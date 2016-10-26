@@ -7,7 +7,6 @@ import com.thinkaurelius.titan.core.schema.SchemaStatus;
 import com.thinkaurelius.titan.core.schema.TitanGraphIndex;
 import com.thinkaurelius.titan.core.schema.TitanManagement;
 import com.thinkaurelius.titan.graphdb.tinkerpop.TitanBlueprintsGraph;
-import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -27,10 +26,6 @@ public class TaxonomyApplication {
         createIndexIfNeeded(graph);
 
         VertexLabel course = graph.getOrCreateVertexLabel("course");
-
-        Vertex norsk = graph.addVertex(T.label, "course", "name", "norsk");
-        Vertex engelsk = graph.addVertex(T.label, "course", "name", "engelsk");
-
     }
 
     private static void createIndexIfNeeded(TitanBlueprintsGraph titanGraph) {

@@ -35,6 +35,13 @@ public class CourseResource {
         return result;
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity get(@PathVariable("id") String id) {
+        GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V(id);
+        if (traversal.hasNext()) return ResponseEntity.ok(toCourse(traversal.next()));
+        return ResponseEntity.notFound().build();
+    }
+
     @PostMapping
     public ResponseEntity<Void> post(@RequestBody Course course) {
         TitanTransaction transaction = graph.buildTransaction().start();
