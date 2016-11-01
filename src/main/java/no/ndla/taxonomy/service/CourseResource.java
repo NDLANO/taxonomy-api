@@ -26,29 +26,32 @@ public class CourseResource {
     public List<Course> index() {
         List<Course> result = new ArrayList<>();
 
-        GraphTraversal<Vertex, Vertex> courses = graph.traversal().V().hasLabel("course");
-        while (courses.hasNext()) {
-            Vertex v = courses.next();
-            result.add(toCourse(v));
+        try (TitanTransaction transaction = graph.buildTransaction().start()) {
+            GraphTraversal<Vertex, Vertex> courses = transaction.traversal().V().hasLabel("course");
+            while (courses.hasNext()) {
+                Vertex v = courses.next();
+                result.add(toCourse(v));
+            }
         }
-
         return result;
     }
 
     @GetMapping("/{id}")
     public ResponseEntity get(@PathVariable("id") String id) {
-        GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V(id);
-        if (traversal.hasNext()) return ResponseEntity.ok(toCourse(traversal.next()));
-        return ResponseEntity.notFound().build();
+        try (TitanTransaction transaction = graph.buildTransaction().start()) {
+            GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V(id);
+            if (traversal.hasNext()) return ResponseEntity.ok(toCourse(traversal.next()));
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping
     public ResponseEntity<Void> post(@RequestBody Course course) {
-        TitanTransaction transaction = graph.buildTransaction().start();
-        Vertex vertex = graph.addVertex(T.label, "course", "name", course.getName());
-        transaction.commit();
-
-        return ResponseEntity.created(URI.create("/courses/" + vertex.id())).build();
+        try (TitanTransaction transaction = graph.buildTransaction().start()) {
+            Vertex vertex = transaction.addVertex(T.label, "course", "name", course.getName());
+            transaction.commit();
+            return ResponseEntity.created(URI.create("/courses/" + vertex.id())).build();
+        }
     }
 
     private Course toCourse(Vertex v) {
