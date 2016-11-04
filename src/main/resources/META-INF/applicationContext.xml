@@ -21,45 +21,45 @@
                 <prop key="storage.dynamodb.force-consistent-read">true</prop>
 
                 <prop key="storage.dynamodb.stores.edgestore.data-model">MULTI</prop>
-                <prop key="storage.dynamodb.stores.edgestore.capacity-read">100</prop>
-                <prop key="storage.dynamodb.stores.edgestore.capacity-write">100</prop>
-                <prop key="storage.dynamodb.stores.edgestore.read-rate">100</prop>
-                <prop key="storage.dynamodb.stores.edgestore.write-rate">100</prop>
+                <prop key="storage.dynamodb.stores.edgestore.capacity-read">10</prop>
+                <prop key="storage.dynamodb.stores.edgestore.capacity-write">10</prop>
+                <prop key="storage.dynamodb.stores.edgestore.read-rate">10</prop>
+                <prop key="storage.dynamodb.stores.edgestore.write-rate">10</prop>
                 <prop key="storage.dynamodb.stores.edgestore.scan-limit">10000</prop>
 
                 <prop key="storage.dynamodb.stores.graphindex.data-model">MULTI</prop>
-                <prop key="storage.dynamodb.stores.graphindex.capacity-read">100</prop>
-                <prop key="storage.dynamodb.stores.graphindex.capacity-write">100</prop>
-                <prop key="storage.dynamodb.stores.graphindex.read-rate">100</prop>
-                <prop key="storage.dynamodb.stores.graphindex.write-rate">100</prop>
+                <prop key="storage.dynamodb.stores.graphindex.capacity-read">10</prop>
+                <prop key="storage.dynamodb.stores.graphindex.capacity-write">10</prop>
+                <prop key="storage.dynamodb.stores.graphindex.read-rate">10</prop>
+                <prop key="storage.dynamodb.stores.graphindex.write-rate">10</prop>
                 <prop key="storage.dynamodb.stores.graphindex.scan-limit">10000</prop>
 
                 <prop key="storage.dynamodb.stores.systemlog.data-model">MULTI</prop>
-                <prop key="storage.dynamodb.stores.systemlog.capacity-read">10</prop>
-                <prop key="storage.dynamodb.stores.systemlog.capacity-write">10</prop>
-                <prop key="storage.dynamodb.stores.systemlog.read-rate">10</prop>
-                <prop key="storage.dynamodb.stores.systemlog.write-rate">10</prop>
+                <prop key="storage.dynamodb.stores.systemlog.capacity-read">5</prop>
+                <prop key="storage.dynamodb.stores.systemlog.capacity-write">5</prop>
+                <prop key="storage.dynamodb.stores.systemlog.read-rate">5</prop>
+                <prop key="storage.dynamodb.stores.systemlog.write-rate">5</prop>
                 <prop key="storage.dynamodb.stores.systemlog.scan-limit">10000</prop>
 
                 <prop key="storage.dynamodb.stores.titan_ids.data-model">MULTI</prop>
-                <prop key="storage.dynamodb.stores.titan_ids.capacity-read">10</prop>
-                <prop key="storage.dynamodb.stores.titan_ids.capacity-write">10</prop>
-                <prop key="storage.dynamodb.stores.titan_ids.read-rate">10</prop>
-                <prop key="storage.dynamodb.stores.titan_ids.write-rate">10</prop>
+                <prop key="storage.dynamodb.stores.titan_ids.capacity-read">5</prop>
+                <prop key="storage.dynamodb.stores.titan_ids.capacity-write">5</prop>
+                <prop key="storage.dynamodb.stores.titan_ids.read-rate">5</prop>
+                <prop key="storage.dynamodb.stores.titan_ids.write-rate">5</prop>
                 <prop key="storage.dynamodb.stores.titan_ids.scan-limit">10000</prop>
 
                 <prop key="storage.dynamodb.stores.system_properties.data-model">MULTI</prop>
-                <prop key="storage.dynamodb.stores.system_properties.capacity-read">10</prop>
-                <prop key="storage.dynamodb.stores.system_properties.capacity-write">10</prop>
-                <prop key="storage.dynamodb.stores.system_properties.read-rate">10</prop>
-                <prop key="storage.dynamodb.stores.system_properties.write-rate">10</prop>
+                <prop key="storage.dynamodb.stores.system_properties.capacity-read">5</prop>
+                <prop key="storage.dynamodb.stores.system_properties.capacity-write">5</prop>
+                <prop key="storage.dynamodb.stores.system_properties.read-rate">5</prop>
+                <prop key="storage.dynamodb.stores.system_properties.write-rate">5</prop>
                 <prop key="storage.dynamodb.stores.system_properties.scan-limit">10000</prop>
 
                 <prop key="storage.dynamodb.stores.txlog.data-model">MULTI</prop>
-                <prop key="storage.dynamodb.stores.txlog.capacity-read">10</prop>
-                <prop key="storage.dynamodb.stores.txlog.capacity-write">10</prop>
-                <prop key="storage.dynamodb.stores.txlog.read-rate">10</prop>
-                <prop key="storage.dynamodb.stores.txlog.write-rate">10</prop>
+                <prop key="storage.dynamodb.stores.txlog.capacity-read">5</prop>
+                <prop key="storage.dynamodb.stores.txlog.capacity-write">5</prop>
+                <prop key="storage.dynamodb.stores.txlog.read-rate">5</prop>
+                <prop key="storage.dynamodb.stores.txlog.write-rate">5</prop>
                 <prop key="storage.dynamodb.stores.txlog.scan-limit">10000</prop>
 
                 <!--<prop key="query.fast-property">true</prop>-->
@@ -73,8 +73,4 @@
     <bean id="titanGraph" class="com.thinkaurelius.titan.graphdb.database.StandardTitanGraph" destroy-method="close">
         <constructor-arg name="configuration" ref="graphDatabaseConfiguration"/>
     </bean>
-
-    <!--<bean id="categoryRepository" class="com.hybris.caas.category.repository.impl.TitanGraphCategoryRepository" />-->
-
-
 </beans>

@@ -14,17 +14,12 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.Properties;
 
-/**
- * Provide configuration for {@code StandardTitanGraph} instance.
- */
 public class TitanConfigurationProvider {
     private static final Logger LOG = LoggerFactory.getLogger(TitanConfigurationProvider.class);
-    private static final String STORAGE_HOSTNAME_KEY = "storage.hostname";
 
     private String propertyFile;
     private String storageHostname;
     private Properties properties;
-
 
     public GraphDatabaseConfiguration load() throws ConfigurationException, FileNotFoundException {
         final PropertiesConfiguration configuration = new PropertiesConfiguration();
@@ -41,7 +36,7 @@ public class TitanConfigurationProvider {
             configuration.load(resource);
         }
 
-        configuration.setProperty(STORAGE_HOSTNAME_KEY, storageHostname);
+        configuration.setProperty("storage.hostname", storageHostname);
 
         if (StringUtils.isEmpty(properties.getProperty("storage.dynamodb.client.credentials.class-name"))) {
             properties.remove("storage.dynamodb.client.credentials.class-name");
@@ -49,10 +44,7 @@ public class TitanConfigurationProvider {
         }
 
         if (properties != null) {
-
-            properties.stringPropertyNames()
-                    .stream()
-                    .forEach(prop -> configuration.setProperty(prop, properties.getProperty(prop)));
+            properties.stringPropertyNames().forEach(prop -> configuration.setProperty(prop, properties.getProperty(prop)));
         }
 
         LOG.info("Titan configuration: \n" + secureToString(configuration));
