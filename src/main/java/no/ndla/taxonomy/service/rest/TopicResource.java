@@ -29,8 +29,8 @@ public class TopicResource {
         List<TopicIndexDocument> result = new ArrayList<>();
 
         try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            GraphTraversal<Vertex, Vertex> Topics = transaction.traversal().V().hasLabel("topic");
-            Topics.forEachRemaining(v -> result.add(new TopicIndexDocument(new Topic(v))));
+            GraphTraversal<Vertex, Vertex> topics = transaction.traversal().V().hasLabel(Topic.LABEL);
+            topics.forEachRemaining(v -> result.add(new TopicIndexDocument(new Topic(v))));
         }
 
         return result;
@@ -39,16 +39,15 @@ public class TopicResource {
     @GetMapping("/{id}")
     public ResponseEntity get(@PathVariable("id") String id) {
         try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V(id);
-            if (traversal.hasNext()) return ResponseEntity.ok(new TopicIndexDocument(new Topic(traversal.next())));
-            return ResponseEntity.notFound().build();
+            Topic topic = Topic.getById(id, transaction);
+            return ResponseEntity.ok(new TopicIndexDocument(topic));
         }
     }
 
     @PostMapping
     public ResponseEntity<Void> post(@RequestBody CreateTopicCommand command) {
         try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            Vertex vertex = transaction.addVertex(T.label, "topic");
+            Vertex vertex = transaction.addVertex(T.label, Topic.LABEL);
             Topic topic = new Topic(vertex);
             topic.name(command.name);
 

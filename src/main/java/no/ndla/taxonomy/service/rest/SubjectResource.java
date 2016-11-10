@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thinkaurelius.titan.core.TitanGraph;
 import com.thinkaurelius.titan.core.TitanTransaction;
 import no.ndla.taxonomy.service.domain.Subject;
+import no.ndla.taxonomy.service.domain.Topic;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -38,16 +39,26 @@ public class SubjectResource {
     @GetMapping("/{id}")
     public ResponseEntity get(@PathVariable("id") String id) {
         try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V(id);
-            if (traversal.hasNext()) return ResponseEntity.ok(new SubjectIndexDocument(new Subject(traversal.next())));
+            Subject subject = Subject.getById(id, transaction);
+            if (subject != null) return ResponseEntity.ok(new SubjectIndexDocument(subject));
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{id}/topics")
+    public ResponseEntity getTopics(@PathVariable("id") String id) {
+        try (TitanTransaction transaction = graph.buildTransaction().start()) {
+            List<TopicIndexDocument> results = new ArrayList<>();
+            Subject subject = Subject.getById(id, transaction);
+            subject.getTopics().forEachRemaining(t -> results.add(new TopicIndexDocument(t)));
+            return ResponseEntity.ok(results);
         }
     }
 
     @PostMapping
     public ResponseEntity<Void> post(@RequestBody CreateSubjectCommand command) {
         try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            Vertex vertex = transaction.addVertex(T.label, "subject");
+            Vertex vertex = transaction.addVertex(T.label, Subject.LABEL);
             Subject subject = new Subject(vertex);
             subject.name(command.name);
             transaction.commit();
@@ -55,12 +66,12 @@ public class SubjectResource {
         }
     }
 
-    public static class CreateSubjectCommand {
+    private static class CreateSubjectCommand {
         @JsonProperty
         public String name;
     }
 
-    private class SubjectIndexDocument {
+    private static class SubjectIndexDocument {
         @JsonProperty
         public Object id;
 
@@ -70,6 +81,19 @@ public class SubjectResource {
         SubjectIndexDocument(Subject subject) {
             id = subject.getId();
             name = subject.getName();
+        }
+    }
+
+    private static class TopicIndexDocument {
+        @JsonProperty
+        public Object id;
+
+        @JsonProperty
+        public String name;
+
+        TopicIndexDocument(Topic topic) {
+            id = topic.getId();
+            name = topic.getName();
         }
     }
 }
