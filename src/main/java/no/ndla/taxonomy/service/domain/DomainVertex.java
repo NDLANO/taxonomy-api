@@ -5,7 +5,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 public abstract class DomainVertex extends DomainElement {
     protected final Vertex vertex;
 
-    public DomainVertex(Vertex vertex) {
+    protected DomainVertex(Vertex vertex) {
         super(vertex);
         this.vertex = vertex;
     }

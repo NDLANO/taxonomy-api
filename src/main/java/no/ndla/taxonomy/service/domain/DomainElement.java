@@ -2,6 +2,7 @@ package no.ndla.taxonomy.service.domain;
 
 import org.apache.tinkerpop.gremlin.structure.Element;
 
+import java.net.URI;
 import java.util.Iterator;
 
 public abstract class DomainElement {
@@ -21,10 +22,15 @@ public abstract class DomainElement {
         element.property(property, value);
     }
 
-    public Object getId() {
-        return element.id();
+    public URI getId() {
+        return URI.create(getProperty("id"));
     }
 
-    protected abstract String getLabel();
+    public void setId(String id) {
+        setId(URI.create(id));
+    }
 
+    public void setId(URI id) {
+        setProperty("id", id.toString());
+    }
 }

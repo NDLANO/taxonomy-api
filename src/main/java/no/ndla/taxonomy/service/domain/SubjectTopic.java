@@ -12,11 +12,6 @@ public class SubjectTopic extends DomainEdge {
         super(edge);
     }
 
-    @Override
-    protected String getLabel() {
-        return LABEL;
-    }
-
     public boolean isPrimary() {
         return getProperty("primary");
     }

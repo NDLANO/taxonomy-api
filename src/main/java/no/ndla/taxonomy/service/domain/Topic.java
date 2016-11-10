@@ -8,17 +8,25 @@ public class Topic extends DomainVertex {
 
     public static final String LABEL = "topic";
 
+    /**
+     * Wrap an existing topic
+     * @param vertex the vertex to wrap
+     */
     public Topic(Vertex vertex) {
         super(vertex);
     }
 
-    @Override
-    protected String getLabel() {
-        return LABEL;
+    /**
+     * Create a new topic
+     * @param transaction the transaction where the new vertex is created
+     */
+    public Topic(TitanTransaction transaction) {
+        this(transaction.addVertex(LABEL));
+        setId("urn:topic:" + vertex.id());
     }
 
     public static Topic getById(Object id, TitanTransaction transaction) {
-        GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V(id);
+        GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V().has("id", id);
         if (traversal.hasNext()) return new Topic(traversal.next());
         throw new NotFoundException("topic", id);
     }

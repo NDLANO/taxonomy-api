@@ -10,27 +10,28 @@ import java.util.Iterator;
 
 public class Subject extends DomainVertex {
 
-    public static final String LABEL = "subject";
+    private static final String LABEL = "subject";
 
     public Subject(Vertex vertex) {
         super(vertex);
     }
 
-    @Override
-    protected String getLabel() {
-        return LABEL;
+    /**
+     * Create a new subject
+     * @param transaction the transaction where the new vertex is created
+     */
+    public Subject(TitanTransaction transaction) {
+        this(transaction.addVertex(LABEL));
+        setId("urn:subject:" + vertex.id());
     }
 
     public static Subject getById(Object id, TitanTransaction transaction) {
-        GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V(id);
+        GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V().has("id", id);
         if (traversal.hasNext()) return new Subject(traversal.next());
         throw new NotFoundException("subject", id);
     }
 
     public SubjectTopic addTopic(Topic topic) {
-        Iterator<Edge> edges = vertex.edges(Direction.OUT, SubjectTopic.LABEL);
-        if (edges.hasNext()) return new SubjectTopic(edges.next());
-
         Edge edge = vertex.addEdge(SubjectTopic.LABEL, topic.vertex);
         return new SubjectTopic(edge);
     }

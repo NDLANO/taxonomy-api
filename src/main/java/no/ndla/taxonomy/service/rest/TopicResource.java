@@ -5,7 +5,6 @@ import com.thinkaurelius.titan.core.TitanGraph;
 import com.thinkaurelius.titan.core.TitanTransaction;
 import no.ndla.taxonomy.service.domain.Topic;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,15 +46,14 @@ public class TopicResource {
     @PostMapping
     public ResponseEntity<Void> post(@RequestBody CreateTopicCommand command) {
         try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            Vertex vertex = transaction.addVertex(T.label, Topic.LABEL);
-            Topic topic = new Topic(vertex);
+            Topic topic = new Topic(transaction);
             topic.name(command.name);
 
+            URI location = URI.create("/topics/" + topic.getId());
             transaction.commit();
-            return ResponseEntity.created(URI.create("/topics/" + vertex.id())).build();
+            return ResponseEntity.created(location).build();
         }
     }
-
 
     public static class CreateTopicCommand {
         @JsonProperty

@@ -1,8 +1,13 @@
 package no.ndla.taxonomy.service;
 
-import org.springframework.boot.SpringApplication;
+import com.thinkaurelius.titan.core.TitanGraph;
+import com.thinkaurelius.titan.core.TitanTransaction;
+import no.ndla.taxonomy.service.migrations.MigrationRunner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportResource;
+
+import static org.springframework.boot.SpringApplication.run;
 
 
 @SpringBootApplication
@@ -10,6 +15,15 @@ import org.springframework.context.annotation.ImportResource;
 public class TaxonomyApplication {
 
     public static void main(String[] args) throws InterruptedException {
-        SpringApplication.run(TaxonomyApplication.class, args);
+        run(TaxonomyApplication.class, args);
+    }
+
+    @Bean
+    public String runMigrations(TitanGraph graph) {
+        try (TitanTransaction transaction = graph.newTransaction()) {
+            new MigrationRunner("no.ndla.taxonomy.service.migrations").run(transaction);
+            transaction.commit();
+        }
+        return "";
     }
 }

@@ -65,20 +65,20 @@ public class SubjectTopicResource {
             SubjectTopic subjectTopic = subject.addTopic(topic);
             subjectTopic.setPrimary(command.primary);
 
+            URI location = URI.create("/subject-topics/" + subjectTopic.getId());
             transaction.commit();
-            return ResponseEntity.created(URI.create("/subject-topics/" + subjectTopic.getId())).build();
+            return ResponseEntity.created(location).build();
         }
     }
 
-
-    public static class AddTopicToSubjectCommand {
+    private static class AddTopicToSubjectCommand {
         @JsonProperty
         public Object subjectid, topicid;
         @JsonProperty
         public boolean primary;
     }
 
-    private class SubjectTopicIndexDocument {
+    private static class SubjectTopicIndexDocument {
         @JsonProperty
         public Object subjectid, topicid;
 

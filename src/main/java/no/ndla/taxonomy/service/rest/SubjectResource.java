@@ -6,7 +6,6 @@ import com.thinkaurelius.titan.core.TitanTransaction;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -58,11 +57,12 @@ public class SubjectResource {
     @PostMapping
     public ResponseEntity<Void> post(@RequestBody CreateSubjectCommand command) {
         try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            Vertex vertex = transaction.addVertex(T.label, Subject.LABEL);
-            Subject subject = new Subject(vertex);
+            Subject subject = new Subject(transaction);
             subject.name(command.name);
+
+            URI location = URI.create("/subjects/" + subject.getId());
             transaction.commit();
-            return ResponseEntity.created(URI.create("/subjects/" + vertex.id())).build();
+            return ResponseEntity.created(location).build();
         }
     }
 
@@ -73,7 +73,7 @@ public class SubjectResource {
 
     private static class SubjectIndexDocument {
         @JsonProperty
-        public Object id;
+        public URI id;
 
         @JsonProperty
         public String name;
@@ -86,7 +86,7 @@ public class SubjectResource {
 
     private static class TopicIndexDocument {
         @JsonProperty
-        public Object id;
+        public URI id;
 
         @JsonProperty
         public String name;
