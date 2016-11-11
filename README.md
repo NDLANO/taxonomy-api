@@ -9,6 +9,9 @@ Unless otherwise specified, all PUT and POST requests must use
 
 All GET requests will return data using the same content type. 
 
+When you remove an entity, its associations are also deleted. E.g., if you remove a subject, 
+its associations to any topics are removed. The topics themselves are not affected.
+
 ## `/subjects`
 
 A collection of school subject, such as physics, mathematics or biology.
@@ -64,6 +67,20 @@ To update the relationship between subjects and topics, use the resource `/subje
          }
     ]
 
+### PUT `/subjects/{id}`
+Update a single subject
+
+*example input*
+
+    PUT /subjects/urn:subject:4288
+
+    {
+        "name" : "biology"
+    }
+    
+*example output*
+
+    < HTTP/1.1 204
     
 ### POST `/subjects`
 
@@ -84,6 +101,16 @@ Creates a new subject
        < Content-Length: 0
 
 
+### DELETE `/subjects/{id}`
+Removes a single subject 
+
+*example input*
+
+    DELETE /subjects/urn:subject:4208
+
+*example output*
+
+    < HTTP/1.1 204
 
 
 ## `/topics`

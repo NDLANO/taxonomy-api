@@ -39,8 +39,25 @@ public class SubjectResource {
     public ResponseEntity get(@PathVariable("id") String id) {
         try (TitanTransaction transaction = graph.buildTransaction().start()) {
             Subject subject = Subject.getById(id, transaction);
-            if (subject != null) return ResponseEntity.ok(new SubjectIndexDocument(subject));
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(new SubjectIndexDocument(subject));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity delete(@PathVariable("id") String id) {
+        try (TitanTransaction transaction = graph.buildTransaction().start()) {
+            Subject subject = Subject.getById(id, transaction);
+            subject.remove();
+            return ResponseEntity.noContent().build();
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity put(@PathVariable("id") String id, @RequestBody UpdateSubjectCommand command) {
+        try (TitanTransaction transaction = graph.buildTransaction().start()) {
+            Subject subject = Subject.getById(id, transaction);
+            subject.setName(command.name);
+            return ResponseEntity.noContent().build();
         }
     }
 
@@ -67,6 +84,11 @@ public class SubjectResource {
     }
 
     private static class CreateSubjectCommand {
+        @JsonProperty
+        public String name;
+    }
+
+    private static class UpdateSubjectCommand {
         @JsonProperty
         public String name;
     }

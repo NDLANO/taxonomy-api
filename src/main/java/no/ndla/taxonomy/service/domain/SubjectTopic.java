@@ -48,8 +48,4 @@ public class SubjectTopic extends DomainEdge {
         if (traversal.hasNext()) return new SubjectTopic(traversal.next());
         throw new NotFoundException("subject-topic", id);
     }
-
-    public void remove() {
-        edge.remove();
-    }
 }

@@ -35,4 +35,8 @@ public abstract class DomainElement {
     public void setId(URI id) {
         setProperty("id", id.toString());
     }
+
+    public void remove() {
+        element.remove();
+    }
 }
