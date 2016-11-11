@@ -8,8 +8,23 @@ public class SubjectTopic extends DomainEdge {
 
     public static final String LABEL = "subject-has-topics";
 
+    /**
+     * Wraps an existing edge between a subject and a topic
+     */
     public SubjectTopic(Edge edge) {
         super(edge);
+    }
+
+    /**
+     * Creates a new edge between a subject and a topic
+     */
+    public SubjectTopic(Subject subject, Topic topic) {
+        this(createEdge(subject,topic));
+        setId("urn:subject-topic:" + edge.id());
+    }
+
+    private static Edge createEdge(Subject subject, Topic topic) {
+        return subject.vertex.addEdge(SubjectTopic.LABEL, topic.vertex);
     }
 
     public boolean isPrimary() {
@@ -29,8 +44,12 @@ public class SubjectTopic extends DomainEdge {
     }
 
     public static SubjectTopic getById(String id, TitanTransaction transaction) {
-        GraphTraversal<Edge, Edge> traversal = transaction.traversal().E(id);
+        GraphTraversal<Edge, Edge> traversal = transaction.traversal().E().hasLabel(LABEL).has("id", id);
         if (traversal.hasNext()) return new SubjectTopic(traversal.next());
         throw new NotFoundException("subject-topic", id);
+    }
+
+    public void remove() {
+        edge.remove();
     }
 }

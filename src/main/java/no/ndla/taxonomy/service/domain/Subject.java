@@ -32,8 +32,7 @@ public class Subject extends DomainVertex {
     }
 
     public SubjectTopic addTopic(Topic topic) {
-        Edge edge = vertex.addEdge(SubjectTopic.LABEL, topic.vertex);
-        return new SubjectTopic(edge);
+        return new SubjectTopic(this, topic);
     }
 
     public Iterator<Topic> getTopics() {

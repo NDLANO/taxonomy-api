@@ -23,7 +23,9 @@ public abstract class DomainElement {
     }
 
     public URI getId() {
-        return URI.create(getProperty("id"));
+        String id = getProperty("id");
+        if (id == null) return null;
+        return URI.create(id);
     }
 
     public void setId(String id) {

@@ -71,21 +71,51 @@ public class SubjectTopicResource {
         }
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
+        try (TitanTransaction transaction = graph.buildTransaction().start()) {
+            SubjectTopic subjectTopic = SubjectTopic.getById(id, transaction);
+            subjectTopic.remove();
+            transaction.commit();
+            return ResponseEntity.noContent().build();
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> put(@PathVariable("id") String id, @RequestBody UpdateSubjectTopicCommand command) {
+        try (TitanTransaction transaction = graph.buildTransaction().start()) {
+            SubjectTopic subjectTopic = SubjectTopic.getById(id, transaction);
+            subjectTopic.setPrimary(command.primary);
+            transaction.commit();
+            return ResponseEntity.noContent().build();
+        }
+    }
+
     private static class AddTopicToSubjectCommand {
         @JsonProperty
-        public Object subjectid, topicid;
+        public URI subjectid, topicid;
+
+        @JsonProperty
+        public boolean primary;
+    }
+
+    private static class UpdateSubjectTopicCommand {
+        @JsonProperty
+        public URI id;
+
         @JsonProperty
         public boolean primary;
     }
 
     private static class SubjectTopicIndexDocument {
         @JsonProperty
-        public Object subjectid, topicid;
+        public URI subjectid, topicid, id;
 
         @JsonProperty
         public boolean primary;
 
         SubjectTopicIndexDocument(SubjectTopic subjectTopic) {
+            id = subjectTopic.getId();
             subjectid = subjectTopic.getSubject().getId();
             topicid = subjectTopic.getTopic().getId();
             primary = subjectTopic.isPrimary();
