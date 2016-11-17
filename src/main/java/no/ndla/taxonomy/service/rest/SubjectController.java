@@ -57,7 +57,7 @@ public class SubjectController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity delete(@PathVariable("id") String id) throws Exception {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Subject subject = Subject.getById(id, graph);
             subject.remove();
@@ -67,7 +67,7 @@ public class SubjectController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity put(@PathVariable("id") String id, @RequestBody UpdateSubjectCommand command) throws Exception {
+    public ResponseEntity<Void> put(@PathVariable("id") String id, @RequestBody UpdateSubjectCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Subject subject = Subject.getById(id, graph);
             subject.setName(command.name);
