@@ -25,7 +25,12 @@ public class Subject extends DomainVertex {
         setId("urn:subject:" + vertex.id());
     }
 
-    public static Subject getById(Object id, TitanTransaction transaction) {
+    public Subject name(String name) {
+        setName(name);
+        return this;
+    }
+
+    public static Subject getById(String id, TitanTransaction transaction) {
         GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V().has("id", id);
         if (traversal.hasNext()) return new Subject(traversal.next());
         throw new NotFoundException("subject", id);

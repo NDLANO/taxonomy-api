@@ -28,7 +28,7 @@ public class SubjectTopic extends DomainEdge {
     }
 
     public boolean isPrimary() {
-        return getProperty("primary");
+         return is("primary");
     }
 
     public void setPrimary(boolean value) {

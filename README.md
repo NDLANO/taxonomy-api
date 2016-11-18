@@ -169,6 +169,35 @@ Creates a new topic
     < Location: /topics/urn:topic:4288
     < Content-Length: 0
 
+### PUT `/topics/{id}`
+Update a single topic
+
+*example input*
+
+    PUT /topics/urn:topic:4288
+
+    {
+        "name" : "trigonometry"
+    }
+    
+*example output*
+
+    < HTTP/1.1 204
+    
+
+### DELETE `/topics/{id}`
+Removes a single topic 
+
+*example input*
+
+    DELETE /topics/urn:topic:4288
+
+*example output*
+
+    < HTTP/1.1 204
+
+
+
 ## `/subject-topics`
 
 Many-to-many association between subjects and topics. If you add a topic to a subject 

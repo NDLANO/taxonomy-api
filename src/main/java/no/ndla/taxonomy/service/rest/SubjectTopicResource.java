@@ -51,8 +51,8 @@ public class SubjectTopicResource {
     public ResponseEntity post(@RequestBody AddTopicToSubjectCommand command) {
         try (TitanTransaction transaction = graph.buildTransaction().start()) {
 
-            Subject subject = Subject.getById(command.subjectid, transaction);
-            Topic topic = Topic.getById(command.topicid, transaction);
+            Subject subject = Subject.getById(command.subjectid.toString(), transaction);
+            Topic topic = Topic.getById(command.topicid.toString(), transaction);
 
             Iterator<Topic> topics = subject.getTopics();
             while (topics.hasNext()) {
@@ -91,7 +91,7 @@ public class SubjectTopicResource {
         }
     }
 
-    private static class AddTopicToSubjectCommand {
+    public static class AddTopicToSubjectCommand {
         @JsonProperty
         public URI subjectid, topicid;
 
@@ -99,7 +99,7 @@ public class SubjectTopicResource {
         public boolean primary;
     }
 
-    private static class UpdateSubjectTopicCommand {
+    public static class UpdateSubjectTopicCommand {
         @JsonProperty
         public URI id;
 
@@ -107,12 +107,15 @@ public class SubjectTopicResource {
         public boolean primary;
     }
 
-    private static class SubjectTopicIndexDocument {
+    public static class SubjectTopicIndexDocument {
         @JsonProperty
         public URI subjectid, topicid, id;
 
         @JsonProperty
         public boolean primary;
+
+        SubjectTopicIndexDocument() {
+        }
 
         SubjectTopicIndexDocument(SubjectTopic subjectTopic) {
             id = subjectTopic.getId();

@@ -18,6 +18,16 @@ public abstract class DomainElement {
         return name.hasNext() ? name.next() : null;
     }
 
+    /***
+     * Null-safe way to get a boolean property
+     * @param property the name of the property
+     * @return false if the property is not set, or if it is set to null. Otherwise, returns the property value.
+     */
+    protected boolean is(String property) {
+        Boolean result = getProperty(property);
+        return result == null ? false : result;
+    }
+
     protected <V> void setProperty(String property, V value) {
         element.property(property, value);
     }

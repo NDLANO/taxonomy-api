@@ -83,22 +83,25 @@ public class SubjectResource {
         }
     }
 
-    private static class CreateSubjectCommand {
+    static class CreateSubjectCommand {
         @JsonProperty
         public String name;
     }
 
-    private static class UpdateSubjectCommand {
+    static class UpdateSubjectCommand {
         @JsonProperty
         public String name;
     }
 
-    private static class SubjectIndexDocument {
+    static class SubjectIndexDocument {
         @JsonProperty
         public URI id;
 
         @JsonProperty
         public String name;
+
+        SubjectIndexDocument() {
+        }
 
         SubjectIndexDocument(Subject subject) {
             id = subject.getId();
@@ -106,12 +109,15 @@ public class SubjectResource {
         }
     }
 
-    private static class TopicIndexDocument {
+    static class TopicIndexDocument {
         @JsonProperty
         public URI id;
 
         @JsonProperty
         public String name;
+
+        TopicIndexDocument() {
+        }
 
         TopicIndexDocument(Topic topic) {
             id = topic.getId();

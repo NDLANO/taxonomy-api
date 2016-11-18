@@ -55,17 +55,43 @@ public class TopicResource {
         }
     }
 
-    public static class CreateTopicCommand {
-        @JsonProperty
-        private String name;
+    @DeleteMapping("/{id}")
+    public ResponseEntity delete(@PathVariable("id") String id) {
+        try (TitanTransaction transaction = graph.buildTransaction().start()) {
+            Topic topic = Topic.getById(id, transaction);
+            topic.remove();
+            return ResponseEntity.noContent().build();
+        }
     }
 
-    private class TopicIndexDocument {
+    @PutMapping("/{id}")
+    public ResponseEntity put(@PathVariable("id") String id, @RequestBody UpdateTopicCommand command) {
+        try (TitanTransaction transaction = graph.buildTransaction().start()) {
+            Topic topic = Topic.getById(id, transaction);
+            topic.setName(command.name);
+            return ResponseEntity.noContent().build();
+        }
+    }
+
+    static class CreateTopicCommand {
         @JsonProperty
-        public Object id;
+        public String name;
+    }
+
+    static class UpdateTopicCommand {
+        @JsonProperty
+        public String name;
+    }
+
+    static class TopicIndexDocument {
+        @JsonProperty
+        public URI id;
 
         @JsonProperty
         public String name;
+
+        TopicIndexDocument() {
+        }
 
         TopicIndexDocument(Topic topic) {
             id = topic.getId();

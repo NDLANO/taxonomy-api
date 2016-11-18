@@ -18,8 +18,4 @@ public abstract class DomainVertex extends DomainElement {
         setProperty("name", value);
     }
 
-    public DomainVertex name(String name) {
-        setName(name);
-        return this;
-    }
 }
