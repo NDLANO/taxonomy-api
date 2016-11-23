@@ -4,12 +4,11 @@
 
 Rest service and graph database for organizing content
 
-Unless otherwise specified, all PUT and POST requests must use 
-`Content-Type: application/json;charset=UTF-8`. If charset is omitted, UTF-8 will be assumed. 
+Unless otherwise specified, all PUT and POST requests must use
+`Content-Type: application/json;charset=UTF-8`. If charset is omitted, UTF-8 will be assumed.
+All GET requests will return data using the same content type.
 
-All GET requests will return data using the same content type. 
-
-When you remove an entity, its associations are also deleted. E.g., if you remove a subject, 
+When you remove an entity, its associations are also deleted. E.g., if you remove a subject,
 its associations to any topics are removed. The topics themselves are not affected.
 
 ## `/subjects`
@@ -20,9 +19,9 @@ A collection of school subject, such as physics, mathematics or biology.
 Gets a list of all subjects
 
 *example input*
-    
+
     GET /subjects
-    
+
 *example output*
 
     [
@@ -51,7 +50,8 @@ Gets a single subject
        }
 
 ### GET `/subjects/{id}/topics`
-Gets all topics directly associated with that subject. Note that this resource is read-only. 
+Gets all topics directly associated with that subject. Note that this resource is read-only.
+
 To update the relationship between subjects and topics, use the resource `/subject-topics`.
 
 *example input*
@@ -77,14 +77,14 @@ Update a single subject
     {
         "name" : "biology"
     }
-    
+
 *example output*
 
     < HTTP/1.1 204
-    
+
 ### POST `/subjects`
 
-Creates a new subject 
+Creates a new subject
 
 *example input*
 
@@ -93,16 +93,15 @@ Creates a new subject
         {
           "name" : "mathematics"
         }
-       
-*example output* 
-       
+
+*example output*
+
        < HTTP/1.1 201
        < Location: /subjects/urn:subject:4208
        < Content-Length: 0
 
-
 ### DELETE `/subjects/{id}`
-Removes a single subject 
+Removes a single subject
 
 *example input*
 
@@ -112,15 +111,14 @@ Removes a single subject
 
     < HTTP/1.1 204
 
-
 ## `/topics`
 
-A collection of topics.  
+A collection of topics.
 
 ### `GET /topics`
 Gets a list of all topics
 
-*example input* 
+*example input*
 
     GET /topics
 
@@ -151,9 +149,29 @@ Gets a single topic
           "name" : "photo synthesis"
        }
 
+### GET `/topics/{id}/subtopics`
+Gets a list of subtopics of a topic
+
+*example input*
+
+    GET /topics/urn:topic:4288/subtopics
+
+*example output*
+
+    [
+       {
+          "id" : "urn:topic:4285",
+          "name" : "chlorophyll"
+       },
+       {
+          "id" : "urn:topic:4222",
+          "name" : "carbon cycle"
+       }
+    ]
+
 ### POST `/topics`
 
-Creates a new topic 
+Creates a new topic
 
 *example input*
 
@@ -162,12 +180,13 @@ Creates a new topic
     {
       "name" : "photo synthesis"
     }
-       
-*example output* 
-       
+
+*example output*
+
     < HTTP/1.1 201
     < Location: /topics/urn:topic:4288
     < Content-Length: 0
+
 
 ### PUT `/topics/{id}`
 Update a single topic
@@ -179,14 +198,13 @@ Update a single topic
     {
         "name" : "trigonometry"
     }
-    
+
 *example output*
 
     < HTTP/1.1 204
-    
 
 ### DELETE `/topics/{id}`
-Removes a single topic 
+Removes a single topic
 
 *example input*
 
@@ -196,24 +214,22 @@ Removes a single topic
 
     < HTTP/1.1 204
 
-
-
 ## `/subject-topics`
 
-Many-to-many association between subjects and topics. If you add a topic to a subject 
-using this resource, the change will be also be visible at the read-only collection at 
-`/subjects/{id}/topics`. 
+Many-to-many association between subjects and topics. If you add a topic to a subject
+using this resource, the change will be also be visible at the read-only collection at
+`/subjects/{id}/topics`.
 
 ### GET `/subject-topics`
 
 Gets a list of all subjects and their first-level topics. A topic may have *one* primary subject, to help with
 selecting a default context for a topic in case no context is given.
 
-*example input* 
+*example input*
 
     GET /subject-topics
 
-*example output* 
+*example output*
 
     [
        {
@@ -232,7 +248,7 @@ selecting a default context for a topic in case no context is given.
 
 ### POST `/subject-topics`
 
-Associates a subject with a topic.  
+Associates a subject with a topic.
 
 *example input*
 
@@ -243,17 +259,17 @@ Associates a subject with a topic.
       "subjectid" : "urn:subject:4208",
       "primary" : false
     }
-    
+
 *example output*
-    
+
     < HTTP/1.1 201
     < Location: /subject-topics/urn:subject-topic:1cruoe-38w-27th-1crx34
     < Content-Length: 0
-    
+
 ### PUT `/subject-topics/{id}`
 
 Update the association between a subject and a topic. Changes to `subjectid` or `topicid` are not
-allowed. Instead, remove the association and create a new one. 
+allowed. Instead, remove the association and create a new one.
 
 *example input*
 
@@ -269,13 +285,93 @@ allowed. Instead, remove the association and create a new one.
 
 ### DELETE `/subject-topics/{id}`
 
-Remove an association between a subject and a topic. 
+Remove an association between a subject and a topic.
 
 *example input*
 
     DELETE /subject-topics/urn:subject-topic:1cruoe-38w-27th-1crx34
 
-*example output* 
-    
+*example output*
+
     < HTTP/1.1 204
 
+## `/topic-subtopics`
+
+Many-to-many association between topics and subtopics. If you add a subtopic to a topic
+using this resource, the change will be also be visible at the read-only collection at
+`/topics/{id}/subtopics`.
+
+### GET `/topic-subtopics`
+
+Gets a list of all topics and their subtopics. A subtopic may have *one* parent topic, to help with
+selecting a default context for a subtopic in case no context is given.
+
+*example input*
+
+    GET /topic-subtopics
+
+*example output*
+
+    [
+       {
+          "id" : "urn:topic-subtopic:odxco-3b4-27th-380",
+          "topicid" : "urn:topic:4176",
+          "subtopicid" : "urn:topic:4208",
+          "primary" : false
+       },
+       {
+          "id" : "urn:topic-subtopic:1cruoe-38w-27th-1crx34",
+          "primary" : false,
+          "topicid" : "urn:topic:4176"
+          "subtopicid" : "urn:topic:4288",
+       }
+    ]
+
+### POST `/topic-subtopics`
+
+Associates a topic with a subtopic
+
+*example input*
+
+    POST /topic-subtopics
+
+    {
+      "topicid" : "urn:topic:4176",
+      "subtopicid" : "urn:topic:4208",
+      "primary" : false
+    }
+
+*example output*
+
+    < HTTP/1.1 201
+    < Location: /topic-subtopics/urn:topic-subtopic:1cruoe-38w-27th-1crx34
+    < Content-Length: 0
+
+### PUT `/topic-subtopics/{id}`
+
+Update the association between a topic and a subtopic. Changes to `topicid` or `subtopicid` are not
+allowed. Instead, remove the association and create a new one.
+
+*example input*
+
+    PUT /topic-subtopics/urn:topic-subtopic:1cruoe-38w-27th-1crx34
+
+    {
+      "primary" : true
+    }
+
+*example output*
+
+    < HTTP/1.1 204
+
+### DELETE `/topic-subtopics/{id}`
+
+Remove an association between a topic and a subtopic.
+
+*example input*
+
+    DELETE /topic-subtopics/urn:topic-subtopic:1cruoe-38w-27th-1crx34
+
+*example output*
+
+    < HTTP/1.1 204

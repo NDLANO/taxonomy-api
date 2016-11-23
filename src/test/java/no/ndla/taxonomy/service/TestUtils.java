@@ -12,6 +12,7 @@ import org.springframework.mock.http.MockHttpOutputMessage;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.io.IOException;
@@ -55,11 +56,15 @@ public class TestUtils {
     }
 
     public static MockHttpServletResponse createResource(String path, Object command) throws Exception {
+        return createResource(path, command, status().isCreated());
+    }
+
+    public static MockHttpServletResponse createResource(String path, Object command, ResultMatcher resultMatcher) throws Exception {
         return mockMvc.perform(
                 post(path)
                         .contentType(APPLICATION_JSON_UTF8)
                         .content(json(command)))
-                .andExpect(status().isCreated())
+                .andExpect(resultMatcher)
                 .andReturn()
                 .getResponse();
     }

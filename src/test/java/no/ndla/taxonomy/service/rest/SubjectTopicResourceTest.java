@@ -17,9 +17,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.net.URI;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -35,19 +34,19 @@ public class SubjectTopicResourceTest {
     }
 
     @Test
-    public void can_add_subject_to_topic() throws Exception {
+    public void can_add_topic_to_subject() throws Exception {
         URI subjectId, topicId;
         try (TitanTransaction transaction = graph.newTransaction()) {
             subjectId = new Subject(transaction).name("physics").getId();
             topicId = new Topic(transaction).name("trigonometry").getId();
         }
 
-        SubjectTopicResource.AddTopicToSubjectCommand command = new SubjectTopicResource.AddTopicToSubjectCommand();
-        command.subjectid = subjectId;
-        command.topicid = topicId;
-
-        MockHttpServletResponse response = createResource("/subject-topics", command);
-        String id = getId(response);
+        String id = getId(
+                createResource("/subject-topics", new SubjectTopicResource.AddTopicToSubjectCommand() {{
+                    this.subjectid = subjectId;
+                    this.topicid = topicId;
+                }})
+        );
 
         try (TitanTransaction transaction = graph.newTransaction()) {
             Subject physics = Subject.getById(subjectId.toString(), transaction);
@@ -56,6 +55,28 @@ public class SubjectTopicResourceTest {
             assertNotNull(SubjectTopic.getById(id, transaction));
         }
     }
+
+    @Test
+    public void canot_add_existing_topic_to_subject() throws Exception {
+        URI subjectId, topicId;
+
+        try (TitanTransaction transaction = graph.newTransaction()) {
+            Subject physics = new Subject(transaction).name("physics");
+            Topic trigonometry = new Topic(transaction).name("trigonometry");
+            physics.addTopic(trigonometry);
+
+            subjectId = physics.getId();
+            topicId = trigonometry.getId();
+        }
+
+        createResource("/subject-topics", new SubjectTopicResource.AddTopicToSubjectCommand() {{
+                    this.subjectid = subjectId;
+                    this.topicid = topicId;
+                }},
+                status().isConflict()
+        );
+    }
+
 
     @Test
     public void can_delete_subject_topic() throws Exception {
@@ -111,5 +132,24 @@ public class SubjectTopicResourceTest {
         assertAnyTrue(subjectTopics, t -> physicsId.equals(t.subjectid) && electricityId.equals(t.topicid));
         assertAnyTrue(subjectTopics, t -> mathematicsId.equals(t.subjectid) && trigonometryId.equals(t.topicid));
         assertAllTrue(subjectTopics, t -> isValidId(t.id));
+    }
+
+    @Test
+    public void can_get_subject_topic() throws Exception {
+        URI topicid, subjectid, id;
+        try (TitanTransaction transaction = graph.newTransaction()) {
+            Subject physics = new Subject(transaction).name("physics");
+            Topic electricity = new Topic(transaction).name("electricity");
+            SubjectTopic subjectTopic = physics.addTopic(electricity);
+
+            subjectid = physics.getId();
+            topicid = electricity.getId();
+            id = subjectTopic.getId();
+        }
+
+        MockHttpServletResponse resource = getResource("/subject-topics/" + id);
+        SubjectTopicResource.SubjectTopicIndexDocument subjectTopicIndexDocument = getObject(SubjectTopicResource.SubjectTopicIndexDocument.class, resource);
+        assertEquals(subjectid, subjectTopicIndexDocument.subjectid);
+        assertEquals(topicid, subjectTopicIndexDocument.topicid);
     }
 }
