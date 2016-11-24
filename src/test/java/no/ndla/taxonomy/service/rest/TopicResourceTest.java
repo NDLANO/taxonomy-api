@@ -12,8 +12,11 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.net.URI;
+
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.assertEquals;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -46,8 +49,9 @@ public class TopicResourceTest {
 
     @Test
     public void can_create_topic() throws Exception {
-        TopicResource.CreateTopicCommand createTopicCommand = new TopicResource.CreateTopicCommand();
-        createTopicCommand.name = "trigonometry";
+        TopicResource.CreateTopicCommand createTopicCommand = new TopicResource.CreateTopicCommand() {{
+            name = "trigonometry";
+        }};
 
         MockHttpServletResponse response = createResource("/topics", createTopicCommand);
         String id = getId(response);
@@ -56,6 +60,32 @@ public class TopicResourceTest {
             Topic topic = Topic.getById(id, transaction);
             assertEquals(createTopicCommand.name, topic.getName());
         }
+    }
+
+    @Test
+    public void can_create_topic_with_id() throws Exception {
+        TopicResource.CreateTopicCommand createTopicCommand = new TopicResource.CreateTopicCommand() {{
+            id = URI.create("urn:topic:1");
+            name = "trigonometry";
+        }};
+
+        createResource("/topics", createTopicCommand);
+
+        try (TitanTransaction transaction = graph.newTransaction()) {
+            Topic topic = Topic.getById(createTopicCommand.id.toString(), transaction);
+            assertEquals(createTopicCommand.name, topic.getName());
+        }
+    }
+
+    @Test
+    public void duplicate_ids_not_allowed() throws Exception {
+        TopicResource.CreateTopicCommand command = new TopicResource.CreateTopicCommand() {{
+            id = URI.create("urn:topic:1");
+            name = "name";
+        }};
+
+        createResource("/topics", command, status().isCreated());
+        createResource("/topics", command, status().isConflict());
     }
 
     @Test

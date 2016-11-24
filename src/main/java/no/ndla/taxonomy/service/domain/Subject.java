@@ -18,6 +18,7 @@ public class Subject extends DomainVertex {
 
     /**
      * Create a new subject
+     *
      * @param transaction the transaction where the new vertex is created
      */
     public Subject(TitanTransaction transaction) {
@@ -31,9 +32,14 @@ public class Subject extends DomainVertex {
     }
 
     public static Subject getById(String id, TitanTransaction transaction) {
-        GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V().has("id", id);
-        if (traversal.hasNext()) return new Subject(traversal.next());
+        Subject subject = findById(id, transaction);
+        if (subject != null) return subject;
         throw new NotFoundException("subject", id);
+    }
+
+    public static Subject findById(String id, TitanTransaction transaction) {
+        GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V().has("id", id);
+        return traversal.hasNext() ? new Subject(traversal.next()) : null;
     }
 
     public SubjectTopic addTopic(Topic topic) {

@@ -3,6 +3,7 @@ package no.ndla.taxonomy.service.rest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thinkaurelius.titan.core.TitanGraph;
 import com.thinkaurelius.titan.core.TitanTransaction;
+import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Topic;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -46,13 +47,21 @@ public class TopicResource {
     @PostMapping
     public ResponseEntity<Void> post(@RequestBody CreateTopicCommand command) {
         try (TitanTransaction transaction = graph.buildTransaction().start()) {
+            if (null != command.id) validateIdIsUnique(command.id, transaction);
+
             Topic topic = new Topic(transaction);
+            if (null != command.id) topic.setId(command.id.toString());
             topic.name(command.name);
 
             URI location = URI.create("/topics/" + topic.getId());
             transaction.commit();
             return ResponseEntity.created(location).build();
         }
+    }
+
+    private void validateIdIsUnique(URI id, TitanTransaction transaction) {
+        if (null != Topic.findById(id.toString(), transaction))
+            throw new DuplicateIdException(id.toString());
     }
 
     @DeleteMapping("/{id}")
@@ -74,6 +83,9 @@ public class TopicResource {
     }
 
     static class CreateTopicCommand {
+        @JsonProperty
+        public URI id;
+
         @JsonProperty
         public String name;
     }

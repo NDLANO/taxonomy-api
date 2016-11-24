@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thinkaurelius.titan.core.TitanGraph;
 import com.thinkaurelius.titan.core.TitanTransaction;
+import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
@@ -78,16 +79,26 @@ public class SubjectResource {
     @PostMapping
     public ResponseEntity<Void> post(@RequestBody CreateSubjectCommand command) {
         try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            Subject subject = new Subject(transaction);
-            subject.name(command.name);
+            if (null != command.id) validateIdIsUnique(command.id, transaction);
 
+            Subject subject = new Subject(transaction);
+            if (null != command.id) subject.setId(command.id.toString());
+            subject.name(command.name);
             URI location = URI.create("/subjects/" + subject.getId());
             transaction.commit();
             return ResponseEntity.created(location).build();
         }
     }
 
+    private void validateIdIsUnique(URI id, TitanTransaction transaction) {
+        if (null != Subject.findById(id.toString(), transaction))
+            throw new DuplicateIdException(id.toString());
+    }
+
     static class CreateSubjectCommand {
+        @JsonProperty
+        public URI id;
+
         @JsonProperty
         public String name;
     }

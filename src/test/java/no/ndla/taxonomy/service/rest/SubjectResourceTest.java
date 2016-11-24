@@ -13,8 +13,12 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.net.URI;
+
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -78,6 +82,30 @@ public class SubjectResourceTest {
         }
     }
 
+    @Test
+    public void can_create_subject_with_id() throws Exception {
+        SubjectResource.CreateSubjectCommand command = new SubjectResource.CreateSubjectCommand() {{
+            id = URI.create("urn:subject:1");
+            name = "name";
+        }};
+
+        createResource("/subjects", command);
+
+        try (TitanTransaction transaction = graph.newTransaction()) {
+            assertNotNull(Subject.getById(command.id.toString(), transaction));
+        }
+    }
+
+    @Test
+    public void duplicate_ids_not_allowed() throws Exception {
+        SubjectResource.CreateSubjectCommand command = new SubjectResource.CreateSubjectCommand() {{
+            id = URI.create("urn:subject:1");
+            name = "name";
+        }};
+
+        createResource("/subjects", command, status().isCreated());
+        createResource("/subjects", command, status().isConflict());
+    }
 
     @Test
     public void can_delete_subject() throws Exception {

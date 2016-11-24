@@ -32,9 +32,14 @@ public class Topic extends DomainVertex {
     }
 
     public static Topic getById(String id, TitanTransaction transaction) {
-        GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V().has("id", id);
-        if (traversal.hasNext()) return new Topic(traversal.next());
+        Topic topic = findById(id, transaction);
+        if (topic != null) return topic;
         throw new NotFoundException("topic", id);
+    }
+
+    public static Topic findById(String id, TitanTransaction transaction) {
+        GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V().has("id", id);
+        return traversal.hasNext() ? new Topic(traversal.next()) : null;
     }
 
     public Topic name(String name) {

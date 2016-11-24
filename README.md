@@ -101,11 +101,19 @@ Update a single subject
 
 Creates a new subject
 
+*properties*
+
+`name` (`string`) - the name of the subject
+
+`id` (`string`) - if specified, set the id to this value. Must start with `urn:subject:` and be a valid URI. 
+If ommitted, an id will be assigned automatically. 
+
 *example input*
 
         POST /subjects
 
         {
+          "id" : "urn:subject:4208",
           "name" : "mathematics"
         }
 
@@ -188,11 +196,19 @@ Gets a list of subtopics of a topic
 
 Creates a new topic
 
+*properties*
+
+`name` (`string`) - the name of the topic
+
+`id` (`string`) - if specified, set the id to this value. Must start with `urn:topic:` and be a valid URI. 
+If ommitted, an id will be assigned automatically. 
+
 *example input*
 
     POST /topics
 
     {
+      "id" : "urn:topic:4288",
       "name" : "photo synthesis"
     }
 
