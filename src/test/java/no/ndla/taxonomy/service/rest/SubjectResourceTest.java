@@ -110,4 +110,28 @@ public class SubjectResourceTest {
         assertAnyTrue(topics, t -> "optics".equals(t.name));
         assertAllTrue(topics, t -> isValidId(t.id));
     }
+
+    @Test
+    public void can_get_topics_recursively() throws Exception {
+        String subjectid;
+        try (TitanTransaction transaction = graph.newTransaction()) {
+            Subject subject = new Subject(transaction).name("subject");
+            subjectid = subject.getId().toString();
+
+            Topic parent = new Topic(transaction).name("parent topic");
+            Topic child = new Topic(transaction).name("child topic");
+            Topic grandchild = new Topic(transaction).name("grandchild topic");
+            subject.addTopic(parent);
+            parent.addSubtopic(child);
+            child.addSubtopic(grandchild);
+        }
+
+        MockHttpServletResponse response = getResource("/subjects/" + subjectid + "/topics?recursive=true");
+        SubjectResource.TopicIndexDocument[] topics = getObject(SubjectResource.TopicIndexDocument[].class, response);
+
+        assertEquals(1, topics.length);
+        assertEquals("parent topic", topics[0].name);
+        assertEquals("child topic", topics[0].subtopics[0].name);
+        assertEquals("grandchild topic", topics[0].subtopics[0].subtopics[0].name);
+    }
 }

@@ -50,23 +50,38 @@ Gets a single subject
        }
 
 ### GET `/subjects/{id}/topics`
-Gets all topics directly associated with that subject. Note that this resource is read-only.
-
+Gets all topics associated with that subject. Note that this resource is read-only.
 To update the relationship between subjects and topics, use the resource `/subject-topics`.
+
+*parameters*
+
+`recursive` `(true|false)` If true, subtopics are fetched recursively. Default: `false` 
 
 *example input*
 
-    GET /subjects/urn:subject:4288/topics
+    GET /subjects/urn:subject:4288/topics?recursive=true
 
 *example output*
 
     [
-         {
-            "id" : "urn:topic:4176",
-            "name" : "photo synthesis"
-         }
+       {
+          "name" : "photo synthesis",
+          "id" : "urn:topic:4176",
+          "subtopics" : []
+       },
+       {
+          "name" : "trigonometry",
+          "id" : "urn:topic:81924160",
+          "subtopics" : [
+             {
+                "name" : "pythagoras",
+                "id" : "urn:topic:4328",
+                "subtopics" : []
+             }
+          ]
+       }
     ]
-
+    
 ### PUT `/subjects/{id}`
 Update a single subject
 

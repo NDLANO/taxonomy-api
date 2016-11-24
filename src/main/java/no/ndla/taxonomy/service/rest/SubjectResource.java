@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.service.rest;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thinkaurelius.titan.core.TitanGraph;
 import com.thinkaurelius.titan.core.TitanTransaction;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 @RestController
@@ -62,11 +64,13 @@ public class SubjectResource {
     }
 
     @GetMapping("/{id}/topics")
-    public ResponseEntity getTopics(@PathVariable("id") String id) {
+    public ResponseEntity getTopics(
+            @PathVariable("id") String id,
+            @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive) {
         try (TitanTransaction transaction = graph.buildTransaction().start()) {
             List<TopicIndexDocument> results = new ArrayList<>();
             Subject subject = Subject.getById(id, transaction);
-            subject.getTopics().forEachRemaining(t -> results.add(new TopicIndexDocument(t)));
+            subject.getTopics().forEachRemaining(t -> results.add(new TopicIndexDocument(t, recursive)));
             return ResponseEntity.ok(results);
         }
     }
@@ -109,6 +113,7 @@ public class SubjectResource {
         }
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     static class TopicIndexDocument {
         @JsonProperty
         public URI id;
@@ -116,12 +121,25 @@ public class SubjectResource {
         @JsonProperty
         public String name;
 
+        @JsonProperty
+        public TopicIndexDocument[] subtopics;
+
         TopicIndexDocument() {
         }
 
-        TopicIndexDocument(Topic topic) {
+        TopicIndexDocument(Topic topic, boolean recursive) {
             id = topic.getId();
             name = topic.getName();
+            if (recursive) addSubtopics(topic);
+        }
+
+        private void addSubtopics(Topic topic) {
+            ArrayList<TopicIndexDocument> result = new ArrayList<>();
+            Iterator<Topic> subtopics = topic.getSubtopics();
+            while (subtopics.hasNext()) {
+                result.add(new TopicIndexDocument(subtopics.next(), true));
+            }
+            this.subtopics = result.toArray(new TopicIndexDocument[result.size()]);
         }
     }
 }
