@@ -82,7 +82,7 @@ public class TopicResource {
         }
     }
 
-    static class CreateTopicCommand {
+    public static class CreateTopicCommand {
         @JsonProperty
         public URI id;
 
@@ -90,12 +90,12 @@ public class TopicResource {
         public String name;
     }
 
-    static class UpdateTopicCommand {
+    public static class UpdateTopicCommand {
         @JsonProperty
         public String name;
     }
 
-    static class TopicIndexDocument {
+    public static class TopicIndexDocument {
         @JsonProperty
         public URI id;
 

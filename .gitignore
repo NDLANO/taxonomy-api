@@ -1,3 +1,4 @@
+*.tsv
 *.tfvars
 .idea
 *.iml
