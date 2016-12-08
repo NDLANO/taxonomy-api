@@ -70,7 +70,10 @@ public class GraphConfiguration {
         configuration.setProperty(CONFIG_PASS, password);
         log.info("Graph configuration: \n" + secureToString(properties));
 
-        OrientGraphFactory factory = new OrientGraphFactory(configuration);
+        int maxPartitionSize = Runtime.getRuntime().availableProcessors();
+        int maxPoolSize = -1;
+
+        OrientGraphFactory factory = new OrientGraphFactory(configuration).setupPool(maxPartitionSize, maxPoolSize);
 
         try (OrientGraph graph = factory.getNoTx()) {
             createSchema(graph);
