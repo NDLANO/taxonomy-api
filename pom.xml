@@ -49,29 +49,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.thinkaurelius.titan</groupId>
-            <artifactId>titan-core</artifactId>
-            <version>${titan-version}</version>
-            <exclusions>
-                <!-- slf4j-log4j break logging from service SDK -->
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>dynamodb-titan100-storage-backend</artifactId>
-            <version>1.0.0</version>
-            <exclusions>
-                <!-- slf4j-log4j break logging from service SDK -->
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.michaelpollmeier</groupId>
+            <artifactId>orientdb-gremlin</artifactId>
+            <version>3.2.3.0</version>
         </dependency>
     </dependencies>
 

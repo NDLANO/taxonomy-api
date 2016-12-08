@@ -1,12 +1,14 @@
 package no.ndla.taxonomy.service.domain;
 
-import com.thinkaurelius.titan.core.TitanTransaction;
+
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 import java.util.Iterator;
+import java.util.UUID;
 
 public class Topic extends DomainVertex {
 
@@ -24,21 +26,21 @@ public class Topic extends DomainVertex {
     /**
      * Create a new topic
      *
-     * @param transaction the transaction where the new vertex is created
+     * @param graph the graph where the new vertex is created
      */
-    public Topic(TitanTransaction transaction) {
-        this(transaction.addVertex(LABEL));
-        setId("urn:topic:" + vertex.id());
+    public Topic(Graph graph) {
+        this(graph.addVertex(LABEL));
+        setId("urn:topic:" + UUID.randomUUID());
     }
 
-    public static Topic getById(String id, TitanTransaction transaction) {
-        Topic topic = findById(id, transaction);
+    public static Topic getById(String id, Graph graph) {
+        Topic topic = findById(id, graph);
         if (topic != null) return topic;
         throw new NotFoundException("topic", id);
     }
 
-    public static Topic findById(String id, TitanTransaction transaction) {
-        GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V().has("id", id);
+    public static Topic findById(String id, Graph graph) {
+        GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V().hasLabel(LABEL).has("id", id);
         return traversal.hasNext() ? new Topic(traversal.next()) : null;
     }
 

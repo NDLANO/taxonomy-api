@@ -2,13 +2,15 @@ package no.ndla.taxonomy.service.rest;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.thinkaurelius.titan.core.TitanGraph;
-import com.thinkaurelius.titan.core.TitanTransaction;
+import com.orientechnologies.orient.core.record.impl.ODocument;
+import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,78 +23,84 @@ import java.util.List;
 @RequestMapping(path = "subjects")
 public class SubjectResource {
 
-    private TitanGraph graph;
+    private OrientGraphFactory factory;
 
-    public SubjectResource(TitanGraph graph) {
-        this.graph = graph;
+    public SubjectResource(OrientGraphFactory factory) {
+        this.factory = factory;
     }
 
     @GetMapping
-    public List<SubjectIndexDocument> index() {
+    public List<SubjectIndexDocument> index() throws Exception {
         List<SubjectIndexDocument> result = new ArrayList<>();
 
-        try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            GraphTraversal<Vertex, Vertex> subjects = transaction.traversal().V().hasLabel("subject");
-            subjects.forEachRemaining(v -> result.add(new SubjectIndexDocument(new Subject(v))));
+        try (OrientGraph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Iterable<ODocument> resultSet = (Iterable<ODocument>) graph.executeSql("select id, name from V_Subject");
+            resultSet.iterator().forEachRemaining(record -> {
+                SubjectIndexDocument document = new SubjectIndexDocument();
+                result.add(document);
+                document.id = URI.create(record.field("id"));
+                document.name = record.field("name");
+            });
+            transaction.rollback();
+            return result;
         }
-        return result;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity get(@PathVariable("id") String id) {
-        try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            Subject subject = Subject.getById(id, transaction);
-            return ResponseEntity.ok(new SubjectIndexDocument(subject));
+    public SubjectIndexDocument get(@PathVariable("id") String id) throws Exception {
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Subject subject = Subject.getById(id, graph);
+            SubjectIndexDocument result = new SubjectIndexDocument(subject);
+            transaction.rollback();
+            return result;
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity delete(@PathVariable("id") String id) {
-        try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            Subject subject = Subject.getById(id, transaction);
+    public ResponseEntity delete(@PathVariable("id") String id) throws Exception {
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Subject subject = Subject.getById(id, graph);
             subject.remove();
+            transaction.commit();
             return ResponseEntity.noContent().build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity put(@PathVariable("id") String id, @RequestBody UpdateSubjectCommand command) {
-        try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            Subject subject = Subject.getById(id, transaction);
+    public ResponseEntity put(@PathVariable("id") String id, @RequestBody UpdateSubjectCommand command) throws Exception {
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Subject subject = Subject.getById(id, graph);
             subject.setName(command.name);
+            transaction.commit();
             return ResponseEntity.noContent().build();
         }
     }
 
     @GetMapping("/{id}/topics")
-    public ResponseEntity getTopics(
+    public List<TopicIndexDocument> getTopics(
             @PathVariable("id") String id,
-            @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive) {
-        try (TitanTransaction transaction = graph.buildTransaction().start()) {
+            @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive) throws Exception {
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
             List<TopicIndexDocument> results = new ArrayList<>();
-            Subject subject = Subject.getById(id, transaction);
+            Subject subject = Subject.getById(id, graph);
             subject.getTopics().forEachRemaining(t -> results.add(new TopicIndexDocument(t, recursive)));
-            return ResponseEntity.ok(results);
+            transaction.rollback();
+            return results;
         }
     }
 
     @PostMapping
-    public ResponseEntity<Void> post(@RequestBody CreateSubjectCommand command) {
-        try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            if (null != command.id) validateIdIsUnique(command.id, transaction);
-
-            Subject subject = new Subject(transaction);
+    public ResponseEntity<Void> post(@RequestBody CreateSubjectCommand command) throws Exception {
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Subject subject = new Subject(graph);
             if (null != command.id) subject.setId(command.id.toString());
             subject.name(command.name);
             URI location = URI.create("/subjects/" + subject.getId());
             transaction.commit();
             return ResponseEntity.created(location).build();
+        } catch (ORecordDuplicatedException e) {
+            throw new DuplicateIdException("" + command.id);
         }
-    }
-
-    private void validateIdIsUnique(URI id, TitanTransaction transaction) {
-        if (null != Subject.findById(id.toString(), transaction))
-            throw new DuplicateIdException(id.toString());
     }
 
     static class CreateSubjectCommand {

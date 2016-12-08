@@ -1,16 +1,15 @@
 package no.ndla.taxonomy.service.domain;
 
-import com.thinkaurelius.titan.core.TitanTransaction;
+
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.*;
 
 import java.util.Iterator;
+import java.util.UUID;
 
 public class Subject extends DomainVertex {
 
-    private static final String LABEL = "subject";
+    public static final String LABEL = "subject";
 
     public Subject(Vertex vertex) {
         super(vertex);
@@ -19,11 +18,11 @@ public class Subject extends DomainVertex {
     /**
      * Create a new subject
      *
-     * @param transaction the transaction where the new vertex is created
+     * @param graph the graph where the new vertex is created
      */
-    public Subject(TitanTransaction transaction) {
-        this(transaction.addVertex(LABEL));
-        setId("urn:subject:" + vertex.id());
+    public Subject(Graph graph) {
+        this(graph.addVertex(LABEL));
+        setId("urn:subject:" + UUID.randomUUID());
     }
 
     public Subject name(String name) {
@@ -31,14 +30,14 @@ public class Subject extends DomainVertex {
         return this;
     }
 
-    public static Subject getById(String id, TitanTransaction transaction) {
-        Subject subject = findById(id, transaction);
+    public static Subject getById(String id, Graph graph) {
+        Subject subject = findById(id, graph);
         if (subject != null) return subject;
         throw new NotFoundException("subject", id);
     }
 
-    public static Subject findById(String id, TitanTransaction transaction) {
-        GraphTraversal<Vertex, Vertex> traversal = transaction.traversal().V().has("id", id);
+    public static Subject findById(String id, Graph graph) {
+        GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V().has("id", id);
         return traversal.hasNext() ? new Subject(traversal.next()) : null;
     }
 

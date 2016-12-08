@@ -1,13 +1,14 @@
 package no.ndla.taxonomy.service.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.thinkaurelius.titan.core.TitanGraph;
-import com.thinkaurelius.titan.core.TitanTransaction;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,38 +22,41 @@ import java.util.List;
 @RequestMapping(path = "subject-topics")
 public class SubjectTopicResource {
 
-    private TitanGraph graph;
+    private OrientGraphFactory factory;
 
-    public SubjectTopicResource(TitanGraph graph) {
-        this.graph = graph;
+    public SubjectTopicResource(OrientGraphFactory factory) {
+        this.factory = factory;
     }
 
     @GetMapping
-    public List<SubjectTopicIndexDocument> index() {
+    public List<SubjectTopicIndexDocument> index() throws Exception {
         List<SubjectTopicIndexDocument> result = new ArrayList<>();
 
-        try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            GraphTraversal<Edge, Edge> topics = transaction.traversal().E().hasLabel(SubjectTopic.LABEL);
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            GraphTraversal<Edge, Edge> topics = graph.traversal().E().hasLabel(SubjectTopic.LABEL);
             topics.forEachRemaining(v -> result.add(new SubjectTopicIndexDocument(new SubjectTopic(v))));
+            transaction.rollback();
         }
 
         return result;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity get(@PathVariable("id") String id) {
-        try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            SubjectTopic subjectTopic = SubjectTopic.getById(id, transaction);
-            return ResponseEntity.ok(new SubjectTopicIndexDocument(subjectTopic));
+    public SubjectTopicIndexDocument get(@PathVariable("id") String id) throws Exception {
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
+            SubjectTopicIndexDocument result = new SubjectTopicIndexDocument(subjectTopic);
+            transaction.rollback();
+            return result;
         }
     }
 
     @PostMapping
-    public ResponseEntity post(@RequestBody AddTopicToSubjectCommand command) {
-        try (TitanTransaction transaction = graph.buildTransaction().start()) {
+    public ResponseEntity post(@RequestBody AddTopicToSubjectCommand command) throws Exception {
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
 
-            Subject subject = Subject.getById(command.subjectid.toString(), transaction);
-            Topic topic = Topic.getById(command.topicid.toString(), transaction);
+            Subject subject = Subject.getById(command.subjectid.toString(), graph);
+            Topic topic = Topic.getById(command.topicid.toString(), graph);
 
             Iterator<Topic> topics = subject.getTopics();
             while (topics.hasNext()) {
@@ -72,9 +76,9 @@ public class SubjectTopicResource {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
-        try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            SubjectTopic subjectTopic = SubjectTopic.getById(id, transaction);
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) throws Exception {
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
             subjectTopic.remove();
             transaction.commit();
             return ResponseEntity.noContent().build();
@@ -82,9 +86,9 @@ public class SubjectTopicResource {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> put(@PathVariable("id") String id, @RequestBody UpdateSubjectTopicCommand command) {
-        try (TitanTransaction transaction = graph.buildTransaction().start()) {
-            SubjectTopic subjectTopic = SubjectTopic.getById(id, transaction);
+    public ResponseEntity<Void> put(@PathVariable("id") String id, @RequestBody UpdateSubjectTopicCommand command) throws Exception {
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
             subjectTopic.setPrimary(command.primary);
             transaction.commit();
             return ResponseEntity.noContent().build();

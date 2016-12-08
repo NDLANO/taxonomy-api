@@ -1,9 +1,11 @@
 package no.ndla.taxonomy.service.rest;
 
-import com.thinkaurelius.titan.core.TitanGraph;
-import com.thinkaurelius.titan.core.TitanTransaction;
+
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class SubjectResourceTest {
 
     @Autowired
-    private TitanGraph graph;
+    private OrientGraphFactory factory;
 
     @Before
     public void setup() throws Exception {
@@ -35,9 +37,10 @@ public class SubjectResourceTest {
 
     @Test
     public void can_get_all_subjects() throws Exception {
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            new Subject(transaction).name("english");
-            new Subject(transaction).name("mathematics");
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            new Subject(graph).name("english");
+            new Subject(graph).name("mathematics");
+            transaction.commit();
         }
 
         MockHttpServletResponse response = getResource("/subjects");
@@ -57,9 +60,10 @@ public class SubjectResourceTest {
         MockHttpServletResponse response = createResource("/subjects", createSubjectCommand);
         String id = getId(response);
 
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            Subject subject = Subject.getById(id, transaction);
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Subject subject = Subject.getById(id, graph);
             assertEquals(createSubjectCommand.name, subject.getName());
+            transaction.rollback();
         }
     }
 
@@ -67,8 +71,9 @@ public class SubjectResourceTest {
     @Test
     public void can_update_subject() throws Exception {
         String id;
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            id = new Subject(transaction).getId().toString();
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            id = new Subject(graph).getId().toString();
+            transaction.commit();
         }
 
         SubjectResource.UpdateSubjectCommand command = new SubjectResource.UpdateSubjectCommand();
@@ -76,9 +81,10 @@ public class SubjectResourceTest {
 
         updateResource("/subjects/" + id, command);
 
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            Subject subject = Subject.getById(id, transaction);
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Subject subject = Subject.getById(id, graph);
             assertEquals(command.name, subject.getName());
+            transaction.rollback();
         }
     }
 
@@ -91,8 +97,9 @@ public class SubjectResourceTest {
 
         createResource("/subjects", command);
 
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            assertNotNull(Subject.getById(command.id.toString(), transaction));
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            assertNotNull(Subject.getById(command.id.toString(), graph));
+            transaction.rollback();
         }
     }
 
@@ -110,23 +117,25 @@ public class SubjectResourceTest {
     @Test
     public void can_delete_subject() throws Exception {
         String id;
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            id = new Subject(transaction).getId().toString();
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            id = new Subject(graph).getId().toString();
+            transaction.commit();
         }
 
         deleteResource("/subjects/" + id);
-        assertNotFound(transaction -> Subject.getById(id, transaction));
+        assertNotFound(graph -> Subject.getById(id, graph));
     }
 
     @Test
     public void can_get_topics() throws Exception {
         String subjectid;
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            Subject subject = new Subject(transaction).name("physics");
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Subject subject = new Subject(graph).name("physics");
             subjectid = subject.getId().toString();
-            subject.addTopic(new Topic(transaction).name("statics"));
-            subject.addTopic(new Topic(transaction).name("electricity"));
-            subject.addTopic(new Topic(transaction).name("optics"));
+            subject.addTopic(new Topic(graph).name("statics"));
+            subject.addTopic(new Topic(graph).name("electricity"));
+            subject.addTopic(new Topic(graph).name("optics"));
+            transaction.commit();
         }
 
         MockHttpServletResponse response = getResource("/subjects/" + subjectid + "/topics");
@@ -142,16 +151,17 @@ public class SubjectResourceTest {
     @Test
     public void can_get_topics_recursively() throws Exception {
         String subjectid;
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            Subject subject = new Subject(transaction).name("subject");
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Subject subject = new Subject(graph).name("subject");
             subjectid = subject.getId().toString();
 
-            Topic parent = new Topic(transaction).name("parent topic");
-            Topic child = new Topic(transaction).name("child topic");
-            Topic grandchild = new Topic(transaction).name("grandchild topic");
+            Topic parent = new Topic(graph).name("parent topic");
+            Topic child = new Topic(graph).name("child topic");
+            Topic grandchild = new Topic(graph).name("grandchild topic");
             subject.addTopic(parent);
             parent.addSubtopic(child);
             child.addSubtopic(grandchild);
+            transaction.commit();
         }
 
         MockHttpServletResponse response = getResource("/subjects/" + subjectid + "/topics?recursive=true");

@@ -1,8 +1,9 @@
 package no.ndla.taxonomy.service;
 
-import com.thinkaurelius.titan.core.TitanGraph;
-import com.thinkaurelius.titan.core.TitanTransaction;
 import no.ndla.taxonomy.service.domain.NotFoundException;
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -16,6 +17,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -33,16 +35,16 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 public class TestUtils {
 
     private static HttpMessageConverter mappingJackson2HttpMessageConverter;
-    private static TitanGraph graph;
+    private static OrientGraphFactory factory;
     private static MockMvc mockMvc;
 
     @Autowired
-    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext, TitanGraph graph) {
+    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext, OrientGraphFactory factory) {
         mappingJackson2HttpMessageConverter = Arrays.stream(converters)
                 .filter(hmc -> hmc instanceof MappingJackson2HttpMessageConverter)
                 .findAny()
                 .orElse(null);
-        this.graph = graph;
+        this.factory = factory;
 
         assertNotNull("the JSON message converter must not be null", this.mappingJackson2HttpMessageConverter);
 
@@ -138,16 +140,26 @@ public class TestUtils {
         return id != null && id.toString().contains("urn");
     }
 
-    public static void clearGraph() {
-        assertEquals("Are you mad?", "inmemory", graph.configuration().getProperty("storage.backend"));
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            transaction.vertices().forEachRemaining(v -> v.remove());
+    public static void clearGraph() throws Exception {
+
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            String url = getUrl(factory);
+            assertTrue("Are you mad?", url.startsWith("memory"));
+            graph.vertices().forEachRemaining(v -> v.remove());
+            transaction.commit();
         }
     }
 
-    public static void assertNotFound(Consumer<TitanTransaction> consumer) {
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            consumer.accept(transaction);
+    private static String getUrl(OrientGraphFactory factory) throws NoSuchFieldException, IllegalAccessException {
+        Field url = factory.getClass().getDeclaredField("url");
+        url.setAccessible(true);
+        return (String) url.get(factory);
+    }
+
+    public static void assertNotFound(Consumer<Graph> consumer) throws Exception {
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            consumer.accept(graph);
+            transaction.rollback();
             fail("Expected NotFoundException");
         } catch (NotFoundException expectedException) {
             //ok

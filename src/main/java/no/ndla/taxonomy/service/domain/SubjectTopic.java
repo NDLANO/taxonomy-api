@@ -1,8 +1,11 @@
 package no.ndla.taxonomy.service.domain;
 
-import com.thinkaurelius.titan.core.TitanTransaction;
+
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+
+import java.util.UUID;
 
 public class SubjectTopic extends DomainEdge {
 
@@ -20,7 +23,7 @@ public class SubjectTopic extends DomainEdge {
      */
     public SubjectTopic(Subject subject, Topic topic) {
         this(createEdge(subject,topic));
-        setId("urn:subject-topic:" + edge.id());
+        setId("urn:subject-topic:" + UUID.randomUUID());
     }
 
     private static Edge createEdge(Subject subject, Topic topic) {
@@ -43,8 +46,8 @@ public class SubjectTopic extends DomainEdge {
         return new Topic(edge.inVertex());
     }
 
-    public static SubjectTopic getById(String id, TitanTransaction transaction) {
-        GraphTraversal<Edge, Edge> traversal = transaction.traversal().E().hasLabel(LABEL).has("id", id);
+    public static SubjectTopic getById(String id, Graph graph) {
+        GraphTraversal<Edge, Edge> traversal = graph.traversal().E().hasLabel(LABEL).has("id", id);
         if (traversal.hasNext()) return new SubjectTopic(traversal.next());
         throw new NotFoundException("subject-topic", id);
     }

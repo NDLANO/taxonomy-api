@@ -1,9 +1,11 @@
 package no.ndla.taxonomy.service.rest;
 
-import com.thinkaurelius.titan.core.TitanGraph;
-import com.thinkaurelius.titan.core.TitanTransaction;
+
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.domain.TopicSubtopic;
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TopicSubtopicResourceTest {
 
     @Autowired
-    private TitanGraph graph;
+    private OrientGraphFactory factory;
 
     @Before
     public void setup() throws Exception {
@@ -35,9 +37,10 @@ public class TopicSubtopicResourceTest {
     @Test
     public void can_add_subtopic_to_topic() throws Exception {
         URI integrationId, calculusId;
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            calculusId = new Topic(transaction).name("calculus").getId();
-            integrationId = new Topic(transaction).name("integration").getId();
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            calculusId = new Topic(graph).name("calculus").getId();
+            integrationId = new Topic(graph).name("integration").getId();
+            transaction.commit();
         }
 
         String id = getId(
@@ -47,24 +50,26 @@ public class TopicSubtopicResourceTest {
                 }})
         );
 
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            Topic calculus = Topic.getById(calculusId.toString(), transaction);
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Topic calculus = Topic.getById(calculusId.toString(), graph);
             assertEquals(1, count(calculus.getSubtopics()));
             assertAnyTrue(calculus.getSubtopics(), t -> "integration".equals(t.getName()));
-            assertNotNull(TopicSubtopic.getById(id, transaction));
+            assertNotNull(TopicSubtopic.getById(id, graph));
+            transaction.rollback();
         }
     }
 
     @Test
     public void cannot_add_existing_subtopic_to_topic() throws Exception {
         URI integrationId, calculusId;
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            Topic calculus = new Topic(transaction).name("calculus");
-            Topic integration = new Topic(transaction).name("integration");
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Topic calculus = new Topic(graph).name("calculus");
+            Topic integration = new Topic(graph).name("integration");
             calculus.addSubtopic(integration);
 
             calculusId = calculus.getId();
             integrationId = integration.getId();
+            transaction.commit();
         }
 
         createResource("/topic-subtopics",
@@ -80,19 +85,21 @@ public class TopicSubtopicResourceTest {
     @Test
     public void can_delete_subtopic_topic() throws Exception {
         String id;
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            id = new Topic(transaction).addSubtopic(new Topic(transaction)).getId().toString();
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            id = new Topic(graph).addSubtopic(new Topic(graph)).getId().toString();
+            transaction.commit();
         }
 
         deleteResource("/topic-subtopics/" + id);
-        assertNotFound(transaction -> Topic.getById(id, transaction));
+        assertNotFound(graph -> Topic.getById(id, graph));
     }
 
     @Test
     public void can_update_topic_subtopic() throws Exception {
         String id;
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            id = new Topic(transaction).addSubtopic(new Topic(transaction)).getId().toString();
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            id = new Topic(graph).addSubtopic(new Topic(graph)).getId().toString();
+            transaction.commit();
         }
 
         TopicSubtopicResource.UpdateTopicSubtopicCommand command = new TopicSubtopicResource.UpdateTopicSubtopicCommand();
@@ -100,8 +107,9 @@ public class TopicSubtopicResourceTest {
 
         updateResource("/topic-subtopics/" + id, command);
 
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            assertTrue(TopicSubtopic.getById(id, transaction).isPrimary());
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            assertTrue(TopicSubtopic.getById(id, graph).isPrimary());
+            transaction.rollback();
         }
     }
 
@@ -109,19 +117,20 @@ public class TopicSubtopicResourceTest {
     public void can_get_topics() throws Exception {
         URI alternatingCurrentId, electricityId, calculusId, integrationId;
 
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            Topic electricity = new Topic(transaction).name("electricity");
-            Topic alternatingCurrent = new Topic(transaction).name("alternating current");
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Topic electricity = new Topic(graph).name("electricity");
+            Topic alternatingCurrent = new Topic(graph).name("alternating current");
             electricity.addSubtopic(alternatingCurrent);
 
-            Topic calculus = new Topic(transaction).name("calculus");
-            Topic integration = new Topic(transaction).name("integration");
+            Topic calculus = new Topic(graph).name("calculus");
+            Topic integration = new Topic(graph).name("integration");
             calculus.addSubtopic(integration);
 
             electricityId = electricity.getId();
             alternatingCurrentId = alternatingCurrent.getId();
             calculusId = calculus.getId();
             integrationId = integration.getId();
+            transaction.commit();
         }
 
         MockHttpServletResponse response = getResource("/topic-subtopics");
@@ -136,14 +145,15 @@ public class TopicSubtopicResourceTest {
     @Test
     public void can_get_topic_subtopic() throws Exception {
         URI topicid, subtopicid, id;
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            Topic electricity = new Topic(transaction).name("electricity");
-            Topic alternatingCurrent = new Topic(transaction).name("alternating current");
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Topic electricity = new Topic(graph).name("electricity");
+            Topic alternatingCurrent = new Topic(graph).name("alternating current");
             TopicSubtopic topicSubtopic = electricity.addSubtopic(alternatingCurrent);
 
             topicid = electricity.getId();
             subtopicid = alternatingCurrent.getId();
             id = topicSubtopic.getId();
+            transaction.commit();
         }
 
         MockHttpServletResponse resource = getResource("/topic-subtopics/" + id);

@@ -1,8 +1,10 @@
 package no.ndla.taxonomy.service.rest;
 
-import com.thinkaurelius.titan.core.TitanGraph;
-import com.thinkaurelius.titan.core.TitanTransaction;
+
 import no.ndla.taxonomy.service.domain.Topic;
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TopicResourceTest {
 
     @Autowired
-    private TitanGraph graph;
+    private OrientGraphFactory factory;
 
     @Before
     public void setup() throws Exception {
@@ -33,9 +35,10 @@ public class TopicResourceTest {
 
     @Test
     public void can_get_all_topics() throws Exception {
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            new Topic(transaction).name("photo synthesis");
-            new Topic(transaction).name("trigonometry");
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            new Topic(graph).name("photo synthesis");
+            new Topic(graph).name("trigonometry");
+            transaction.commit();
         }
 
         MockHttpServletResponse response = getResource("/topics");
@@ -56,9 +59,10 @@ public class TopicResourceTest {
         MockHttpServletResponse response = createResource("/topics", createTopicCommand);
         String id = getId(response);
 
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            Topic topic = Topic.getById(id, transaction);
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Topic topic = Topic.getById(id, graph);
             assertEquals(createTopicCommand.name, topic.getName());
+            transaction.rollback();
         }
     }
 
@@ -71,9 +75,10 @@ public class TopicResourceTest {
 
         createResource("/topics", createTopicCommand);
 
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            Topic topic = Topic.getById(createTopicCommand.id.toString(), transaction);
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Topic topic = Topic.getById(createTopicCommand.id.toString(), graph);
             assertEquals(createTopicCommand.name, topic.getName());
+            transaction.rollback();
         }
     }
 
@@ -91,8 +96,9 @@ public class TopicResourceTest {
     @Test
     public void can_update_topic() throws Exception {
         String id;
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            id = new Topic(transaction).getId().toString();
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            id = new Topic(graph).getId().toString();
+            transaction.commit();
         }
 
         TopicResource.UpdateTopicCommand command = new TopicResource.UpdateTopicCommand();
@@ -100,20 +106,22 @@ public class TopicResourceTest {
 
         updateResource("/topics/" + id, command);
 
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            Topic topic = Topic.getById(id, transaction);
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            Topic topic = Topic.getById(id, graph);
             assertEquals(command.name, topic.getName());
+            transaction.rollback();
         }
     }
 
     @Test
     public void can_delete_topic() throws Exception {
         String id;
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            id = new Topic(transaction).getId().toString();
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            id = new Topic(graph).getId().toString();
+            transaction.commit();
         }
 
         deleteResource("/topics/" + id);
-        assertNotFound(transaction -> Topic.getById(id, transaction));
+        assertNotFound(graph -> Topic.getById(id, graph));
     }
 }

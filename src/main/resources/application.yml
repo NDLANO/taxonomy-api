@@ -1,58 +1,9 @@
 server.port: 5000
-
-titan.properties:
-  storage.backend: com.amazon.titan.diskstorage.dynamodb.DynamoDBStoreManager
-  storage.dynamodb.client.endpoint: ${DYNAMODB_CLIENT_ENDPOINT}
-  storage.dynamodb.prefix: ${DYNAMODB_PREFIX}
-  storage.dynamodb.client.credentials.class-name: com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-  storage.dynamodb.client.credentials.constructor-args: 
-  storage.dynamodb.force-consistent-read: true
-
-  storage.dynamodb.stores.edgestore.data-model: MULTI
-  storage.dynamodb.stores.edgestore.capacity-read: 10
-  storage.dynamodb.stores.edgestore.capacity-write: 10
-  storage.dynamodb.stores.edgestore.read-rate: 10
-  storage.dynamodb.stores.edgestore.write-rate: 10
-  storage.dynamodb.stores.edgestore.scan-limit: 10000
-
-  storage.dynamodb.stores.graphindex.data-model: MULTI
-  storage.dynamodb.stores.graphindex.capacity-read: 10
-  storage.dynamodb.stores.graphindex.capacity-write: 10
-  storage.dynamodb.stores.graphindex.read-rate: 10
-  storage.dynamodb.stores.graphindex.write-rate: 10
-  storage.dynamodb.stores.graphindex.scan-limit: 10000
-
-  storage.dynamodb.stores.systemlog.data-model: MULTI
-  storage.dynamodb.stores.systemlog.capacity-read: 5
-  storage.dynamodb.stores.systemlog.capacity-write: 5
-  storage.dynamodb.stores.systemlog.read-rate: 5
-  storage.dynamodb.stores.systemlog.write-rate: 5
-  storage.dynamodb.stores.systemlog.scan-limit: 10000
-
-  storage.dynamodb.stores.titan_ids.data-model: MULTI
-  storage.dynamodb.stores.titan_ids.capacity-read: 5
-  storage.dynamodb.stores.titan_ids.capacity-write: 5
-  storage.dynamodb.stores.titan_ids.read-rate: 5
-  storage.dynamodb.stores.titan_ids.write-rate: 5
-  storage.dynamodb.stores.titan_ids.scan-limit: 10000
-
-  storage.dynamodb.stores.system_properties.data-model: MULTI
-  storage.dynamodb.stores.system_properties.capacity-read: 5
-  storage.dynamodb.stores.system_properties.capacity-write: 5
-  storage.dynamodb.stores.system_properties.read-rate: 5
-  storage.dynamodb.stores.system_properties.write-rate: 5
-  storage.dynamodb.stores.system_properties.scan-limit: 10000
-
-  storage.dynamodb.stores.txlog.data-model: MULTI
-  storage.dynamodb.stores.txlog.capacity-read: 5
-  storage.dynamodb.stores.txlog.capacity-write: 5
-  storage.dynamodb.stores.txlog.read-rate: 5
-  storage.dynamodb.stores.txlog.write-rate: 5
-  storage.dynamodb.stores.txlog.scan-limit: 10000
+graph:
+  url: remote:example.com/database-name
+  username: username
+  password: secret
 
 ---
 
 spring.profiles: dev
-
-DYNAMODB_CLIENT_ENDPOINT: https://dynamodb.eu-central-1.amazonaws.com
-DYNAMODB_PREFIX: taksonomi

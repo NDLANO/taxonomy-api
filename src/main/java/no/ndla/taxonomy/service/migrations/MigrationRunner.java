@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.migrations;
 
-import com.thinkaurelius.titan.core.TitanTransaction;
+
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.AssignableTypeFilter;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class MigrationRunner {
@@ -24,12 +26,12 @@ public class MigrationRunner {
         this.basePackage = basePackage;
     }
 
-    public void run(TitanTransaction transaction) {
+    public void run(Graph graph) {
         try {
             findMigrationClasses();
 
-            migrations.sort((a, b) -> a.getName().compareTo(b.getName()));
-            migrations.forEach(m -> m.run(transaction));
+            migrations.sort(Comparator.comparing(Migration::getName));
+            migrations.forEach(m -> m.run(graph));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

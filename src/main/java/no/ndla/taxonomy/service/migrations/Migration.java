@@ -1,19 +1,20 @@
 package no.ndla.taxonomy.service.migrations;
 
-import com.thinkaurelius.titan.core.TitanTransaction;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 
 public abstract class Migration {
-    private static final String LABEL = "migration";
+    public static final String LABEL = "migration";
     private static final Logger log = LoggerFactory.getLogger(Migration.class);
 
-    protected TitanTransaction transaction;
+    protected Graph graph;
 
-    public final void run(TitanTransaction transaction) {
-        this.transaction = transaction;
+    public final void run(Graph graph) {
+        this.graph = graph;
 
         if (hasBeenRun()) {
             log.info(getName() + " has already been run, skipping.");
@@ -33,11 +34,13 @@ public abstract class Migration {
     }
 
     private void rememberRun() {
-        transaction.addVertex(LABEL).property("name", getName()).property("timestamp", Instant.now());
+        Vertex vertex = graph.addVertex(LABEL);
+        vertex.property("name", getName());
+        vertex.property("timestamp", Instant.now());
     }
 
     private boolean hasBeenRun() {
-        return transaction.traversal().V().hasLabel(LABEL).has("name", getName()).hasNext();
+        return graph.traversal().V().hasLabel(LABEL).has("name", getName()).hasNext();
     }
 
     public abstract void run() throws Exception;

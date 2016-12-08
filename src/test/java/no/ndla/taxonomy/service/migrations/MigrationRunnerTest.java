@@ -1,9 +1,10 @@
 package no.ndla.taxonomy.service.migrations;
 
 import ch.qos.logback.classic.Logger;
-import com.thinkaurelius.titan.core.TitanFactory;
-import com.thinkaurelius.titan.core.TitanGraph;
-import com.thinkaurelius.titan.core.TitanTransaction;
+import no.ndla.taxonomy.service.GraphConfiguration;
+import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,7 +15,7 @@ import static ch.qos.logback.classic.Level.INFO;
 import static org.mockito.Mockito.*;
 
 public class MigrationRunnerTest {
-    private TitanGraph graph;
+    private OrientGraphFactory factory;
     private MigrationRunner migrationRunner;
 
     @BeforeClass
@@ -25,7 +26,7 @@ public class MigrationRunnerTest {
 
     @Before
     public void setUp() throws Exception {
-        graph = TitanFactory.build().set("storage.backend", "inmemory").open();
+        factory = new GraphConfiguration().testOrientGraph();
         migrationRunner = new MigrationRunner();
     }
 
@@ -61,9 +62,10 @@ public class MigrationRunnerTest {
         return migration1;
     }
 
-    private void runMigrations() {
-        try (TitanTransaction transaction = graph.newTransaction()) {
-            migrationRunner.run(transaction);
+    private void runMigrations() throws Exception {
+        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+            migrationRunner.run(graph);
+            transaction.commit();
         }
     }
 }
