@@ -2,10 +2,7 @@ package no.ndla.taxonomy.service;
 
 import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.orientechnologies.orient.core.metadata.schema.OType;
-import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.domain.SubjectTopic;
-import no.ndla.taxonomy.service.domain.Topic;
-import no.ndla.taxonomy.service.domain.TopicSubtopic;
+import no.ndla.taxonomy.service.domain.*;
 import no.ndla.taxonomy.service.migrations.Migration;
 import no.ndla.taxonomy.service.migrations.MigrationRunner;
 import org.apache.commons.configuration.BaseConfiguration;
@@ -131,12 +128,14 @@ public class GraphConfiguration {
     private void createSchema(OrientGraph graph) {
         graph.createVertexClass(Migration.LABEL);
         graph.createVertexClass(Subject.LABEL);
+        graph.createVertexClass(Resource.LABEL);
         graph.createEdgeClass(SubjectTopic.LABEL);
         graph.createVertexClass(Topic.LABEL);
         graph.createEdgeClass(TopicSubtopic.LABEL);
 
         createUniqueIndex(graph, Topic.LABEL, "id");
         createUniqueIndex(graph, Subject.LABEL, "id");
+        createUniqueIndex(graph, Resource.LABEL, "id");
         createUniqueIndex(graph, Migration.LABEL, "name");
     }
 

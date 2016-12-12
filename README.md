@@ -13,7 +13,7 @@ its associations to any topics are removed. The topics themselves are not affect
 
 ## `/subjects`
 
-A collection of school subject, such as physics, mathematics or biology.
+A collection of school subjects, such as physics, mathematics or biology.
 
 ### GET `/subjects`
 Gets a list of all subjects
@@ -402,6 +402,96 @@ Remove an association between a topic and a subtopic.
 *example input*
 
     DELETE /topic-subtopics/urn:topic-subtopic:1cruoe-38w-27th-1crx34
+
+*example output*
+
+    < HTTP/1.1 204
+
+## `/resources`
+
+A collection of learning resources, such as articles, videos or learning paths.
+
+### GET `/resources`
+Gets a list of all resources
+
+*example input*
+
+    GET /resources
+
+*example output*
+
+    [
+       {
+          "id" : "urn:resource:4208",
+          "name" : "The inner planets"
+       },
+       {
+          "id" : "urn:resource:4288",
+          "name" : "The gas giants"
+       }
+    ]
+
+### GET `/resources/{id}`
+Gets a single resource
+
+*example input*
+
+    GET /resources/urn:resource:4288
+
+*example output*
+
+       {
+          "id" : "urn:resource:4288",
+          "name" : "The inner planets"
+       }
+
+### PUT `/resources/{id}`
+Update a single resource
+
+*example input*
+
+    PUT /resources/urn:resource:4288
+
+    {
+        "name" : "The rocky planets"
+    }
+
+*example output*
+
+    < HTTP/1.1 204
+
+### POST `/resources`
+
+Creates a new resource
+
+*properties*
+
+`name` (`string`) - the name of the resource
+
+`id` (`string`) - if specified, set the id to this value. Must start with `urn:resource:` and be a valid URI. 
+If ommitted, an id will be assigned automatically. 
+
+*example input*
+
+        POST /resources
+
+        {
+          "id" : "urn:resource:4208",
+          "name" : "The inner planets"
+        }
+
+*example output*
+
+       < HTTP/1.1 201
+       < Location: /resources/urn:resource:4208
+       < Content-Length: 0
+
+### DELETE `/resources/{id}`
+Removes a single resource
+
+*example input*
+
+    DELETE /resources/urn:resource:4208
 
 *example output*
 
