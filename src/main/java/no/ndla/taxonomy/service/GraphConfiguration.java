@@ -71,7 +71,7 @@ public class GraphConfiguration {
         configuration.setProperty(CONFIG_PASS, password);
         log.info("Graph configuration: \n" + secureToString(properties));
 
-        OrientGraphFactory factory = new OrientGraphFactory(configuration).setupPool(-1, 200);
+        OrientGraphFactory factory = new OrientGraphFactory(configuration).setupPool(-1, 1000);
 
         try (OrientGraph graph = factory.getNoTx()) {
             createSchema(graph);
