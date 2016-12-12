@@ -103,7 +103,7 @@ public class SubjectResource {
         }
     }
 
-    static class CreateSubjectCommand {
+    public static class CreateSubjectCommand {
         @JsonProperty
         public URI id;
 

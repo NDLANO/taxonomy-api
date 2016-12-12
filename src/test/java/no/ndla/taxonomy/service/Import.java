@@ -1,5 +1,7 @@
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.service.rest.SubjectResource;
+import no.ndla.taxonomy.service.rest.SubjectTopicResource;
 import no.ndla.taxonomy.service.rest.TopicResource;
 import no.ndla.taxonomy.service.rest.TopicSubtopicResource;
 import org.junit.Ignore;
@@ -21,6 +23,7 @@ public class Import {
         Scanner file = new Scanner(getClass().getClassLoader().getResourceAsStream("import.tsv"));
 
         URI parentUri = null;
+        URI subjectUri = createSubject(1, "Medieuttrykk og mediesamfunnet");
 
         while (file.hasNextLine()) {
             String line = file.nextLine();
@@ -39,6 +42,7 @@ public class Import {
                 name = columns[4];
                 System.out.println(id + ":\t" + name);
                 parentUri = createTopic(id, name);
+                addTopic(subjectUri, parentUri);
             } else {
                 //new child topic
                 id = getInt(columns[2]);
@@ -72,6 +76,28 @@ public class Import {
         return topicid;
     }
 
+    private URI createSubject(Integer id, String name) {
+        SubjectResource.CreateSubjectCommand cmd = new SubjectResource.CreateSubjectCommand();
+        if (null != id) cmd.id = URI.create("urn:subject:" + id);
+        cmd.name = name;
+
+        URI uri = restTemplate.postForLocation("http://localhost:5000/subjects", cmd);
+        URI subjectid = URI.create(uri.toString().substring(uri.toString().lastIndexOf("/") + 1));
+        System.out.println("created: " + subjectid);
+        return subjectid;
+    }
+    
+    private URI addTopic(URI subjectid, URI topicid) {
+        SubjectTopicResource.AddTopicToSubjectCommand cmd = new SubjectTopicResource.AddTopicToSubjectCommand();
+        cmd.subjectid = subjectid;
+        cmd.topicid = topicid;
+        System.out.println("Subjectid: " + cmd.subjectid + " topicid: " + cmd.topicid);
+
+        URI uri = restTemplate.postForLocation("http://localhost:5000/subject-topics", cmd);
+        System.out.println("Added subject-topic: " + uri);
+        return uri;
+    }
+    
     private static Integer getInt(String value) {
         try {
             return Integer.parseInt(value);
