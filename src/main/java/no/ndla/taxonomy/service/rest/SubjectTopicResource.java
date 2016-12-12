@@ -1,10 +1,10 @@
 package no.ndla.taxonomy.service.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
-import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -22,9 +22,9 @@ import java.util.List;
 @RequestMapping(path = "subject-topics")
 public class SubjectTopicResource {
 
-    private OrientGraphFactory factory;
+    private GraphFactory factory;
 
-    public SubjectTopicResource(OrientGraphFactory factory) {
+    public SubjectTopicResource(GraphFactory factory) {
         this.factory = factory;
     }
 
@@ -32,7 +32,7 @@ public class SubjectTopicResource {
     public List<SubjectTopicIndexDocument> index() throws Exception {
         List<SubjectTopicIndexDocument> result = new ArrayList<>();
 
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             GraphTraversal<Edge, Edge> topics = graph.traversal().E().hasLabel(SubjectTopic.LABEL);
             topics.forEachRemaining(v -> result.add(new SubjectTopicIndexDocument(new SubjectTopic(v))));
             transaction.rollback();
@@ -43,7 +43,7 @@ public class SubjectTopicResource {
 
     @GetMapping("/{id}")
     public SubjectTopicIndexDocument get(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
             SubjectTopicIndexDocument result = new SubjectTopicIndexDocument(subjectTopic);
             transaction.rollback();
@@ -53,7 +53,7 @@ public class SubjectTopicResource {
 
     @PostMapping
     public ResponseEntity post(@RequestBody AddTopicToSubjectCommand command) throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
 
             Subject subject = Subject.getById(command.subjectid.toString(), graph);
             Topic topic = Topic.getById(command.topicid.toString(), graph);
@@ -77,7 +77,7 @@ public class SubjectTopicResource {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
             subjectTopic.remove();
             transaction.commit();
@@ -87,7 +87,7 @@ public class SubjectTopicResource {
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> put(@PathVariable("id") String id, @RequestBody UpdateSubjectTopicCommand command) throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
             subjectTopic.setPrimary(command.primary);
             transaction.commit();

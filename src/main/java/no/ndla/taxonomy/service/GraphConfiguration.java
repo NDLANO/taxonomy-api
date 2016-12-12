@@ -12,6 +12,7 @@ import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.MapConfiguration;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,7 @@ public class GraphConfiguration {
 
     @Bean
     @Profile("!junit")
-    public OrientGraphFactory orientGraph() throws Exception {
+    public GraphFactory orientGraph() throws Exception {
         final MapConfiguration configuration = new MapConfiguration(properties);
         configuration.setProperty(CONFIG_URL, url);
         configuration.setProperty(CONFIG_USER, username);
@@ -81,17 +82,38 @@ public class GraphConfiguration {
             transaction.commit();
         }
 
-        return factory;
+        return new GraphFactory() {
+            @Override
+            public Graph create() {
+                return factory.getTx();
+            }
+
+            @Override
+            public boolean isTest() {
+                return false;
+            }
+        };
     }
 
     @Bean
     @Profile("junit")
-    public OrientGraphFactory testOrientGraph() throws Exception {
+    public GraphFactory testOrientGraph() throws Exception {
         OrientGraphFactory factory = new OrientGraphFactory("memory:taxonomy");
         try (OrientGraph graph = factory.getNoTx()) {
             createSchema(graph);
         }
-        return factory;
+
+        return new GraphFactory() {
+            @Override
+            public Graph create() {
+                return factory.getTx();
+            }
+
+            @Override
+            public boolean isTest() {
+                return true;
+            }
+        };
     }
 
     private String secureToString(Map<String, String> configuration) {

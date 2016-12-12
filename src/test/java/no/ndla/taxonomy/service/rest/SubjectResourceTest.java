@@ -1,9 +1,9 @@
 package no.ndla.taxonomy.service.rest;
 
 
+import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
-import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.junit.Before;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class SubjectResourceTest {
 
     @Autowired
-    private OrientGraphFactory factory;
+    private GraphFactory factory;
 
     @Before
     public void setup() throws Exception {
@@ -37,7 +37,7 @@ public class SubjectResourceTest {
 
     @Test
     public void can_get_all_subjects() throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             new Subject(graph).name("english");
             new Subject(graph).name("mathematics");
             transaction.commit();
@@ -60,7 +60,7 @@ public class SubjectResourceTest {
         MockHttpServletResponse response = createResource("/subjects", createSubjectCommand);
         String id = getId(response);
 
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Subject subject = Subject.getById(id, graph);
             assertEquals(createSubjectCommand.name, subject.getName());
             transaction.rollback();
@@ -71,7 +71,7 @@ public class SubjectResourceTest {
     @Test
     public void can_update_subject() throws Exception {
         String id;
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             id = new Subject(graph).getId().toString();
             transaction.commit();
         }
@@ -81,7 +81,7 @@ public class SubjectResourceTest {
 
         updateResource("/subjects/" + id, command);
 
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Subject subject = Subject.getById(id, graph);
             assertEquals(command.name, subject.getName());
             transaction.rollback();
@@ -97,7 +97,7 @@ public class SubjectResourceTest {
 
         createResource("/subjects", command);
 
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             assertNotNull(Subject.getById(command.id.toString(), graph));
             transaction.rollback();
         }
@@ -117,7 +117,7 @@ public class SubjectResourceTest {
     @Test
     public void can_delete_subject() throws Exception {
         String id;
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             id = new Subject(graph).getId().toString();
             transaction.commit();
         }
@@ -129,7 +129,7 @@ public class SubjectResourceTest {
     @Test
     public void can_get_topics() throws Exception {
         String subjectid;
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Subject subject = new Subject(graph).name("physics");
             subjectid = subject.getId().toString();
             subject.addTopic(new Topic(graph).name("statics"));
@@ -151,7 +151,7 @@ public class SubjectResourceTest {
     @Test
     public void can_get_topics_recursively() throws Exception {
         String subjectid;
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Subject subject = new Subject(graph).name("subject");
             subjectid = subject.getId().toString();
 

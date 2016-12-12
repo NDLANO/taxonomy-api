@@ -3,10 +3,10 @@ package no.ndla.taxonomy.service.rest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
+import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Topic;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
-import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.springframework.http.ResponseEntity;
@@ -21,10 +21,9 @@ import java.util.Map;
 @RequestMapping(path = "topics")
 public class TopicResource {
 
+    private GraphFactory factory;
 
-    private OrientGraphFactory factory;
-
-    public TopicResource(OrientGraphFactory factory) {
+    public TopicResource(GraphFactory factory) {
         this.factory = factory;
     }
 
@@ -32,7 +31,7 @@ public class TopicResource {
     public List<TopicIndexDocument> index() throws Exception {
         List<TopicIndexDocument> result = new ArrayList<>();
 
-        try (OrientGraph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
             Iterable<ODocument> resultSet = (Iterable<ODocument>) graph.executeSql("select id, name from V_Topic");
             resultSet.iterator().forEachRemaining(record -> {
                 TopicIndexDocument document = new TopicIndexDocument();
@@ -47,7 +46,7 @@ public class TopicResource {
 
     @GetMapping("/{id}")
     public TopicIndexDocument get(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = Topic.getById(id, graph);
             TopicIndexDocument result = new TopicIndexDocument(topic);
             transaction.rollback();
@@ -57,7 +56,7 @@ public class TopicResource {
 
     @PostMapping
     public ResponseEntity<Void> post(@RequestBody CreateTopicCommand command) throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = new Topic(graph);
             if (null != command.id) topic.setId(command.id.toString());
             topic.name(command.name);
@@ -72,7 +71,7 @@ public class TopicResource {
 
     @DeleteMapping("/{id}")
     public ResponseEntity delete(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = Topic.getById(id, graph);
             topic.remove();
             transaction.commit();
@@ -82,7 +81,7 @@ public class TopicResource {
 
     @PutMapping("/{id}")
     public ResponseEntity put(@PathVariable("id") String id, @RequestBody UpdateTopicCommand command) throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = Topic.getById(id, graph);
             topic.setName(command.name);
             transaction.commit();

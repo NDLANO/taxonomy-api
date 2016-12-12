@@ -4,11 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
+import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
-import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +23,9 @@ import java.util.List;
 @RequestMapping(path = "subjects")
 public class SubjectResource {
 
-    private OrientGraphFactory factory;
+    private GraphFactory factory;
 
-    public SubjectResource(OrientGraphFactory factory) {
+    public SubjectResource(GraphFactory factory) {
         this.factory = factory;
     }
 
@@ -33,7 +33,7 @@ public class SubjectResource {
     public List<SubjectIndexDocument> index() throws Exception {
         List<SubjectIndexDocument> result = new ArrayList<>();
 
-        try (OrientGraph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
             Iterable<ODocument> resultSet = (Iterable<ODocument>) graph.executeSql("select id, name from V_Subject");
             resultSet.iterator().forEachRemaining(record -> {
                 SubjectIndexDocument document = new SubjectIndexDocument();
@@ -48,7 +48,7 @@ public class SubjectResource {
 
     @GetMapping("/{id}")
     public SubjectIndexDocument get(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Subject subject = Subject.getById(id, graph);
             SubjectIndexDocument result = new SubjectIndexDocument(subject);
             transaction.rollback();
@@ -58,7 +58,7 @@ public class SubjectResource {
 
     @DeleteMapping("/{id}")
     public ResponseEntity delete(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Subject subject = Subject.getById(id, graph);
             subject.remove();
             transaction.commit();
@@ -68,7 +68,7 @@ public class SubjectResource {
 
     @PutMapping("/{id}")
     public ResponseEntity put(@PathVariable("id") String id, @RequestBody UpdateSubjectCommand command) throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Subject subject = Subject.getById(id, graph);
             subject.setName(command.name);
             transaction.commit();
@@ -80,7 +80,7 @@ public class SubjectResource {
     public List<TopicIndexDocument> getTopics(
             @PathVariable("id") String id,
             @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive) throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             List<TopicIndexDocument> results = new ArrayList<>();
             Subject subject = Subject.getById(id, graph);
             subject.getTopics().forEachRemaining(t -> results.add(new TopicIndexDocument(t, recursive)));
@@ -91,7 +91,7 @@ public class SubjectResource {
 
     @PostMapping
     public ResponseEntity<Void> post(@RequestBody CreateSubjectCommand command) throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Subject subject = new Subject(graph);
             if (null != command.id) subject.setId(command.id.toString());
             subject.name(command.name);

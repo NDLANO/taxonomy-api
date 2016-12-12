@@ -1,8 +1,8 @@
 package no.ndla.taxonomy.service.rest;
 
 
+import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.Topic;
-import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.junit.Before;
@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TopicResourceTest {
 
     @Autowired
-    private OrientGraphFactory factory;
+    private GraphFactory factory;
 
     @Before
     public void setup() throws Exception {
@@ -35,7 +35,7 @@ public class TopicResourceTest {
 
     @Test
     public void can_get_all_topics() throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             new Topic(graph).name("photo synthesis");
             new Topic(graph).name("trigonometry");
             transaction.commit();
@@ -59,7 +59,7 @@ public class TopicResourceTest {
         MockHttpServletResponse response = createResource("/topics", createTopicCommand);
         String id = getId(response);
 
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = Topic.getById(id, graph);
             assertEquals(createTopicCommand.name, topic.getName());
             transaction.rollback();
@@ -75,7 +75,7 @@ public class TopicResourceTest {
 
         createResource("/topics", createTopicCommand);
 
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = Topic.getById(createTopicCommand.id.toString(), graph);
             assertEquals(createTopicCommand.name, topic.getName());
             transaction.rollback();
@@ -96,7 +96,7 @@ public class TopicResourceTest {
     @Test
     public void can_update_topic() throws Exception {
         String id;
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             id = new Topic(graph).getId().toString();
             transaction.commit();
         }
@@ -106,7 +106,7 @@ public class TopicResourceTest {
 
         updateResource("/topics/" + id, command);
 
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = Topic.getById(id, graph);
             assertEquals(command.name, topic.getName());
             transaction.rollback();
@@ -116,7 +116,7 @@ public class TopicResourceTest {
     @Test
     public void can_delete_topic() throws Exception {
         String id;
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             id = new Topic(graph).getId().toString();
             transaction.commit();
         }

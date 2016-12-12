@@ -2,7 +2,7 @@ package no.ndla.taxonomy.service.migrations;
 
 import ch.qos.logback.classic.Logger;
 import no.ndla.taxonomy.service.GraphConfiguration;
-import org.apache.tinkerpop.gremlin.orientdb.OrientGraphFactory;
+import no.ndla.taxonomy.service.GraphFactory;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.junit.Before;
@@ -15,7 +15,7 @@ import static ch.qos.logback.classic.Level.INFO;
 import static org.mockito.Mockito.*;
 
 public class MigrationRunnerTest {
-    private OrientGraphFactory factory;
+    private GraphFactory factory;
     private MigrationRunner migrationRunner;
 
     @BeforeClass
@@ -63,7 +63,7 @@ public class MigrationRunnerTest {
     }
 
     private void runMigrations() throws Exception {
-        try (Graph graph = factory.getTx(); Transaction transaction = graph.tx()) {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             migrationRunner.run(graph);
             transaction.commit();
         }
