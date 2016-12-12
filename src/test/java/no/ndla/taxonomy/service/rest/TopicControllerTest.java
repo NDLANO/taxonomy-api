@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("junit")
-public class TopicResourceTest {
+public class TopicControllerTest {
 
     @Autowired
     private GraphFactory factory;
@@ -42,7 +42,7 @@ public class TopicResourceTest {
         }
 
         MockHttpServletResponse response = getResource("/topics");
-        TopicResource.TopicIndexDocument[] topics = getObject(TopicResource.TopicIndexDocument[].class, response);
+        TopicController.TopicIndexDocument[] topics = getObject(TopicController.TopicIndexDocument[].class, response);
         assertEquals(2, topics.length);
 
         assertAnyTrue(topics, s -> "photo synthesis".equals(s.name));
@@ -52,7 +52,7 @@ public class TopicResourceTest {
 
     @Test
     public void can_create_topic() throws Exception {
-        TopicResource.CreateTopicCommand createTopicCommand = new TopicResource.CreateTopicCommand() {{
+        TopicController.CreateTopicCommand createTopicCommand = new TopicController.CreateTopicCommand() {{
             name = "trigonometry";
         }};
 
@@ -68,7 +68,7 @@ public class TopicResourceTest {
 
     @Test
     public void can_create_topic_with_id() throws Exception {
-        TopicResource.CreateTopicCommand createTopicCommand = new TopicResource.CreateTopicCommand() {{
+        TopicController.CreateTopicCommand createTopicCommand = new TopicController.CreateTopicCommand() {{
             id = URI.create("urn:topic:1");
             name = "trigonometry";
         }};
@@ -84,7 +84,7 @@ public class TopicResourceTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        TopicResource.CreateTopicCommand command = new TopicResource.CreateTopicCommand() {{
+        TopicController.CreateTopicCommand command = new TopicController.CreateTopicCommand() {{
             id = URI.create("urn:topic:1");
             name = "name";
         }};
@@ -101,7 +101,7 @@ public class TopicResourceTest {
             transaction.commit();
         }
 
-        TopicResource.UpdateTopicCommand command = new TopicResource.UpdateTopicCommand();
+        TopicController.UpdateTopicCommand command = new TopicController.UpdateTopicCommand();
         command.name = "trigonometry";
 
         updateResource("/topics/" + id, command);

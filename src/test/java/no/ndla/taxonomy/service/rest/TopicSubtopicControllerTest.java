@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("junit")
-public class TopicSubtopicResourceTest {
+public class TopicSubtopicControllerTest {
 
     @Autowired
     private GraphFactory factory;
@@ -44,7 +44,7 @@ public class TopicSubtopicResourceTest {
         }
 
         String id = getId(
-                createResource("/topic-subtopics", new TopicSubtopicResource.AddSubtopicToTopicCommand() {{
+                createResource("/topic-subtopics", new TopicSubtopicController.AddSubtopicToTopicCommand() {{
                     topicid = calculusId;
                     subtopicid = integrationId;
                 }})
@@ -73,7 +73,7 @@ public class TopicSubtopicResourceTest {
         }
 
         createResource("/topic-subtopics",
-                new TopicSubtopicResource.AddSubtopicToTopicCommand() {{
+                new TopicSubtopicController.AddSubtopicToTopicCommand() {{
                     topicid = calculusId;
                     subtopicid = integrationId;
                 }},
@@ -102,7 +102,7 @@ public class TopicSubtopicResourceTest {
             transaction.commit();
         }
 
-        TopicSubtopicResource.UpdateTopicSubtopicCommand command = new TopicSubtopicResource.UpdateTopicSubtopicCommand();
+        TopicSubtopicController.UpdateTopicSubtopicCommand command = new TopicSubtopicController.UpdateTopicSubtopicCommand();
         command.primary = true;
 
         updateResource("/topic-subtopics/" + id, command);
@@ -134,7 +134,7 @@ public class TopicSubtopicResourceTest {
         }
 
         MockHttpServletResponse response = getResource("/topic-subtopics");
-        TopicSubtopicResource.TopicSubtopicIndexDocument[] topicSubtopics = getObject(TopicSubtopicResource.TopicSubtopicIndexDocument[].class, response);
+        TopicSubtopicController.TopicSubtopicIndexDocument[] topicSubtopics = getObject(TopicSubtopicController.TopicSubtopicIndexDocument[].class, response);
 
         assertEquals(2, topicSubtopics.length);
         assertAnyTrue(topicSubtopics, t -> electricityId.equals(t.topicid) && alternatingCurrentId.equals(t.subtopicid));
@@ -157,7 +157,7 @@ public class TopicSubtopicResourceTest {
         }
 
         MockHttpServletResponse resource = getResource("/topic-subtopics/" + id);
-        TopicSubtopicResource.TopicSubtopicIndexDocument topicSubtopicIndexDocument = getObject(TopicSubtopicResource.TopicSubtopicIndexDocument.class, resource);
+        TopicSubtopicController.TopicSubtopicIndexDocument topicSubtopicIndexDocument = getObject(TopicSubtopicController.TopicSubtopicIndexDocument.class, resource);
         assertEquals(topicid, topicSubtopicIndexDocument.topicid);
         assertEquals(subtopicid, topicSubtopicIndexDocument.subtopicid);
     }

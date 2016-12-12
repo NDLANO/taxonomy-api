@@ -2,9 +2,8 @@ package no.ndla.taxonomy.service.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import no.ndla.taxonomy.service.GraphFactory;
-import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
+import no.ndla.taxonomy.service.domain.TopicSubtopic;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -19,22 +18,21 @@ import java.util.Iterator;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "subject-topics")
-public class SubjectTopicResource {
-
+@RequestMapping(path = "topic-subtopics")
+public class TopicSubtopicController {
     private GraphFactory factory;
 
-    public SubjectTopicResource(GraphFactory factory) {
+    public TopicSubtopicController(GraphFactory factory) {
         this.factory = factory;
     }
 
     @GetMapping
-    public List<SubjectTopicIndexDocument> index() throws Exception {
-        List<SubjectTopicIndexDocument> result = new ArrayList<>();
+    public List<TopicSubtopicIndexDocument> index() throws Exception {
+        List<TopicSubtopicIndexDocument> result = new ArrayList<>();
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            GraphTraversal<Edge, Edge> topics = graph.traversal().E().hasLabel(SubjectTopic.LABEL);
-            topics.forEachRemaining(v -> result.add(new SubjectTopicIndexDocument(new SubjectTopic(v))));
+            GraphTraversal<Edge, Edge> topics = graph.traversal().E().hasLabel(TopicSubtopic.LABEL);
+            topics.forEachRemaining(v -> result.add(new TopicSubtopicIndexDocument(new TopicSubtopic(v))));
             transaction.rollback();
         }
 
@@ -42,31 +40,31 @@ public class SubjectTopicResource {
     }
 
     @GetMapping("/{id}")
-    public SubjectTopicIndexDocument get(@PathVariable("id") String id) throws Exception {
+    public TopicSubtopicIndexDocument get(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
-            SubjectTopicIndexDocument result = new SubjectTopicIndexDocument(subjectTopic);
+            TopicSubtopic subjectTopic = TopicSubtopic.getById(id, graph);
+            TopicSubtopicIndexDocument result = new TopicSubtopicIndexDocument(subjectTopic);
             transaction.rollback();
             return result;
         }
     }
 
     @PostMapping
-    public ResponseEntity post(@RequestBody AddTopicToSubjectCommand command) throws Exception {
+    public ResponseEntity post(@RequestBody AddSubtopicToTopicCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
 
-            Subject subject = Subject.getById(command.subjectid.toString(), graph);
             Topic topic = Topic.getById(command.topicid.toString(), graph);
+            Topic subtopic = Topic.getById(command.subtopicid.toString(), graph);
 
-            Iterator<Topic> topics = subject.getTopics();
+            Iterator<Topic> topics = topic.getSubtopics();
             while (topics.hasNext()) {
                 Topic t = topics.next();
-                if (t.getId().equals(topic.getId()))
+                if (t.getId().equals(subtopic.getId()))
                     return ResponseEntity.status(HttpStatus.CONFLICT)
-                            .body("Subject with id " + command.subjectid + " already contains topic with id " + command.topicid);
+                            .body("Subject with id " + command.topicid + " already contains topic with id " + command.subtopicid);
             }
 
-            SubjectTopic subjectTopic = subject.addTopic(topic);
+            TopicSubtopic subjectTopic = topic.addSubtopic(subtopic);
             subjectTopic.setPrimary(command.primary);
 
             URI location = URI.create("/subject-topics/" + subjectTopic.getId());
@@ -78,7 +76,7 @@ public class SubjectTopicResource {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
+            TopicSubtopic subjectTopic = TopicSubtopic.getById(id, graph);
             subjectTopic.remove();
             transaction.commit();
             return ResponseEntity.noContent().build();
@@ -86,24 +84,24 @@ public class SubjectTopicResource {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> put(@PathVariable("id") String id, @RequestBody UpdateSubjectTopicCommand command) throws Exception {
+    public ResponseEntity<Void> put(@PathVariable("id") String id, @RequestBody UpdateTopicSubtopicCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
+            TopicSubtopic subjectTopic = TopicSubtopic.getById(id, graph);
             subjectTopic.setPrimary(command.primary);
             transaction.commit();
             return ResponseEntity.noContent().build();
         }
     }
 
-    public static class AddTopicToSubjectCommand {
+    public static class AddSubtopicToTopicCommand {
         @JsonProperty
-        public URI subjectid, topicid;
+        public URI topicid, subtopicid;
 
         @JsonProperty
         public boolean primary;
     }
 
-    public static class UpdateSubjectTopicCommand {
+    public static class UpdateTopicSubtopicCommand {
         @JsonProperty
         public URI id;
 
@@ -111,21 +109,21 @@ public class SubjectTopicResource {
         public boolean primary;
     }
 
-    public static class SubjectTopicIndexDocument {
+    public static class TopicSubtopicIndexDocument {
         @JsonProperty
-        public URI subjectid, topicid, id;
+        public URI topicid, subtopicid, id;
 
         @JsonProperty
         public boolean primary;
 
-        SubjectTopicIndexDocument() {
+        TopicSubtopicIndexDocument() {
         }
 
-        SubjectTopicIndexDocument(SubjectTopic subjectTopic) {
-            id = subjectTopic.getId();
-            subjectid = subjectTopic.getSubject().getId();
-            topicid = subjectTopic.getTopic().getId();
-            primary = subjectTopic.isPrimary();
+        TopicSubtopicIndexDocument(TopicSubtopic topicSubtopic) {
+            id = topicSubtopic.getId();
+            topicid = topicSubtopic.getTopic().getId();
+            subtopicid = topicSubtopic.getSubtopic().getId();
+            primary = topicSubtopic.isPrimary();
         }
     }
 }

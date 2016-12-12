@@ -19,11 +19,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping(path = "topics")
-public class TopicResource {
+public class TopicController {
 
     private GraphFactory factory;
 
-    public TopicResource(GraphFactory factory) {
+    public TopicController(GraphFactory factory) {
         this.factory = factory;
     }
 

@@ -1,9 +1,9 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.service.rest.SubjectResource;
-import no.ndla.taxonomy.service.rest.SubjectTopicResource;
-import no.ndla.taxonomy.service.rest.TopicResource;
-import no.ndla.taxonomy.service.rest.TopicSubtopicResource;
+import no.ndla.taxonomy.service.rest.SubjectController;
+import no.ndla.taxonomy.service.rest.SubjectTopicController;
+import no.ndla.taxonomy.service.rest.TopicController;
+import no.ndla.taxonomy.service.rest.TopicSubtopicController;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.web.client.RestTemplate;
@@ -55,7 +55,7 @@ public class Import {
     }
 
     private URI addSubtopic(URI topicid, URI subtopicid) {
-        TopicSubtopicResource.AddSubtopicToTopicCommand cmd = new TopicSubtopicResource.AddSubtopicToTopicCommand();
+        TopicSubtopicController.AddSubtopicToTopicCommand cmd = new TopicSubtopicController.AddSubtopicToTopicCommand();
         cmd.topicid = topicid;
         cmd.subtopicid = subtopicid;
         System.out.println("topicid: " + cmd.topicid + " subtopicid: " + subtopicid);
@@ -66,7 +66,7 @@ public class Import {
     }
 
     private URI createTopic(Integer id, String name) {
-        TopicResource.CreateTopicCommand cmd = new TopicResource.CreateTopicCommand();
+        TopicController.CreateTopicCommand cmd = new TopicController.CreateTopicCommand();
         if (null != id) cmd.id = URI.create("urn:topic:" + id);
         cmd.name = name;
 
@@ -77,7 +77,7 @@ public class Import {
     }
 
     private URI createSubject(Integer id, String name) {
-        SubjectResource.CreateSubjectCommand cmd = new SubjectResource.CreateSubjectCommand();
+        SubjectController.CreateSubjectCommand cmd = new SubjectController.CreateSubjectCommand();
         if (null != id) cmd.id = URI.create("urn:subject:" + id);
         cmd.name = name;
 
@@ -88,7 +88,7 @@ public class Import {
     }
     
     private URI addTopic(URI subjectid, URI topicid) {
-        SubjectTopicResource.AddTopicToSubjectCommand cmd = new SubjectTopicResource.AddTopicToSubjectCommand();
+        SubjectTopicController.AddTopicToSubjectCommand cmd = new SubjectTopicController.AddTopicToSubjectCommand();
         cmd.subjectid = subjectid;
         cmd.topicid = topicid;
         System.out.println("Subjectid: " + cmd.subjectid + " topicid: " + cmd.topicid);

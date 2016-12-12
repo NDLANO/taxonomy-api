@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("junit")
-public class SubjectTopicResourceTest {
+public class SubjectTopicControllerTest {
 
     @Autowired
     private GraphFactory factory;
@@ -45,7 +45,7 @@ public class SubjectTopicResourceTest {
         }
 
         String id = getId(
-                createResource("/subject-topics", new SubjectTopicResource.AddTopicToSubjectCommand() {{
+                createResource("/subject-topics", new SubjectTopicController.AddTopicToSubjectCommand() {{
                     this.subjectid = subjectId;
                     this.topicid = topicId;
                 }})
@@ -74,7 +74,7 @@ public class SubjectTopicResourceTest {
             transaction.commit();
         }
 
-        createResource("/subject-topics", new SubjectTopicResource.AddTopicToSubjectCommand() {{
+        createResource("/subject-topics", new SubjectTopicController.AddTopicToSubjectCommand() {{
                     this.subjectid = subjectId;
                     this.topicid = topicId;
                 }},
@@ -103,7 +103,7 @@ public class SubjectTopicResourceTest {
             transaction.commit();
         }
 
-        SubjectTopicResource.UpdateSubjectTopicCommand command = new SubjectTopicResource.UpdateSubjectTopicCommand();
+        SubjectTopicController.UpdateSubjectTopicCommand command = new SubjectTopicController.UpdateSubjectTopicCommand();
         command.primary = true;
 
         updateResource("/subject-topics/" + id, command);
@@ -135,7 +135,7 @@ public class SubjectTopicResourceTest {
         }
 
         MockHttpServletResponse response = getResource("/subject-topics");
-        SubjectTopicResource.SubjectTopicIndexDocument[] subjectTopics = getObject(SubjectTopicResource.SubjectTopicIndexDocument[].class, response);
+        SubjectTopicController.SubjectTopicIndexDocument[] subjectTopics = getObject(SubjectTopicController.SubjectTopicIndexDocument[].class, response);
 
         assertEquals(2, subjectTopics.length);
         assertAnyTrue(subjectTopics, t -> physicsId.equals(t.subjectid) && electricityId.equals(t.topicid));
@@ -158,7 +158,7 @@ public class SubjectTopicResourceTest {
         }
 
         MockHttpServletResponse resource = getResource("/subject-topics/" + id);
-        SubjectTopicResource.SubjectTopicIndexDocument subjectTopicIndexDocument = getObject(SubjectTopicResource.SubjectTopicIndexDocument.class, resource);
+        SubjectTopicController.SubjectTopicIndexDocument subjectTopicIndexDocument = getObject(SubjectTopicController.SubjectTopicIndexDocument.class, resource);
         assertEquals(subjectid, subjectTopicIndexDocument.subjectid);
         assertEquals(topicid, subjectTopicIndexDocument.topicid);
     }
