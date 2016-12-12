@@ -37,7 +37,7 @@ public class Subject extends DomainVertex {
     }
 
     public static Subject findById(String id, Graph graph) {
-        GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V().has("id", id);
+        GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V().hasLabel(LABEL).has("id", id);
         return traversal.hasNext() ? new Subject(traversal.next()) : null;
     }
 
