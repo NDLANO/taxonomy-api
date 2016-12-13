@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.service.domain.NotFoundException;
+import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -141,11 +142,10 @@ public class TestUtils {
     public static void clearGraph() throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             assertTrue("Are you mad?", factory.isTest());
-            graph.vertices().forEachRemaining(v -> v.remove());
+            graph.vertices().forEachRemaining(Element::remove);
             transaction.commit();
         }
     }
-
 
     public static void assertNotFound(Consumer<Graph> consumer) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {

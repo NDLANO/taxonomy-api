@@ -334,7 +334,7 @@ using this resource, the change will be also be visible at the read-only collect
 
 ### GET `/topic-subtopics`
 
-Gets a list of all topics and their subtopics. A subtopic may have *one* parent topic, to help with
+Gets a list of all topics and their subtopics. A subtopic may have *one* primary parent topic, to help with
 selecting a default context for a subtopic in case no context is given.
 
 *example input*
@@ -492,6 +492,87 @@ Removes a single resource
 *example input*
 
     DELETE /resources/urn:resource:4208
+
+*example output*
+
+    < HTTP/1.1 204
+
+## `/topic-resources`
+
+Many-to-many association between topics and resources. If you add a resource to a topic
+using this resource, the change will be also be visible at the read-only collection at
+`/topics/{id}/resources`.
+
+### GET `/topic-resources`
+
+Gets a list of all topics and their resources. A resource may have *one* primary parent topic, to help with
+selecting a default context for a resource in case no context is given.
+
+*example input*
+
+    GET /topic-resources
+
+*example output*
+
+    [
+       {
+          "id" : "urn:topic-resource:odxco-3b4-27th-380",
+          "topicid" : "urn:topic:4176",
+          "resourceid" : "urn:resource:4208",
+          "primary" : false
+       },
+       {
+          "id" : "urn:topic-resource:1cruoe-38w-27th-1crx34",
+          "primary" : false,
+          "topicid" : "urn:topic:4176"
+          "resourceid" : "urn:resource:4288",
+       }
+    ]
+
+### POST `/topic-resources`
+
+Associates a topic with a resource
+
+*example input*
+
+    POST /topic-resources
+
+    {
+      "topicid" : "urn:topic:4176",
+      "resourceid" : "urn:resource:4208",
+      "primary" : false
+    }
+
+*example output*
+
+    < HTTP/1.1 201
+    < Location: /topic-resources/urn:topic-resource:1cruoe-38w-27th-1crx34
+    < Content-Length: 0
+
+### PUT `/topic-resources/{id}`
+
+Update the association between a topic and a resource. Changes to `topicid` or `resourceid` are not
+allowed. Instead, remove the association and create a new one.
+
+*example input*
+
+    PUT /topic-resources/urn:topic-resource:1cruoe-38w-27th-1crx34
+
+    {
+      "primary" : true
+    }
+
+*example output*
+
+    < HTTP/1.1 204
+
+### DELETE `/topic-resources/{id}`
+
+Remove an association between a topic and a resource.
+
+*example input*
+
+    DELETE /topic-resources/urn:topic-resource:1cruoe-38w-27th-1crx34
 
 *example output*
 

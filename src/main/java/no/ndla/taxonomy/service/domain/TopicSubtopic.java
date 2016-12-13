@@ -12,7 +12,7 @@ public class TopicSubtopic extends DomainEdge {
     public static final String LABEL = "topic-has-subtopics";
 
     /**
-     * Wraps an existing edge between a subject and a topic
+     * Wraps an existing edge between a topic and a subtopic
      */
     public TopicSubtopic(Edge edge) {
         super(edge);

@@ -129,23 +129,38 @@ public class GraphConfiguration {
         graph.createVertexClass(Migration.LABEL);
         graph.createVertexClass(Subject.LABEL);
         graph.createVertexClass(Resource.LABEL);
-        graph.createEdgeClass(SubjectTopic.LABEL);
         graph.createVertexClass(Topic.LABEL);
-        graph.createEdgeClass(TopicSubtopic.LABEL);
 
-        createUniqueIndex(graph, Topic.LABEL, "id");
-        createUniqueIndex(graph, Subject.LABEL, "id");
-        createUniqueIndex(graph, Resource.LABEL, "id");
-        createUniqueIndex(graph, Migration.LABEL, "name");
+        graph.createEdgeClass(SubjectTopic.LABEL);
+        graph.createEdgeClass(TopicSubtopic.LABEL);
+        graph.createEdgeClass(TopicResource.LABEL);
+
+        createUniqueVertexIndex(graph, Topic.LABEL, "id");
+        createUniqueVertexIndex(graph, Subject.LABEL, "id");
+        createUniqueVertexIndex(graph, Resource.LABEL, "id");
+        createUniqueVertexIndex(graph, Migration.LABEL, "name");
+
+        createUniqueEdgeIndex(graph, TopicSubtopic.LABEL, "id");
+        createUniqueEdgeIndex(graph, SubjectTopic.LABEL, "id");
+        createUniqueEdgeIndex(graph, TopicResource.LABEL, "id");
     }
 
-    private void createUniqueIndex(OrientGraph graph, String label, String key) {
+    private void createUniqueVertexIndex(OrientGraph graph, String label, String key) {
         BaseConfiguration configuration = new BaseConfiguration();
         configuration.setProperty("type", OClass.INDEX_TYPE.UNIQUE.name());
         configuration.setProperty("keytype", OType.STRING);
-        Set<String> vertexIndexedKeys = graph.getVertexIndexedKeys(label);
-        log.info("indexes for " + label + ": " + vertexIndexedKeys);
-        if (!vertexIndexedKeys.contains(key)) graph.createVertexIndex(key, label, configuration);
+        Set<String> keys = graph.getVertexIndexedKeys(label);
+        log.info("indexes for " + label + ": " + keys);
+        if (!keys.contains(key)) graph.createVertexIndex(key, label, configuration);
+    }
+
+    private void createUniqueEdgeIndex(OrientGraph graph, String label, String key) {
+        BaseConfiguration configuration = new BaseConfiguration();
+        configuration.setProperty("type", OClass.INDEX_TYPE.UNIQUE.name());
+        configuration.setProperty("keytype", OType.STRING);
+        Set<String> keys = graph.getEdgeIndexedKeys(label);
+        log.info("indexes for " + label + ": " + keys);
+        if (!keys.contains(key)) graph.createEdgeIndex(key, label, configuration);
     }
 
 

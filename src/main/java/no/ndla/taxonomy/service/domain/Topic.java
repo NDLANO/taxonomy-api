@@ -53,6 +53,10 @@ public class Topic extends DomainVertex {
         return new TopicSubtopic(this, topic);
     }
 
+    public TopicResource addResource(Resource resource) {
+        return new TopicResource(this, resource);
+    }
+
     public Iterator<Topic> getSubtopics() {
         Iterator<Edge> edges = vertex.edges(Direction.OUT, TopicSubtopic.LABEL);
 
@@ -65,6 +69,22 @@ public class Topic extends DomainVertex {
             @Override
             public Topic next() {
                 return new Topic(edges.next().inVertex());
+            }
+        };
+    }
+
+    public Iterator<Resource> getResources() {
+        Iterator<Edge> edges = vertex.edges(Direction.OUT, TopicResource.LABEL);
+
+        return new Iterator<Resource>() {
+            @Override
+            public boolean hasNext() {
+                return edges.hasNext();
+            }
+
+            @Override
+            public Resource next() {
+                return new Resource(edges.next().inVertex());
             }
         };
     }
