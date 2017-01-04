@@ -31,13 +31,12 @@ public class Resource extends DomainVertex {
     }
 
     public static Resource getById(String id, Graph graph) {
-        Resource resource = findById(id, graph);
-        if (resource != null) return resource;
-        throw new NotFoundException("resource", id);
-    }
-
-    public static Resource findById(String id, Graph graph) {
         GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V().hasLabel(LABEL).has("id", id);
-        return traversal.hasNext() ? new Resource(traversal.next()) : null;
+        if (traversal.hasNext()) {
+            return new Resource(traversal.next());
+        } else {
+            throw new NotFoundException("resource", id);
+        }
+
     }
 }

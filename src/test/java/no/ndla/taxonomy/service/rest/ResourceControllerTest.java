@@ -124,4 +124,27 @@ public class ResourceControllerTest {
         deleteResource("/resources/" + id);
         assertNotFound(graph -> Resource.getById(id, graph));
     }
+
+    @Test
+    public void can_get_resource_by_id() throws Exception {
+        String id;
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            id = new Resource(graph).name("The inner planets").getId().toString();
+            transaction.commit();
+        }
+        MockHttpServletResponse response = getResource("/resources/" + id);
+        ResourceController.ResourceIndexDocument result = getObject(ResourceController.ResourceIndexDocument.class, response);
+        assertEquals(id, result.id.toString());
+    }
+
+    @Test
+    public void get_unknown_resource_fails_gracefully() throws Exception {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            new Resource(graph).name("The inner planets").getId().toString();
+            transaction.commit();
+        }
+
+        getResource("/resources/nonexistantid", status().isNotFound());
+
+    }
 }
