@@ -1,6 +1,5 @@
 package no.ndla.taxonomy.service.domain;
 
-import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -32,7 +31,7 @@ public class ResourceType extends DomainVertex {
         return this;
     }
 
-    public static ResourceType getById(String id, OrientGraph graph) {
+    public static ResourceType getById(String id, Graph graph) {
         GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V().hasLabel(LABEL).has("id", id);
         if (traversal.hasNext()) {
             return new ResourceType(traversal.next());

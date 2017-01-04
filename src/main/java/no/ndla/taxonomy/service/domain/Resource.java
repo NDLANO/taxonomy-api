@@ -37,6 +37,5 @@ public class Resource extends DomainVertex {
         } else {
             throw new NotFoundException("resource", id);
         }
-
     }
 }

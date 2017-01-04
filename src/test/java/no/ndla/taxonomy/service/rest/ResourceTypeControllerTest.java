@@ -17,6 +17,7 @@ import java.net.URI;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
@@ -74,6 +75,29 @@ public class ResourceTypeControllerTest {
         MockHttpServletResponse response = getResource("/resource-types/doesnotexist", status().isNotFound());
     }
 
+    @Test
+    public void can_create_resourcetype() throws Exception {
+        ResourceTypeController.CreateResourceTypeCommand command = new ResourceTypeController.CreateResourceTypeCommand() {{
+            id = URI.create("urn:resource-type:1");
+            name = "name";
+        }};
+        createResource("/resource-types/", command);
 
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            assertNotNull(ResourceType.getById(command.id.toString(), graph));
+            transaction.rollback();
+        }
+
+    }
+
+    @Test
+    public void cannot_create_duplicate_resourcetype() throws Exception {
+        ResourceTypeController.CreateResourceTypeCommand command = new ResourceTypeController.CreateResourceTypeCommand() {{
+            id = URI.create("urn:resource-type:1");
+            name = "name";
+        }};
+        createResource("/resource-types/", command);
+        createResource("/resource-types/", command, status().isConflict());
+    }
 }
 

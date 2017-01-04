@@ -2,14 +2,15 @@ package no.ndla.taxonomy.service.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
+import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
 import no.ndla.taxonomy.service.GraphFactory;
+import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.ResourceType;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -52,6 +53,21 @@ public class ResourceTypeController {
         }
     }
 
+    @PostMapping
+    public ResponseEntity<Void> post(@RequestBody CreateResourceTypeCommand command) throws Exception {
+        try (Graph graph = factory.create();
+        Transaction transaction = graph.tx()) {
+            ResourceType resourceType = new ResourceType(graph);
+            if (null != command.id) resourceType.setId(command.id.toString());
+            resourceType.name(command.name);
+            URI location = URI.create("/resource-types/" + resourceType.getId());
+            transaction.commit();
+            return ResponseEntity.created(location).build();
+        } catch (ORecordDuplicatedException e) {
+            throw new DuplicateIdException("" + command.id);
+        }
+    }
+
     static class ResourceTypeIndexDocument {
         @JsonProperty
         public URI id;
@@ -66,5 +82,13 @@ public class ResourceTypeController {
             id = resourceType.getId();
             name = resourceType.getName();
         }
+    }
+
+    public static class CreateResourceTypeCommand {
+        @JsonProperty
+        public URI id;
+
+        @JsonProperty
+        public String name;
     }
 }
