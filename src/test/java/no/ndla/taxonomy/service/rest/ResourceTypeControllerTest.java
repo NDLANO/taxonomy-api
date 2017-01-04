@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.rest;
 
 import no.ndla.taxonomy.service.GraphFactory;
+import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.ResourceType;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
@@ -98,6 +99,35 @@ public class ResourceTypeControllerTest {
         }};
         createResource("/resource-types/", command);
         createResource("/resource-types/", command, status().isConflict());
+    }
+
+    @Test
+    public void can_delete_resourcetype() throws Exception {
+        String id;
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            id = new ResourceType(graph).name("video").getId().toString();
+            transaction.commit();
+        }
+        deleteResource("/resource-types/" + id);
+    }
+
+    @Test
+    public void can_update_resourcetype() throws Exception {
+        URI id;
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            id = new ResourceType(graph).name("video").getId();
+            transaction.commit();
+        }
+        ResourceTypeController.UpdateResourceTypeCommand updateCommand = new ResourceTypeController.UpdateResourceTypeCommand();
+        updateCommand.name = "Audovideo";
+
+        updateResource("/resource-types/" + id, updateCommand);
+
+        Graph graph = factory.create();
+        Transaction transaction = graph.tx();
+        ResourceType result = ResourceType.getById(id.toString(), graph);
+        assertEquals(updateCommand.name, result.getName());
+        transaction.rollback();
     }
 }
 

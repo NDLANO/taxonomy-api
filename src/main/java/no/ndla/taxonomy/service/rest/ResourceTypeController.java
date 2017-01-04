@@ -68,6 +68,26 @@ public class ResourceTypeController {
         }
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity delete(@PathVariable("id") String id) throws Exception {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            ResourceType resource = ResourceType.getById(id, graph);
+            resource.remove();
+            transaction.commit();
+            return ResponseEntity.noContent().build();
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity put(@PathVariable String id, @RequestBody UpdateResourceTypeCommand command) throws Exception {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            ResourceType resourceType = ResourceType.getById(id, graph);
+            resourceType.name(command.name);
+            transaction.commit();
+            return ResponseEntity.noContent().build();
+        }
+    }
+
     static class ResourceTypeIndexDocument {
         @JsonProperty
         public URI id;
@@ -85,6 +105,14 @@ public class ResourceTypeController {
     }
 
     public static class CreateResourceTypeCommand {
+        @JsonProperty
+        public URI id;
+
+        @JsonProperty
+        public String name;
+    }
+
+    public static class UpdateResourceTypeCommand {
         @JsonProperty
         public URI id;
 
