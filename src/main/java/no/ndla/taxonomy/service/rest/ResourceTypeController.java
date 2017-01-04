@@ -7,6 +7,7 @@ import no.ndla.taxonomy.service.domain.ResourceType;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -38,6 +39,16 @@ public class ResourceTypeController {
             });
             transaction.rollback();
             return result;
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResourceTypeIndexDocument get(@PathVariable("id") String id) throws Exception {
+        try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
+            final ResourceType result = ResourceType.getById(id, graph);
+            ResourceTypeController.ResourceTypeIndexDocument resourceType = new ResourceTypeController.ResourceTypeIndexDocument(result);
+            transaction.rollback();
+            return resourceType;
         }
     }
 

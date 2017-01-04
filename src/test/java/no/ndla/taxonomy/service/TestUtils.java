@@ -70,14 +70,17 @@ public class TestUtils {
                 .getResponse();
     }
 
-    public static MockHttpServletResponse getResource(String path) throws Exception {
+    public static MockHttpServletResponse getResource(String path, ResultMatcher resultMatcher) throws Exception {
         return mockMvc.perform(
                 get(path)
-                        .accept(APPLICATION_JSON_UTF8))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(APPLICATION_JSON_UTF8))
+                .accept(APPLICATION_JSON_UTF8))
+                .andExpect(resultMatcher)
                 .andReturn()
                 .getResponse();
+    }
+
+    public static MockHttpServletResponse getResource(String path) throws Exception {
+        return getResource(path, status().isOk());
     }
 
     public static MockHttpServletResponse deleteResource(String path) throws Exception {

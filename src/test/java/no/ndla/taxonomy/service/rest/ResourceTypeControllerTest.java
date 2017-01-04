@@ -13,8 +13,11 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.net.URI;
+
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.assertEquals;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -45,6 +48,32 @@ public class ResourceTypeControllerTest {
         assertAnyTrue(resourcetypes, s -> "audio".equals(s.name));
         assertAllTrue(resourcetypes, s -> isValidId(s.id));
     }
+
+    @Test
+    public void can_get_resourcetype_by_id() throws Exception {
+        URI id;
+
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            id = new ResourceType(graph).name("video").getId();
+            transaction.commit();
+        }
+
+
+        MockHttpServletResponse response = getResource("/resource-types/" + id.toString());
+        ResourceTypeController.ResourceTypeIndexDocument resourceType = getObject(ResourceTypeController.ResourceTypeIndexDocument.class, response);
+        assertEquals(id, resourceType.id);
+    }
+
+    @Test
+    public void unknown_resourcetype_fails_gracefully() throws Exception {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            new ResourceType(graph).name("video");
+            transaction.commit();
+        }
+
+        MockHttpServletResponse response = getResource("/resource-types/doesnotexist", status().isNotFound());
+    }
+
 
 }
 
