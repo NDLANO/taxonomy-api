@@ -18,11 +18,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "resources")
-public class ResourceController {
+public class Resources {
 
     private GraphFactory factory;
 
-    public ResourceController(GraphFactory factory) {
+    public Resources(GraphFactory factory) {
         this.factory = factory;
     }
 

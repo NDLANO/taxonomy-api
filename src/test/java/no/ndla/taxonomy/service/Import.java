@@ -1,9 +1,9 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.service.rest.SubjectController;
-import no.ndla.taxonomy.service.rest.SubjectTopicController;
-import no.ndla.taxonomy.service.rest.TopicController;
-import no.ndla.taxonomy.service.rest.TopicSubtopicController;
+import no.ndla.taxonomy.service.rest.Subjects;
+import no.ndla.taxonomy.service.rest.SubjectTopics;
+import no.ndla.taxonomy.service.rest.Topics;
+import no.ndla.taxonomy.service.rest.TopicSubtopics;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.web.client.RestTemplate;
@@ -55,7 +55,7 @@ public class Import {
     }
 
     private URI addSubtopic(URI topicid, URI subtopicid) {
-        TopicSubtopicController.AddSubtopicToTopicCommand cmd = new TopicSubtopicController.AddSubtopicToTopicCommand();
+        TopicSubtopics.AddSubtopicToTopicCommand cmd = new TopicSubtopics.AddSubtopicToTopicCommand();
         cmd.topicid = topicid;
         cmd.subtopicid = subtopicid;
         System.out.println("topicid: " + cmd.topicid + " subtopicid: " + subtopicid);
@@ -66,7 +66,7 @@ public class Import {
     }
 
     private URI createTopic(Integer id, String name) {
-        TopicController.CreateTopicCommand cmd = new TopicController.CreateTopicCommand();
+        Topics.CreateTopicCommand cmd = new Topics.CreateTopicCommand();
         if (null != id) cmd.id = URI.create("urn:topic:" + id);
         cmd.name = name;
 
@@ -77,7 +77,7 @@ public class Import {
     }
 
     private URI createSubject(Integer id, String name) {
-        SubjectController.CreateSubjectCommand cmd = new SubjectController.CreateSubjectCommand();
+        Subjects.CreateSubjectCommand cmd = new Subjects.CreateSubjectCommand();
         if (null != id) cmd.id = URI.create("urn:subject:" + id);
         cmd.name = name;
 
@@ -88,7 +88,7 @@ public class Import {
     }
     
     private URI addTopic(URI subjectid, URI topicid) {
-        SubjectTopicController.AddTopicToSubjectCommand cmd = new SubjectTopicController.AddTopicToSubjectCommand();
+        SubjectTopics.AddTopicToSubjectCommand cmd = new SubjectTopics.AddTopicToSubjectCommand();
         cmd.subjectid = subjectid;
         cmd.topicid = topicid;
         System.out.println("Subjectid: " + cmd.subjectid + " topicid: " + cmd.topicid);

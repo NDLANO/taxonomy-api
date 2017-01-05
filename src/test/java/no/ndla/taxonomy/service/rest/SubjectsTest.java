@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("junit")
-public class SubjectControllerTest {
+public class SubjectsTest {
 
     @Autowired
     private GraphFactory factory;
@@ -44,7 +44,7 @@ public class SubjectControllerTest {
         }
 
         MockHttpServletResponse response = getResource("/subjects");
-        SubjectController.SubjectIndexDocument[] subjects = getObject(SubjectController.SubjectIndexDocument[].class, response);
+        Subjects.SubjectIndexDocument[] subjects = getObject(Subjects.SubjectIndexDocument[].class, response);
         assertEquals(2, subjects.length);
 
         assertAnyTrue(subjects, s -> "english".equals(s.name));
@@ -54,7 +54,7 @@ public class SubjectControllerTest {
 
     @Test
     public void can_create_subject() throws Exception {
-        SubjectController.CreateSubjectCommand createSubjectCommand = new SubjectController.CreateSubjectCommand();
+        Subjects.CreateSubjectCommand createSubjectCommand = new Subjects.CreateSubjectCommand();
         createSubjectCommand.name = "testsubject";
 
         MockHttpServletResponse response = createResource("/subjects", createSubjectCommand);
@@ -76,7 +76,7 @@ public class SubjectControllerTest {
             transaction.commit();
         }
 
-        SubjectController.UpdateSubjectCommand command = new SubjectController.UpdateSubjectCommand();
+        Subjects.UpdateSubjectCommand command = new Subjects.UpdateSubjectCommand();
         command.name = "physics";
 
         updateResource("/subjects/" + id, command);
@@ -90,7 +90,7 @@ public class SubjectControllerTest {
 
     @Test
     public void can_create_subject_with_id() throws Exception {
-        SubjectController.CreateSubjectCommand command = new SubjectController.CreateSubjectCommand() {{
+        Subjects.CreateSubjectCommand command = new Subjects.CreateSubjectCommand() {{
             id = URI.create("urn:subject:1");
             name = "name";
         }};
@@ -105,7 +105,7 @@ public class SubjectControllerTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        SubjectController.CreateSubjectCommand command = new SubjectController.CreateSubjectCommand() {{
+        Subjects.CreateSubjectCommand command = new Subjects.CreateSubjectCommand() {{
             id = URI.create("urn:subject:1");
             name = "name";
         }};
@@ -139,7 +139,7 @@ public class SubjectControllerTest {
         }
 
         MockHttpServletResponse response = getResource("/subjects/" + subjectid + "/topics");
-        SubjectController.TopicIndexDocument[] topics = getObject(SubjectController.TopicIndexDocument[].class, response);
+        Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
 
         assertEquals(3, topics.length);
         assertAnyTrue(topics, t -> "statics".equals(t.name));
@@ -165,7 +165,7 @@ public class SubjectControllerTest {
         }
 
         MockHttpServletResponse response = getResource("/subjects/" + subjectid + "/topics?recursive=true");
-        SubjectController.TopicIndexDocument[] topics = getObject(SubjectController.TopicIndexDocument[].class, response);
+        Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
 
         assertEquals(1, topics.length);
         assertEquals("parent topic", topics[0].name);

@@ -3,9 +3,9 @@ package no.ndla.taxonomy.service.rest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import no.ndla.taxonomy.service.GraphFactory;
-import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.domain.SubjectTopic;
+import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.Topic;
+import no.ndla.taxonomy.service.domain.TopicResource;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
@@ -19,27 +19,26 @@ import java.util.Iterator;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "subject-topics")
-public class SubjectTopicController {
-
+@RequestMapping(path = "topic-resources")
+public class TopicResources {
     private GraphFactory factory;
 
-    public SubjectTopicController(GraphFactory factory) {
+    public TopicResources(GraphFactory factory) {
         this.factory = factory;
     }
 
     @GetMapping
-    public List<SubjectTopicIndexDocument> index() throws Exception {
-        List<SubjectTopicIndexDocument> result = new ArrayList<>();
+    public List<TopicResourceIndexDocument> index() throws Exception {
+        List<TopicResourceIndexDocument> result = new ArrayList<>();
 
         try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
-            Iterable<ODocument> resultSet = (Iterable<ODocument>) graph.executeSql("select id, primary, in.id as topicid, out.id as subjectid from `E_subject-has-topics`");
+            Iterable<ODocument> resultSet = (Iterable<ODocument>) graph.executeSql("select id, primary, out.id as topicid, in.id as resourceid from `E_topic-has-resources`");
             resultSet.iterator().forEachRemaining(record -> {
-                SubjectTopicIndexDocument document = new SubjectTopicIndexDocument();
+                TopicResourceIndexDocument document = new TopicResourceIndexDocument();
                 result.add(document);
                 document.id = URI.create(record.field("id"));
-                document.subjectid = URI.create(record.field("subjectid"));
                 document.topicid = URI.create(record.field("topicid"));
+                document.resourceid = URI.create(record.field("resourceid"));
                 document.primary = Boolean.valueOf(record.field("primary"));
             });
             transaction.rollback();
@@ -48,34 +47,34 @@ public class SubjectTopicController {
     }
 
     @GetMapping("/{id}")
-    public SubjectTopicIndexDocument get(@PathVariable("id") String id) throws Exception {
+    public TopicResourceIndexDocument get(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
-            SubjectTopicIndexDocument result = new SubjectTopicIndexDocument(subjectTopic);
+            TopicResource topicResource = TopicResource.getById(id, graph);
+            TopicResourceIndexDocument result = new TopicResourceIndexDocument(topicResource);
             transaction.rollback();
             return result;
         }
     }
 
     @PostMapping
-    public ResponseEntity post(@RequestBody AddTopicToSubjectCommand command) throws Exception {
+    public ResponseEntity post(@RequestBody AddResourceToTopicCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
 
-            Subject subject = Subject.getById(command.subjectid.toString(), graph);
             Topic topic = Topic.getById(command.topicid.toString(), graph);
+            Resource resource = Resource.getById(command.resourceid.toString(), graph);
 
-            Iterator<Topic> topics = subject.getTopics();
-            while (topics.hasNext()) {
-                Topic t = topics.next();
-                if (t.getId().equals(topic.getId()))
+            Iterator<Resource> resources = topic.getResources();
+            while (resources.hasNext()) {
+                Resource r = resources.next();
+                if (r.getId().equals(resource.getId()))
                     return ResponseEntity.status(HttpStatus.CONFLICT)
-                            .body("Subject with id " + command.subjectid + " already contains topic with id " + command.topicid);
+                            .body("Topic with id " + command.topicid + " already contains resource with id " + command.resourceid);
             }
 
-            SubjectTopic subjectTopic = subject.addTopic(topic);
-            subjectTopic.setPrimary(command.primary);
+            TopicResource topicResource = topic.addResource(resource);
+            topicResource.setPrimary(command.primary);
 
-            URI location = URI.create("/subject-topics/" + subjectTopic.getId());
+            URI location = URI.create("/topic-resources/" + topicResource.getId());
             transaction.commit();
             return ResponseEntity.created(location).build();
         }
@@ -84,32 +83,32 @@ public class SubjectTopicController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
-            subjectTopic.remove();
+            TopicResource topicResource = TopicResource.getById(id, graph);
+            topicResource.remove();
             transaction.commit();
             return ResponseEntity.noContent().build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> put(@PathVariable("id") String id, @RequestBody UpdateSubjectTopicCommand command) throws Exception {
+    public ResponseEntity<Void> put(@PathVariable("id") String id, @RequestBody UpdateTopicResourceCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
-            subjectTopic.setPrimary(command.primary);
+            TopicResource topicResource = TopicResource.getById(id, graph);
+            topicResource.setPrimary(command.primary);
             transaction.commit();
             return ResponseEntity.noContent().build();
         }
     }
 
-    public static class AddTopicToSubjectCommand {
+    public static class AddResourceToTopicCommand {
         @JsonProperty
-        public URI subjectid, topicid;
+        public URI topicid, resourceid;
 
         @JsonProperty
         public boolean primary;
     }
 
-    public static class UpdateSubjectTopicCommand {
+    public static class UpdateTopicResourceCommand {
         @JsonProperty
         public URI id;
 
@@ -117,21 +116,21 @@ public class SubjectTopicController {
         public boolean primary;
     }
 
-    public static class SubjectTopicIndexDocument {
+    public static class TopicResourceIndexDocument {
         @JsonProperty
-        public URI subjectid, topicid, id;
+        public URI topicid, resourceid, id;
 
         @JsonProperty
         public boolean primary;
 
-        SubjectTopicIndexDocument() {
+        TopicResourceIndexDocument() {
         }
 
-        SubjectTopicIndexDocument(SubjectTopic subjectTopic) {
-            id = subjectTopic.getId();
-            subjectid = subjectTopic.getSubject().getId();
-            topicid = subjectTopic.getTopic().getId();
-            primary = subjectTopic.isPrimary();
+        TopicResourceIndexDocument(TopicResource topicResource) {
+            id = topicResource.getId();
+            topicid = topicResource.getTopic().getId();
+            resourceid = topicResource.getResource().getId();
+            primary = topicResource.isPrimary();
         }
     }
 }

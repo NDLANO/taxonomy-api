@@ -21,11 +21,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "subjects")
-public class SubjectController {
+public class Subjects {
 
     private GraphFactory factory;
 
-    public SubjectController(GraphFactory factory) {
+    public Subjects(GraphFactory factory) {
         this.factory = factory;
     }
 

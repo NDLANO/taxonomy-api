@@ -18,22 +18,22 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "resource-types")
-public class ResourceTypeController {
+public class ResourceTypes {
 
     private GraphFactory factory;
 
-    public ResourceTypeController(GraphFactory factory) {
+    public ResourceTypes(GraphFactory factory) {
         this.factory = factory;
     }
 
     @GetMapping
-    public List<ResourceTypeController.ResourceTypeIndexDocument> index() throws Exception {
-        List<ResourceTypeController.ResourceTypeIndexDocument> result = new ArrayList<>();
+    public List<ResourceTypes.ResourceTypeIndexDocument> index() throws Exception {
+        List<ResourceTypes.ResourceTypeIndexDocument> result = new ArrayList<>();
 
         try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
             Iterable<ODocument> resultSet = (Iterable<ODocument>) graph.executeSql("select id, name from `V_Resource-Type`");
             resultSet.iterator().forEachRemaining(record -> {
-                ResourceTypeController.ResourceTypeIndexDocument document = new ResourceTypeController.ResourceTypeIndexDocument();
+                ResourceTypes.ResourceTypeIndexDocument document = new ResourceTypes.ResourceTypeIndexDocument();
                 result.add(document);
                 document.id = URI.create(record.field("id"));
                 document.name = record.field("name");
@@ -47,7 +47,7 @@ public class ResourceTypeController {
     public ResourceTypeIndexDocument get(@PathVariable("id") String id) throws Exception {
         try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
             final ResourceType result = ResourceType.getById(id, graph);
-            ResourceTypeController.ResourceTypeIndexDocument resourceType = new ResourceTypeController.ResourceTypeIndexDocument(result);
+            ResourceTypes.ResourceTypeIndexDocument resourceType = new ResourceTypes.ResourceTypeIndexDocument(result);
             transaction.rollback();
             return resourceType;
         }

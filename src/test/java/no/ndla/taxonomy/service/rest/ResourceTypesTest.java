@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("junit")
-public class ResourceTypeControllerTest {
+public class ResourceTypesTest {
 
     @Autowired
     private GraphFactory factory;
@@ -43,7 +43,7 @@ public class ResourceTypeControllerTest {
         }
 
         MockHttpServletResponse response = getResource("/resource-types");
-        ResourceTypeController.ResourceTypeIndexDocument[] resourcetypes = getObject(ResourceTypeController.ResourceTypeIndexDocument[].class, response);
+        ResourceTypes.ResourceTypeIndexDocument[] resourcetypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
         assertEquals(2, resourcetypes.length);
 
         assertAnyTrue(resourcetypes, s -> "video".equals(s.name));
@@ -62,7 +62,7 @@ public class ResourceTypeControllerTest {
 
 
         MockHttpServletResponse response = getResource("/resource-types/" + id.toString());
-        ResourceTypeController.ResourceTypeIndexDocument resourceType = getObject(ResourceTypeController.ResourceTypeIndexDocument.class, response);
+        ResourceTypes.ResourceTypeIndexDocument resourceType = getObject(ResourceTypes.ResourceTypeIndexDocument.class, response);
         assertEquals(id, resourceType.id);
     }
 
@@ -78,7 +78,7 @@ public class ResourceTypeControllerTest {
 
     @Test
     public void can_create_resourcetype() throws Exception {
-        ResourceTypeController.CreateResourceTypeCommand command = new ResourceTypeController.CreateResourceTypeCommand() {{
+        ResourceTypes.CreateResourceTypeCommand command = new ResourceTypes.CreateResourceTypeCommand() {{
             id = URI.create("urn:resource-type:1");
             name = "name";
         }};
@@ -93,7 +93,7 @@ public class ResourceTypeControllerTest {
 
     @Test
     public void cannot_create_duplicate_resourcetype() throws Exception {
-        ResourceTypeController.CreateResourceTypeCommand command = new ResourceTypeController.CreateResourceTypeCommand() {{
+        ResourceTypes.CreateResourceTypeCommand command = new ResourceTypes.CreateResourceTypeCommand() {{
             id = URI.create("urn:resource-type:1");
             name = "name";
         }};
@@ -118,7 +118,7 @@ public class ResourceTypeControllerTest {
             id = new ResourceType(graph).name("video").getId();
             transaction.commit();
         }
-        ResourceTypeController.UpdateResourceTypeCommand updateCommand = new ResourceTypeController.UpdateResourceTypeCommand();
+        ResourceTypes.UpdateResourceTypeCommand updateCommand = new ResourceTypes.UpdateResourceTypeCommand();
         updateCommand.name = "Audovideo";
 
         updateResource("/resource-types/" + id, updateCommand);

@@ -2,8 +2,9 @@ package no.ndla.taxonomy.service.rest;
 
 
 import no.ndla.taxonomy.service.GraphFactory;
+import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.Topic;
-import no.ndla.taxonomy.service.domain.TopicSubtopic;
+import no.ndla.taxonomy.service.domain.TopicResource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.junit.Before;
@@ -24,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("junit")
-public class TopicSubtopicControllerTest {
+public class TopicResourcesTest {
 
     @Autowired
     private GraphFactory factory;
@@ -35,47 +36,47 @@ public class TopicSubtopicControllerTest {
     }
 
     @Test
-    public void can_add_subtopic_to_topic() throws Exception {
+    public void can_add_resource_to_topic() throws Exception {
         URI integrationId, calculusId;
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             calculusId = new Topic(graph).name("calculus").getId();
-            integrationId = new Topic(graph).name("integration").getId();
+            integrationId = new Resource(graph).name("Introduction to integration").getId();
             transaction.commit();
         }
 
         String id = getId(
-                createResource("/topic-subtopics", new TopicSubtopicController.AddSubtopicToTopicCommand() {{
+                createResource("/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
                     topicid = calculusId;
-                    subtopicid = integrationId;
+                    resourceid = integrationId;
                 }})
         );
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic calculus = Topic.getById(calculusId.toString(), graph);
-            assertEquals(1, count(calculus.getSubtopics()));
-            assertAnyTrue(calculus.getSubtopics(), t -> "integration".equals(t.getName()));
-            assertNotNull(TopicSubtopic.getById(id, graph));
+            assertEquals(1, count(calculus.getResources()));
+            assertAnyTrue(calculus.getResources(), t -> "Introduction to integration".equals(t.getName()));
+            assertNotNull(TopicResource.getById(id, graph));
             transaction.rollback();
         }
     }
 
     @Test
-    public void cannot_add_existing_subtopic_to_topic() throws Exception {
+    public void cannot_add_existing_resource_to_topic() throws Exception {
         URI integrationId, calculusId;
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic calculus = new Topic(graph).name("calculus");
-            Topic integration = new Topic(graph).name("integration");
-            calculus.addSubtopic(integration);
+            Resource integration = new Resource(graph).name("Introduction to integration");
+            calculus.addResource(integration);
 
             calculusId = calculus.getId();
             integrationId = integration.getId();
             transaction.commit();
         }
 
-        createResource("/topic-subtopics",
-                new TopicSubtopicController.AddSubtopicToTopicCommand() {{
+        createResource("/topic-resources",
+                new TopicResources.AddResourceToTopicCommand() {{
                     topicid = calculusId;
-                    subtopicid = integrationId;
+                    resourceid = integrationId;
                 }},
                 status().isConflict()
         );
@@ -83,48 +84,48 @@ public class TopicSubtopicControllerTest {
 
 
     @Test
-    public void can_delete_subtopic_topic() throws Exception {
+    public void can_delete_resource_topic() throws Exception {
         String id;
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new Topic(graph).addSubtopic(new Topic(graph)).getId().toString();
+            id = new Topic(graph).addResource(new Resource(graph)).getId().toString();
             transaction.commit();
         }
 
-        deleteResource("/topic-subtopics/" + id);
+        deleteResource("/topic-resources/" + id);
         assertNotFound(graph -> Topic.getById(id, graph));
     }
 
     @Test
-    public void can_update_topic_subtopic() throws Exception {
+    public void can_update_topic_resource() throws Exception {
         String id;
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new Topic(graph).addSubtopic(new Topic(graph)).getId().toString();
+            id = new Topic(graph).addResource(new Resource(graph)).getId().toString();
             transaction.commit();
         }
 
-        TopicSubtopicController.UpdateTopicSubtopicCommand command = new TopicSubtopicController.UpdateTopicSubtopicCommand();
+        TopicResources.UpdateTopicResourceCommand command = new TopicResources.UpdateTopicResourceCommand();
         command.primary = true;
 
-        updateResource("/topic-subtopics/" + id, command);
+        updateResource("/topic-resources/" + id, command);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            assertTrue(TopicSubtopic.getById(id, graph).isPrimary());
+            assertTrue(TopicResource.getById(id, graph).isPrimary());
             transaction.rollback();
         }
     }
 
     @Test
-    public void can_get_topics() throws Exception {
+    public void can_get_resources() throws Exception {
         URI alternatingCurrentId, electricityId, calculusId, integrationId;
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic electricity = new Topic(graph).name("electricity");
-            Topic alternatingCurrent = new Topic(graph).name("alternating current");
-            electricity.addSubtopic(alternatingCurrent);
+            Resource alternatingCurrent = new Resource(graph).name("How alternating current works");
+            electricity.addResource(alternatingCurrent);
 
             Topic calculus = new Topic(graph).name("calculus");
-            Topic integration = new Topic(graph).name("integration");
-            calculus.addSubtopic(integration);
+            Resource integration = new Resource(graph).name("Introduction to integration");
+            calculus.addResource(integration);
 
             electricityId = electricity.getId();
             alternatingCurrentId = alternatingCurrent.getId();
@@ -133,32 +134,32 @@ public class TopicSubtopicControllerTest {
             transaction.commit();
         }
 
-        MockHttpServletResponse response = getResource("/topic-subtopics");
-        TopicSubtopicController.TopicSubtopicIndexDocument[] topicSubtopics = getObject(TopicSubtopicController.TopicSubtopicIndexDocument[].class, response);
+        MockHttpServletResponse response = getResource("/topic-resources");
+        TopicResources.TopicResourceIndexDocument[] topicResources = getObject(TopicResources.TopicResourceIndexDocument[].class, response);
 
-        assertEquals(2, topicSubtopics.length);
-        assertAnyTrue(topicSubtopics, t -> electricityId.equals(t.topicid) && alternatingCurrentId.equals(t.subtopicid));
-        assertAnyTrue(topicSubtopics, t -> calculusId.equals(t.topicid) && integrationId.equals(t.subtopicid));
-        assertAllTrue(topicSubtopics, t -> isValidId(t.id));
+        assertEquals(2, topicResources.length);
+        assertAnyTrue(topicResources, t -> electricityId.equals(t.topicid) && alternatingCurrentId.equals(t.resourceid));
+        assertAnyTrue(topicResources, t -> calculusId.equals(t.topicid) && integrationId.equals(t.resourceid));
+        assertAllTrue(topicResources, t -> isValidId(t.id));
     }
 
     @Test
-    public void can_get_topic_subtopic() throws Exception {
-        URI topicid, subtopicid, id;
+    public void can_get_topic_resource() throws Exception {
+        URI topicid, resourceid, id;
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic electricity = new Topic(graph).name("electricity");
-            Topic alternatingCurrent = new Topic(graph).name("alternating current");
-            TopicSubtopic topicSubtopic = electricity.addSubtopic(alternatingCurrent);
+            Resource alternatingCurrent = new Resource(graph).name("How alternating current works");
+            TopicResource topicResource = electricity.addResource(alternatingCurrent);
 
             topicid = electricity.getId();
-            subtopicid = alternatingCurrent.getId();
-            id = topicSubtopic.getId();
+            resourceid = alternatingCurrent.getId();
+            id = topicResource.getId();
             transaction.commit();
         }
 
-        MockHttpServletResponse resource = getResource("/topic-subtopics/" + id);
-        TopicSubtopicController.TopicSubtopicIndexDocument topicSubtopicIndexDocument = getObject(TopicSubtopicController.TopicSubtopicIndexDocument.class, resource);
-        assertEquals(topicid, topicSubtopicIndexDocument.topicid);
-        assertEquals(subtopicid, topicSubtopicIndexDocument.subtopicid);
+        MockHttpServletResponse resource = getResource("/topic-resources/" + id);
+        TopicResources.TopicResourceIndexDocument topicResourceIndexDocument = getObject(TopicResources.TopicResourceIndexDocument.class, resource);
+        assertEquals(topicid, topicResourceIndexDocument.topicid);
+        assertEquals(resourceid, topicResourceIndexDocument.resourceid);
     }
 }

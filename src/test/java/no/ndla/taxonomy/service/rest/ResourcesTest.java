@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("junit")
-public class ResourceControllerTest {
+public class ResourcesTest {
 
     @Autowired
     private GraphFactory factory;
@@ -43,7 +43,7 @@ public class ResourceControllerTest {
         }
 
         MockHttpServletResponse response = getResource("/resources");
-        ResourceController.ResourceIndexDocument[] resources = getObject(ResourceController.ResourceIndexDocument[].class, response);
+        Resources.ResourceIndexDocument[] resources = getObject(Resources.ResourceIndexDocument[].class, response);
         assertEquals(2, resources.length);
 
         assertAnyTrue(resources, s -> "The inner planets".equals(s.name));
@@ -53,7 +53,7 @@ public class ResourceControllerTest {
 
     @Test
     public void can_create_resource() throws Exception {
-        ResourceController.CreateResourceCommand createResourceCommand = new ResourceController.CreateResourceCommand();
+        Resources.CreateResourceCommand createResourceCommand = new Resources.CreateResourceCommand();
         createResourceCommand.name = "testresource";
 
         MockHttpServletResponse response = createResource("/resources", createResourceCommand);
@@ -75,7 +75,7 @@ public class ResourceControllerTest {
             transaction.commit();
         }
 
-        ResourceController.UpdateResourceCommand command = new ResourceController.UpdateResourceCommand();
+        Resources.UpdateResourceCommand command = new Resources.UpdateResourceCommand();
         command.name = "The inner planets";
 
         updateResource("/resources/" + id, command);
@@ -89,7 +89,7 @@ public class ResourceControllerTest {
 
     @Test
     public void can_create_resource_with_id() throws Exception {
-        ResourceController.CreateResourceCommand command = new ResourceController.CreateResourceCommand() {{
+        Resources.CreateResourceCommand command = new Resources.CreateResourceCommand() {{
             id = URI.create("urn:resource:1");
             name = "name";
         }};
@@ -104,7 +104,7 @@ public class ResourceControllerTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        ResourceController.CreateResourceCommand command = new ResourceController.CreateResourceCommand() {{
+        Resources.CreateResourceCommand command = new Resources.CreateResourceCommand() {{
             id = URI.create("urn:resource:1");
             name = "name";
         }};
@@ -133,7 +133,7 @@ public class ResourceControllerTest {
             transaction.commit();
         }
         MockHttpServletResponse response = getResource("/resources/" + id);
-        ResourceController.ResourceIndexDocument result = getObject(ResourceController.ResourceIndexDocument.class, response);
+        Resources.ResourceIndexDocument result = getObject(Resources.ResourceIndexDocument.class, response);
         assertEquals(id, result.id.toString());
     }
 
