@@ -2,9 +2,12 @@ package no.ndla.taxonomy.service.domain;
 
 
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
+import java.util.Iterator;
 import java.util.UUID;
 
 public class Resource extends DomainVertex {
@@ -37,5 +40,25 @@ public class Resource extends DomainVertex {
         } else {
             throw new NotFoundException("resource", id);
         }
+    }
+
+    public Iterator<ResourceType> getResourceTypes() {
+        Iterator<Edge> edges = vertex.edges(Direction.OUT, ResourceResourceType.LABEL);
+
+        return new Iterator<ResourceType>() {
+            @Override
+            public boolean hasNext() {
+                return edges.hasNext();
+            }
+
+            @Override
+            public ResourceType next() {
+                return new ResourceType(edges.next().inVertex());
+            }
+        };
+    }
+
+    public ResourceResourceType addResourceType(ResourceType resourceType) {
+        return new ResourceResourceType(this, resourceType);
     }
 }
