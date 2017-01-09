@@ -3,12 +3,16 @@ package no.ndla.taxonomy.service.rest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.ResourceType;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +31,7 @@ public class ResourceTypes {
     }
 
     @GetMapping
+    @ApiOperation("Gets a list of all resource types")
     public List<ResourceTypes.ResourceTypeIndexDocument> index() throws Exception {
         List<ResourceTypes.ResourceTypeIndexDocument> result = new ArrayList<>();
 
@@ -44,6 +49,7 @@ public class ResourceTypes {
     }
 
     @GetMapping("/{id}")
+    @ApiOperation("Gets a single resource type")
     public ResourceTypeIndexDocument get(@PathVariable("id") String id) throws Exception {
         try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
             final ResourceType result = ResourceType.getById(id, graph);
@@ -54,9 +60,14 @@ public class ResourceTypes {
     }
 
     @PostMapping
-    public ResponseEntity<Void> post(@RequestBody CreateResourceTypeCommand command) throws Exception {
+    @ApiOperation("Creates a new resource type")
+    public ResponseEntity<Void> post(
+            @ApiParam(name = "resourceType", value = "The new resource type")
+            @RequestBody
+                    CreateResourceTypeCommand command
+    ) throws Exception {
         try (Graph graph = factory.create();
-        Transaction transaction = graph.tx()) {
+             Transaction transaction = graph.tx()) {
             ResourceType resourceType = new ResourceType(graph);
             if (null != command.id) resourceType.setId(command.id.toString());
             resourceType.name(command.name);
@@ -69,6 +80,7 @@ public class ResourceTypes {
     }
 
     @DeleteMapping("/{id}")
+    @ApiOperation(value = "Deletes a single resource type")
     public ResponseEntity delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             ResourceType resource = ResourceType.getById(id, graph);
@@ -79,20 +91,26 @@ public class ResourceTypes {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity put(@PathVariable String id, @RequestBody UpdateResourceTypeCommand command) throws Exception {
+    @ApiOperation(value = "Updates a single resource type")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void put(
+            @PathVariable String id,
+            @ApiParam(name = "resourceType", value = "The updated resource type") @RequestBody UpdateResourceTypeCommand command
+    ) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             ResourceType resourceType = ResourceType.getById(id, graph);
             resourceType.name(command.name);
             transaction.commit();
-            return ResponseEntity.noContent().build();
         }
     }
 
-    static class ResourceTypeIndexDocument {
+    public static class ResourceTypeIndexDocument {
         @JsonProperty
+        @ApiModelProperty(example = "urn:resource-type:1")
         public URI id;
 
         @JsonProperty
+        @ApiModelProperty(required = true, value = "The name of the resource type", example = "Lecture")
         public String name;
 
         ResourceTypeIndexDocument() {
@@ -106,17 +124,17 @@ public class ResourceTypes {
 
     public static class CreateResourceTypeCommand {
         @JsonProperty
+        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resource-type: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:resource-type:1")
         public URI id;
 
         @JsonProperty
+        @ApiModelProperty(required = true, value = "The name of the resource type", example = "Lecture")
         public String name;
     }
 
     public static class UpdateResourceTypeCommand {
         @JsonProperty
-        public URI id;
-
-        @JsonProperty
+        @ApiModelProperty(required = true, value = "The name of the resource type", example = "Lecture")
         public String name;
     }
 }

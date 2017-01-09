@@ -3,19 +3,22 @@ package no.ndla.taxonomy.service.rest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Topic;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping(path = "topics")
@@ -28,6 +31,7 @@ public class Topics {
     }
 
     @GetMapping
+    @ApiOperation("Gets a list of all topics")
     public List<TopicIndexDocument> index() throws Exception {
         List<TopicIndexDocument> result = new ArrayList<>();
 
@@ -45,6 +49,7 @@ public class Topics {
     }
 
     @GetMapping("/{id}")
+    @ApiOperation("Gets a single topic")
     public TopicIndexDocument get(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = Topic.getById(id, graph);
@@ -55,7 +60,8 @@ public class Topics {
     }
 
     @PostMapping
-    public ResponseEntity<Void> post(@RequestBody CreateTopicCommand command) throws Exception {
+    @ApiOperation(value = "Creates a new topic")
+    public ResponseEntity<Void> post(@ApiParam(name = "topic", value = "The new topic") @RequestBody CreateTopicCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = new Topic(graph);
             if (null != command.id) topic.setId(command.id.toString());
@@ -70,6 +76,7 @@ public class Topics {
     }
 
     @DeleteMapping("/{id}")
+    @ApiOperation(value = "Deletes a single topic")
     public ResponseEntity delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = Topic.getById(id, graph);
@@ -80,25 +87,31 @@ public class Topics {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity put(@PathVariable("id") String id, @RequestBody UpdateTopicCommand command) throws Exception {
+    @ApiOperation(value = "Updates a single topic")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void put(
+            @PathVariable("id") String id,
+            @ApiParam(name = "topic", value = "The updated topic") @RequestBody UpdateTopicCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = Topic.getById(id, graph);
             topic.setName(command.name);
             transaction.commit();
-            return ResponseEntity.noContent().build();
         }
     }
 
     public static class CreateTopicCommand {
         @JsonProperty
+        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:topic:1")
         public URI id;
 
         @JsonProperty
+        @ApiModelProperty(required = true, value = "The name of the topic", example = "Trigonometry")
         public String name;
     }
 
     public static class UpdateTopicCommand {
         @JsonProperty
+        @ApiModelProperty(required = true, value = "The name of the topic", example = "Trigonometry")
         public String name;
     }
 
@@ -107,6 +120,7 @@ public class Topics {
         public URI id;
 
         @JsonProperty
+        @ApiModelProperty(required = true, value = "The name of the topic", example = "Trigonometry")
         public String name;
 
         TopicIndexDocument() {
@@ -115,11 +129,6 @@ public class Topics {
         TopicIndexDocument(Topic topic) {
             id = topic.getId();
             name = topic.getName();
-        }
-
-        public TopicIndexDocument(Map<String, Object> m) {
-            id = URI.create((String) ((List) m.get("id")).get(0));
-            name = (String) ((List) m.get("name")).get(0);
         }
     }
 }

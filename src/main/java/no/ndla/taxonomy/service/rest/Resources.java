@@ -3,6 +3,7 @@ package no.ndla.taxonomy.service.rest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
+import io.swagger.annotations.ApiOperation;
 import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Resource;
@@ -27,6 +28,8 @@ public class Resources {
     }
 
     @GetMapping
+    @ApiOperation(value = "List all resources",
+            notes = "Multiple status values can be provided with comma seperated strings")
     public List<ResourceIndexDocument> index() throws Exception {
         List<ResourceIndexDocument> result = new ArrayList<>();
 
