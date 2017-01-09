@@ -18,7 +18,7 @@ import java.net.URI;
 import java.util.Iterator;
 
 @RestController
-@RequestMapping(path="resource-resourcetypes")
+@RequestMapping(path = "resource-resourcetypes")
 public class ResourceResourceTypes {
 
     private GraphFactory factory;
@@ -35,8 +35,6 @@ public class ResourceResourceTypes {
             Resource resource = Resource.getById(command.resourceId.toString(), graph);
             ResourceType resourceType = ResourceType.getById(command.resourceTypeId.toString(), graph);
 
-            ResourceResourceType edge = resource.addResourceType(resourceType);
-
             Iterator<ResourceType> resourceTypes = resource.getResourceTypes();
             while (resourceTypes.hasNext()) {
                 ResourceType type = resourceTypes.next();
@@ -45,6 +43,8 @@ public class ResourceResourceTypes {
                             .body("Resource with id " + command.resourceId + " already contains resource type " + command.resourceTypeId);
                 }
             }
+
+            ResourceResourceType edge = resource.addResourceType(resourceType);
 
             URI location = URI.create("/resource-resourcetypes/" + edge.getId());
             transaction.commit();
