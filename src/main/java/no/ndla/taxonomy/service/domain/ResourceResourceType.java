@@ -33,7 +33,7 @@ public class ResourceResourceType extends DomainEdge{
     }
 
 
-    public static Object getById(String id, Graph graph) {
+    public static ResourceResourceType getById(String id, Graph graph) {
         GraphTraversal<Edge, Edge> traversal = graph.traversal().E().hasLabel(LABEL).has("id", id);
         if (traversal.hasNext()) return new ResourceResourceType((traversal.next()));
         throw new NotFoundException("resource-resourcetype", id);

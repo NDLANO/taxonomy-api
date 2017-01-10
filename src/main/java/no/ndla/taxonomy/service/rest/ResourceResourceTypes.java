@@ -9,10 +9,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.Iterator;
@@ -49,6 +46,16 @@ public class ResourceResourceTypes {
             URI location = URI.create("/resource-resourcetypes/" + edge.getId());
             transaction.commit();
             return ResponseEntity.created(location).build();
+        }
+    }
+
+    @DeleteMapping({"/{id}"})
+    public ResponseEntity<Void> deleteResourceResourceType(@PathVariable("id") String id) throws Exception {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            ResourceResourceType resourceResourceType = ResourceResourceType.getById(id, graph);
+            resourceResourceType.remove();
+            transaction.commit();
+            return ResponseEntity.noContent().build();
         }
     }
 

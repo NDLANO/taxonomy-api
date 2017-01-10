@@ -60,7 +60,7 @@ public class ResourceResourceTypesTest {
     }
 
     @Test
-    public void cannot_have_duplicate_resourcetypes() throws Exception {
+    public void cannot_have_duplicate_resourcetypes_for_resource() throws Exception {
         Resource integrationResource;
         ResourceType resourceType;
 
@@ -75,5 +75,18 @@ public class ResourceResourceTypesTest {
             resourceId = integrationResource.getId();
             resourceTypeId = resourceType.getId();
         }}, status().isConflict());
+    }
+
+    @Test
+    public void can_delete_resource_resourcetype() throws Exception {
+        final ResourceResourceType resourceResourceType;
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            Resource integrationResource = new Resource(graph).name("Introduction to integration");
+            ResourceType resourceType = new ResourceType(graph).name("text");
+            resourceResourceType = integrationResource.addResourceType(resourceType);
+            transaction.commit();
+        }
+
+        deleteResource("/resource-resourcetypes/" + resourceResourceType.getId().toString());
     }
 }
