@@ -118,4 +118,24 @@ public class ResourceResourceTypesTest {
         assertAnyTrue(resourceResourcetypes, t -> trigId.equals(t.resourceId) && articleId.equals(t.resourceTypeId));
         assertAnyTrue(resourceResourcetypes, t -> integrationId.equals(t.resourceId) && textId.equals(t.resourceTypeId));
     }
+
+    @Test
+    public void can_get_a_resource_resourcetype() throws Exception {
+        URI trigId;
+        URI articleId;
+        ResourceResourceType trigonometryArticle;
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            Resource resource = new Resource(graph).name("Advanced trigonometry");
+            trigId = resource.getId();
+            ResourceType resourceType = new ResourceType(graph).name("article");
+            articleId = resourceType.getId();
+            trigonometryArticle = resource.addResourceType(resourceType);
+            transaction.commit();
+        }
+
+        final MockHttpServletResponse resource = getResource("/resource-resourcetypes/" + trigonometryArticle.getId());
+        final ResourceResourceTypes.ResourceResourceTypeIndexDocument result = getObject(ResourceResourceTypes.ResourceResourceTypeIndexDocument.class, resource);
+        assertEquals(trigId, result.resourceId);
+        assertEquals(articleId, result.resourceTypeId);
+    }
 }

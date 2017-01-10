@@ -38,4 +38,12 @@ public class ResourceResourceType extends DomainEdge{
         if (traversal.hasNext()) return new ResourceResourceType((traversal.next()));
         throw new NotFoundException("resource-resourcetype", id);
     }
+
+    public ResourceType getResourceType() {
+        return new ResourceType(edge.inVertex());
+    }
+
+    public Resource getResource() {
+        return new Resource(edge.outVertex());
+    }
 }

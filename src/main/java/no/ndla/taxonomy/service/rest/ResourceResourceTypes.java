@@ -81,6 +81,16 @@ public class ResourceResourceTypes {
         }
     }
 
+    @GetMapping({"/{id}"})
+    public ResourceResourceTypeIndexDocument get(@PathVariable("id") String id) throws Exception {
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            final ResourceResourceType result = ResourceResourceType.getById(id, graph);
+            final ResourceResourceTypeIndexDocument resourceResourceTypeIndexDocument = new ResourceResourceTypeIndexDocument(result);
+            transaction.rollback();
+            return new ResourceResourceTypeIndexDocument(result);
+        }
+    }
+
     public static class CreateResourceResourceTypeCommand {
         @JsonProperty
         URI resourceId, resourceTypeId;
@@ -89,5 +99,13 @@ public class ResourceResourceTypes {
     public static class ResourceResourceTypeIndexDocument {
         @JsonProperty
         URI resourceId, resourceTypeId, id;
+
+        public ResourceResourceTypeIndexDocument() {}
+
+        public ResourceResourceTypeIndexDocument(ResourceResourceType resourceResourceType) {
+            id = resourceResourceType.getId();
+            resourceId = resourceResourceType.getResource().getId();
+            resourceTypeId = resourceResourceType.getResourceType().getId();
+        }
     }
 }
