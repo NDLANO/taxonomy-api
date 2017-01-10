@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -88,5 +89,33 @@ public class ResourceResourceTypesTest {
         }
 
         deleteResource("/resource-resourcetypes/" + resourceResourceType.getId().toString());
+    }
+
+    @Test
+    public void can_list_all_resource_resourcetypes() throws Exception {
+        ResourceResourceType trigonometryArticle;
+        ResourceResourceType integrationText;
+        URI trigId, articleId, integrationId, textId;
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            Resource resource = new Resource(graph).name("Advanced trigonometry");
+            trigId = resource.getId();
+            ResourceType resourceType = new ResourceType(graph).name("article");
+            articleId = resourceType.getId();
+            trigonometryArticle = resource.addResourceType(resourceType);
+
+            final Resource integrationResource = new Resource(graph).name("Introduction to integration");
+            integrationId = integrationResource.getId();
+            final ResourceType textType = new ResourceType(graph).name("text");
+            textId = textType.getId();
+            integrationText = integrationResource.addResourceType(textType);
+
+            transaction.commit();
+        }
+
+        final MockHttpServletResponse response = getResource("/resource-resourcetypes");
+        final ResourceResourceTypes.ResourceResourceTypeIndexDocument[] resourceResourcetypes = getObject(ResourceResourceTypes.ResourceResourceTypeIndexDocument[].class, response);
+        assertEquals(2, resourceResourcetypes.length);
+        assertAnyTrue(resourceResourcetypes, t -> trigId.equals(t.resourceId) && articleId.equals(t.resourceTypeId));
+        assertAnyTrue(resourceResourcetypes, t -> integrationId.equals(t.resourceId) && textId.equals(t.resourceTypeId));
     }
 }
