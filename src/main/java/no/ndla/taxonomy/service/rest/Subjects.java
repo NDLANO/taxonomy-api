@@ -2,7 +2,6 @@ package no.ndla.taxonomy.service.rest;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
@@ -11,13 +10,13 @@ import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
-import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
+import no.ndla.taxonomy.service.repositories.SubjectRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,90 +28,72 @@ public class Subjects {
 
     private GraphFactory factory;
 
+    @Autowired
+    private SubjectRepository subjectRepository;
+
     public Subjects(GraphFactory factory) {
         this.factory = factory;
     }
+
 
     @GetMapping
     @ApiOperation("Gets a list of all subjects")
     public List<SubjectIndexDocument> index() throws Exception {
         List<SubjectIndexDocument> result = new ArrayList<>();
-
-        try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
-            Iterable<ODocument> resultSet = (Iterable<ODocument>) graph.executeSql("select id, name from V_Subject");
-            resultSet.iterator().forEachRemaining(record -> {
-                SubjectIndexDocument document = new SubjectIndexDocument();
-                result.add(document);
-                document.id = URI.create(record.field("id"));
-                document.name = record.field("name");
-            });
-            transaction.rollback();
-            return result;
-        }
+        Iterable<Subject> all = subjectRepository.findAll();
+        all.forEach(subject -> result.add(new SubjectIndexDocument(subject)));
+        return result;
     }
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single subject")
-    public SubjectIndexDocument get(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject subject = Subject.getById(id, graph);
-            SubjectIndexDocument result = new SubjectIndexDocument(subject);
-            transaction.rollback();
-            return result;
-        }
+    public SubjectIndexDocument get(@PathVariable("id") URI id) throws Exception {
+        Subject subject = subjectRepository.getById(id);
+        SubjectIndexDocument result = new SubjectIndexDocument(subject);
+        return result;
     }
 
     @DeleteMapping("/{id}")
     @ApiOperation("Deletes a single subject")
-    public ResponseEntity<Void> delete(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject subject = Subject.getById(id, graph);
-            subject.remove();
-            transaction.commit();
-            return ResponseEntity.noContent().build();
-        }
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
+    public void delete(@PathVariable("id") URI id) throws Exception {
+        subjectRepository.deleteById(id);
     }
 
     @PutMapping("/{id}")
     @ApiOperation("Updates a single subject")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(
-            @PathVariable("id") String id,
+            @PathVariable("id") URI id,
             @ApiParam(name = "subject", value = "The updated subject") @RequestBody UpdateSubjectCommand command
     ) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject subject = Subject.getById(id, graph);
-            subject.setName(command.name);
-            transaction.commit();
-        }
+        Subject subject = subjectRepository.getById(id);
+        subject.setName(command.name);
     }
 
     @GetMapping("/{id}/topics")
     @ApiOperation(value = "Gets all topics associated with a subject", notes = "This resource is read-only. To update the relationship between subjects and topics, use the resource /subject-topics.")
     public List<TopicIndexDocument> getTopics(
-            @PathVariable("id") String id,
+            @PathVariable("id") URI id,
             @RequestParam(value = "recursive", required = false, defaultValue = "false")
             @ApiParam("If true, subtopics are fetched recursively")
                     boolean recursive
     ) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            List<TopicIndexDocument> results = new ArrayList<>();
-            Subject subject = Subject.getById(id, graph);
-            subject.getTopics().forEachRemaining(t -> results.add(new TopicIndexDocument(t, recursive)));
-            transaction.rollback();
-            return results;
-        }
+        List<TopicIndexDocument> results = new ArrayList<>();
+        Subject subject = subjectRepository.getById(id);
+        subject.getTopics().forEachRemaining(t -> results.add(new TopicIndexDocument(t, recursive)));
+        return results;
     }
 
     @PostMapping
     @ApiOperation(value = "Creates a new subject")
     public ResponseEntity<Void> post(@ApiParam(name = "subject", value = "The new subject") @RequestBody CreateSubjectCommand command) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject subject = new Subject(graph);
-            if (null != command.id) subject.setId(command.id.toString());
-            subject.name(command.name);
+        try {
+            Subject subject = new Subject();
+            if (null != command.id) subject.setId(command.id);
+            subject.setName(command.name);
             URI location = URI.create("/subjects/" + subject.getId());
-            transaction.commit();
             return ResponseEntity.created(location).build();
         } catch (ORecordDuplicatedException e) {
             throw new DuplicateIdException("" + command.id);
@@ -152,7 +133,7 @@ public class Subjects {
             name = subject.getName();
         }
     }
-    
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class TopicIndexDocument {
         @JsonProperty

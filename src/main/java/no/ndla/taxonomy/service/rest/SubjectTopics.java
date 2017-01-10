@@ -61,7 +61,7 @@ public class SubjectTopics {
     public ResponseEntity post(@RequestBody AddTopicToSubjectCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
 
-            Subject subject = Subject.getById(command.subjectid.toString(), graph);
+            Subject subject = null; //subjectRepository.getById(command.subjectid);
             Topic topic = Topic.getById(command.topicid.toString(), graph);
 
             Iterator<Topic> topics = subject.getTopics();

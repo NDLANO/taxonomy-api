@@ -1,4 +1,5 @@
 create table subjects (
-  id serial primary key,
+  serial serial primary key,
+  id text,
   name text
 );

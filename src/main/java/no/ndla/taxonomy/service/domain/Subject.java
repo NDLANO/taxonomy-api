@@ -1,44 +1,18 @@
 package no.ndla.taxonomy.service.domain;
 
 
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.structure.*;
-
+import javax.persistence.Entity;
+import java.net.URI;
 import java.util.Iterator;
 import java.util.UUID;
 
-public class Subject extends DomainVertex {
+@Entity
+public class Subject extends DomainObject {
 
     public static final String LABEL = "subject";
 
-    public Subject(Vertex vertex) {
-        super(vertex);
-    }
-
-    /**
-     * Create a new subject
-     *
-     * @param graph the graph where the new vertex is created
-     */
-    public Subject(Graph graph) {
-        this(graph.addVertex(LABEL));
-        setId("urn:subject:" + UUID.randomUUID());
-    }
-
-    public Subject name(String name) {
-        setName(name);
-        return this;
-    }
-
-    public static Subject getById(String id, Graph graph) {
-        Subject subject = findById(id, graph);
-        if (subject != null) return subject;
-        throw new NotFoundException("subject", id);
-    }
-
-    public static Subject findById(String id, Graph graph) {
-        GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V().hasLabel(LABEL).has("id", id);
-        return traversal.hasNext() ? new Subject(traversal.next()) : null;
+    public Subject() {
+        setId(URI.create("urn:subject:" + UUID.randomUUID()));
     }
 
     public SubjectTopic addTopic(Topic topic) {
@@ -46,6 +20,9 @@ public class Subject extends DomainVertex {
     }
 
     public Iterator<Topic> getTopics() {
+        return null;
+
+        /*
         Iterator<Edge> edges = vertex.edges(Direction.OUT, SubjectTopic.LABEL);
 
         return new Iterator<Topic>() {
@@ -59,5 +36,12 @@ public class Subject extends DomainVertex {
                 return new Topic(edges.next().inVertex());
             }
         };
+
+        */
+    }
+
+    public Subject name(String name) {
+        setName(name);
+        return this;
     }
 }

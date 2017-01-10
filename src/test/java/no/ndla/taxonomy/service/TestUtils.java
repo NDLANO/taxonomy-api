@@ -16,8 +16,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.context.WebApplicationContext;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.function.Consumer;
@@ -26,7 +30,6 @@ import java.util.function.Predicate;
 import static org.junit.Assert.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
@@ -36,18 +39,20 @@ public class TestUtils {
     private static HttpMessageConverter mappingJackson2HttpMessageConverter;
     private static GraphFactory factory;
     private static MockMvc mockMvc;
+    private static DataSource dataSource;
 
     @Autowired
-    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext, GraphFactory factory) {
+    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext, GraphFactory factory, DataSource dataSource) {
         mappingJackson2HttpMessageConverter = Arrays.stream(converters)
                 .filter(hmc -> hmc instanceof MappingJackson2HttpMessageConverter)
                 .findAny()
                 .orElse(null);
-        this.factory = factory;
+        TestUtils.factory = factory;
+        TestUtils.dataSource = dataSource;
 
-        assertNotNull("the JSON message converter must not be null", this.mappingJackson2HttpMessageConverter);
+        assertNotNull("the JSON message converter must not be null", TestUtils.mappingJackson2HttpMessageConverter);
 
-        mockMvc = webAppContextSetup(webApplicationContext).build();
+        TestUtils.mockMvc = webAppContextSetup(webApplicationContext).build();
     }
 
     public static String json(Object o) throws IOException {
@@ -73,7 +78,7 @@ public class TestUtils {
     public static MockHttpServletResponse getResource(String path, ResultMatcher resultMatcher) throws Exception {
         return mockMvc.perform(
                 get(path)
-                .accept(APPLICATION_JSON_UTF8))
+                        .accept(APPLICATION_JSON_UTF8))
                 .andExpect(resultMatcher)
                 .andReturn()
                 .getResponse();
@@ -147,6 +152,18 @@ public class TestUtils {
             assertTrue("Are you mad?", factory.isTest());
             graph.vertices().forEachRemaining(Element::remove);
             transaction.commit();
+        }
+
+        String[] tables = new String[]{"subjects"};
+        try (Connection connection = dataSource.getConnection()) {
+            for (String table : tables) truncate(table, connection);
+            connection.commit();
+        }
+    }
+
+    private static void truncate(String table, Connection connection) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("delete from " + table)) {
+            statement.execute();
         }
     }
 

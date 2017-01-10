@@ -27,7 +27,7 @@ public class SubjectTopic extends DomainEdge {
     }
 
     private static Edge createEdge(Subject subject, Topic topic) {
-        return subject.vertex.addEdge(SubjectTopic.LABEL, topic.vertex);
+        return null;// subject.vertex.addEdge(SubjectTopic.LABEL, topic.vertex);
     }
 
     public boolean isPrimary() {
@@ -39,7 +39,7 @@ public class SubjectTopic extends DomainEdge {
     }
 
     public Subject getSubject() {
-        return new Subject(edge.outVertex());
+        return null; //new Subject(edge.outVertex());
     }
 
     public Topic getTopic() {
