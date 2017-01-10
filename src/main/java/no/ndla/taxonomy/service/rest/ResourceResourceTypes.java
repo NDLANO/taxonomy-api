@@ -2,7 +2,11 @@ package no.ndla.taxonomy.service.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.GraphFactory;
+import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.ResourceResourceType;
 import no.ndla.taxonomy.service.domain.ResourceType;
@@ -29,7 +33,10 @@ public class ResourceResourceTypes {
     }
 
     @PostMapping
-    public ResponseEntity post(@RequestBody CreateResourceResourceTypeCommand command) throws Exception {
+    @ApiOperation(value = "Creates a connection between a resource and a resource type")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<Void> post(
+            @ApiParam(name = "Connection", value = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) throws Exception {
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
 
@@ -40,8 +47,7 @@ public class ResourceResourceTypes {
             while (resourceTypes.hasNext()) {
                 ResourceType type = resourceTypes.next();
                 if (type.getId().equals(command.resourceTypeId)) {
-                    return ResponseEntity.status(HttpStatus.CONFLICT)
-                            .body("Resource with id " + command.resourceId + " already contains resource type " + command.resourceTypeId);
+                    throw new DuplicateIdException(command.resourceTypeId.toString());
                 }
             }
 
@@ -54,18 +60,19 @@ public class ResourceResourceTypes {
     }
 
     @DeleteMapping({"/{id}"})
-    public ResponseEntity<Void> delete(@PathVariable("id") String id) throws Exception {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ApiOperation("Deletes a connection between a resource and a resource type")
+    public void delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             ResourceResourceType resourceResourceType = ResourceResourceType.getById(id, graph);
             resourceResourceType.remove();
             transaction.commit();
-            return ResponseEntity.noContent().build();
         }
     }
 
     @GetMapping
+    @ApiOperation("Gets all connections between resources and resource types")
     public List<ResourceResourceTypeIndexDocument> get() throws Exception {
-
         List<ResourceResourceTypeIndexDocument> result = new ArrayList<>();
         try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
             Iterable<ODocument> resultSet = (Iterable<ODocument>) graph.executeSql("select id, out.id as resourceid, in.id as resourcetypeid from `E_resource-has-resourcetypes`");
@@ -82,6 +89,7 @@ public class ResourceResourceTypes {
     }
 
     @GetMapping({"/{id}"})
+    @ApiOperation("Gets a single connection between resource and resource type")
     public ResourceResourceTypeIndexDocument get(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             final ResourceResourceType result = ResourceResourceType.getById(id, graph);
@@ -93,14 +101,29 @@ public class ResourceResourceTypes {
 
     public static class CreateResourceResourceTypeCommand {
         @JsonProperty
-        URI resourceId, resourceTypeId;
+        @ApiModelProperty(required = true, value = "Resource id", example = "urn:resource:123")
+        URI resourceId;
+
+        @JsonProperty
+        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resource-type:234")
+        URI resourceTypeId;
     }
 
     public static class ResourceResourceTypeIndexDocument {
         @JsonProperty
-        URI resourceId, resourceTypeId, id;
+        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resource:123")
+        URI resourceId;
 
-        public ResourceResourceTypeIndexDocument() {}
+        @JsonProperty
+        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resource-type:234")
+        URI resourceTypeId;
+
+        @JsonProperty
+        @ApiModelProperty(required = true, value = "Resource to resource type connection id", example = "urn:resource-has-resourcetypes:12")
+        URI id;
+
+        public ResourceResourceTypeIndexDocument() {
+        }
 
         public ResourceResourceTypeIndexDocument(ResourceResourceType resourceResourceType) {
             id = resourceResourceType.getId();

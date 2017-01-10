@@ -74,6 +74,10 @@ public class SwaggerConfiguration {
                                 .headersWithDescription(
                                         singletonMap(LOCATION.toString(), new Header("Location", "Path to created resource", new ModelRef("URI")))
                                 )
+                                .build(),
+                        new ResponseMessageBuilder()
+                                .code(HttpStatus.CONFLICT.value())
+                                .message(CONFLICT.getReasonPhrase())
                                 .build()
                 ))
                 ;
