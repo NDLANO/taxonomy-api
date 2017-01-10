@@ -29,7 +29,7 @@ public class ResourceResourceTypes {
     }
 
     @PostMapping
-    public ResponseEntity createResourceResourceType(@RequestBody CreateResourceResourceTypeCommand command) throws Exception {
+    public ResponseEntity post(@RequestBody CreateResourceResourceTypeCommand command) throws Exception {
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
 
@@ -54,7 +54,7 @@ public class ResourceResourceTypes {
     }
 
     @DeleteMapping({"/{id}"})
-    public ResponseEntity<Void> deleteResourceResourceType(@PathVariable("id") String id) throws Exception {
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             ResourceResourceType resourceResourceType = ResourceResourceType.getById(id, graph);
             resourceResourceType.remove();
@@ -64,7 +64,7 @@ public class ResourceResourceTypes {
     }
 
     @GetMapping
-    public List<ResourceResourceTypeIndexDocument> getAllResourceResourcetypes() throws Exception {
+    public List<ResourceResourceTypeIndexDocument> get() throws Exception {
 
         List<ResourceResourceTypeIndexDocument> result = new ArrayList<>();
         try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
