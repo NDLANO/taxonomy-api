@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.rest;
+package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.GraphFactory;
@@ -42,7 +42,7 @@ public class ResourcesTest {
             transaction.commit();
         }
 
-        MockHttpServletResponse response = getResource("/resources");
+        MockHttpServletResponse response = getResource("/v1/resources");
         Resources.ResourceIndexDocument[] resources = getObject(Resources.ResourceIndexDocument[].class, response);
         assertEquals(2, resources.length);
 
@@ -56,7 +56,7 @@ public class ResourcesTest {
         Resources.CreateResourceCommand createResourceCommand = new Resources.CreateResourceCommand();
         createResourceCommand.name = "testresource";
 
-        MockHttpServletResponse response = createResource("/resources", createResourceCommand);
+        MockHttpServletResponse response = createResource("/v1/resources", createResourceCommand);
         String id = getId(response);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
@@ -78,7 +78,7 @@ public class ResourcesTest {
         Resources.UpdateResourceCommand command = new Resources.UpdateResourceCommand();
         command.name = "The inner planets";
 
-        updateResource("/resources/" + id, command);
+        updateResource("/v1/resources/" + id, command);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Resource resource = Resource.getById(id, graph);
@@ -94,7 +94,7 @@ public class ResourcesTest {
             name = "name";
         }};
 
-        createResource("/resources", command);
+        createResource("/v1/resources", command);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             assertNotNull(Resource.getById(command.id.toString(), graph));
@@ -109,8 +109,8 @@ public class ResourcesTest {
             name = "name";
         }};
 
-        createResource("/resources", command, status().isCreated());
-        createResource("/resources", command, status().isConflict());
+        createResource("/v1/resources", command, status().isCreated());
+        createResource("/v1/resources", command, status().isConflict());
     }
 
     @Test
@@ -121,7 +121,7 @@ public class ResourcesTest {
             transaction.commit();
         }
 
-        deleteResource("/resources/" + id);
+        deleteResource("/v1/resources/" + id);
         assertNotFound(graph -> Resource.getById(id, graph));
     }
 
@@ -132,7 +132,7 @@ public class ResourcesTest {
             id = new Resource(graph).name("The inner planets").getId().toString();
             transaction.commit();
         }
-        MockHttpServletResponse response = getResource("/resources/" + id);
+        MockHttpServletResponse response = getResource("/v1/resources/" + id);
         Resources.ResourceIndexDocument result = getObject(Resources.ResourceIndexDocument.class, response);
         assertEquals(id, result.id.toString());
     }
@@ -144,7 +144,7 @@ public class ResourcesTest {
             transaction.commit();
         }
 
-        getResource("/resources/nonexistantid", status().isNotFound());
+        getResource("/v1/resources/nonexistantid", status().isNotFound());
 
     }
 }

@@ -1,8 +1,12 @@
-package no.ndla.taxonomy.service.rest;
+package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.GraphFactory;
+import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
@@ -19,7 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "subject-topics")
+@RequestMapping(path = {"subject-topics", "/v1/subject-topics"})
 public class SubjectTopics {
 
     private GraphFactory factory;
@@ -29,6 +33,7 @@ public class SubjectTopics {
     }
 
     @GetMapping
+    @ApiOperation("Gets all connections between a subject and a topic")
     public List<SubjectTopicIndexDocument> index() throws Exception {
         List<SubjectTopicIndexDocument> result = new ArrayList<>();
 
@@ -48,6 +53,7 @@ public class SubjectTopics {
     }
 
     @GetMapping("/{id}")
+    @ApiOperation("Get a specific connection between a subject and a topic")
     public SubjectTopicIndexDocument get(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
@@ -58,7 +64,10 @@ public class SubjectTopics {
     }
 
     @PostMapping
-    public ResponseEntity post(@RequestBody AddTopicToSubjectCommand command) throws Exception {
+    @ApiOperation("Add a new topic to a subject")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<Void> post(
+            @ApiParam(name = "command", value = "The subject and topic getting connected. Use primary=true if primary connection for this topic.") @RequestBody AddTopicToSubjectCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
 
             Subject subject = null; //subjectRepository.getById(command.subjectid);
@@ -68,8 +77,7 @@ public class SubjectTopics {
             while (topics.hasNext()) {
                 Topic t = topics.next();
                 if (t.getId().equals(topic.getId()))
-                    return ResponseEntity.status(HttpStatus.CONFLICT)
-                            .body("Subject with id " + command.subjectid + " already contains topic with id " + command.topicid);
+                    throw new DuplicateIdException("Subject with id " + command.subjectid + " already contains topic with id " + command.topicid);
             }
 
             SubjectTopic subjectTopic = subject.addTopic(topic);
@@ -82,46 +90,66 @@ public class SubjectTopics {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") String id) throws Exception {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ApiOperation("Deletes a connection between a subject and a topic")
+    public void delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
             subjectTopic.remove();
             transaction.commit();
-            return ResponseEntity.noContent().build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> put(@PathVariable("id") String id, @RequestBody UpdateSubjectTopicCommand command) throws Exception {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ApiOperation("Updates a connection between subject and topic. Use to update which subject is primary to a topic.")
+    public void put(@PathVariable("id") String id, @RequestBody UpdateSubjectTopicCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
             subjectTopic.setPrimary(command.primary);
             transaction.commit();
-            return ResponseEntity.noContent().build();
         }
     }
 
     public static class AddTopicToSubjectCommand {
         @JsonProperty
-        public URI subjectid, topicid;
+        @ApiModelProperty(required = true, value = "Subject id", example = "urn:subject:123")
+        public URI subjectid;
 
         @JsonProperty
+        @ApiModelProperty(required = true, value = "Topic id", example = "urn:topic:234")
+        public URI topicid;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Primary connection", example="true")
         public boolean primary;
     }
 
     public static class UpdateSubjectTopicCommand {
         @JsonProperty
+        @ApiModelProperty(required = true, value = "connection id", example = "urn:subject-has-topics:2")
         public URI id;
 
         @JsonProperty
+        @ApiModelProperty(value = "primary", example = "true")
         public boolean primary;
     }
 
     public static class SubjectTopicIndexDocument {
         @JsonProperty
-        public URI subjectid, topicid, id;
+        @ApiModelProperty(value = "Subject id", example="urn:subject:123")
+        public URI subjectid;
 
         @JsonProperty
+        @ApiModelProperty(value = "Topic id", example = "urn:topic:345")
+        public URI topicid;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Connection id", example = "urn:subject-has-topics:34")
+        public URI id;
+
+        @JsonProperty
+        @ApiModelProperty(value = "primary", example = "true")
         public boolean primary;
 
         SubjectTopicIndexDocument() {

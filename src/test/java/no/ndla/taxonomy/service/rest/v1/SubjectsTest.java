@@ -1,9 +1,11 @@
-package no.ndla.taxonomy.service.rest;
+package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,7 +43,7 @@ public class SubjectsTest {
         subjectRepository.save(new Subject().name("english"));
         subjectRepository.save(new Subject().name("mathematics"));
 
-        MockHttpServletResponse response = getResource("/subjects");
+        MockHttpServletResponse response = getResource("/v1/subjects");
         Subjects.SubjectIndexDocument[] subjects = getObject(Subjects.SubjectIndexDocument[].class, response);
         assertEquals(2, subjects.length);
 
@@ -55,7 +57,7 @@ public class SubjectsTest {
         Subjects.CreateSubjectCommand createSubjectCommand = new Subjects.CreateSubjectCommand();
         createSubjectCommand.name = "testsubject";
 
-        MockHttpServletResponse response = createResource("/subjects", createSubjectCommand);
+        MockHttpServletResponse response = createResource("/v1/subjects", createSubjectCommand);
         String id = getId(response);
 
 
@@ -71,7 +73,7 @@ public class SubjectsTest {
         Subjects.UpdateSubjectCommand command = new Subjects.UpdateSubjectCommand();
         command.name = "physics";
 
-        updateResource("/subjects/" + id, command);
+        updateResource("/v1/subjects/" + id, command);
 
         Subject subject = subjectRepository.getById(id);
         assertEquals(command.name, subject.getName());
@@ -84,7 +86,7 @@ public class SubjectsTest {
             name = "name";
         }};
 
-        createResource("/subjects", command);
+        createResource("/v1/subjects", command);
 
         assertNotNull(subjectRepository.getById(command.id));
     }
@@ -96,14 +98,14 @@ public class SubjectsTest {
             name = "name";
         }};
 
-        createResource("/subjects", command, status().isCreated());
-        createResource("/subjects", command, status().isConflict());
+        createResource("/v1/subjects", command, status().isCreated());
+        createResource("/v1/subjects", command, status().isConflict());
     }
 
     @Test
     public void can_delete_subject() throws Exception {
         URI id = subjectRepository.save(new Subject()).getId();
-        deleteResource("/subjects/" + id);
+        deleteResource("/v1/subjects/" + id);
         assertNotFound(graph -> subjectRepository.getById(id));
     }
 
@@ -120,7 +122,7 @@ public class SubjectsTest {
             transaction.commit();
         }
 
-        MockHttpServletResponse response = getResource("/subjects/" + subjectid + "/topics");
+        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics");
         Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
 
         assertEquals(3, topics.length);
@@ -146,7 +148,7 @@ public class SubjectsTest {
             transaction.commit();
         }
 
-        MockHttpServletResponse response = getResource("/subjects/" + subjectid + "/topics?recursive=true");
+        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics?recursive=true");
         Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
 
         assertEquals(1, topics.length);

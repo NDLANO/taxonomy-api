@@ -9,6 +9,7 @@ spring.datasource:
   username: sa
   password:
 
+springfox.documentation.swagger.v2.path: /v1/api-docs
 ---
 
 spring.profiles: dev

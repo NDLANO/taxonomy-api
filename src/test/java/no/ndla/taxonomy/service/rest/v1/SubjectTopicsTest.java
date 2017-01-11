@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.rest;
+package no.ndla.taxonomy.service.rest.v1;
 
 
 import org.junit.runner.RunWith;
@@ -29,7 +29,7 @@ public class SubjectTopicsTest {
         }
 
         String id = getId(
-                createResource("/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
+                createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
                     this.subjectid = subjectId;
                     this.topicid = topicId;
                 }})
@@ -58,7 +58,7 @@ public class SubjectTopicsTest {
             transaction.commit();
         }
 
-        createResource("/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
+        createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
                     this.subjectid = subjectId;
                     this.topicid = topicId;
                 }},
@@ -75,7 +75,7 @@ public class SubjectTopicsTest {
             transaction.commit();
         }
 
-        deleteResource("/subject-topics/" + id);
+        deleteResource("/v1/subject-topics/" + id);
         assertNotFound(graph -> Subject.getById(id, graph));
     }
 
@@ -90,7 +90,7 @@ public class SubjectTopicsTest {
         SubjectTopics.UpdateSubjectTopicCommand command = new SubjectTopics.UpdateSubjectTopicCommand();
         command.primary = true;
 
-        updateResource("/subject-topics/" + id, command);
+        updateResource("/v1/subject-topics/" + id, command);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             assertTrue(SubjectTopic.getById(id, graph).isPrimary());
@@ -118,7 +118,7 @@ public class SubjectTopicsTest {
             transaction.commit();
         }
 
-        MockHttpServletResponse response = getResource("/subject-topics");
+        MockHttpServletResponse response = getResource("/v1/subject-topics");
         SubjectTopics.SubjectTopicIndexDocument[] subjectTopics = getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
 
         assertEquals(2, subjectTopics.length);
@@ -141,7 +141,7 @@ public class SubjectTopicsTest {
             transaction.commit();
         }
 
-        MockHttpServletResponse resource = getResource("/subject-topics/" + id);
+        MockHttpServletResponse resource = getResource("/v1/subject-topics/" + id);
         SubjectTopics.SubjectTopicIndexDocument subjectTopicIndexDocument = getObject(SubjectTopics.SubjectTopicIndexDocument.class, resource);
         assertEquals(subjectid, subjectTopicIndexDocument.subjectid);
         assertEquals(topicid, subjectTopicIndexDocument.topicid);

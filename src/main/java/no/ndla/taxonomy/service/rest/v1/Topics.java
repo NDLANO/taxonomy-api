@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.rest;
+package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "topics")
+@RequestMapping(path = {"topics", "/v1/topics"})
 public class Topics {
 
     private GraphFactory factory;
@@ -101,7 +101,7 @@ public class Topics {
 
     public static class CreateTopicCommand {
         @JsonProperty
-        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:topic:1")
+        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:topic:1")
         public URI id;
 
         @JsonProperty

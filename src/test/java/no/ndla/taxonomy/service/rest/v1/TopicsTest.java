@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.rest;
+package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.GraphFactory;
@@ -41,7 +41,7 @@ public class TopicsTest {
             transaction.commit();
         }
 
-        MockHttpServletResponse response = getResource("/topics");
+        MockHttpServletResponse response = getResource("/v1/topics");
         Topics.TopicIndexDocument[] topics = getObject(Topics.TopicIndexDocument[].class, response);
         assertEquals(2, topics.length);
 
@@ -56,7 +56,7 @@ public class TopicsTest {
             name = "trigonometry";
         }};
 
-        MockHttpServletResponse response = createResource("/topics", createTopicCommand);
+        MockHttpServletResponse response = createResource("/v1/topics", createTopicCommand);
         String id = getId(response);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
@@ -73,7 +73,7 @@ public class TopicsTest {
             name = "trigonometry";
         }};
 
-        createResource("/topics", createTopicCommand);
+        createResource("/v1/topics", createTopicCommand);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = Topic.getById(createTopicCommand.id.toString(), graph);
@@ -89,8 +89,8 @@ public class TopicsTest {
             name = "name";
         }};
 
-        createResource("/topics", command, status().isCreated());
-        createResource("/topics", command, status().isConflict());
+        createResource("/v1/topics", command, status().isCreated());
+        createResource("/v1/topics", command, status().isConflict());
     }
 
     @Test
@@ -104,7 +104,7 @@ public class TopicsTest {
         Topics.UpdateTopicCommand command = new Topics.UpdateTopicCommand();
         command.name = "trigonometry";
 
-        updateResource("/topics/" + id, command);
+        updateResource("/v1/topics/" + id, command);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = Topic.getById(id, graph);
@@ -121,7 +121,7 @@ public class TopicsTest {
             transaction.commit();
         }
 
-        deleteResource("/topics/" + id);
+        deleteResource("/v1/topics/" + id);
         assertNotFound(graph -> Topic.getById(id, graph));
     }
 }
