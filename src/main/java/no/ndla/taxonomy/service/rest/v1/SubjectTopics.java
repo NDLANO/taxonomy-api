@@ -70,7 +70,7 @@ public class SubjectTopics {
             @ApiParam(name = "command", value = "The subject and topic getting connected. Use primary=true if primary connection for this topic.") @RequestBody AddTopicToSubjectCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
 
-            Subject subject = null; //subjectRepository.getById(command.subjectid);
+            Subject subject = null; //subjectRepository.getByPublicId(command.subjectid);
             Topic topic = Topic.getById(command.topicid.toString(), graph);
 
             Iterator<Topic> topics = subject.getTopics();
@@ -157,7 +157,7 @@ public class SubjectTopics {
 
         SubjectTopicIndexDocument(SubjectTopic subjectTopic) {
             id = subjectTopic.getId();
-            subjectid = subjectTopic.getSubject().getId();
+            subjectid = subjectTopic.getSubject().getPublicId();
             topicid = subjectTopic.getTopic().getId();
             primary = subjectTopic.isPrimary();
         }

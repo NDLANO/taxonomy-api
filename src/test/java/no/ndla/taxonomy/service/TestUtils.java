@@ -8,12 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.mock.http.MockHttpOutputMessage;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
@@ -153,17 +155,11 @@ public class TestUtils {
             graph.vertices().forEachRemaining(Element::remove);
             transaction.commit();
         }
-
-        String[] tables = new String[]{"subjects"};
-        try (Connection connection = dataSource.getConnection()) {
-            for (String table : tables) truncate(table, connection);
-            connection.commit();
-        }
     }
 
     private static void truncate(String table, Connection connection) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement("delete from " + table)) {
-            statement.execute();
+            int result = statement.executeUpdate();
         }
     }
 

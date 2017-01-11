@@ -2,7 +2,6 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -12,6 +11,7 @@ import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +24,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = {"subjects", "/v1/subjects"})
+@Transactional
 public class Subjects {
 
     private GraphFactory factory;
@@ -48,7 +49,7 @@ public class Subjects {
     @GetMapping("/{id}")
     @ApiOperation("Gets a single subject")
     public SubjectIndexDocument get(@PathVariable("id") URI id) throws Exception {
-        Subject subject = subjectRepository.getById(id);
+        Subject subject = subjectRepository.getByPublicId(id.toString());
         SubjectIndexDocument result = new SubjectIndexDocument(subject);
         return result;
     }
@@ -56,9 +57,8 @@ public class Subjects {
     @DeleteMapping("/{id}")
     @ApiOperation("Deletes a single subject")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Transactional
     public void delete(@PathVariable("id") URI id) throws Exception {
-        subjectRepository.deleteById(id);
+        subjectRepository.deleteByPublicId(id);
     }
 
     @PutMapping("/{id}")
@@ -68,7 +68,7 @@ public class Subjects {
             @PathVariable("id") URI id,
             @ApiParam(name = "subject", value = "The updated subject") @RequestBody UpdateSubjectCommand command
     ) throws Exception {
-        Subject subject = subjectRepository.getById(id);
+        Subject subject = subjectRepository.getByPublicId(id.toString());
         subject.setName(command.name);
     }
 
@@ -81,7 +81,7 @@ public class Subjects {
                     boolean recursive
     ) throws Exception {
         List<TopicIndexDocument> results = new ArrayList<>();
-        Subject subject = subjectRepository.getById(id);
+        Subject subject = subjectRepository.getByPublicId(id.toString());
         subject.getTopics().forEachRemaining(t -> results.add(new TopicIndexDocument(t, recursive)));
         return results;
     }
@@ -91,12 +91,13 @@ public class Subjects {
     public ResponseEntity<Void> post(@ApiParam(name = "subject", value = "The new subject") @RequestBody CreateSubjectCommand command) throws Exception {
         try {
             Subject subject = new Subject();
-            if (null != command.id) subject.setId(command.id);
+            if (null != command.id) subject.setPublicId(command.id);
             subject.setName(command.name);
-            URI location = URI.create("/subjects/" + subject.getId());
+            URI location = URI.create("/subjects/" + subject.getPublicId());
+            subjectRepository.save(subject);
             return ResponseEntity.created(location).build();
-        } catch (ORecordDuplicatedException e) {
-            throw new DuplicateIdException("" + command.id);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateIdException(command.id.toString());
         }
     }
 
@@ -129,7 +130,7 @@ public class Subjects {
         }
 
         SubjectIndexDocument(Subject subject) {
-            id = subject.getId();
+            id = subject.getPublicId();
             name = subject.getName();
         }
     }

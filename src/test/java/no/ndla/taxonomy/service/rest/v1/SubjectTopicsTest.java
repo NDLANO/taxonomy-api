@@ -36,10 +36,10 @@ public class SubjectTopicsTest {
         );
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject physics = Subject.getById(subjectId.toString(), graph);
+            Subject physics = Subject.getByPublicId(subjectId.toString(), graph);
             assertEquals(1, count(physics.getTopics()));
             assertAnyTrue(physics.getTopics(), t -> "trigonometry".equals(t.getName()));
-            assertNotNull(SubjectTopic.getById(id, graph));
+            assertNotNull(SubjectTopic.getByPublicId(id, graph));
             transaction.rollback();
         }
     }
@@ -76,7 +76,7 @@ public class SubjectTopicsTest {
         }
 
         deleteResource("/v1/subject-topics/" + id);
-        assertNotFound(graph -> Subject.getById(id, graph));
+        assertNotFound(graph -> Subject.getByPublicId(id, graph));
     }
 
     @Test
@@ -93,7 +93,7 @@ public class SubjectTopicsTest {
         updateResource("/v1/subject-topics/" + id, command);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            assertTrue(SubjectTopic.getById(id, graph).isPrimary());
+            assertTrue(SubjectTopic.getByPublicId(id, graph).isPrimary());
             transaction.rollback();
         }
     }

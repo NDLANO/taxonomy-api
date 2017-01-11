@@ -1,11 +1,8 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
-import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URI;
@@ -25,13 +23,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("junit")
-public class SubjectsTest {
+public class SubjectsTest extends AbstractTransactionalJUnit4SpringContextTests {
 
     @Autowired
     private SubjectRepository subjectRepository;
-
-    @Autowired
-    private GraphFactory factory;
 
     @Before
     public void setup() throws Exception {
@@ -60,22 +55,21 @@ public class SubjectsTest {
         MockHttpServletResponse response = createResource("/v1/subjects", createSubjectCommand);
         String id = getId(response);
 
-
-        Subject subject = subjectRepository.getById(id);
+        Subject subject = subjectRepository.getByPublicId(id);
         assertEquals(createSubjectCommand.name, subject.getName());
     }
 
 
     @Test
     public void can_update_subject() throws Exception {
-        URI id = subjectRepository.save(new Subject()).getId();
+        URI id = subjectRepository.save(new Subject()).getPublicId();
 
         Subjects.UpdateSubjectCommand command = new Subjects.UpdateSubjectCommand();
         command.name = "physics";
 
         updateResource("/v1/subjects/" + id, command);
 
-        Subject subject = subjectRepository.getById(id);
+        Subject subject = subjectRepository.getByPublicId(id);
         assertEquals(command.name, subject.getName());
     }
 
@@ -88,7 +82,7 @@ public class SubjectsTest {
 
         createResource("/v1/subjects", command);
 
-        assertNotNull(subjectRepository.getById(command.id));
+        assertNotNull(subjectRepository.getByPublicId(command.id));
     }
 
     @Test
@@ -104,9 +98,9 @@ public class SubjectsTest {
 
     @Test
     public void can_delete_subject() throws Exception {
-        URI id = subjectRepository.save(new Subject()).getId();
+        URI id = subjectRepository.save(new Subject()).getPublicId();
         deleteResource("/v1/subjects/" + id);
-        assertNotFound(graph -> subjectRepository.getById(id));
+        assertNotFound(graph -> subjectRepository.getByPublicId(id));
     }
 
     /*

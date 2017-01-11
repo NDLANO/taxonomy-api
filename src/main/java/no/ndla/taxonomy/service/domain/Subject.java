@@ -6,13 +6,13 @@ import java.net.URI;
 import java.util.Iterator;
 import java.util.UUID;
 
-@Entity
+@Entity(name = "subjects")
 public class Subject extends DomainObject {
 
     public static final String LABEL = "subject";
 
     public Subject() {
-        setId(URI.create("urn:subject:" + UUID.randomUUID()));
+        setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
     }
 
     public SubjectTopic addTopic(Topic topic) {

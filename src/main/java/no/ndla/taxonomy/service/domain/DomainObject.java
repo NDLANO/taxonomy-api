@@ -1,29 +1,29 @@
 package no.ndla.taxonomy.service.domain;
 
 import javax.persistence.Column;
-import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
 import java.net.URI;
 
-@Entity
-public class DomainObject {
+@MappedSuperclass
+public abstract class DomainObject {
     @Id
     @GeneratedValue
-    private Integer serial;
+    private Integer id;
 
     @Column
-    private URI id;
+    private URI publicId;
 
     @Column
     private String name;
 
-    public Integer getSerial() {
-        return serial;
+    public Integer getId() {
+        return id;
     }
 
-    public void setSerial(Integer serial) {
-        this.serial = serial;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -34,11 +34,11 @@ public class DomainObject {
         this.name = name;
     }
 
-    public URI getId() {
-        return id;
+    public URI getPublicId() {
+        return publicId;
     }
 
-    public void setId(URI id) {
-        this.id = id;
+    public void setPublicId(URI publicId) {
+        this.publicId = publicId;
     }
 }

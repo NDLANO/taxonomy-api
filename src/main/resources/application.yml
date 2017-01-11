@@ -5,11 +5,13 @@ graph:
   password: secret
 
 spring.datasource:
-  url: jdbc:h2:mem:test;MODE=PostgreSQL;DB_CLOSE_ON_EXIT=FALSE
+  url: jdbc:h2:mem:test;MODE=PostgreSQL;DB_CLOSE_ON_EXIT=FALSE;DB_CLOSE_DELAY=-1
   username: sa
   password:
 
+
 springfox.documentation.swagger.v2.path: /v1/api-docs
+spring.jpa.hibernate.ddl-auto: none
 ---
 
 spring.profiles: dev

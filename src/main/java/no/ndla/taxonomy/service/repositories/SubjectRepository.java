@@ -7,18 +7,18 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.net.URI;
 
-public interface SubjectRepository extends CrudRepository<Subject, URI> {
-    Subject findById(URI id);
+public interface SubjectRepository extends CrudRepository<Subject, Integer> {
+    Subject findByPublicId(URI id);
 
-    default Subject getById(URI id) {
-        Subject subject = findById(id);
+    default Subject getByPublicId(URI id) {
+        Subject subject = findByPublicId(id);
         if (null == subject) throw new NotFoundException("subject", id);
         return subject;
     }
 
-    default Subject getById(String id) {
-        return getById(URI.create(id));
+    default Subject getByPublicId(String id) {
+        return getByPublicId(URI.create(id));
     }
 
-    public void deleteById(URI id);
+    void deleteByPublicId(URI id);
 }
