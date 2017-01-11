@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.rest;
+package no.ndla.taxonomy.service.rest.v1;
 
 import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.Resource;
@@ -46,7 +46,7 @@ public class ResourceResourceTypesTest {
             transaction.commit();
         }
 
-        String id = getId(createResource("/resource-resourcetypes", new ResourceResourceTypes.CreateResourceResourceTypeCommand() {{
+        String id = getId(createResource("/v1/resource-resourcetypes", new ResourceResourceTypes.CreateResourceResourceTypeCommand() {{
             resourceId = integrationResourceId;
             resourceTypeId = textTypeId;
         }}));
@@ -72,7 +72,7 @@ public class ResourceResourceTypesTest {
             transaction.commit();
         }
 
-        createResource("/resource-resourcetypes", new ResourceResourceTypes.CreateResourceResourceTypeCommand() {{
+        createResource("/v1/resource-resourcetypes", new ResourceResourceTypes.CreateResourceResourceTypeCommand() {{
             resourceId = integrationResource.getId();
             resourceTypeId = resourceType.getId();
         }}, status().isConflict());
@@ -88,7 +88,7 @@ public class ResourceResourceTypesTest {
             transaction.commit();
         }
 
-        deleteResource("/resource-resourcetypes/" + resourceResourceType.getId().toString());
+        deleteResource("/v1/resource-resourcetypes/" + resourceResourceType.getId().toString());
     }
 
     @Test
@@ -112,7 +112,7 @@ public class ResourceResourceTypesTest {
             transaction.commit();
         }
 
-        final MockHttpServletResponse response = getResource("/resource-resourcetypes");
+        final MockHttpServletResponse response = getResource("/v1/resource-resourcetypes");
         final ResourceResourceTypes.ResourceResourceTypeIndexDocument[] resourceResourcetypes = getObject(ResourceResourceTypes.ResourceResourceTypeIndexDocument[].class, response);
         assertEquals(2, resourceResourcetypes.length);
         assertAnyTrue(resourceResourcetypes, t -> trigId.equals(t.resourceId) && articleId.equals(t.resourceTypeId));
@@ -133,7 +133,7 @@ public class ResourceResourceTypesTest {
             transaction.commit();
         }
 
-        final MockHttpServletResponse resource = getResource("/resource-resourcetypes/" + trigonometryArticle.getId());
+        final MockHttpServletResponse resource = getResource("/v1/resource-resourcetypes/" + trigonometryArticle.getId());
         final ResourceResourceTypes.ResourceResourceTypeIndexDocument result = getObject(ResourceResourceTypes.ResourceResourceTypeIndexDocument.class, resource);
         assertEquals(trigId, result.resourceId);
         assertEquals(articleId, result.resourceTypeId);

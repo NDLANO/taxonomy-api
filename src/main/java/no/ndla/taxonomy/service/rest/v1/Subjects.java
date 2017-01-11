@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.rest;
+package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "subjects")
+@RequestMapping(path = {"subjects", "/v1/subjects"})
 public class Subjects {
 
     private GraphFactory factory;

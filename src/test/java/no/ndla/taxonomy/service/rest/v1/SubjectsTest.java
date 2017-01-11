@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.rest;
+package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.GraphFactory;
@@ -43,7 +43,7 @@ public class SubjectsTest {
             transaction.commit();
         }
 
-        MockHttpServletResponse response = getResource("/subjects");
+        MockHttpServletResponse response = getResource("/v1/subjects");
         Subjects.SubjectIndexDocument[] subjects = getObject(Subjects.SubjectIndexDocument[].class, response);
         assertEquals(2, subjects.length);
 
@@ -57,7 +57,7 @@ public class SubjectsTest {
         Subjects.CreateSubjectCommand createSubjectCommand = new Subjects.CreateSubjectCommand();
         createSubjectCommand.name = "testsubject";
 
-        MockHttpServletResponse response = createResource("/subjects", createSubjectCommand);
+        MockHttpServletResponse response = createResource("/v1/subjects", createSubjectCommand);
         String id = getId(response);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
@@ -79,7 +79,7 @@ public class SubjectsTest {
         Subjects.UpdateSubjectCommand command = new Subjects.UpdateSubjectCommand();
         command.name = "physics";
 
-        updateResource("/subjects/" + id, command);
+        updateResource("/v1/subjects/" + id, command);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Subject subject = Subject.getById(id, graph);
@@ -95,7 +95,7 @@ public class SubjectsTest {
             name = "name";
         }};
 
-        createResource("/subjects", command);
+        createResource("/v1/subjects", command);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             assertNotNull(Subject.getById(command.id.toString(), graph));
@@ -110,8 +110,8 @@ public class SubjectsTest {
             name = "name";
         }};
 
-        createResource("/subjects", command, status().isCreated());
-        createResource("/subjects", command, status().isConflict());
+        createResource("/v1/subjects", command, status().isCreated());
+        createResource("/v1/subjects", command, status().isConflict());
     }
 
     @Test
@@ -122,7 +122,7 @@ public class SubjectsTest {
             transaction.commit();
         }
 
-        deleteResource("/subjects/" + id);
+        deleteResource("/v1/subjects/" + id);
         assertNotFound(graph -> Subject.getById(id, graph));
     }
 
@@ -138,7 +138,7 @@ public class SubjectsTest {
             transaction.commit();
         }
 
-        MockHttpServletResponse response = getResource("/subjects/" + subjectid + "/topics");
+        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics");
         Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
 
         assertEquals(3, topics.length);
@@ -164,7 +164,7 @@ public class SubjectsTest {
             transaction.commit();
         }
 
-        MockHttpServletResponse response = getResource("/subjects/" + subjectid + "/topics?recursive=true");
+        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics?recursive=true");
         Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
 
         assertEquals(1, topics.length);

@@ -32,8 +32,8 @@ public class SwaggerConfiguration {
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("no.ndla.taxonomy.service.rest"))
-                .paths(PathSelectors.any())
+                .apis(RequestHandlerSelectors.basePackage("no.ndla.taxonomy.service.rest.v1"))
+                .paths(PathSelectors.regex("/v1/.*"))
                 .build()
                 .pathMapping("/")
                 .apiInfo(apiInfo())
@@ -91,7 +91,7 @@ public class SwaggerConfiguration {
                         "Unless otherwise specified, all PUT and POST requests must use Content-Type: application/json;charset=UTF-8. If charset is omitted, UTF-8 will be assumed. All GET requests will return data using the same content type." +
                         "\n\n" +
                         "When you remove an entity, its associations are also deleted. E.g., if you remove a subject, its associations to any topics are removed. The topics themselves are not affected.",
-                "v1.0",
+                "v1",
                 null,
                 (Contact) null,
                 "GPL 3.0",

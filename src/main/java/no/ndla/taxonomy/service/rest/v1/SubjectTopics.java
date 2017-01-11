@@ -1,9 +1,7 @@
-package no.ndla.taxonomy.service.rest;
+package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
-import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -25,7 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "subject-topics")
+@RequestMapping(path = {"subject-topics", "/v1/subject-topics"})
 public class SubjectTopics {
 
     private GraphFactory factory;

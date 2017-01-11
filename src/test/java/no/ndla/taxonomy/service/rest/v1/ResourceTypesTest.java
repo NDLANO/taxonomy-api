@@ -1,7 +1,6 @@
-package no.ndla.taxonomy.service.rest;
+package no.ndla.taxonomy.service.rest.v1;
 
 import no.ndla.taxonomy.service.GraphFactory;
-import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.ResourceType;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
@@ -42,7 +41,7 @@ public class ResourceTypesTest {
             transaction.commit();
         }
 
-        MockHttpServletResponse response = getResource("/resource-types");
+        MockHttpServletResponse response = getResource("/v1/resource-types");
         ResourceTypes.ResourceTypeIndexDocument[] resourcetypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
         assertEquals(2, resourcetypes.length);
 
@@ -61,7 +60,7 @@ public class ResourceTypesTest {
         }
 
 
-        MockHttpServletResponse response = getResource("/resource-types/" + id.toString());
+        MockHttpServletResponse response = getResource("/v1/resource-types/" + id.toString());
         ResourceTypes.ResourceTypeIndexDocument resourceType = getObject(ResourceTypes.ResourceTypeIndexDocument.class, response);
         assertEquals(id, resourceType.id);
     }
@@ -73,7 +72,7 @@ public class ResourceTypesTest {
             transaction.commit();
         }
 
-        MockHttpServletResponse response = getResource("/resource-types/doesnotexist", status().isNotFound());
+        MockHttpServletResponse response = getResource("/v1/resource-types/doesnotexist", status().isNotFound());
     }
 
     @Test
@@ -82,7 +81,7 @@ public class ResourceTypesTest {
             id = URI.create("urn:resource-type:1");
             name = "name";
         }};
-        createResource("/resource-types/", command);
+        createResource("/v1/resource-types/", command);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             assertNotNull(ResourceType.getById(command.id.toString(), graph));
@@ -97,8 +96,8 @@ public class ResourceTypesTest {
             id = URI.create("urn:resource-type:1");
             name = "name";
         }};
-        createResource("/resource-types/", command);
-        createResource("/resource-types/", command, status().isConflict());
+        createResource("/v1/resource-types/", command);
+        createResource("/v1/resource-types/", command, status().isConflict());
     }
 
     @Test
@@ -108,7 +107,7 @@ public class ResourceTypesTest {
             id = new ResourceType(graph).name("video").getId().toString();
             transaction.commit();
         }
-        deleteResource("/resource-types/" + id);
+        deleteResource("/v1/resource-types/" + id);
     }
 
     @Test
@@ -121,7 +120,7 @@ public class ResourceTypesTest {
         ResourceTypes.UpdateResourceTypeCommand updateCommand = new ResourceTypes.UpdateResourceTypeCommand();
         updateCommand.name = "Audovideo";
 
-        updateResource("/resource-types/" + id, updateCommand);
+        updateResource("/v1/resource-types/" + id, updateCommand);
 
         Graph graph = factory.create();
         Transaction transaction = graph.tx();

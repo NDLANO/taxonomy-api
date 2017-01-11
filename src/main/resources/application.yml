@@ -4,6 +4,7 @@ graph:
   username: username
   password: secret
 
+springfox.documentation.swagger.v2.path: /v1/api-docs
 ---
 
 spring.profiles: dev

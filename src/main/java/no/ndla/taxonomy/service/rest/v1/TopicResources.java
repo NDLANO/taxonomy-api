@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.rest;
+package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
@@ -19,7 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "topic-resources")
+@RequestMapping(path = {"topic-resources", "/v1/topic-resources"})
 public class TopicResources {
     private GraphFactory factory;
 
