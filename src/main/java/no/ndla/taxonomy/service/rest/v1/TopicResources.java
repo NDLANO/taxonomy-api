@@ -2,6 +2,9 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.Topic;
@@ -28,6 +31,7 @@ public class TopicResources {
     }
 
     @GetMapping
+    @ApiOperation(value = "Gets all connections between topics and resources")
     public List<TopicResourceIndexDocument> index() throws Exception {
         List<TopicResourceIndexDocument> result = new ArrayList<>();
 
@@ -47,6 +51,7 @@ public class TopicResources {
     }
 
     @GetMapping("/{id}")
+    @ApiOperation(value = "Gets a specific connection between a topic and a resource")
     public TopicResourceIndexDocument get(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             TopicResource topicResource = TopicResource.getById(id, graph);
@@ -57,7 +62,9 @@ public class TopicResources {
     }
 
     @PostMapping
-    public ResponseEntity post(@RequestBody AddResourceToTopicCommand command) throws Exception {
+    @ApiOperation(value = "Adds a resource to a topic")
+    public ResponseEntity post(
+            @ApiParam(name = "connection", value = "new topic/resource connection ") @RequestBody AddResourceToTopicCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
 
             Topic topic = Topic.getById(command.topicid.toString(), graph);
@@ -81,46 +88,68 @@ public class TopicResources {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") String id) throws Exception {
+    @ApiOperation("Removes a resource from a topic")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             TopicResource topicResource = TopicResource.getById(id, graph);
             topicResource.remove();
             transaction.commit();
-            return ResponseEntity.noContent().build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> put(@PathVariable("id") String id, @RequestBody UpdateTopicResourceCommand command) throws Exception {
+    @ApiOperation(value = "Updates a connection between a topic and a resource", notes = "Use to update which topic is primary to the resource.")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void put(@PathVariable("id") String id,
+                    @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             TopicResource topicResource = TopicResource.getById(id, graph);
             topicResource.setPrimary(command.primary);
             transaction.commit();
-            return ResponseEntity.noContent().build();
         }
     }
 
     public static class AddResourceToTopicCommand {
         @JsonProperty
-        public URI topicid, resourceid;
+        @ApiModelProperty(required = true, value = "Topic id", example="urn:topic:345")
+        public URI topicid;
 
         @JsonProperty
+        @ApiModelProperty(required = true, value = "Resource id", example = "urn:resource:345")
+        URI resourceid;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Primary connection", example= "true")
         public boolean primary;
     }
 
     public static class UpdateTopicResourceCommand {
         @JsonProperty
+        @ApiModelProperty(value = "Topic resource connection id", example="urn:topic-has-resources:123")
         public URI id;
 
         @JsonProperty
+        @ApiModelProperty(value = "Primary connection", example= "true")
         public boolean primary;
     }
 
     public static class TopicResourceIndexDocument {
-        @JsonProperty
-        public URI topicid, resourceid, id;
 
         @JsonProperty
+        @ApiModelProperty(value = "Topic id", example="urn:topic:345")
+        public URI topicid;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Resource id", example = "urn:resource:345")
+        URI resourceid;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Topic resource connection id", example="urn:topic-has-resources:123")
+        public URI id;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Primary connection", example= "true")
         public boolean primary;
 
         TopicResourceIndexDocument() {

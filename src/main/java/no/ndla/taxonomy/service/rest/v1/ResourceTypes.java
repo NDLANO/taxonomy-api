@@ -60,7 +60,7 @@ public class ResourceTypes {
     }
 
     @PostMapping
-    @ApiOperation("Creates a new resource type")
+    @ApiOperation(value = "Adds a new resource type")
     public ResponseEntity<Void> post(
             @ApiParam(name = "resourceType", value = "The new resource type")
             @RequestBody
@@ -80,18 +80,18 @@ public class ResourceTypes {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation(value = "Deletes a single resource type")
-    public ResponseEntity delete(@PathVariable("id") String id) throws Exception {
+    public void delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             ResourceType resource = ResourceType.getById(id, graph);
             resource.remove();
             transaction.commit();
-            return ResponseEntity.noContent().build();
         }
     }
 
     @PutMapping("/{id}")
-    @ApiOperation(value = "Updates a single resource type")
+    @ApiOperation(value = "Updates a resource type")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(
             @PathVariable String id,
@@ -124,7 +124,7 @@ public class ResourceTypes {
 
     public static class CreateResourceTypeCommand {
         @JsonProperty
-        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resource-type: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:resource-type:1")
+        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resource-type: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:resource-type:1")
         public URI id;
 
         @JsonProperty

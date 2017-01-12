@@ -34,7 +34,7 @@ public class Subjects {
     }
 
     @GetMapping
-    @ApiOperation("Gets a list of all subjects")
+    @ApiOperation("Gets all subjects")
     public List<SubjectIndexDocument> index() throws Exception {
         List<SubjectIndexDocument> result = new ArrayList<>();
 
@@ -74,7 +74,7 @@ public class Subjects {
     }
 
     @PutMapping("/{id}")
-    @ApiOperation("Updates a single subject")
+    @ApiOperation("Updates a subject")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(
             @PathVariable("id") String id,
