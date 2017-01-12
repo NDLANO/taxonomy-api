@@ -33,7 +33,7 @@ public class ResourceResourceTypes {
     }
 
     @PostMapping
-    @ApiOperation(value = "Creates a connection between a resource and a resource type")
+    @ApiOperation(value = "Adds a resource type to a resource")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Void> post(
             @ApiParam(name = "Connection", value = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) throws Exception {
@@ -61,7 +61,7 @@ public class ResourceResourceTypes {
 
     @DeleteMapping({"/{id}"})
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation("Deletes a connection between a resource and a resource type")
+    @ApiOperation("Removes a resource type from a resource")
     public void delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             ResourceResourceType resourceResourceType = ResourceResourceType.getById(id, graph);

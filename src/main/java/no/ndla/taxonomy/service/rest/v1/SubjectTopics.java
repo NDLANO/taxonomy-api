@@ -91,7 +91,7 @@ public class SubjectTopics {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation("Deletes a connection between a subject and a topic")
+    @ApiOperation("Removes a topic from a subject")
     public void delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
