@@ -33,7 +33,7 @@ public class SubjectTopics {
     }
 
     @GetMapping
-    @ApiOperation("Gets all connections between a subject and a topic")
+    @ApiOperation("Gets all connections between subjects and topics")
     public List<SubjectTopicIndexDocument> index() throws Exception {
         List<SubjectTopicIndexDocument> result = new ArrayList<>();
 
@@ -64,8 +64,7 @@ public class SubjectTopics {
     }
 
     @PostMapping
-    @ApiOperation("Add a new topic to a subject")
-    @ResponseStatus(HttpStatus.CREATED)
+    @ApiOperation("Adds a new topic to a subject")
     public ResponseEntity<Void> post(
             @ApiParam(name = "command", value = "The subject and topic getting connected. Use primary=true if primary connection for this topic.") @RequestBody AddTopicToSubjectCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
@@ -91,7 +90,7 @@ public class SubjectTopics {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation("Deletes a connection between a subject and a topic")
+    @ApiOperation("Removes a topic from a subject")
     public void delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
@@ -102,8 +101,9 @@ public class SubjectTopics {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation("Updates a connection between subject and topic. Use to update which subject is primary to a topic.")
-    public void put(@PathVariable("id") String id, @RequestBody UpdateSubjectTopicCommand command) throws Exception {
+    @ApiOperation(value = "Updates a connection between subject and topic", notes="Use to update which subject is primary to a topic.")
+    public void put(@PathVariable("id") String id,
+                    @ApiParam(name="connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
             subjectTopic.setPrimary(command.primary);

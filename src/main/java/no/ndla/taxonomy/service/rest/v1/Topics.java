@@ -31,7 +31,7 @@ public class Topics {
     }
 
     @GetMapping
-    @ApiOperation("Gets a list of all topics")
+    @ApiOperation("Gets all topics")
     public List<TopicIndexDocument> index() throws Exception {
         List<TopicIndexDocument> result = new ArrayList<>();
 
@@ -77,12 +77,12 @@ public class Topics {
 
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Deletes a single topic")
-    public ResponseEntity delete(@PathVariable("id") String id) throws Exception {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             Topic topic = Topic.getById(id, graph);
             topic.remove();
             transaction.commit();
-            return ResponseEntity.noContent().build();
         }
     }
 
@@ -117,10 +117,11 @@ public class Topics {
 
     public static class TopicIndexDocument {
         @JsonProperty
+        @ApiModelProperty(value = "Topic id", example="urn:topic:234")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "The name of the topic", example = "Trigonometry")
+        @ApiModelProperty(value = "The name of the topic", example = "Trigonometry")
         public String name;
 
         TopicIndexDocument() {

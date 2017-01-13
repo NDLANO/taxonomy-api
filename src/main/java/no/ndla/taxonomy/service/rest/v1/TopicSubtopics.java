@@ -2,7 +2,11 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.GraphFactory;
+import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.domain.TopicSubtopic;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
@@ -28,6 +32,7 @@ public class TopicSubtopics {
 
 
     @GetMapping
+    @ApiOperation(value="Gets all connections between topics and subtopics")
     public List<TopicSubtopicIndexDocument> index() throws Exception {
         List<TopicSubtopicIndexDocument> result = new ArrayList<>();
 
@@ -47,6 +52,7 @@ public class TopicSubtopics {
     }
 
     @GetMapping("/{id}")
+    @ApiOperation(value = "Gets a single connection between a topic and a subtopic")
     public TopicSubtopicIndexDocument get(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             TopicSubtopic topicSubtopic = TopicSubtopic.getById(id, graph);
@@ -57,7 +63,9 @@ public class TopicSubtopics {
     }
 
     @PostMapping
-    public ResponseEntity post(@RequestBody AddSubtopicToTopicCommand command) throws Exception {
+    @ApiOperation(value = "Adds a subtopic to a topic")
+    public ResponseEntity<Void> post(
+            @ApiParam(name="connection", value = "The new connection") @RequestBody AddSubtopicToTopicCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
 
             Topic topic = Topic.getById(command.topicid.toString(), graph);
@@ -66,9 +74,9 @@ public class TopicSubtopics {
             Iterator<Topic> topics = topic.getSubtopics();
             while (topics.hasNext()) {
                 Topic t = topics.next();
-                if (t.getId().equals(subtopic.getId()))
-                    return ResponseEntity.status(HttpStatus.CONFLICT)
-                            .body("Topic with id " + command.topicid + " already contains topic with id " + command.subtopicid);
+                if (t.getId().equals(subtopic.getId())) {
+                    throw new DuplicateIdException("Topic with id " + command.topicid + " already contains topic with id " + command.subtopicid);
+                }
             }
 
             TopicSubtopic topicSubtopic = topic.addSubtopic(subtopic);
@@ -81,46 +89,67 @@ public class TopicSubtopics {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") String id) throws Exception {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ApiOperation(value = "Removes a connection between a topic and a subtopic")
+    public void delete(@PathVariable("id") String id) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             TopicSubtopic topicSubtopic = TopicSubtopic.getById(id, graph);
             topicSubtopic.remove();
             transaction.commit();
-            return ResponseEntity.noContent().build();
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> put(@PathVariable("id") String id, @RequestBody UpdateTopicSubtopicCommand command) throws Exception {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ApiOperation(value = "Updates a connection between a topic and a subtopic", notes = "Use to update which topic is primary to a subtopic")
+    public void put(@PathVariable("id") String id,
+                    @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             TopicSubtopic topicSubtopic = TopicSubtopic.getById(id, graph);
             topicSubtopic.setPrimary(command.primary);
             transaction.commit();
-            return ResponseEntity.noContent().build();
         }
     }
 
     public static class AddSubtopicToTopicCommand {
         @JsonProperty
-        public URI topicid, subtopicid;
+        @ApiModelProperty(required = true, value = "Topic id", example = "urn:topic:234")
+        public URI topicid;
 
         @JsonProperty
+        @ApiModelProperty(required = true, value = "Subtopic id", example = "urn:topic:234")
+        public URI subtopicid;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Primary connection", example="true")
         public boolean primary;
     }
 
     public static class UpdateTopicSubtopicCommand {
         @JsonProperty
+        @ApiModelProperty(value = "Connection id", example="urn:topic-has-subtopics:345")
         public URI id;
 
         @JsonProperty
+        @ApiModelProperty(value = "Primary connection", example="true")
         public boolean primary;
     }
 
     public static class TopicSubtopicIndexDocument {
         @JsonProperty
-        public URI topicid, subtopicid, id;
+        @ApiModelProperty(value = "Topic id", example = "urn:topic:234")
+        public URI topicid;
 
         @JsonProperty
+        @ApiModelProperty(value = "Subtopic id", example = "urn:topic:234")
+        public URI subtopicid;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Connection id", example="urn:topic-has-subtopics:345")
+        public URI  id;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Primary connection", example="true")
         public boolean primary;
 
         TopicSubtopicIndexDocument() {
