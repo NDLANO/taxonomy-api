@@ -2,16 +2,8 @@ package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.repositories.SubjectRepository;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URI;
 
@@ -20,23 +12,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-@ActiveProfiles("junit")
-public class SubjectsTest extends AbstractTransactionalJUnit4SpringContextTests {
-
-    @Autowired
-    private SubjectRepository subjectRepository;
-
-    @Before
-    public void setup() throws Exception {
-        clearGraph();
-    }
+public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_all_subjects() throws Exception {
-        subjectRepository.save(new Subject().name("english"));
-        subjectRepository.save(new Subject().name("mathematics"));
+        newSubject().name("english");
+        newSubject().name("mathematics");
 
         MockHttpServletResponse response = getResource("/v1/subjects");
         Subjects.SubjectIndexDocument[] subjects = getObject(Subjects.SubjectIndexDocument[].class, response);
@@ -55,14 +36,14 @@ public class SubjectsTest extends AbstractTransactionalJUnit4SpringContextTests 
         MockHttpServletResponse response = createResource("/v1/subjects", createSubjectCommand);
         String id = getId(response);
 
-        Subject subject = subjectRepository.getByPublicId(id);
+        Subject subject = subjectRepository.getByPublicId(URI.create(id));
         assertEquals(createSubjectCommand.name, subject.getName());
     }
 
 
     @Test
     public void can_update_subject() throws Exception {
-        URI id = subjectRepository.save(new Subject()).getPublicId();
+        URI id = newSubject().getPublicId();
 
         Subjects.UpdateSubjectCommand command = new Subjects.UpdateSubjectCommand();
         command.name = "physics";
@@ -98,25 +79,19 @@ public class SubjectsTest extends AbstractTransactionalJUnit4SpringContextTests 
 
     @Test
     public void can_delete_subject() throws Exception {
-        URI id = subjectRepository.save(new Subject()).getPublicId();
+        URI id = newSubject().getPublicId();
         deleteResource("/v1/subjects/" + id);
         assertNotFound(graph -> subjectRepository.getByPublicId(id));
     }
 
-    /*
     @Test
     public void can_get_topics() throws Exception {
-        String subjectid;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject subject = new Subject(graph).name("physics");
-            subjectid = subject.getId().toString();
-            subject.addTopic(new Topic(graph).name("statics"));
-            subject.addTopic(new Topic(graph).name("electricity"));
-            subject.addTopic(new Topic(graph).name("optics"));
-            transaction.commit();
-        }
+        Subject subject = newSubject().name("physics");
+        save(subject.addTopic(newTopic().name("statics")));
+        save(subject.addTopic(newTopic().name("electricity")));
+        save(subject.addTopic(newTopic().name("optics")));
 
-        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics");
+        MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
         Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
 
         assertEquals(3, topics.length);
@@ -126,6 +101,7 @@ public class SubjectsTest extends AbstractTransactionalJUnit4SpringContextTests 
         assertAllTrue(topics, t -> isValidId(t.id));
     }
 
+    /*
     @Test
     public void can_get_topics_recursively() throws Exception {
         String subjectid;
@@ -150,6 +126,6 @@ public class SubjectsTest extends AbstractTransactionalJUnit4SpringContextTests 
         assertEquals("child topic", topics[0].subtopics[0].name);
         assertEquals("grandchild topic", topics[0].subtopics[0].subtopics[0].name);
     }
+*/
 
-    */
 }

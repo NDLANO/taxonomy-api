@@ -27,11 +27,11 @@ public class TopicSubtopic extends DomainEdge {
     }
 
     private static Edge createEdge(Topic topic, Topic subtopic) {
-        return topic.vertex.addEdge(TopicSubtopic.LABEL, subtopic.vertex);
+        return null; //topic.vertex.addEdge(TopicSubtopic.LABEL, subtopic.vertex);
     }
 
     public boolean isPrimary() {
-         return is("primary");
+        return is("primary");
     }
 
     public void setPrimary(boolean value) {
@@ -39,11 +39,11 @@ public class TopicSubtopic extends DomainEdge {
     }
 
     public Topic getTopic() {
-        return new Topic(edge.outVertex());
+        return null; //new Topic(edge.outVertex());
     }
 
     public Topic getSubtopic() {
-        return new Topic(edge.inVertex());
+        return null; //new Topic(edge.inVertex());
     }
 
     public static TopicSubtopic getById(String id, Graph graph) {

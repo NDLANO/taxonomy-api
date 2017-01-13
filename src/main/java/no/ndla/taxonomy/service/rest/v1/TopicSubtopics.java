@@ -4,21 +4,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.GraphFactory;
-import no.ndla.taxonomy.service.domain.DuplicateIdException;
-import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.domain.TopicSubtopic;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 @RestController
@@ -61,6 +58,8 @@ public class TopicSubtopics {
             return result;
         }
     }
+
+    /*
 
     @PostMapping
     @ApiOperation(value = "Adds a subtopic to a topic")
@@ -111,6 +110,8 @@ public class TopicSubtopics {
         }
     }
 
+    */
+
     public static class AddSubtopicToTopicCommand {
         @JsonProperty
         @ApiModelProperty(required = true, value = "Topic id", example = "urn:topic:234")
@@ -157,8 +158,8 @@ public class TopicSubtopics {
 
         TopicSubtopicIndexDocument(TopicSubtopic topicSubtopic) {
             id = topicSubtopic.getId();
-            topicid = topicSubtopic.getTopic().getId();
-            subtopicid = topicSubtopic.getSubtopic().getId();
+            topicid = topicSubtopic.getTopic().getPublicId();
+            subtopicid = topicSubtopic.getSubtopic().getPublicId();
             primary = topicSubtopic.isPrimary();
         }
     }

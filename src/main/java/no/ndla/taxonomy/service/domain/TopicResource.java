@@ -27,7 +27,7 @@ public class TopicResource extends DomainEdge {
     }
 
     private static Edge createEdge(Topic topic, Resource resource) {
-        return topic.vertex.addEdge(TopicResource.LABEL, resource.vertex);
+        return null; //topic.vertex.addEdge(TopicResource.LABEL, resource.vertex);
     }
 
     public boolean isPrimary() {
@@ -39,11 +39,11 @@ public class TopicResource extends DomainEdge {
     }
 
     public Topic getTopic() {
-        return new Topic(edge.outVertex());
+        return null; //new Topic(edge.outVertex());
     }
 
     public Topic getResource() {
-        return new Topic(edge.inVertex());
+        return null; //new Topic(edge.inVertex());
     }
 
     public static TopicResource getById(String id, Graph graph) {

@@ -2,11 +2,14 @@ package no.ndla.taxonomy.service.domain;
 
 
 import javax.persistence.Entity;
+import javax.persistence.OneToMany;
 import java.net.URI;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
-@Entity(name = "subjects")
+@Entity
 public class Subject extends DomainObject {
 
     public static final String LABEL = "subject";
@@ -16,28 +19,29 @@ public class Subject extends DomainObject {
     }
 
     public SubjectTopic addTopic(Topic topic) {
-        return new SubjectTopic(this, topic);
+        SubjectTopic subjectTopic = new SubjectTopic(this, topic);
+        subjectTopics.add(subjectTopic);
+        topic.subjectTopics.add(subjectTopic);
+        return subjectTopic;
     }
 
-    public Iterator<Topic> getTopics() {
-        return null;
+    @OneToMany(mappedBy = "subject")
+     Set<SubjectTopic> subjectTopics = new HashSet<>();
 
-        /*
-        Iterator<Edge> edges = vertex.edges(Direction.OUT, SubjectTopic.LABEL);
+    public Iterator<Topic> getTopics() {
+        Iterator<SubjectTopic> iterator = subjectTopics.iterator();
 
         return new Iterator<Topic>() {
             @Override
             public boolean hasNext() {
-                return edges.hasNext();
+                return iterator.hasNext();
             }
 
             @Override
             public Topic next() {
-                return new Topic(edges.next().inVertex());
+                return iterator.next().getTopic();
             }
         };
-
-        */
     }
 
     public Subject name(String name) {

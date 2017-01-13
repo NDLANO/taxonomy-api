@@ -1,47 +1,24 @@
 package no.ndla.taxonomy.service.domain;
 
 
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
-
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
+import java.net.URI;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
-public class Topic extends DomainVertex {
+@Entity
+public class Topic extends DomainObject {
 
     public static final String LABEL = "topic";
 
-    /**
-     * Wrap an existing topic
-     *
-     * @param vertex the vertex to wrap
-     */
-    public Topic(Vertex vertex) {
-        super(vertex);
-    }
+    @OneToMany(mappedBy = "topic")
+    Set<SubjectTopic> subjectTopics = new HashSet<>();
 
-    /**
-     * Create a new topic
-     *
-     * @param graph the graph where the new vertex is created
-     */
-    public Topic(Graph graph) {
-        this(graph.addVertex(LABEL));
-        setId("urn:topic:" + UUID.randomUUID());
-    }
-
-    public static Topic getById(String id, Graph graph) {
-        Topic topic = findById(id, graph);
-        if (topic != null) return topic;
-        throw new NotFoundException("topic", id);
-    }
-
-    public static Topic findById(String id, Graph graph) {
-        GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V().hasLabel(LABEL).has("id", id);
-        return traversal.hasNext() ? new Topic(traversal.next()) : null;
+    public Topic() {
+        setPublicId(URI.create("urn:topic:" + UUID.randomUUID()));
     }
 
     public Topic name(String name) {
@@ -57,7 +34,9 @@ public class Topic extends DomainVertex {
         return new TopicResource(this, resource);
     }
 
+
     public Iterator<Topic> getSubtopics() {
+        return null; /*
         Iterator<Edge> edges = vertex.edges(Direction.OUT, TopicSubtopic.LABEL);
 
         return new Iterator<Topic>() {
@@ -71,9 +50,11 @@ public class Topic extends DomainVertex {
                 return new Topic(edges.next().inVertex());
             }
         };
+        */
     }
 
     public Iterator<Resource> getResources() {
+        return null; /*
         Iterator<Edge> edges = vertex.edges(Direction.OUT, TopicResource.LABEL);
 
         return new Iterator<Resource>() {
@@ -86,6 +67,7 @@ public class Topic extends DomainVertex {
             public Resource next() {
                 return new Resource(edges.next().inVertex());
             }
-        };
+        };*/
     }
+
 }

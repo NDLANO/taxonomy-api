@@ -12,6 +12,9 @@ spring.datasource:
 
 springfox.documentation.swagger.v2.path: /v1/api-docs
 spring.jpa.hibernate.ddl-auto: none
+spring:
+  jpa:
+    show-sql: true
 ---
 
 spring.profiles: dev

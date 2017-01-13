@@ -9,9 +9,11 @@ import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.domain.TopicResource;
+import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,10 @@ import java.util.List;
 @RequestMapping(path = {"topic-resources", "/v1/topic-resources"})
 public class TopicResources {
     private GraphFactory factory;
+
+
+    @Autowired
+    TopicRepository topicRepository;
 
     public TopicResources(GraphFactory factory) {
         this.factory = factory;
@@ -67,7 +73,7 @@ public class TopicResources {
             @ApiParam(name = "connection", value = "new topic/resource connection ") @RequestBody AddResourceToTopicCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
 
-            Topic topic = Topic.getById(command.topicid.toString(), graph);
+            Topic topic = topicRepository.getByPublicId(command.topicid);
             Resource resource = Resource.getById(command.resourceid.toString(), graph);
 
             Iterator<Resource> resources = topic.getResources();
@@ -157,8 +163,8 @@ public class TopicResources {
 
         TopicResourceIndexDocument(TopicResource topicResource) {
             id = topicResource.getId();
-            topicid = topicResource.getTopic().getId();
-            resourceid = topicResource.getResource().getId();
+            topicid = topicResource.getTopic().getPublicId();
+            resourceid = topicResource.getResource().getPublicId();
             primary = topicResource.isPrimary();
         }
     }

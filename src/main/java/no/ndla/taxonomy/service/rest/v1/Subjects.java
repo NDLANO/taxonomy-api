@@ -5,12 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,14 +25,12 @@ import java.util.List;
 @RequestMapping(path = {"subjects", "/v1/subjects"})
 @Transactional
 public class Subjects {
-
-    private GraphFactory factory;
-
-    @Autowired
     private SubjectRepository subjectRepository;
+    private TopicRepository topicRepository;
 
-    public Subjects(GraphFactory factory) {
-        this.factory = factory;
+    public Subjects(SubjectRepository subjectRepository, TopicRepository topicRepository) {
+        this.subjectRepository = subjectRepository;
+        this.topicRepository = topicRepository;
     }
 
 
@@ -49,7 +46,7 @@ public class Subjects {
     @GetMapping("/{id}")
     @ApiOperation("Gets a single subject")
     public SubjectIndexDocument get(@PathVariable("id") URI id) throws Exception {
-        Subject subject = subjectRepository.getByPublicId(id.toString());
+        Subject subject = subjectRepository.getByPublicId(id);
         SubjectIndexDocument result = new SubjectIndexDocument(subject);
         return result;
     }
@@ -68,7 +65,7 @@ public class Subjects {
             @PathVariable("id") URI id,
             @ApiParam(name = "subject", value = "The updated subject") @RequestBody UpdateSubjectCommand command
     ) throws Exception {
-        Subject subject = subjectRepository.getByPublicId(id.toString());
+        Subject subject = subjectRepository.getByPublicId(id);
         subject.setName(command.name);
     }
 
@@ -81,8 +78,8 @@ public class Subjects {
                     boolean recursive
     ) throws Exception {
         List<TopicIndexDocument> results = new ArrayList<>();
-        Subject subject = subjectRepository.getByPublicId(id.toString());
-        subject.getTopics().forEachRemaining(t -> results.add(new TopicIndexDocument(t, recursive)));
+        List<Topic> topics = topicRepository.getBySubjectTopicsSubjectPublicId(id);
+        topics.iterator().forEachRemaining(t -> results.add(new TopicIndexDocument(t, recursive)));
         return results;
     }
 
@@ -151,7 +148,7 @@ public class Subjects {
         }
 
         TopicIndexDocument(Topic topic, boolean recursive) {
-            id = topic.getId();
+            id = topic.getPublicId();
             name = topic.getName();
             if (recursive) addSubtopics(topic);
         }
