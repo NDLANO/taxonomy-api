@@ -103,11 +103,12 @@ public class ResourceTypes {
     ) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             ResourceType resourceType = ResourceType.getById(id, graph);
-            resourceType.name(command.name);
+            if (command.name != null) resourceType.name(command.name);
             if (command.parentId != null) {
                 if (resourceType.getParent().getId().equals(command.parentId)) {
                     throw new DuplicateIdException("Resource type already has sub resource type with id " + id);
                 }
+                resourceType.removeParentResourceType();
                 resourceType.addParentResourceType(ResourceType.getById(command.parentId.toString(), graph));
             } else {
                 resourceType.removeParentResourceType();

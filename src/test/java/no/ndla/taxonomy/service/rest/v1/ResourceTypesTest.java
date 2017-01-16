@@ -205,5 +205,30 @@ public class ResourceTypesTest {
             resourceType.getParent();
         }
     }
+
+    @Test
+    public void can_update_parent_resourcetype() throws Exception {
+        URI childIdResourceType, newParentResourceTypeId;
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            ResourceType parentResourceType = new ResourceType(graph).name("external");
+            ResourceType subResourceType = new ResourceType(graph).name("youtube");
+            ResourceType newParentResourceType = new ResourceType(graph).name("video");
+            newParentResourceTypeId = newParentResourceType.getId();
+            new ResourceTypeSubResourceType(parentResourceType, subResourceType);
+            childIdResourceType = subResourceType.getId();
+            transaction.commit();
+        }
+        ResourceTypes.UpdateResourceTypeCommand command = new ResourceTypes.UpdateResourceTypeCommand() {{
+            parentId = newParentResourceTypeId;
+        }};
+        updateResource("/v1/resource-types/" + childIdResourceType.toString(), command);
+
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            final ResourceType resourceType = ResourceType.getById(childIdResourceType.toString(), graph);
+            assertEquals("video", resourceType.getParent().getName());
+        }
+    }
+
+    
 }
 
