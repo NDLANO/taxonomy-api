@@ -136,6 +136,7 @@ public class GraphConfiguration {
         graph.createEdgeClass(TopicSubtopic.LABEL);
         graph.createEdgeClass(TopicResource.LABEL);
         graph.createEdgeClass(ResourceResourceType.LABEL);
+        graph.createEdgeClass(ResourceTypeSubResourceType.LABEL);
 
         createUniqueVertexIndex(graph, Topic.LABEL, "id");
         createUniqueVertexIndex(graph, Subject.LABEL, "id");
@@ -147,6 +148,7 @@ public class GraphConfiguration {
         createUniqueEdgeIndex(graph, SubjectTopic.LABEL, "id");
         createUniqueEdgeIndex(graph, TopicResource.LABEL, "id");
         createUniqueEdgeIndex(graph, ResourceResourceType.LABEL, "id");
+        createUniqueEdgeIndex(graph, ResourceTypeSubResourceType.LABEL, "id");
     }
 
     private void createUniqueVertexIndex(OrientGraph graph, String label, String key) {

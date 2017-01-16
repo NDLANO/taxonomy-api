@@ -1,15 +1,23 @@
 package no.ndla.taxonomy.service.domain;
 
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
+import java.util.Iterator;
 import java.util.UUID;
 
 public class ResourceType extends DomainVertex {
 
     public static final String LABEL = "resource-type";
 
+    /**
+     * Wrap an existing resource type
+     *
+     * @param vertex the vertex to wrap
+     */
     public ResourceType(Vertex vertex) {
         super(vertex);
     }
@@ -39,4 +47,32 @@ public class ResourceType extends DomainVertex {
             throw new NotFoundException("resource-type", id);
         }
     }
-}
+
+    public ResourceTypeSubResourceType addParentResourceType(ResourceType parentResourceType) {
+        return new ResourceTypeSubResourceType(parentResourceType, this);
+    }
+
+    public ResourceType getParent() {
+        final Iterator<Edge> edges = vertex.edges(Direction.IN, ResourceTypeSubResourceType.LABEL);
+        if (edges.hasNext()) {
+            return new ResourceType(edges.next().outVertex());
+        }
+        throw new NotFoundException("Parent resource type for resource type", this.getId());
+    }
+
+        public Iterator<ResourceType> getSubResourceTypes () {
+            Iterator<Edge> edges = vertex.edges(Direction.OUT, ResourceTypeSubResourceType.LABEL);
+
+            return new Iterator<ResourceType>() {
+                @Override
+                public boolean hasNext() {
+                    return edges.hasNext();
+                }
+
+                @Override
+                public ResourceType next() {
+                    return new ResourceType(edges.next().inVertex());
+                }
+            };
+        }
+    }

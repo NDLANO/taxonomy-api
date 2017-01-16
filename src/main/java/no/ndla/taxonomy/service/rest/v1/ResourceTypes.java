@@ -70,6 +70,10 @@ public class ResourceTypes {
              Transaction transaction = graph.tx()) {
             ResourceType resourceType = new ResourceType(graph);
             if (null != command.id) resourceType.setId(command.id.toString());
+            if (null != command.parentId) {
+                ResourceType parent = ResourceType.getById(command.parentId.toString(), graph);
+                resourceType.addParentResourceType(parent);
+            }
             resourceType.name(command.name);
             URI location = URI.create("/resource-types/" + resourceType.getId());
             transaction.commit();
@@ -124,6 +128,10 @@ public class ResourceTypes {
 
     public static class CreateResourceTypeCommand {
         @JsonProperty
+        @ApiModelProperty(value = "If specified, the new resource type will be a child of the mentioned resource type.")
+        public URI parentId;
+
+        @JsonProperty
         @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resource-type: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:resource-type:1")
         public URI id;
 
@@ -133,6 +141,11 @@ public class ResourceTypes {
     }
 
     public static class UpdateResourceTypeCommand {
+
+        @JsonProperty
+        @ApiModelProperty(value = "If specified, the parent of the resource type will be updated")
+        public URI parentId;
+
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the resource type", example = "Lecture")
         public String name;

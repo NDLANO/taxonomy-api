@@ -14,6 +14,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URI;
+import java.util.Iterator;
+import java.util.List;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.assertEquals;
@@ -127,6 +129,32 @@ public class ResourceTypesTest {
         ResourceType result = ResourceType.getById(id.toString(), graph);
         assertEquals(updateCommand.name, result.getName());
         transaction.rollback();
+    }
+
+    @Test
+    public void can_add_subresourcetype_to_resourcetype() throws Exception {
+        URI parentIdResourceType;
+        URI childIdResourceType = URI.create("urn:resource-type:12");
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            parentIdResourceType = new ResourceType(graph).name("external").getId();
+            transaction.commit();
+        }
+        ResourceTypes.CreateResourceTypeCommand command = new ResourceTypes.CreateResourceTypeCommand() {{
+            parentId = parentIdResourceType;
+            id = childIdResourceType;
+            name = "youtube";
+        }};
+        final String edgeId = getId(createResource("/v1/resource-types/", command));
+
+        assertNotNull(edgeId);
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            final ResourceType child = ResourceType.getById(childIdResourceType.toString(), graph);
+            assertEquals(parentIdResourceType, child.getParent().getId());
+
+            final Iterator<ResourceType> children = ResourceType.getById(parentIdResourceType.toString(), graph).getSubResourceTypes();
+            assertAnyTrue(children, r -> childIdResourceType.toString().equals(r.getId().toString()));
+            transaction.rollback();
+        }
     }
 }
 
