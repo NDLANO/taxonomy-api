@@ -92,11 +92,15 @@ public class TestUtils {
     }
 
     public static MockHttpServletResponse updateResource(String path, Object command) throws Exception {
+        return updateResource(path, command, status().isNoContent());
+    }
+
+    public static MockHttpServletResponse updateResource(String path, Object command, ResultMatcher resultMatcher) throws Exception {
         return mockMvc.perform(
                 put(path)
-                        .contentType(APPLICATION_JSON_UTF8)
-                        .content(json(command)))
-                .andExpect(status().isNoContent())
+                .contentType(APPLICATION_JSON_UTF8)
+                .content(json(command)))
+                .andExpect(resultMatcher)
                 .andReturn()
                 .getResponse();
     }

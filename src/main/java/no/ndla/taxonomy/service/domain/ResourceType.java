@@ -52,6 +52,13 @@ public class ResourceType extends DomainVertex {
         return new ResourceTypeSubResourceType(parentResourceType, this);
     }
 
+    public void removeParentResourceType() {
+        final Iterator<Edge> edges = vertex.edges(Direction.IN, ResourceTypeSubResourceType.LABEL);
+        if (edges.hasNext()) {
+            edges.next().remove();
+        }
+    }
+
     public ResourceType getParent() {
         final Iterator<Edge> edges = vertex.edges(Direction.IN, ResourceTypeSubResourceType.LABEL);
         if (edges.hasNext()) {
@@ -75,4 +82,4 @@ public class ResourceType extends DomainVertex {
                 }
             };
         }
-    }
+}

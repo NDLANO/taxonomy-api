@@ -1,14 +1,19 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import no.ndla.taxonomy.service.GraphFactory;
+import no.ndla.taxonomy.service.domain.NotFoundException;
 import no.ndla.taxonomy.service.domain.ResourceType;
+import no.ndla.taxonomy.service.domain.ResourceTypeSubResourceType;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -29,6 +34,9 @@ public class ResourceTypesTest {
 
     @Autowired
     private GraphFactory factory;
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
     @Before
     public void setup() throws Exception {
@@ -154,6 +162,47 @@ public class ResourceTypesTest {
             final Iterator<ResourceType> children = ResourceType.getById(parentIdResourceType.toString(), graph).getSubResourceTypes();
             assertAnyTrue(children, r -> childIdResourceType.toString().equals(r.getId().toString()));
             transaction.rollback();
+        }
+    }
+
+    @Test
+    public void cannot_add_existing_subresourcetypes_to_resourcetype() throws Exception {
+        URI parentIdResourceType;
+        URI childIdResourceType;
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            ResourceType parentResourceType = new ResourceType(graph).name("external");
+            ResourceType subResourceType = new ResourceType(graph).name("youtube");
+            new ResourceTypeSubResourceType(parentResourceType, subResourceType);
+            parentIdResourceType = parentResourceType.getId();
+            childIdResourceType = subResourceType.getId();
+            transaction.commit();
+        }
+        ResourceTypes.UpdateResourceTypeCommand command = new ResourceTypes.UpdateResourceTypeCommand() {{
+            parentId = parentIdResourceType;
+            name = "youtube";
+        }};
+        updateResource("/v1/resource-types/" + childIdResourceType.toString(), command, status().isConflict());
+    }
+
+    @Test
+    public void can_remove_parent_from_resourcetype() throws Exception {
+        URI childIdResourceType;
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            ResourceType parentResourceType = new ResourceType(graph).name("external");
+            ResourceType subResourceType = new ResourceType(graph).name("youtube");
+            new ResourceTypeSubResourceType(parentResourceType, subResourceType);
+            childIdResourceType = subResourceType.getId();
+            transaction.commit();
+        }
+        ResourceTypes.UpdateResourceTypeCommand command = new ResourceTypes.UpdateResourceTypeCommand() {{
+            name = "youtube";
+        }};
+        updateResource("/v1/resource-types/" + childIdResourceType.toString(), command);
+
+        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+            ResourceType resourceType = ResourceType.getById(childIdResourceType.toString(), graph);
+            exception.expect(NotFoundException.class);
+            resourceType.getParent();
         }
     }
 }

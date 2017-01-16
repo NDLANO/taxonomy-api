@@ -95,7 +95,7 @@ public class ResourceTypes {
     }
 
     @PutMapping("/{id}")
-    @ApiOperation(value = "Updates a resource type")
+    @ApiOperation(value = "Updates a resource type. Use to update which resource type is parent.")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(
             @PathVariable String id,
@@ -104,6 +104,14 @@ public class ResourceTypes {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             ResourceType resourceType = ResourceType.getById(id, graph);
             resourceType.name(command.name);
+            if (command.parentId != null) {
+                if (resourceType.getParent().getId().equals(command.parentId)) {
+                    throw new DuplicateIdException("Resource type already has sub resource type with id " + id);
+                }
+                resourceType.addParentResourceType(ResourceType.getById(command.parentId.toString(), graph));
+            } else {
+                resourceType.removeParentResourceType();
+            }
             transaction.commit();
         }
     }
