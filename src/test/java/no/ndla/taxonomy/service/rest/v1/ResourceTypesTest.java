@@ -1,13 +1,8 @@
 package no.ndla.taxonomy.service.rest.v1;
 
-import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.ResourceType;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
@@ -17,29 +12,18 @@ import java.net.URI;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("junit")
-public class ResourceTypesTest {
-
-    @Autowired
-    private GraphFactory factory;
-
-    @Before
-    public void setup() throws Exception {
-        clearGraph();
-    }
+public class ResourceTypesTest extends RestTest {
 
     @Test
     public void can_get_all_resource_types() throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            new ResourceType(graph).name("video");
-            new ResourceType(graph).name("audio");
-            transaction.commit();
-        }
+        newResourceType().name("video");
+        newResourceType().name("audio");
 
         MockHttpServletResponse response = getResource("/v1/resource-types");
         ResourceTypes.ResourceTypeIndexDocument[] resourcetypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
@@ -52,13 +36,7 @@ public class ResourceTypesTest {
 
     @Test
     public void can_get_resourcetype_by_id() throws Exception {
-        URI id;
-
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new ResourceType(graph).name("video").getId();
-            transaction.commit();
-        }
-
+        URI id = newResourceType().name("video").getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/resource-types/" + id.toString());
         ResourceTypes.ResourceTypeIndexDocument resourceType = getObject(ResourceTypes.ResourceTypeIndexDocument.class, response);
@@ -67,12 +45,7 @@ public class ResourceTypesTest {
 
     @Test
     public void unknown_resourcetype_fails_gracefully() throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            new ResourceType(graph).name("video");
-            transaction.commit();
-        }
-
-        MockHttpServletResponse response = getResource("/v1/resource-types/doesnotexist", status().isNotFound());
+        getResource("/v1/resource-types/doesnotexist", status().isNotFound());
     }
 
     @Test
@@ -81,13 +54,11 @@ public class ResourceTypesTest {
             id = URI.create("urn:resource-type:1");
             name = "name";
         }};
+
         createResource("/v1/resource-types/", command);
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            assertNotNull(ResourceType.getById(command.id.toString(), graph));
-            transaction.rollback();
-        }
-
+        ResourceType result = resourceTypeRepository.getByPublicId(command.id);
+        assertEquals(command.name, result.getName());
     }
 
     @Test
@@ -102,31 +73,22 @@ public class ResourceTypesTest {
 
     @Test
     public void can_delete_resourcetype() throws Exception {
-        String id;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new ResourceType(graph).name("video").getId().toString();
-            transaction.commit();
-        }
+        URI id = newResourceType().name("video").getPublicId();
         deleteResource("/v1/resource-types/" + id);
+        assertNull(resourceTypeRepository.findByPublicId(id));
     }
 
     @Test
     public void can_update_resourcetype() throws Exception {
-        URI id;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new ResourceType(graph).name("video").getId();
-            transaction.commit();
-        }
-        ResourceTypes.UpdateResourceTypeCommand updateCommand = new ResourceTypes.UpdateResourceTypeCommand();
-        updateCommand.name = "Audovideo";
+        URI id = newResourceType().name("video").getPublicId();
+        ResourceTypes.UpdateResourceTypeCommand updateCommand = new ResourceTypes.UpdateResourceTypeCommand() {{
+            name = "Audovideo";
+        }};
 
         updateResource("/v1/resource-types/" + id, updateCommand);
 
-        Graph graph = factory.create();
-        Transaction transaction = graph.tx();
-        ResourceType result = ResourceType.getById(id.toString(), graph);
+        ResourceType result = resourceTypeRepository.getByPublicId(id);
         assertEquals(updateCommand.name, result.getName());
-        transaction.rollback();
     }
 }
 

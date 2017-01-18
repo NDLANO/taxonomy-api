@@ -55,6 +55,7 @@ public class Subjects {
     @ApiOperation("Deletes a single subject")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) throws Exception {
+        subjectRepository.getByPublicId(id);
         subjectRepository.deleteByPublicId(id);
     }
 

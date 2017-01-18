@@ -1,31 +1,19 @@
 package no.ndla.taxonomy.service.domain;
 
 
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
-
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
+import java.net.URI;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
-public class Resource extends DomainVertex {
+@Entity
+public class Resource extends DomainObject {
 
-    public static final String LABEL = "resource";
-
-    public Resource(Vertex vertex) {
-        super(vertex);
-    }
-
-    /**
-     * Create a new resource
-     *
-     * @param graph the graph where the new vertex is created
-     */
-    public Resource(Graph graph) {
-        this(graph.addVertex(LABEL));
-        setId("urn:resource:" + UUID.randomUUID());
+    public Resource() {
+        setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
     }
 
     public Resource name(String name) {
@@ -33,32 +21,35 @@ public class Resource extends DomainVertex {
         return this;
     }
 
-    public static Resource getById(String id, Graph graph) {
-        GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V().hasLabel(LABEL).has("id", id);
-        if (traversal.hasNext()) {
-            return new Resource(traversal.next());
-        } else {
-            throw new NotFoundException("resource", id);
-        }
-    }
+    @OneToMany(mappedBy = "resource")
+    private Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
 
     public Iterator<ResourceType> getResourceTypes() {
-        Iterator<Edge> edges = vertex.edges(Direction.OUT, ResourceResourceType.LABEL);
-
+        Iterator<ResourceResourceType> iterator = resourceResourceTypes.iterator();
         return new Iterator<ResourceType>() {
             @Override
             public boolean hasNext() {
-                return edges.hasNext();
+                return iterator.hasNext();
             }
 
             @Override
             public ResourceType next() {
-                return new ResourceType(edges.next().inVertex());
+                return iterator.next().getResourceType();
             }
         };
     }
 
     public ResourceResourceType addResourceType(ResourceType resourceType) {
-        return new ResourceResourceType(this, resourceType);
+        Iterator<ResourceType> resourceTypes = getResourceTypes();
+        while (resourceTypes.hasNext()) {
+            ResourceType t = resourceTypes.next();
+            if (t.getId().equals(resourceType.getId())) {
+                throw new DuplicateIdException("Resource with id " + getPublicId() + " is already marked with resource type with id " + resourceType.getPublicId());
+            }
+        }
+
+        ResourceResourceType resourceResourceType = new ResourceResourceType(this, resourceType);
+        resourceResourceTypes.add(resourceResourceType);
+        return resourceResourceType;
     }
 }

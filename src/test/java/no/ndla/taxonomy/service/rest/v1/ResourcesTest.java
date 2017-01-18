@@ -1,46 +1,22 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
-import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.Resource;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URI;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-@ActiveProfiles("junit")
-public class ResourcesTest {
-
-    @Autowired
-    private GraphFactory factory;
-
-    @Before
-    public void setup() throws Exception {
-        clearGraph();
-    }
+public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_all_resources() throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            new Resource(graph).name("The inner planets");
-            new Resource(graph).name("Gas giants");
-            transaction.commit();
-        }
+        newResource().name("The inner planets");
+        newResource().name("Gas giants");
 
         MockHttpServletResponse response = getResource("/v1/resources");
         Resources.ResourceIndexDocument[] resources = getObject(Resources.ResourceIndexDocument[].class, response);
@@ -53,38 +29,27 @@ public class ResourcesTest {
 
     @Test
     public void can_create_resource() throws Exception {
-        Resources.CreateResourceCommand createResourceCommand = new Resources.CreateResourceCommand();
-        createResourceCommand.name = "testresource";
+        Resources.CreateResourceCommand createResourceCommand = new Resources.CreateResourceCommand() {{
+            name = "testresource";
+        }};
 
-        MockHttpServletResponse response = createResource("/v1/resources", createResourceCommand);
-        URI id = getId(response);
+        URI id = getId(createResource("/v1/resources", createResourceCommand));
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Resource resource = Resource.getById(id.toString(), graph);
-            assertEquals(createResourceCommand.name, resource.getName());
-            transaction.rollback();
-        }
+        Resource resource = resourceRepository.getByPublicId(id);
+        assertEquals(createResourceCommand.name, resource.getName());
     }
-
 
     @Test
     public void can_update_resource() throws Exception {
-        String id;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new Resource(graph).getId().toString();
-            transaction.commit();
-        }
+        URI id = newResource().getPublicId();
 
         Resources.UpdateResourceCommand command = new Resources.UpdateResourceCommand();
         command.name = "The inner planets";
 
         updateResource("/v1/resources/" + id, command);
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Resource resource = Resource.getById(id, graph);
-            assertEquals(command.name, resource.getName());
-            transaction.rollback();
-        }
+        Resource resource = resourceRepository.getByPublicId(id);
+        assertEquals(command.name, resource.getName());
     }
 
     @Test
@@ -96,10 +61,7 @@ public class ResourcesTest {
 
         createResource("/v1/resources", command);
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            assertNotNull(Resource.getById(command.id.toString(), graph));
-            transaction.rollback();
-        }
+        assertNotNull(resourceRepository.getByPublicId(command.id));
     }
 
     @Test
@@ -115,36 +77,23 @@ public class ResourcesTest {
 
     @Test
     public void can_delete_resource() throws Exception {
-        String id;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new Resource(graph).getId().toString();
-            transaction.commit();
-        }
-
+        URI id = newResource().getPublicId();
         deleteResource("/v1/resources/" + id);
-        assertNotFound(graph -> Resource.getById(id, graph));
+        assertNull(resourceRepository.findByPublicId(id));
     }
 
     @Test
     public void can_get_resource_by_id() throws Exception {
-        String id;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new Resource(graph).name("The inner planets").getId().toString();
-            transaction.commit();
-        }
+        URI id = newResource().name("The inner planets").getPublicId();
+
         MockHttpServletResponse response = getResource("/v1/resources/" + id);
         Resources.ResourceIndexDocument result = getObject(Resources.ResourceIndexDocument.class, response);
-        assertEquals(id, result.id.toString());
+
+        assertEquals(id, result.id);
     }
 
     @Test
     public void get_unknown_resource_fails_gracefully() throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            new Resource(graph).name("The inner planets").getId().toString();
-            transaction.commit();
-        }
-
         getResource("/v1/resources/nonexistantid", status().isNotFound());
-
     }
 }

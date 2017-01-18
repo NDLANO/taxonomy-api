@@ -11,6 +11,7 @@ import java.net.URI;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TopicsTest extends RestTest {
@@ -87,6 +88,6 @@ public class TopicsTest extends RestTest {
     public void can_delete_topic() throws Exception {
         URI id = newTopic().getPublicId();
         deleteResource("/v1/topics/" + id);
-        assertNotFound(graph -> topicRepository.getByPublicId(id));
+        assertNull(topicRepository.findByPublicId(id));
     }
 }

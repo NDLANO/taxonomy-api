@@ -64,6 +64,7 @@ public class Topics {
     @ApiOperation(value = "Deletes a single topic")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) throws Exception {
+        topicRepository.getByPublicId(id);
         topicRepository.deleteByPublicId(id);
     }
 

@@ -2,14 +2,14 @@ package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.domain.Subject;
+import no.ndla.taxonomy.service.domain.Topic;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class SubjectsTest extends RestTest {
@@ -81,7 +81,7 @@ public class SubjectsTest extends RestTest {
     public void can_delete_subject() throws Exception {
         URI id = newSubject().getPublicId();
         deleteResource("/v1/subjects/" + id);
-        assertNotFound(graph -> subjectRepository.getByPublicId(id));
+        assertNull(subjectRepository.findByPublicId(id));
     }
 
     @Test
@@ -101,22 +101,17 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(topics, t -> isValidId(t.id));
     }
 
-    /*
     @Test
     public void can_get_topics_recursively() throws Exception {
-        String subjectid;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject subject = new Subject(graph).name("subject");
-            subjectid = subject.getId().toString();
+        Subject subject = newSubject().name("subject");
+        URI subjectid = subject.getPublicId();
 
-            Topic parent = new Topic(graph).name("parent topic");
-            Topic child = new Topic(graph).name("child topic");
-            Topic grandchild = new Topic(graph).name("grandchild topic");
-            subject.addTopic(parent);
-            parent.addSubtopic(child);
-            child.addSubtopic(grandchild);
-            transaction.commit();
-        }
+        Topic parent = newTopic().name("parent topic");
+        Topic child = newTopic().name("child topic");
+        Topic grandchild = newTopic().name("grandchild topic");
+        save(subject.addTopic(parent));
+        save(parent.addSubtopic(child));
+        save(child.addSubtopic(grandchild));
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics?recursive=true");
         Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
@@ -126,6 +121,5 @@ public class SubjectsTest extends RestTest {
         assertEquals("child topic", topics[0].subtopics[0].name);
         assertEquals("grandchild topic", topics[0].subtopics[0].subtopics[0].name);
     }
-*/
 
 }

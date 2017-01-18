@@ -1,8 +1,9 @@
-create table topic (
-  id serial primary key,
-  public_id varchar(255) not null,
-  name varchar(255)
+CREATE TABLE topic (
+  id        SERIAL PRIMARY KEY,
+  public_id VARCHAR(255) NOT NULL,
+  name      VARCHAR(255)
 );
 
-create unique index topic_public_id on topic (public_id);
+CREATE UNIQUE INDEX topic_public_id
+  ON topic (public_id);
 

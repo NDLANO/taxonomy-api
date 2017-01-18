@@ -1,5 +1,7 @@
 package no.ndla.taxonomy.service.domain;
 
+import org.hibernate.annotations.Type;
+
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -12,15 +14,12 @@ public class DomainEntity {
     @GeneratedValue
     private Integer id;
 
-    @Column
+    @Column(name = "public_id")
+    @Type(type = "no.ndla.taxonomy.service.domain.UriType")
     private URI publicId;
 
-    public Integer getId() {
+    protected Integer getId() {
         return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
     }
 
     public URI getPublicId() {

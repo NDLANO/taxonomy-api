@@ -4,7 +4,6 @@ package no.ndla.taxonomy.service.rest.v1;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,11 +21,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("junit")
 public class SubjectTopicsTest extends RestTest {
-
-    @Before
-    public void setup() throws Exception {
-        clearGraph();
-    }
 
     @Test
     public void can_add_topic_to_subject() throws Exception {
@@ -66,9 +60,9 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_delete_subject_topic() throws Exception {
-        URI id = newSubject().addTopic(newTopic()).getPublicId();
+        URI id = save(newSubject().addTopic(newTopic())).getPublicId();
         deleteResource("/v1/subject-topics/" + id);
-        assertNotFound(graph -> subjectRepository.getByPublicId(id));
+        assertNull(subjectRepository.findByPublicId(id));
     }
 
     @Test

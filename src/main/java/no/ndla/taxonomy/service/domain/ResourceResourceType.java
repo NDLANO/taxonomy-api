@@ -1,49 +1,36 @@
 package no.ndla.taxonomy.service.domain;
 
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import java.net.URI;
 import java.util.UUID;
 
-public class ResourceResourceType extends DomainEdge{
+@Entity
+public class ResourceResourceType extends DomainEntity {
 
-    public static final String LABEL = "resource-has-resourcetypes";
+    @ManyToOne
+    @JoinColumn(name = "resource_id")
+    private Resource resource;
 
-    /**
-     * Creates a new edge between a resource and a resource type
-     * @param resource
-     * @param resourceType
-     */
+    @ManyToOne
+    @JoinColumn(name = "resource_type_id")
+    private ResourceType resourceType;
+
+    protected ResourceResourceType() {
+    }
+
     public ResourceResourceType(Resource resource, ResourceType resourceType) {
-        this(createEdge(resource, resourceType));
-        setId("urn:resource-resourcetype:" + UUID.randomUUID());
-    }
-
-    /**
-     * Wraps an existing edge between a resource and a resource type
-     */
-    public ResourceResourceType(Edge edge) {
-        super(edge);
-    }
-
-
-    private static Edge createEdge(Resource resource, ResourceType resourceType) {
-        return resource.vertex.addEdge(ResourceResourceType.LABEL, resourceType.vertex);
-    }
-
-
-    public static ResourceResourceType getById(String id, Graph graph) {
-        GraphTraversal<Edge, Edge> traversal = graph.traversal().E().hasLabel(LABEL).has("id", id);
-        if (traversal.hasNext()) return new ResourceResourceType((traversal.next()));
-        throw new NotFoundException("resource-resourcetype", id);
-    }
-
-    public ResourceType getResourceType() {
-        return new ResourceType(edge.inVertex());
+        this.resource = resource;
+        this.resourceType = resourceType;
+        setPublicId(URI.create("urn:resource-resourcetype:" + UUID.randomUUID()));
     }
 
     public Resource getResource() {
-        return new Resource(edge.outVertex());
+        return resource;
+    }
+
+    public ResourceType getResourceType() {
+        return resourceType;
     }
 }

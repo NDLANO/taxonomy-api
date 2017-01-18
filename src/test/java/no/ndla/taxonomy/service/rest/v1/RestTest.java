@@ -1,12 +1,10 @@
 package no.ndla.taxonomy.service.rest.v1;
 
+import no.ndla.taxonomy.service.domain.Resource;
+import no.ndla.taxonomy.service.domain.ResourceType;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
-import no.ndla.taxonomy.service.repositories.SubjectRepository;
-import no.ndla.taxonomy.service.repositories.SubjectTopicRepository;
-import no.ndla.taxonomy.service.repositories.TopicRepository;
-import no.ndla.taxonomy.service.repositories.TopicSubtopicRepository;
-import org.junit.Before;
+import no.ndla.taxonomy.service.repositories.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,8 +13,6 @@ import org.springframework.test.context.junit4.AbstractTransactionalJUnit4Spring
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.persistence.EntityManager;
-
-import static no.ndla.taxonomy.service.TestUtils.clearGraph;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -33,16 +29,22 @@ public abstract class RestTest extends AbstractTransactionalJUnit4SpringContextT
     TopicRepository topicRepository;
 
     @Autowired
+    TopicResourceRepository topicResourceRepository;
+
+    @Autowired
     SubjectTopicRepository subjectTopicRepository;
 
     @Autowired
     TopicSubtopicRepository topicSubtopicRepository;
 
-    @Before
-    public void setup() throws Exception {
-        clearGraph();
-    }
+    @Autowired
+    ResourceResourceTypeRepository resourceResourceTypeRepository;
 
+    @Autowired
+    ResourceRepository resourceRepository;
+
+    @Autowired
+    ResourceTypeRepository resourceTypeRepository;
 
     <T> T save(T entity) {
         entityManager.persist(entity);
@@ -55,5 +57,13 @@ public abstract class RestTest extends AbstractTransactionalJUnit4SpringContextT
 
     Topic newTopic() {
         return save(new Topic());
+    }
+
+    Resource newResource() {
+        return save(new Resource());
+    }
+
+    ResourceType newResourceType() {
+        return save(new ResourceType());
     }
 }

@@ -3,7 +3,6 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.domain.TopicSubtopic;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,11 +20,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("junit")
 public class TopicSubtopicsTest extends RestTest {
-
-    @Before
-    public void setup() throws Exception {
-        clearGraph();
-    }
 
     @Test
     public void can_add_subtopic_to_topic() throws Exception {
@@ -71,7 +65,7 @@ public class TopicSubtopicsTest extends RestTest {
     public void can_delete_topic_subtopic() throws Exception {
         URI id = save(newTopic().addSubtopic(newTopic())).getPublicId();
         deleteResource("/v1/topic-subtopics/" + id);
-        assertNotFound(graph -> topicRepository.getByPublicId(id));
+        assertNull(topicRepository.findByPublicId(id));
     }
 
     @Test

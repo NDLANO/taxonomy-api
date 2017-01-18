@@ -128,21 +128,12 @@ public class GraphConfiguration {
     private void createSchema(OrientGraph graph) {
         graph.createVertexClass(Migration.LABEL);
         graph.createVertexClass(Subject.LABEL);
-        graph.createVertexClass(Resource.LABEL);
         graph.createVertexClass(Topic.LABEL);
-        graph.createVertexClass(ResourceType.LABEL);
-
-        graph.createEdgeClass(TopicResource.LABEL);
-        graph.createEdgeClass(ResourceResourceType.LABEL);
 
         createUniqueVertexIndex(graph, Topic.LABEL, "id");
         createUniqueVertexIndex(graph, Subject.LABEL, "id");
-        createUniqueVertexIndex(graph, Resource.LABEL, "id");
         createUniqueVertexIndex(graph, Migration.LABEL, "name");
-        createUniqueVertexIndex(graph, ResourceType.LABEL, "id");
 
-        createUniqueEdgeIndex(graph, TopicResource.LABEL, "id");
-        createUniqueEdgeIndex(graph, ResourceResourceType.LABEL, "id");
     }
 
     private void createUniqueVertexIndex(OrientGraph graph, String label, String key) {

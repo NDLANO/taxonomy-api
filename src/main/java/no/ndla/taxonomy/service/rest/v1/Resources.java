@@ -1,33 +1,31 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.orientechnologies.orient.core.record.impl.ODocument;
-import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Resource;
-import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
+import no.ndla.taxonomy.service.repositories.ResourceRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping(path = {"resources", "/v1/resources"})
+@Transactional
 public class Resources {
 
-    private GraphFactory factory;
+    private ResourceRepository resourceRepository;
 
-    public Resources(GraphFactory factory) {
-        this.factory = factory;
+    public Resources(ResourceRepository resourceRepository) {
+        this.resourceRepository = resourceRepository;
     }
 
     @GetMapping
@@ -35,67 +33,47 @@ public class Resources {
             notes = "Multiple status values can be provided with comma seperated strings")
     public List<ResourceIndexDocument> index() throws Exception {
         List<ResourceIndexDocument> result = new ArrayList<>();
-
-        try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
-            Iterable<ODocument> resultSet = (Iterable<ODocument>) graph.executeSql("select id, name from V_Resource");
-            resultSet.iterator().forEachRemaining(record -> {
-                ResourceIndexDocument document = new ResourceIndexDocument();
-                result.add(document);
-                document.id = URI.create(record.field("id"));
-                document.name = record.field("name");
-            });
-            transaction.rollback();
-            return result;
-        }
+        resourceRepository.findAll().forEach(record -> result.add(new ResourceIndexDocument(record)));
+        return result;
     }
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single resource")
-    public ResourceIndexDocument get(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Resource resource = Resource.getById(id, graph);
-            ResourceIndexDocument result = new ResourceIndexDocument(resource);
-            transaction.rollback();
-            return result;
-        }
+    public ResourceIndexDocument get(@PathVariable("id") URI id) throws Exception {
+        Resource resource = resourceRepository.getByPublicId(id);
+        ResourceIndexDocument result = new ResourceIndexDocument(resource);
+        return result;
     }
 
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Deletes a resource")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity delete(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Resource resource = Resource.getById(id, graph);
-            resource.remove();
-            transaction.commit();
-            return ResponseEntity.noContent().build();
-        }
+    public void delete(@PathVariable("id") URI id) throws Exception {
+        resourceRepository.getByPublicId(id);
+        resourceRepository.deleteByPublicId(id);
     }
 
     @PutMapping("/{id}")
     @ApiOperation(value = "Updates a resource")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void put(@PathVariable("id") String id, @ApiParam(name= "resource", value = "the updated resource") @RequestBody UpdateResourceCommand command) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Resource resource = Resource.getById(id, graph);
-            resource.setName(command.name);
-            transaction.commit();
-        }
+    public void put(@PathVariable("id") URI id, @ApiParam(name = "resource", value = "the updated resource") @RequestBody UpdateResourceCommand command) throws Exception {
+        Resource resource = resourceRepository.getByPublicId(id);
+        resource.setName(command.name);
     }
 
     @PostMapping
     @ApiOperation(value = "Adds a new resource")
     public ResponseEntity<Void> post(
             @ApiParam(name = "resource", value = "the new resource") @RequestBody CreateResourceCommand command) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Resource resource = new Resource(graph);
-            if (null != command.id) resource.setId(command.id.toString());
+        try {
+            Resource resource = new Resource();
+            if (null != command.id) resource.setPublicId(command.id);
             resource.name(command.name);
-            URI location = URI.create("/resources/" + resource.getId());
-            transaction.commit();
+            resourceRepository.save(resource);
+            URI location = URI.create("/resources/" + resource.getPublicId());
             return ResponseEntity.created(location).build();
-        } catch (ORecordDuplicatedException e) {
-            throw new DuplicateIdException("" + command.id);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateIdException(command.id.toString());
         }
     }
 
@@ -117,18 +95,18 @@ public class Resources {
 
     static class ResourceIndexDocument {
         @JsonProperty
-        @ApiModelProperty(example="urn:resource:345")
+        @ApiModelProperty(example = "urn:resource:345")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty( value = "The name of the resource", example = "Introduction to integration")
+        @ApiModelProperty(value = "The name of the resource", example = "Introduction to integration")
         public String name;
 
         ResourceIndexDocument() {
         }
 
         ResourceIndexDocument(Resource resource) {
-            id = resource.getId();
+            id = resource.getPublicId();
             name = resource.getName();
         }
     }

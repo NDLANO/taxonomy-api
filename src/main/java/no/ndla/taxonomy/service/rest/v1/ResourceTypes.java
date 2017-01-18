@@ -1,62 +1,45 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.orientechnologies.orient.core.record.impl.ODocument;
-import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.ResourceType;
-import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
+import no.ndla.taxonomy.service.repositories.ResourceTypeRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping(path = {"resource-types", "/v1/resource-types"})
+@Transactional
 public class ResourceTypes {
 
-    private GraphFactory factory;
+    private ResourceTypeRepository resourceTypeRepository;
 
-    public ResourceTypes(GraphFactory factory) {
-        this.factory = factory;
+    public ResourceTypes(ResourceTypeRepository resourceTypeRepository) {
+        this.resourceTypeRepository = resourceTypeRepository;
     }
 
     @GetMapping
     @ApiOperation("Gets a list of all resource types")
-    public List<ResourceTypes.ResourceTypeIndexDocument> index() throws Exception {
-        List<ResourceTypes.ResourceTypeIndexDocument> result = new ArrayList<>();
-
-        try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
-            Iterable<ODocument> resultSet = (Iterable<ODocument>) graph.executeSql("select id, name from `V_Resource-Type`");
-            resultSet.iterator().forEachRemaining(record -> {
-                ResourceTypes.ResourceTypeIndexDocument document = new ResourceTypes.ResourceTypeIndexDocument();
-                result.add(document);
-                document.id = URI.create(record.field("id"));
-                document.name = record.field("name");
-            });
-            transaction.rollback();
-            return result;
-        }
+    public List<ResourceTypeIndexDocument> index() throws Exception {
+        List<ResourceTypeIndexDocument> result = new ArrayList<>();
+        resourceTypeRepository.findAll().forEach(record -> result.add(new ResourceTypeIndexDocument(record)));
+        return result;
     }
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single resource type")
-    public ResourceTypeIndexDocument get(@PathVariable("id") String id) throws Exception {
-        try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
-            final ResourceType result = ResourceType.getById(id, graph);
-            ResourceTypes.ResourceTypeIndexDocument resourceType = new ResourceTypes.ResourceTypeIndexDocument(result);
-            transaction.rollback();
-            return resourceType;
-        }
+    public ResourceTypeIndexDocument get(@PathVariable("id") URI id) throws Exception {
+        return new ResourceTypeIndexDocument(resourceTypeRepository.getByPublicId(id));
     }
 
     @PostMapping
@@ -66,42 +49,35 @@ public class ResourceTypes {
             @RequestBody
                     CreateResourceTypeCommand command
     ) throws Exception {
-        try (Graph graph = factory.create();
-             Transaction transaction = graph.tx()) {
-            ResourceType resourceType = new ResourceType(graph);
-            if (null != command.id) resourceType.setId(command.id.toString());
+        try {
+            ResourceType resourceType = new ResourceType();
+            if (null != command.id) resourceType.setPublicId(command.id);
             resourceType.name(command.name);
-            URI location = URI.create("/resource-types/" + resourceType.getId());
-            transaction.commit();
+            resourceTypeRepository.save(resourceType);
+            URI location = URI.create("/resource-types/" + resourceType.getPublicId());
             return ResponseEntity.created(location).build();
-        } catch (ORecordDuplicatedException e) {
-            throw new DuplicateIdException("" + command.id);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateIdException(command.id.toString());
         }
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation(value = "Deletes a single resource type")
-    public void delete(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            ResourceType resource = ResourceType.getById(id, graph);
-            resource.remove();
-            transaction.commit();
-        }
+    public void delete(@PathVariable("id") URI id) throws Exception {
+        resourceTypeRepository.getByPublicId(id);
+        resourceTypeRepository.deleteByPublicId(id);
     }
 
     @PutMapping("/{id}")
     @ApiOperation(value = "Updates a resource type")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(
-            @PathVariable String id,
+            @PathVariable URI id,
             @ApiParam(name = "resourceType", value = "The updated resource type") @RequestBody UpdateResourceTypeCommand command
     ) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            ResourceType resourceType = ResourceType.getById(id, graph);
-            resourceType.name(command.name);
-            transaction.commit();
-        }
+        ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
+        resourceType.name(command.name);
     }
 
     public static class ResourceTypeIndexDocument {
@@ -117,7 +93,7 @@ public class ResourceTypes {
         }
 
         ResourceTypeIndexDocument(ResourceType resourceType) {
-            id = resourceType.getId();
+            id = resourceType.getPublicId();
             name = resourceType.getName();
         }
     }

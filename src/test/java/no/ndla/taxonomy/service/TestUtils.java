@@ -149,30 +149,6 @@ public class TestUtils {
         return id != null && id.toString().contains("urn");
     }
 
-    public static void clearGraph() throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            assertTrue("Are you mad?", factory.isTest());
-            graph.vertices().forEachRemaining(Element::remove);
-            transaction.commit();
-        }
-    }
-
-    private static void truncate(String table, Connection connection) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement("delete from " + table)) {
-            int result = statement.executeUpdate();
-        }
-    }
-
-    public static void assertNotFound(Consumer<Graph> consumer) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            consumer.accept(graph);
-            transaction.rollback();
-            fail("Expected NotFoundException");
-        } catch (NotFoundException expectedException) {
-            //ok
-        }
-    }
-
     public static int count(Iterator iterator) {
         int count = 0;
         while (iterator.hasNext()) {
