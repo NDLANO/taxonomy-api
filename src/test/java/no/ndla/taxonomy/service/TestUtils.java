@@ -1,35 +1,26 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.service.domain.NotFoundException;
-import org.apache.tinkerpop.gremlin.structure.Element;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.mock.http.MockHttpOutputMessage;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.net.URI;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,18 +30,14 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 public class TestUtils {
 
     private static HttpMessageConverter mappingJackson2HttpMessageConverter;
-    private static GraphFactory factory;
     private static MockMvc mockMvc;
-    private static DataSource dataSource;
 
     @Autowired
-    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext, GraphFactory factory, DataSource dataSource) {
+    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext) {
         mappingJackson2HttpMessageConverter = Arrays.stream(converters)
                 .filter(hmc -> hmc instanceof MappingJackson2HttpMessageConverter)
                 .findAny()
                 .orElse(null);
-        TestUtils.factory = factory;
-        TestUtils.dataSource = dataSource;
 
         assertNotNull("the JSON message converter must not be null", TestUtils.mappingJackson2HttpMessageConverter);
 
@@ -105,8 +92,8 @@ public class TestUtils {
     public static MockHttpServletResponse updateResource(String path, Object command, ResultMatcher resultMatcher) throws Exception {
         return mockMvc.perform(
                 put(path)
-                .contentType(APPLICATION_JSON_UTF8)
-                .content(json(command)))
+                        .contentType(APPLICATION_JSON_UTF8)
+                        .content(json(command)))
                 .andExpect(resultMatcher)
                 .andReturn()
                 .getResponse();

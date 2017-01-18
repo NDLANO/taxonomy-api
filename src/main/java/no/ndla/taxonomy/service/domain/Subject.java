@@ -33,7 +33,7 @@ public class Subject extends DomainObject {
     }
 
     @OneToMany(mappedBy = "subject")
-     Set<SubjectTopic> subjectTopics = new HashSet<>();
+    Set<SubjectTopic> subjectTopics = new HashSet<>();
 
     public Iterator<Topic> getTopics() {
         Iterator<SubjectTopic> iterator = subjectTopics.iterator();

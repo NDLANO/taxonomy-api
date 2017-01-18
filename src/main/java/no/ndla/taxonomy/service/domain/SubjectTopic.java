@@ -1,7 +1,10 @@
 package no.ndla.taxonomy.service.domain;
 
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import java.net.URI;
 import java.util.UUID;
 

@@ -15,7 +15,7 @@ public class DomainEntity {
     private Integer id;
 
     @Column(name = "public_id")
-    @Type(type = "no.ndla.taxonomy.service.domain.UriType")
+    @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
     private URI publicId;
 
     protected Integer getId() {

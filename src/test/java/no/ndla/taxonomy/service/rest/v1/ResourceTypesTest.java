@@ -1,9 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import no.ndla.taxonomy.service.domain.ResourceType;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
@@ -14,10 +12,6 @@ import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ResourceTypesTest extends RestTest {
-
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
-
 
     @Test
     public void can_get_all_resource_types() throws Exception {
