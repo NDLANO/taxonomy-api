@@ -1,12 +1,10 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import no.ndla.taxonomy.service.domain.ResourceType;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.rules.ExpectedException;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URI;
 
@@ -15,10 +13,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-@ActiveProfiles("junit")
 public class ResourceTypesTest extends RestTest {
+
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
+
 
     @Test
     public void can_get_all_resource_types() throws Exception {
@@ -89,6 +88,47 @@ public class ResourceTypesTest extends RestTest {
 
         ResourceType result = resourceTypeRepository.getByPublicId(id);
         assertEquals(updateCommand.name, result.getName());
+    }
+
+    @Test
+    public void can_add_subresourcetype_to_resourcetype() throws Exception {
+        ResourceType parent = newResourceType().name("external");
+
+        URI childId = getId(createResource("/v1/resource-types/", new ResourceTypes.CreateResourceTypeCommand() {{
+            parentId = parent.getPublicId();
+            name = "youtube";
+        }}));
+
+        ResourceType child = resourceTypeRepository.getByPublicId(childId);
+        assertEquals(parent.getPublicId(), child.getParent().getPublicId());
+    }
+
+    @Test
+    public void can_remove_parent_from_resourcetype() throws Exception {
+        ResourceType parent = newResourceType().name("external");
+        ResourceType child = newResourceType().name("youtube");
+        child.setParent(parent);
+
+        URI childId = child.getPublicId();
+
+        updateResource("/v1/resource-types/" + childId, new ResourceTypes.UpdateResourceTypeCommand() {{
+            parentId = null;
+        }});
+
+        assertNull(resourceTypeRepository.getByPublicId(childId).getParent());
+    }
+
+    @Test
+    public void can_update_parent_resourcetype() throws Exception {
+        ResourceType oldParent = newResourceType().name("external");
+        ResourceType child = newResourceType().name("youtube").parent(oldParent);
+        ResourceType newParent = newResourceType().name("video");
+
+        updateResource("/v1/resource-types/" + child.getPublicId(), new ResourceTypes.UpdateResourceTypeCommand() {{
+            parentId = newParent.getPublicId();
+        }});
+
+        assertEquals("video", child.getParent().getName());
     }
 }
 

@@ -52,6 +52,11 @@ public class ResourceTypes {
         try {
             ResourceType resourceType = new ResourceType();
             if (null != command.id) resourceType.setPublicId(command.id);
+
+            if (null != command.parentId) {
+                ResourceType parent = resourceTypeRepository.getByPublicId(command.parentId);
+                resourceType.setParent(parent);
+            }
             resourceType.name(command.name);
             resourceTypeRepository.save(resourceType);
             URI location = URI.create("/resource-types/" + resourceType.getPublicId());
@@ -70,7 +75,7 @@ public class ResourceTypes {
     }
 
     @PutMapping("/{id}")
-    @ApiOperation(value = "Updates a resource type")
+    @ApiOperation(value = "Updates a resource type. Use to update which resource type is parent.")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(
             @PathVariable URI id,
@@ -78,6 +83,11 @@ public class ResourceTypes {
     ) throws Exception {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         resourceType.name(command.name);
+        ResourceType parent = null;
+        if (command.parentId != null) {
+            parent = resourceTypeRepository.getByPublicId(command.parentId);
+        }
+        resourceType.setParent(parent);
     }
 
     public static class ResourceTypeIndexDocument {
@@ -100,6 +110,10 @@ public class ResourceTypes {
 
     public static class CreateResourceTypeCommand {
         @JsonProperty
+        @ApiModelProperty(value = "If specified, the new resource type will be a child of the mentioned resource type.")
+        public URI parentId;
+
+        @JsonProperty
         @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resource-type: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:resource-type:1")
         public URI id;
 
@@ -109,6 +123,10 @@ public class ResourceTypes {
     }
 
     public static class UpdateResourceTypeCommand {
+        @JsonProperty
+        @ApiModelProperty(value = "If specified, this resource type will be a child of the mentioned parent resource type. If left blank, this resource type will become a top level resource type")
+        public URI parentId;
+
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the resource type", example = "Lecture")
         public String name;

@@ -133,7 +133,6 @@ public class GraphConfiguration {
         createUniqueVertexIndex(graph, Topic.LABEL, "id");
         createUniqueVertexIndex(graph, Subject.LABEL, "id");
         createUniqueVertexIndex(graph, Migration.LABEL, "name");
-
     }
 
     private void createUniqueVertexIndex(OrientGraph graph, String label, String key) {

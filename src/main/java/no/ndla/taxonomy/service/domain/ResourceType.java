@@ -31,11 +31,19 @@ public class ResourceType extends DomainObject {
         return parent;
     }
 
+
     public void setParent(ResourceType parent) {
         this.parent = parent;
     }
 
+    public ResourceType parent(ResourceType parent) {
+        setParent(parent);
+        return this;
+    }
+
+
     public Set<ResourceType> getSubtypes() {
         return subtypes;
     }
+
 }
