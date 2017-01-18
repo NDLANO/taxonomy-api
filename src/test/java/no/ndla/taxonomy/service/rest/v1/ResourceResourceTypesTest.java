@@ -46,7 +46,7 @@ public class ResourceResourceTypesTest {
             transaction.commit();
         }
 
-        String id = getId(createResource("/v1/resource-resourcetypes", new ResourceResourceTypes.CreateResourceResourceTypeCommand() {{
+        URI id = getId(createResource("/v1/resource-resourcetypes", new ResourceResourceTypes.CreateResourceResourceTypeCommand() {{
             resourceId = integrationResourceId;
             resourceTypeId = textTypeId;
         }}));
@@ -55,7 +55,7 @@ public class ResourceResourceTypesTest {
             Resource resource = Resource.getById(integrationResourceId.toString(), graph);
             assertEquals(1, count(resource.getResourceTypes()));
             assertAnyTrue(resource.getResourceTypes(), t -> "text".equals(t.getName()));
-            assertNotNull(ResourceResourceType.getById(id, graph));
+            assertNotNull(ResourceResourceType.getById(id.toString(), graph));
             transaction.rollback();
         }
     }

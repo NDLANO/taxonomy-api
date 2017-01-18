@@ -39,9 +39,9 @@ public class TopicsTest extends RestTest {
         }};
 
         MockHttpServletResponse response = createResource("/v1/topics", createTopicCommand);
-        String id = getId(response);
+        URI id = getId(response);
 
-        Topic topic = topicRepository.getByPublicId(URI.create(id));
+        Topic topic = topicRepository.getByPublicId(id);
         assertEquals(createTopicCommand.name, topic.getName());
     }
 

@@ -108,9 +108,9 @@ public class TestUtils {
                 .getResponse();
     }
 
-    public static String getId(MockHttpServletResponse response) {
+    public static URI getId(MockHttpServletResponse response) {
         String location = response.getHeader("Location");
-        return location.substring(location.lastIndexOf("/") + 1);
+        return URI.create(location.substring(location.lastIndexOf("/") + 1));
     }
 
     public static <V> V getObject(Class<V> theClass, MockHttpServletResponse response) throws Exception {

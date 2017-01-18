@@ -19,6 +19,13 @@ public class Subject extends DomainObject {
     }
 
     public SubjectTopic addTopic(Topic topic) {
+        Iterator<Topic> topics = getTopics();
+        while (topics.hasNext()) {
+            Topic t = topics.next();
+            if (t.getId().equals(topic.getId()))
+                throw new DuplicateIdException("Subject with id " + getPublicId() + " already contains topic with id " + topic.getPublicId());
+        }
+
         SubjectTopic subjectTopic = new SubjectTopic(this, topic);
         subjectTopics.add(subjectTopic);
         topic.subjectTopics.add(subjectTopic);

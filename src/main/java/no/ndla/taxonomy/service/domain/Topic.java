@@ -17,6 +17,9 @@ public class Topic extends DomainObject {
     @OneToMany(mappedBy = "topic")
     Set<SubjectTopic> subjectTopics = new HashSet<>();
 
+    @OneToMany(mappedBy = "topic")
+    private Set<TopicSubtopic> topicSubtopics = new HashSet<>();
+
     public Topic() {
         setPublicId(URI.create("urn:topic:" + UUID.randomUUID()));
     }
@@ -26,32 +29,40 @@ public class Topic extends DomainObject {
         return this;
     }
 
-    public TopicSubtopic addSubtopic(Topic topic) {
-        return new TopicSubtopic(this, topic);
+    public TopicSubtopic addSubtopic(Topic subtopic) {
+        Iterator<Topic> topics = getSubtopics();
+        while (topics.hasNext()) {
+            Topic t = topics.next();
+            if (t.getId().equals(subtopic.getId())) {
+                throw new DuplicateIdException("Topic with id " + getPublicId() + " already contains topic with id " + subtopic.getPublicId());
+            }
+        }
+
+        TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic);
+        topicSubtopics.add(topicSubtopic);
+        return topicSubtopic;
     }
 
     public TopicResource addResource(Resource resource) {
         return new TopicResource(this, resource);
     }
 
-
     public Iterator<Topic> getSubtopics() {
-        return null; /*
-        Iterator<Edge> edges = vertex.edges(Direction.OUT, TopicSubtopic.LABEL);
+        Iterator<TopicSubtopic> iterator = topicSubtopics.iterator();
 
         return new Iterator<Topic>() {
             @Override
             public boolean hasNext() {
-                return edges.hasNext();
+                return iterator.hasNext();
             }
 
             @Override
             public Topic next() {
-                return new Topic(edges.next().inVertex());
+                return iterator.next().getSubtopic();
             }
         };
-        */
     }
+
 
     public Iterator<Resource> getResources() {
         return null; /*

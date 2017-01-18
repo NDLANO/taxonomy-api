@@ -57,10 +57,10 @@ public class ResourcesTest {
         createResourceCommand.name = "testresource";
 
         MockHttpServletResponse response = createResource("/v1/resources", createResourceCommand);
-        String id = getId(response);
+        URI id = getId(response);
 
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Resource resource = Resource.getById(id, graph);
+            Resource resource = Resource.getById(id.toString(), graph);
             assertEquals(createResourceCommand.name, resource.getName());
             transaction.rollback();
         }

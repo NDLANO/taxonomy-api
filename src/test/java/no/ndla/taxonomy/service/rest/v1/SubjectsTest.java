@@ -34,9 +34,9 @@ public class SubjectsTest extends RestTest {
         createSubjectCommand.name = "testsubject";
 
         MockHttpServletResponse response = createResource("/v1/subjects", createSubjectCommand);
-        String id = getId(response);
+        URI id = getId(response);
 
-        Subject subject = subjectRepository.getByPublicId(URI.create(id));
+        Subject subject = subjectRepository.getByPublicId(id);
         assertEquals(createSubjectCommand.name, subject.getName());
     }
 

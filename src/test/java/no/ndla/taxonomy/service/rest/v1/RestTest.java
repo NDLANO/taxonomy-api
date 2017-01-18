@@ -5,6 +5,7 @@ import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import no.ndla.taxonomy.service.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
+import no.ndla.taxonomy.service.repositories.TopicSubtopicRepository;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public abstract class RestTest extends AbstractTransactionalJUnit4SpringContextT
 
     @Autowired
     SubjectTopicRepository subjectTopicRepository;
+
+    @Autowired
+    TopicSubtopicRepository topicSubtopicRepository;
 
     @Before
     public void setup() throws Exception {

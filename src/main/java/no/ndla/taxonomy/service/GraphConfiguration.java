@@ -132,7 +132,6 @@ public class GraphConfiguration {
         graph.createVertexClass(Topic.LABEL);
         graph.createVertexClass(ResourceType.LABEL);
 
-        graph.createEdgeClass(TopicSubtopic.LABEL);
         graph.createEdgeClass(TopicResource.LABEL);
         graph.createEdgeClass(ResourceResourceType.LABEL);
 
@@ -142,7 +141,6 @@ public class GraphConfiguration {
         createUniqueVertexIndex(graph, Migration.LABEL, "name");
         createUniqueVertexIndex(graph, ResourceType.LABEL, "id");
 
-        createUniqueEdgeIndex(graph, TopicSubtopic.LABEL, "id");
         createUniqueEdgeIndex(graph, TopicResource.LABEL, "id");
         createUniqueEdgeIndex(graph, ResourceResourceType.LABEL, "id");
     }
