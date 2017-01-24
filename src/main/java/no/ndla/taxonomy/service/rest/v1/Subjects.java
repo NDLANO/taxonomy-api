@@ -12,6 +12,7 @@ import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +33,6 @@ public class Subjects {
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
     }
-
 
     @GetMapping
     @ApiOperation("Gets all subjects")
@@ -68,6 +68,15 @@ public class Subjects {
     ) throws Exception {
         Subject subject = subjectRepository.getByPublicId(id);
         subject.setName(command.name);
+    }
+
+    @PutMapping
+    @ApiOperation(value = "Puts a collection of subjects")
+    public void putSubjects(@ApiParam(name = "subjects", value = "A list of subjects") @RequestBody  CreateSubjectCommand[] commands) throws Exception {
+        subjectRepository.deleteAll();
+        for (CreateSubjectCommand command : commands) {
+            post(command);
+        }
     }
 
     @GetMapping("/{id}/topics")

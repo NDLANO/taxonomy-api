@@ -78,6 +78,15 @@ public class Topics {
         topic.setName(command.name);
     }
 
+    @PutMapping
+    @ApiOperation(value = "Replaces the collection of topics.")
+    public void putCollection(@ApiParam(name = "subjects", value = "A list of subjects") @RequestBody CreateTopicCommand[] commands) throws Exception {
+        topicRepository.deleteAll();
+        for (CreateTopicCommand command : commands) {
+            post(command);
+        }
+    }
+
     public static class CreateTopicCommand {
         @JsonProperty
         @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:topic:1")
