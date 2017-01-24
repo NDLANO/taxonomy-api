@@ -6,11 +6,13 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import java.net.URI;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
 @Entity
 public class ResourceType extends DomainObject {
+
     public ResourceType() {
         setPublicId(URI.create("urn:resource-type:" + UUID.randomUUID()));
     }
@@ -34,6 +36,9 @@ public class ResourceType extends DomainObject {
 
     public void setParent(ResourceType parent) {
         this.parent = parent;
+        if (parent != null) {
+            parent.addSubtype(this);
+        }
     }
 
     public ResourceType parent(ResourceType parent) {
@@ -42,8 +47,29 @@ public class ResourceType extends DomainObject {
     }
 
 
-    public Set<ResourceType> getSubtypes() {
-        return subtypes;
+    private void addSubtype(ResourceType subtype) {
+        subtypes.add(subtype);
+
+    }
+
+    public Iterator<ResourceType> getSubtypes() {
+        Iterator<ResourceType> iterator = subtypes.iterator();
+
+        return new Iterator<ResourceType>() {
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public ResourceType next() {
+                return iterator.next();
+            }
+        };
+    }
+
+    public void setSubtypes(Set<ResourceType> subtypes) {
+        this.subtypes = subtypes;
     }
 
 }

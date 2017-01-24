@@ -107,6 +107,7 @@ public class ResourceTypesTest extends RestTest {
 
         updateResource("/v1/resource-types/" + childId, new ResourceTypes.UpdateResourceTypeCommand() {{
             parentId = null;
+            name = child.getName();
         }});
 
         assertNull(resourceTypeRepository.getByPublicId(childId).getParent());
@@ -120,9 +121,41 @@ public class ResourceTypesTest extends RestTest {
 
         updateResource("/v1/resource-types/" + child.getPublicId(), new ResourceTypes.UpdateResourceTypeCommand() {{
             parentId = newParent.getPublicId();
+            name = child.getName();
         }});
 
         assertEquals("video", child.getParent().getName());
+    }
+
+    @Test
+    public void can_get_subresourcetypes() throws Exception {
+        ResourceType parent = newResourceType().name("external");
+        newResourceType().name("youtube").parent(parent);
+        newResourceType().name("ted").parent(parent);
+        newResourceType().name("vimeo").parent(parent);
+
+        MockHttpServletResponse response = getResource("/v1/resource-types/" + parent.getPublicId() + "/subresourcetypes");
+        ResourceTypes.ResourceTypeIndexDocument[] subResourceTypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
+
+        assertEquals(3, subResourceTypes.length);
+        assertAnyTrue(subResourceTypes, t -> "youtube".equals(t.name));
+        assertAnyTrue(subResourceTypes, t -> "ted".equals(t.name));
+        assertAnyTrue(subResourceTypes, t -> "vimeo".equals(t.name));
+        assertAllTrue(subResourceTypes, t -> isValidId(t.id));
+    }
+
+    @Test
+    public void can_get_subresourcetypes_recursively() throws Exception {
+        ResourceType parent = newResourceType().name("external");
+        final ResourceType video = newResourceType().name("video").parent(parent);
+        final ResourceType youtube = newResourceType().name("youtube").parent(video);
+
+        MockHttpServletResponse response = getResource("/v1/resource-types/" + parent.getPublicId() + "/subresourcetypes?recursive=true");
+        ResourceTypes.ResourceTypeIndexDocument[] subResourceTypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
+
+        assertEquals(1, subResourceTypes.length);
+        assertEquals("video", subResourceTypes[0].name);
+        assertEquals("youtube", subResourceTypes[0].subResourceTypes[0].name);
     }
 }
 

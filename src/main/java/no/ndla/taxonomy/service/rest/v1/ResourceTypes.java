@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 @RestController
@@ -90,14 +91,30 @@ public class ResourceTypes {
         resourceType.setParent(parent);
     }
 
+
+    @GetMapping("/{id}/subresourcetypes")
+    public List<ResourceTypeIndexDocument> getSubResourceTypes(@PathVariable("id") URI id,
+                                                               @RequestParam(value = "recursive", required = false, defaultValue = "false")
+                                                               @ApiParam("If true, subtopics are fetched recursively")
+                                                                       boolean recursive) throws Exception {
+        List<ResourceTypeIndexDocument> results = new ArrayList<>();
+        final Iterator<ResourceType> subtypes = resourceTypeRepository.getByPublicId(id).getSubtypes();
+        subtypes.forEachRemaining(rt -> results.add(new ResourceTypeIndexDocument(rt, recursive)));
+        return results;
+    }
+
     public static class ResourceTypeIndexDocument {
         @JsonProperty
         @ApiModelProperty(example = "urn:resource-type:1")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "The name of the resource type", example = "Lecture")
+        @ApiModelProperty(value = "The name of the resource type", example = "Lecture")
         public String name;
+
+        @JsonProperty
+        @ApiModelProperty("Sub resource types")
+        public ResourceTypeIndexDocument[] subResourceTypes;
 
         ResourceTypeIndexDocument() {
         }
@@ -106,6 +123,25 @@ public class ResourceTypes {
             id = resourceType.getPublicId();
             name = resourceType.getName();
         }
+
+        ResourceTypeIndexDocument(ResourceType resourceType, boolean recursive) {
+            id = resourceType.getPublicId();
+            name = resourceType.getName();
+            if (recursive) {
+                addSubResourceType(resourceType);
+            }
+        }
+
+        private void addSubResourceType(ResourceType resourceType) {
+            ArrayList<ResourceTypeIndexDocument> result = new ArrayList<>();
+
+            final Iterator<ResourceType> subtypes = resourceType.getSubtypes();
+            while (subtypes.hasNext()) {
+                result.add(new ResourceTypeIndexDocument(subtypes.next()));
+            }
+            this.subResourceTypes = result.toArray(new ResourceTypeIndexDocument[result.size()]);
+        }
+
     }
 
     public static class CreateResourceTypeCommand {
@@ -128,7 +164,7 @@ public class ResourceTypes {
         public URI parentId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "The name of the resource type", example = "Lecture")
+        @ApiModelProperty(value = "The name of the resource type", example = "Lecture")
         public String name;
     }
 }
