@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.orientechnologies.orient.core.metadata.schema.OType;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
@@ -45,7 +46,8 @@ public class SubjectTopics {
                 document.id = URI.create(record.field("id"));
                 document.subjectid = URI.create(record.field("subjectid"));
                 document.topicid = URI.create(record.field("topicid"));
-                document.primary = Boolean.valueOf(record.field("primary"));
+                Boolean primary = record.field("primary", OType.BOOLEAN);
+                document.primary = primary == null ? false : primary;
             });
             transaction.rollback();
             return result;
@@ -101,9 +103,9 @@ public class SubjectTopics {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation(value = "Updates a connection between subject and topic", notes="Use to update which subject is primary to a topic.")
+    @ApiOperation(value = "Updates a connection between subject and topic", notes = "Use to update which subject is primary to a topic.")
     public void put(@PathVariable("id") String id,
-                    @ApiParam(name="connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) throws Exception {
+                    @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) throws Exception {
         try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
             SubjectTopic subjectTopic = SubjectTopic.getById(id, graph);
             subjectTopic.setPrimary(command.primary);
@@ -121,7 +123,7 @@ public class SubjectTopics {
         public URI topicid;
 
         @JsonProperty
-        @ApiModelProperty(value = "Primary connection", example="true")
+        @ApiModelProperty(value = "Primary connection", example = "true")
         public boolean primary;
     }
 
@@ -137,7 +139,7 @@ public class SubjectTopics {
 
     public static class SubjectTopicIndexDocument {
         @JsonProperty
-        @ApiModelProperty(value = "Subject id", example="urn:subject:123")
+        @ApiModelProperty(value = "Subject id", example = "urn:subject:123")
         public URI subjectid;
 
         @JsonProperty

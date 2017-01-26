@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.orientechnologies.orient.core.metadata.schema.OType;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
@@ -44,7 +45,8 @@ public class TopicSubtopics {
                 document.id = URI.create(record.field("id"));
                 document.topicid = URI.create(record.field("topicid"));
                 document.subtopicid = URI.create(record.field("subtopicid"));
-                document.primary = Boolean.valueOf(record.field("primary"));
+                Boolean primary = record.field("primary", OType.BOOLEAN);
+                document.primary = primary == null ? false : primary;
             });
             transaction.rollback();
             return result;
