@@ -71,7 +71,7 @@ public class Subjects {
     }
 
     @PutMapping
-    @ApiOperation(value = "Puts a collection of subjects")
+    @ApiOperation(value = "Replaces a collection of subjects")
     public void putSubjects(@ApiParam(name = "subjects", value = "A list of subjects") @RequestBody  CreateSubjectCommand[] commands) throws Exception {
         subjectRepository.deleteAll();
         for (CreateSubjectCommand command : commands) {
