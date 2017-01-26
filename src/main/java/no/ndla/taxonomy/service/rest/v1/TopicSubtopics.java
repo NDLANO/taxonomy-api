@@ -79,6 +79,15 @@ public class TopicSubtopics {
         topicSubtopic.setPrimary(command.primary);
     }
 
+    @PutMapping
+    @ApiOperation(value = "Replaces a collection of topic subtopics connections")
+    public void putTopicSubtopics(@ApiParam(name = "topic-subtopics", value = "A list of topic subtopic connections") @RequestBody  AddSubtopicToTopicCommand[] commands) throws Exception {
+        topicSubtopicRepository.deleteAll();
+        for (AddSubtopicToTopicCommand command : commands) {
+            post(command);
+        }
+    }
+
 
     public static class AddSubtopicToTopicCommand {
         @JsonProperty

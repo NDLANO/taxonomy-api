@@ -86,6 +86,15 @@ public class SubjectTopics {
         subjectTopic.setPrimary(command.primary);
     }
 
+    @PutMapping
+    @ApiOperation(value = "Replaces a collection of subject-topics")
+    public void putSubjectTopics(@ApiParam(name = "subject-topics", value = "A list of subject topic connections") @RequestBody  AddTopicToSubjectCommand[] commands) throws Exception {
+        subjectTopicRepository.deleteAll();
+        for (AddTopicToSubjectCommand command : commands) {
+            post(command);
+        }
+    }
+
     public static class AddTopicToSubjectCommand {
         @JsonProperty
         @ApiModelProperty(required = true, value = "Subject id", example = "urn:subject:123")
