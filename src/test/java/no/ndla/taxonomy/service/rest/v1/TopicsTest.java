@@ -2,8 +2,10 @@ package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.domain.Resource;
+import no.ndla.taxonomy.service.domain.ResourceType;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -142,5 +144,31 @@ public class TopicsTest extends RestTest {
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> resourceA.getName().equals((r.name)));
         assertAnyTrue(result, r -> resourceA2.getName().equals(r.name));
+    }
+
+    @Test
+    @Ignore
+    public void can_get_resources_for_a_topic_filtered_on_resource_type() throws Exception {
+        Topic a = newTopic().name("a");
+        Topic aa = newTopic().name("aa");
+        save(a.addSubtopic(aa));
+        Resource resourceA = newResource().name("resource a");
+        save(a.addResource(resourceA));
+        Resource resourceAA = newResource().name("resource aa");
+        save(aa.addResource(resourceAA));
+        Resource resourceA2 = newResource().name("resource a2");
+        save(a.addResource(resourceA2));
+        ResourceType type1 = newResourceType().name("lecture");
+        resourceA.addResourceType(type1);
+        ResourceType type2 = newResourceType().name("test");
+        resourceA2.addResourceType(type2);
+        flush();
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + a.getPublicId().toString() + "/resources?type=" + type1.getPublicId());
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(1, result.length);
+        assertAnyTrue(result, r -> resourceA.getName().equals(r.name));
+
     }
 }

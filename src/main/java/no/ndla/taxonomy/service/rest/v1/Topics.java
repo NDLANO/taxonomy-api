@@ -99,7 +99,10 @@ public class Topics {
     public List<ResourceIndexDocument> getResources(@PathVariable("id") URI topicId,
                                                     @RequestParam(value = "recursive", required = false, defaultValue = "false")
                                                     @ApiParam("If true, resources from subtopics are fetched recursively")
-                                                            boolean recursive)
+                                                            boolean recursive,
+                                                    @RequestParam(value = "type", required = false)
+                                                    @ApiParam("Supply URI for resource type to filter return only resources of this type")
+                                                    URI typeId)
 
     {
 
