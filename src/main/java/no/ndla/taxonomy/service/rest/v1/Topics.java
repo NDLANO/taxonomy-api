@@ -7,15 +7,20 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 @RestController
 @RequestMapping(path = {"topics", "/v1/topics"})
@@ -23,9 +28,11 @@ import java.util.List;
 public class Topics {
 
     private TopicRepository topicRepository;
+    private JdbcTemplate jdbcTemplate;
 
-    public Topics(TopicRepository topicRepository) {
+    public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
         this.topicRepository = topicRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @GetMapping
@@ -85,6 +92,36 @@ public class Topics {
         for (CreateTopicCommand command : commands) {
             post(command);
         }
+    }
+
+    public List<ResourceIndexDocument> getResources(@PathVariable("id") URI topicId) {
+
+        String query = getQuery("get_resources_by_topic_public_id_recursively.sql");
+
+        List<ResourceIndexDocument> results = jdbcTemplate.query(
+                query,
+                (resultSet, i) -> new ResourceIndexDocument() {{
+                    topicId = URI.create(resultSet.getString("topic_id"));
+                }},
+                topicId
+        );
+
+        return results;
+    }
+
+    public static String getQuery(String name) {
+        try (
+                InputStream inputStream = new ClassPathResource("db.queries." + name).getInputStream()
+        ) {
+            return new Scanner(inputStream).useDelimiter("\\Z").next();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static class ResourceIndexDocument {
+        public URI topicId, resourceId;
+        public String resourceName;
     }
 
     public static class CreateTopicCommand {
