@@ -1,63 +1,58 @@
 package no.ndla.taxonomy.service.domain;
 
 
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.structure.*;
-
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
+import java.net.URI;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
-public class Subject extends DomainVertex {
+@Entity
+public class Subject extends DomainObject {
 
     public static final String LABEL = "subject";
 
-    public Subject(Vertex vertex) {
-        super(vertex);
+    public Subject() {
+        setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
     }
 
-    /**
-     * Create a new subject
-     *
-     * @param graph the graph where the new vertex is created
-     */
-    public Subject(Graph graph) {
-        this(graph.addVertex(LABEL));
-        setId("urn:subject:" + UUID.randomUUID());
+    public SubjectTopic addTopic(Topic topic) {
+        Iterator<Topic> topics = getTopics();
+        while (topics.hasNext()) {
+            Topic t = topics.next();
+            if (t.getId().equals(topic.getId()))
+                throw new DuplicateIdException("Subject with id " + getPublicId() + " already contains topic with id " + topic.getPublicId());
+        }
+
+        SubjectTopic subjectTopic = new SubjectTopic(this, topic);
+        subjectTopics.add(subjectTopic);
+        topic.subjectTopics.add(subjectTopic);
+        return subjectTopic;
+    }
+
+    @OneToMany(mappedBy = "subject")
+    Set<SubjectTopic> subjectTopics = new HashSet<>();
+
+    public Iterator<Topic> getTopics() {
+        Iterator<SubjectTopic> iterator = subjectTopics.iterator();
+
+        return new Iterator<Topic>() {
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public Topic next() {
+                return iterator.next().getTopic();
+            }
+        };
     }
 
     public Subject name(String name) {
         setName(name);
         return this;
-    }
-
-    public static Subject getById(String id, Graph graph) {
-        Subject subject = findById(id, graph);
-        if (subject != null) return subject;
-        throw new NotFoundException("subject", id);
-    }
-
-    public static Subject findById(String id, Graph graph) {
-        GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V().hasLabel(LABEL).has("id", id);
-        return traversal.hasNext() ? new Subject(traversal.next()) : null;
-    }
-
-    public SubjectTopic addTopic(Topic topic) {
-        return new SubjectTopic(this, topic);
-    }
-
-    public Iterator<Topic> getTopics() {
-        Iterator<Edge> edges = vertex.edges(Direction.OUT, SubjectTopic.LABEL);
-
-        return new Iterator<Topic>() {
-            @Override
-            public boolean hasNext() {
-                return edges.hasNext();
-            }
-
-            @Override
-            public Topic next() {
-                return new Topic(edges.next().inVertex());
-            }
-        };
     }
 }

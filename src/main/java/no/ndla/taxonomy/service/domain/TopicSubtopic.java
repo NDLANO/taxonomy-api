@@ -1,54 +1,49 @@
 package no.ndla.taxonomy.service.domain;
 
 
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import java.net.URI;
 import java.util.UUID;
 
-public class TopicSubtopic extends DomainEdge {
+@Entity
+public class TopicSubtopic extends DomainEntity {
 
-    public static final String LABEL = "topic-has-subtopics";
+    @ManyToOne
+    @JoinColumn(name = "topic_id")
+    private Topic topic;
 
-    /**
-     * Wraps an existing edge between a topic and a subtopic
-     */
-    public TopicSubtopic(Edge edge) {
-        super(edge);
+    @ManyToOne
+    @JoinColumn(name = "subtopic_id")
+    private Topic subtopic;
+
+    @Column(name = "is_primary")
+    private boolean primary;
+
+    protected TopicSubtopic() {
     }
 
-    /**
-     * Creates a new edge between a topic and a subtopic
-     */
     public TopicSubtopic(Topic topic, Topic subtopic) {
-        this(createEdge(topic, subtopic));
-        setId("urn:topic-subtopic:" + UUID.randomUUID());
-    }
-
-    private static Edge createEdge(Topic topic, Topic subtopic) {
-        return topic.vertex.addEdge(TopicSubtopic.LABEL, subtopic.vertex);
+        this.topic = topic;
+        this.subtopic = subtopic;
+        setPublicId(URI.create("urn:topic-subtopic:" + UUID.randomUUID()));
     }
 
     public boolean isPrimary() {
-         return is("primary");
+        return primary;
     }
 
-    public void setPrimary(boolean value) {
-        setProperty("primary", value);
+    public void setPrimary(boolean primary) {
+        this.primary = primary;
     }
 
     public Topic getTopic() {
-        return new Topic(edge.outVertex());
+        return topic;
     }
 
     public Topic getSubtopic() {
-        return new Topic(edge.inVertex());
-    }
-
-    public static TopicSubtopic getById(String id, Graph graph) {
-        GraphTraversal<Edge, Edge> traversal = graph.traversal().E().hasLabel(LABEL).has("id", id);
-        if (traversal.hasNext()) return new TopicSubtopic(traversal.next());
-        throw new NotFoundException("topic-subtopic", id);
+        return subtopic;
     }
 }

@@ -1,16 +1,11 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
-import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
@@ -25,54 +20,35 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("junit")
-public class SubjectTopicsTest {
-
-    @Autowired
-    private GraphFactory factory;
-
-    @Before
-    public void setup() throws Exception {
-        clearGraph();
-    }
+public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_add_topic_to_subject() throws Exception {
         URI subjectId, topicId;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            subjectId = new Subject(graph).name("physics").getId();
-            topicId = new Topic(graph).name("trigonometry").getId();
-            transaction.commit();
-        }
+        subjectId = newSubject().name("physics").getPublicId();
+        topicId = newTopic().name("trigonometry").getPublicId();
 
-        String id = getId(
+        URI id = getId(
                 createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
                     this.subjectid = subjectId;
                     this.topicid = topicId;
                 }})
         );
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject physics = Subject.getById(subjectId.toString(), graph);
-            assertEquals(1, count(physics.getTopics()));
-            assertAnyTrue(physics.getTopics(), t -> "trigonometry".equals(t.getName()));
-            assertNotNull(SubjectTopic.getById(id, graph));
-            transaction.rollback();
-        }
+        Subject physics = subjectRepository.getByPublicId(subjectId);
+        assertEquals(1, count(physics.getTopics()));
+        assertAnyTrue(physics.getTopics(), t -> "trigonometry".equals(t.getName()));
+        assertNotNull(subjectTopicRepository.getByPublicId(id));
     }
 
     @Test
     public void canot_add_existing_topic_to_subject() throws Exception {
-        URI subjectId, topicId;
+        Subject physics = newSubject().name("physics");
+        Topic trigonometry = newTopic().name("trigonometry");
+        physics.addTopic(trigonometry);
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject physics = new Subject(graph).name("physics");
-            Topic trigonometry = new Topic(graph).name("trigonometry");
-            physics.addTopic(trigonometry);
-
-            subjectId = physics.getId();
-            topicId = trigonometry.getId();
-            transaction.commit();
-        }
+        URI subjectId = physics.getPublicId();
+        URI topicId = trigonometry.getPublicId();
 
         createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
                     this.subjectid = subjectId;
@@ -82,57 +58,38 @@ public class SubjectTopicsTest {
         );
     }
 
-
     @Test
     public void can_delete_subject_topic() throws Exception {
-        String id;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new Subject(graph).addTopic(new Topic(graph)).getId().toString();
-            transaction.commit();
-        }
-
+        URI id = save(newSubject().addTopic(newTopic())).getPublicId();
         deleteResource("/v1/subject-topics/" + id);
-        assertNotFound(graph -> Subject.getById(id, graph));
+        assertNull(subjectRepository.findByPublicId(id));
     }
 
     @Test
     public void can_update_subject_topic() throws Exception {
-        String id;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new Subject(graph).addTopic(new Topic(graph)).getId().toString();
-            transaction.commit();
-        }
+        URI id = save(newSubject().addTopic(newTopic())).getPublicId();
 
-        SubjectTopics.UpdateSubjectTopicCommand command = new SubjectTopics.UpdateSubjectTopicCommand();
-        command.primary = true;
+        updateResource("/v1/subject-topics/" + id, new SubjectTopics.UpdateSubjectTopicCommand() {{
+            primary = true;
+        }});
 
-        updateResource("/v1/subject-topics/" + id, command);
-
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            assertTrue(SubjectTopic.getById(id, graph).isPrimary());
-            transaction.rollback();
-        }
+        assertTrue(subjectTopicRepository.getByPublicId(id).isPrimary());
     }
 
     @Test
     public void can_get_topics() throws Exception {
-        URI physicsId, electricityId, mathematicsId, trigonometryId;
+        Subject physics = newSubject().name("physics");
+        Topic electricity = newTopic().name("electricity");
+        save(physics.addTopic(electricity));
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject physics = new Subject(graph).name("physics");
-            Topic electricity = new Topic(graph).name("electricity");
-            physics.addTopic(electricity);
+        Subject mathematics = newSubject().name("mathematics");
+        Topic trigonometry = newTopic().name("trigonometry");
+        save(mathematics.addTopic(trigonometry));
 
-            Subject mathematics = new Subject(graph).name("mathematics");
-            Topic trigonometry = new Topic(graph).name("trigonometry");
-            mathematics.addTopic(trigonometry);
-
-            physicsId = physics.getId();
-            electricityId = electricity.getId();
-            mathematicsId = mathematics.getId();
-            trigonometryId = trigonometry.getId();
-            transaction.commit();
-        }
+        URI physicsId = physics.getPublicId();
+        URI electricityId = electricity.getPublicId();
+        URI mathematicsId = mathematics.getPublicId();
+        URI trigonometryId = trigonometry.getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subject-topics");
         SubjectTopics.SubjectTopicIndexDocument[] subjectTopics = getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
@@ -145,17 +102,13 @@ public class SubjectTopicsTest {
 
     @Test
     public void can_get_subject_topic() throws Exception {
-        URI topicid, subjectid, id;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject physics = new Subject(graph).name("physics");
-            Topic electricity = new Topic(graph).name("electricity");
-            SubjectTopic subjectTopic = physics.addTopic(electricity);
+        Subject physics = newSubject().name("physics");
+        Topic electricity = newTopic().name("electricity");
+        SubjectTopic subjectTopic = save(physics.addTopic(electricity));
 
-            subjectid = physics.getId();
-            topicid = electricity.getId();
-            id = subjectTopic.getId();
-            transaction.commit();
-        }
+        URI subjectid = physics.getPublicId();
+        URI topicid = electricity.getPublicId();
+        URI id = subjectTopic.getPublicId();
 
         MockHttpServletResponse resource = getResource("/v1/subject-topics/" + id);
         SubjectTopics.SubjectTopicIndexDocument subjectTopicIndexDocument = getObject(SubjectTopics.SubjectTopicIndexDocument.class, resource);

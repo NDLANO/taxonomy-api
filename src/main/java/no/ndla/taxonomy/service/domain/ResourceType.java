@@ -1,85 +1,75 @@
 package no.ndla.taxonomy.service.domain;
 
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
-
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import java.net.URI;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
-public class ResourceType extends DomainVertex {
+@Entity
+public class ResourceType extends DomainObject {
 
-    public static final String LABEL = "resource-type";
-
-    /**
-     * Wrap an existing resource type
-     *
-     * @param vertex the vertex to wrap
-     */
-    public ResourceType(Vertex vertex) {
-        super(vertex);
+    public ResourceType() {
+        setPublicId(URI.create("urn:resource-type:" + UUID.randomUUID()));
     }
 
-    /**
-     * Create a new resource type
-     *
-     * @param graph the graph where the new vertex is created
-     */
-    public ResourceType(Graph graph) {
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
+    private ResourceType parent;
 
-        this(graph.addVertex(LABEL));
-        setId("urn:resource-type:" + UUID.randomUUID());
-    }
-
+    @OneToMany(mappedBy = "parent")
+    private Set<ResourceType> subtypes = new HashSet<>();
 
     public ResourceType name(String name) {
         setName(name);
         return this;
     }
 
-    public static ResourceType getById(String id, Graph graph) {
-        GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V().hasLabel(LABEL).has("id", id);
-        if (traversal.hasNext()) {
-            return new ResourceType(traversal.next());
-        } else {
-            throw new NotFoundException("resource-type", id);
-        }
-    }
-
-    public ResourceTypeSubResourceType addParentResourceType(ResourceType parentResourceType) {
-        return new ResourceTypeSubResourceType(parentResourceType, this);
-    }
-
-    public void removeParentResourceType() {
-        final Iterator<Edge> edges = vertex.edges(Direction.IN, ResourceTypeSubResourceType.LABEL);
-        if (edges.hasNext()) {
-            edges.next().remove();
-        }
-    }
-
     public ResourceType getParent() {
-        final Iterator<Edge> edges = vertex.edges(Direction.IN, ResourceTypeSubResourceType.LABEL);
-        if (edges.hasNext()) {
-            return new ResourceType(edges.next().outVertex());
-        }
-        throw new NotFoundException("Parent resource type for resource type", this.getId());
+        return parent;
     }
 
-        public Iterator<ResourceType> getSubResourceTypes () {
-            Iterator<Edge> edges = vertex.edges(Direction.OUT, ResourceTypeSubResourceType.LABEL);
 
-            return new Iterator<ResourceType>() {
-                @Override
-                public boolean hasNext() {
-                    return edges.hasNext();
-                }
-
-                @Override
-                public ResourceType next() {
-                    return new ResourceType(edges.next().inVertex());
-                }
-            };
+    public void setParent(ResourceType parent) {
+        this.parent = parent;
+        if (parent != null) {
+            parent.addSubtype(this);
         }
+    }
+
+    public ResourceType parent(ResourceType parent) {
+        setParent(parent);
+        return this;
+    }
+
+
+    private void addSubtype(ResourceType subtype) {
+        subtypes.add(subtype);
+
+    }
+
+    public Iterator<ResourceType> getSubtypes() {
+        Iterator<ResourceType> iterator = subtypes.iterator();
+
+        return new Iterator<ResourceType>() {
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public ResourceType next() {
+                return iterator.next();
+            }
+        };
+    }
+
+    public void setSubtypes(Set<ResourceType> subtypes) {
+        this.subtypes = subtypes;
+    }
+
 }

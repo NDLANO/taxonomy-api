@@ -1,47 +1,23 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
-import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URI;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-@ActiveProfiles("junit")
-public class SubjectsTest {
-
-    @Autowired
-    private GraphFactory factory;
-
-    @Before
-    public void setup() throws Exception {
-        clearGraph();
-    }
+public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_all_subjects() throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            new Subject(graph).name("english");
-            new Subject(graph).name("mathematics");
-            transaction.commit();
-        }
+        newSubject().name("english");
+        newSubject().name("mathematics");
 
         MockHttpServletResponse response = getResource("/v1/subjects");
         Subjects.SubjectIndexDocument[] subjects = getObject(Subjects.SubjectIndexDocument[].class, response);
@@ -58,34 +34,24 @@ public class SubjectsTest {
         createSubjectCommand.name = "testsubject";
 
         MockHttpServletResponse response = createResource("/v1/subjects", createSubjectCommand);
-        String id = getId(response);
+        URI id = getId(response);
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject subject = Subject.getById(id, graph);
-            assertEquals(createSubjectCommand.name, subject.getName());
-            transaction.rollback();
-        }
+        Subject subject = subjectRepository.getByPublicId(id);
+        assertEquals(createSubjectCommand.name, subject.getName());
     }
 
 
     @Test
     public void can_update_subject() throws Exception {
-        String id;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new Subject(graph).getId().toString();
-            transaction.commit();
-        }
+        URI id = newSubject().getPublicId();
 
         Subjects.UpdateSubjectCommand command = new Subjects.UpdateSubjectCommand();
         command.name = "physics";
 
         updateResource("/v1/subjects/" + id, command);
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject subject = Subject.getById(id, graph);
-            assertEquals(command.name, subject.getName());
-            transaction.rollback();
-        }
+        Subject subject = subjectRepository.getByPublicId(id);
+        assertEquals(command.name, subject.getName());
     }
 
     @Test
@@ -97,10 +63,7 @@ public class SubjectsTest {
 
         createResource("/v1/subjects", command);
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            assertNotNull(Subject.getById(command.id.toString(), graph));
-            transaction.rollback();
-        }
+        assertNotNull(subjectRepository.getByPublicId(command.id));
     }
 
     @Test
@@ -116,29 +79,19 @@ public class SubjectsTest {
 
     @Test
     public void can_delete_subject() throws Exception {
-        String id;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new Subject(graph).getId().toString();
-            transaction.commit();
-        }
-
+        URI id = newSubject().getPublicId();
         deleteResource("/v1/subjects/" + id);
-        assertNotFound(graph -> Subject.getById(id, graph));
+        assertNull(subjectRepository.findByPublicId(id));
     }
 
     @Test
     public void can_get_topics() throws Exception {
-        String subjectid;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject subject = new Subject(graph).name("physics");
-            subjectid = subject.getId().toString();
-            subject.addTopic(new Topic(graph).name("statics"));
-            subject.addTopic(new Topic(graph).name("electricity"));
-            subject.addTopic(new Topic(graph).name("optics"));
-            transaction.commit();
-        }
+        Subject subject = newSubject().name("physics");
+        save(subject.addTopic(newTopic().name("statics")));
+        save(subject.addTopic(newTopic().name("electricity")));
+        save(subject.addTopic(newTopic().name("optics")));
 
-        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics");
+        MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
         Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
 
         assertEquals(3, topics.length);
@@ -150,19 +103,15 @@ public class SubjectsTest {
 
     @Test
     public void can_get_topics_recursively() throws Exception {
-        String subjectid;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Subject subject = new Subject(graph).name("subject");
-            subjectid = subject.getId().toString();
+        Subject subject = newSubject().name("subject");
+        URI subjectid = subject.getPublicId();
 
-            Topic parent = new Topic(graph).name("parent topic");
-            Topic child = new Topic(graph).name("child topic");
-            Topic grandchild = new Topic(graph).name("grandchild topic");
-            subject.addTopic(parent);
-            parent.addSubtopic(child);
-            child.addSubtopic(grandchild);
-            transaction.commit();
-        }
+        Topic parent = newTopic().name("parent topic");
+        Topic child = newTopic().name("child topic");
+        Topic grandchild = newTopic().name("grandchild topic");
+        save(subject.addTopic(parent));
+        save(parent.addSubtopic(child));
+        save(child.addSubtopic(grandchild));
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics?recursive=true");
         Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
@@ -172,4 +121,5 @@ public class SubjectsTest {
         assertEquals("child topic", topics[0].subtopics[0].name);
         assertEquals("grandchild topic", topics[0].subtopics[0].subtopics[0].name);
     }
+
 }

@@ -1,9 +1,5 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.service.domain.NotFoundException;
-import org.apache.tinkerpop.gremlin.structure.Element;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -16,17 +12,17 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.context.WebApplicationContext;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
@@ -34,20 +30,18 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 public class TestUtils {
 
     private static HttpMessageConverter mappingJackson2HttpMessageConverter;
-    private static GraphFactory factory;
     private static MockMvc mockMvc;
 
     @Autowired
-    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext, GraphFactory factory) {
+    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext) {
         mappingJackson2HttpMessageConverter = Arrays.stream(converters)
                 .filter(hmc -> hmc instanceof MappingJackson2HttpMessageConverter)
                 .findAny()
                 .orElse(null);
-        this.factory = factory;
 
-        assertNotNull("the JSON message converter must not be null", this.mappingJackson2HttpMessageConverter);
+        assertNotNull("the JSON message converter must not be null", TestUtils.mappingJackson2HttpMessageConverter);
 
-        mockMvc = webAppContextSetup(webApplicationContext).build();
+        TestUtils.mockMvc = webAppContextSetup(webApplicationContext).build();
     }
 
     public static String json(Object o) throws IOException {
@@ -73,7 +67,7 @@ public class TestUtils {
     public static MockHttpServletResponse getResource(String path, ResultMatcher resultMatcher) throws Exception {
         return mockMvc.perform(
                 get(path)
-                .accept(APPLICATION_JSON_UTF8))
+                        .accept(APPLICATION_JSON_UTF8))
                 .andExpect(resultMatcher)
                 .andReturn()
                 .getResponse();
@@ -98,16 +92,16 @@ public class TestUtils {
     public static MockHttpServletResponse updateResource(String path, Object command, ResultMatcher resultMatcher) throws Exception {
         return mockMvc.perform(
                 put(path)
-                .contentType(APPLICATION_JSON_UTF8)
-                .content(json(command)))
+                        .contentType(APPLICATION_JSON_UTF8)
+                        .content(json(command)))
                 .andExpect(resultMatcher)
                 .andReturn()
                 .getResponse();
     }
 
-    public static String getId(MockHttpServletResponse response) {
+    public static URI getId(MockHttpServletResponse response) {
         String location = response.getHeader("Location");
-        return location.substring(location.lastIndexOf("/") + 1);
+        return URI.create(location.substring(location.lastIndexOf("/") + 1));
     }
 
     public static <V> V getObject(Class<V> theClass, MockHttpServletResponse response) throws Exception {
@@ -144,24 +138,6 @@ public class TestUtils {
 
     public static boolean isValidId(URI id) {
         return id != null && id.toString().contains("urn");
-    }
-
-    public static void clearGraph() throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            assertTrue("Are you mad?", factory.isTest());
-            graph.vertices().forEachRemaining(Element::remove);
-            transaction.commit();
-        }
-    }
-
-    public static void assertNotFound(Consumer<Graph> consumer) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            consumer.accept(graph);
-            transaction.rollback();
-            fail("Expected NotFoundException");
-        } catch (NotFoundException expectedException) {
-            //ok
-        }
     }
 
     public static int count(Iterator iterator) {

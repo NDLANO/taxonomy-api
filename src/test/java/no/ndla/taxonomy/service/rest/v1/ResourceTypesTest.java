@@ -1,55 +1,22 @@
 package no.ndla.taxonomy.service.rest.v1;
 
-import no.ndla.taxonomy.service.GraphFactory;
-import no.ndla.taxonomy.service.domain.NotFoundException;
 import no.ndla.taxonomy.service.domain.ResourceType;
-import no.ndla.taxonomy.service.domain.ResourceTypeSubResourceType;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URI;
-import java.util.Iterator;
-import java.util.List;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-@ActiveProfiles("junit")
-public class ResourceTypesTest {
-
-    @Autowired
-    private GraphFactory factory;
-
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
-
-    @Before
-    public void setup() throws Exception {
-        clearGraph();
-    }
+public class ResourceTypesTest extends RestTest {
 
     @Test
     public void can_get_all_resource_types() throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            new ResourceType(graph).name("video");
-            new ResourceType(graph).name("audio");
-            transaction.commit();
-        }
+        newResourceType().name("video");
+        newResourceType().name("audio");
 
         MockHttpServletResponse response = getResource("/v1/resource-types");
         ResourceTypes.ResourceTypeIndexDocument[] resourcetypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
@@ -62,13 +29,7 @@ public class ResourceTypesTest {
 
     @Test
     public void can_get_resourcetype_by_id() throws Exception {
-        URI id;
-
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new ResourceType(graph).name("video").getId();
-            transaction.commit();
-        }
-
+        URI id = newResourceType().name("video").getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/resource-types/" + id.toString());
         ResourceTypes.ResourceTypeIndexDocument resourceType = getObject(ResourceTypes.ResourceTypeIndexDocument.class, response);
@@ -77,12 +38,7 @@ public class ResourceTypesTest {
 
     @Test
     public void unknown_resourcetype_fails_gracefully() throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            new ResourceType(graph).name("video");
-            transaction.commit();
-        }
-
-        MockHttpServletResponse response = getResource("/v1/resource-types/doesnotexist", status().isNotFound());
+        getResource("/v1/resource-types/doesnotexist", status().isNotFound());
     }
 
     @Test
@@ -91,13 +47,11 @@ public class ResourceTypesTest {
             id = URI.create("urn:resource-type:1");
             name = "name";
         }};
+
         createResource("/v1/resource-types/", command);
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            assertNotNull(ResourceType.getById(command.id.toString(), graph));
-            transaction.rollback();
-        }
-
+        ResourceType result = resourceTypeRepository.getByPublicId(command.id);
+        assertEquals(command.name, result.getName());
     }
 
     @Test
@@ -112,123 +66,96 @@ public class ResourceTypesTest {
 
     @Test
     public void can_delete_resourcetype() throws Exception {
-        String id;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new ResourceType(graph).name("video").getId().toString();
-            transaction.commit();
-        }
+        URI id = newResourceType().name("video").getPublicId();
         deleteResource("/v1/resource-types/" + id);
+        assertNull(resourceTypeRepository.findByPublicId(id));
     }
 
     @Test
     public void can_update_resourcetype() throws Exception {
-        URI id;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            id = new ResourceType(graph).name("video").getId();
-            transaction.commit();
-        }
-        ResourceTypes.UpdateResourceTypeCommand updateCommand = new ResourceTypes.UpdateResourceTypeCommand();
-        updateCommand.name = "Audovideo";
+        URI id = newResourceType().name("video").getPublicId();
+        ResourceTypes.UpdateResourceTypeCommand updateCommand = new ResourceTypes.UpdateResourceTypeCommand() {{
+            name = "Audovideo";
+        }};
 
         updateResource("/v1/resource-types/" + id, updateCommand);
 
-        Graph graph = factory.create();
-        Transaction transaction = graph.tx();
-        ResourceType result = ResourceType.getById(id.toString(), graph);
+        ResourceType result = resourceTypeRepository.getByPublicId(id);
         assertEquals(updateCommand.name, result.getName());
-        transaction.rollback();
     }
 
     @Test
     public void can_add_subresourcetype_to_resourcetype() throws Exception {
-        URI parentIdResourceType;
-        URI childIdResourceType = URI.create("urn:resource-type:12");
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            parentIdResourceType = new ResourceType(graph).name("external").getId();
-            transaction.commit();
-        }
-        ResourceTypes.CreateResourceTypeCommand command = new ResourceTypes.CreateResourceTypeCommand() {{
-            parentId = parentIdResourceType;
-            id = childIdResourceType;
+        ResourceType parent = newResourceType().name("external");
+
+        URI childId = getId(createResource("/v1/resource-types/", new ResourceTypes.CreateResourceTypeCommand() {{
+            parentId = parent.getPublicId();
             name = "youtube";
-        }};
-        final String edgeId = getId(createResource("/v1/resource-types/", command));
+        }}));
 
-        assertNotNull(edgeId);
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            final ResourceType child = ResourceType.getById(childIdResourceType.toString(), graph);
-            assertEquals(parentIdResourceType, child.getParent().getId());
-
-            final Iterator<ResourceType> children = ResourceType.getById(parentIdResourceType.toString(), graph).getSubResourceTypes();
-            assertAnyTrue(children, r -> childIdResourceType.toString().equals(r.getId().toString()));
-            transaction.rollback();
-        }
-    }
-
-    @Test
-    public void cannot_add_existing_subresourcetypes_to_resourcetype() throws Exception {
-        URI parentIdResourceType;
-        URI childIdResourceType;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            ResourceType parentResourceType = new ResourceType(graph).name("external");
-            ResourceType subResourceType = new ResourceType(graph).name("youtube");
-            new ResourceTypeSubResourceType(parentResourceType, subResourceType);
-            parentIdResourceType = parentResourceType.getId();
-            childIdResourceType = subResourceType.getId();
-            transaction.commit();
-        }
-        ResourceTypes.UpdateResourceTypeCommand command = new ResourceTypes.UpdateResourceTypeCommand() {{
-            parentId = parentIdResourceType;
-            name = "youtube";
-        }};
-        updateResource("/v1/resource-types/" + childIdResourceType.toString(), command, status().isConflict());
+        ResourceType child = resourceTypeRepository.getByPublicId(childId);
+        assertEquals(parent.getPublicId(), child.getParent().getPublicId());
     }
 
     @Test
     public void can_remove_parent_from_resourcetype() throws Exception {
-        URI childIdResourceType;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            ResourceType parentResourceType = new ResourceType(graph).name("external");
-            ResourceType subResourceType = new ResourceType(graph).name("youtube");
-            new ResourceTypeSubResourceType(parentResourceType, subResourceType);
-            childIdResourceType = subResourceType.getId();
-            transaction.commit();
-        }
-        ResourceTypes.UpdateResourceTypeCommand command = new ResourceTypes.UpdateResourceTypeCommand() {{
-            name = "youtube";
-        }};
-        updateResource("/v1/resource-types/" + childIdResourceType.toString(), command);
+        ResourceType parent = newResourceType().name("external");
+        ResourceType child = newResourceType().name("youtube");
+        child.setParent(parent);
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            ResourceType resourceType = ResourceType.getById(childIdResourceType.toString(), graph);
-            exception.expect(NotFoundException.class);
-            resourceType.getParent();
-        }
+        URI childId = child.getPublicId();
+
+        updateResource("/v1/resource-types/" + childId, new ResourceTypes.UpdateResourceTypeCommand() {{
+            parentId = null;
+            name = child.getName();
+        }});
+
+        assertNull(resourceTypeRepository.getByPublicId(childId).getParent());
     }
 
     @Test
     public void can_update_parent_resourcetype() throws Exception {
-        URI childIdResourceType, newParentResourceTypeId;
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            ResourceType parentResourceType = new ResourceType(graph).name("external");
-            ResourceType subResourceType = new ResourceType(graph).name("youtube");
-            ResourceType newParentResourceType = new ResourceType(graph).name("video");
-            newParentResourceTypeId = newParentResourceType.getId();
-            new ResourceTypeSubResourceType(parentResourceType, subResourceType);
-            childIdResourceType = subResourceType.getId();
-            transaction.commit();
-        }
-        ResourceTypes.UpdateResourceTypeCommand command = new ResourceTypes.UpdateResourceTypeCommand() {{
-            parentId = newParentResourceTypeId;
-        }};
-        updateResource("/v1/resource-types/" + childIdResourceType.toString(), command);
+        ResourceType oldParent = newResourceType().name("external");
+        ResourceType child = newResourceType().name("youtube").parent(oldParent);
+        ResourceType newParent = newResourceType().name("video");
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            final ResourceType resourceType = ResourceType.getById(childIdResourceType.toString(), graph);
-            assertEquals("video", resourceType.getParent().getName());
-        }
+        updateResource("/v1/resource-types/" + child.getPublicId(), new ResourceTypes.UpdateResourceTypeCommand() {{
+            parentId = newParent.getPublicId();
+            name = child.getName();
+        }});
+
+        assertEquals("video", child.getParent().getName());
     }
 
-    
+    @Test
+    public void can_get_subresourcetypes() throws Exception {
+        ResourceType parent = newResourceType().name("external");
+        newResourceType().name("youtube").parent(parent);
+        newResourceType().name("ted").parent(parent);
+        newResourceType().name("vimeo").parent(parent);
+
+        MockHttpServletResponse response = getResource("/v1/resource-types/" + parent.getPublicId() + "/subresourcetypes");
+        ResourceTypes.ResourceTypeIndexDocument[] subResourceTypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
+
+        assertEquals(3, subResourceTypes.length);
+        assertAnyTrue(subResourceTypes, t -> "youtube".equals(t.name));
+        assertAnyTrue(subResourceTypes, t -> "ted".equals(t.name));
+        assertAnyTrue(subResourceTypes, t -> "vimeo".equals(t.name));
+        assertAllTrue(subResourceTypes, t -> isValidId(t.id));
+    }
+
+    @Test
+    public void can_get_subresourcetypes_recursively() throws Exception {
+        ResourceType parent = newResourceType().name("external");
+        final ResourceType video = newResourceType().name("video").parent(parent);
+        final ResourceType youtube = newResourceType().name("youtube").parent(video);
+
+        MockHttpServletResponse response = getResource("/v1/resource-types/" + parent.getPublicId() + "/subresourcetypes?recursive=true");
+        ResourceTypes.ResourceTypeIndexDocument[] subResourceTypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
+
+        assertEquals(1, subResourceTypes.length);
+        assertEquals("video", subResourceTypes[0].name);
+        assertEquals("youtube", subResourceTypes[0].subResourceTypes[0].name);
+    }
 }
 

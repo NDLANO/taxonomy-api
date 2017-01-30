@@ -1,35 +1,37 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.orientechnologies.orient.core.record.impl.ODocument;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.GraphFactory;
-import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.ResourceResourceType;
 import no.ndla.taxonomy.service.domain.ResourceType;
-import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
+import no.ndla.taxonomy.service.repositories.ResourceRepository;
+import no.ndla.taxonomy.service.repositories.ResourceResourceTypeRepository;
+import no.ndla.taxonomy.service.repositories.ResourceTypeRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 @RestController
 @RequestMapping(path = {"resource-resourcetypes", "/v1/resource-resourcetypes"})
+@Transactional
 public class ResourceResourceTypes {
 
-    private GraphFactory factory;
+    private final ResourceResourceTypeRepository resourceResourceTypeRepository;
+    private ResourceTypeRepository resourceTypeRepository;
+    private final ResourceRepository resourceRepository;
 
-    public ResourceResourceTypes(GraphFactory factory) {
-        this.factory = factory;
+    public ResourceResourceTypes(ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceTypeRepository resourceTypeRepository, ResourceRepository resourceRepository) {
+        this.resourceResourceTypeRepository = resourceResourceTypeRepository;
+        this.resourceTypeRepository = resourceTypeRepository;
+        this.resourceRepository = resourceRepository;
     }
 
     @PostMapping
@@ -37,65 +39,36 @@ public class ResourceResourceTypes {
     public ResponseEntity<Void> post(
             @ApiParam(name = "Connection", value = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) throws Exception {
 
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
+        Resource resource = resourceRepository.getByPublicId(command.resourceId);
+        ResourceType resourceType = resourceTypeRepository.getByPublicId(command.resourceTypeId);
 
-            Resource resource = Resource.getById(command.resourceId.toString(), graph);
-            ResourceType resourceType = ResourceType.getById(command.resourceTypeId.toString(), graph);
+        ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);
+        resourceResourceTypeRepository.save(resourceResourceType);
 
-            Iterator<ResourceType> resourceTypes = resource.getResourceTypes();
-            while (resourceTypes.hasNext()) {
-                ResourceType type = resourceTypes.next();
-                if (type.getId().equals(command.resourceTypeId)) {
-                    throw new DuplicateIdException(command.resourceTypeId.toString());
-                }
-            }
-
-            ResourceResourceType edge = resource.addResourceType(resourceType);
-
-            URI location = URI.create("/resource-resourcetypes/" + edge.getId());
-            transaction.commit();
-            return ResponseEntity.created(location).build();
-        }
+        URI location = URI.create("/resource-resourcetypes/" + resourceResourceType.getPublicId());
+        return ResponseEntity.created(location).build();
     }
 
     @DeleteMapping({"/{id}"})
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation("Removes a resource type from a resource")
-    public void delete(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            ResourceResourceType resourceResourceType = ResourceResourceType.getById(id, graph);
-            resourceResourceType.remove();
-            transaction.commit();
-        }
+    public void delete(@PathVariable("id") URI id) throws Exception {
+        resourceResourceTypeRepository.deleteByPublicId(id);
     }
 
     @GetMapping
     @ApiOperation("Gets all connections between resources and resource types")
     public List<ResourceResourceTypeIndexDocument> index() throws Exception {
         List<ResourceResourceTypeIndexDocument> result = new ArrayList<>();
-        try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
-            Iterable<ODocument> resultSet = (Iterable<ODocument>) graph.executeSql("select id, out.id as resourceid, in.id as resourcetypeid from `E_resource-has-resourcetypes`");
-            resultSet.iterator().forEachRemaining(record -> {
-                ResourceResourceTypeIndexDocument document = new ResourceResourceTypes.ResourceResourceTypeIndexDocument();
-                document.resourceId = URI.create(record.field("resourceid"));
-                document.resourceTypeId = URI.create(record.field("resourcetypeid"));
-                document.id = URI.create(record.field("id"));
-                result.add(document);
-            });
-            transaction.rollback();
-            return result;
-        }
+        resourceResourceTypeRepository.findAll().forEach(record -> result.add(new ResourceResourceTypeIndexDocument(record)));
+        return result;
     }
 
     @GetMapping({"/{id}"})
     @ApiOperation("Gets a single connection between resource and resource type")
-    public ResourceResourceTypeIndexDocument get(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            final ResourceResourceType result = ResourceResourceType.getById(id, graph);
-            final ResourceResourceTypeIndexDocument resourceResourceTypeIndexDocument = new ResourceResourceTypeIndexDocument(result);
-            transaction.rollback();
-            return new ResourceResourceTypeIndexDocument(result);
-        }
+    public ResourceResourceTypeIndexDocument get(@PathVariable("id") URI id) throws Exception {
+        ResourceResourceType result = resourceResourceTypeRepository.getByPublicId(id);
+        return new ResourceResourceTypeIndexDocument(result);
     }
 
     public static class CreateResourceResourceTypeCommand {
@@ -125,9 +98,9 @@ public class ResourceResourceTypes {
         }
 
         public ResourceResourceTypeIndexDocument(ResourceResourceType resourceResourceType) {
-            id = resourceResourceType.getId();
-            resourceId = resourceResourceType.getResource().getId();
-            resourceTypeId = resourceResourceType.getResourceType().getId();
+            id = resourceResourceType.getPublicId();
+            resourceId = resourceResourceType.getResource().getPublicId();
+            resourceTypeId = resourceResourceType.getResourceType().getPublicId();
         }
     }
 }

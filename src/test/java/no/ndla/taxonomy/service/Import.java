@@ -1,17 +1,15 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.service.rest.v1.Subjects;
 import no.ndla.taxonomy.service.rest.v1.SubjectTopics;
-import no.ndla.taxonomy.service.rest.v1.Topics;
+import no.ndla.taxonomy.service.rest.v1.Subjects;
 import no.ndla.taxonomy.service.rest.v1.TopicSubtopics;
+import no.ndla.taxonomy.service.rest.v1.Topics;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.Scanner;
-
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 public class Import {
 
@@ -54,6 +52,7 @@ public class Import {
         }
     }
 
+
     private URI addSubtopic(URI topicid, URI subtopicid) {
         TopicSubtopics.AddSubtopicToTopicCommand cmd = new TopicSubtopics.AddSubtopicToTopicCommand();
         cmd.topicid = topicid;
@@ -86,7 +85,7 @@ public class Import {
         System.out.println("created: " + subjectid);
         return subjectid;
     }
-    
+
     private URI addTopic(URI subjectid, URI topicid) {
         SubjectTopics.AddTopicToSubjectCommand cmd = new SubjectTopics.AddTopicToSubjectCommand();
         cmd.subjectid = subjectid;
@@ -97,7 +96,7 @@ public class Import {
         System.out.println("Added subject-topic: " + uri);
         return uri;
     }
-    
+
     private static Integer getInt(String value) {
         try {
             return Integer.parseInt(value);
@@ -108,5 +107,9 @@ public class Import {
 
     private static String getString(String value) {
         return value == null ? "" : value;
+    }
+
+    private static boolean isNotBlank(String column) {
+        return null != column && column.trim().length() > 0;
     }
 }

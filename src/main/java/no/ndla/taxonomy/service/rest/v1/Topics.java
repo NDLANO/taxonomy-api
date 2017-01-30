@@ -1,102 +1,127 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.orientechnologies.orient.core.record.impl.ODocument;
-import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.GraphFactory;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Topic;
-import org.apache.tinkerpop.gremlin.orientdb.OrientGraph;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
+import no.ndla.taxonomy.service.repositories.TopicRepository;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 @RestController
 @RequestMapping(path = {"topics", "/v1/topics"})
+@Transactional
 public class Topics {
 
-    private GraphFactory factory;
+    private TopicRepository topicRepository;
+    private JdbcTemplate jdbcTemplate;
 
-    public Topics(GraphFactory factory) {
-        this.factory = factory;
+    public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
+        this.topicRepository = topicRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @GetMapping
     @ApiOperation("Gets all topics")
     public List<TopicIndexDocument> index() throws Exception {
         List<TopicIndexDocument> result = new ArrayList<>();
-
-        try (OrientGraph graph = (OrientGraph) factory.create(); Transaction transaction = graph.tx()) {
-            Iterable<ODocument> resultSet = (Iterable<ODocument>) graph.executeSql("select id, name from V_Topic");
-            resultSet.iterator().forEachRemaining(record -> {
-                TopicIndexDocument document = new TopicIndexDocument();
-                result.add(document);
-                document.id = URI.create(record.field("id"));
-                document.name = record.field("name");
-            });
-            transaction.rollback();
-            return result;
-        }
+        Iterable<Topic> all = topicRepository.findAll();
+        all.forEach(topic -> result.add(new TopicIndexDocument(topic)));
+        return result;
     }
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
-    public TopicIndexDocument get(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Topic topic = Topic.getById(id, graph);
-            TopicIndexDocument result = new TopicIndexDocument(topic);
-            transaction.rollback();
-            return result;
-        }
+    public TopicIndexDocument get(@PathVariable("id") URI id) throws Exception {
+        Topic topic = topicRepository.getByPublicId(id);
+        TopicIndexDocument result = new TopicIndexDocument(topic);
+        return result;
     }
 
     @PostMapping
     @ApiOperation(value = "Creates a new topic")
     public ResponseEntity<Void> post(@ApiParam(name = "topic", value = "The new topic") @RequestBody CreateTopicCommand command) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Topic topic = new Topic(graph);
-            if (null != command.id) topic.setId(command.id.toString());
+        try {
+            Topic topic = new Topic();
+            if (null != command.id) topic.setPublicId(command.id);
             topic.name(command.name);
-
-            URI location = URI.create("/topics/" + topic.getId());
-            transaction.commit();
+            URI location = URI.create("/topics/" + topic.getPublicId());
+            topicRepository.save(topic);
             return ResponseEntity.created(location).build();
-        } catch (ORecordDuplicatedException e) {
-            throw new DuplicateIdException("" + command.id);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateIdException(command.id.toString());
         }
     }
 
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Deletes a single topic")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") String id) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Topic topic = Topic.getById(id, graph);
-            topic.remove();
-            transaction.commit();
-        }
+    public void delete(@PathVariable("id") URI id) throws Exception {
+        topicRepository.getByPublicId(id);
+        topicRepository.deleteByPublicId(id);
     }
 
     @PutMapping("/{id}")
     @ApiOperation(value = "Updates a single topic")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(
-            @PathVariable("id") String id,
+            @PathVariable("id") URI id,
             @ApiParam(name = "topic", value = "The updated topic") @RequestBody UpdateTopicCommand command) throws Exception {
-        try (Graph graph = factory.create(); Transaction transaction = graph.tx()) {
-            Topic topic = Topic.getById(id, graph);
-            topic.setName(command.name);
-            transaction.commit();
+        Topic topic = topicRepository.getByPublicId(id);
+        topic.setName(command.name);
+    }
+
+    @PutMapping
+    @ApiOperation(value = "Replaces the collection of topics.")
+    public void putCollection(@ApiParam(name = "subjects", value = "A list of subjects") @RequestBody CreateTopicCommand[] commands) throws Exception {
+        topicRepository.deleteAll();
+        for (CreateTopicCommand command : commands) {
+            post(command);
         }
+    }
+
+    public List<ResourceIndexDocument> getResources(@PathVariable("id") URI topicId) {
+
+        String query = getQuery("get_resources_by_topic_public_id_recursively.sql");
+
+        List<ResourceIndexDocument> results = jdbcTemplate.query(
+                query,
+                (resultSet, i) -> new ResourceIndexDocument() {{
+                    topicId = URI.create(resultSet.getString("topic_id"));
+                }},
+                topicId
+        );
+
+        return results;
+    }
+
+    public static String getQuery(String name) {
+        try (
+                InputStream inputStream = new ClassPathResource("db.queries." + name).getInputStream()
+        ) {
+            return new Scanner(inputStream).useDelimiter("\\Z").next();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static class ResourceIndexDocument {
+        public URI topicId, resourceId;
+        public String resourceName;
     }
 
     public static class CreateTopicCommand {
@@ -117,7 +142,7 @@ public class Topics {
 
     public static class TopicIndexDocument {
         @JsonProperty
-        @ApiModelProperty(value = "Topic id", example="urn:topic:234")
+        @ApiModelProperty(value = "Topic id", example = "urn:topic:234")
         public URI id;
 
         @JsonProperty
@@ -128,7 +153,7 @@ public class Topics {
         }
 
         TopicIndexDocument(Topic topic) {
-            id = topic.getId();
+            id = topic.getPublicId();
             name = topic.getName();
         }
     }

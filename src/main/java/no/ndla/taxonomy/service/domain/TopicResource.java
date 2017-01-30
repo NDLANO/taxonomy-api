@@ -1,54 +1,49 @@
 package no.ndla.taxonomy.service.domain;
 
 
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import java.net.URI;
 import java.util.UUID;
 
-public class TopicResource extends DomainEdge {
+@Entity
+public class TopicResource extends DomainEntity {
 
-    public static final String LABEL = "topic-has-resources";
+    @ManyToOne
+    @JoinColumn(name = "topic_id")
+    private Topic topic;
 
-    /**
-     * Wraps an existing edge between a topic and a learning resource
-     */
-    public TopicResource(Edge edge) {
-        super(edge);
+    @ManyToOne
+    @JoinColumn(name = "resource_id")
+    private Resource resource;
+
+    @Column(name = "is_primary")
+    private boolean primary;
+
+    protected TopicResource() {
     }
 
-    /**
-     * Creates a new edge between a topic and a resource
-     */
     public TopicResource(Topic topic, Resource resource) {
-        this(createEdge(topic, resource));
-        setId("urn:topic-resource:" + UUID.randomUUID());
-    }
-
-    private static Edge createEdge(Topic topic, Resource resource) {
-        return topic.vertex.addEdge(TopicResource.LABEL, resource.vertex);
+        this.topic = topic;
+        this.resource = resource;
+        setPublicId(URI.create("urn:topic-resource:" + UUID.randomUUID()));
     }
 
     public boolean isPrimary() {
-         return is("primary");
+        return primary;
     }
 
-    public void setPrimary(boolean value) {
-        setProperty("primary", value);
+    public void setPrimary(boolean primary) {
+        this.primary = primary;
     }
 
     public Topic getTopic() {
-        return new Topic(edge.outVertex());
+        return topic;
     }
 
-    public Topic getResource() {
-        return new Topic(edge.inVertex());
-    }
-
-    public static TopicResource getById(String id, Graph graph) {
-        GraphTraversal<Edge, Edge> traversal = graph.traversal().E().hasLabel(LABEL).has("id", id);
-        if (traversal.hasNext()) return new TopicResource(traversal.next());
-        throw new NotFoundException("topic-resource", id);
+    public Resource getResource() {
+        return resource;
     }
 }

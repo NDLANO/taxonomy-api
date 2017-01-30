@@ -1,47 +1,30 @@
 package no.ndla.taxonomy.service.domain;
 
 
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
-
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
+import java.net.URI;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
-public class Topic extends DomainVertex {
+@Entity
+public class Topic extends DomainObject {
 
     public static final String LABEL = "topic";
 
-    /**
-     * Wrap an existing topic
-     *
-     * @param vertex the vertex to wrap
-     */
-    public Topic(Vertex vertex) {
-        super(vertex);
-    }
+    @OneToMany(mappedBy = "topic")
+    Set<SubjectTopic> subjectTopics = new HashSet<>();
 
-    /**
-     * Create a new topic
-     *
-     * @param graph the graph where the new vertex is created
-     */
-    public Topic(Graph graph) {
-        this(graph.addVertex(LABEL));
-        setId("urn:topic:" + UUID.randomUUID());
-    }
+    @OneToMany(mappedBy = "topic")
+    private Set<TopicSubtopic> topicSubtopics = new HashSet<>();
 
-    public static Topic getById(String id, Graph graph) {
-        Topic topic = findById(id, graph);
-        if (topic != null) return topic;
-        throw new NotFoundException("topic", id);
-    }
+    @OneToMany(mappedBy = "topic")
+    private Set<TopicResource> topicResources = new HashSet<>();
 
-    public static Topic findById(String id, Graph graph) {
-        GraphTraversal<Vertex, Vertex> traversal = graph.traversal().V().hasLabel(LABEL).has("id", id);
-        return traversal.hasNext() ? new Topic(traversal.next()) : null;
+    public Topic() {
+        setPublicId(URI.create("urn:topic:" + UUID.randomUUID()));
     }
 
     public Topic name(String name) {
@@ -49,43 +32,63 @@ public class Topic extends DomainVertex {
         return this;
     }
 
-    public TopicSubtopic addSubtopic(Topic topic) {
-        return new TopicSubtopic(this, topic);
+    public TopicSubtopic addSubtopic(Topic subtopic) {
+        Iterator<Topic> topics = getSubtopics();
+        while (topics.hasNext()) {
+            Topic t = topics.next();
+            if (t.getId().equals(subtopic.getId())) {
+                throw new DuplicateIdException("Topic with id " + getPublicId() + " already contains topic with id " + subtopic.getPublicId());
+            }
+        }
+
+        TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic);
+        topicSubtopics.add(topicSubtopic);
+        return topicSubtopic;
     }
 
     public TopicResource addResource(Resource resource) {
-        return new TopicResource(this, resource);
+        Iterator<Resource> resources = getResources();
+        while (resources.hasNext()) {
+            Resource r = resources.next();
+            if (r.getId().equals(resource.getId()))
+                throw new DuplicateIdException("Topic with id " + getPublicId() + " already contains resource with id " + resource.getPublicId());
+        }
+
+        TopicResource topicResource = new TopicResource(this, resource);
+        topicResources.add(topicResource);
+        return topicResource;
     }
 
     public Iterator<Topic> getSubtopics() {
-        Iterator<Edge> edges = vertex.edges(Direction.OUT, TopicSubtopic.LABEL);
+        Iterator<TopicSubtopic> iterator = topicSubtopics.iterator();
 
         return new Iterator<Topic>() {
             @Override
             public boolean hasNext() {
-                return edges.hasNext();
+                return iterator.hasNext();
             }
 
             @Override
             public Topic next() {
-                return new Topic(edges.next().inVertex());
+                return iterator.next().getSubtopic();
             }
         };
     }
 
-    public Iterator<Resource> getResources() {
-        Iterator<Edge> edges = vertex.edges(Direction.OUT, TopicResource.LABEL);
 
+    public Iterator<Resource> getResources() {
+        Iterator<TopicResource> iterator = topicResources.iterator();
         return new Iterator<Resource>() {
             @Override
             public boolean hasNext() {
-                return edges.hasNext();
+                return iterator.hasNext();
             }
 
             @Override
             public Resource next() {
-                return new Resource(edges.next().inVertex());
+                return iterator.next().getResource();
             }
         };
     }
+
 }
