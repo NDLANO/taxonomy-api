@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
+import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.junit.Test;
@@ -89,5 +90,57 @@ public class TopicsTest extends RestTest {
         URI id = newTopic().getPublicId();
         deleteResource("/v1/topics/" + id);
         assertNull(topicRepository.findByPublicId(id));
+    }
+
+    @Test
+    public void can_get_resources_for_a_topic_recursively() throws Exception {
+        Topic a = newTopic().name("a");
+        Topic aa = newTopic().name("aa");
+        Topic aaa = newTopic().name("aaa");
+        Topic aab = newTopic().name("aab");
+        save(a.addSubtopic(aa));
+        save(aa.addSubtopic(aaa));
+        save(aa.addSubtopic(aab));
+
+        Resource resourceA = newResource().name("resource a");
+        save(a.addResource(resourceA));
+        Resource resourceAA = newResource().name("resource aa");
+        save(aa.addResource(resourceAA));
+        Resource resourceAAA = newResource().name("resource aaa");
+        save(aaa.addResource(resourceAAA));
+        Resource resourceAAB = newResource().name("resource aab");
+        save(aab.addResource(resourceAAB));
+
+        flush();
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + a.getPublicId().toString() + "/resources?recursive=true");
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(4, result.length);
+        assertAnyTrue(result, r -> resourceA.getName().equals(r.name));
+        assertAnyTrue(result, r -> resourceAA.getName().equals(r.name));
+        assertAnyTrue(result, r -> resourceAAA.getName().equals(r.name));
+        assertAnyTrue(result, r -> resourceAAB.getName().equals(r.name));
+    }
+
+    @Test
+    public void can_get_resources_for_a_topic_without_child_topic_resources() throws Exception {
+        Topic a = newTopic().name("a");
+        Topic aa = newTopic().name("aa");
+        save(a.addSubtopic(aa));
+        Resource resourceA = newResource().name("resource a");
+        save(a.addResource(resourceA));
+        Resource resourceAA = newResource().name("resource aa");
+        save(aa.addResource(resourceAA));
+        Resource resourceA2 = newResource().name("resource a2");
+        save(a.addResource(resourceA2));
+        flush();
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + a.getPublicId().toString() + "/resources");
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(2, result.length);
+        assertAnyTrue(result, r -> resourceA.getName().equals((r.name)));
+        assertAnyTrue(result, r -> resourceA2.getName().equals(r.name));
     }
 }

@@ -94,16 +94,30 @@ public class Topics {
         }
     }
 
-    public List<ResourceIndexDocument> getResources(@PathVariable("id") URI topicId) {
+    @GetMapping("/{id}/resources")
+    @ApiOperation(value = "Gets all resources for the given topic")
+    public List<ResourceIndexDocument> getResources(@PathVariable("id") URI topicId,
+                                                    @RequestParam(value = "recursive", required = false, defaultValue = "false")
+                                                    @ApiParam("If true, resources from subtopics are fetched recursively")
+                                                            boolean recursive)
 
-        String query = getQuery("get_resources_by_topic_public_id_recursively.sql");
+    {
+
+        String query;
+        if (recursive) {
+            query = getQuery("get_resources_by_topic_public_id_recursively.sql");
+        } else {
+            query = getQuery("get_resources_by_topic_public_id.sql");
+        }
 
         List<ResourceIndexDocument> results = jdbcTemplate.query(
                 query,
                 (resultSet, i) -> new ResourceIndexDocument() {{
                     topicId = URI.create(resultSet.getString("topic_id"));
+                    name = resultSet.getString("resource_name");
+                    id = URI.create(resultSet.getString("resource_id"));
                 }},
-                topicId
+                topicId.toString()
         );
 
         return results;
@@ -111,7 +125,7 @@ public class Topics {
 
     public static String getQuery(String name) {
         try (
-                InputStream inputStream = new ClassPathResource("db.queries." + name).getInputStream()
+                InputStream inputStream = new ClassPathResource("/db/queries/" + name, Topics.class.getClassLoader()).getInputStream()
         ) {
             return new Scanner(inputStream).useDelimiter("\\Z").next();
         } catch (IOException e) {
@@ -120,8 +134,8 @@ public class Topics {
     }
 
     public static class ResourceIndexDocument {
-        public URI topicId, resourceId;
-        public String resourceName;
+        public URI topicId, id;
+        public String name;
     }
 
     public static class CreateTopicCommand {
