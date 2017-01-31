@@ -1,7 +1,9 @@
 SELECT
   t.public_id topic_id,
   r.name      resource_name,
-  r.public_id resource_id
+  r.public_id resource_id,
+  rt.id       resource_type_id,
+  rt.name     resource_type_name
 FROM
   topic t
   INNER JOIN topic_resource tr ON tr.topic_id = t.id

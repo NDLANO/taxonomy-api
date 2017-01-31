@@ -7,7 +7,6 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,12 +14,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
+
+import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
 
 @RestController
 @RequestMapping(path = {"topics", "/v1/topics"})
@@ -29,6 +28,9 @@ public class Topics {
 
     private TopicRepository topicRepository;
     private JdbcTemplate jdbcTemplate;
+
+    private static final String resourceQueryRecursive = getQuery("get_resources_by_topic_public_id_recursively");
+    private static final String resourceQuery = getQuery("get_resources_by_topic_public_id");
 
     public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
         this.topicRepository = topicRepository;
@@ -105,13 +107,8 @@ public class Topics {
             @ApiParam(value = "Filter by resource type id(s). If not specified, resources of all types will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
                     URI[] resourceTypeIds
-    ) {
-        String query;
-        if (recursive) {
-            query = getQuery("get_resources_by_topic_public_id_recursively.sql");
-        } else {
-            query = getQuery("get_resources_by_topic_public_id.sql");
-        }
+    ) throws SQLException {
+        String query = recursive ? resourceQueryRecursive : resourceQuery;
 
         List<Object> args = new ArrayList<>();
         args.add(topicId.toString());
@@ -126,31 +123,47 @@ public class Topics {
             query = query.replace("1 = 1", "(" + where + ")");
         }
 
-        List<ResourceIndexDocument> results = jdbcTemplate.query(
-                query,
-                (resultSet, i) -> new ResourceIndexDocument() {{
-                    topicId = URI.create(resultSet.getString("topic_id"));
-                    name = resultSet.getString("resource_name");
-                    id = URI.create(resultSet.getString("resource_id"));
-                }},
-                args.toArray()
-        );
+        return jdbcTemplate.query(query, setQueryParameters(args), resultSet -> {
+            List<ResourceIndexDocument> result = new ArrayList<>();
+            ResourceIndexDocument current, previous = null;
 
-        return results;
-    }
+            while (resultSet.next()) {
+                URI id = toURI(resultSet.getString("resource_id"));
 
-    public static String getQuery(String name) {
-        try (
-                InputStream inputStream = new ClassPathResource("/db/queries/" + name, Topics.class.getClassLoader()).getInputStream()
-        ) {
-            return new Scanner(inputStream).useDelimiter("\\Z").next();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+                boolean duplicate = previous != null && id.equals(previous.id);
+                if (duplicate) {
+                    current = previous;
+                } else {
+                    current = new ResourceIndexDocument() {{
+                        topicId = toURI(resultSet.getString("topic_id"));
+                        name = resultSet.getString("resource_name");
+                        id = toURI(resultSet.getString("resource_id"));
+                    }};
+                    result.add(current);
+                }
+
+                ResourceTypeIndexDocument resourceType = new ResourceTypeIndexDocument() {{
+                    String resource_type_id = resultSet.getString("resource_type_id");
+                    id = toURI(resource_type_id);
+                    name = resultSet.getString("resource_type_name");
+                }};
+
+                current.resourceTypes.add(resourceType);
+                previous = current;
+            }
+
+            return result;
+        });
     }
 
     public static class ResourceIndexDocument {
         public URI topicId, id;
+        public String name;
+        public List<ResourceTypeIndexDocument> resourceTypes = new ArrayList<>();
+    }
+
+    public static class ResourceTypeIndexDocument {
+        public URI id;
         public String name;
     }
 

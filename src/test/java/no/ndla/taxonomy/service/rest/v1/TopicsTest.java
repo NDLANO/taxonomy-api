@@ -1,7 +1,6 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
-import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.junit.Test;
@@ -22,8 +21,8 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_all_topics() throws Exception {
-        newTopic().name("photo synthesis");
-        newTopic().name("trigonometry");
+        builder.topic(t -> t.name("photo synthesis"));
+        builder.topic(t -> t.name("trigonometry"));
 
         MockHttpServletResponse response = getResource("/v1/topics");
         Topics.TopicIndexDocument[] topics = getObject(Topics.TopicIndexDocument[].class, response);
@@ -94,54 +93,52 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_resources_for_a_topic_recursively() throws Exception {
-        Topic a = newTopic().name("a");
-        Topic aa = newTopic().name("aa");
-        Topic aaa = newTopic().name("aaa");
-        Topic aab = newTopic().name("aab");
-        save(a.addSubtopic(aa));
-        save(aa.addSubtopic(aaa));
-        save(aa.addSubtopic(aab));
-
-        Resource resourceA = newResource().name("resource a");
-        save(a.addResource(resourceA));
-        Resource resourceAA = newResource().name("resource aa");
-        save(aa.addResource(resourceAA));
-        Resource resourceAAA = newResource().name("resource aaa");
-        save(aaa.addResource(resourceAAA));
-        Resource resourceAAB = newResource().name("resource aab");
-        save(aab.addResource(resourceAAB));
+        URI a = builder.topic(t -> t
+                .name("a")
+                .resource(r -> r.name("resource a"))
+                .subtopic(st -> st
+                        .name("aa")
+                        .resource(r -> r.name("resource aa"))
+                        .subtopic(st2 -> st2
+                                .name("aaa")
+                                .resource(r -> r.name("resource aaa"))
+                        )
+                        .subtopic(st2 -> st2
+                                .name("aab")
+                                .resource(r -> r.name("resource aab"))
+                        )
+                )
+        ).getPublicId();
 
         flush();
 
-        MockHttpServletResponse response = getResource("/v1/topics/" + a.getPublicId().toString() + "/resources?recursive=true");
+        MockHttpServletResponse response = getResource("/v1/topics/" + a + "/resources?recursive=true");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
 
         assertEquals(4, result.length);
-        assertAnyTrue(result, r -> resourceA.getName().equals(r.name));
-        assertAnyTrue(result, r -> resourceAA.getName().equals(r.name));
-        assertAnyTrue(result, r -> resourceAAA.getName().equals(r.name));
-        assertAnyTrue(result, r -> resourceAAB.getName().equals(r.name));
+        assertAnyTrue(result, r -> "resource a".equals(r.name));
+        assertAnyTrue(result, r -> "resource aa".equals(r.name));
+        assertAnyTrue(result, r -> "resource aaa".equals(r.name));
+        assertAnyTrue(result, r -> "resource aab".equals(r.name));
     }
 
     @Test
     public void can_get_resources_for_a_topic_without_child_topic_resources() throws Exception {
-        Topic a = newTopic().name("a");
-        Topic aa = newTopic().name("aa");
-        save(a.addSubtopic(aa));
-        Resource resourceA = newResource().name("resource a");
-        save(a.addResource(resourceA));
-        Resource resourceAA = newResource().name("resource aa");
-        save(aa.addResource(resourceAA));
-        Resource resourceA2 = newResource().name("resource a2");
-        save(a.addResource(resourceA2));
+        URI a = builder.topic(t -> t
+                .name("a")
+                .subtopic(st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))
+                .resource(r -> r.name("resource 1"))
+                .resource(r -> r.name("resource 2"))
+        ).getPublicId();
+
         flush();
 
-        MockHttpServletResponse response = getResource("/v1/topics/" + a.getPublicId().toString() + "/resources");
+        MockHttpServletResponse response = getResource("/v1/topics/" + a + "/resources");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
-        assertAnyTrue(result, r -> resourceA.getName().equals((r.name)));
-        assertAnyTrue(result, r -> resourceA2.getName().equals(r.name));
+        assertAnyTrue(result, r -> "resource 1".equals(r.name));
+        assertAnyTrue(result, r -> "resource 2".equals(r.name));
     }
 
     @Test
@@ -164,8 +161,54 @@ public class TopicsTest extends RestTest {
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "a lecture".equals(r.name));
         assertAnyTrue(result, r -> "an assignment".equals(r.name));
-
     }
+
+    @Test
+    public void can_have_several_resource_types() throws Exception {
+        URI topic = builder.topic(t -> t
+                .name("topic")
+                .resource(r -> r
+                        .name("resource")
+                        .resourceType(rt -> rt.name("lecture"))
+                        .resourceType(rt -> rt.name("assignment"))
+                )
+        ).getPublicId();
+        flush();
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + topic + "/resources");
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(1, result.length);
+        assertEquals(2, result[0].resourceTypes.size());
+    }
+
+    @Test
+    public void can_have_several_resource_types_recursively() throws Exception {
+        URI topic = builder.topic(t -> t
+                .name("topic")
+                .subtopic(st -> st
+                        .resource(r -> r
+                                .name("resource 1")
+                                .resourceType(rt -> rt.name("lecture"))
+                                .resourceType(rt -> rt.name("assignment"))
+                        )
+                )
+                .resource(r -> r
+                        .name("resource 2")
+                        .resourceType(rt -> rt.name("lecture"))
+                        .resourceType(rt -> rt.name("assignment"))
+                )
+        ).getPublicId();
+        flush();
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + topic + "/resources?recursive=true");
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(2, result.length);
+        assertEquals(2, result[0].resourceTypes.size());
+        assertEquals(2, result[1].resourceTypes.size());
+    }
+
 }
 
 
