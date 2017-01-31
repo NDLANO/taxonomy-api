@@ -26,8 +26,17 @@ WITH RECURSIVE tree (topic_id, public_id, name, parent_id, is_primary, level) AS
     INNER JOIN tree parent ON parent.topic_id = s.topic_id
 )
 
-SELECT r.public_id resource_id, r.name resource_name, t.public_id topic_id
+SELECT
+  r.public_id          resource_id,
+  r.name               resource_name,
+  t.public_id          topic_id,
+  rrt.resource_type_id resource_type_id,
+  rt.name              resource_type_name
 FROM
   tree t
   INNER JOIN topic_resource tr ON tr.topic_id = t.topic_id
-  INNER JOIN resource r ON r.id = tr.resource_id;
+  INNER JOIN resource r ON r.id = tr.resource_id
+  LEFT OUTER JOIN resource_resource_type rrt ON rrt.resource_id = r.id
+  LEFT OUTER JOIN resource_type rt ON rrt.resource_type_id = rt.id
+WHERE 1 = 1
+ORDER BY r.id

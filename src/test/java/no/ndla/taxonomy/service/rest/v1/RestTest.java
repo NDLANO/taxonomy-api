@@ -1,10 +1,8 @@
 package no.ndla.taxonomy.service.rest.v1;
 
-import no.ndla.taxonomy.service.domain.Resource;
-import no.ndla.taxonomy.service.domain.ResourceType;
-import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.domain.Topic;
+import no.ndla.taxonomy.service.domain.*;
 import no.ndla.taxonomy.service.repositories.*;
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -45,6 +43,13 @@ public abstract class RestTest extends AbstractTransactionalJUnit4SpringContextT
 
     @Autowired
     ResourceTypeRepository resourceTypeRepository;
+
+    Builder builder;
+
+    @Before
+    public void setUp() throws Exception {
+        builder = new Builder(entityManager);
+    }
 
     <T> T save(T entity) {
         entityManager.persist(entity);

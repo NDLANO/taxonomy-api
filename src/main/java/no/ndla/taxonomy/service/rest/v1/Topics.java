@@ -96,21 +96,34 @@ public class Topics {
 
     @GetMapping("/{id}/resources")
     @ApiOperation(value = "Gets all resources for the given topic")
-    public List<ResourceIndexDocument> getResources(@PathVariable("id") URI topicId,
-                                                    @RequestParam(value = "recursive", required = false, defaultValue = "false")
-                                                    @ApiParam("If true, resources from subtopics are fetched recursively")
-                                                            boolean recursive,
-                                                    @RequestParam(value = "type", required = false)
-                                                    @ApiParam("Supply URI for resource type to filter return only resources of this type")
-                                                    URI typeId)
-
-    {
-
+    public List<ResourceIndexDocument> getResources(
+            @PathVariable("id") URI topicId,
+            @RequestParam(value = "recursive", required = false, defaultValue = "false")
+            @ApiParam("If true, resources from subtopics are fetched recursively")
+                    boolean recursive,
+            @RequestParam(value = "type", required = false, defaultValue = "")
+            @ApiParam(value = "Filter by resource type id(s). If not specified, resources of all types will be returned." +
+                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
+                    URI[] resourceTypeIds
+    ) {
         String query;
         if (recursive) {
             query = getQuery("get_resources_by_topic_public_id_recursively.sql");
         } else {
             query = getQuery("get_resources_by_topic_public_id.sql");
+        }
+
+        List<Object> args = new ArrayList<>();
+        args.add(topicId.toString());
+
+        if (resourceTypeIds.length > 0) {
+            StringBuilder where = new StringBuilder();
+            for (URI resourceTypeId : resourceTypeIds) {
+                where.append("rt.public_id = ? OR ");
+                args.add(resourceTypeId.toString());
+            }
+            where.setLength(where.length() - 4);
+            query = query.replace("1 = 1", "(" + where + ")");
         }
 
         List<ResourceIndexDocument> results = jdbcTemplate.query(
@@ -120,7 +133,7 @@ public class Topics {
                     name = resultSet.getString("resource_name");
                     id = URI.create(resultSet.getString("resource_id"));
                 }},
-                topicId.toString()
+                args.toArray()
         );
 
         return results;
