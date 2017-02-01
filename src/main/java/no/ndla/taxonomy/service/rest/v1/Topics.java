@@ -148,7 +148,9 @@ public class Topics {
                     name = resultSet.getString("resource_type_name");
                 }};
 
-                current.resourceTypes.add(resourceType);
+                if (resourceType.id != null) {
+                    current.resourceTypes.add(resourceType);
+                }
                 previous = current;
             }
 
@@ -157,13 +159,30 @@ public class Topics {
     }
 
     public static class ResourceIndexDocument {
-        public URI topicId, id;
+        @JsonProperty
+        @ApiModelProperty(value = "Topic id", example = "urn:topic:123")
+        public URI topicId;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Resource id", example = "urn:resource:12")
+        public URI id;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Resource name", example = "Basic physics")
         public String name;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resource-type:1', name = 'lecture'}]")
         public List<ResourceTypeIndexDocument> resourceTypes = new ArrayList<>();
     }
 
     public static class ResourceTypeIndexDocument {
+        @JsonProperty
+        @ApiModelProperty(value = "Resource type id", example = "urn:resource-type:12")
         public URI id;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Resource type name", example = "Assignment")
         public String name;
     }
 
