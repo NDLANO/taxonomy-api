@@ -209,6 +209,24 @@ public class TopicsTest extends RestTest {
         assertEquals(2, result[1].resourceTypes.size());
     }
 
+    @Test
+    public void can_have_no_resource_type() throws Exception {
+        URI topic = builder.topic(t -> t
+                .name("topic")
+                .subtopic(st -> st
+                        .resource(r -> r
+                                .name("resource 1")
+                        )
+                )
+        ).getPublicId();
+        flush();
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + topic + "/resources?recursive=true");
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(1, result.length);
+        assertEquals(0, result[0].resourceTypes.size());
+    }
 }
 
 

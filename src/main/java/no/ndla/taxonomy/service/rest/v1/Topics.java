@@ -142,13 +142,13 @@ public class Topics {
                     result.add(current);
                 }
 
-                ResourceTypeIndexDocument resourceType = new ResourceTypeIndexDocument() {{
-                    String resource_type_id = resultSet.getString("resource_type_id");
-                    id = toURI(resource_type_id);
-                    name = resultSet.getString("resource_type_name");
-                }};
+                String resource_type_id = resultSet.getString("resource_type_id");
+                if (resource_type_id != null) {
+                    ResourceTypeIndexDocument resourceType = new ResourceTypeIndexDocument() {{
+                        id = toURI(resource_type_id);
+                        name = resultSet.getString("resource_type_name");
+                    }};
 
-                if (resourceType.id != null) {
                     current.resourceTypes.add(resourceType);
                 }
                 previous = current;
