@@ -9,6 +9,7 @@ public class Builder {
     private EntityManager entityManager;
 
     private Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();
+    private Map<String, SubjectBuilder> subjects = new HashMap<>();
     private Map<String, TopicBuilder> topics = new HashMap<>();
     private Map<String, ResourceBuilder> resources = new HashMap<>();
 
@@ -58,6 +59,12 @@ public class Builder {
         return resourceType.resourceType;
     }
 
+    private SubjectBuilder getSubjectBuilder(String key) {
+        if (key == null) return new SubjectBuilder();
+        if (!subjects.containsKey(key)) subjects.put(key, new SubjectBuilder());
+        return subjects.get(key);
+    }
+
     private TopicBuilder getTopicBuilder(String key) {
         if (key == null) return new TopicBuilder();
         if (!topics.containsKey(key)) topics.put(key, new TopicBuilder());
@@ -74,6 +81,52 @@ public class Builder {
         if (key == null) return new ResourceBuilder();
         if (!resources.containsKey(key)) resources.put(key, new ResourceBuilder());
         return resources.get(key);
+    }
+
+    public Subject subject(String key) {
+        return subject(key, null);
+    }
+
+    public Subject subject(String key, Consumer<SubjectBuilder> consumer) {
+        SubjectBuilder subject = getSubjectBuilder(key);
+        if (null != consumer) consumer.accept(subject);
+        return subject.subject;
+    }
+
+    public Subject subject(Consumer<SubjectBuilder> consumer) {
+        return subject(null, consumer);
+    }
+
+    public class SubjectBuilder {
+        private final Subject subject;
+
+        public SubjectBuilder() {
+            subject = new Subject();
+            entityManager.persist(subject);
+        }
+
+        public SubjectBuilder name(String name) {
+            subject.name(name);
+            return this;
+        }
+
+        public SubjectBuilder topic(String key, Consumer<TopicBuilder> consumer) {
+            TopicBuilder topicBuilder = getTopicBuilder(key);
+            if (null != consumer) consumer.accept(topicBuilder);
+            topic(topicBuilder.topic);
+            return this;
+        }
+
+
+        public SubjectBuilder topic(Consumer<TopicBuilder> consumer) {
+            return topic(null, consumer);
+        }
+
+        public SubjectBuilder topic(Topic topic) {
+            SubjectTopic subjectTopic = subject.addTopic(topic);
+            entityManager.persist(subjectTopic);
+            return this;
+        }
     }
 
     public class TopicBuilder {

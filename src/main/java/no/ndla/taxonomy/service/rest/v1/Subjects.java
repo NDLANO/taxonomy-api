@@ -6,14 +6,15 @@ import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
+import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -22,6 +23,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import static no.ndla.taxonomy.service.jdbc.QueryUtils.getQuery;
+import static no.ndla.taxonomy.service.jdbc.QueryUtils.setQueryParameters;
+import static no.ndla.taxonomy.service.jdbc.QueryUtils.toURI;
+
 @RestController
 @RequestMapping(path = {"subjects", "/v1/subjects"})
 @Transactional
@@ -29,9 +34,13 @@ public class Subjects {
     private SubjectRepository subjectRepository;
     private TopicRepository topicRepository;
 
-    public Subjects(SubjectRepository subjectRepository, TopicRepository topicRepository) {
+    private static final String queryBase = getQuery("get_resources_by_subject_public_id_recursively");
+    private JdbcTemplate jdbcTemplate;
+
+    public Subjects(SubjectRepository subjectRepository, TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @GetMapping
@@ -72,7 +81,7 @@ public class Subjects {
 
     @PutMapping
     @ApiOperation(value = "Replaces a collection of subjects")
-    public void putSubjects(@ApiParam(name = "subjects", value = "A list of subjects") @RequestBody  CreateSubjectCommand[] commands) throws Exception {
+    public void putSubjects(@ApiParam(name = "subjects", value = "A list of subjects") @RequestBody CreateSubjectCommand[] commands) throws Exception {
         subjectRepository.deleteAll();
         for (CreateSubjectCommand command : commands) {
             post(command);
@@ -106,6 +115,65 @@ public class Subjects {
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateIdException(command.id.toString());
         }
+    }
+
+    @GetMapping("/{id}/resources")
+    @ApiOperation(value = "Gets all resources for a subject (all topics and subtopics)")
+    public List<ResourceIndexDocument> getResources(
+            @PathVariable("id") URI subjectId,
+            @RequestParam(value = "type", required = false, defaultValue = "")
+            @ApiParam(value = "Filter by resource type id(s). If not specified, resources of all types will be returned." +
+                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
+                    URI[] resourceTypeIds
+    ) {
+        List<Object> args = new ArrayList<>();
+        args.add(subjectId.toString());
+        String sql;
+        if (resourceTypeIds.length > 0) {
+            StringBuilder where = new StringBuilder();
+            for (URI resourceTypeId : resourceTypeIds) {
+                where.append("rt.public_id = ? OR ");
+                args.add(resourceTypeId.toString());
+            }
+            where.setLength(where.length() - 4);
+            sql = queryBase.replace("1 = 1", "(" + where + ")");
+        } else {
+            sql = queryBase;
+        }
+
+        return jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
+            List<ResourceIndexDocument> result = new ArrayList<>();
+            ResourceIndexDocument current, previous = null;
+
+            while (resultSet.next()) {
+                URI id = toURI(resultSet.getString("resource_public_id"));
+
+                boolean duplicate = previous != null && id.equals(previous.id);
+                if (duplicate) {
+                    current = previous;
+                } else {
+                    current = new ResourceIndexDocument() {{
+                        topicId = toURI(resultSet.getString("topic_public_id"));
+                        name = resultSet.getString("resource_name");
+                        id = toURI(resultSet.getString("resource_public_id"));
+                    }};
+                    result.add(current);
+                }
+
+                String resource_type_id = resultSet.getString("resource_type_public_id");
+                if (resource_type_id != null) {
+                    ResourceTypeIndexDocument resourceType = new ResourceTypeIndexDocument() {{
+                        id = toURI(resource_type_id);
+                        name = resultSet.getString("resource_type_name");
+                    }};
+
+                    current.resourceTypes.add(resourceType);
+                }
+                previous = current;
+            }
+            return result;
+
+        });
     }
 
     public static class CreateSubjectCommand {
@@ -171,5 +239,39 @@ public class Subjects {
             }
             this.subtopics = result.toArray(new TopicIndexDocument[result.size()]);
         }
+    }
+
+    public static class ResourceIndexDocument {
+        @JsonProperty
+        public URI id;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Topic id", example = "urn:topic:12")
+        public URI topicId;
+
+        @JsonProperty
+        public String name;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resource-type:1', name = 'lecture'}]")
+        public List<ResourceTypeIndexDocument> resourceTypes = new ArrayList<>();
+
+        ResourceIndexDocument() {
+        }
+
+        ResourceIndexDocument(Resource resource) {
+            this.id = resource.getPublicId();
+            this.name = resource.getName();
+        }
+    }
+
+    public static class ResourceTypeIndexDocument {
+        @JsonProperty
+        @ApiModelProperty(value = "Resource type id", example = "urn:resource-type:12")
+        public URI id;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Resource type name", example = "Assignment")
+        public String name;
     }
 }
