@@ -29,8 +29,7 @@ public class Resources {
     }
 
     @GetMapping
-    @ApiOperation(value = "Lists all resources",
-            notes = "Multiple status values can be provided with comma seperated strings")
+    @ApiOperation(value = "Lists all resources")
     public List<ResourceIndexDocument> index() throws Exception {
         List<ResourceIndexDocument> result = new ArrayList<>();
         resourceRepository.findAll().forEach(record -> result.add(new ResourceIndexDocument(record)));
