@@ -25,6 +25,10 @@ public class Builder {
         return topic(null, consumer);
     }
 
+    public Topic topic() {
+        return topic(null, null);
+    }
+
     public Topic topic(String key, Consumer<TopicBuilder> consumer) {
         TopicBuilder topic = getTopicBuilder(key);
         if (null != consumer) consumer.accept(topic);
@@ -87,6 +91,10 @@ public class Builder {
         return subject(key, null);
     }
 
+    public Subject subject() {
+        return subject(null, null);
+    }
+
     public Subject subject(String key, Consumer<SubjectBuilder> consumer) {
         SubjectBuilder subject = getSubjectBuilder(key);
         if (null != consumer) consumer.accept(subject);
@@ -142,9 +150,8 @@ public class Builder {
             return this;
         }
 
-        public TopicBuilder subtopic(Topic subtopic) {
-            entityManager.persist(topic.addSubtopic(subtopic));
-            return this;
+        public TopicBuilder subtopic() {
+            return subtopic(null, null);
         }
 
         public TopicBuilder subtopic(String topicKey) {
@@ -162,9 +169,13 @@ public class Builder {
             return this;
         }
 
-        private TopicBuilder resource(Resource resource) {
-            entityManager.persist(topic.addResource(resource));
+        public TopicBuilder subtopic(Topic subtopic) {
+            entityManager.persist(topic.addSubtopic(subtopic));
             return this;
+        }
+
+        public TopicBuilder resource() {
+            return resource(null, null);
         }
 
         public TopicBuilder resource(String resourceKey) {
@@ -179,6 +190,11 @@ public class Builder {
             ResourceBuilder resource = getResourceBuilder(resourceKey);
             if (null != consumer) consumer.accept(resource);
             return resource(resource.resource);
+        }
+
+        private TopicBuilder resource(Resource resource) {
+            entityManager.persist(topic.addResource(resource));
+            return this;
         }
     }
 

@@ -24,8 +24,8 @@ public class TopicSubtopicsTest extends RestTest {
     @Test
     public void can_add_subtopic_to_topic() throws Exception {
         URI integrationId, calculusId;
-        calculusId = newTopic().name("calculus").getPublicId();
-        integrationId = newTopic().name("integration").getPublicId();
+        calculusId = builder.topic(t -> t.name("calculus")).getPublicId();
+        integrationId = builder.topic(t -> t.name("integration")).getPublicId();
 
         URI id = getId(
                 createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
@@ -43,13 +43,11 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void cannot_add_existing_subtopic_to_topic() throws Exception {
-        URI integrationId, calculusId;
-        Topic calculus = newTopic().name("calculus");
-        Topic integration = newTopic().name("integration");
-        calculus.addSubtopic(integration);
-
-        calculusId = calculus.getPublicId();
-        integrationId = integration.getPublicId();
+        URI integrationId = builder.topic("integration", t -> t.name("integration")).getPublicId();
+        URI calculusId = builder.topic(t -> t
+                .name("calculus")
+                .subtopic("integration")
+        ).getPublicId();
 
         createResource("/v1/topic-subtopics",
                 new TopicSubtopics.AddSubtopicToTopicCommand() {{
@@ -81,20 +79,10 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void can_get_topics() throws Exception {
-        URI alternatingCurrentId, electricityId, calculusId, integrationId;
-
-        Topic electricity = newTopic().name("electricity");
-        Topic alternatingCurrent = newTopic().name("alternating current");
-        save(electricity.addSubtopic(alternatingCurrent));
-
-        Topic calculus = newTopic().name("calculus");
-        Topic integration = newTopic().name("integration");
-        save(calculus.addSubtopic(integration));
-
-        electricityId = electricity.getPublicId();
-        alternatingCurrentId = alternatingCurrent.getPublicId();
-        calculusId = calculus.getPublicId();
-        integrationId = integration.getPublicId();
+        URI alternatingCurrentId = builder.topic("ac", t -> t.name("alternating current")).getPublicId();
+        URI electricityId = builder.topic(t -> t.name("electricity").subtopic("ac")).getPublicId();
+        URI integrationId = builder.topic("integration", t -> t.name("integration")).getPublicId();
+        URI calculusId = builder.topic(t -> t.name("calculus").subtopic("integration")).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/topic-subtopics");
         TopicSubtopics.TopicSubtopicIndexDocument[] topicSubtopics = getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);

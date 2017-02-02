@@ -2,7 +2,6 @@ package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.domain.Topic;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -16,8 +15,8 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_all_subjects() throws Exception {
-        newSubject().name("english");
-        newSubject().name("mathematics");
+        builder.subject(s -> s.name("english"));
+        builder.subject(s -> s.name("mathematics"));
 
         MockHttpServletResponse response = getResource("/v1/subjects");
         Subjects.SubjectIndexDocument[] subjects = getObject(Subjects.SubjectIndexDocument[].class, response);
@@ -43,7 +42,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_update_subject() throws Exception {
-        URI id = newSubject().getPublicId();
+        URI id = builder.subject().getPublicId();
 
         Subjects.UpdateSubjectCommand command = new Subjects.UpdateSubjectCommand();
         command.name = "physics";
@@ -79,17 +78,19 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_delete_subject() throws Exception {
-        URI id = newSubject().getPublicId();
+        URI id = builder.subject().getPublicId();
         deleteResource("/v1/subjects/" + id);
         assertNull(subjectRepository.findByPublicId(id));
     }
 
     @Test
     public void can_get_topics() throws Exception {
-        Subject subject = newSubject().name("physics");
-        save(subject.addTopic(newTopic().name("statics")));
-        save(subject.addTopic(newTopic().name("electricity")));
-        save(subject.addTopic(newTopic().name("optics")));
+        Subject subject = builder.subject(s -> s
+                .name("physics")
+                .topic(t -> t.name("statics"))
+                .topic(t -> t.name("electricity"))
+                .topic(t -> t.name("optics"))
+        );
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
         Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
@@ -103,15 +104,16 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_topics_recursively() throws Exception {
-        Subject subject = newSubject().name("subject");
-        URI subjectid = subject.getPublicId();
-
-        Topic parent = newTopic().name("parent topic");
-        Topic child = newTopic().name("child topic");
-        Topic grandchild = newTopic().name("grandchild topic");
-        save(subject.addTopic(parent));
-        save(parent.addSubtopic(child));
-        save(child.addSubtopic(grandchild));
+        URI subjectid = builder.subject(s -> s
+                .name("subject")
+                .topic(parent -> parent
+                        .name("parent topic")
+                        .subtopic(child -> child
+                                .name("child topic")
+                                .subtopic(grandchild -> grandchild.name("grandchild topic"))
+                        )
+                )
+        ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics?recursive=true");
         Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
@@ -140,7 +142,6 @@ public class SubjectsTest extends RestTest {
         Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
 
         assertEquals(3, resources.length);
-
     }
 
     @Test

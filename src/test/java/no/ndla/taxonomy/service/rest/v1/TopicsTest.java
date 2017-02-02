@@ -72,21 +72,19 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_update_topic() throws Exception {
-        URI id = newTopic().getPublicId();
+        URI id = builder.topic().getPublicId();
 
-        Topics.UpdateTopicCommand command = new Topics.UpdateTopicCommand() {{
+        updateResource("/v1/topics/" + id, new Topics.UpdateTopicCommand() {{
             name = "trigonometry";
-        }};
-
-        updateResource("/v1/topics/" + id, command);
+        }});
 
         Topic topic = topicRepository.getByPublicId(id);
-        assertEquals(command.name, topic.getName());
+        assertEquals("trigonometry", topic.getName());
     }
 
     @Test
     public void can_delete_topic() throws Exception {
-        URI id = newTopic().getPublicId();
+        URI id = builder.topic().getPublicId();
         deleteResource("/v1/topics/" + id);
         assertNull(topicRepository.findByPublicId(id));
     }
