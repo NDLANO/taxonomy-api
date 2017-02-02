@@ -1,7 +1,6 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -83,7 +82,7 @@ public class TopicSubtopics {
 
     @PutMapping
     @ApiOperation(value = "Replaces a collection of topic subtopics connections")
-    public void putTopicSubtopics(@ApiParam(name = "topic-subtopics", value = "A list of topic subtopic connections") @RequestBody  AddSubtopicToTopicCommand[] commands) throws Exception {
+    public void putTopicSubtopics(@ApiParam(name = "topic-subtopics", value = "A list of topic subtopic connections") @RequestBody AddSubtopicToTopicCommand[] commands) throws Exception {
         topicSubtopicRepository.deleteAll();
         for (AddSubtopicToTopicCommand command : commands) {
             post(command);

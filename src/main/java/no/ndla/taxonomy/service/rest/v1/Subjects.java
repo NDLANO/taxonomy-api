@@ -23,9 +23,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import static no.ndla.taxonomy.service.jdbc.QueryUtils.getQuery;
-import static no.ndla.taxonomy.service.jdbc.QueryUtils.setQueryParameters;
-import static no.ndla.taxonomy.service.jdbc.QueryUtils.toURI;
+import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
 
 @RestController
 @RequestMapping(path = {"subjects", "/v1/subjects"})

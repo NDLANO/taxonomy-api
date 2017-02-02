@@ -1,7 +1,6 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -90,7 +89,7 @@ public class SubjectTopics {
 
     @PutMapping
     @ApiOperation(value = "Replaces a collection of subject-topics")
-    public void putSubjectTopics(@ApiParam(name = "subject-topics", value = "A list of subject topic connections") @RequestBody  AddTopicToSubjectCommand[] commands) throws Exception {
+    public void putSubjectTopics(@ApiParam(name = "subject-topics", value = "A list of subject topic connections") @RequestBody AddTopicToSubjectCommand[] commands) throws Exception {
         subjectTopicRepository.deleteAll();
         for (AddTopicToSubjectCommand command : commands) {
             post(command);
