@@ -14,6 +14,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class ResourcesTest extends RestTest {
 
     @Test
+    public void can_get_single_resource() throws Exception {
+        URI trigonometry = builder.resource(s -> s
+                .name("introduction to trigonometry")
+                .contentUri("urn:article:1")
+        ).getPublicId();
+
+        MockHttpServletResponse response = getResource("/v1/resources/" + trigonometry);
+        Resources.ResourceIndexDocument resource = getObject(Resources.ResourceIndexDocument.class, response);
+
+        assertEquals("introduction to trigonometry", resource.name);
+        assertEquals("urn:article:1", resource.contentUri.toString());
+    }
+
+    @Test
     public void can_get_all_resources() throws Exception {
         newResource().name("The inner planets");
         newResource().name("Gas giants");
@@ -31,25 +45,30 @@ public class ResourcesTest extends RestTest {
     public void can_create_resource() throws Exception {
         Resources.CreateResourceCommand createResourceCommand = new Resources.CreateResourceCommand() {{
             name = "testresource";
+            contentUri = URI.create("urn:article:1");
         }};
 
         URI id = getId(createResource("/v1/resources", createResourceCommand));
 
         Resource resource = resourceRepository.getByPublicId(id);
         assertEquals(createResourceCommand.name, resource.getName());
+        assertEquals(createResourceCommand.contentUri, resource.getContentUri());
     }
 
     @Test
     public void can_update_resource() throws Exception {
         URI id = newResource().getPublicId();
 
-        Resources.UpdateResourceCommand command = new Resources.UpdateResourceCommand();
-        command.name = "The inner planets";
+        Resources.UpdateResourceCommand command = new Resources.UpdateResourceCommand() {{
+            name = "The inner planets";
+            contentUri = URI.create("urn:article:1");
+        }};
 
         updateResource("/v1/resources/" + id, command);
 
         Resource resource = resourceRepository.getByPublicId(id);
         assertEquals(command.name, resource.getName());
+        assertEquals(command.contentUri, resource.getContentUri());
     }
 
     @Test

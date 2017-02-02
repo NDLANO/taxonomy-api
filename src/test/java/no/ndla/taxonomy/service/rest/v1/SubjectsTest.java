@@ -14,6 +14,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class SubjectsTest extends RestTest {
 
     @Test
+    public void can_get_single_subject() throws Exception {
+        URI english = builder.subject(s -> s
+                .name("english")
+                .contentUri("urn:article:1")
+        ).getPublicId();
+
+        MockHttpServletResponse response = getResource("/v1/subjects/" + english);
+        Subjects.SubjectIndexDocument subject = getObject(Subjects.SubjectIndexDocument.class, response);
+
+        assertEquals("english", subject.name);
+        assertEquals("urn:article:1", subject.contentUri.toString());
+    }
+
+    @Test
     public void can_get_all_subjects() throws Exception {
         builder.subject(s -> s.name("english"));
         builder.subject(s -> s.name("mathematics"));
@@ -29,28 +43,34 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_create_subject() throws Exception {
-        Subjects.CreateSubjectCommand createSubjectCommand = new Subjects.CreateSubjectCommand();
-        createSubjectCommand.name = "testsubject";
+        Subjects.CreateSubjectCommand createSubjectCommand = new Subjects.CreateSubjectCommand() {{
+            name = "testsubject";
+            contentUri = URI.create("urn:article:1");
+        }};
+
 
         MockHttpServletResponse response = createResource("/v1/subjects", createSubjectCommand);
         URI id = getId(response);
 
         Subject subject = subjectRepository.getByPublicId(id);
         assertEquals(createSubjectCommand.name, subject.getName());
+        assertEquals(createSubjectCommand.contentUri, subject.getContentUri());
     }
-
 
     @Test
     public void can_update_subject() throws Exception {
         URI id = builder.subject().getPublicId();
 
-        Subjects.UpdateSubjectCommand command = new Subjects.UpdateSubjectCommand();
-        command.name = "physics";
+        Subjects.UpdateSubjectCommand command = new Subjects.UpdateSubjectCommand() {{
+            name = "physics";
+            contentUri = URI.create("urn:article:1");
+        }};
 
         updateResource("/v1/subjects/" + id, command);
 
         Subject subject = subjectRepository.getByPublicId(id);
         assertEquals(command.name, subject.getName());
+        assertEquals(command.contentUri, subject.getContentUri());
     }
 
     @Test
@@ -87,18 +107,18 @@ public class SubjectsTest extends RestTest {
     public void can_get_topics() throws Exception {
         Subject subject = builder.subject(s -> s
                 .name("physics")
-                .topic(t -> t.name("statics"))
-                .topic(t -> t.name("electricity"))
-                .topic(t -> t.name("optics"))
+                .topic(t -> t.name("statics").contentUri("urn:article:1"))
+                .topic(t -> t.name("electricity").contentUri("urn:article:2"))
+                .topic(t -> t.name("optics").contentUri("urn:article:3"))
         );
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
         Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
 
         assertEquals(3, topics.length);
-        assertAnyTrue(topics, t -> "statics".equals(t.name));
-        assertAnyTrue(topics, t -> "electricity".equals(t.name));
-        assertAnyTrue(topics, t -> "optics".equals(t.name));
+        assertAnyTrue(topics, t -> "statics".equals(t.name) && "urn:article:1".equals(t.contentUri.toString()));
+        assertAnyTrue(topics, t -> "electricity".equals(t.name) && "urn:article:2".equals(t.contentUri.toString()));
+        assertAnyTrue(topics, t -> "optics".equals(t.name) && "urn:article:3".equals(t.contentUri.toString()));
         assertAllTrue(topics, t -> isValidId(t.id));
     }
 
@@ -122,6 +142,21 @@ public class SubjectsTest extends RestTest {
         assertEquals("parent topic", topics[0].name);
         assertEquals("child topic", topics[0].subtopics[0].name);
         assertEquals("grandchild topic", topics[0].subtopics[0].subtopics[0].name);
+    }
+
+    @Test
+    public void resources_can_have_content_uri() throws Exception {
+        URI id = builder.subject(s -> s
+                .topic(t -> t
+                        .resource(r -> r.contentUri("urn:article:1"))
+                )
+        ).getPublicId();
+        flush();
+
+        MockHttpServletResponse response = getResource("/v1/subjects/" + id + "/resources");
+        Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
+
+        assertEquals("urn:article:1", resources[0].contentUri.toString());
     }
 
     @Test

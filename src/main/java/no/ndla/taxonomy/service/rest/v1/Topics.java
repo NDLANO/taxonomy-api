@@ -61,6 +61,7 @@ public class Topics {
             Topic topic = new Topic();
             if (null != command.id) topic.setPublicId(command.id);
             topic.name(command.name);
+            topic.setContentUri(command.contentUri);
             URI location = URI.create("/topics/" + topic.getPublicId());
             topicRepository.save(topic);
             return ResponseEntity.created(location).build();
@@ -85,6 +86,7 @@ public class Topics {
             @ApiParam(name = "topic", value = "The updated topic") @RequestBody UpdateTopicCommand command) throws Exception {
         Topic topic = topicRepository.getByPublicId(id);
         topic.setName(command.name);
+        topic.setContentUri(command.contentUri);
     }
 
     @PutMapping
@@ -137,6 +139,7 @@ public class Topics {
                     current = new ResourceIndexDocument() {{
                         topicId = toURI(resultSet.getString("topic_id"));
                         name = resultSet.getString("resource_name");
+                        contentUri = toURI(resultSet.getString("resource_content_uri"));
                         id = toURI(resultSet.getString("resource_id"));
                     }};
                     result.add(current);
@@ -174,6 +177,12 @@ public class Topics {
         @JsonProperty
         @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resource-type:1', name = 'lecture'}]")
         public List<ResourceTypeIndexDocument> resourceTypes = new ArrayList<>();
+
+        @JsonProperty
+        @ApiModelProperty(notes = "The ID of this resource in the system where the content is stored. " +
+                "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
+                "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
+        public URI contentUri;
     }
 
     public static class ResourceTypeIndexDocument {
@@ -192,11 +201,19 @@ public class Topics {
         public URI id;
 
         @JsonProperty
+        @ApiModelProperty(notes = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+        public URI contentUri;
+
+        @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the topic", example = "Trigonometry")
         public String name;
     }
 
     public static class UpdateTopicCommand {
+        @JsonProperty
+        @ApiModelProperty(notes = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+        public URI contentUri;
+
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the topic", example = "Trigonometry")
         public String name;
@@ -211,12 +228,17 @@ public class Topics {
         @ApiModelProperty(value = "The name of the topic", example = "Trigonometry")
         public String name;
 
+        @JsonProperty
+        @ApiModelProperty(notes = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+        public URI contentUri;
+
         TopicIndexDocument() {
         }
 
         TopicIndexDocument(Topic topic) {
             id = topic.getPublicId();
             name = topic.getName();
+            contentUri = topic.getContentUri();
         }
     }
 }

@@ -75,6 +75,7 @@ public class Subjects {
     ) throws Exception {
         Subject subject = subjectRepository.getByPublicId(id);
         subject.setName(command.name);
+        subject.setContentUri(command.contentUri);
     }
 
     @PutMapping
@@ -107,6 +108,7 @@ public class Subjects {
             Subject subject = new Subject();
             if (null != command.id) subject.setPublicId(command.id);
             subject.setName(command.name);
+            subject.setContentUri(command.contentUri);
             URI location = URI.create("/subjects/" + subject.getPublicId());
             subjectRepository.save(subject);
             return ResponseEntity.created(location).build();
@@ -152,6 +154,7 @@ public class Subjects {
                 } else {
                     current = new ResourceIndexDocument() {{
                         topicId = toURI(resultSet.getString("topic_public_id"));
+                        contentUri = toURI(resultSet.getString("resource_content_uri"));
                         name = resultSet.getString("resource_name");
                         id = toURI(resultSet.getString("resource_public_id"));
                     }};
@@ -180,11 +183,19 @@ public class Subjects {
         public URI id;
 
         @JsonProperty
+        @ApiModelProperty(notes = "ID of article introducing this subject. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+        public URI contentUri;
+
+        @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the subject", example = "Mathematics")
         public String name;
     }
 
     public static class UpdateSubjectCommand {
+        @JsonProperty
+        @ApiModelProperty(notes = "ID of article introducing this subject. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+        public URI contentUri;
+
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the subject", example = "Mathematics")
         public String name;
@@ -196,6 +207,10 @@ public class Subjects {
         public URI id;
 
         @JsonProperty
+        @ApiModelProperty(notes = "ID of article introducing this subject. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+        public URI contentUri;
+
+        @JsonProperty
         @ApiModelProperty(value = "The name of the subject", example = "Mathematics")
         public String name;
 
@@ -205,10 +220,10 @@ public class Subjects {
         SubjectIndexDocument(Subject subject) {
             id = subject.getPublicId();
             name = subject.getName();
+            contentUri = subject.getContentUri();
         }
     }
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class TopicIndexDocument {
         @JsonProperty
         public URI id;
@@ -217,8 +232,13 @@ public class Subjects {
         public String name;
 
         @JsonProperty
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         @ApiModelProperty("Children of this topic")
         public TopicIndexDocument[] subtopics;
+
+        @JsonProperty
+        @ApiModelProperty(notes = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+        public URI contentUri;
 
         TopicIndexDocument() {
         }
@@ -226,6 +246,7 @@ public class Subjects {
         TopicIndexDocument(Topic topic, boolean recursive) {
             id = topic.getPublicId();
             name = topic.getName();
+            contentUri = topic.getContentUri();
             if (recursive) addSubtopics(topic);
         }
 
@@ -253,6 +274,12 @@ public class Subjects {
         @JsonProperty
         @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resource-type:1', name = 'lecture'}]")
         public List<ResourceTypeIndexDocument> resourceTypes = new ArrayList<>();
+
+        @JsonProperty
+        @ApiModelProperty(notes = "The ID of this resource in the system where the content is stored. " +
+                "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
+                "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
+        public URI contentUri;
 
         ResourceIndexDocument() {
         }

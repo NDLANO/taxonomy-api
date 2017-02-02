@@ -1,6 +1,9 @@
 package no.ndla.taxonomy.service.domain;
 
 
+import org.hibernate.annotations.Type;
+
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import java.net.URI;
@@ -11,6 +14,10 @@ import java.util.UUID;
 
 @Entity
 public class Resource extends DomainObject {
+
+    @Column
+    @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
+    private URI contentUri;
 
     public Resource() {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
@@ -51,5 +58,13 @@ public class Resource extends DomainObject {
         ResourceResourceType resourceResourceType = new ResourceResourceType(this, resourceType);
         resourceResourceTypes.add(resourceResourceType);
         return resourceResourceType;
+    }
+
+    public URI getContentUri() {
+        return contentUri;
+    }
+
+    public void setContentUri(URI contentUri) {
+        this.contentUri = contentUri;
     }
 }

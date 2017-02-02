@@ -59,6 +59,7 @@ public class Resources {
     public void put(@PathVariable("id") URI id, @ApiParam(name = "resource", value = "the updated resource") @RequestBody UpdateResourceCommand command) throws Exception {
         Resource resource = resourceRepository.getByPublicId(id);
         resource.setName(command.name);
+        resource.setContentUri(command.contentUri);
     }
 
     @PostMapping
@@ -69,6 +70,7 @@ public class Resources {
             Resource resource = new Resource();
             if (null != command.id) resource.setPublicId(command.id);
             resource.name(command.name);
+            resource.setContentUri(command.contentUri);
             resourceRepository.save(resource);
             URI location = URI.create("/resources/" + resource.getPublicId());
             return ResponseEntity.created(location).build();
@@ -83,11 +85,23 @@ public class Resources {
         public URI id;
 
         @JsonProperty
+        @ApiModelProperty(notes = "The ID of this resource in the system where the content is stored. " +
+                "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
+                "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
+        public URI contentUri;
+
+        @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the resource", example = "Introduction to integration")
         public String name;
     }
 
     static class UpdateResourceCommand {
+        @JsonProperty
+        @ApiModelProperty(notes = "The ID of this resource in the system where the content is stored. " +
+                "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
+                "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
+        public URI contentUri;
+
         @JsonProperty
         @ApiModelProperty(value = "The name of the resource", example = "Introduction to integration")
         public String name;
@@ -102,12 +116,19 @@ public class Resources {
         @ApiModelProperty(value = "The name of the resource", example = "Introduction to integration")
         public String name;
 
+        @JsonProperty
+        @ApiModelProperty(notes = "The ID of this resource in the system where the content is stored. " +
+                "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
+                "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
+        public URI contentUri;
+
         ResourceIndexDocument() {
         }
 
         ResourceIndexDocument(Resource resource) {
             id = resource.getPublicId();
             name = resource.getName();
+            contentUri = resource.getContentUri();
         }
     }
 }

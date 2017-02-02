@@ -29,6 +29,7 @@ WITH RECURSIVE tree (topic_id, public_id, name, parent_id, is_primary, level) AS
 SELECT
   r.public_id          resource_id,
   r.name               resource_name,
+  r.content_uri        resource_content_uri,
   t.public_id          topic_id,
   rrt.resource_type_id resource_type_id,
   rt.name              resource_type_name

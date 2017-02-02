@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.domain;
 
 import javax.persistence.EntityManager;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -135,6 +136,15 @@ public class Builder {
             entityManager.persist(subjectTopic);
             return this;
         }
+
+        public SubjectBuilder contentUri(String contentUri) {
+            return contentUri(URI.create(contentUri));
+        }
+
+        public SubjectBuilder contentUri(URI contentUri) {
+            subject.setContentUri(contentUri);
+            return this;
+        }
     }
 
     public class TopicBuilder {
@@ -196,6 +206,15 @@ public class Builder {
             entityManager.persist(topic.addResource(resource));
             return this;
         }
+
+        public TopicBuilder contentUri(String contentUri) {
+            return contentUri(URI.create(contentUri));
+        }
+
+        public TopicBuilder contentUri(URI contentUri) {
+            topic.setContentUri(contentUri);
+            return this;
+        }
     }
 
     public class ResourceBuilder {
@@ -228,6 +247,15 @@ public class Builder {
 
         public ResourceBuilder resourceType(String resourceTypeKey) {
             return resourceType(resourceTypeKey, null);
+        }
+
+        public ResourceBuilder contentUri(String contentUri) {
+            return contentUri(URI.create(contentUri));
+        }
+
+        public ResourceBuilder contentUri(URI contentUri) {
+            resource.setContentUri(contentUri);
+            return this;
         }
     }
 

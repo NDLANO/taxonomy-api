@@ -1,6 +1,9 @@
 package no.ndla.taxonomy.service.domain;
 
 
+import org.hibernate.annotations.Type;
+
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import java.net.URI;
@@ -12,8 +15,6 @@ import java.util.UUID;
 @Entity
 public class Topic extends DomainObject {
 
-    public static final String LABEL = "topic";
-
     @OneToMany(mappedBy = "topic")
     Set<SubjectTopic> subjectTopics = new HashSet<>();
 
@@ -22,6 +23,10 @@ public class Topic extends DomainObject {
 
     @OneToMany(mappedBy = "topic")
     private Set<TopicResource> topicResources = new HashSet<>();
+
+    @Column
+    @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
+    private URI contentUri;
 
     public Topic() {
         setPublicId(URI.create("urn:topic:" + UUID.randomUUID()));
@@ -91,4 +96,11 @@ public class Topic extends DomainObject {
         };
     }
 
+    public void setContentUri(URI contentUri) {
+        this.contentUri = contentUri;
+    }
+
+    public URI getContentUri() {
+        return contentUri;
+    }
 }
