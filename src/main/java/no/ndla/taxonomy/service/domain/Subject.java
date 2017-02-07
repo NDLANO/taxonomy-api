@@ -18,6 +18,12 @@ public class Subject extends DomainObject {
     @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
     private URI contentUri;
 
+    @OneToMany(mappedBy = "subject")
+    Set<SubjectTopic> subjectTopics = new HashSet<>();
+
+    @OneToMany(mappedBy = "subject")
+    Set<SubjectTranslation> subjectTranslations = new HashSet<>();
+
     public Subject() {
         setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
     }
@@ -36,9 +42,6 @@ public class Subject extends DomainObject {
         return subjectTopic;
     }
 
-    @OneToMany(mappedBy = "subject")
-    Set<SubjectTopic> subjectTopics = new HashSet<>();
-
     public Iterator<Topic> getTopics() {
         Iterator<SubjectTopic> iterator = subjectTopics.iterator();
 
@@ -55,6 +58,26 @@ public class Subject extends DomainObject {
         };
     }
 
+    public SubjectTranslation addTranslation(String languageCode) {
+        SubjectTranslation subjectTranslation = getTranslation(languageCode);
+        if (subjectTranslation != null) return subjectTranslation;
+
+        subjectTranslation = new SubjectTranslation(this, languageCode);
+        subjectTranslations.add(subjectTranslation);
+        return subjectTranslation;
+    }
+
+    public SubjectTranslation getTranslation(String languageCode) {
+        return subjectTranslations.stream()
+                .filter(subjectTranslation -> subjectTranslation.getLanguageCode().equals(languageCode))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public Iterator<SubjectTranslation> getTranslations() {
+        return subjectTranslations.iterator();
+    }
+
     public Subject name(String name) {
         setName(name);
         return this;
@@ -66,5 +89,11 @@ public class Subject extends DomainObject {
 
     public void setContentUri(URI contentUri) {
         this.contentUri = contentUri;
+    }
+
+    public void removeTranslation(String languageCode) {
+        SubjectTranslation translation = getTranslation(languageCode);
+        if (translation == null) return;
+        subjectTranslations.remove(translation);
     }
 }

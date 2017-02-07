@@ -145,6 +145,27 @@ public class Builder {
             subject.setContentUri(contentUri);
             return this;
         }
+
+        public SubjectBuilder translation(String languageCode, Consumer<SubjectTranslationBuilder> consumer) {
+            SubjectTranslation subjectTranslation = subject.addTranslation(languageCode);
+            entityManager.persist(subjectTranslation);
+            SubjectTranslationBuilder builder = new SubjectTranslationBuilder(subjectTranslation);
+            consumer.accept(builder);
+            return this;
+        }
+    }
+
+    public class SubjectTranslationBuilder {
+        private SubjectTranslation subjectTranslation;
+
+        public SubjectTranslationBuilder(SubjectTranslation subjectTranslation) {
+            this.subjectTranslation = subjectTranslation;
+        }
+
+        public SubjectTranslationBuilder name(String name) {
+            subjectTranslation.setName(name);
+            return this;
+        }
     }
 
     public class TopicBuilder {

@@ -23,7 +23,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
+import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
 @RequestMapping(path = {"subjects", "/v1/subjects"})
@@ -51,11 +53,28 @@ public class Subjects {
     }
 
     @GetMapping("/{id}")
-    @ApiOperation("Gets a single subject")
-    public SubjectIndexDocument get(@PathVariable("id") URI id) throws Exception {
-        Subject subject = subjectRepository.getByPublicId(id);
-        SubjectIndexDocument result = new SubjectIndexDocument(subject);
-        return result;
+    @ApiOperation(value = "Gets a single subject", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
+    public SubjectIndexDocument get(
+            @PathVariable("id") URI id,
+            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "") String language
+    ) throws Exception {
+        String sql = getQuery("get_subjects_by_public_id");
+        sql = sql.replace("1 = 1", "s.public_id = ?");
+        List<Object> args = asList(language, id.toString());
+
+        return jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
+                    List<SubjectIndexDocument> result = new ArrayList<>();
+                    while (resultSet.next()) {
+                        result.add(new SubjectIndexDocument() {{
+                            name = resultSet.getString("subject_name");
+                            id = getURI(resultSet, "subject_public_id");
+                            contentUri = getURI(resultSet, "subject_content_uri");
+                        }});
+                    }
+                    return getFirst(result, "Subject", id);
+                }
+        );
     }
 
     @DeleteMapping("/{id}")
@@ -299,4 +318,6 @@ public class Subjects {
         @ApiModelProperty(value = "Resource type name", example = "Assignment")
         public String name;
     }
+
+
 }
