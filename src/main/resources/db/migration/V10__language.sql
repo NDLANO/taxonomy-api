@@ -1,7 +1,7 @@
 CREATE TABLE subject_translation (
   id            SERIAL PRIMARY KEY,
-  subject_id    VARCHAR(255) NOT NULL REFERENCES subject (id),
-  language_code VARCHAR(3)   NOT NULL,
+  subject_id    INT        NOT NULL REFERENCES subject (id),
+  language_code VARCHAR(3) NOT NULL,
   name          VARCHAR(255)
 );
 
@@ -10,8 +10,8 @@ CREATE UNIQUE INDEX subject_language_unique
 
 CREATE TABLE topic_translation (
   id            SERIAL PRIMARY KEY,
-  topic_id      VARCHAR(255) NOT NULL REFERENCES topic (id),
-  language_code VARCHAR(3)   NOT NULL,
+  topic_id      INT        NOT NULL REFERENCES topic (id),
+  language_code VARCHAR(3) NOT NULL,
   name          VARCHAR(255)
 );
 
@@ -20,8 +20,8 @@ CREATE UNIQUE INDEX topic_language_unique
 
 CREATE TABLE resource_translation (
   id            SERIAL PRIMARY KEY,
-  resource_id   VARCHAR(255) NOT NULL REFERENCES resource (id),
-  language_code VARCHAR(3)   NOT NULL,
+  resource_id   INT        NOT NULL REFERENCES resource (id),
+  language_code VARCHAR(3) NOT NULL,
   name          VARCHAR(255)
 );
 
@@ -30,8 +30,8 @@ CREATE UNIQUE INDEX resource_language_unique
 
 CREATE TABLE resource_type_translation (
   id               SERIAL PRIMARY KEY,
-  resource_type_id VARCHAR(255) NOT NULL REFERENCES resource_type (id),
-  language_code    VARCHAR(3)   NOT NULL,
+  resource_type_id INT        NOT NULL REFERENCES resource_type (id),
+  language_code    VARCHAR(3) NOT NULL,
   name             VARCHAR(255)
 );
 
