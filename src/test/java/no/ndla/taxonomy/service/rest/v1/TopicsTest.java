@@ -126,8 +126,6 @@ public class TopicsTest extends RestTest {
                 )
         ).getPublicId();
 
-        flush();
-
         MockHttpServletResponse response = getResource("/v1/topics/" + a + "/resources?recursive=true");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
 
@@ -146,8 +144,6 @@ public class TopicsTest extends RestTest {
                 .resource(r -> r.name("resource 1"))
                 .resource(r -> r.name("resource 2"))
         ).getPublicId();
-
-        flush();
 
         MockHttpServletResponse response = getResource("/v1/topics/" + a + "/resources");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
@@ -169,8 +165,6 @@ public class TopicsTest extends RestTest {
                 .resource(r -> r.name("a lecture").resourceType("lecture"))
         );
 
-        flush();
-
         MockHttpServletResponse response = getResource("/v1/topics/" + a.getPublicId() + "/resources?type=" + assignment + "," + lecture);
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
 
@@ -189,7 +183,6 @@ public class TopicsTest extends RestTest {
                         .resourceType(rt -> rt.name("assignment"))
                 )
         ).getPublicId();
-        flush();
 
         MockHttpServletResponse response = getResource("/v1/topics/" + topic + "/resources");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
@@ -215,7 +208,6 @@ public class TopicsTest extends RestTest {
                         .resourceType(rt -> rt.name("assignment"))
                 )
         ).getPublicId();
-        flush();
 
         MockHttpServletResponse response = getResource("/v1/topics/" + topic + "/resources?recursive=true");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
@@ -235,7 +227,6 @@ public class TopicsTest extends RestTest {
                         )
                 )
         ).getPublicId();
-        flush();
 
         MockHttpServletResponse response = getResource("/v1/topics/" + topic + "/resources?recursive=true");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);

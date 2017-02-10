@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.context.WebApplicationContext;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
@@ -29,14 +30,16 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 public class TestUtils {
 
     private static HttpMessageConverter mappingJackson2HttpMessageConverter;
+    private static EntityManager entityManager;
     private static MockMvc mockMvc;
 
     @Autowired
-    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext) {
+    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext, EntityManager entityManager) {
         mappingJackson2HttpMessageConverter = Arrays.stream(converters)
                 .filter(hmc -> hmc instanceof MappingJackson2HttpMessageConverter)
                 .findAny()
                 .orElse(null);
+        this.entityManager = entityManager;
 
         assertNotNull("the JSON message converter must not be null", TestUtils.mappingJackson2HttpMessageConverter);
 
@@ -54,6 +57,7 @@ public class TestUtils {
     }
 
     public static MockHttpServletResponse createResource(String path, Object command, ResultMatcher resultMatcher) throws Exception {
+        entityManager.flush();
         return mockMvc.perform(
                 post(path)
                         .contentType(APPLICATION_JSON_UTF8)
@@ -64,6 +68,7 @@ public class TestUtils {
     }
 
     public static MockHttpServletResponse getResource(String path, ResultMatcher resultMatcher) throws Exception {
+        entityManager.flush();
         return mockMvc.perform(
                 get(path)
                         .accept(APPLICATION_JSON_UTF8))
@@ -77,6 +82,7 @@ public class TestUtils {
     }
 
     public static MockHttpServletResponse deleteResource(String path) throws Exception {
+        entityManager.flush();
         return mockMvc.perform(
                 delete(path))
                 .andExpect(status().isNoContent())
@@ -89,6 +95,7 @@ public class TestUtils {
     }
 
     public static MockHttpServletResponse updateResource(String path, Object command, ResultMatcher resultMatcher) throws Exception {
+        entityManager.flush();
         return mockMvc.perform(
                 put(path)
                         .contentType(APPLICATION_JSON_UTF8)

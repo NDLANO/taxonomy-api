@@ -21,7 +21,6 @@ public class SubjectTranslationsTest extends RestTest {
                 )
         ).getPublicId();
 
-        flush();
         Subjects.SubjectIndexDocument subject = getSubject(id, "nb");
         assertEquals("Matematikk", subject.name);
     }
@@ -31,7 +30,6 @@ public class SubjectTranslationsTest extends RestTest {
         URI id = builder.subject(s -> s
                 .name("Mathematics")
         ).getPublicId();
-        flush();
         Subjects.SubjectIndexDocument subject = getSubject(id, "XX");
         assertEquals("Mathematics", subject.name);
     }
@@ -44,7 +42,6 @@ public class SubjectTranslationsTest extends RestTest {
                         .name("Matematikk")
                 )
         ).getPublicId();
-        flush();
 
         Subjects.SubjectIndexDocument subject = getSubject(id, null);
         assertEquals("Mathematics", subject.name);
@@ -71,7 +68,6 @@ public class SubjectTranslationsTest extends RestTest {
                 )
         );
         URI id = subject.getPublicId();
-        flush();
 
         deleteResource("/v1/subjects/" + id + "/translations/nb");
 
@@ -87,7 +83,6 @@ public class SubjectTranslationsTest extends RestTest {
                 .translation("de", l -> l.name("Mathematik"))
         );
         URI id = subject.getPublicId();
-        flush();
 
         SubjectTranslations.SubjectTranslationIndexDocument[] translations = getObject(SubjectTranslations.SubjectTranslationIndexDocument[].class, getResource("/v1/subjects/" + id + "/translations"));
 

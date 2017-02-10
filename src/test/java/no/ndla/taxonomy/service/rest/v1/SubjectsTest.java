@@ -48,7 +48,6 @@ public class SubjectsTest extends RestTest {
             contentUri = URI.create("urn:article:1");
         }};
 
-
         MockHttpServletResponse response = createResource("/v1/subjects", createSubjectCommand);
         URI id = getId(response);
 
@@ -151,7 +150,6 @@ public class SubjectsTest extends RestTest {
                         .resource(r -> r.contentUri("urn:article:1"))
                 )
         ).getPublicId();
-        flush();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + id + "/resources");
         Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
@@ -171,7 +169,6 @@ public class SubjectsTest extends RestTest {
                         .resource(r -> r.name("resource b").resourceType(rt -> rt.name("lecture")))
                         .subtopic(st -> st.name("subtopic").resource(r -> r.name("sub resource"))))
         ).getPublicId();
-        flush();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + id + "/resources");
         Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
@@ -199,7 +196,6 @@ public class SubjectsTest extends RestTest {
                         )
                 )
         ).getPublicId();
-        flush();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
@@ -222,7 +218,6 @@ public class SubjectsTest extends RestTest {
                         )
                 )
         ).getPublicId();
-        flush();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
@@ -245,8 +240,6 @@ public class SubjectsTest extends RestTest {
                         .resource(r -> r.name("a lecture").resourceType("lecture"))
                 )
         ).getPublicId();
-
-        flush();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources?type=" + lecture);
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);

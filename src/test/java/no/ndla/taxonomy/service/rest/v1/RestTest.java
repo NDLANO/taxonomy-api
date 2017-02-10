@@ -56,10 +56,6 @@ public abstract class RestTest extends AbstractTransactionalJUnit4SpringContextT
         return entity;
     }
 
-    void flush() {
-        entityManager.flush();
-    }
-
     Subject newSubject() {
         return save(new Subject());
     }
