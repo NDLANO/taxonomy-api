@@ -78,6 +78,12 @@ public class Subject extends DomainObject {
         return subjectTranslations.iterator();
     }
 
+    public void removeTranslation(String languageCode) {
+        SubjectTranslation translation = getTranslation(languageCode);
+        if (translation == null) return;
+        subjectTranslations.remove(translation);
+    }
+
     public Subject name(String name) {
         setName(name);
         return this;
@@ -89,11 +95,5 @@ public class Subject extends DomainObject {
 
     public void setContentUri(URI contentUri) {
         this.contentUri = contentUri;
-    }
-
-    public void removeTranslation(String languageCode) {
-        SubjectTranslation translation = getTranslation(languageCode);
-        if (translation == null) return;
-        subjectTranslations.remove(translation);
     }
 }

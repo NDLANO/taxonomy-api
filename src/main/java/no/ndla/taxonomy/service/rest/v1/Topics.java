@@ -40,6 +40,9 @@ public class Topics {
     @GetMapping
     @ApiOperation("Gets all topics")
     public List<TopicIndexDocument> index() throws Exception {
+
+        // TODO: Language
+
         List<TopicIndexDocument> result = new ArrayList<>();
         Iterable<Topic> all = topicRepository.findAll();
         all.forEach(topic -> result.add(new TopicIndexDocument(topic)));
@@ -49,6 +52,9 @@ public class Topics {
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
     public TopicIndexDocument get(@PathVariable("id") URI id) throws Exception {
+
+        // TODO: Language
+
         Topic topic = topicRepository.getByPublicId(id);
         TopicIndexDocument result = new TopicIndexDocument(topic);
         return result;
@@ -110,6 +116,9 @@ public class Topics {
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
                     URI[] resourceTypeIds
     ) throws SQLException {
+
+        // TODO: Language
+
         String query = recursive ? resourceQueryRecursive : resourceQuery;
 
         List<Object> args = new ArrayList<>();

@@ -122,6 +122,24 @@ public class SubjectsTest extends RestTest {
     }
 
     @Test
+    public void can_get_topics_with_language() throws Exception {
+        Subject subject = builder.subject(s -> s
+                .name("physics")
+                .topic(t -> t.name("statics").translation("nb", tr -> tr.name("statikk")))
+                .topic(t -> t.name("electricity").translation("nb", tr -> tr.name("elektrisitet")))
+                .topic(t -> t.name("optics").translation("nb", tr -> tr.name("optikk")))
+        );
+
+        MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics?language=nb");
+        Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
+
+        assertEquals(3, topics.length);
+        assertAnyTrue(topics, t -> "statikk".equals(t.name));
+        assertAnyTrue(topics, t -> "elektrisitet".equals(t.name));
+        assertAnyTrue(topics, t -> "optikk".equals(t.name));
+    }
+
+    @Test
     public void can_get_topics_recursively() throws Exception {
         URI subjectid = builder.subject(s -> s
                 .name("subject")
@@ -139,8 +157,8 @@ public class SubjectsTest extends RestTest {
 
         assertEquals(1, topics.length);
         assertEquals("parent topic", topics[0].name);
-        assertEquals("child topic", topics[0].subtopics[0].name);
-        assertEquals("grandchild topic", topics[0].subtopics[0].subtopics[0].name);
+        assertEquals("child topic", topics[0].subtopics.get(0).name);
+        assertEquals("grandchild topic", topics[0].subtopics.get(0).subtopics.get(0).name);
     }
 
     @Test

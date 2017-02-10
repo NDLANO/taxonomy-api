@@ -5,6 +5,6 @@ package no.ndla.taxonomy.service.rest.v1;
  */
 public class DocStrings {
 
-    public  final static String LANGUAGE_DOC = "ISO-639-1 language code";
+    public final static String LANGUAGE_DOC = "ISO-639-1 language code";
 
 }

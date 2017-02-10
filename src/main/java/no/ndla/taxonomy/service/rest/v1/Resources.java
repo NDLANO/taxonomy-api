@@ -31,6 +31,9 @@ public class Resources {
     @GetMapping
     @ApiOperation(value = "Lists all resources")
     public List<ResourceIndexDocument> index() throws Exception {
+
+        // TODO: Language
+
         List<ResourceIndexDocument> result = new ArrayList<>();
         resourceRepository.findAll().forEach(record -> result.add(new ResourceIndexDocument(record)));
         return result;
@@ -39,6 +42,9 @@ public class Resources {
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single resource")
     public ResourceIndexDocument get(@PathVariable("id") URI id) throws Exception {
+
+        // TODO: Language
+
         Resource resource = resourceRepository.getByPublicId(id);
         ResourceIndexDocument result = new ResourceIndexDocument(resource);
         return result;

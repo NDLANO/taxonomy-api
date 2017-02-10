@@ -6,9 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
-import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,8 +18,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
@@ -31,10 +30,12 @@ import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 @RequestMapping(path = {"subjects", "/v1/subjects"})
 @Transactional
 public class Subjects {
+    private static final String GET_SUBJECTS_QUERY = getQuery("get_subjects");
+    private static final String GET_RESOURCES_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_subject_public_id_recursively");
+    private static final String GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_topics_by_subject_public_id_recursively");
+
     private SubjectRepository subjectRepository;
     private TopicRepository topicRepository;
-
-    private static final String queryBase = getQuery("get_resources_by_subject_public_id_recursively");
     private JdbcTemplate jdbcTemplate;
 
     public Subjects(SubjectRepository subjectRepository, TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
@@ -45,11 +46,12 @@ public class Subjects {
 
     @GetMapping
     @ApiOperation("Gets all subjects")
-    public List<SubjectIndexDocument> index() throws Exception {
-        List<SubjectIndexDocument> result = new ArrayList<>();
-        Iterable<Subject> all = subjectRepository.findAll();
-        all.forEach(subject -> result.add(new SubjectIndexDocument(subject)));
-        return result;
+    public List<SubjectIndexDocument> index(
+            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "") String language
+    ) throws Exception {
+        List<Object> args = asList(language);
+        return getSubjectIndexDocuments(GET_SUBJECTS_QUERY, args);
     }
 
     @GetMapping("/{id}")
@@ -59,11 +61,15 @@ public class Subjects {
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) throws Exception {
-        String sql = getQuery("get_subjects_by_public_id");
-        sql = sql.replace("1 = 1", "s.public_id = ?");
+        String sql = GET_SUBJECTS_QUERY.replace("1 = 1", "s.public_id = ?");
         List<Object> args = asList(language, id.toString());
 
-        return jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
+        return getFirst(getSubjectIndexDocuments(sql, args), "Subject", id);
+    }
+
+    private List<SubjectIndexDocument> getSubjectIndexDocuments(String sql, List<Object> args) {
+        return jdbcTemplate.query(sql, setQueryParameters(args),
+                resultSet -> {
                     List<SubjectIndexDocument> result = new ArrayList<>();
                     while (resultSet.next()) {
                         result.add(new SubjectIndexDocument() {{
@@ -72,7 +78,7 @@ public class Subjects {
                             contentUri = getURI(resultSet, "subject_content_uri");
                         }});
                     }
-                    return getFirst(result, "Subject", id);
+                    return result;
                 }
         );
     }
@@ -109,15 +115,40 @@ public class Subjects {
     @GetMapping("/{id}/topics")
     @ApiOperation(value = "Gets all topics associated with a subject", notes = "This resource is read-only. To update the relationship between subjects and topics, use the resource /subject-topics.")
     public List<TopicIndexDocument> getTopics(
-            @PathVariable("id") URI id,
+            @PathVariable("id")
+                    URI id,
+            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language,
             @RequestParam(value = "recursive", required = false, defaultValue = "false")
             @ApiParam("If true, subtopics are fetched recursively")
                     boolean recursive
     ) throws Exception {
-        List<TopicIndexDocument> results = new ArrayList<>();
-        List<Topic> topics = topicRepository.getBySubjectTopicsSubjectPublicId(id);
-        topics.iterator().forEachRemaining(t -> results.add(new TopicIndexDocument(t, recursive)));
-        return results;
+        String sql = GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY;
+        if (!recursive) sql = sql.replace("1 = 1", "t.level = 0");
+        List<Object> args = asList(language, id.toString(), language);
+
+        Map<URI, TopicIndexDocument> topics = new HashMap<>();
+
+        return jdbcTemplate.query(sql, setQueryParameters(args),
+                resultSet -> {
+                    List<TopicIndexDocument> result = new ArrayList<>();
+                    while (resultSet.next()) {
+                        URI parent = getURI(resultSet, "parent_public_id");
+
+                        TopicIndexDocument topic = new TopicIndexDocument() {{
+                            name = resultSet.getString("name");
+                            id = getURI(resultSet, "public_id");
+                            contentUri = getURI(resultSet, "content_uri");
+                        }};
+
+                        topics.put(topic.id, topic);
+                        if (parent == null) result.add(topic);
+                        else topics.get(parent).subtopics.add(topic);
+                    }
+                    return result;
+                }
+        );
     }
 
     @PostMapping
@@ -145,6 +176,9 @@ public class Subjects {
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
                     URI[] resourceTypeIds
     ) {
+
+        // TODO: Language
+
         List<Object> args = new ArrayList<>();
         args.add(subjectId.toString());
         String sql;
@@ -155,9 +189,9 @@ public class Subjects {
                 args.add(resourceTypeId.toString());
             }
             where.setLength(where.length() - 4);
-            sql = queryBase.replace("1 = 1", "(" + where + ")");
+            sql = GET_RESOURCES_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY.replace("1 = 1", "(" + where + ")");
         } else {
-            sql = queryBase;
+            sql = GET_RESOURCES_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY;
         }
 
         return jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
@@ -232,15 +266,6 @@ public class Subjects {
         @JsonProperty
         @ApiModelProperty(value = "The name of the subject", example = "Mathematics")
         public String name;
-
-        SubjectIndexDocument() {
-        }
-
-        SubjectIndexDocument(Subject subject) {
-            id = subject.getPublicId();
-            name = subject.getName();
-            contentUri = subject.getContentUri();
-        }
     }
 
     public static class TopicIndexDocument {
@@ -253,30 +278,11 @@ public class Subjects {
         @JsonProperty
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         @ApiModelProperty("Children of this topic")
-        public TopicIndexDocument[] subtopics;
+        public List<TopicIndexDocument> subtopics = new ArrayList<>();
 
         @JsonProperty
         @ApiModelProperty(notes = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
         public URI contentUri;
-
-        TopicIndexDocument() {
-        }
-
-        TopicIndexDocument(Topic topic, boolean recursive) {
-            id = topic.getPublicId();
-            name = topic.getName();
-            contentUri = topic.getContentUri();
-            if (recursive) addSubtopics(topic);
-        }
-
-        private void addSubtopics(Topic topic) {
-            ArrayList<TopicIndexDocument> result = new ArrayList<>();
-            Iterator<Topic> subtopics = topic.getSubtopics();
-            while (subtopics.hasNext()) {
-                result.add(new TopicIndexDocument(subtopics.next(), true));
-            }
-            this.subtopics = result.toArray(new TopicIndexDocument[result.size()]);
-        }
     }
 
     public static class ResourceIndexDocument {
@@ -299,14 +305,6 @@ public class Subjects {
                 "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
                 "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
         public URI contentUri;
-
-        ResourceIndexDocument() {
-        }
-
-        ResourceIndexDocument(Resource resource) {
-            this.id = resource.getPublicId();
-            this.name = resource.getName();
-        }
     }
 
     public static class ResourceTypeIndexDocument {
@@ -318,6 +316,4 @@ public class Subjects {
         @ApiModelProperty(value = "Resource type name", example = "Assignment")
         public String name;
     }
-
-
 }

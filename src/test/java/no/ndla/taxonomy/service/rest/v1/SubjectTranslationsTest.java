@@ -3,6 +3,7 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import no.ndla.taxonomy.service.domain.Subject;
 import org.junit.Test;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
@@ -13,7 +14,20 @@ import static org.junit.Assert.assertNull;
 
 public class SubjectTranslationsTest extends RestTest {
     @Test
-    public void can_get_existing_translation() throws Exception {
+    public void can_get_all_subjects() throws Exception {
+        builder.subject(s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
+        builder.subject(s -> s.name("Chemistry").translation("nb", l -> l.name("Kjemi")));
+
+        MockHttpServletResponse response = getResource("/v1/subjects?language=nb");
+        Subjects.SubjectIndexDocument[] subjects = getObject(Subjects.SubjectIndexDocument[].class, response);
+
+        assertEquals(2, subjects.length);
+        assertAnyTrue(subjects, s -> s.name.equals("Matematikk"));
+        assertAnyTrue(subjects, s -> s.name.equals("Kjemi"));
+    }
+
+    @Test
+    public void can_get_single_subject() throws Exception {
         URI id = builder.subject(s -> s
                 .name("Mathematics")
                 .translation("nb", l -> l
@@ -90,6 +104,20 @@ public class SubjectTranslationsTest extends RestTest {
         assertAnyTrue(translations, t -> t.name.equals("Matematikk") && t.language.equals("nb"));
         assertAnyTrue(translations, t -> t.name.equals("Mathematics") && t.language.equals("en"));
         assertAnyTrue(translations, t -> t.name.equals("Mathematik") && t.language.equals("de"));
+    }
+
+    @Test
+    public void can_get_single_translation() throws Exception {
+        Subject subject = builder.subject(s -> s
+                .name("Mathematics")
+                .translation("nb", l -> l.name("Matematikk"))
+        );
+        URI id = subject.getPublicId();
+
+        SubjectTranslations.SubjectTranslationIndexDocument translation = getObject(SubjectTranslations.SubjectTranslationIndexDocument.class,
+                getResource("/v1/subjects/" + id + "/translations/nb"));
+        assertEquals("Matematikk", translation.name);
+        assertEquals("nb", translation.language);
     }
 
     private Subjects.SubjectIndexDocument getSubject(URI id, String language) throws Exception {

@@ -28,6 +28,9 @@ public class Topic extends DomainObject {
     @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
     private URI contentUri;
 
+    @OneToMany(mappedBy = "topic")
+    Set<TopicTranslation> topicTranslations = new HashSet<>();
+
     public Topic() {
         setPublicId(URI.create("urn:topic:" + UUID.randomUUID()));
     }
@@ -103,4 +106,32 @@ public class Topic extends DomainObject {
     public URI getContentUri() {
         return contentUri;
     }
+
+
+    public TopicTranslation addTranslation(String languageCode) {
+        TopicTranslation topicTranslation = getTranslation(languageCode);
+        if (topicTranslation != null) return topicTranslation;
+
+        topicTranslation = new TopicTranslation(this, languageCode);
+        topicTranslations.add(topicTranslation);
+        return topicTranslation;
+    }
+
+    public TopicTranslation getTranslation(String languageCode) {
+        return topicTranslations.stream()
+                .filter(topicTranslation -> topicTranslation.getLanguageCode().equals(languageCode))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public Iterator<TopicTranslation> getTranslations() {
+        return topicTranslations.iterator();
+    }
+
+    public void removeTranslation(String languageCode) {
+        TopicTranslation translation = getTranslation(languageCode);
+        if (translation == null) return;
+        topicTranslations.remove(translation);
+    }
+
 }

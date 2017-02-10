@@ -32,6 +32,9 @@ public class ResourceTypes {
     @GetMapping
     @ApiOperation("Gets a list of all resource types")
     public List<ResourceTypeIndexDocument> index() throws Exception {
+
+        // TODO: Language
+
         List<ResourceTypeIndexDocument> result = new ArrayList<>();
         resourceTypeRepository.findAll().forEach(record -> result.add(new ResourceTypeIndexDocument(record)));
         return result;
@@ -40,6 +43,9 @@ public class ResourceTypes {
     @GetMapping("/{id}")
     @ApiOperation("Gets a single resource type")
     public ResourceTypeIndexDocument get(@PathVariable("id") URI id) throws Exception {
+
+        // TODO: Language
+
         return new ResourceTypeIndexDocument(resourceTypeRepository.getByPublicId(id));
     }
 
@@ -93,10 +99,15 @@ public class ResourceTypes {
 
 
     @GetMapping("/{id}/subresourcetypes")
-    public List<ResourceTypeIndexDocument> getSubResourceTypes(@PathVariable("id") URI id,
-                                                               @RequestParam(value = "recursive", required = false, defaultValue = "false")
-                                                               @ApiParam("If true, subtopics are fetched recursively")
-                                                                       boolean recursive) throws Exception {
+    public List<ResourceTypeIndexDocument> getSubResourceTypes(
+            @PathVariable("id") URI id,
+            @RequestParam(value = "recursive", required = false, defaultValue = "false")
+            @ApiParam("If true, subtopics are fetched recursively")
+                    boolean recursive
+    ) throws Exception {
+
+        // TODO: Language
+
         List<ResourceTypeIndexDocument> results = new ArrayList<>();
         final Iterator<ResourceType> subtypes = resourceTypeRepository.getByPublicId(id).getSubtypes();
         subtypes.forEachRemaining(rt -> results.add(new ResourceTypeIndexDocument(rt, recursive)));

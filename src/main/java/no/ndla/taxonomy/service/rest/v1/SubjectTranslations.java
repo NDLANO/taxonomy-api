@@ -1,7 +1,10 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.*;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.service.domain.NotFoundException;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.SubjectTranslation;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
@@ -43,12 +46,30 @@ public class SubjectTranslations {
         return result;
     }
 
+    @GetMapping("/{language}")
+    @ApiOperation("Gets a single translation for a single subject")
+    public SubjectTranslationIndexDocument get(
+            @PathVariable("id") URI id,
+            @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
+            @PathVariable("language") String language
+    ) throws Exception {
+        Subject subject = subjectRepository.getByPublicId(id);
+        SubjectTranslation translation = subject.getTranslation(language);
+        if (translation == null)
+            throw new NotFoundException("translation with language code " + language + " for subject", id);
+        return new SubjectTranslationIndexDocument() {{
+            name = translation.getName();
+            language = translation.getLanguageCode();
+        }};
+    }
+
     @DeleteMapping("/{language}")
     @ApiOperation("Deletes a translation")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") URI id,
-                       @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
-                       @PathVariable("language") String language
+    public void delete(
+            @PathVariable("id") URI id,
+            @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
+            @PathVariable("language") String language
     ) throws Exception {
         Subject subject = subjectRepository.getByPublicId(id);
         SubjectTranslation translation = subject.getTranslation(language);

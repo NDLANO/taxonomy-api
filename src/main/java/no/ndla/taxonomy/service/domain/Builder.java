@@ -236,6 +236,27 @@ public class Builder {
             topic.setContentUri(contentUri);
             return this;
         }
+
+        public TopicBuilder translation(String languageCode, Consumer<TopicTranslationBuilder> consumer) {
+            TopicTranslation topicTranslation = topic.addTranslation(languageCode);
+            entityManager.persist(topicTranslation);
+            TopicTranslationBuilder builder = new TopicTranslationBuilder(topicTranslation);
+            consumer.accept(builder);
+            return this;
+        }
+    }
+
+    public class TopicTranslationBuilder {
+        private TopicTranslation topicTranslation;
+
+        public TopicTranslationBuilder(TopicTranslation topicTranslation) {
+            this.topicTranslation = topicTranslation;
+        }
+
+        public TopicTranslationBuilder name(String name) {
+            topicTranslation.setName(name);
+            return this;
+        }
     }
 
     public class ResourceBuilder {
