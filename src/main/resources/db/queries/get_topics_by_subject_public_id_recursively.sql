@@ -2,11 +2,11 @@ WITH RECURSIVE tree (id, public_id, name, content_uri, parent_id, parent_public_
   SELECT
     t.id,
     t.public_id,
-    coalesce(tr.name, t.name) name,
+    coalesce(tr.name, t.name) AS name,
     t.content_uri,
-    NULL                      parent_id,
-    NULL                      parent_public_id,
-    0                         level
+    cast(NULL AS INT)         AS parent_id,
+    cast(NULL AS VARCHAR)     AS parent_public_id,
+    0                         AS level
   FROM
     subject s
     INNER JOIN subject_topic st ON s.id = st.subject_id
@@ -21,10 +21,10 @@ WITH RECURSIVE tree (id, public_id, name, content_uri, parent_id, parent_public_
   SELECT
     t.id,
     t.public_id,
-    coalesce(tr.name, t.name) name,
+    coalesce(tr.name, t.name) AS name,
     t.content_uri,
-    parent.id                 parent_id,
-    parent.public_id          parent_public_id,
+    parent.id                    parent_id,
+    parent.public_id             parent_public_id,
     parent.level + 1
   FROM
     topic t

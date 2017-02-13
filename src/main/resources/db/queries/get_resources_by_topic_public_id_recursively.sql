@@ -17,7 +17,7 @@ WITH RECURSIVE tree (topic_id, public_id, name, parent_id, is_primary, level) AS
     t.id,
     t.public_id,
     t.name,
-    parent.topic_id parent_id,
+    parent.topic_id AS parent_id,
     s.is_primary,
     parent.level + 1
   FROM
@@ -27,12 +27,12 @@ WITH RECURSIVE tree (topic_id, public_id, name, parent_id, is_primary, level) AS
 )
 
 SELECT
-  r.public_id          resource_id,
-  r.name               resource_name,
-  r.content_uri        resource_content_uri,
-  t.public_id          topic_id,
-  rrt.resource_type_id resource_type_id,
-  rt.name              resource_type_name
+  r.public_id          AS resource_id,
+  r.name               AS resource_name,
+  r.content_uri        AS resource_content_uri,
+  t.public_id          AS topic_id,
+  rrt.resource_type_id AS resource_type_id,
+  rt.name              AS resource_type_name
 FROM
   tree t
   INNER JOIN topic_resource tr ON tr.topic_id = t.topic_id

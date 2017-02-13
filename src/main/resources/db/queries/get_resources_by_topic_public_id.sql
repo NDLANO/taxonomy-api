@@ -1,10 +1,10 @@
 SELECT
-  t.public_id   topic_id,
-  r.name        resource_name,
-  r.public_id   resource_id,
-  r.content_uri resource_content_uri,
-  rt.id         resource_type_id,
-  rt.name       resource_type_name
+  t.public_id   AS topic_id,
+  r.name        AS resource_name,
+  r.public_id   AS resource_id,
+  r.content_uri AS resource_content_uri,
+  rt.id         AS resource_type_id,
+  rt.name       AS resource_type_name
 FROM
   topic t
   INNER JOIN topic_resource tr ON tr.topic_id = t.id

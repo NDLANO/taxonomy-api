@@ -1,7 +1,7 @@
 SELECT
-  t.public_id               topic_public_id,
-  coalesce(tr.name, t.name) topic_name,
-  t.content_uri             topic_content_uri
+  t.public_id               AS topic_public_id,
+  coalesce(tr.name, t.name) AS topic_name,
+  t.content_uri             AS topic_content_uri
 FROM
   topic t
   LEFT OUTER JOIN

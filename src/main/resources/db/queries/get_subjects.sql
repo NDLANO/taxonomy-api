@@ -1,7 +1,7 @@
 SELECT
-  s.public_id              subject_public_id,
-  coalesce(t.name, s.name) subject_name,
-  s.content_uri            subject_content_uri
+  s.public_id              AS subject_public_id,
+  coalesce(t.name, s.name) AS subject_name,
+  s.content_uri            AS subject_content_uri
 FROM
   subject s
   LEFT OUTER JOIN
