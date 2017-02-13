@@ -19,7 +19,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
+import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
 @RequestMapping(path = {"topics", "/v1/topics"})
@@ -29,6 +31,7 @@ public class Topics {
     private TopicRepository topicRepository;
     private JdbcTemplate jdbcTemplate;
 
+    private static final String getTopicsQuery = getQuery("get_topics");
     private static final String resourceQueryRecursive = getQuery("get_resources_by_topic_public_id_recursively");
     private static final String resourceQuery = getQuery("get_resources_by_topic_public_id");
 
@@ -39,25 +42,41 @@ public class Topics {
 
     @GetMapping
     @ApiOperation("Gets all topics")
-    public List<TopicIndexDocument> index() throws Exception {
-
-        // TODO: Language
-
-        List<TopicIndexDocument> result = new ArrayList<>();
-        Iterable<Topic> all = topicRepository.findAll();
-        all.forEach(topic -> result.add(new TopicIndexDocument(topic)));
-        return result;
+    public List<TopicIndexDocument> index(
+            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "") String language
+    ) throws Exception {
+        List<Object> args = asList(language);
+        return getTopicIndexDocuments(getTopicsQuery, args);
     }
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
-    public TopicIndexDocument get(@PathVariable("id") URI id) throws Exception {
+    public TopicIndexDocument get(@PathVariable("id") URI id,
+                                  @ApiParam(value = LANGUAGE_DOC, example = "nb")
+                                  @RequestParam(value = "language", required = false, defaultValue = "") String language
+    ) throws Exception {
 
-        // TODO: Language
+        String sql = getTopicsQuery.replace("1 = 1", "t.public_id = ?");
+        List<Object> args = asList(language, id.toString());
 
-        Topic topic = topicRepository.getByPublicId(id);
-        TopicIndexDocument result = new TopicIndexDocument(topic);
-        return result;
+        return getFirst(getTopicIndexDocuments(sql, args), "Topic", id);
+    }
+
+    private List<TopicIndexDocument> getTopicIndexDocuments(String sql, List<Object> args) {
+        return jdbcTemplate.query(sql, setQueryParameters(args),
+                resultSet -> {
+                    List<TopicIndexDocument> result = new ArrayList<>();
+                    while (resultSet.next()) {
+                        result.add(new TopicIndexDocument() {{
+                            name = resultSet.getString("topic_name");
+                            id = getURI(resultSet, "topic_public_id");
+                            contentUri = getURI(resultSet, "topic_content_uri");
+                        }});
+                    }
+                    return result;
+                }
+        );
     }
 
     @PostMapping
