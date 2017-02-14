@@ -16,9 +16,6 @@ import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-@ActiveProfiles("junit")
 public class TopicSubtopicsTest extends RestTest {
 
     @Test
