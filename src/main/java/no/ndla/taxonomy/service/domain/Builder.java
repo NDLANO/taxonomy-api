@@ -299,6 +299,27 @@ public class Builder {
             resource.setContentUri(contentUri);
             return this;
         }
+
+        public ResourceBuilder translation(String languageCode, Consumer<ResourceTranslationBuilder> consumer) {
+            ResourceTranslation resourceTranslation = resource.addTranslation(languageCode);
+            entityManager.persist(resourceTranslation);
+            ResourceTranslationBuilder builder = new ResourceTranslationBuilder(resourceTranslation);
+            consumer.accept(builder);
+            return this;
+        }
+    }
+
+    public class ResourceTranslationBuilder {
+        private ResourceTranslation resourceTranslation;
+
+        public ResourceTranslationBuilder(ResourceTranslation resourceTranslation) {
+            this.resourceTranslation = resourceTranslation;
+        }
+
+        public ResourceTranslationBuilder name(String name) {
+            resourceTranslation.setName(name);
+            return this;
+        }
     }
 
     public class ResourceTypeBuilder {
@@ -311,6 +332,26 @@ public class Builder {
 
         public ResourceTypeBuilder name(String name) {
             resourceType.name(name);
+            return this;
+        }
+        public ResourceTypeBuilder translation(String languageCode, Consumer<ResourceTypeTranslationBuilder> consumer) {
+            ResourceTypeTranslation resourceTypeTranslation = resourceType.addTranslation(languageCode);
+            entityManager.persist(resourceTypeTranslation);
+            ResourceTypeTranslationBuilder builder = new ResourceTypeTranslationBuilder(resourceTypeTranslation);
+            consumer.accept(builder);
+            return this;
+        }
+    }
+
+    public class ResourceTypeTranslationBuilder {
+        private ResourceTypeTranslation resourceTypeTranslation;
+
+        public ResourceTypeTranslationBuilder(ResourceTypeTranslation resourceTypeTranslation) {
+            this.resourceTypeTranslation = resourceTypeTranslation;
+        }
+
+        public ResourceTypeTranslationBuilder name(String name) {
+            resourceTypeTranslation.setName(name);
             return this;
         }
     }

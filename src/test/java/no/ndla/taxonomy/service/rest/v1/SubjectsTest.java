@@ -176,6 +176,44 @@ public class SubjectsTest extends RestTest {
     }
 
     @Test
+    public void can_get_translated_resources() throws Exception {
+
+        builder.resourceType("article", rt -> rt
+                .name("Article")
+                .translation("nb", tr -> tr.name("Artikkel"))
+        );
+
+        URI id = builder.subject(s -> s
+                .name("subject")
+                .topic(t -> t
+                        .name("Trigonometry")
+                        .resource(r -> r
+                                .name("Introduction to trigonometry")
+                                .translation("nb", tr -> tr.name("Introduksjon til trigonometri"))
+                                .resourceType("article")
+                        )
+                )
+                .topic(t -> t
+                        .name("Calculus")
+                        .resource(r -> r
+                                .name("Introduction to calculus")
+                                .translation("nb", tr -> tr.name("Introduksjon til calculus"))
+                                .resourceType("article")
+                        )
+                )
+        ).getPublicId();
+
+        MockHttpServletResponse response = getResource("/v1/subjects/" + id + "/resources?language=nb");
+        Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
+
+        assertEquals(2, resources.length);
+
+        assertAnyTrue(resources, r -> r.name.equals("Introduksjon til trigonometri"));
+        assertAnyTrue(resources, r -> r.name.equals("Introduksjon til calculus"));
+        assertAllTrue(resources, r -> r.resourceTypes.get(0).name.equals("Artikkel"));
+    }
+
+    @Test
     public void can_get_resources_for_a_subject_and_its_topics_recursively() throws Exception {
         URI id = builder.subject(s -> s
                 .name("subject")

@@ -19,6 +19,12 @@ public class Resource extends DomainObject {
     @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
     private URI contentUri;
 
+    @OneToMany(mappedBy = "resource")
+    private Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
+
+    @OneToMany(mappedBy = "resource")
+    Set<ResourceTranslation> resourceTranslations = new HashSet<>();
+
     public Resource() {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
     }
@@ -27,9 +33,6 @@ public class Resource extends DomainObject {
         setName(name);
         return this;
     }
-
-    @OneToMany(mappedBy = "resource")
-    private Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
 
     public Iterator<ResourceType> getResourceTypes() {
         Iterator<ResourceResourceType> iterator = resourceResourceTypes.iterator();
@@ -66,5 +69,32 @@ public class Resource extends DomainObject {
 
     public void setContentUri(URI contentUri) {
         this.contentUri = contentUri;
+    }
+
+
+    public ResourceTranslation addTranslation(String languageCode) {
+        ResourceTranslation resourceTranslation = getTranslation(languageCode);
+        if (resourceTranslation != null) return resourceTranslation;
+
+        resourceTranslation = new ResourceTranslation(this, languageCode);
+        resourceTranslations.add(resourceTranslation);
+        return resourceTranslation;
+    }
+
+    public ResourceTranslation getTranslation(String languageCode) {
+        return resourceTranslations.stream()
+                .filter(resourceTranslation -> resourceTranslation.getLanguageCode().equals(languageCode))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public Iterator<ResourceTranslation> getTranslations() {
+        return resourceTranslations.iterator();
+    }
+
+    public void removeTranslation(String languageCode) {
+        ResourceTranslation translation = getTranslation(languageCode);
+        if (translation == null) return;
+        resourceTranslations.remove(translation);
     }
 }

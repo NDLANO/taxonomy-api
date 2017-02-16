@@ -171,27 +171,28 @@ public class Subjects {
     @ApiOperation(value = "Gets all resources for a subject (all topics and subtopics)")
     public List<ResourceIndexDocument> getResources(
             @PathVariable("id") URI subjectId,
+            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language,
             @RequestParam(value = "type", required = false, defaultValue = "")
             @ApiParam(value = "Filter by resource type id(s). If not specified, resources of all types will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
                     URI[] resourceTypeIds
     ) {
-
-        // TODO: Language
-
         List<Object> args = new ArrayList<>();
         args.add(subjectId.toString());
-        String sql;
+        args.add(language);
+        args.add(language);
+
+        String sql = GET_RESOURCES_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY;
         if (resourceTypeIds.length > 0) {
             StringBuilder where = new StringBuilder();
             for (URI resourceTypeId : resourceTypeIds) {
                 where.append("rt.public_id = ? OR ");
                 args.add(resourceTypeId.toString());
             }
-            where.setLength(where.length() - 4);
-            sql = GET_RESOURCES_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY.replace("1 = 1", "(" + where + ")");
-        } else {
-            sql = GET_RESOURCES_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY;
+            where.setLength(where.length() - " OR ".length());
+            sql = sql.replace("1 = 1", "(" + where + ")");
         }
 
         return jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
@@ -226,7 +227,6 @@ public class Subjects {
                 previous = current;
             }
             return result;
-
         });
     }
 

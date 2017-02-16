@@ -24,6 +24,9 @@ public class ResourceType extends DomainObject {
     @OneToMany(mappedBy = "parent")
     private Set<ResourceType> subtypes = new HashSet<>();
 
+    @OneToMany(mappedBy = "resourceType")
+    Set<ResourceTypeTranslation> resourceTypeTranslations = new HashSet<>();
+
     public ResourceType name(String name) {
         setName(name);
         return this;
@@ -46,10 +49,8 @@ public class ResourceType extends DomainObject {
         return this;
     }
 
-
     private void addSubtype(ResourceType subtype) {
         subtypes.add(subtype);
-
     }
 
     public Iterator<ResourceType> getSubtypes() {
@@ -68,8 +69,29 @@ public class ResourceType extends DomainObject {
         };
     }
 
-    public void setSubtypes(Set<ResourceType> subtypes) {
-        this.subtypes = subtypes;
+    public ResourceTypeTranslation addTranslation(String languageCode) {
+        ResourceTypeTranslation resourceTypeTranslation = getTranslation(languageCode);
+        if (resourceTypeTranslation != null) return resourceTypeTranslation;
+
+        resourceTypeTranslation = new ResourceTypeTranslation(this, languageCode);
+        resourceTypeTranslations.add(resourceTypeTranslation);
+        return resourceTypeTranslation;
     }
 
+    public ResourceTypeTranslation getTranslation(String languageCode) {
+        return resourceTypeTranslations.stream()
+                .filter(resourceTypeTranslation -> resourceTypeTranslation.getLanguageCode().equals(languageCode))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public Iterator<ResourceTypeTranslation> getTranslations() {
+        return resourceTypeTranslations.iterator();
+    }
+
+    public void removeTranslation(String languageCode) {
+        ResourceTypeTranslation translation = getTranslation(languageCode);
+        if (translation == null) return;
+        resourceTypeTranslations.remove(translation);
+    }
 }
