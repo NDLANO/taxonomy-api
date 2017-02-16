@@ -234,6 +234,62 @@ public class TopicsTest extends RestTest {
         assertEquals(1, result.length);
         assertEquals(0, result[0].resourceTypes.size());
     }
+
+    @Test
+    public void can_get_resources_for_a_topic_recursively_with_translation() throws Exception {
+        builder.resourceType("article", rt -> rt.name("Article").translation("nb", tr -> tr.name("Artikkel")));
+
+        URI a = builder.topic(t -> t
+                .resource(r -> r
+                        .name("Introduction to calculus")
+                        .translation("nb", tr -> tr.name("Introduksjon til calculus"))
+                        .resourceType("article")
+                )
+                .subtopic(st -> st
+                        .resource(r -> r
+                                .name("Introduction to integration")
+                                .translation("nb", tr -> tr.name("Introduksjon til integrasjon"))
+                                .resourceType("article")
+                        )
+                )
+        ).getPublicId();
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + a + "/resources?recursive=true&language=nb");
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(2, result.length);
+        assertAnyTrue(result, r -> "Introduksjon til calculus".equals(r.name));
+        assertAnyTrue(result, r -> "Introduksjon til integrasjon".equals(r.name));
+        assertAllTrue(result, r -> r.resourceTypes.get(0).name.equals("Artikkel"));
+    }
+
+    @Test
+    public void can_get_resources_for_a_topic_without_child_topic_resources_with_translation() throws Exception {
+        builder.resourceType("article", rt -> rt.name("Article").translation("nb", tr -> tr.name("Artikkel")));
+
+        URI a = builder.topic(t -> t
+                .resource(r -> r
+                        .name("resource 1")
+                        .translation("nb", tr -> tr.name("ressurs 1"))
+                        .resourceType("article")
+                )
+                .resource(r -> r
+                        .name("resource 2")
+                        .translation("nb", tr -> tr.name("ressurs 2"))
+                        .resourceType("article")
+                )
+                .subtopic(st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))
+        ).getPublicId();
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + a + "/resources?language=nb");
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(2, result.length);
+        assertAnyTrue(result, r -> "ressurs 1".equals(r.name));
+        assertAnyTrue(result, r -> "ressurs 2".equals(r.name));
+        assertAllTrue(result, r -> r.resourceTypes.get(0).name.equals("Artikkel"));
+    }
+
 }
 
 

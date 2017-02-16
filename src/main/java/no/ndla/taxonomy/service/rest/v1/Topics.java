@@ -127,6 +127,9 @@ public class Topics {
     @ApiOperation(value = "Gets all resources for the given topic")
     public List<ResourceIndexDocument> getResources(
             @PathVariable("id") URI topicId,
+            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language,
             @RequestParam(value = "recursive", required = false, defaultValue = "false")
             @ApiParam("If true, resources from subtopics are fetched recursively")
                     boolean recursive,
@@ -136,12 +139,19 @@ public class Topics {
                     URI[] resourceTypeIds
     ) throws SQLException {
 
-        // TODO: Language
-
-        String query = recursive ? resourceQueryRecursive : resourceQuery;
-
         List<Object> args = new ArrayList<>();
-        args.add(topicId.toString());
+        String query;
+        if (recursive) {
+            query = resourceQueryRecursive;
+            args.add(topicId.toString());
+            args.add(language);
+            args.add(language);
+        } else {
+            query = resourceQuery;
+            args.add(language);
+            args.add(language);
+            args.add(topicId.toString());
+        }
 
         if (resourceTypeIds.length > 0) {
             StringBuilder where = new StringBuilder();
