@@ -28,17 +28,43 @@ public class ResourcesTest extends RestTest {
     }
 
     @Test
+    public void can_get_single_resource_with_translation() throws Exception {
+        URI trigonometry = builder.resource(s -> s
+                .name("introduction to trigonometry")
+                .translation("nb", tr -> tr.name("Introduksjon til trigonometri"))
+        ).getPublicId();
+
+        MockHttpServletResponse response = getResource("/v1/resources/" + trigonometry + "?language=nb");
+        Resources.ResourceIndexDocument resource = getObject(Resources.ResourceIndexDocument.class, response);
+
+        assertEquals("Introduksjon til trigonometri", resource.name);
+    }
+
+    @Test
     public void can_get_all_resources() throws Exception {
-        newResource().name("The inner planets");
-        newResource().name("Gas giants");
+        builder.resource(r -> r.name("The inner planets"));
+        builder.resource(r -> r.name("Gas giants"));
 
         MockHttpServletResponse response = getResource("/v1/resources");
         Resources.ResourceIndexDocument[] resources = getObject(Resources.ResourceIndexDocument[].class, response);
-        assertEquals(2, resources.length);
 
+        assertEquals(2, resources.length);
         assertAnyTrue(resources, s -> "The inner planets".equals(s.name));
         assertAnyTrue(resources, s -> "Gas giants".equals(s.name));
         assertAllTrue(resources, s -> isValidId(s.id));
+    }
+
+    @Test
+    public void can_get_all_resources_with_translation() throws Exception {
+        builder.resource(r -> r.name("The inner planets").translation("nb", tr -> tr.name("De indre planetene")));
+        builder.resource(r -> r.name("Gas giants").translation("nb", tr -> tr.name("Gasskjemper")));
+
+        MockHttpServletResponse response = getResource("/v1/resources?language=nb");
+        Resources.ResourceIndexDocument[] resources = getObject(Resources.ResourceIndexDocument[].class, response);
+
+        assertEquals(2, resources.length);
+        assertAnyTrue(resources, s -> "De indre planetene".equals(s.name));
+        assertAnyTrue(resources, s -> "Gasskjemper".equals(s.name));
     }
 
     @Test

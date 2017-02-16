@@ -8,7 +8,6 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
-import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 
@@ -35,12 +35,10 @@ public class Subjects {
     private static final String GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_topics_by_subject_public_id_recursively");
 
     private SubjectRepository subjectRepository;
-    private TopicRepository topicRepository;
     private JdbcTemplate jdbcTemplate;
 
-    public Subjects(SubjectRepository subjectRepository, TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
+    public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate) {
         this.subjectRepository = subjectRepository;
-        this.topicRepository = topicRepository;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -50,7 +48,7 @@ public class Subjects {
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) throws Exception {
-        List<Object> args = asList(language);
+        List<Object> args = singletonList(language);
         return getSubjectIndexDocuments(GET_SUBJECTS_QUERY, args);
     }
 
@@ -59,7 +57,8 @@ public class Subjects {
     public SubjectIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "") String language
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language
     ) throws Exception {
         String sql = GET_SUBJECTS_QUERY.replace("1 = 1", "s.public_id = ?");
         List<Object> args = asList(language, id.toString());
@@ -163,7 +162,7 @@ public class Subjects {
             subjectRepository.save(subject);
             return ResponseEntity.created(location).build();
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateIdException(command.id.toString());
+            throw new DuplicateIdException("" + command.id);
         }
     }
 

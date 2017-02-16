@@ -86,7 +86,9 @@ public class ResourceTypes {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(
             @PathVariable URI id,
-            @ApiParam(name = "resourceType", value = "The updated resource type") @RequestBody UpdateResourceTypeCommand command
+            @ApiParam(name = "resourceType", value = "The updated resource type")
+            @RequestBody UpdateResourceTypeCommand
+                    command
     ) throws Exception {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         resourceType.name(command.name);
@@ -102,7 +104,7 @@ public class ResourceTypes {
     public List<ResourceTypeIndexDocument> getSubResourceTypes(
             @PathVariable("id") URI id,
             @RequestParam(value = "recursive", required = false, defaultValue = "false")
-            @ApiParam("If true, subtopics are fetched recursively")
+            @ApiParam("If true, sub resource types are fetched recursively")
                     boolean recursive
     ) throws Exception {
 

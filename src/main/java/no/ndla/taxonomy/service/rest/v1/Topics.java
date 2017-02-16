@@ -272,11 +272,5 @@ public class Topics {
 
         TopicIndexDocument() {
         }
-
-        TopicIndexDocument(Topic topic) {
-            id = topic.getPublicId();
-            name = topic.getName();
-            contentUri = topic.getContentUri();
-        }
     }
 }

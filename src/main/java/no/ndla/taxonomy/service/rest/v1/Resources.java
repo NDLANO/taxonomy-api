@@ -10,6 +10,7 @@ import no.ndla.taxonomy.service.repositories.ResourceRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -17,37 +18,64 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
+import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
+
 @RestController
 @RequestMapping(path = {"resources", "/v1/resources"})
 @Transactional
 public class Resources {
 
-    private ResourceRepository resourceRepository;
+    private static final String GET_RESOURCES_QUERY = getQuery("get_resources");
 
-    public Resources(ResourceRepository resourceRepository) {
+    private ResourceRepository resourceRepository;
+    private JdbcTemplate jdbcTemplate;
+
+    public Resources(ResourceRepository resourceRepository, JdbcTemplate jdbcTemplate) {
         this.resourceRepository = resourceRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @GetMapping
     @ApiOperation(value = "Lists all resources")
-    public List<ResourceIndexDocument> index() throws Exception {
-
-        // TODO: Language
-
-        List<ResourceIndexDocument> result = new ArrayList<>();
-        resourceRepository.findAll().forEach(record -> result.add(new ResourceIndexDocument(record)));
-        return result;
+    public List<ResourceIndexDocument> index(
+            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language
+    ) throws Exception {
+        return getResourceIndexDocuments(GET_RESOURCES_QUERY, singletonList(language));
     }
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single resource")
-    public ResourceIndexDocument get(@PathVariable("id") URI id) throws Exception {
+    public ResourceIndexDocument get(
+            @PathVariable("id") URI id,
+            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language
+    ) throws Exception {
+        String sql = GET_RESOURCES_QUERY.replace("1 = 1", "r.public_id = ?");
+        List<Object> args = asList(language, id.toString());
 
-        // TODO: Language
+        return getFirst(getResourceIndexDocuments(sql, args), "Resource", id);
+    }
 
-        Resource resource = resourceRepository.getByPublicId(id);
-        ResourceIndexDocument result = new ResourceIndexDocument(resource);
-        return result;
+    private List<ResourceIndexDocument> getResourceIndexDocuments(String sql, List<Object> args) {
+        return jdbcTemplate.query(sql, setQueryParameters(args),
+                resultSet -> {
+                    List<ResourceIndexDocument> result = new ArrayList<>();
+                    while (resultSet.next()) {
+                        result.add(new ResourceIndexDocument() {{
+                            name = resultSet.getString("resource_name");
+                            id = getURI(resultSet, "resource_public_id");
+                            contentUri = getURI(resultSet, "resource_content_uri");
+                        }});
+                    }
+                    return result;
+                }
+        );
     }
 
     @DeleteMapping("/{id}")
