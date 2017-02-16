@@ -15,13 +15,13 @@ public class ResourceTypesTest extends RestTest {
 
     @Test
     public void can_get_all_resource_types() throws Exception {
-        newResourceType().name("video");
-        newResourceType().name("audio");
+        builder.resourceType(rt -> rt.name("video"));
+        builder.resourceType(rt -> rt.name("audio"));
 
         MockHttpServletResponse response = getResource("/v1/resource-types");
         ResourceTypes.ResourceTypeIndexDocument[] resourcetypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
-        assertEquals(2, resourcetypes.length);
 
+        assertEquals(2, resourcetypes.length);
         assertAnyTrue(resourcetypes, s -> "video".equals(s.name));
         assertAnyTrue(resourcetypes, s -> "audio".equals(s.name));
         assertAllTrue(resourcetypes, s -> isValidId(s.id));
@@ -29,11 +29,33 @@ public class ResourceTypesTest extends RestTest {
 
     @Test
     public void can_get_resourcetype_by_id() throws Exception {
-        URI id = newResourceType().name("video").getPublicId();
+        URI id = builder.resourceType(rt -> rt.name("video")).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/resource-types/" + id.toString());
         ResourceTypes.ResourceTypeIndexDocument resourceType = getObject(ResourceTypes.ResourceTypeIndexDocument.class, response);
         assertEquals(id, resourceType.id);
+    }
+
+    @Test
+    public void can_get_all_resource_types_with_translation() throws Exception {
+        builder.resourceType(rt -> rt.name("video").translation("nb", tr -> tr.name("film")));
+        builder.resourceType(rt -> rt.name("audio").translation("nb", tr -> tr.name("lydklipp")));
+
+        MockHttpServletResponse response = getResource("/v1/resource-types?language=nb");
+        ResourceTypes.ResourceTypeIndexDocument[] resourcetypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
+
+        assertEquals(2, resourcetypes.length);
+        assertAnyTrue(resourcetypes, s -> "film".equals(s.name));
+        assertAnyTrue(resourcetypes, s -> "lydklipp".equals(s.name));
+    }
+
+    @Test
+    public void can_get_resourcetype_by_id_with_translation() throws Exception {
+        URI id = builder.resourceType(rt -> rt.name("video").translation("nb", tr -> tr.name("film"))).getPublicId();
+
+        MockHttpServletResponse response = getResource("/v1/resource-types/" + id.toString() + "?language=nb");
+        ResourceTypes.ResourceTypeIndexDocument resourceType = getObject(ResourceTypes.ResourceTypeIndexDocument.class, response);
+        assertEquals("film", resourceType.name);
     }
 
     @Test

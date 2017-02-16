@@ -46,7 +46,8 @@ public class Subjects {
     @ApiOperation("Gets all subjects")
     public List<SubjectIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "") String language
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language
     ) throws Exception {
         List<Object> args = singletonList(language);
         return getSubjectIndexDocuments(GET_SUBJECTS_QUERY, args);
