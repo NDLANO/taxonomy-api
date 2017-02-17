@@ -95,7 +95,7 @@ public class TopicTranslations {
 
     public static class TopicTranslationIndexDocument {
         @JsonProperty
-        @ApiModelProperty(value = "The translated name of the topic", example = "Mathematics")
+        @ApiModelProperty(value = "The translated name of the topic", example = "Trigonometry")
         public String name;
 
         @JsonProperty
@@ -105,7 +105,7 @@ public class TopicTranslations {
 
     public static class UpdateTopicTranslationCommand {
         @JsonProperty
-        @ApiModelProperty(value = "The translated name of the topic", example = "Mathematics")
+        @ApiModelProperty(value = "The translated name of the topic", example = "Trigonometry")
         public String name;
     }
 }
