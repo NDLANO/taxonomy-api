@@ -36,7 +36,6 @@ public class ResourceType extends DomainObject {
         return parent;
     }
 
-
     public void setParent(ResourceType parent) {
         this.parent = parent;
         if (parent != null) {
@@ -49,7 +48,7 @@ public class ResourceType extends DomainObject {
         return this;
     }
 
-    private void addSubtype(ResourceType subtype) {
+    public void addSubtype(ResourceType subtype) {
         subtypes.add(subtype);
     }
 

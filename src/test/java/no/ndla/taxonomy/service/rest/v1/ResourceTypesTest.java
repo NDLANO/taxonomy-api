@@ -15,14 +15,17 @@ public class ResourceTypesTest extends RestTest {
 
     @Test
     public void can_get_all_resource_types() throws Exception {
-        builder.resourceType(rt -> rt.name("video"));
+        builder.resourceType(rt -> rt
+                .name("video")
+                .subtype(st -> st.name("lecture"))
+        );
         builder.resourceType(rt -> rt.name("audio"));
 
         MockHttpServletResponse response = getResource("/v1/resource-types");
         ResourceTypes.ResourceTypeIndexDocument[] resourcetypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
 
         assertEquals(2, resourcetypes.length);
-        assertAnyTrue(resourcetypes, s -> "video".equals(s.name));
+        assertAnyTrue(resourcetypes, s -> "video".equals(s.name) && s.subtypes.get(0).name.equals("lecture"));
         assertAnyTrue(resourcetypes, s -> "audio".equals(s.name));
         assertAllTrue(resourcetypes, s -> isValidId(s.id));
     }
@@ -34,6 +37,7 @@ public class ResourceTypesTest extends RestTest {
         MockHttpServletResponse response = getResource("/v1/resource-types/" + id.toString());
         ResourceTypes.ResourceTypeIndexDocument resourceType = getObject(ResourceTypes.ResourceTypeIndexDocument.class, response);
         assertEquals(id, resourceType.id);
+        assertEquals(0, resourceType.subtypes.size());
     }
 
     @Test
@@ -88,27 +92,26 @@ public class ResourceTypesTest extends RestTest {
 
     @Test
     public void can_delete_resourcetype() throws Exception {
-        URI id = newResourceType().name("video").getPublicId();
+        URI id = builder.resourceType(rt -> rt.name("video")).getPublicId();
         deleteResource("/v1/resource-types/" + id);
         assertNull(resourceTypeRepository.findByPublicId(id));
     }
 
     @Test
     public void can_update_resourcetype() throws Exception {
-        URI id = newResourceType().name("video").getPublicId();
-        ResourceTypes.UpdateResourceTypeCommand updateCommand = new ResourceTypes.UpdateResourceTypeCommand() {{
-            name = "Audovideo";
-        }};
+        URI id = builder.resourceType(rt -> rt.name("video")).getPublicId();
 
-        updateResource("/v1/resource-types/" + id, updateCommand);
+        updateResource("/v1/resource-types/" + id, new ResourceTypes.UpdateResourceTypeCommand() {{
+            name = "Audiovideo";
+        }});
 
         ResourceType result = resourceTypeRepository.getByPublicId(id);
-        assertEquals(updateCommand.name, result.getName());
+        assertEquals("Audiovideo", result.getName());
     }
 
     @Test
     public void can_add_subresourcetype_to_resourcetype() throws Exception {
-        ResourceType parent = newResourceType().name("external");
+        ResourceType parent = builder.resourceType(rt -> rt.name("external"));
 
         URI childId = getId(createResource("/v1/resource-types/", new ResourceTypes.CreateResourceTypeCommand() {{
             parentId = parent.getPublicId();
@@ -121,8 +124,8 @@ public class ResourceTypesTest extends RestTest {
 
     @Test
     public void can_remove_parent_from_resourcetype() throws Exception {
-        ResourceType parent = newResourceType().name("external");
-        ResourceType child = newResourceType().name("youtube");
+        ResourceType parent = builder.resourceType(rt -> rt.name("external"));
+        ResourceType child = builder.resourceType(rt -> rt.name("youtube"));
         child.setParent(parent);
 
         URI childId = child.getPublicId();
@@ -137,12 +140,13 @@ public class ResourceTypesTest extends RestTest {
 
     @Test
     public void can_update_parent_resourcetype() throws Exception {
-        ResourceType oldParent = newResourceType().name("external");
-        ResourceType child = newResourceType().name("youtube").parent(oldParent);
-        ResourceType newParent = newResourceType().name("video");
+        ResourceType oldParent = builder.resourceType(rt -> rt.name("external"));
+        ResourceType child = builder.resourceType(rt -> rt.name("youtube"));
+        child.setParent(oldParent);
+        URI newParentId = builder.resourceType(rt -> rt.name("video")).getPublicId();
 
         updateResource("/v1/resource-types/" + child.getPublicId(), new ResourceTypes.UpdateResourceTypeCommand() {{
-            parentId = newParent.getPublicId();
+            parentId = newParentId;
             name = child.getName();
         }});
 
@@ -150,13 +154,15 @@ public class ResourceTypesTest extends RestTest {
     }
 
     @Test
-    public void can_get_subresourcetypes() throws Exception {
-        ResourceType parent = newResourceType().name("external");
-        newResourceType().name("youtube").parent(parent);
-        newResourceType().name("ted").parent(parent);
-        newResourceType().name("vimeo").parent(parent);
+    public void can_get_subtypes() throws Exception {
+        URI id = builder.resourceType(rt -> rt
+                .name("external")
+                .subtype(st -> st.name("youtube"))
+                .subtype(st -> st.name("ted"))
+                .subtype(st -> st.name("vimeo"))
+        ).getPublicId();
 
-        MockHttpServletResponse response = getResource("/v1/resource-types/" + parent.getPublicId() + "/subresourcetypes");
+        MockHttpServletResponse response = getResource("/v1/resource-types/" + id + "/subtypes");
         ResourceTypes.ResourceTypeIndexDocument[] subResourceTypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
 
         assertEquals(3, subResourceTypes.length);
@@ -167,17 +173,20 @@ public class ResourceTypesTest extends RestTest {
     }
 
     @Test
-    public void can_get_subresourcetypes_recursively() throws Exception {
-        ResourceType parent = newResourceType().name("external");
-        final ResourceType video = newResourceType().name("video").parent(parent);
-        final ResourceType youtube = newResourceType().name("youtube").parent(video);
+    public void can_get_subtypes_recursively() throws Exception {
+        URI id = builder.resourceType(rt -> rt
+                .name("external")
+                .subtype(st -> st.name("video")
+                        .subtype(st2 -> st2.name("youtube"))
+                )
+        ).getPublicId();
 
-        MockHttpServletResponse response = getResource("/v1/resource-types/" + parent.getPublicId() + "/subresourcetypes?recursive=true");
+        MockHttpServletResponse response = getResource("/v1/resource-types/" + id + "/subtypes?recursive=true");
         ResourceTypes.ResourceTypeIndexDocument[] subResourceTypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
 
         assertEquals(1, subResourceTypes.length);
         assertEquals("video", subResourceTypes[0].name);
-        assertEquals("youtube", subResourceTypes[0].subResourceTypes[0].name);
+        assertEquals("youtube", subResourceTypes[0].subtypes.get(0).name);
     }
 }
 

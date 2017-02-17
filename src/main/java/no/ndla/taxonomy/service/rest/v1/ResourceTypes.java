@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.service.rest.v1;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
@@ -16,10 +17,10 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
@@ -32,7 +33,7 @@ public class ResourceTypes {
     private ResourceTypeRepository resourceTypeRepository;
     private JdbcTemplate jdbcTemplate;
 
-    private static final String GET_RESOURCE_TYPES_QUERY = getQuery("get_resource_types");
+    private static final String GET_RESOURCE_TYPES_RECURSIVELY_QUERY = getQuery("get_resource_types_recursively");
 
     public ResourceTypes(ResourceTypeRepository resourceTypeRepository, JdbcTemplate jdbcTemplate) {
         this.resourceTypeRepository = resourceTypeRepository;
@@ -46,7 +47,9 @@ public class ResourceTypes {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {
-        return getResourceTypeIndexDocuments(GET_RESOURCE_TYPES_QUERY, singletonList(language));
+        String sql = GET_RESOURCE_TYPES_RECURSIVELY_QUERY;
+        sql = sql.replace("1 = 1", "rt.parent_id is null");
+        return getResourceTypeIndexDocuments(sql, singletonList(language));
     }
 
     @GetMapping("/{id}")
@@ -57,8 +60,13 @@ public class ResourceTypes {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {
-        String sql = GET_RESOURCE_TYPES_QUERY.replace("1 = 1", "rt.public_id = ?");
-        List<Object> args = asList(language, id.toString());
+        String sql = GET_RESOURCE_TYPES_RECURSIVELY_QUERY;
+        List<Object> args = new ArrayList<>();
+
+        sql = sql.replace("1 = 1", "rt.public_id = ?");
+        args.add(id.toString());
+        sql = sql.replace("2 = 2", "t.level = 0");
+        args.add(language);
 
         return getFirst(getResourceTypeIndexDocuments(sql, args), "Subject", id);
     }
@@ -67,11 +75,22 @@ public class ResourceTypes {
         return jdbcTemplate.query(sql, setQueryParameters(args),
                 resultSet -> {
                     List<ResourceTypeIndexDocument> result = new ArrayList<>();
+                    Map<Integer, ResourceTypeIndexDocument> parents = new HashMap<>();
+
                     while (resultSet.next()) {
-                        result.add(new ResourceTypeIndexDocument() {{
-                            name = resultSet.getString("resource_type_name");
-                            id = getURI(resultSet, "resource_type_public_id");
-                        }});
+                        int id = resultSet.getInt("id");
+                        int parentId = resultSet.getInt("parent_id");
+
+                        ResourceTypeIndexDocument resourceType = new ResourceTypeIndexDocument() {{
+                            name = resultSet.getString("name");
+                            id = getURI(resultSet, "public_id");
+                        }};
+                        parents.put(id, resourceType);
+                        if (parents.containsKey(parentId)) {
+                            parents.get(parentId).subtypes.add(resourceType);
+                        } else {
+                            result.add(resourceType);
+                        }
                     }
                     return result;
                 }
@@ -98,7 +117,7 @@ public class ResourceTypes {
             URI location = URI.create("/resource-types/" + resourceType.getPublicId());
             return ResponseEntity.created(location).build();
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateIdException(command.id.toString());
+            throw new DuplicateIdException("" + command.id);
         }
     }
 
@@ -129,20 +148,32 @@ public class ResourceTypes {
     }
 
 
-    @GetMapping("/{id}/subresourcetypes")
-    public List<ResourceTypeIndexDocument> getSubResourceTypes(
+    @GetMapping("/{id}/subtypes")
+    @ApiOperation(value = "Gets subtypes of one resource type")
+    public List<ResourceTypeIndexDocument> getSubtypes(
             @PathVariable("id") URI id,
+            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language,
             @RequestParam(value = "recursive", required = false, defaultValue = "false")
             @ApiParam("If true, sub resource types are fetched recursively")
                     boolean recursive
     ) throws Exception {
 
-        // TODO: Language
+        String sql = GET_RESOURCE_TYPES_RECURSIVELY_QUERY;
+        List<Object> args = new ArrayList<>();
 
-        List<ResourceTypeIndexDocument> results = new ArrayList<>();
-        final Iterator<ResourceType> subtypes = resourceTypeRepository.getByPublicId(id).getSubtypes();
-        subtypes.forEachRemaining(rt -> results.add(new ResourceTypeIndexDocument(rt, recursive)));
-        return results;
+        sql = sql.replace("1 = 1", "rt.public_id = ?");
+        args.add(id.toString());
+
+        if (recursive) {
+            sql = sql.replace("2 = 2", "t.level >= 1");
+        } else {
+            sql = sql.replace("2 = 2", "t.level = 1");
+        }
+
+        args.add(language);
+        return getResourceTypeIndexDocuments(sql, args);
     }
 
     public static class ResourceTypeIndexDocument {
@@ -156,34 +187,8 @@ public class ResourceTypes {
 
         @JsonProperty
         @ApiModelProperty("Sub resource types")
-        public ResourceTypeIndexDocument[] subResourceTypes;
-
-        ResourceTypeIndexDocument() {
-        }
-
-        ResourceTypeIndexDocument(ResourceType resourceType) {
-            id = resourceType.getPublicId();
-            name = resourceType.getName();
-        }
-
-        ResourceTypeIndexDocument(ResourceType resourceType, boolean recursive) {
-            id = resourceType.getPublicId();
-            name = resourceType.getName();
-            if (recursive) {
-                addSubResourceType(resourceType);
-            }
-        }
-
-        private void addSubResourceType(ResourceType resourceType) {
-            ArrayList<ResourceTypeIndexDocument> result = new ArrayList<>();
-
-            final Iterator<ResourceType> subtypes = resourceType.getSubtypes();
-            while (subtypes.hasNext()) {
-                result.add(new ResourceTypeIndexDocument(subtypes.next()));
-            }
-            this.subResourceTypes = result.toArray(new ResourceTypeIndexDocument[result.size()]);
-        }
-
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        public List<ResourceTypeIndexDocument> subtypes = new ArrayList<>();
     }
 
     public static class CreateResourceTypeCommand {

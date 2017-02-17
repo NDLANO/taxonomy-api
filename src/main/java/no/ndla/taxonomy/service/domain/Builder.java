@@ -341,6 +341,31 @@ public class Builder {
             consumer.accept(builder);
             return this;
         }
+
+        public ResourceTypeBuilder subtype() {
+            return subtype(null, null);
+        }
+
+        public ResourceTypeBuilder subtype(String resourceTypeKey) {
+            return subtype(resourceTypeKey, null);
+        }
+
+        public ResourceTypeBuilder subtype(Consumer<ResourceTypeBuilder> consumer) {
+            return subtype(null, consumer);
+        }
+
+        public ResourceTypeBuilder subtype(String key, Consumer<ResourceTypeBuilder> consumer) {
+            ResourceTypeBuilder resourceTypeBuilder = getResourceTypeBuilder(key);
+            if (null != consumer) consumer.accept(resourceTypeBuilder);
+            subtype(resourceTypeBuilder.resourceType);
+            return this;
+        }
+
+        public ResourceTypeBuilder subtype(ResourceType subtype) {
+            subtype.setParent(resourceType);
+            return this;
+        }
+
     }
 
     public class ResourceTypeTranslationBuilder {
