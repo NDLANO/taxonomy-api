@@ -126,7 +126,7 @@ public class Subjects {
     ) throws Exception {
         String sql = GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY;
         if (!recursive) sql = sql.replace("1 = 1", "t.level = 0");
-        List<Object> args = asList(language, id.toString(), language);
+        List<Object> args = asList(id.toString(), language);
 
         Map<URI, TopicIndexDocument> topics = new HashMap<>();
 
