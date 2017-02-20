@@ -153,6 +153,11 @@ public class Builder {
             consumer.accept(builder);
             return this;
         }
+
+        public SubjectBuilder publicId(String id) {
+            subject.setPublicId(URI.create(id));
+            return this;
+        }
     }
 
     public class SubjectTranslationBuilder {
@@ -244,6 +249,11 @@ public class Builder {
             consumer.accept(builder);
             return this;
         }
+
+        public TopicBuilder publicId(String id) {
+            topic.setPublicId(URI.create(id));
+            return this;
+        }
     }
 
     public class TopicTranslationBuilder {
@@ -307,6 +317,11 @@ public class Builder {
             consumer.accept(builder);
             return this;
         }
+
+        public ResourceBuilder publicId(String id) {
+            resource.setPublicId(URI.create(id));
+            return this;
+        }
     }
 
     public class ResourceTranslationBuilder {
@@ -334,6 +349,7 @@ public class Builder {
             resourceType.name(name);
             return this;
         }
+
         public ResourceTypeBuilder translation(String languageCode, Consumer<ResourceTypeTranslationBuilder> consumer) {
             ResourceTypeTranslation resourceTypeTranslation = resourceType.addTranslation(languageCode);
             entityManager.persist(resourceTypeTranslation);
