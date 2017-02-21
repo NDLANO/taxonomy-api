@@ -134,17 +134,16 @@ public class Subjects {
                 resultSet -> {
                     List<TopicIndexDocument> result = new ArrayList<>();
                     while (resultSet.next()) {
-                        URI parent = getURI(resultSet, "parent_public_id");
 
                         TopicIndexDocument topic = new TopicIndexDocument() {{
                             name = resultSet.getString("name");
                             id = getURI(resultSet, "public_id");
                             contentUri = getURI(resultSet, "content_uri");
+                            parent = getURI(resultSet, "parent_public_id");
                         }};
 
                         topics.put(topic.id, topic);
-                        if (parent == null) result.add(topic);
-                        else topics.get(parent).subtopics.add(topic);
+                        result.add(topic);
                     }
                     return result;
                 }
@@ -283,6 +282,10 @@ public class Subjects {
         @JsonProperty
         @ApiModelProperty(notes = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
         public URI contentUri;
+
+        @JsonProperty
+        @ApiModelProperty("Parent id in the current context, null if none exists")
+        public URI parent;
     }
 
     public static class ResourceIndexDocument {

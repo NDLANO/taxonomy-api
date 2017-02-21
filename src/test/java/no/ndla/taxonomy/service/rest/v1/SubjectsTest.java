@@ -155,10 +155,10 @@ public class SubjectsTest extends RestTest {
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics?recursive=true");
         Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
 
-        assertEquals(1, topics.length);
+        assertEquals(3, topics.length);
         assertEquals("parent topic", topics[0].name);
-        assertEquals("child topic", topics[0].subtopics.get(0).name);
-        assertEquals("grandchild topic", topics[0].subtopics.get(0).subtopics.get(0).name);
+        assertEquals("child topic", topics[1].name);
+        assertEquals("grandchild topic", topics[2].name);
     }
 
     @Test
