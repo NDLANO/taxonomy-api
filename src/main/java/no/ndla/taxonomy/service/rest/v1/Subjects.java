@@ -275,11 +275,6 @@ public class Subjects {
         public String name;
 
         @JsonProperty
-        @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        @ApiModelProperty("Children of this topic")
-        public List<TopicIndexDocument> subtopics = new ArrayList<>();
-
-        @JsonProperty
         @ApiModelProperty(notes = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
         public URI contentUri;
 
