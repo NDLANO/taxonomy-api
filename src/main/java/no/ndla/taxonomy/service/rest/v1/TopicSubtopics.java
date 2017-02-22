@@ -55,8 +55,7 @@ public class TopicSubtopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Topic subtopic = topicRepository.getByPublicId(command.subtopicid);
 
-        TopicSubtopic topicSubtopic = topic.addSubtopic(subtopic);
-        topicSubtopic.setPrimary(command.primary);
+        TopicSubtopic topicSubtopic = topic.addSubtopic(subtopic, command.primary);
         topicSubtopicRepository.save(topicSubtopic);
 
         URI location = URI.create("/topic-subtopics/" + topicSubtopic.getPublicId());

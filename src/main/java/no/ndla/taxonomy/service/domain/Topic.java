@@ -19,7 +19,10 @@ public class Topic extends DomainObject {
     Set<SubjectTopic> subjectTopics = new HashSet<>();
 
     @OneToMany(mappedBy = "topic")
-    private Set<TopicSubtopic> topicSubtopics = new HashSet<>();
+    private Set<TopicSubtopic> subtopicConnections = new HashSet<>();
+
+    @OneToMany(mappedBy = "subtopic")
+    private Set<TopicSubtopic> parentConnections = new HashSet<>();
 
     @OneToMany(mappedBy = "topic")
     private Set<TopicResource> topicResources = new HashSet<>();
@@ -41,6 +44,11 @@ public class Topic extends DomainObject {
     }
 
     public TopicSubtopic addSubtopic(Topic subtopic) {
+        return addSubtopic(subtopic, false);
+
+    }
+
+    public TopicSubtopic addSubtopic(Topic subtopic, boolean primary) {
         Iterator<Topic> topics = getSubtopics();
         while (topics.hasNext()) {
             Topic t = topics.next();
@@ -50,8 +58,40 @@ public class Topic extends DomainObject {
         }
 
         TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic);
-        topicSubtopics.add(topicSubtopic);
+        subtopic.addParent(topicSubtopic);
+        subtopicConnections.add(topicSubtopic);
+        setPrimary(primary, topicSubtopic);
         return topicSubtopic;
+    }
+
+    private void addParent(TopicSubtopic topicSubtopic) {
+        parentConnections.add(topicSubtopic);
+    }
+
+    private void setPrimary(boolean primary, TopicSubtopic topicSubtopic) {
+
+        Topic parent = topicSubtopic.getTopic();
+        Topic subtopic = topicSubtopic.getSubtopic();
+        if (isFirstSubTopicForTopic(subtopic)) {
+            topicSubtopic.setPrimary(true);
+        }
+        /*else {
+            subTopic.setPrimary(primary);
+            if (primary) {
+                inValidateOldPrimary(subTopic);
+            }
+        }*/
+    }
+
+    private boolean isFirstSubTopicForTopic(Topic subTopic) {
+        if (subtopicConnections.size() > 1) {
+            return false;
+        }
+        if (subtopicConnections.size() == 0) {
+            return true;
+        }
+        TopicSubtopic topicSubtopic = getSubtopicConnections().next();
+        return topicSubtopic.getTopic().getPublicId().equals(this.getPublicId()) && topicSubtopic.getSubtopic().getPublicId().equals(subTopic.getPublicId());
     }
 
     public TopicResource addResource(Resource resource) {
@@ -73,7 +113,7 @@ public class Topic extends DomainObject {
     }
 
     public Iterator<Topic> getSubtopics() {
-        Iterator<TopicSubtopic> iterator = topicSubtopics.iterator();
+        Iterator<TopicSubtopic> iterator = subtopicConnections.iterator();
 
         return new Iterator<Topic>() {
             @Override
@@ -85,6 +125,17 @@ public class Topic extends DomainObject {
             public Topic next() {
                 return iterator.next().getSubtopic();
             }
+        };
+    }
+
+    public Iterator<TopicSubtopic> getSubtopicConnections() {
+        Iterator<TopicSubtopic> iterator = subtopicConnections.iterator();
+        return new Iterator<TopicSubtopic>() {
+            @Override
+            public boolean hasNext() { return iterator.hasNext(); }
+
+            @Override
+            public TopicSubtopic next() { return iterator.next(); }
         };
     }
 

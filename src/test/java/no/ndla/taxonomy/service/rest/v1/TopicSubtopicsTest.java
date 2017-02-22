@@ -4,13 +4,10 @@ package no.ndla.taxonomy.service.rest.v1;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.domain.TopicSubtopic;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URI;
+import java.util.Iterator;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.*;
@@ -107,5 +104,51 @@ public class TopicSubtopicsTest extends RestTest {
         assertEquals(topicid, topicSubtopicIndexDocument.topicid);
 
         assertEquals(subtopicid, topicSubtopicIndexDocument.subtopicid);
+    }
+
+    @Test
+    public void first_topic_connected_to_subtopic_is_primary() throws Exception {
+        Topic electricity = newTopic().name("electricity");
+        Topic alternatingCurrent = newTopic().name("How alternating current works");
+        TopicSubtopic topicSubtopic = save(electricity.addSubtopic(alternatingCurrent));
+
+        MockHttpServletResponse response = getResource("/v1/topic-subtopics/" + topicSubtopic.getPublicId());
+        TopicSubtopics.TopicSubtopicIndexDocument topicSubtopicIndexDocument = getObject(TopicSubtopics.TopicSubtopicIndexDocument.class, response);
+        assertTrue(topicSubtopicIndexDocument.primary);
+    }
+
+    @Test
+    public void subtopic_can_only_have_one_primary_topic_connection() throws Exception {
+        builder.topic("electricity", t -> t
+                .name("electricity")
+                .subtopic("ac", st -> st
+                        .name("alternating current")
+                )
+        );
+
+        builder.topic("wiring", t -> t
+                .name("Wiring")
+        );
+        URI id = getId(
+                createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
+                    topicid = builder.topic("wiring").getPublicId();
+                    subtopicid = builder.topic("ac").getPublicId();
+                    primary = true;
+                }})
+        );
+
+        MockHttpServletResponse response = getResource("/v1/topic-subtopics/" + id);
+        TopicSubtopics.TopicSubtopicIndexDocument topicSubtopicIndexDocument = getObject(TopicSubtopics.TopicSubtopicIndexDocument.class, response);
+        assertTrue(topicSubtopicIndexDocument.primary);
+
+        Topic topic = builder.topic("ac");
+        Iterator<TopicSubtopic> iterator = topic.getSubtopicConnections();
+        while (iterator.hasNext()) {
+            TopicSubtopic topicSubtopic = iterator.next();
+            if (!id.equals(topicSubtopic.getPublicId())) {
+                assertFalse(topicSubtopic.isPrimary());
+            }
+        }
+
     }
 }
