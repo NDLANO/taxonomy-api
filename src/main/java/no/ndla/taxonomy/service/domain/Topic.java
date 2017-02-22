@@ -16,7 +16,7 @@ import java.util.UUID;
 public class Topic extends DomainObject {
 
     @OneToMany(mappedBy = "topic")
-    Set<SubjectTopic> subjectTopics = new HashSet<>();
+    Set<SubjectTopic> parentSubjects = new HashSet<>();
 
     @OneToMany(mappedBy = "topic")
     private Set<TopicSubtopic> subtopicConnections = new HashSet<>();
@@ -58,9 +58,9 @@ public class Topic extends DomainObject {
         }
 
         TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic);
+        subtopic.setPrimaryParentTopic(primary, topicSubtopic);
         subtopic.addParent(topicSubtopic);
         subtopicConnections.add(topicSubtopic);
-        setPrimary(primary, topicSubtopic);
         return topicSubtopic;
     }
 
@@ -68,30 +68,21 @@ public class Topic extends DomainObject {
         parentConnections.add(topicSubtopic);
     }
 
-    private void setPrimary(boolean primary, TopicSubtopic topicSubtopic) {
-
-        Topic parent = topicSubtopic.getTopic();
-        Topic subtopic = topicSubtopic.getSubtopic();
-        if (isFirstSubTopicForTopic(subtopic)) {
+    private void setPrimaryParentTopic(boolean primary, TopicSubtopic topicSubtopic) {
+        if (parentConnections.size() == 0) {
             topicSubtopic.setPrimary(true);
-        }
-        /*else {
-            subTopic.setPrimary(primary);
+        } else {
+            topicSubtopic.setPrimary(primary);
             if (primary) {
-                inValidateOldPrimary(subTopic);
+                invalidateOldPrimary();
             }
-        }*/
+        }
     }
 
-    private boolean isFirstSubTopicForTopic(Topic subTopic) {
-        if (subtopicConnections.size() > 1) {
-            return false;
+    private void invalidateOldPrimary() {
+        for (TopicSubtopic tst : parentConnections) {
+            tst.setPrimary(false);
         }
-        if (subtopicConnections.size() == 0) {
-            return true;
-        }
-        TopicSubtopic topicSubtopic = getSubtopicConnections().next();
-        return topicSubtopic.getTopic().getPublicId().equals(this.getPublicId()) && topicSubtopic.getSubtopic().getPublicId().equals(subTopic.getPublicId());
     }
 
     public TopicResource addResource(Resource resource) {
@@ -128,17 +119,20 @@ public class Topic extends DomainObject {
         };
     }
 
-    public Iterator<TopicSubtopic> getSubtopicConnections() {
-        Iterator<TopicSubtopic> iterator = subtopicConnections.iterator();
+    public Iterator<TopicSubtopic> getParentTopics() {
+        Iterator<TopicSubtopic> iterator = parentConnections.iterator();
         return new Iterator<TopicSubtopic>() {
             @Override
-            public boolean hasNext() { return iterator.hasNext(); }
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
 
             @Override
-            public TopicSubtopic next() { return iterator.next(); }
+            public TopicSubtopic next() {
+                return iterator.next();
+            }
         };
     }
-
 
     public Iterator<Resource> getResources() {
         Iterator<TopicResource> iterator = topicResources.iterator();
@@ -162,7 +156,6 @@ public class Topic extends DomainObject {
     public URI getContentUri() {
         return contentUri;
     }
-
 
     public TopicTranslation addTranslation(String languageCode) {
         TopicTranslation topicTranslation = getTranslation(languageCode);
@@ -191,48 +184,37 @@ public class Topic extends DomainObject {
     }
 
     public void addSubjectTopic(SubjectTopic subjectTopic, boolean primary) {
-        subjectTopics.add(subjectTopic);
-        setPrimary(primary, subjectTopic);
+        setPrimaryParentSubject(primary, subjectTopic);
+        parentSubjects.add(subjectTopic);
     }
 
-
-    private void setPrimary(boolean primary, SubjectTopic subjectTopic) {
-        Subject subject = subjectTopic.getSubject();
-        if (isFirstTopicForResource(subject)) {
+    private void setPrimaryParentSubject(boolean primary, SubjectTopic subjectTopic) {
+        if (parentSubjects.size() == 0) {
             subjectTopic.setPrimary(true);
         } else {
             subjectTopic.setPrimary(primary);
-            if (primary) {
-                inValidateOldPrimary(subjectTopic);
-            }
+            if (primary) invalidateOldPrimarySubject();
         }
     }
 
-
-    private boolean isFirstTopicForResource(Subject subject) {
-        if (subjectTopics.size() > 1) {
-            return false;
-        }
-        SubjectTopic subjectTopic = getSubjectTopics().next();
-        return subjectTopic.getTopic().getPublicId().equals(this.getPublicId()) && subjectTopic.getSubject().getPublicId().equals(subject.getPublicId());
-    }
-
-    public Iterator<SubjectTopic> getSubjectTopics() {
-        Iterator<SubjectTopic> iterator = subjectTopics.iterator();
+    public Iterator<SubjectTopic> getParentSubjects() {
+        Iterator<SubjectTopic> iterator = parentSubjects.iterator();
         return new Iterator<SubjectTopic>() {
             @Override
-            public boolean hasNext() { return iterator.hasNext(); }
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
 
             @Override
-            public SubjectTopic next() { return iterator.next(); }
+            public SubjectTopic next() {
+                return iterator.next();
+            }
         };
     }
 
-    private void inValidateOldPrimary(SubjectTopic subjectTopic) {
-        for (SubjectTopic st: subjectTopics) {
-            if (!st.getPublicId().equals(subjectTopic.getPublicId())) {
-                st.setPrimary(false);
-            }
+    private void invalidateOldPrimarySubject() {
+        for (SubjectTopic st : parentSubjects) {
+            st.setPrimary(false);
         }
     }
 }

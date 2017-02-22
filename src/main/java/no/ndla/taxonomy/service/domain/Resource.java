@@ -42,10 +42,14 @@ public class Resource extends DomainObject {
         Iterator<TopicResource> iterator = topicResources.iterator();
         return new Iterator<TopicResource>() {
             @Override
-            public boolean hasNext() {return iterator.hasNext(); }
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
 
             @Override
-            public TopicResource next() { return iterator.next(); }
+            public TopicResource next() {
+                return iterator.next();
+            }
         };
     }
 
@@ -114,37 +118,24 @@ public class Resource extends DomainObject {
     }
 
     public void addTopicResource(TopicResource topicResource, boolean primary) {
-        topicResources.add(topicResource);
         setPrimary(primary, topicResource);
+        topicResources.add(topicResource);
     }
 
 
     private void setPrimary(boolean primary, TopicResource topicResource) {
-        Topic topic = topicResource.getTopic();
-        if (isFirstTopicForResource(topic)) {
+        if (topicResources.size() == 0) {
             topicResource.setPrimary(true);
         } else {
             topicResource.setPrimary(primary);
-            if (primary) {
-                inValidateOldPrimary(topicResource);
-            }
+            if (primary) invalidateOldPrimary();
         }
     }
 
 
-    private boolean isFirstTopicForResource(Topic topic) {
-        if (topicResources.size() > 1) {
-            return false;
-        }
-        TopicResource topicResource = getTopicResources().next();
-        return topicResource.getResource().getPublicId().equals(this.getPublicId()) && topicResource.getTopic().getPublicId().equals(topic.getPublicId());
-    }
-
-    private void inValidateOldPrimary(TopicResource topicResource) {
-        for (TopicResource tr: topicResources) {
-            if (!tr.getPublicId().equals(topicResource.getPublicId())) {
-                tr.setPrimary(false);
-            }
+    private void invalidateOldPrimary() {
+        for (TopicResource tr : topicResources) {
+            tr.setPrimary(false);
         }
     }
 }

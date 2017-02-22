@@ -43,7 +43,7 @@ public class Subject extends DomainObject {
         SubjectTopic subjectTopic = new SubjectTopic(this, topic);
         subjectTopics.add(subjectTopic);
         topic.addSubjectTopic(subjectTopic, primary);
-        topic.subjectTopics.add(subjectTopic);
+        topic.parentSubjects.add(subjectTopic);
         return subjectTopic;
     }
 

@@ -141,11 +141,14 @@ public class TopicSubtopicsTest extends RestTest {
         TopicSubtopics.TopicSubtopicIndexDocument topicSubtopicIndexDocument = getObject(TopicSubtopics.TopicSubtopicIndexDocument.class, response);
         assertTrue(topicSubtopicIndexDocument.primary);
 
-        Topic topic = builder.topic("ac");
-        Iterator<TopicSubtopic> iterator = topic.getSubtopicConnections();
+        Topic subtopic = builder.topic("ac");
+        Iterator<TopicSubtopic> iterator = subtopic.getParentTopics();
         while (iterator.hasNext()) {
             TopicSubtopic topicSubtopic = iterator.next();
-            if (!id.equals(topicSubtopic.getPublicId())) {
+            System.out.println(topicSubtopic.getTopic().getName() + " -> " + topicSubtopic.getSubtopic().getName() + " primary: " + topicSubtopic.isPrimary());
+            if (id.equals(topicSubtopic.getPublicId())) {
+                assertTrue(topicSubtopic.isPrimary());
+            } else {
                 assertFalse(topicSubtopic.isPrimary());
             }
         }

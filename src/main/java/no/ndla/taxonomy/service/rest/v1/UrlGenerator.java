@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.transaction.Transactional;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.getQuery;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.setQueryParameters;
@@ -35,7 +38,7 @@ public class UrlGenerator {
             @ApiParam(value = "If the element has several possible paths, select the one most like this one", example = "/subject:1/topic:1")
             @RequestParam(required = false, defaultValue = "") String context
     ) throws MalformedURLException {
-       Collection<String> urls =
+        Collection<String> urls =
                 jdbcTemplate.query(GENERATE_URL_QUERY, setQueryParameters(Collections.singletonList(id.toString())),
                         resultSet -> {
                             Map<String, String> result = new HashMap<>();

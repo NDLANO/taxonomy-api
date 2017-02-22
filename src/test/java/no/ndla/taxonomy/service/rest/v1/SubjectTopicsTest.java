@@ -5,11 +5,7 @@ import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URI;
 import java.util.Iterator;
@@ -146,7 +142,7 @@ public class SubjectTopicsTest extends RestTest {
         assertTrue(subjectTopicIndexDocument.primary);
 
         Topic topic = builder.topic("graphs");
-        Iterator<SubjectTopic> iterator = topic.getSubjectTopics();
+        Iterator<SubjectTopic> iterator = topic.getParentSubjects();
         while (iterator.hasNext()) {
             SubjectTopic subjectTopic = iterator.next();
             if (!id.equals(subjectTopic.getPublicId())) {
