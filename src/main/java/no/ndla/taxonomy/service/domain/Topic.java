@@ -190,4 +190,49 @@ public class Topic extends DomainObject {
         topicTranslations.remove(translation);
     }
 
+    public void addSubjectTopic(SubjectTopic subjectTopic, boolean primary) {
+        subjectTopics.add(subjectTopic);
+        setPrimary(primary, subjectTopic);
+    }
+
+
+    private void setPrimary(boolean primary, SubjectTopic subjectTopic) {
+        Subject subject = subjectTopic.getSubject();
+        if (isFirstTopicForResource(subject)) {
+            subjectTopic.setPrimary(true);
+        } else {
+            subjectTopic.setPrimary(primary);
+            if (primary) {
+                inValidateOldPrimary(subjectTopic);
+            }
+        }
+    }
+
+
+    private boolean isFirstTopicForResource(Subject subject) {
+        if (subjectTopics.size() > 1) {
+            return false;
+        }
+        SubjectTopic subjectTopic = getSubjectTopics().next();
+        return subjectTopic.getTopic().getPublicId().equals(this.getPublicId()) && subjectTopic.getSubject().getPublicId().equals(subject.getPublicId());
+    }
+
+    public Iterator<SubjectTopic> getSubjectTopics() {
+        Iterator<SubjectTopic> iterator = subjectTopics.iterator();
+        return new Iterator<SubjectTopic>() {
+            @Override
+            public boolean hasNext() { return iterator.hasNext(); }
+
+            @Override
+            public SubjectTopic next() { return iterator.next(); }
+        };
+    }
+
+    private void inValidateOldPrimary(SubjectTopic subjectTopic) {
+        for (SubjectTopic st: subjectTopics) {
+            if (!st.getPublicId().equals(subjectTopic.getPublicId())) {
+                st.setPrimary(false);
+            }
+        }
+    }
 }

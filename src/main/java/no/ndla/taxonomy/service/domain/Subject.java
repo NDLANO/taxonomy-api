@@ -29,6 +29,10 @@ public class Subject extends DomainObject {
     }
 
     public SubjectTopic addTopic(Topic topic) {
+        return addTopic(topic, false);
+    }
+
+    public SubjectTopic addTopic(Topic topic, boolean primary) {
         Iterator<Topic> topics = getTopics();
         while (topics.hasNext()) {
             Topic t = topics.next();
@@ -38,6 +42,7 @@ public class Subject extends DomainObject {
 
         SubjectTopic subjectTopic = new SubjectTopic(this, topic);
         subjectTopics.add(subjectTopic);
+        topic.addSubjectTopic(subjectTopic, primary);
         topic.subjectTopics.add(subjectTopic);
         return subjectTopic;
     }

@@ -62,8 +62,7 @@ public class SubjectTopics {
         Subject subject = subjectRepository.getByPublicId(command.subjectid);
         Topic topic = topicRepository.getByPublicId(command.topicid);
 
-        SubjectTopic subjectTopic = subject.addTopic(topic);
-        subjectTopic.setPrimary(command.primary);
+        SubjectTopic subjectTopic = subject.addTopic(topic, command.primary);
         subjectTopicRepository.save(subjectTopic);
 
         URI location = URI.create("/subject-topics/" + subjectTopic.getPublicId());

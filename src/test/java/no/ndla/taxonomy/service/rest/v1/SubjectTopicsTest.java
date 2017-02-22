@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URI;
+import java.util.Iterator;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.*;
@@ -111,5 +112,46 @@ public class SubjectTopicsTest extends RestTest {
         SubjectTopics.SubjectTopicIndexDocument subjectTopicIndexDocument = getObject(SubjectTopics.SubjectTopicIndexDocument.class, resource);
         assertEquals(subjectid, subjectTopicIndexDocument.subjectid);
         assertEquals(topicid, subjectTopicIndexDocument.topicid);
+    }
+
+    @Test
+    public void first_subject_connected_to_topic_is_primary() throws Exception {
+        Subject electricity = newSubject().name("physics");
+        Topic alternatingCurrent = newTopic().name("electricity");
+        SubjectTopic subjectTopic = save(electricity.addTopic(alternatingCurrent));
+
+        MockHttpServletResponse resource = getResource("/v1/subject-topics/" + subjectTopic.getPublicId());
+        SubjectTopics.SubjectTopicIndexDocument subjectTopicIndexDocument = getObject(SubjectTopics.SubjectTopicIndexDocument.class, resource);
+        assertTrue(subjectTopicIndexDocument.primary);
+    }
+
+    @Test
+    public void topic_can_only_have_one_primary_subject() throws Exception {
+        builder.subject("elementary maths", t -> t
+                .name("elementary maths")
+                .topic("graphs", r -> r.name("graphs")));
+
+        builder.subject("graph theory", t -> t
+                .name("graph theory"));
+
+        URI id = getId(
+                createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
+                    subjectid = builder.subject("graph theory").getPublicId();
+                    topicid = builder.topic("graphs").getPublicId();
+                    primary = true;
+                }})
+        );
+        MockHttpServletResponse response = getResource("/v1/subject-topics/" + id);
+        SubjectTopics.SubjectTopicIndexDocument subjectTopicIndexDocument = getObject(SubjectTopics.SubjectTopicIndexDocument.class, response);
+        assertTrue(subjectTopicIndexDocument.primary);
+
+        Topic topic = builder.topic("graphs");
+        Iterator<SubjectTopic> iterator = topic.getSubjectTopics();
+        while (iterator.hasNext()) {
+            SubjectTopic subjectTopic = iterator.next();
+            if (!id.equals(subjectTopic.getPublicId())) {
+                assertFalse(subjectTopic.isPrimary());
+            }
+        }
     }
 }
