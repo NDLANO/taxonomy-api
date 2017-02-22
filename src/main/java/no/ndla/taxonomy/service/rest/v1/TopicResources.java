@@ -57,14 +57,13 @@ public class TopicResources {
 
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Resource resource = resourceRepository.getByPublicId(command.resourceid);
-
-        TopicResource topicResource = topic.addResource(resource);
-        topicResource.setPrimary(command.primary);
+        TopicResource topicResource = topic.addResource(resource, command.primary);
         topicResourceRepository.save(topicResource);
 
         URI location = URI.create("/topic-resources/" + topicResource.getPublicId());
         return ResponseEntity.created(location).build();
     }
+
 
     @DeleteMapping("/{id}")
     @ApiOperation("Removes a resource from a topic")
@@ -78,7 +77,8 @@ public class TopicResources {
     @ApiOperation(value = "Updates a connection between a topic and a resource", notes = "Use to update which topic is primary to the resource.")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand command) throws Exception {
+                    @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand
+                            command) throws Exception {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
         topicResource.setPrimary(command.primary);
     }

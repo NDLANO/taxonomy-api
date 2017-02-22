@@ -55,6 +55,10 @@ public class Topic extends DomainObject {
     }
 
     public TopicResource addResource(Resource resource) {
+        return addResource(resource, false);
+    }
+
+    public TopicResource addResource(Resource resource, boolean primary) {
         Iterator<Resource> resources = getResources();
         while (resources.hasNext()) {
             Resource r = resources.next();
@@ -64,6 +68,7 @@ public class Topic extends DomainObject {
 
         TopicResource topicResource = new TopicResource(this, resource);
         topicResources.add(topicResource);
+        resource.addTopicResource(topicResource, primary);
         return topicResource;
     }
 

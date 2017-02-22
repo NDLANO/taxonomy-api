@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
+import java.util.Iterator;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.*;
@@ -103,5 +104,46 @@ public class TopicResourcesTest extends RestTest {
         TopicResources.TopicResourceIndexDocument topicResourceIndexDocument = getObject(TopicResources.TopicResourceIndexDocument.class, resource);
         assertEquals(electricity.getPublicId(), topicResourceIndexDocument.topicid);
         assertEquals(alternatingCurrent.getPublicId(), topicResourceIndexDocument.resourceid);
+    }
+
+    @Test
+    public void first_topic_connected_to_resource_is_primary() throws Exception {
+        Topic electricity = newTopic().name("electricity");
+        Resource alternatingCurrent = newResource().name("How alternating current works");
+        TopicResource topicResource = save(electricity.addResource(alternatingCurrent));
+
+        MockHttpServletResponse resource = getResource("/v1/topic-resources/" + topicResource.getPublicId());
+        TopicResources.TopicResourceIndexDocument topicResourceIndexDocument = getObject(TopicResources.TopicResourceIndexDocument.class, resource);
+        assertTrue(topicResourceIndexDocument.primary);
+    }
+
+    @Test
+    public void resource_can_only_have_one_primary() throws Exception {
+        builder.topic("elementary maths", t -> t
+                .name("elementary maths")
+                .resource("graphs", r -> r.name("graphs")));
+
+        builder.topic("graph theory", t -> t
+                .name("graph theory"));
+
+        URI id = getId(
+                createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
+                    topicid = builder.topic("graph theory").getPublicId();
+                    resourceid = builder.resource("graphs").getPublicId();
+                    primary = true;
+                }})
+        );
+        MockHttpServletResponse response = getResource("/v1/topic-resources/" + id);
+        TopicResources.TopicResourceIndexDocument topicResourceIndexDocument = getObject(TopicResources.TopicResourceIndexDocument.class, response);
+        assertTrue(topicResourceIndexDocument.primary);
+
+        Resource resource = builder.resource("graphs");
+        Iterator<TopicResource> iterator = resource.getTopicResources();
+        while (iterator.hasNext()) {
+            TopicResource topicResource = iterator.next();
+            if (!id.equals(topicResource.getPublicId())) {
+                assertFalse(topicResource.isPrimary());
+            }
+        }
     }
 }

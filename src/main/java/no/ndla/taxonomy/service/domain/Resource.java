@@ -25,6 +25,9 @@ public class Resource extends DomainObject {
     @OneToMany(mappedBy = "resource")
     Set<ResourceTranslation> resourceTranslations = new HashSet<>();
 
+    @OneToMany(mappedBy = "resource")
+    private Set<TopicResource> topicResources = new HashSet<>();
+
     public Resource() {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
     }
@@ -32,6 +35,18 @@ public class Resource extends DomainObject {
     public Resource name(String name) {
         setName(name);
         return this;
+    }
+
+
+    public Iterator<TopicResource> getTopicResources() {
+        Iterator<TopicResource> iterator = topicResources.iterator();
+        return new Iterator<TopicResource>() {
+            @Override
+            public boolean hasNext() {return iterator.hasNext(); }
+
+            @Override
+            public TopicResource next() { return iterator.next(); }
+        };
     }
 
     public Iterator<ResourceType> getResourceTypes() {
@@ -96,5 +111,40 @@ public class Resource extends DomainObject {
         ResourceTranslation translation = getTranslation(languageCode);
         if (translation == null) return;
         resourceTranslations.remove(translation);
+    }
+
+    public void addTopicResource(TopicResource topicResource, boolean primary) {
+        topicResources.add(topicResource);
+        setPrimary(primary, topicResource);
+    }
+
+
+    private void setPrimary(boolean primary, TopicResource topicResource) {
+        Topic topic = topicResource.getTopic();
+        if (isFirstTopicForResource(topic)) {
+            topicResource.setPrimary(true);
+        } else {
+            topicResource.setPrimary(primary);
+            if (primary) {
+                inValidateOldPrimary(topicResource);
+            }
+        }
+    }
+
+
+    private boolean isFirstTopicForResource(Topic topic) {
+        if (topicResources.size() > 1) {
+            return false;
+        }
+        TopicResource topicResource = getTopicResources().next();
+        return topicResource.getResource().getPublicId().equals(this.getPublicId()) && topicResource.getTopic().getPublicId().equals(topic.getPublicId());
+    }
+
+    private void inValidateOldPrimary(TopicResource topicResource) {
+        for (TopicResource tr: topicResources) {
+            if (!tr.getPublicId().equals(topicResource.getPublicId())) {
+                tr.setPrimary(false);
+            }
+        }
     }
 }
