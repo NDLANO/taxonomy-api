@@ -1,9 +1,10 @@
 SELECT
   t.public_id                  AS topic_id,
   coalesce(rtr.name, r.name)   AS resource_name,
-  r.public_id                  AS resource_id,
+  r.public_id                  AS resource_public_id,
   r.content_uri                AS resource_content_uri,
   rt.id                        AS resource_type_id,
+  rt.public_id                 AS resource_type_public_id,
   coalesce(rttr.name, rt.name) AS resource_type_name
 FROM
   topic t

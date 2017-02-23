@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
+import no.ndla.taxonomy.service.domain.ResourceType;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.junit.Test;
@@ -175,12 +176,15 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_have_several_resource_types() throws Exception {
+        ResourceType lecture = builder.resourceType("lecture", rt -> rt.name("lecture"));
+        ResourceType assignment = builder.resourceType("assignment", rt -> rt.name("assignment"));
+
         URI topic = builder.topic(t -> t
                 .name("topic")
                 .resource(r -> r
                         .name("resource")
-                        .resourceType(rt -> rt.name("lecture"))
-                        .resourceType(rt -> rt.name("assignment"))
+                        .resourceType(lecture)
+                        .resourceType(assignment)
                 )
         ).getPublicId();
 
@@ -189,23 +193,28 @@ public class TopicsTest extends RestTest {
 
         assertEquals(1, result.length);
         assertEquals(2, result[0].resourceTypes.size());
+        assertAnyTrue(result[0].resourceTypes, rt -> rt.id.equals(lecture.getPublicId()));
+        assertAnyTrue(result[0].resourceTypes, rt -> rt.id.equals(assignment.getPublicId()));
     }
 
     @Test
     public void can_have_several_resource_types_recursively() throws Exception {
+        ResourceType lecture = builder.resourceType("lecture", rt -> rt.name("lecture"));
+        ResourceType assignment = builder.resourceType("assignment", rt -> rt.name("assignment"));
+
         URI topic = builder.topic(t -> t
                 .name("topic")
                 .subtopic(st -> st
                         .resource(r -> r
                                 .name("resource 1")
-                                .resourceType(rt -> rt.name("lecture"))
-                                .resourceType(rt -> rt.name("assignment"))
+                                .resourceType(lecture)
+                                .resourceType(assignment)
                         )
                 )
                 .resource(r -> r
                         .name("resource 2")
-                        .resourceType(rt -> rt.name("lecture"))
-                        .resourceType(rt -> rt.name("assignment"))
+                        .resourceType(lecture)
+                        .resourceType(assignment)
                 )
         ).getPublicId();
 
@@ -215,6 +224,10 @@ public class TopicsTest extends RestTest {
         assertEquals(2, result.length);
         assertEquals(2, result[0].resourceTypes.size());
         assertEquals(2, result[1].resourceTypes.size());
+        assertAnyTrue(result[0].resourceTypes, rt -> rt.id.equals(lecture.getPublicId()));
+        assertAnyTrue(result[0].resourceTypes, rt -> rt.id.equals(assignment.getPublicId()));
+        assertAnyTrue(result[1].resourceTypes, rt -> rt.id.equals(lecture.getPublicId()));
+        assertAnyTrue(result[1].resourceTypes, rt -> rt.id.equals(assignment.getPublicId()));
     }
 
     @Test

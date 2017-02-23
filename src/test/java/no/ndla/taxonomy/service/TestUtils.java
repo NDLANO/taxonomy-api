@@ -19,8 +19,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -121,21 +120,22 @@ public class TestUtils {
         assertTrue("No " + className + " matching predicate found.", Arrays.stream(objects).anyMatch(predicate));
     }
 
+    public static <V> void assertAnyTrue(Iterable<V> objects, Predicate<V> predicate) {
+        assertAnyTrue(objects.iterator(), predicate);
+    }
+
     public static <V> void assertAnyTrue(Iterator<V> objects, Predicate<V> predicate) {
         assertTrue(objects.hasNext());
 
-        boolean anyTrue = false;
         String className = null;
         while (objects.hasNext()) {
             V next = objects.next();
             className = next.getClass().getSimpleName();
-            if (predicate.test(next)) {
-                anyTrue = true;
-                break;
-            }
+            if (predicate.test(next)) return;
         }
 
-        assertTrue("No " + className + " matching predicate found.", anyTrue);
+        if (null == className) fail("Empty collection");
+        fail("No " + className + " matching predicate found.");
     }
 
     public static <V> void assertAllTrue(V[] objects, Predicate<V> predicate) {

@@ -168,7 +168,7 @@ public class Topics {
             ResourceIndexDocument current, previous = null;
 
             while (resultSet.next()) {
-                URI id = toURI(resultSet.getString("resource_id"));
+                URI id = toURI(resultSet.getString("resource_public_id"));
 
                 boolean duplicate = previous != null && id.equals(previous.id);
                 if (duplicate) {
@@ -178,15 +178,15 @@ public class Topics {
                         topicId = toURI(resultSet.getString("topic_id"));
                         name = resultSet.getString("resource_name");
                         contentUri = toURI(resultSet.getString("resource_content_uri"));
-                        id = toURI(resultSet.getString("resource_id"));
+                        id = toURI(resultSet.getString("resource_public_id"));
                     }};
                     result.add(current);
                 }
 
-                String resource_type_id = resultSet.getString("resource_type_id");
-                if (resource_type_id != null) {
+                String resourceTypePublicId = resultSet.getString("resource_type_public_id");
+                if (resourceTypePublicId != null) {
                     ResourceTypeIndexDocument resourceType = new ResourceTypeIndexDocument() {{
-                        id = toURI(resource_type_id);
+                        id = toURI(resourceTypePublicId);
                         name = resultSet.getString("resource_type_name");
                     }};
 
