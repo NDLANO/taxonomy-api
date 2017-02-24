@@ -64,11 +64,20 @@ public class TopicSubtopicsTest extends RestTest {
     public void can_update_topic_subtopic() throws Exception {
         URI id = save(newTopic().addSubtopic(newTopic())).getPublicId();
 
-        TopicSubtopics.UpdateTopicSubtopicCommand command = new TopicSubtopics.UpdateTopicSubtopicCommand();
-        command.primary = true;
-        updateResource("/v1/topic-subtopics/" + id, command);
+        updateResource("/v1/topic-subtopics/" + id, new TopicSubtopics.UpdateTopicSubtopicCommand() {{
+            primary = true;
+        }});
 
         assertTrue(topicSubtopicRepository.getByPublicId(id).isPrimary());
+    }
+
+    @Test
+    public void cannot_unset_primary_topic() throws Exception {
+        URI id = save(newTopic().addSubtopic(newTopic())).getPublicId();
+
+        updateResource("/v1/topic-subtopics/" + id, new TopicSubtopics.UpdateTopicSubtopicCommand() {{
+            primary = false;
+        }}, status().is4xxClientError());
     }
 
     @Test

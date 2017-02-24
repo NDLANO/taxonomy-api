@@ -83,6 +83,8 @@ public class TopicResources {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
         if (command.primary) {
             topicResource.setPrimary(true);
+        } else if (topicResource.isPrimary() && !command.primary) {
+            throw new PrimaryParentRequiredException();
         }
     }
 

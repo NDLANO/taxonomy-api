@@ -89,6 +89,8 @@ public class SubjectTopics {
 
         if (command.primary) {
             topic.setPrimarySubject(subject);
+        } else if (subjectTopic.isPrimary() && !command.primary) {
+            throw new PrimaryParentRequiredException();
         }
     }
 

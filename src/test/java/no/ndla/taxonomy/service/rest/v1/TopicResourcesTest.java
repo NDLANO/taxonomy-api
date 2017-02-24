@@ -76,6 +76,15 @@ public class TopicResourcesTest extends RestTest {
     }
 
     @Test
+    public void cannot_unset_primary_topic() throws Exception {
+        URI id = save(newTopic().addResource(newResource())).getPublicId();
+
+        updateResource("/v1/topic-resources/" + id, new TopicResources.UpdateTopicResourceCommand() {{
+            primary = false;
+        }}, status().is4xxClientError());
+    }
+
+    @Test
     public void can_get_resources() throws Exception {
         Topic electricity = newTopic().name("electricity");
         Resource alternatingCurrent = newResource().name("How alternating current works");

@@ -71,6 +71,15 @@ public class SubjectTopicsTest extends RestTest {
     }
 
     @Test
+    public void cannot_unset_primary_subject() throws Exception {
+        URI id = save(newSubject().addTopic(newTopic())).getPublicId();
+
+        updateResource("/v1/subject-topics/" + id, new SubjectTopics.UpdateSubjectTopicCommand() {{
+            primary = false;
+        }}, status().is4xxClientError());
+    }
+
+    @Test
     public void can_get_topics() throws Exception {
         Subject physics = newSubject().name("physics");
         Topic electricity = newTopic().name("electricity");
@@ -150,4 +159,6 @@ public class SubjectTopicsTest extends RestTest {
             }
         }
     }
+
+
 }

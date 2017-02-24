@@ -80,6 +80,8 @@ public class TopicSubtopics {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
         if (command.primary) {
             topicSubtopic.setPrimary(true);
+        } else if (topicSubtopic.isPrimary() && !command.primary) {
+            throw new PrimaryParentRequiredException();
         }
     }
 
