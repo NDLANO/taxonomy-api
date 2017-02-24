@@ -16,23 +16,23 @@ import java.util.UUID;
 public class Topic extends DomainObject {
 
     @OneToMany(mappedBy = "topic")
-    Set<SubjectTopic> parentSubjects = new HashSet<>();
+    Set<SubjectTopic> subjects = new HashSet<>();
 
     @OneToMany(mappedBy = "topic")
-    private Set<TopicSubtopic> subtopicConnections = new HashSet<>();
+    private Set<TopicSubtopic> subtopics = new HashSet<>();
 
     @OneToMany(mappedBy = "subtopic")
-    private Set<TopicSubtopic> parentConnections = new HashSet<>();
+    private Set<TopicSubtopic> parentTopics = new HashSet<>();
 
     @OneToMany(mappedBy = "topic")
-    private Set<TopicResource> topicResources = new HashSet<>();
+    private Set<TopicResource> resources = new HashSet<>();
 
     @Column
     @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
     private URI contentUri;
 
     @OneToMany(mappedBy = "topic")
-    Set<TopicTranslation> topicTranslations = new HashSet<>();
+    Set<TopicTranslation> translations = new HashSet<>();
 
     public Topic() {
         setPublicId(URI.create("urn:topic:" + UUID.randomUUID()));
@@ -44,11 +44,24 @@ public class Topic extends DomainObject {
     }
 
     public TopicSubtopic addSubtopic(Topic subtopic) {
-        return addSubtopic(subtopic, false);
+        refuseIfDuplicateSubtopic(subtopic);
 
+        TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic);
+        subtopic.parentTopics.add(topicSubtopic);
+        subtopics.add(topicSubtopic);
+        if (subtopic.hasSingleParentTopic()) subtopic.setPrimaryParentTopic(this);
+        return topicSubtopic;
     }
 
-    public TopicSubtopic addSubtopic(Topic subtopic, boolean primary) {
+    public boolean hasSingleParentTopic() {
+        return parentTopics.size() == 1;
+    }
+
+    public boolean hasSingleSubject() {
+        return subjects.size() == 1;
+    }
+
+    private void refuseIfDuplicateSubtopic(Topic subtopic) {
         Iterator<Topic> topics = getSubtopics();
         while (topics.hasNext()) {
             Topic t = topics.next();
@@ -56,55 +69,46 @@ public class Topic extends DomainObject {
                 throw new DuplicateIdException("Topic with id " + getPublicId() + " already contains topic with id " + subtopic.getPublicId());
             }
         }
-
-        TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic);
-        subtopic.setPrimaryParentTopic(primary, topicSubtopic);
-        subtopic.addParent(topicSubtopic);
-        subtopicConnections.add(topicSubtopic);
-        return topicSubtopic;
     }
 
-    private void addParent(TopicSubtopic topicSubtopic) {
-        parentConnections.add(topicSubtopic);
+    public void setPrimaryParentTopic(Topic topic) {
+        TopicSubtopic topicSubtopic = getParentTopic(topic);
+        if (null == topicSubtopic) throw new ParentNotFoundException(this, topic);
+
+        parentTopics.forEach(st -> st.setPrimary(false));
+        topicSubtopic.setPrimary(true);
     }
 
-    private void setPrimaryParentTopic(boolean primary, TopicSubtopic topicSubtopic) {
-        if (parentConnections.size() == 0) {
-            topicSubtopic.setPrimary(true);
-        } else {
-            topicSubtopic.setPrimary(primary);
-            if (primary) {
-                invalidateOldPrimary();
+    private TopicSubtopic getParentTopic(Topic parentTopic) {
+        for (TopicSubtopic topicSubtopic : parentTopics) {
+            if (topicSubtopic.getTopic().equals(parentTopic)) {
+                return topicSubtopic;
             }
         }
-    }
-
-    private void invalidateOldPrimary() {
-        for (TopicSubtopic tst : parentConnections) {
-            tst.setPrimary(false);
-        }
+        return null;
     }
 
     public TopicResource addResource(Resource resource) {
-        return addResource(resource, false);
+        refuseIfDuplicateResource(resource);
+
+        TopicResource topicResource = new TopicResource(this, resource);
+        this.resources.add(topicResource);
+        resource.topics.add(topicResource);
+        if (resource.hasSingleParentTopic()) resource.setPrimaryTopic(this);
+        return topicResource;
     }
 
-    public TopicResource addResource(Resource resource, boolean primary) {
+    private void refuseIfDuplicateResource(Resource resource) {
         Iterator<Resource> resources = getResources();
         while (resources.hasNext()) {
             Resource r = resources.next();
             if (r.getId().equals(resource.getId()))
                 throw new DuplicateIdException("Topic with id " + getPublicId() + " already contains resource with id " + resource.getPublicId());
         }
-
-        TopicResource topicResource = new TopicResource(this, resource);
-        topicResources.add(topicResource);
-        resource.addTopicResource(topicResource, primary);
-        return topicResource;
     }
 
     public Iterator<Topic> getSubtopics() {
-        Iterator<TopicSubtopic> iterator = subtopicConnections.iterator();
+        Iterator<TopicSubtopic> iterator = subtopics.iterator();
 
         return new Iterator<Topic>() {
             @Override
@@ -120,7 +124,7 @@ public class Topic extends DomainObject {
     }
 
     public Iterator<TopicSubtopic> getParentTopics() {
-        Iterator<TopicSubtopic> iterator = parentConnections.iterator();
+        Iterator<TopicSubtopic> iterator = parentTopics.iterator();
         return new Iterator<TopicSubtopic>() {
             @Override
             public boolean hasNext() {
@@ -135,7 +139,7 @@ public class Topic extends DomainObject {
     }
 
     public Iterator<Resource> getResources() {
-        Iterator<TopicResource> iterator = topicResources.iterator();
+        Iterator<TopicResource> iterator = resources.iterator();
         return new Iterator<Resource>() {
             @Override
             public boolean hasNext() {
@@ -162,43 +166,46 @@ public class Topic extends DomainObject {
         if (topicTranslation != null) return topicTranslation;
 
         topicTranslation = new TopicTranslation(this, languageCode);
-        topicTranslations.add(topicTranslation);
+        translations.add(topicTranslation);
         return topicTranslation;
     }
 
     public TopicTranslation getTranslation(String languageCode) {
-        return topicTranslations.stream()
-                .filter(topicTranslation -> topicTranslation.getLanguageCode().equals(languageCode))
+        return translations.stream()
+                .filter(translation -> translation.getLanguageCode().equals(languageCode))
                 .findFirst()
                 .orElse(null);
     }
 
     public Iterator<TopicTranslation> getTranslations() {
-        return topicTranslations.iterator();
+        return translations.iterator();
     }
 
     public void removeTranslation(String languageCode) {
         TopicTranslation translation = getTranslation(languageCode);
         if (translation == null) return;
-        topicTranslations.remove(translation);
+        translations.remove(translation);
     }
 
-    public void addSubjectTopic(SubjectTopic subjectTopic, boolean primary) {
-        setPrimaryParentSubject(primary, subjectTopic);
-        parentSubjects.add(subjectTopic);
+    public void setPrimarySubject(Subject subject) {
+        SubjectTopic subjectTopic = getSubject(subject);
+        if (null == subjectTopic) throw new ParentNotFoundException(this, subject);
+
+        subjects.forEach(st -> st.setPrimary(false));
+        subjectTopic.setPrimary(true);
     }
 
-    private void setPrimaryParentSubject(boolean primary, SubjectTopic subjectTopic) {
-        if (parentSubjects.size() == 0) {
-            subjectTopic.setPrimary(true);
-        } else {
-            subjectTopic.setPrimary(primary);
-            if (primary) invalidateOldPrimarySubject();
+    private SubjectTopic getSubject(Subject subject) {
+        for (SubjectTopic subjectTopic : subjects) {
+            if (subjectTopic.getSubject().equals(subject)) {
+                return subjectTopic;
+            }
         }
+        return null;
     }
 
-    public Iterator<SubjectTopic> getParentSubjects() {
-        Iterator<SubjectTopic> iterator = parentSubjects.iterator();
+    public Iterator<SubjectTopic> getSubjects() {
+        Iterator<SubjectTopic> iterator = subjects.iterator();
         return new Iterator<SubjectTopic>() {
             @Override
             public boolean hasNext() {
@@ -212,9 +219,4 @@ public class Topic extends DomainObject {
         };
     }
 
-    private void invalidateOldPrimarySubject() {
-        for (SubjectTopic st : parentSubjects) {
-            st.setPrimary(false);
-        }
-    }
 }

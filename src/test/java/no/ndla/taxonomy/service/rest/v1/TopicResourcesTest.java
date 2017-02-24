@@ -138,7 +138,7 @@ public class TopicResourcesTest extends RestTest {
         assertTrue(topicResourceIndexDocument.primary);
 
         Resource resource = builder.resource("graphs");
-        Iterator<TopicResource> iterator = resource.getTopicResources();
+        Iterator<TopicResource> iterator = resource.getTopics();
         while (iterator.hasNext()) {
             TopicResource topicResource = iterator.next();
             if (!id.equals(topicResource.getPublicId())) {

@@ -55,8 +55,10 @@ public class TopicSubtopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Topic subtopic = topicRepository.getByPublicId(command.subtopicid);
 
-        TopicSubtopic topicSubtopic = topic.addSubtopic(subtopic, command.primary);
+        TopicSubtopic topicSubtopic = topic.addSubtopic(subtopic);
         topicSubtopicRepository.save(topicSubtopic);
+
+        if (command.primary) subtopic.setPrimaryParentTopic(topic);
 
         URI location = URI.create("/topic-subtopics/" + topicSubtopic.getPublicId());
         return ResponseEntity.created(location).build();
@@ -76,7 +78,9 @@ public class TopicSubtopics {
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) throws Exception {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
-        topicSubtopic.setPrimary(command.primary);
+        if (command.primary) {
+            topicSubtopic.setPrimary(true);
+        }
     }
 
     @PutMapping

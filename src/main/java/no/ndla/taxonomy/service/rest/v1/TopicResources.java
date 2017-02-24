@@ -52,12 +52,13 @@ public class TopicResources {
 
     @PostMapping
     @ApiOperation(value = "Adds a resource to a topic")
-    public ResponseEntity post(
+    public ResponseEntity<Void> post(
             @ApiParam(name = "connection", value = "new topic/resource connection ") @RequestBody AddResourceToTopicCommand command) throws Exception {
 
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Resource resource = resourceRepository.getByPublicId(command.resourceid);
-        TopicResource topicResource = topic.addResource(resource, command.primary);
+        TopicResource topicResource = topic.addResource(resource);
+        if (command.primary) resource.setPrimaryTopic(topic);
         topicResourceRepository.save(topicResource);
 
         URI location = URI.create("/topic-resources/" + topicResource.getPublicId());
@@ -80,7 +81,9 @@ public class TopicResources {
                     @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand
                             command) throws Exception {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
-        topicResource.setPrimary(command.primary);
+        if (command.primary) {
+            topicResource.setPrimary(true);
+        }
     }
 
     public static class AddResourceToTopicCommand {

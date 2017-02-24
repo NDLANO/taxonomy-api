@@ -62,7 +62,8 @@ public class SubjectTopics {
         Subject subject = subjectRepository.getByPublicId(command.subjectid);
         Topic topic = topicRepository.getByPublicId(command.topicid);
 
-        SubjectTopic subjectTopic = subject.addTopic(topic, command.primary);
+        SubjectTopic subjectTopic = subject.addTopic(topic);
+        if (command.primary) topic.setPrimarySubject(subject);
         subjectTopicRepository.save(subjectTopic);
 
         URI location = URI.create("/subject-topics/" + subjectTopic.getPublicId());
@@ -83,7 +84,12 @@ public class SubjectTopics {
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) throws Exception {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
-        subjectTopic.setPrimary(command.primary);
+        Topic topic = subjectTopic.getTopic();
+        Subject subject = subjectTopic.getSubject();
+
+        if (command.primary) {
+            topic.setPrimarySubject(subject);
+        }
     }
 
     @PutMapping
@@ -105,7 +111,8 @@ public class SubjectTopics {
         public URI topicid;
 
         @JsonProperty
-        @ApiModelProperty(value = "Primary connection", example = "true")
+        @ApiModelProperty(value = "If this is the primary subject of this topic.", example = "true",
+                notes = "The first subject added to a topic will always become primary, regardless of the value provided here.")
         public boolean primary;
     }
 
@@ -115,7 +122,8 @@ public class SubjectTopics {
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(value = "primary", example = "true")
+        @ApiModelProperty(value = "If true, set this subject as the primary subject for this topic", example = "true",
+                notes = "This will replace any other primary subject for this topic. You must have one primary subject, so it is not allowed to set the currently primary subject to not be primary any more.")
         public boolean primary;
     }
 

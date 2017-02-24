@@ -26,7 +26,7 @@ public class Resource extends DomainObject {
     Set<ResourceTranslation> resourceTranslations = new HashSet<>();
 
     @OneToMany(mappedBy = "resource")
-    private Set<TopicResource> topicResources = new HashSet<>();
+    Set<TopicResource> topics = new HashSet<>();
 
     public Resource() {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
@@ -37,9 +37,8 @@ public class Resource extends DomainObject {
         return this;
     }
 
-
-    public Iterator<TopicResource> getTopicResources() {
-        Iterator<TopicResource> iterator = topicResources.iterator();
+    public Iterator<TopicResource> getTopics() {
+        Iterator<TopicResource> iterator = topics.iterator();
         return new Iterator<TopicResource>() {
             @Override
             public boolean hasNext() {
@@ -117,25 +116,25 @@ public class Resource extends DomainObject {
         resourceTranslations.remove(translation);
     }
 
-    public void addTopicResource(TopicResource topicResource, boolean primary) {
-        setPrimary(primary, topicResource);
-        topicResources.add(topicResource);
+    public void setPrimaryTopic(Topic topic) {
+        TopicResource topicResource = getTopic(topic);
+        if (null == topicResource) throw new ParentNotFoundException(this, topic);
+
+        topics.forEach(t -> t.setPrimary(false));
+        topicResource.setPrimary(true);
     }
 
 
-    private void setPrimary(boolean primary, TopicResource topicResource) {
-        if (topicResources.size() == 0) {
-            topicResource.setPrimary(true);
-        } else {
-            topicResource.setPrimary(primary);
-            if (primary) invalidateOldPrimary();
-        }
+    public boolean hasSingleParentTopic() {
+        return topics.size() == 1;
     }
 
-
-    private void invalidateOldPrimary() {
-        for (TopicResource tr : topicResources) {
-            tr.setPrimary(false);
+    private TopicResource getTopic(Topic topic) {
+        for (TopicResource topicResource : topics) {
+            if (topicResource.getTopic().equals(topic)) {
+                return topicResource;
+            }
         }
+        return null;
     }
 }

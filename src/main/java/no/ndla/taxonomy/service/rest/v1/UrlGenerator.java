@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.transaction.Transactional;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,7 +36,7 @@ public class UrlGenerator {
             @RequestParam("id") URI id,
             @ApiParam(value = "If the element has several possible paths, select the one most like this one", example = "/subject:1/topic:1")
             @RequestParam(required = false, defaultValue = "") String context
-    ) throws MalformedURLException {
+    ) {
         Collection<String> urls =
                 jdbcTemplate.query(GENERATE_URL_QUERY, setQueryParameters(Collections.singletonList(id.toString())),
                         resultSet -> {

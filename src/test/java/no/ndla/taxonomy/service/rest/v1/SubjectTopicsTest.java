@@ -142,7 +142,7 @@ public class SubjectTopicsTest extends RestTest {
         assertTrue(subjectTopicIndexDocument.primary);
 
         Topic topic = builder.topic("graphs");
-        Iterator<SubjectTopic> iterator = topic.getParentSubjects();
+        Iterator<SubjectTopic> iterator = topic.getSubjects();
         while (iterator.hasNext()) {
             SubjectTopic subjectTopic = iterator.next();
             if (!id.equals(subjectTopic.getPublicId())) {
