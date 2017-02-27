@@ -18,6 +18,7 @@ import java.util.Map;
 
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.getQuery;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.setQueryParameters;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @RestController
 @RequestMapping("/v1/url/generate")
@@ -37,8 +38,12 @@ public class UrlGenerator {
             @ApiParam(value = "If the element has several possible paths, select the one most like this one", example = "/subject:1/topic:1")
             @RequestParam(required = false, defaultValue = "") String context
     ) {
+        String query = GENERATE_URL_QUERY;
+        if (isBlank(context)) {
+            query = query.replace("1 = 1", "parent.is_primary = true");
+        }
         Collection<String> urls =
-                jdbcTemplate.query(GENERATE_URL_QUERY, setQueryParameters(Collections.singletonList(id.toString())),
+                jdbcTemplate.query(query, setQueryParameters(Collections.singletonList(id.toString())),
                         resultSet -> {
                             Map<String, String> result = new HashMap<>();
                             while (resultSet.next()) {
