@@ -124,6 +124,10 @@ public class Resource extends DomainObject {
         topicResource.setPrimary(true);
     }
 
+    public void setRandomPrimaryTopic() {
+        if (topics.size() == 0) return;
+        setPrimaryTopic(topics.iterator().next().getTopic());
+    }
 
     public boolean hasSingleParentTopic() {
         return topics.size() == 1;
@@ -137,4 +141,5 @@ public class Resource extends DomainObject {
         }
         return null;
     }
+
 }

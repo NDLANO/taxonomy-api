@@ -107,6 +107,23 @@ public class Topic extends DomainObject {
         }
     }
 
+    public void removeResource(Resource resource) {
+        TopicResource topicResource = getResource(resource);
+        if (topicResource == null) throw new ChildNotFoundException(this, resource);
+        resource.topics.remove(topicResource);
+        resources.remove(topicResource);
+        if (topicResource.isPrimary()) resource.setRandomPrimaryTopic();
+    }
+
+    private TopicResource getResource(Resource resource) {
+        for (TopicResource topicResource : resources) {
+            if (topicResource.getResource().equals(resource)) {
+                return topicResource;
+            }
+        }
+        return null;
+    }
+
     public Iterator<Topic> getSubtopics() {
         Iterator<TopicSubtopic> iterator = subtopics.iterator();
 
@@ -218,5 +235,6 @@ public class Topic extends DomainObject {
             }
         };
     }
+
 
 }

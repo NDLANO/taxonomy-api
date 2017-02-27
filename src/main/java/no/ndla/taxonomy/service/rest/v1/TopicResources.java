@@ -70,7 +70,9 @@ public class TopicResources {
     @ApiOperation("Removes a resource from a topic")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) throws Exception {
-        topicResourceRepository.getByPublicId(id);
+        TopicResource topicResource = topicResourceRepository.getByPublicId(id);
+        topicResource.getTopic().removeResource(topicResource.getResource());
+
         topicResourceRepository.deleteByPublicId(id);
     }
 

@@ -85,6 +85,19 @@ public class TopicResourcesTest extends RestTest {
     }
 
     @Test
+    public void deleted_primary_topic_is_replaced() throws Exception {
+        Resource resource = newResource();
+        URI primary = save(newTopic().addResource(resource)).getPublicId();
+        URI other = save(newTopic().addResource(resource)).getPublicId();
+
+        deleteResource("/v1/topic-resources/" + primary);
+
+        TopicResource topicResource = resource.getTopics().next();
+        assertEquals(other, topicResource.getPublicId());
+        assertTrue(topicResource.isPrimary());
+    }
+
+    @Test
     public void can_get_resources() throws Exception {
         Topic electricity = newTopic().name("electricity");
         Resource alternatingCurrent = newResource().name("How alternating current works");
