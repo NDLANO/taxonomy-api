@@ -79,6 +79,11 @@ public class Topic extends DomainObject {
         topicSubtopic.setPrimary(true);
     }
 
+    private void setRandomPrimaryTopic(Topic subtopic) {
+        if (subtopic.parentTopics.size() == 0) return;
+        setPrimaryParentTopic(subtopic.parentTopics.iterator().next().getTopic());
+    }
+
     private TopicSubtopic getParentTopic(Topic parentTopic) {
         for (TopicSubtopic topicSubtopic : parentTopics) {
             if (topicSubtopic.getTopic().equals(parentTopic)) {
@@ -109,7 +114,7 @@ public class Topic extends DomainObject {
 
     public void removeResource(Resource resource) {
         TopicResource topicResource = getResource(resource);
-        if (topicResource == null) throw new ChildNotFoundException(this, resource);
+        if (topicResource == null) throw new ChildNotFoundException("Topic with id " + this.getPublicId() + " has no resource with id " + topicResource.getResource());
         resource.topics.remove(topicResource);
         resources.remove(topicResource);
         if (topicResource.isPrimary()) resource.setRandomPrimaryTopic();
@@ -237,4 +242,20 @@ public class Topic extends DomainObject {
     }
 
 
+    public void removeSubtopic(Topic subtopic) {
+        TopicSubtopic topicSubtopic = getSubtopic(subtopic);
+        if (topicSubtopic == null) throw new ChildNotFoundException("Topic " + this.getPublicId() + " has not subtopic with id " + subtopic.getPublicId());
+        subtopic.parentTopics.remove(topicSubtopic);
+        subtopics.remove(topicSubtopic);
+        if (topicSubtopic.isPrimary()) subtopic.setRandomPrimaryTopic(subtopic);
+    }
+
+    private TopicSubtopic getSubtopic(Topic subtopic) {
+        for (TopicSubtopic topicSubtopic : subtopics) {
+            if (topicSubtopic.getSubtopic().equals(subtopic)) {
+                return topicSubtopic;
+            }
+        }
+        return null;
+    }
 }

@@ -69,6 +69,7 @@ public class TopicSubtopics {
     @ApiOperation(value = "Removes a connection between a topic and a subtopic")
     public void delete(@PathVariable("id") URI id) throws Exception {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
+        topicSubtopic.getTopic().removeSubtopic(topicSubtopic.getSubtopic());
         topicSubtopicRepository.delete(topicSubtopic);
     }
 

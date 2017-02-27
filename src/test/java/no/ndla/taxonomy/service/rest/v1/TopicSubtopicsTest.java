@@ -127,6 +127,19 @@ public class TopicSubtopicsTest extends RestTest {
     }
 
     @Test
+    public void deleted_primary_topic_is_replaced() throws Exception {
+        Topic subtopic = newTopic();
+        URI primary = save(newTopic().addSubtopic(subtopic)).getPublicId();
+        URI other = save(newTopic().addSubtopic(subtopic)).getPublicId();
+
+        deleteResource("/v1/topic-subtopics/" + primary);
+
+        TopicSubtopic topicSubtopic = subtopic.getParentTopics().next();
+        assertEquals(other, topicSubtopic.getPublicId());
+        assertTrue(topicSubtopic.isPrimary());
+    }
+
+    @Test
     public void subtopic_can_only_have_one_primary_topic_connection() throws Exception {
         builder.topic("electricity", t -> t
                 .name("electricity")
