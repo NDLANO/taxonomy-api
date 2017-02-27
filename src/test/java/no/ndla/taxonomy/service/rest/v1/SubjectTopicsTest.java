@@ -161,4 +161,16 @@ public class SubjectTopicsTest extends RestTest {
     }
 
 
+    @Test
+    public void deleted_primary_subject_is_replaced() throws Exception {
+        Topic topic = newTopic();
+        URI primary = save(newSubject().addTopic(topic)).getPublicId();
+        URI other = save(newSubject().addTopic(topic)).getPublicId();
+
+        deleteResource("/v1/subject-topics/" + primary);
+
+        SubjectTopic subjectTopic = topic.getSubjects().next();
+        assertEquals(other, subjectTopic.getPublicId());
+        assertTrue(subjectTopic.isPrimary());
+    }
 }

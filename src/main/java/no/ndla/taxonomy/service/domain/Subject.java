@@ -101,4 +101,21 @@ public class Subject extends DomainObject {
     public void setContentUri(URI contentUri) {
         this.contentUri = contentUri;
     }
+
+    public void removeTopic(Topic topic) {
+        SubjectTopic subjectTopic = getTopic(topic);
+        if (subjectTopic == null) {
+            throw new ChildNotFoundException("Subject " + this.getPublicId() + " has no topic with id " + topic.getPublicId());
+        }
+        topic.subjects.remove(subjectTopic);
+        topics.remove(subjectTopic);
+        if (subjectTopic.isPrimary()) topic.setRandomPrimarySubject();
+    }
+
+    private SubjectTopic getTopic(Topic topic) {
+        for (SubjectTopic subjectTopic : topics) {
+            if (subjectTopic.getTopic().getPublicId().equals(topic.getPublicId())) return subjectTopic;
+        }
+        return null;
+    }
 }

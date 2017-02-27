@@ -74,7 +74,8 @@ public class SubjectTopics {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation("Removes a topic from a subject")
     public void delete(@PathVariable("id") URI id) throws Exception {
-        subjectTopicRepository.getByPublicId(id);
+        SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
+        subjectTopic.getSubject().removeTopic(subjectTopic.getTopic());
         subjectTopicRepository.deleteByPublicId(id);
     }
 
