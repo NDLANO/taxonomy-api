@@ -217,9 +217,10 @@ public class Topics {
         public List<ResourceTypeIndexDocument> resourceTypes = new ArrayList<>();
 
         @JsonProperty
-        @ApiModelProperty(notes = "The ID of this resource in the system where the content is stored. " +
-                "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
-                "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
+        @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
+                notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
+                        "for the system, and <id> is the id of this content in that system.",
+                example = "urn:article:1")
         public URI contentUri;
     }
 
@@ -239,7 +240,7 @@ public class Topics {
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(notes = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+        @ApiModelProperty(value = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
         public URI contentUri;
 
         @JsonProperty
@@ -249,7 +250,7 @@ public class Topics {
 
     public static class UpdateTopicCommand {
         @JsonProperty
-        @ApiModelProperty(notes = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+        @ApiModelProperty(value = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
         public URI contentUri;
 
         @JsonProperty
@@ -267,7 +268,7 @@ public class Topics {
         public String name;
 
         @JsonProperty
-        @ApiModelProperty(notes = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+        @ApiModelProperty(value = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
         public URI contentUri;
 
         TopicIndexDocument() {

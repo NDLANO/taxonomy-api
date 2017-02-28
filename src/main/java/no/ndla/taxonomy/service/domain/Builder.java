@@ -119,6 +119,10 @@ public class Builder {
             return this;
         }
 
+        public SubjectBuilder topic(String key) {
+            return topic(key, null);
+        }
+
         public SubjectBuilder topic(String key, Consumer<TopicBuilder> consumer) {
             TopicBuilder topicBuilder = getTopicBuilder(key);
             if (null != consumer) consumer.accept(topicBuilder);
@@ -228,7 +232,7 @@ public class Builder {
             return resource(resource.resource);
         }
 
-        private TopicBuilder resource(Resource resource) {
+        public TopicBuilder resource(Resource resource) {
             entityManager.persist(topic.addResource(resource));
             return this;
         }

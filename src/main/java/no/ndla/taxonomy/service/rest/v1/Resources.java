@@ -118,9 +118,9 @@ public class Resources {
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(notes = "The ID of this resource in the system where the content is stored. " +
-                "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
-                "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
+        @ApiModelProperty(value = "The ID of this resource in the system where the content is stored.",
+                notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
+                        "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
         public URI contentUri;
 
         @JsonProperty
@@ -130,9 +130,9 @@ public class Resources {
 
     static class UpdateResourceCommand {
         @JsonProperty
-        @ApiModelProperty(notes = "The ID of this resource in the system where the content is stored. " +
-                "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
-                "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
+        @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
+                notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
+                        "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
         public URI contentUri;
 
         @JsonProperty
@@ -150,9 +150,9 @@ public class Resources {
         public String name;
 
         @JsonProperty
-        @ApiModelProperty(notes = "The ID of this resource in the system where the content is stored. " +
-                "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
-                "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
+        @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
+                notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
+                        "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
         public URI contentUri;
 
         ResourceIndexDocument() {

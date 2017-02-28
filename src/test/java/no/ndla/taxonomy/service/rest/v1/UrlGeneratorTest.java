@@ -2,12 +2,12 @@ package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.domain.Resource;
-import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
 import org.junit.Test;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.assertEquals;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class UrlGeneratorTest extends RestTest {
     @Test
@@ -104,6 +104,12 @@ public class UrlGeneratorTest extends RestTest {
 
         UrlGenerator.UrlResult url = generateUrl("urn:resource:1");
         assertEquals("/subject:2/topic:2/resource:1", url.path);
+    }
+
+    @Test
+    public void return_404_if_not_found() throws Exception {
+        String id = "no:such:element";
+        getResource("/v1/url/generate?id=" + id, status().isNotFound());
     }
 
     private UrlGenerator.UrlResult generateUrl(String id) throws Exception {

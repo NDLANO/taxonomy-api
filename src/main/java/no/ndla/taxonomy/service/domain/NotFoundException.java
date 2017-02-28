@@ -8,4 +8,9 @@ public class NotFoundException extends RuntimeException {
     public NotFoundException(String type, Object id) {
         super(type + " with id " + id + " not found");
     }
+
+    public NotFoundException(String url) {
+        super("Element with url " + url + " not found");
+    }
+
 }

@@ -2,6 +2,7 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.service.domain.NotFoundException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +39,12 @@ public class UrlGenerator {
             @ApiParam(value = "If the element has several possible paths, select the one most like this one", example = "/subject:1/topic:1")
             @RequestParam(required = false, defaultValue = "") String context
     ) {
+        UrlResult urlResult = getUrlResult(id, context);
+        if (isBlank(urlResult.path)) throw new NotFoundException("Element", id);
+        return urlResult;
+    }
+
+    public UrlResult getUrlResult(URI id, String context) {
         String query = GENERATE_URL_QUERY;
         if (isBlank(context)) {
             query = query.replace("1 = 1", "parent.is_primary = true");
@@ -60,7 +67,6 @@ public class UrlGenerator {
                             return result.values();
                         }
                 );
-
         return new UrlResult(id, getUrlMatchingContext(context, urls));
     }
 
