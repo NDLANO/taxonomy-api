@@ -138,6 +138,32 @@ public class TopicsTest extends RestTest {
     }
 
     @Test
+    public void can_get_urls_for_resources_for_a_topic_recursively() throws Exception {
+        URI a = builder.topic(t -> t
+                .name("a")
+                .resource(r -> r.name("resource a"))
+                .subtopic(st -> st
+                        .name("aa")
+                        .resource(r -> r.name("resource aa"))
+                        .subtopic(st2 -> st2
+                                .name("aaa")
+                                .resource(r -> r.name("resource aaa"))
+                        )
+                        .subtopic(st2 -> st2
+                                .name("aab")
+                                .resource(r -> r.name("resource aab"))
+                        )
+                )
+        ).getPublicId();
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + a + "/resources?recursive=true");
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(4, result.length);
+        assertAllTrue(result, r -> r.url.path.contains("topic") && r.url.path.contains("resource"));
+    }
+
+    @Test
     public void can_get_resources_for_a_topic_without_child_topic_resources() throws Exception {
         URI a = builder.topic(t -> t
                 .name("a")

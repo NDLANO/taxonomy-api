@@ -30,14 +30,16 @@ public class Topics {
 
     private TopicRepository topicRepository;
     private JdbcTemplate jdbcTemplate;
+    private UrlGenerator urlGenerator;
 
     private static final String getTopicsQuery = getQuery("get_topics");
     private static final String resourceQueryRecursive = getQuery("get_resources_by_topic_public_id_recursively");
     private static final String resourceQuery = getQuery("get_resources_by_topic_public_id");
 
-    public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
+    public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate, UrlGenerator urlGenerator) {
         this.topicRepository = topicRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.urlGenerator = urlGenerator;
     }
 
     @GetMapping
@@ -163,6 +165,8 @@ public class Topics {
             query = query.replace("1 = 1", "(" + where + ")");
         }
 
+        UrlGenerator.UrlResult topicContext = urlGenerator.getUrlResult(topicId, "");
+
         return jdbcTemplate.query(query, setQueryParameters(args), resultSet -> {
             List<ResourceIndexDocument> result = new ArrayList<>();
             ResourceIndexDocument current, previous = null;
@@ -179,6 +183,7 @@ public class Topics {
                         name = resultSet.getString("resource_name");
                         contentUri = toURI(resultSet.getString("resource_content_uri"));
                         id = toURI(resultSet.getString("resource_public_id"));
+                        url = urlGenerator.getUrlResult(id, topicContext.path);
                     }};
                     result.add(current);
                 }
@@ -222,6 +227,10 @@ public class Topics {
                         "for the system, and <id> is the id of this content in that system.",
                 example = "urn:article:1")
         public URI contentUri;
+
+        @JsonProperty
+        @ApiModelProperty(value = "URL for resource", example = "{id = 'urn:resource:12', path = '/subject:1/topic:12/resource:12'}")
+        public UrlGenerator.UrlResult url;
     }
 
     public static class ResourceTypeIndexDocument {

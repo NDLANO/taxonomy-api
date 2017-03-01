@@ -35,10 +35,12 @@ public class Subjects {
 
     private SubjectRepository subjectRepository;
     private JdbcTemplate jdbcTemplate;
+    private UrlGenerator urlGenerator;
 
-    public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate) {
+    public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate, UrlGenerator urlGenerator) {
         this.subjectRepository = subjectRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.urlGenerator = urlGenerator;
     }
 
     @GetMapping
@@ -193,6 +195,7 @@ public class Subjects {
             sql = sql.replace("1 = 1", "(" + where + ")");
         }
 
+        UrlGenerator.UrlResult subjectContext = urlGenerator.getUrlResult(subjectId, "");
         return jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
             List<ResourceIndexDocument> result = new ArrayList<>();
             ResourceIndexDocument current, previous = null;
@@ -209,6 +212,7 @@ public class Subjects {
                         contentUri = toURI(resultSet.getString("resource_content_uri"));
                         name = resultSet.getString("resource_name");
                         id = toURI(resultSet.getString("resource_public_id"));
+                        url = urlGenerator.getUrlResult(id, subjectContext.path);
                     }};
                     result.add(current);
                 }
@@ -303,6 +307,10 @@ public class Subjects {
                         "for the system, and <id> is the id of this content in that system.",
                 example = "urn:article:1")
         public URI contentUri;
+
+        @JsonProperty
+        @ApiModelProperty(value = "URL for resource", example = "{id = 'urn:resource:12', path = '/subject:1/topic:12/resource:12'}")
+        public UrlGenerator.UrlResult url;
     }
 
     public static class ResourceTypeIndexDocument {

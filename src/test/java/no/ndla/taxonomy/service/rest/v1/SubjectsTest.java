@@ -233,6 +233,26 @@ public class SubjectsTest extends RestTest {
     }
 
     @Test
+    public void can_get_urls_for_all_resources() throws Exception {
+        URI id = builder.subject(s -> s
+                .name("subject")
+                .topic(t -> t
+                        .name("topic a")
+                        .resource(r -> r.name("resource a")))
+                .topic(t -> t
+                        .name("topic b")
+                        .resource(r -> r.name("resource b"))
+                        .subtopic(st -> st.name("subtopic").resource(r -> r.name("sub resource"))))
+        ).getPublicId();
+
+        MockHttpServletResponse response = getResource("/v1/subjects/" + id + "/resources");
+        Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
+
+        assertEquals(3, resources.length);
+        assertAllTrue(resources, r -> r.url.path.contains("topic") && r.url.path.contains("resource"));
+    }
+
+    @Test
     public void can_have_several_resource_types_recursively() throws Exception {
         URI subjectId = builder.subject(s -> s
                 .name("subject")
