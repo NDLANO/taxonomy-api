@@ -212,7 +212,7 @@ public class Subjects {
                         contentUri = toURI(resultSet.getString("resource_content_uri"));
                         name = resultSet.getString("resource_name");
                         id = toURI(resultSet.getString("resource_public_id"));
-                        url = urlGenerator.getUrlResult(id, subjectContext.path);
+                        path = urlGenerator.getUrlResult(id, subjectContext.path).path;
                     }};
                     result.add(current);
                 }
@@ -309,8 +309,8 @@ public class Subjects {
         public URI contentUri;
 
         @JsonProperty
-        @ApiModelProperty(value = "URL for resource", example = "{id = 'urn:resource:12', path = '/subject:1/topic:12/resource:12'}")
-        public UrlGenerator.UrlResult url;
+        @ApiModelProperty(value = "URL path for resource", example = "'/subject:1/topic:12/resource:12")
+        public String path;
     }
 
     public static class ResourceTypeIndexDocument {

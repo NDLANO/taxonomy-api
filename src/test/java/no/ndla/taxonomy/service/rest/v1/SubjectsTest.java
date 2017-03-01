@@ -249,7 +249,7 @@ public class SubjectsTest extends RestTest {
         Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
 
         assertEquals(3, resources.length);
-        assertAllTrue(resources, r -> r.url.path.contains("topic") && r.url.path.contains("resource"));
+        assertAllTrue(resources, r -> r.path.contains("topic") && r.path.contains("resource"));
     }
 
     @Test
