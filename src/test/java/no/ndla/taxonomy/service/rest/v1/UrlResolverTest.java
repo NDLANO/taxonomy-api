@@ -109,23 +109,23 @@ public class UrlResolverTest extends RestTest {
 
     @Test
     public void sends_404_when_not_found() throws Exception {
-        String url = "/no/such/element";
-        getResource("/v1/url/resolve?url=" + url, status().isNotFound());
+        String path = "/no/such/element";
+        getResource("/v1/url/resolve?path=" + path, status().isNotFound());
     }
 
-    private void assertParents(UrlResolver.ResolvedUrl url, String... expected) {
-        assertEquals(expected.length, url.parents.length);
+    private void assertParents(UrlResolver.ResolvedUrl path, String... expected) {
+        assertEquals(expected.length, path.parents.length);
         for (int i = 0; i < expected.length; i++) {
-            assertEquals(expected[i], url.parents[i].toString());
+            assertEquals(expected[i], path.parents[i].toString());
         }
     }
 
-    private String resolveUrlAndExpectRedirect(String url) throws Exception {
-        MockHttpServletResponse response = getResource("/v1/url/resolve?url=" + url, status().is3xxRedirection());
+    private String resolveUrlAndExpectRedirect(String path) throws Exception {
+        MockHttpServletResponse response = getResource("/v1/url/resolve?path=" + path, status().is3xxRedirection());
         return response.getHeader("Location");
     }
 
     private UrlResolver.ResolvedUrl resolveUrl(String url) throws Exception {
-        return getObject(UrlResolver.ResolvedUrl.class, getResource("/v1/url/resolve?url=" + url));
+        return getObject(UrlResolver.ResolvedUrl.class, getResource("/v1/url/resolve?path=" + url));
     }
 }

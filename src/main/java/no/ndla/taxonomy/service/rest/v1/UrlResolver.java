@@ -34,13 +34,13 @@ public class UrlResolver {
     }
 
     @GetMapping
-    public ResolvedUrl resolve(@RequestParam String url, HttpServletResponse response) throws Exception {
-        URI id = getId(url);
+    public ResolvedUrl resolve(@RequestParam String path, HttpServletResponse response) throws Exception {
+        URI id = getId(path);
 
-        UrlGenerator.UrlResult urlResult = urlGenerator.getUrlResult(id, url);
-        if (isBlank(urlResult.path)) throw new NotFoundException(url);
+        UrlGenerator.UrlResult urlResult = urlGenerator.getUrlResult(id, path);
+        if (isBlank(urlResult.path)) throw new NotFoundException(path);
 
-        if (!urlResult.path.equals(url)) {
+        if (!urlResult.path.equals(path)) {
             response.sendRedirect(urlResult.path);
             return null;
         }
