@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.rest.v1;
+package no.ndla.taxonomy.service.domain;
 
 import org.springframework.web.bind.annotation.ResponseStatus;
 
