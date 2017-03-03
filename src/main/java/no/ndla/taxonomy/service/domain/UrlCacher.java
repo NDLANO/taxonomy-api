@@ -45,8 +45,8 @@ public class UrlCacher {
                 });
     }
 
-    public void add(Resource resource) {
-        URI publicId = resource.getPublicId();
+    public void add(DomainObject domainObject) {
+        URI publicId = domainObject.getPublicId();
         cachedUrlRepository.deleteByPublicId(publicId);
         Collection<String> paths = urlGenerator.generatePaths(publicId);
         String primaryPath = urlGenerator.generatePrimaryPath(publicId);
@@ -55,6 +55,15 @@ public class UrlCacher {
         for (String path : paths) {
             System.out.println("path: " + path);
             cachedUrlRepository.save(new CachedUrl(publicId, path, path.equals(primaryPath)));
+        }
+    }
+
+    public void remove(DomainObject domainObject) {
+        URI publicId = domainObject.getPublicId();
+        Collection<String> paths = urlGenerator.generatePaths(publicId);
+        cachedUrlRepository.deleteByPublicId(publicId);
+        for (String path : paths) {
+            cachedUrlRepository.deleteByPathStartingWith(path);
         }
     }
 }

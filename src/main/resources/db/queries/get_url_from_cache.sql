@@ -1,3 +1,3 @@
 SELECT *
-FROM urls
+FROM cached_url
 WHERE public_id = ?

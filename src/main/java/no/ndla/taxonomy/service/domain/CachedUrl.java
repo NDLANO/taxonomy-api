@@ -8,6 +8,8 @@ import java.net.URI;
 @Entity
 public class CachedUrl {
 
+    public CachedUrl() {}
+
     public CachedUrl(URI publicId, String path, boolean primary) {
         this.publicId = publicId;
         this.path = path;

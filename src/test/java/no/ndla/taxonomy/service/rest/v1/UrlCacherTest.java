@@ -92,4 +92,29 @@ public class UrlCacherTest extends RestTest {
         assertAnyTrue(urls, u -> !u.isPrimary() && u.getPath().equals("/subject:1/topic:2/resource:2"));
     }
 
+    @Test
+    public void removing_resource_deletes_all_urls() throws Exception {
+        urlCacher.add(resource1);
+        urlCacher.remove(resource1);
+        Collection<CachedUrl> urls = cachedUrlRepository.findByPublicId(resource1.getPublicId());
+        assertEquals(0, urls.size());
+    }
+
+    @Test
+    public void can_add_new_topic_to_cache() throws Exception {
+        urlCacher.add(topic1);
+        assertEquals(1, count(cachedUrlRepository.findByPublicId(topic1.getPublicId()).iterator()));
+        CachedUrl url = cachedUrlRepository.findByPublicId(topic1.getPublicId()).iterator().next();
+        assertEquals("/subject:1/topic:1", url.getPath());
+    }
+
+    @Test
+    public void removing_topic_deletes_all_urls_involving_topic() throws Exception {
+        urlCacher.add(topic1);
+        urlCacher.add(resource1);
+        urlCacher.remove(topic1);
+
+        assertEquals(0, count(cachedUrlRepository.findByPublicId(topic1.getPublicId()).iterator()));
+        assertEquals(0, count(cachedUrlRepository.findByPublicId(resource1.getPublicId()).iterator()));
+    }
 }
