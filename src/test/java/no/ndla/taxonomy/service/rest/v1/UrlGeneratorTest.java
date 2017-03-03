@@ -59,24 +59,26 @@ public class UrlGeneratorTest extends RestTest {
 
     @Test
     public void can_use_context_to_choose_url() throws Exception {
-        builder.resource("testResource", r -> r.publicId("urn:resource:1"));
+        builder.topic("topic1", t -> t
+                .publicId("urn:topic:1")
+                .resource(r -> r.publicId("urn:resource:1"))
+        );
+
         builder.subject(s -> s
                 .publicId("urn:subject:1")
-                .topic(t -> t
-                        .publicId("urn:topic:1")
-                        .resource("testResource")
-                )
+                .topic("topic1")
         );
+
         builder.subject(s -> s
                 .publicId("urn:subject:2")
-                .topic(t -> t
-                        .publicId("urn:topic:2")
-                        .resource("testResource")
-                )
+                .topic("topic1")
         );
-        UrlGenerator.UrlResult url = generateUrl("urn:resource:1", "/subject:2/topic:2/");
-        assertEquals("/subject:2/topic:2/resource:1", url.path);
 
+        UrlGenerator.UrlResult url = generateUrl("urn:resource:1", "/subject:1/something");
+        assertEquals("/subject:1/topic:1/resource:1", url.path);
+
+        UrlGenerator.UrlResult url2 = generateUrl("urn:resource:1", "/subject:2/something");
+        assertEquals("/subject:2/topic:1/resource:1", url2.path);
     }
 
     @Test

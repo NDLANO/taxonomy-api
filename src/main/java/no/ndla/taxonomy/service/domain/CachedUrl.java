@@ -1,19 +1,27 @@
 package no.ndla.taxonomy.service.domain;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import org.hibernate.annotations.Type;
+
+import javax.persistence.*;
+import java.net.URI;
 
 @Entity
 public class CachedUrl {
+
+    public CachedUrl(URI publicId, String path, boolean primary) {
+        this.publicId = publicId;
+        this.path = path;
+        this.primary = primary;
+    }
+
     @Id
-    @GeneratedValue
-    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column
     private int id;
 
-    @Column(name = "public_id")
-    private String publicId;
+    @Column
+    @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
+    private URI publicId;
 
     @Column
     private String path;
@@ -21,4 +29,27 @@ public class CachedUrl {
     @Column(name = "is_primary")
     private boolean primary;
 
+    public URI getPublicId() {
+        return publicId;
+    }
+
+    public void setPublicId(URI publicId) {
+        this.publicId = publicId;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public boolean isPrimary() {
+        return primary;
+    }
+
+    public void setPrimary(boolean primary) {
+        this.primary = primary;
+    }
 }

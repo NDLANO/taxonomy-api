@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.getQuery;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.setQueryParameters;
@@ -45,29 +45,54 @@ public class UrlGenerator {
     }
 
     public UrlResult getUrlResult(URI id, String context) {
+        boolean onlyPrimary = isBlank(context);
+        Collection<String> urls = generatePaths(id, onlyPrimary);
+        return new UrlResult(id, getUrlMatchingContext(context, urls));
+    }
+
+    public Collection<String> generatePaths(URI publicId) {
+        return generatePaths(publicId, false);
+    }
+
+    public Collection<String> generatePaths(URI publicId, boolean onlyPrimary) {
         String query = GENERATE_URL_QUERY;
-        if (isBlank(context)) {
+        if (onlyPrimary) {
             query = query.replace("1 = 1", "parent.is_primary = true");
         }
-        Collection<String> urls =
-                jdbcTemplate.query(query, setQueryParameters(Collections.singletonList(id.toString())),
-                        resultSet -> {
-                            Map<String, String> result = new HashMap<>();
-                            while (resultSet.next()) {
-                                String publicId = resultSet.getString("public_id");
-                                String childId = resultSet.getString("child_public_id");
-                                String prefix = "";
-                                if (result.containsKey(publicId)) {
-                                    prefix = result.get(publicId);
-                                    result.remove(publicId);
-                                }
-                                String path = prefix + "/" + publicId.substring(4);
-                                result.put(childId, path);
-                            }
-                            return result.values();
-                        }
-                );
-        return new UrlResult(id, getUrlMatchingContext(context, urls));
+        return jdbcTemplate.query(query, setQueryParameters(Collections.singletonList(publicId.toString())),
+                resultSet -> {
+                    Map<String, List<String>> urls = new HashMap<>();
+                    while (resultSet.next()) {
+                        mapRow(resultSet, urls);
+                    }
+                    return urls.values().stream().flatMap(List::stream).collect(Collectors.toList());
+                }
+        );
+    }
+
+    public String generatePrimaryPath(URI publicId) {
+        Collection<String> paths = generatePaths(publicId, true);
+        return paths.size() == 0 ? null : paths.iterator().next();
+    }
+
+    private void mapRow(ResultSet resultSet, Map<String, List<String>> urls) throws SQLException {
+        String publicId = resultSet.getString("public_id");
+        String childId = resultSet.getString("child_public_id");
+
+        List<String> prefixes = get(urls, publicId);
+        urls.remove(publicId);
+        if (prefixes.size() == 0) prefixes.add("");
+
+        List<String> paths = get(urls, childId);
+        urls.put(childId, paths);
+
+        for (String prefix : prefixes) {
+            paths.add(prefix + "/" + publicId.substring(4));
+        }
+    }
+
+    private List<String> get(Map<String, List<String>> urls, String publicId) {
+        return urls.containsKey(publicId) ? urls.get(publicId) : new ArrayList<>();
     }
 
     private String getUrlMatchingContext(String context, Collection<String> urls) {

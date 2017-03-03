@@ -11,7 +11,7 @@ public class DomainEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "public_id")
+    @Column
     @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
     private URI publicId;
 
