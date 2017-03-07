@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import static no.ndla.taxonomy.service.TestUtils.assertAnyTrue;
 import static no.ndla.taxonomy.service.TestUtils.count;
@@ -67,9 +68,8 @@ public class UrlCacherTest extends RestTest {
     public void can_add_new_resource_to_cache() throws Exception {
         urlCacher.add(resource1);
 
-        assertEquals(1, count(cachedUrlRepository.findAll().iterator()));
-        CachedUrl url = cachedUrlRepository.findByPublicId(resource1.getPublicId()).iterator().next();
-        assertEquals("/subject:1/topic:1/resource:1", url.getPath());
+        assertEquals(1, count(getUrls(resource1)));
+        assertEquals("/subject:1/topic:1/resource:1", getUrls(resource1).next().getPath());
     }
 
     @Test
@@ -78,9 +78,8 @@ public class UrlCacherTest extends RestTest {
 
         urlCacher.add(resource1);
 
-        assertEquals(1, count(cachedUrlRepository.findAll().iterator()));
-        CachedUrl url = cachedUrlRepository.findByPublicId(resource1.getPublicId()).iterator().next();
-        assertEquals("/subject:1/topic:1/resource:1", url.getPath());
+        assertEquals(1, count(getUrls(resource1)));
+        assertEquals("/subject:1/topic:1/resource:1", getUrls(resource1).next().getPath());
     }
 
     @Test
@@ -93,28 +92,50 @@ public class UrlCacherTest extends RestTest {
     }
 
     @Test
-    public void removing_resource_deletes_all_urls() throws Exception {
+    public void removing_resource_deletes_all_urls_involving_resource() throws Exception {
         urlCacher.add(resource1);
+        resourceRepository.delete(resource1);
         urlCacher.remove(resource1);
-        Collection<CachedUrl> urls = cachedUrlRepository.findByPublicId(resource1.getPublicId());
-        assertEquals(0, urls.size());
+        Iterator<CachedUrl> urls = getUrls(resource1);
+
+        assertEquals(0, count(urls));
     }
 
     @Test
     public void can_add_new_topic_to_cache() throws Exception {
         urlCacher.add(topic1);
-        assertEquals(1, count(cachedUrlRepository.findByPublicId(topic1.getPublicId()).iterator()));
-        CachedUrl url = cachedUrlRepository.findByPublicId(topic1.getPublicId()).iterator().next();
+        assertEquals(1, count(getUrls(topic1)));
+        CachedUrl url = getUrls(topic1).next();
         assertEquals("/subject:1/topic:1", url.getPath());
     }
 
     @Test
     public void removing_topic_deletes_all_urls_involving_topic() throws Exception {
         urlCacher.add(topic1);
-        urlCacher.add(resource1);
+        assertEquals(1, count(getUrls(topic1)));
+
+        topicRepository.delete(topic1);
         urlCacher.remove(topic1);
 
-        assertEquals(0, count(cachedUrlRepository.findByPublicId(topic1.getPublicId()).iterator()));
-        assertEquals(0, count(cachedUrlRepository.findByPublicId(resource1.getPublicId()).iterator()));
+        assertEquals(0, count(getUrls(topic1)));
+    }
+
+    @Test
+    public void relocating_topic_invalidates_and_regenerates_old_urls() throws Exception {
+        urlCacher.add(subject1);
+        urlCacher.add(topic1);
+        urlCacher.add(resource1);
+
+        subject1.removeTopic(topic1);
+        subject2.addTopic(topic1);
+        entityManager.flush();
+
+        urlCacher.add(topic1);
+        assertEquals(1, count(getUrls(topic1)));
+        assertEquals("/subject:2/topic:1", getUrls(topic1).next().getPath());
+    }
+
+    private Iterator<CachedUrl> getUrls(DomainEntity domainEntity) {
+        return cachedUrlRepository.findByPublicId(domainEntity.getPublicId()).iterator();
     }
 }

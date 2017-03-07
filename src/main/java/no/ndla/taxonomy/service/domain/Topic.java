@@ -3,6 +3,7 @@ package no.ndla.taxonomy.service.domain;
 
 import org.hibernate.annotations.Type;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
@@ -15,23 +16,23 @@ import java.util.UUID;
 @Entity
 public class Topic extends DomainObject {
 
-    @OneToMany(mappedBy = "topic")
-    Set<SubjectTopic> subjects = new HashSet<>();
+    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<SubjectTopic> subjects = new HashSet<>();
 
-    @OneToMany(mappedBy = "topic")
-    private Set<TopicSubtopic> subtopics = new HashSet<>();
+    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<TopicSubtopic> subtopics = new HashSet<>();
 
-    @OneToMany(mappedBy = "subtopic")
-    private Set<TopicSubtopic> parentTopics = new HashSet<>();
+    @OneToMany(mappedBy = "subtopic", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<TopicSubtopic> parentTopics = new HashSet<>();
 
-    @OneToMany(mappedBy = "topic")
-    private Set<TopicResource> resources = new HashSet<>();
+    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<TopicResource> resources = new HashSet<>();
 
     @Column
     @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
     private URI contentUri;
 
-    @OneToMany(mappedBy = "topic")
+    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<TopicTranslation> translations = new HashSet<>();
 
     public Topic() {
@@ -69,6 +70,13 @@ public class Topic extends DomainObject {
                 throw new DuplicateIdException("Topic with id " + getPublicId() + " already contains topic with id " + subtopic.getPublicId());
             }
         }
+    }
+
+    public Topic getPrimaryParentTopic() {
+        for (TopicSubtopic parentTopic : parentTopics) {
+            if (parentTopic.isPrimary()) return parentTopic.getTopic();
+        }
+        return null;
     }
 
     public void setPrimaryParentTopic(Topic topic) {
@@ -146,17 +154,17 @@ public class Topic extends DomainObject {
         };
     }
 
-    public Iterator<TopicSubtopic> getParentTopics() {
+    public Iterator<Topic> getParentTopics() {
         Iterator<TopicSubtopic> iterator = parentTopics.iterator();
-        return new Iterator<TopicSubtopic>() {
+        return new Iterator<Topic>() {
             @Override
             public boolean hasNext() {
                 return iterator.hasNext();
             }
 
             @Override
-            public TopicSubtopic next() {
-                return iterator.next();
+            public Topic next() {
+                return iterator.next().getTopic();
             }
         };
     }
@@ -220,7 +228,7 @@ public class Topic extends DomainObject {
 
     public void setRandomPrimarySubject() {
         if (subjects.size() == 0) return;
-        getSubjects().next().setPrimary(true);
+        subjects.iterator().next().setPrimary(true);
     }
 
     private SubjectTopic getSubject(Subject subject) {
@@ -232,18 +240,17 @@ public class Topic extends DomainObject {
         return null;
     }
 
-
-    public Iterator<SubjectTopic> getSubjects() {
+    public Iterator<Subject> getSubjects() {
         Iterator<SubjectTopic> iterator = subjects.iterator();
-        return new Iterator<SubjectTopic>() {
+        return new Iterator<Subject>() {
             @Override
             public boolean hasNext() {
                 return iterator.hasNext();
             }
 
             @Override
-            public SubjectTopic next() {
-                return iterator.next();
+            public Subject next() {
+                return iterator.next().getSubject();
             }
         };
     }
@@ -265,4 +272,5 @@ public class Topic extends DomainObject {
         }
         return null;
     }
+
 }

@@ -7,12 +7,14 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.repositories.ResourceRepository;
+import no.ndla.taxonomy.service.repositories.TopicResourceRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
@@ -31,10 +33,14 @@ public class Resources {
     private static final String GET_RESOURCES_QUERY = getQuery("get_resources");
 
     private ResourceRepository resourceRepository;
+    private TopicResourceRepository topicResourceRepository;
+    private EntityManager entityManager;
     private JdbcTemplate jdbcTemplate;
 
-    public Resources(ResourceRepository resourceRepository, JdbcTemplate jdbcTemplate) {
+    public Resources(ResourceRepository resourceRepository, TopicResourceRepository topicResourceRepository, EntityManager entityManager, JdbcTemplate jdbcTemplate) {
         this.resourceRepository = resourceRepository;
+        this.topicResourceRepository = topicResourceRepository;
+        this.entityManager = entityManager;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -82,8 +88,8 @@ public class Resources {
     @ApiOperation(value = "Deletes a resource")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) throws Exception {
-        resourceRepository.getByPublicId(id);
-        resourceRepository.deleteByPublicId(id);
+        Resource resource = resourceRepository.getByPublicId(id);
+        resourceRepository.delete(resource);
     }
 
     @PutMapping("/{id}")

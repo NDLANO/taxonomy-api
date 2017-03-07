@@ -3,6 +3,7 @@ package no.ndla.taxonomy.service.domain;
 
 import org.hibernate.annotations.Type;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
@@ -19,14 +20,14 @@ public class Resource extends DomainObject {
     @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
     private URI contentUri;
 
-    @OneToMany(mappedBy = "resource")
-    private Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
+    @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
 
-    @OneToMany(mappedBy = "resource")
-    Set<ResourceTranslation> resourceTranslations = new HashSet<>();
+    @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ResourceTranslation> resourceTranslations = new HashSet<>();
 
-    @OneToMany(mappedBy = "resource")
-    Set<TopicResource> topics = new HashSet<>();
+    @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<TopicResource> topics = new HashSet<>();
 
     public Resource() {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
@@ -37,17 +38,17 @@ public class Resource extends DomainObject {
         return this;
     }
 
-    public Iterator<TopicResource> getTopics() {
+    public Iterator<Topic> getTopics() {
         Iterator<TopicResource> iterator = topics.iterator();
-        return new Iterator<TopicResource>() {
+        return new Iterator<Topic>() {
             @Override
             public boolean hasNext() {
                 return iterator.hasNext();
             }
 
             @Override
-            public TopicResource next() {
-                return iterator.next();
+            public Topic next() {
+                return iterator.next().getTopic();
             }
         };
     }
@@ -116,6 +117,13 @@ public class Resource extends DomainObject {
         resourceTranslations.remove(translation);
     }
 
+    public Topic getPrimaryTopic() {
+        for (TopicResource topic : topics) {
+            if (topic.isPrimary()) return topic.getTopic();
+        }
+        return null;
+    }
+
     public void setPrimaryTopic(Topic topic) {
         TopicResource topicResource = getTopic(topic);
         if (null == topicResource) throw new ParentNotFoundException(this, topic);
@@ -142,4 +150,18 @@ public class Resource extends DomainObject {
         return null;
     }
 
+    public void removeResourceType(ResourceType resourceType) {
+        ResourceResourceType resourceResourceType = getResourceType(resourceType);
+        if (resourceResourceType == null)
+            throw new ChildNotFoundException("Resource with id " + this.getPublicId() + " is not of type " + resourceType.getPublicId());
+
+        resourceResourceTypes.remove(resourceResourceType);
+    }
+
+    private ResourceResourceType getResourceType(ResourceType resourceType) {
+        for (ResourceResourceType resourceResourceType : resourceResourceTypes) {
+            if (resourceResourceType.getResourceType().equals(resourceType)) return resourceResourceType;
+        }
+        return null;
+    }
 }

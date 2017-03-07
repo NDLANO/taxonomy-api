@@ -46,8 +46,8 @@ public class ResourceResourceTypesTest extends RestTest {
 
     @Test
     public void can_delete_resource_resourcetype() throws Exception {
-        Resource integrationResource = newResource().name("Introduction to integration");
-        ResourceType resourceType = newResourceType().name("text");
+        Resource integrationResource = builder.resource(r -> r.name("Introduction to integration"));
+        ResourceType resourceType = builder.resourceType(rt -> rt.name("text"));
         URI id = save(integrationResource.addResourceType(resourceType)).getPublicId();
 
         deleteResource("/v1/resource-resourcetypes/" + id);
@@ -76,7 +76,6 @@ public class ResourceResourceTypesTest extends RestTest {
         Resource resource = newResource().name("Advanced trigonometry");
         ResourceType resourceType = newResourceType().name("article");
         ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);
-        System.out.println("public id: " + resourceResourceType.getPublicId());
         URI id = save(resourceResourceType).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/resource-resourcetypes/" + id);

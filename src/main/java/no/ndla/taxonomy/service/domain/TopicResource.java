@@ -46,4 +46,8 @@ public class TopicResource extends DomainEntity {
     public Resource getResource() {
         return resource;
     }
+
+    public String toString() {
+        return "TopicResource: { " + topic.getName() + " " + topic.getPublicId() + " -> " + resource.getName() + " " + resource.getPublicId() + " " + (isPrimary() ? "P" : "") + "}";
+    }
 }

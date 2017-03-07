@@ -8,6 +8,7 @@ import java.util.Collection;
 
 public interface CachedUrlRepository extends CrudRepository<CachedUrl, Integer> {
     Collection<CachedUrl> findByPublicId(URI id);
+
     void deleteByPublicId(URI id);
 
     void deleteByPathStartingWith(String path);

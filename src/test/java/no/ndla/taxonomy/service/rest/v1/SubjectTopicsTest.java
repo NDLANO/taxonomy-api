@@ -8,7 +8,6 @@ import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
-import java.util.Iterator;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.*;
@@ -132,32 +131,25 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void topic_can_only_have_one_primary_subject() throws Exception {
+        Topic topic = builder.topic("graphs", r -> r.name("graphs"));
+
         builder.subject("elementary maths", t -> t
                 .name("elementary maths")
-                .topic("graphs", r -> r.name("graphs")));
+                .topic(topic));
 
-        builder.subject("graph theory", t -> t
+        Subject newPrimary = builder.subject("graph theory", t -> t
                 .name("graph theory"));
 
-        URI id = getId(
-                createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
-                    subjectid = builder.subject("graph theory").getPublicId();
-                    topicid = builder.topic("graphs").getPublicId();
-                    primary = true;
-                }})
-        );
-        MockHttpServletResponse response = getResource("/v1/subject-topics/" + id);
-        SubjectTopics.SubjectTopicIndexDocument subjectTopicIndexDocument = getObject(SubjectTopics.SubjectTopicIndexDocument.class, response);
-        assertTrue(subjectTopicIndexDocument.primary);
+        createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
+            subjectid = newPrimary.getPublicId();
+            topicid = topic.getPublicId();
+            primary = true;
+        }});
 
-        Topic topic = builder.topic("graphs");
-        Iterator<SubjectTopic> iterator = topic.getSubjects();
-        while (iterator.hasNext()) {
-            SubjectTopic subjectTopic = iterator.next();
-            if (!id.equals(subjectTopic.getPublicId())) {
-                assertFalse(subjectTopic.isPrimary());
-            }
-        }
+        topic.subjects.forEach(subjectTopic -> {
+            if (subjectTopic.getSubject().equals(newPrimary)) assertTrue(subjectTopic.isPrimary());
+            else assertFalse(subjectTopic.isPrimary());
+        });
     }
 
 
@@ -169,7 +161,7 @@ public class SubjectTopicsTest extends RestTest {
 
         deleteResource("/v1/subject-topics/" + primary);
 
-        SubjectTopic subjectTopic = topic.getSubjects().next();
+        SubjectTopic subjectTopic = topic.subjects.iterator().next();
         assertEquals(other, subjectTopic.getPublicId());
         assertTrue(subjectTopic.isPrimary());
     }

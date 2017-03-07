@@ -103,8 +103,19 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_delete_topic() throws Exception {
-        URI id = builder.topic().getPublicId();
+        builder.topic(parent -> parent
+                .subtopic("topic", topic -> topic
+                        .name("DELETE ME")
+                        .translation("nb", tr -> tr.name("emne"))
+                        .subtopic(sub -> sub.publicId("urn:topic:2"))
+                        .resource(r -> r.publicId("urn:resource:1"))
+                )
+        );
+        builder.subject(s -> s.topic("topic"));
+        URI id = builder.topic("topic").getPublicId();
+
         deleteResource("/v1/topics/" + id);
+
         assertNull(topicRepository.findByPublicId(id));
     }
 

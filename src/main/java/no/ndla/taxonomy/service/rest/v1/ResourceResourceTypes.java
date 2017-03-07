@@ -53,7 +53,9 @@ public class ResourceResourceTypes {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation("Removes a resource type from a resource")
     public void delete(@PathVariable("id") URI id) throws Exception {
-        resourceResourceTypeRepository.deleteByPublicId(id);
+        ResourceResourceType resourceResourceType = resourceResourceTypeRepository.getByPublicId(id);
+        resourceResourceType.getResource().removeResourceType(resourceResourceType.getResourceType());
+        resourceResourceTypeRepository.delete(resourceResourceType);
     }
 
     @GetMapping

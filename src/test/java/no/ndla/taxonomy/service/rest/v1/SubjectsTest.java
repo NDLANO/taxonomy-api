@@ -97,7 +97,10 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_delete_subject() throws Exception {
-        URI id = builder.subject().getPublicId();
+        URI id = builder.subject(s -> s
+                .topic(t -> t.publicId("urn:topic:1"))
+                .translation("nb", tr -> tr.name("fag"))
+        ).getPublicId();
         deleteResource("/v1/subjects/" + id);
         assertNull(subjectRepository.findByPublicId(id));
     }

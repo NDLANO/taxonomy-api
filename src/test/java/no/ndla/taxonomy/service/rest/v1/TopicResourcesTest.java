@@ -8,7 +8,6 @@ import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
-import java.util.Iterator;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.*;
@@ -86,15 +85,14 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void deleted_primary_topic_is_replaced() throws Exception {
-        Resource resource = newResource();
-        URI primary = save(newTopic().addResource(resource)).getPublicId();
-        URI other = save(newTopic().addResource(resource)).getPublicId();
+        Resource resource = builder.resource(r -> r.name("resource"));
+        Topic primary = builder.topic(t -> t.name("primary").resource(resource));
+        Topic other = builder.topic(t -> t.name("other").resource(resource));
+        resource.setPrimaryTopic(primary);
 
-        deleteResource("/v1/topic-resources/" + primary);
+        deleteResource("/v1/topics/" + primary.getPublicId());
 
-        TopicResource topicResource = resource.getTopics().next();
-        assertEquals(other, topicResource.getPublicId());
-        assertTrue(topicResource.isPrimary());
+        assertEquals("other", resource.getPrimaryTopic().getName());
     }
 
     @Test
@@ -140,32 +138,26 @@ public class TopicResourcesTest extends RestTest {
     }
 
     @Test
-    public void resource_can_only_have_one_primary() throws Exception {
-        builder.topic("elementary maths", t -> t
-                .name("elementary maths")
-                .resource("graphs", r -> r.name("graphs")));
+    public void resource_can_only_have_one_primary_topic() throws Exception {
+        Resource graphs = builder.resource(r -> r.name("graphs"));
 
-        builder.topic("graph theory", t -> t
+        builder.topic(t -> t
+                .name("elementary maths")
+                .resource(graphs)
+        );
+
+        Topic graphTheory = builder.topic(t -> t
                 .name("graph theory"));
 
-        URI id = getId(
-                createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
-                    topicid = builder.topic("graph theory").getPublicId();
-                    resourceid = builder.resource("graphs").getPublicId();
-                    primary = true;
-                }})
-        );
-        MockHttpServletResponse response = getResource("/v1/topic-resources/" + id);
-        TopicResources.TopicResourceIndexDocument topicResourceIndexDocument = getObject(TopicResources.TopicResourceIndexDocument.class, response);
-        assertTrue(topicResourceIndexDocument.primary);
+        createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
+            topicid = graphTheory.getPublicId();
+            resourceid = graphs.getPublicId();
+            primary = true;
+        }});
 
-        Resource resource = builder.resource("graphs");
-        Iterator<TopicResource> iterator = resource.getTopics();
-        while (iterator.hasNext()) {
-            TopicResource topicResource = iterator.next();
-            if (!id.equals(topicResource.getPublicId())) {
-                assertFalse(topicResource.isPrimary());
-            }
-        }
+        graphs.topics.forEach(topicResource -> {
+            if (topicResource.getTopic().equals(graphTheory)) assertTrue(topicResource.isPrimary());
+            else assertFalse(topicResource.isPrimary());
+        });
     }
 }

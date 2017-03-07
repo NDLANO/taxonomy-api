@@ -122,7 +122,14 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_delete_resource() throws Exception {
-        URI id = newResource().getPublicId();
+        builder.topic(t -> t
+                .resource("resource", r -> r
+                        .translation("nb", tr -> tr.name("ressurs"))
+                        .resourceType(rt -> rt.name("Learning path"))
+                )
+        );
+
+        URI id = builder.resource("resource").getPublicId();
         deleteResource("/v1/resources/" + id);
         assertNull(resourceRepository.findByPublicId(id));
     }

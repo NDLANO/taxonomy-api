@@ -1,69 +1,52 @@
 package no.ndla.taxonomy.service.domain;
 
 import no.ndla.taxonomy.service.repositories.CachedUrlRepository;
-import no.ndla.taxonomy.service.rest.v1.UrlGenerator;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
-import java.net.URI;
-import java.util.Collection;
-import java.util.List;
 
-import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.getQuery;
-import static no.ndla.taxonomy.service.jdbc.QueryUtils.setQueryParameters;
+import static no.ndla.taxonomy.service.jdbc.QueryUtils.getURI;
 
 @Transactional
 @Component
 public class UrlCacher {
-
-    private static final String GET_URLS_QUERY = getQuery("get_url_from_cache");
-
-    private JdbcTemplate jdbcTemplate;
     private CachedUrlRepository cachedUrlRepository;
-    private UrlGenerator urlGenerator;
+    private EntityManager entityManager;
+    private JdbcTemplate jdbcTemplate;
+    private static final String GENERATE_URLS_RECURSIVELY_QUERY = getQuery("generate_urls_recursively");
 
-
-    public UrlCacher(JdbcTemplate jdbcTemplate, CachedUrlRepository cachedUrlRepository, UrlGenerator urlGenerator) {
-        this.jdbcTemplate = jdbcTemplate;
+    public UrlCacher(CachedUrlRepository cachedUrlRepository, EntityManager entityManager, JdbcTemplate jdbcTemplate) {
         this.cachedUrlRepository = cachedUrlRepository;
-        this.urlGenerator = urlGenerator;
-    }
-
-    public String getUrl(URI subjectId) {
-        List<Object> args = asList(subjectId.toString());
-
-
-        return jdbcTemplate.query(GET_URLS_QUERY, setQueryParameters(args),
-                resultSet -> {
-                    while (resultSet.next()) {
-                        return resultSet.getString("path");
-                    }
-                    throw new NotFoundException("Subject", subjectId);
-
-                });
+        this.entityManager = entityManager;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public void add(DomainObject domainObject) {
-        URI publicId = domainObject.getPublicId();
-        cachedUrlRepository.deleteByPublicId(publicId);
-        Collection<String> paths = urlGenerator.generatePaths(publicId);
-        String primaryPath = urlGenerator.generatePrimaryPath(publicId);
+        //Naive implementation for now
+        rebuildEntireCache();
 
-        System.out.println("primary: " + primaryPath);
-        for (String path : paths) {
-            System.out.println("path: " + path);
-            cachedUrlRepository.save(new CachedUrl(publicId, path, path.equals(primaryPath)));
-        }
     }
 
     public void remove(DomainObject domainObject) {
-        URI publicId = domainObject.getPublicId();
-        Collection<String> paths = urlGenerator.generatePaths(publicId);
-        cachedUrlRepository.deleteByPublicId(publicId);
-        for (String path : paths) {
-            cachedUrlRepository.deleteByPathStartingWith(path);
-        }
+        //Naive implementation for now
+        rebuildEntireCache();
+    }
+
+    private void rebuildEntireCache() {
+        cachedUrlRepository.deleteAll();
+        entityManager.flush();
+        jdbcTemplate.query(GENERATE_URLS_RECURSIVELY_QUERY, resultSet -> {
+            while (resultSet.next()) {
+                CachedUrl url = new CachedUrl();
+                url.setPublicId(getURI(resultSet, "public_id"));
+                url.setPath(resultSet.getString("path"));
+                url.setPrimary(resultSet.getBoolean("is_primary"));
+                cachedUrlRepository.save(url);
+            }
+            return null;
+        });
     }
 }

@@ -233,7 +233,8 @@ public class Builder {
         }
 
         public TopicBuilder resource(Resource resource) {
-            entityManager.persist(topic.addResource(resource));
+            TopicResource topicResource = topic.addResource(resource);
+            entityManager.persist(topicResource);
             return this;
         }
 

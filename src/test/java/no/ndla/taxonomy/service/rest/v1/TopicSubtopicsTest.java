@@ -7,7 +7,6 @@ import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
-import java.util.Iterator;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.*;
@@ -127,53 +126,40 @@ public class TopicSubtopicsTest extends RestTest {
     }
 
     @Test
-    public void deleted_primary_topic_is_replaced() throws Exception {
-        Topic subtopic = newTopic();
-        URI primary = save(newTopic().addSubtopic(subtopic)).getPublicId();
-        URI other = save(newTopic().addSubtopic(subtopic)).getPublicId();
+    public void deleted_primary_parent_topic_is_replaced() throws Exception {
+        Topic subtopic = builder.topic();
+        Topic primary = builder.topic(t -> t.name("primary").subtopic(subtopic));
+        builder.topic(t -> t.name("other").subtopic(subtopic));
+        subtopic.setPrimaryParentTopic(primary);
 
-        deleteResource("/v1/topic-subtopics/" + primary);
+        deleteResource("/v1/topics/" + primary.getPublicId());
 
-        TopicSubtopic topicSubtopic = subtopic.getParentTopics().next();
-        assertEquals(other, topicSubtopic.getPublicId());
-        assertTrue(topicSubtopic.isPrimary());
+        assertEquals("other", subtopic.getPrimaryParentTopic().getName());
     }
 
     @Test
     public void subtopic_can_only_have_one_primary_topic_connection() throws Exception {
+        Topic subtopic = builder.topic(t -> t.name("alternating current"));
+
         builder.topic("electricity", t -> t
                 .name("electricity")
-                .subtopic("ac", st -> st
-                        .name("alternating current")
-                )
+                .subtopic(subtopic)
         );
 
-        builder.topic("wiring", t -> t
+        Topic newPrimary = builder.topic("wiring", t -> t
                 .name("Wiring")
         );
-        URI id = getId(
-                createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
-                    topicid = builder.topic("wiring").getPublicId();
-                    subtopicid = builder.topic("ac").getPublicId();
-                    primary = true;
-                }})
-        );
 
-        MockHttpServletResponse response = getResource("/v1/topic-subtopics/" + id);
-        TopicSubtopics.TopicSubtopicIndexDocument topicSubtopicIndexDocument = getObject(TopicSubtopics.TopicSubtopicIndexDocument.class, response);
-        assertTrue(topicSubtopicIndexDocument.primary);
+        createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
+            topicid = newPrimary.getPublicId();
+            subtopicid = subtopic.getPublicId();
+            primary = true;
+        }});
 
-        Topic subtopic = builder.topic("ac");
-        Iterator<TopicSubtopic> iterator = subtopic.getParentTopics();
-        while (iterator.hasNext()) {
-            TopicSubtopic topicSubtopic = iterator.next();
-            System.out.println(topicSubtopic.getTopic().getName() + " -> " + topicSubtopic.getSubtopic().getName() + " primary: " + topicSubtopic.isPrimary());
-            if (id.equals(topicSubtopic.getPublicId())) {
-                assertTrue(topicSubtopic.isPrimary());
-            } else {
-                assertFalse(topicSubtopic.isPrimary());
-            }
-        }
+        subtopic.parentTopics.forEach(topicResource -> {
+            if (topicResource.getTopic().equals(newPrimary)) assertTrue(topicResource.isPrimary());
+            else assertFalse(topicResource.isPrimary());
+        });
 
     }
 }

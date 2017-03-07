@@ -8,7 +8,8 @@ import java.net.URI;
 @Entity
 public class CachedUrl {
 
-    public CachedUrl() {}
+    public CachedUrl() {
+    }
 
     public CachedUrl(URI publicId, String path, boolean primary) {
         this.publicId = publicId;
@@ -53,5 +54,14 @@ public class CachedUrl {
 
     public void setPrimary(boolean primary) {
         this.primary = primary;
+    }
+
+    @Override
+    public String toString() {
+        return "CachedUrl{" +
+                "publicId=" + publicId +
+                ", path='" + path + '\'' +
+                ", primary=" + primary +
+                '}';
     }
 }

@@ -3,6 +3,7 @@ package no.ndla.taxonomy.service.domain;
 
 import org.hibernate.annotations.Type;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
@@ -18,10 +19,10 @@ public class Subject extends DomainObject {
     @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
     private URI contentUri;
 
-    @OneToMany(mappedBy = "subject")
-    Set<SubjectTopic> topics = new HashSet<>();
+    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<SubjectTopic> topics = new HashSet<>();
 
-    @OneToMany(mappedBy = "subject")
+    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<SubjectTranslation> translations = new HashSet<>();
 
     public Subject() {
