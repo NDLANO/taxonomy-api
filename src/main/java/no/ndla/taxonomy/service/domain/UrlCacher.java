@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+import java.net.URI;
 
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.getQuery;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.getURI;
@@ -25,17 +26,24 @@ public class UrlCacher {
     }
 
     public void add(DomainObject domainObject) {
+        add(domainObject.getPublicId());
+    }
+
+    public void add(URI publicId) {
         //Naive implementation for now
         rebuildEntireCache();
-
     }
 
     public void remove(DomainObject domainObject) {
+        remove(domainObject.getPublicId());
+    }
+
+    public void remove(URI publicId) {
         //Naive implementation for now
         rebuildEntireCache();
     }
 
-    private void rebuildEntireCache() {
+    public void rebuildEntireCache() {
         cachedUrlRepository.deleteAll();
         entityManager.flush();
         jdbcTemplate.query(GENERATE_URLS_RECURSIVELY_QUERY, resultSet -> {

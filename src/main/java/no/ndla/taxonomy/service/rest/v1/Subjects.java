@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Subject;
+import no.ndla.taxonomy.service.domain.UrlCacher;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -36,11 +37,13 @@ public class Subjects {
     private SubjectRepository subjectRepository;
     private JdbcTemplate jdbcTemplate;
     private UrlGenerator urlGenerator;
+    private UrlCacher urlCacher;
 
-    public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate, UrlGenerator urlGenerator) {
+    public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate, UrlGenerator urlGenerator, UrlCacher urlCacher) {
         this.subjectRepository = subjectRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.urlGenerator = urlGenerator;
+        this.urlCacher = urlCacher;
     }
 
     @GetMapping
@@ -77,6 +80,7 @@ public class Subjects {
                             name = resultSet.getString("subject_name");
                             id = getURI(resultSet, "subject_public_id");
                             contentUri = getURI(resultSet, "subject_content_uri");
+                            path = resultSet.getString("subject_path");
                         }});
                     }
                     return result;
@@ -161,6 +165,7 @@ public class Subjects {
             subject.setContentUri(command.contentUri);
             URI location = URI.create("/subjects/" + subject.getPublicId());
             subjectRepository.save(subject);
+            urlCacher.add(subject);
             return ResponseEntity.created(location).build();
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateIdException("" + command.id);
@@ -268,6 +273,10 @@ public class Subjects {
         @JsonProperty
         @ApiModelProperty(value = "The name of the subject", example = "Mathematics")
         public String name;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The path part of the url to this subject.", example = "/subject:1")
+        public String path;
     }
 
     public static class TopicIndexDocument {

@@ -18,6 +18,7 @@ public class SubjectsTest extends RestTest {
         URI english = builder.subject(s -> s
                 .name("english")
                 .contentUri("urn:article:1")
+                .publicId("urn:subject:1")
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + english);
@@ -25,6 +26,7 @@ public class SubjectsTest extends RestTest {
 
         assertEquals("english", subject.name);
         assertEquals("urn:article:1", subject.contentUri.toString());
+        assertEquals("/subject:1", subject.path);
     }
 
     @Test
