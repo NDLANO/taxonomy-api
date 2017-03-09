@@ -30,16 +30,14 @@ public class Topics {
 
     private TopicRepository topicRepository;
     private JdbcTemplate jdbcTemplate;
-    private UrlGenerator urlGenerator;
 
     private static final String getTopicsQuery = getQuery("get_topics");
     private static final String resourceQueryRecursive = getQuery("get_resources_by_topic_public_id_recursively");
     private static final String resourceQuery = getQuery("get_resources_by_topic_public_id");
 
-    public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate, UrlGenerator urlGenerator) {
+    public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
         this.topicRepository = topicRepository;
         this.jdbcTemplate = jdbcTemplate;
-        this.urlGenerator = urlGenerator;
     }
 
     @GetMapping
@@ -74,6 +72,7 @@ public class Topics {
                             name = resultSet.getString("topic_name");
                             id = getURI(resultSet, "topic_public_id");
                             contentUri = getURI(resultSet, "topic_content_uri");
+                            path = resultSet.getString("topic_path");
                         }});
                     }
                     return result;
@@ -165,8 +164,6 @@ public class Topics {
             query = query.replace("1 = 1", "(" + where + ")");
         }
 
-        UrlGenerator.UrlResult topicContext = urlGenerator.getUrlResult(topicId, "");
-
         return jdbcTemplate.query(query, setQueryParameters(args), resultSet -> {
             List<ResourceIndexDocument> result = new ArrayList<>();
             ResourceIndexDocument current, previous = null;
@@ -183,7 +180,7 @@ public class Topics {
                         name = resultSet.getString("resource_name");
                         contentUri = toURI(resultSet.getString("resource_content_uri"));
                         id = toURI(resultSet.getString("resource_public_id"));
-                        path = urlGenerator.getUrlResult(id, topicContext.path).path;
+                        path = resultSet.getString("resource_path");
                     }};
                     result.add(current);
                 }
@@ -279,6 +276,10 @@ public class Topics {
         @JsonProperty
         @ApiModelProperty(value = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
         public URI contentUri;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The path part of the url for this topic", example = "/subject:1/topic:1")
+        public String path;
 
         TopicIndexDocument() {
         }

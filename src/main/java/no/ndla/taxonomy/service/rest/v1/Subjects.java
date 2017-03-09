@@ -36,13 +36,11 @@ public class Subjects {
 
     private SubjectRepository subjectRepository;
     private JdbcTemplate jdbcTemplate;
-    private UrlGenerator urlGenerator;
     private UrlCacher urlCacher;
 
-    public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate, UrlGenerator urlGenerator, UrlCacher urlCacher) {
+    public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate, UrlCacher urlCacher) {
         this.subjectRepository = subjectRepository;
         this.jdbcTemplate = jdbcTemplate;
-        this.urlGenerator = urlGenerator;
         this.urlCacher = urlCacher;
     }
 
@@ -201,7 +199,6 @@ public class Subjects {
             sql = sql.replace("1 = 1", "(" + where + ")");
         }
 
-        UrlGenerator.UrlResult subjectContext = urlGenerator.getUrlResult(subjectId, "");
         return jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
             List<ResourceIndexDocument> result = new ArrayList<>();
             ResourceIndexDocument current, previous = null;

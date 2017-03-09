@@ -22,22 +22,48 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_single_topic() throws Exception {
-        URI trigonometry = builder.topic(s -> s
-                .name("trigonometry")
-                .contentUri("urn:article:1")
-        ).getPublicId();
+        builder.subject(s -> s.name("maths")
+                .publicId("urn:subject:1")
+                .topic(t -> t
+                        .name("trigonometry")
+                        .contentUri("urn:article:1")
+                        .publicId("urn:topic:1")
+                ));
 
-        MockHttpServletResponse response = getResource("/v1/topics/" + trigonometry);
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:1");
         Topics.TopicIndexDocument topic = getObject(Topics.TopicIndexDocument.class, response);
 
         assertEquals("trigonometry", topic.name);
         assertEquals("urn:article:1", topic.contentUri.toString());
+        assertEquals("/subject:1/topic:1", topic.path);
+    }
+
+    @Test
+    public void topic_without_subject_has_no_url() throws Exception {
+        builder.topic(t -> t
+                .name("trigonometry")
+                .contentUri("urn:article:1")
+                .publicId("urn:topic:1")
+        );
+
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:1");
+        Topics.TopicIndexDocument topic = getObject(Topics.TopicIndexDocument.class, response);
+
+        assertEquals("trigonometry", topic.name);
+        assertEquals("urn:article:1", topic.contentUri.toString());
+        assertNull(topic.path);
     }
 
     @Test
     public void can_get_all_topics() throws Exception {
-        builder.topic(t -> t.name("photo synthesis"));
-        builder.topic(t -> t.name("trigonometry"));
+        builder.subject(s -> s
+                .name("Basic science")
+                .topic(t -> t.name("photo synthesis")));
+        builder.subject(s -> s
+                .name("Maths")
+                .topic(t -> t.name("trigonometry")));
 
         MockHttpServletResponse response = getResource("/v1/topics");
         Topics.TopicIndexDocument[] topics = getObject(Topics.TopicIndexDocument[].class, response);
@@ -46,6 +72,7 @@ public class TopicsTest extends RestTest {
         assertAnyTrue(topics, s -> "photo synthesis".equals(s.name));
         assertAnyTrue(topics, s -> "trigonometry".equals(s.name));
         assertAllTrue(topics, s -> isValidId(s.id));
+        assertAllTrue(topics, t -> t.path.contains("subject") && t.path.contains("topic"));
     }
 
     @Test
@@ -121,24 +148,27 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_resources_for_a_topic_recursively() throws Exception {
-        URI a = builder.topic(t -> t
-                .name("a")
-                .resource(r -> r.name("resource a").contentUri("urn:article:a"))
-                .subtopic(st -> st
-                        .name("aa")
-                        .resource(r -> r.name("resource aa").contentUri("urn:article:aa"))
-                        .subtopic(st2 -> st2
-                                .name("aaa")
-                                .resource(r -> r.name("resource aaa").contentUri("urn:article:aaa"))
+        builder.subject(s -> s
+                .name("subject a")
+                .topic(t -> t
+                        .name("a")
+                        .publicId("urn:topic:a")
+                        .resource(r -> r.name("resource a").contentUri("urn:article:a"))
+                        .subtopic(st -> st
+                                .name("aa")
+                                .resource(r -> r.name("resource aa").contentUri("urn:article:aa"))
+                                .subtopic(st2 -> st2
+                                        .name("aaa")
+                                        .resource(r -> r.name("resource aaa").contentUri("urn:article:aaa"))
+                                )
+                                .subtopic(st2 -> st2
+                                        .name("aab")
+                                        .resource(r -> r.name("resource aab").contentUri("urn:article:aab"))
+                                )
                         )
-                        .subtopic(st2 -> st2
-                                .name("aab")
-                                .resource(r -> r.name("resource aab").contentUri("urn:article:aab"))
-                        )
-                )
-        ).getPublicId();
+                ));
 
-        MockHttpServletResponse response = getResource("/v1/topics/" + a + "/resources?recursive=true");
+        MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:a" + "/resources?recursive=true");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
 
         assertEquals(4, result.length);
@@ -146,28 +176,31 @@ public class TopicsTest extends RestTest {
         assertAnyTrue(result, r -> "resource aa".equals(r.name) && "urn:article:aa".equals(r.contentUri.toString()));
         assertAnyTrue(result, r -> "resource aaa".equals(r.name) && "urn:article:aaa".equals(r.contentUri.toString()));
         assertAnyTrue(result, r -> "resource aab".equals(r.name) && "urn:article:aab".equals(r.contentUri.toString()));
+        assertAllTrue(result, r -> !r.path.isEmpty());
     }
 
     @Test
     public void can_get_urls_for_resources_for_a_topic_recursively() throws Exception {
-        URI a = builder.topic(t -> t
-                .name("a")
-                .resource(r -> r.name("resource a"))
-                .subtopic(st -> st
-                        .name("aa")
-                        .resource(r -> r.name("resource aa"))
-                        .subtopic(st2 -> st2
-                                .name("aaa")
-                                .resource(r -> r.name("resource aaa"))
+        builder.subject(s -> s.name("subject a")
+                .topic(t -> t
+                        .name("a")
+                        .publicId("urn:topic:a")
+                        .resource(r -> r.name("resource a"))
+                        .subtopic(st -> st
+                                .name("aa")
+                                .resource(r -> r.name("resource aa"))
+                                .subtopic(st2 -> st2
+                                        .name("aaa")
+                                        .resource(r -> r.name("resource aaa"))
+                                )
+                                .subtopic(st2 -> st2
+                                        .name("aab")
+                                        .resource(r -> r.name("resource aab"))
+                                )
                         )
-                        .subtopic(st2 -> st2
-                                .name("aab")
-                                .resource(r -> r.name("resource aab"))
-                        )
-                )
-        ).getPublicId();
+                ));
 
-        MockHttpServletResponse response = getResource("/v1/topics/" + a + "/resources?recursive=true");
+        MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:a" + "/resources?recursive=true");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
 
         assertEquals(4, result.length);
@@ -176,14 +209,16 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_resources_for_a_topic_without_child_topic_resources() throws Exception {
-        URI a = builder.topic(t -> t
-                .name("a")
-                .subtopic(st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))
-                .resource(r -> r.name("resource 1"))
-                .resource(r -> r.name("resource 2"))
-        ).getPublicId();
+        builder.subject(s -> s
+                .topic(t -> t
+                        .name("a")
+                        .publicId("urn:topic:1")
+                        .subtopic(st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))
+                        .resource(r -> r.name("resource 1"))
+                        .resource(r -> r.name("resource 2"))
+                ));
 
-        MockHttpServletResponse response = getResource("/v1/topics/" + a + "/resources");
+        MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:1" + "/resources");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
@@ -196,14 +231,15 @@ public class TopicsTest extends RestTest {
         URI assignment = builder.resourceType("assignment").getPublicId();
         URI lecture = builder.resourceType("lecture").getPublicId();
 
-        Topic a = builder.topic(t -> t
+        builder.subject(s -> s.topic(t -> t
                 .name("a")
+                .publicId("urn:topic:1")
                 .subtopic(sub -> sub.name("subtopic").resource(r -> r.name("a lecture in a subtopic").resourceType("lecture")))
                 .resource(r -> r.name("an assignment").resourceType("assignment"))
                 .resource(r -> r.name("a lecture").resourceType("lecture"))
-        );
+        ));
 
-        MockHttpServletResponse response = getResource("/v1/topics/" + a.getPublicId() + "/resources?type=" + assignment + "," + lecture);
+        MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:1" + "/resources?type=" + assignment + "," + lecture);
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
@@ -216,16 +252,17 @@ public class TopicsTest extends RestTest {
         ResourceType lecture = builder.resourceType("lecture", rt -> rt.name("lecture"));
         ResourceType assignment = builder.resourceType("assignment", rt -> rt.name("assignment"));
 
-        URI topic = builder.topic(t -> t
+        builder.subject(s -> s.topic(t -> t
                 .name("topic")
+                .publicId("urn:topic:1")
                 .resource(r -> r
                         .name("resource")
                         .resourceType(lecture)
                         .resourceType(assignment)
                 )
-        ).getPublicId();
+        ));
 
-        MockHttpServletResponse response = getResource("/v1/topics/" + topic + "/resources");
+        MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:1" + "/resources");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
 
         assertEquals(1, result.length);
@@ -317,21 +354,23 @@ public class TopicsTest extends RestTest {
     public void can_get_resources_for_a_topic_without_child_topic_resources_with_translation() throws Exception {
         builder.resourceType("article", rt -> rt.name("Article").translation("nb", tr -> tr.name("Artikkel")));
 
-        URI a = builder.topic(t -> t
-                .resource(r -> r
-                        .name("resource 1")
-                        .translation("nb", tr -> tr.name("ressurs 1"))
-                        .resourceType("article")
-                )
-                .resource(r -> r
-                        .name("resource 2")
-                        .translation("nb", tr -> tr.name("ressurs 2"))
-                        .resourceType("article")
-                )
-                .subtopic(st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))
-        ).getPublicId();
+        builder.subject(s -> s
+                .topic(t -> t
+                        .publicId("urn:topic:1")
+                        .resource(r -> r
+                                .name("resource 1")
+                                .translation("nb", tr -> tr.name("ressurs 1"))
+                                .resourceType("article")
+                        )
+                        .resource(r -> r
+                                .name("resource 2")
+                                .translation("nb", tr -> tr.name("ressurs 2"))
+                                .resourceType("article")
+                        )
+                        .subtopic(st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))
+                ));
 
-        MockHttpServletResponse response = getResource("/v1/topics/" + a + "/resources?language=nb");
+        MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:1" + "/resources?language=nb");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
