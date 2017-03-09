@@ -36,12 +36,10 @@ public class Subjects {
 
     private SubjectRepository subjectRepository;
     private JdbcTemplate jdbcTemplate;
-    private UrlCacher urlCacher;
 
-    public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate, UrlCacher urlCacher) {
+    public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate) {
         this.subjectRepository = subjectRepository;
         this.jdbcTemplate = jdbcTemplate;
-        this.urlCacher = urlCacher;
     }
 
     @GetMapping
@@ -164,7 +162,6 @@ public class Subjects {
             subject.setContentUri(command.contentUri);
             URI location = URI.create("/subjects/" + subject.getPublicId());
             subjectRepository.save(subject);
-            urlCacher.add(subject);
             return ResponseEntity.created(location).build();
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateIdException("" + command.id);

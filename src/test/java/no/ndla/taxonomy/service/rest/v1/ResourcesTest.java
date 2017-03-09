@@ -15,16 +15,36 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_single_resource() throws Exception {
-        URI trigonometry = builder.resource(s -> s
-                .name("introduction to trigonometry")
-                .contentUri("urn:article:1")
-        ).getPublicId();
+        builder.subject(s -> s
+                .topic(t -> t
+                        .resource(r -> r
+                                .name("introduction to trigonometry")
+                                .contentUri("urn:article:1")
+                                .publicId("urn:resource:1")
+                        )));
 
-        MockHttpServletResponse response = getResource("/v1/resources/" + trigonometry);
+        MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1");
         Resources.ResourceIndexDocument resource = getObject(Resources.ResourceIndexDocument.class, response);
 
         assertEquals("introduction to trigonometry", resource.name);
         assertEquals("urn:article:1", resource.contentUri.toString());
+        assertTrue(resource.path.contains("subject") && resource.path.contains("topic") && resource.path.contains("resource"));
+    }
+
+    @Test
+    public void resource_without_subject_and_topic_has_no_url() throws Exception {
+        builder.resource(r -> r
+                                .name("introduction to trigonometry")
+                                .contentUri("urn:article:1")
+                                .publicId("urn:resource:1")
+                        );
+
+        MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1");
+        Resources.ResourceIndexDocument resource = getObject(Resources.ResourceIndexDocument.class, response);
+
+        assertEquals("introduction to trigonometry", resource.name);
+        assertEquals("urn:article:1", resource.contentUri.toString());
+        assertNull(resource.path);
     }
 
     @Test
@@ -42,8 +62,8 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_all_resources() throws Exception {
-        builder.resource(r -> r.name("The inner planets"));
-        builder.resource(r -> r.name("Gas giants"));
+        builder.subject(s -> s.topic(t -> t.resource(r -> r.name("The inner planets"))));
+        builder.subject(s -> s.topic(t -> t.resource(r -> r.name("Gas giants"))));
 
         MockHttpServletResponse response = getResource("/v1/resources");
         Resources.ResourceIndexDocument[] resources = getObject(Resources.ResourceIndexDocument[].class, response);
@@ -52,6 +72,7 @@ public class ResourcesTest extends RestTest {
         assertAnyTrue(resources, s -> "The inner planets".equals(s.name));
         assertAnyTrue(resources, s -> "Gas giants".equals(s.name));
         assertAllTrue(resources, s -> isValidId(s.id));
+        assertAllTrue(resources, r -> !r.path.isEmpty());
     }
 
     @Test

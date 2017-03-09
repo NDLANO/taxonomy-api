@@ -77,6 +77,7 @@ public class Resources {
                             name = resultSet.getString("resource_name");
                             id = getURI(resultSet, "resource_public_id");
                             contentUri = getURI(resultSet, "resource_content_uri");
+                            path = resultSet.getString("resource_path");
                         }});
                     }
                     return result;
@@ -160,6 +161,10 @@ public class Resources {
                 notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
                         "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
         public URI contentUri;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The path part of the url to this resource", example = "/subject:1/topic:1/resource:1")
+        public String path;
 
         ResourceIndexDocument() {
         }
