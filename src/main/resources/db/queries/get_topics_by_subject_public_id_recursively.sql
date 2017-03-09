@@ -18,10 +18,10 @@ WITH RECURSIVE tree (id, public_id, name, content_uri, parent_id, parent_public_
   SELECT
     t.id,
     t.public_id,
-    t.name AS        name,
+    t.name                AS name,
     t.content_uri,
-    parent.id        parent_id,
-    parent.public_id parent_public_id,
+    parent.id                parent_id,
+    parent.public_id         parent_public_id,
     parent.level + 1
   FROM
     topic t
@@ -34,11 +34,13 @@ SELECT
   coalesce(tr.name, t.name) AS name,
   t.content_uri,
   t.parent_public_id,
-  t.level
+  t.level,
+  url.path                  AS topic_path
 FROM
   tree t
   LEFT OUTER JOIN (SELECT *
                    FROM topic_translation
                    WHERE language_code = ?) tr ON t.id = tr.topic_id
+  LEFT OUTER JOIN cached_url url ON url.public_id = t.public_id
 WHERE 1 = 1
 ORDER BY t.level

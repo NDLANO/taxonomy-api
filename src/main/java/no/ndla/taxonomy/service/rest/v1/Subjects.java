@@ -145,6 +145,7 @@ public class Subjects {
                             id = getURI(resultSet, "public_id");
                             contentUri = getURI(resultSet, "content_uri");
                             parent = getURI(resultSet, "parent_public_id");
+                            path = resultSet.getString("topic_path");
                         }};
 
                         topics.put(topic.id, topic);
@@ -217,7 +218,7 @@ public class Subjects {
                         contentUri = toURI(resultSet.getString("resource_content_uri"));
                         name = resultSet.getString("resource_name");
                         id = toURI(resultSet.getString("resource_public_id"));
-                        path = urlGenerator.getUrlResult(id, subjectContext.path).path;
+                        path = resultSet.getString("resource_path");
                     }};
                     result.add(current);
                 }
@@ -293,6 +294,10 @@ public class Subjects {
         @JsonProperty
         @ApiModelProperty("Parent id in the current context, null if none exists")
         public URI parent;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The path part of the url to this topic.", example = "/subject:1/topic:1")
+        public String path;
     }
 
     public static class ResourceIndexDocument {

@@ -41,6 +41,7 @@ public class SubjectsTest extends RestTest {
         assertAnyTrue(subjects, s -> "english".equals(s.name));
         assertAnyTrue(subjects, s -> "mathematics".equals(s.name));
         assertAllTrue(subjects, s -> isValidId(s.id));
+        assertAllTrue(subjects, s -> !s.path.isEmpty());
     }
 
     @Test
@@ -124,6 +125,7 @@ public class SubjectsTest extends RestTest {
         assertAnyTrue(topics, t -> "electricity".equals(t.name) && "urn:article:2".equals(t.contentUri.toString()));
         assertAnyTrue(topics, t -> "optics".equals(t.name) && "urn:article:3".equals(t.contentUri.toString()));
         assertAllTrue(topics, t -> isValidId(t.id));
+        assertAllTrue(topics, t -> !t.path.isEmpty());
     }
 
     @Test
