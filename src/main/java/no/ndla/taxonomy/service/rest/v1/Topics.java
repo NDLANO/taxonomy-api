@@ -22,6 +22,7 @@ import java.util.*;
 import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
+import static no.ndla.taxonomy.service.rest.v1.UrlResolver.getPathMostCloselyMatchingContext;
 
 @RestController
 @RequestMapping(path = {"topics", "/v1/topics"})
@@ -138,7 +139,10 @@ public class Topics {
             @ApiParam(value = "Filter by resource type id(s). If not specified, resources of all types will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
                     URI[] resourceTypeIds
-    ) throws SQLException {
+    ) throws Exception {
+
+        TopicIndexDocument topicIndexDocument = get(topicId, null);
+
 
         List<Object> args = new ArrayList<>();
         String query;
@@ -168,6 +172,8 @@ public class Topics {
             List<ResourceIndexDocument> result = new ArrayList<>();
             Map<URI, ResourceIndexDocument> resources = new HashMap<>();
 
+            String context = topicIndexDocument.path;
+
             while (resultSet.next()) {
                 URI id = toURI(resultSet.getString("resource_public_id"));
 
@@ -178,11 +184,11 @@ public class Topics {
                         name = resultSet.getString("resource_name");
                         contentUri = toURI(resultSet.getString("resource_content_uri"));
                         id = toURI(resultSet.getString("resource_public_id"));
-                        path = resultSet.getString("resource_path");
                     }};
                     resources.put(id, resource);
                     result.add(resource);
                 }
+                resource.path = getPathMostCloselyMatchingContext(context, resource.path, resultSet.getString("resource_path"));
 
                 String resourceTypePublicId = resultSet.getString("resource_type_public_id");
                 if (resourceTypePublicId != null) {

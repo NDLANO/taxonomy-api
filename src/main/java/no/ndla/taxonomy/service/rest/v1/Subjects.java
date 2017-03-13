@@ -22,7 +22,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
-import static no.ndla.taxonomy.service.rest.v1.UrlGenerator.getPathMostCloselyMatchingContext;
+import static no.ndla.taxonomy.service.rest.v1.UrlResolver.getPathMostCloselyMatchingContext;
 
 @RestController
 @RequestMapping(path = {"subjects", "/v1/subjects"})

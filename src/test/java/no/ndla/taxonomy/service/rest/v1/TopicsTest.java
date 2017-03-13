@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
+import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.ResourceType;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
@@ -11,6 +12,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
+import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -205,7 +207,7 @@ public class TopicsTest extends RestTest {
                                 .resource(r -> r.publicId("urn:resource:aa"))
                                 .subtopic(st2 -> st2
                                         .publicId("urn:topic:aaa")
-                                        .resource(r -> r.publicId("urn:resource:aaa"))
+                                        .resource("aaa", r -> r.publicId("urn:resource:aaa"))
                                 )
                                 .subtopic(st2 -> st2
                                         .publicId("urn:topic:aab")
@@ -213,6 +215,13 @@ public class TopicsTest extends RestTest {
                                 )
                         )
                 ));
+
+        builder.subject(s -> s.publicId("urn:subject:2")
+                .topic(t -> t
+                        .publicId("urn:topic:2")
+                        .resource("aaa")
+                )
+        );
 
         MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:a" + "/resources?recursive=true");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
@@ -222,6 +231,34 @@ public class TopicsTest extends RestTest {
         assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/resource:aa".equals(r.path));
         assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aaa/resource:aaa".equals(r.path));
         assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aab/resource:aab".equals(r.path));
+    }
+
+    @Test
+    public void resource_urls_are_chosen_according_to_context() throws Exception {
+        Resource resource = builder.resource(r -> r.publicId("urn:resource:1"));
+
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .topic(t -> t
+                        .publicId("urn:topic:1")
+                        .resource(resource)
+                )
+        );
+        builder.subject(s -> s
+                .publicId("urn:subject:2")
+                .topic("topic2", t -> t
+                        .publicId("urn:topic:2")
+                        .resource(resource)
+                )
+        );
+
+        for (int i : asList(1, 2)) {
+            MockHttpServletResponse response = getResource("/v1/topics/urn:topic:" + i + "/resources");
+            Topics.ResourceIndexDocument[] resources = getObject(Topics.ResourceIndexDocument[].class, response);
+
+            assertEquals(1, resources.length);
+            assertEquals("/subject:" + i + "/topic:" + i + "/resource:1", resources[0].path);
+        }
     }
 
     @Test

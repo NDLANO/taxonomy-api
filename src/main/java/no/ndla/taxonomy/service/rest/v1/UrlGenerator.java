@@ -3,7 +3,6 @@ package no.ndla.taxonomy.service.rest.v1;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.domain.NotFoundException;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,7 +46,7 @@ public class UrlGenerator {
     public UrlResult getUrlResult(URI id, String context) {
         boolean onlyPrimary = isBlank(context);
         String[] urls = generatePaths(id, onlyPrimary);
-        return new UrlResult(id, getPathMostCloselyMatchingContext(context, urls));
+        return new UrlResult(id, UrlResolver.getPathMostCloselyMatchingContext(context, urls));
     }
 
 
@@ -86,19 +85,6 @@ public class UrlGenerator {
 
     private List<String> get(Map<String, List<String>> urls, String publicId) {
         return urls.containsKey(publicId) ? urls.get(publicId) : new ArrayList<>();
-    }
-
-    public static String getPathMostCloselyMatchingContext(String context, String... urls) {
-        String longestPrefix = "";
-        String bestUrl = "";
-        for (String possibleUrl : urls) {
-            String commonPrefix = StringUtils.getCommonPrefix(context, possibleUrl);
-            if (commonPrefix.length() >= longestPrefix.length()) {
-                bestUrl = possibleUrl;
-                longestPrefix = commonPrefix;
-            }
-        }
-        return bestUrl;
     }
 
     public static class UrlResult {

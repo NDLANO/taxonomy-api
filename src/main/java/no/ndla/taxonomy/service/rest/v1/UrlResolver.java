@@ -4,6 +4,7 @@ package no.ndla.taxonomy.service.rest.v1;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.service.domain.NotFoundException;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,41 +26,55 @@ public class UrlResolver {
 
     private static final String RESOLVE_URL_QUERY = getQuery("resolve_url");
 
-    private UrlGenerator urlGenerator;
     private JdbcTemplate jdbcTemplate;
 
-    public UrlResolver(UrlGenerator urlGenerator, JdbcTemplate jdbcTemplate) {
-        this.urlGenerator = urlGenerator;
+    public UrlResolver(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public static String getPathMostCloselyMatchingContext(String context, String... urls) {
+        String longestPrefix = "";
+        String bestUrl = "";
+        for (String possibleUrl : urls) {
+            String commonPrefix = StringUtils.getCommonPrefix(context, possibleUrl);
+            if (commonPrefix.length() >= longestPrefix.length()) {
+                bestUrl = possibleUrl;
+                longestPrefix = commonPrefix;
+            }
+        }
+        return bestUrl;
     }
 
     @GetMapping
     public ResolvedUrl resolve(@RequestParam String path, HttpServletResponse response) throws Exception {
         URI id = getId(path);
 
-        UrlGenerator.UrlResult urlResult = urlGenerator.getUrlResult(id, path);
-        if (isBlank(urlResult.path)) throw new NotFoundException(path);
-
-        if (!urlResult.path.equals(path)) {
-            response.sendRedirect(urlResult.path);
-            return null;
-        }
-
-        ResolvedUrl resolvedUrl = new ResolvedUrl();
-        resolvedUrl.parents = getParents(urlResult);
-
-        jdbcTemplate.query(RESOLVE_URL_QUERY, setQueryParameters(Collections.singletonList(id.toString())),
+        ResolvedUrl returnedResolvedUrl = jdbcTemplate.query(RESOLVE_URL_QUERY, setQueryParameters(Collections.singletonList(id.toString())),
                 resultSet -> {
-                    if (resultSet.next()) {
+                    ResolvedUrl resolvedUrl = new ResolvedUrl();
+                    while (resultSet.next()) {
                         resolvedUrl.id = getURI(resultSet, "public_id");
                         resolvedUrl.contentUri = getURI(resultSet, "content_uri");
                         resolvedUrl.name = resultSet.getString("name");
+                        resolvedUrl.path = getPathMostCloselyMatchingContext(path, resolvedUrl.path, resultSet.getString("resource_path"));
+                        if (resolvedUrl.path.equals(path)) {
+                            return resolvedUrl;
+                        }
                     }
                     return resolvedUrl;
                 }
         );
+        if (isBlank(returnedResolvedUrl.path)) {
+            throw new NotFoundException(path);
+        }
 
-        return resolvedUrl;
+        if (!returnedResolvedUrl.path.equals(path)) {
+            response.sendRedirect(returnedResolvedUrl.path);
+            return null;
+        }
+
+        returnedResolvedUrl.parents = getParents(returnedResolvedUrl.path);
+        return returnedResolvedUrl;
     }
 
     private URI getId(String url) {
@@ -67,8 +82,8 @@ public class UrlResolver {
         return URI.create("urn:" + parts[parts.length - 1]);
     }
 
-    private URI[] getParents(UrlGenerator.UrlResult urlResult) {
-        String[] pathElements = urlResult.path.split("/");
+    private URI[] getParents(String path) {
+        String[] pathElements = path.split("/");
         if (pathElements.length < 2) return new URI[0];
 
         URI[] result = new URI[pathElements.length - 2];
@@ -99,5 +114,9 @@ public class UrlResolver {
         @JsonProperty
         @ApiModelProperty(value = "Parent elements of the resolved element", notes = "The first element is the parent, the second is the grandparent, etc.")
         public URI[] parents = new URI[0];
+
+        @JsonProperty
+        @ApiModelProperty(value = "URL path for resource", example = "'/subject:1/topic:12/resource:12'")
+        public String path;
     }
 }
