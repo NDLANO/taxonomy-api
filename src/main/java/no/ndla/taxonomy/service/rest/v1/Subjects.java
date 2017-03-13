@@ -1,12 +1,12 @@
 package no.ndla.taxonomy.service.rest.v1;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.domain.UrlCacher;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -16,15 +16,13 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
+import static no.ndla.taxonomy.service.rest.v1.UrlGenerator.getPathMostCloselyMatchingContext;
 
 @RestController
 @RequestMapping(path = {"subjects", "/v1/subjects"})
@@ -134,18 +132,22 @@ public class Subjects {
         return jdbcTemplate.query(sql, setQueryParameters(args),
                 resultSet -> {
                     List<TopicIndexDocument> result = new ArrayList<>();
+                    String context = "/" + id.toString().substring(4);
                     while (resultSet.next()) {
+                        URI public_id = getURI(resultSet, "public_id");
 
-                        TopicIndexDocument topic = new TopicIndexDocument() {{
-                            name = resultSet.getString("name");
-                            id = getURI(resultSet, "public_id");
-                            contentUri = getURI(resultSet, "content_uri");
-                            parent = getURI(resultSet, "parent_public_id");
-                            path = resultSet.getString("topic_path");
-                        }};
-
-                        topics.put(topic.id, topic);
-                        result.add(topic);
+                        TopicIndexDocument topic = topics.get(public_id);
+                        if (topic == null) {
+                            topic = new TopicIndexDocument() {{
+                                name = resultSet.getString("name");
+                                id = public_id;
+                                contentUri = getURI(resultSet, "content_uri");
+                                parent = getURI(resultSet, "parent_public_id");
+                            }};
+                            topics.put(topic.id, topic);
+                            result.add(topic);
+                        }
+                        topic.path = getPathMostCloselyMatchingContext(context, topic.path, resultSet.getString("topic_path"));
                     }
                     return result;
                 }
@@ -198,24 +200,27 @@ public class Subjects {
 
         return jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
             List<ResourceIndexDocument> result = new ArrayList<>();
-            ResourceIndexDocument current, previous = null;
+            Map<URI, ResourceIndexDocument> resources = new HashMap<>();
+
+
+            String context = "/" + subjectId.toString().substring(4);
 
             while (resultSet.next()) {
                 URI id = toURI(resultSet.getString("resource_public_id"));
 
-                boolean duplicate = previous != null && id.equals(previous.id);
-                if (duplicate) {
-                    current = previous;
-                } else {
-                    current = new ResourceIndexDocument() {{
+                ResourceIndexDocument resource = resources.get(id);
+                if (null == resource) {
+                    resource = new ResourceIndexDocument() {{
                         topicId = toURI(resultSet.getString("topic_public_id"));
                         contentUri = toURI(resultSet.getString("resource_content_uri"));
                         name = resultSet.getString("resource_name");
                         id = toURI(resultSet.getString("resource_public_id"));
-                        path = resultSet.getString("resource_path");
                     }};
-                    result.add(current);
+                    resources.put(id, resource);
+                    result.add(resource);
                 }
+
+                resource.path = getPathMostCloselyMatchingContext(context, resource.path, resultSet.getString("resource_path"));
 
                 String resource_type_id = resultSet.getString("resource_type_public_id");
                 if (resource_type_id != null) {
@@ -224,9 +229,8 @@ public class Subjects {
                         name = resultSet.getString("resource_type_name");
                     }};
 
-                    current.resourceTypes.add(resourceType);
+                    resource.resourceTypes.add(resourceType);
                 }
-                previous = current;
             }
             return result;
         });
@@ -307,7 +311,7 @@ public class Subjects {
 
         @JsonProperty
         @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resource-type:1', name = 'lecture'}]")
-        public List<ResourceTypeIndexDocument> resourceTypes = new ArrayList<>();
+        public Set<ResourceTypeIndexDocument> resourceTypes = new HashSet<>();
 
         @JsonProperty
         @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
@@ -329,5 +333,22 @@ public class Subjects {
         @JsonProperty
         @ApiModelProperty(value = "Resource type name", example = "Assignment")
         public String name;
+
+        @Override
+        @JsonIgnore
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof ResourceTypeIndexDocument)) return false;
+
+            ResourceTypeIndexDocument that = (ResourceTypeIndexDocument) o;
+
+            return id.equals(that.id);
+        }
+
+        @Override
+        @JsonIgnore
+        public int hashCode() {
+            return id.hashCode();
+        }
     }
 }

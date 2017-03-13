@@ -2,6 +2,7 @@ package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.domain.ResourceType;
+import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.junit.Test;
@@ -22,7 +23,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_single_topic() throws Exception {
-        builder.subject(s -> s.name("maths")
+        builder.subject(s -> s
                 .publicId("urn:subject:1")
                 .topic(t -> t
                         .name("trigonometry")
@@ -40,19 +41,33 @@ public class TopicsTest extends RestTest {
     }
 
     @Test
+    public void primary_url_is_returned_when_getting_single_topic() throws Exception {
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .topic("topic", t -> t.publicId("urn:topic:1"))
+        );
+
+        Subject primary = builder.subject(s -> s
+                .publicId("urn:subject:2")
+                .topic("topic")
+        );
+        builder.topic("topic").setPrimarySubject(primary);
+
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1");
+        Topics.TopicIndexDocument topic = getObject(Topics.TopicIndexDocument.class, response);
+
+        assertEquals("/subject:2/topic:1", topic.path);
+    }
+
+    @Test
     public void topic_without_subject_has_no_url() throws Exception {
         builder.topic(t -> t
-                .name("trigonometry")
-                .contentUri("urn:article:1")
                 .publicId("urn:topic:1")
         );
 
-
-        MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:1");
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1");
         Topics.TopicIndexDocument topic = getObject(Topics.TopicIndexDocument.class, response);
 
-        assertEquals("trigonometry", topic.name);
-        assertEquals("urn:article:1", topic.contentUri.toString());
         assertNull(topic.path);
     }
 
@@ -181,21 +196,20 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_urls_for_resources_for_a_topic_recursively() throws Exception {
-        builder.subject(s -> s.name("subject a")
+        builder.subject(s -> s.publicId("urn:subject:1")
                 .topic(t -> t
-                        .name("a")
                         .publicId("urn:topic:a")
-                        .resource(r -> r.name("resource a"))
+                        .resource(r -> r.publicId("urn:resource:a"))
                         .subtopic(st -> st
-                                .name("aa")
-                                .resource(r -> r.name("resource aa"))
+                                .publicId("urn:topic:aa")
+                                .resource(r -> r.publicId("urn:resource:aa"))
                                 .subtopic(st2 -> st2
-                                        .name("aaa")
-                                        .resource(r -> r.name("resource aaa"))
+                                        .publicId("urn:topic:aaa")
+                                        .resource(r -> r.publicId("urn:resource:aaa"))
                                 )
                                 .subtopic(st2 -> st2
-                                        .name("aab")
-                                        .resource(r -> r.name("resource aab"))
+                                        .publicId("urn:topic:aab")
+                                        .resource(r -> r.publicId("urn:resource:aab"))
                                 )
                         )
                 ));
@@ -204,7 +218,10 @@ public class TopicsTest extends RestTest {
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
 
         assertEquals(4, result.length);
-        assertAllTrue(result, r -> r.path.contains("topic") && r.path.contains("resource"));
+        assertAnyTrue(result, r -> "/subject:1/topic:a/resource:a".equals(r.path));
+        assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/resource:aa".equals(r.path));
+        assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aaa/resource:aaa".equals(r.path));
+        assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aab/resource:aab".equals(r.path));
     }
 
     @Test
@@ -347,7 +364,7 @@ public class TopicsTest extends RestTest {
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "Introduksjon til calculus".equals(r.name));
         assertAnyTrue(result, r -> "Introduksjon til integrasjon".equals(r.name));
-        assertAllTrue(result, r -> r.resourceTypes.get(0).name.equals("Artikkel"));
+        assertAllTrue(result, r -> r.resourceTypes.iterator().next().name.equals("Artikkel"));
     }
 
     @Test
@@ -376,7 +393,7 @@ public class TopicsTest extends RestTest {
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "ressurs 1".equals(r.name));
         assertAnyTrue(result, r -> "ressurs 2".equals(r.name));
-        assertAllTrue(result, r -> r.resourceTypes.get(0).name.equals("Artikkel"));
+        assertAllTrue(result, r -> r.resourceTypes.iterator().next().name.equals("Artikkel"));
     }
 
 }

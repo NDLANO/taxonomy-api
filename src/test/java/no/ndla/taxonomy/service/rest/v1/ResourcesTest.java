@@ -16,7 +16,9 @@ public class ResourcesTest extends RestTest {
     @Test
     public void can_get_single_resource() throws Exception {
         builder.subject(s -> s
+                .publicId("urn:subject:1")
                 .topic(t -> t
+                        .publicId("urn:topic:1")
                         .resource(r -> r
                                 .name("introduction to trigonometry")
                                 .contentUri("urn:article:1")
@@ -28,22 +30,43 @@ public class ResourcesTest extends RestTest {
 
         assertEquals("introduction to trigonometry", resource.name);
         assertEquals("urn:article:1", resource.contentUri.toString());
-        assertTrue(resource.path.contains("subject") && resource.path.contains("topic") && resource.path.contains("resource"));
+        assertEquals("/subject:1/topic:1/resource:1", resource.path);
+    }
+
+    @Test
+    public void primary_url_is_return_when_getting_single_resource() throws Exception {
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .topic(t -> t
+                        .publicId("urn:topic:1")
+                        .resource("resource", r -> r
+                                .publicId("urn:resource:1")
+                        )));
+        builder.subject(s -> s
+                .publicId("urn:subject:2")
+                .topic("primary", t -> t
+                        .publicId("urn:topic:2")
+                        .resource("resource")
+                )
+        );
+
+        builder.resource("resource").setPrimaryTopic(builder.topic("primary"));
+
+        MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1");
+        Resources.ResourceIndexDocument resource = getObject(Resources.ResourceIndexDocument.class, response);
+
+        assertEquals("/subject:2/topic:2/resource:1", resource.path);
     }
 
     @Test
     public void resource_without_subject_and_topic_has_no_url() throws Exception {
         builder.resource(r -> r
-                                .name("introduction to trigonometry")
-                                .contentUri("urn:article:1")
-                                .publicId("urn:resource:1")
-                        );
+                .publicId("urn:resource:1")
+        );
 
         MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1");
         Resources.ResourceIndexDocument resource = getObject(Resources.ResourceIndexDocument.class, response);
 
-        assertEquals("introduction to trigonometry", resource.name);
-        assertEquals("urn:article:1", resource.contentUri.toString());
         assertNull(resource.path);
     }
 
@@ -90,16 +113,14 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_create_resource() throws Exception {
-        Resources.CreateResourceCommand createResourceCommand = new Resources.CreateResourceCommand() {{
+        URI id = getId(createResource("/v1/resources", new Resources.CreateResourceCommand() {{
             name = "testresource";
             contentUri = URI.create("urn:article:1");
-        }};
-
-        URI id = getId(createResource("/v1/resources", createResourceCommand));
+        }}));
 
         Resource resource = resourceRepository.getByPublicId(id);
-        assertEquals(createResourceCommand.name, resource.getName());
-        assertEquals(createResourceCommand.contentUri, resource.getContentUri());
+        assertEquals("testresource", resource.getName());
+        assertEquals("urn:article:1", resource.getContentUri().toString());
     }
 
     @Test

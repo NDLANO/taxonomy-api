@@ -1,10 +1,10 @@
 WITH RECURSIVE tree (topic_id, public_id, parent_id, is_primary, level) AS (
   SELECT
-    t.id                  AS topic_id,
-    t.public_id           AS public_id,
-    0                     AS parent_id,
-    FALSE                 AS is_primary,
-    0                     AS level
+    t.id        AS topic_id,
+    t.public_id AS public_id,
+    0           AS parent_id,
+    FALSE       AS is_primary,
+    0           AS level
   FROM
     subject s
     INNER JOIN subject_topic st ON st.subject_id = s.id
@@ -15,11 +15,11 @@ WITH RECURSIVE tree (topic_id, public_id, parent_id, is_primary, level) AS (
   UNION ALL
 
   SELECT
-    t.id                  AS topic_id,
-    t.public_id           AS public_id,
-    parent.topic_id       AS parent_id,
-    st.is_primary         AS is_primary,
-    parent.level + 1      AS level
+    t.id             AS topic_id,
+    t.public_id      AS public_id,
+    parent.topic_id  AS parent_id,
+    st.is_primary    AS is_primary,
+    parent.level + 1 AS level
   FROM
     topic t
     LEFT OUTER JOIN topic_subtopic st ON t.id = st.subtopic_id

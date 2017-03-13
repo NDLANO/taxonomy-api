@@ -11,6 +11,11 @@ FROM
     FROM topic_translation
     WHERE language_code = ?
   ) tr ON t.id = tr.topic_id
-  LEFT OUTER JOIN cached_url url ON url.public_id = t.public_id
+  LEFT OUTER JOIN
+  (
+    SELECT *
+    FROM cached_url
+    WHERE is_primary = TRUE
+  ) url ON url.public_id = t.public_id
 WHERE
   1 = 1

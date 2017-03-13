@@ -46,15 +46,12 @@ public class UrlGenerator {
 
     public UrlResult getUrlResult(URI id, String context) {
         boolean onlyPrimary = isBlank(context);
-        Collection<String> urls = generatePaths(id, onlyPrimary);
-        return new UrlResult(id, getUrlMatchingContext(context, urls));
+        String[] urls = generatePaths(id, onlyPrimary);
+        return new UrlResult(id, getPathMostCloselyMatchingContext(context, urls));
     }
 
-    public Collection<String> generatePaths(URI publicId) {
-        return generatePaths(publicId, false);
-    }
 
-    public Collection<String> generatePaths(URI publicId, boolean onlyPrimary) {
+    private String[] generatePaths(URI publicId, boolean onlyPrimary) {
         String query = GENERATE_URL_QUERY;
         if (onlyPrimary) {
             query = query.replace("1 = 1", "parent.is_primary = true");
@@ -65,14 +62,10 @@ public class UrlGenerator {
                     while (resultSet.next()) {
                         mapRow(resultSet, urls);
                     }
-                    return urls.values().stream().flatMap(List::stream).collect(Collectors.toList());
+                    List<String> paths = urls.values().stream().flatMap(List::stream).collect(Collectors.toList());
+                    return paths.toArray(new String[paths.size()]);
                 }
         );
-    }
-
-    public String generatePrimaryPath(URI publicId) {
-        Collection<String> paths = generatePaths(publicId, true);
-        return paths.size() == 0 ? null : paths.iterator().next();
     }
 
     private void mapRow(ResultSet resultSet, Map<String, List<String>> urls) throws SQLException {
@@ -95,7 +88,7 @@ public class UrlGenerator {
         return urls.containsKey(publicId) ? urls.get(publicId) : new ArrayList<>();
     }
 
-    private String getUrlMatchingContext(String context, Collection<String> urls) {
+    public static String getPathMostCloselyMatchingContext(String context, String... urls) {
         String longestPrefix = "";
         String bestUrl = "";
         for (String possibleUrl : urls) {

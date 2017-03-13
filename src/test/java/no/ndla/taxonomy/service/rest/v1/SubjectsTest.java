@@ -1,12 +1,15 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
+import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.Subject;
+import no.ndla.taxonomy.service.domain.Topic;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
+import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -217,7 +220,7 @@ public class SubjectsTest extends RestTest {
 
         assertAnyTrue(resources, r -> r.name.equals("Introduksjon til trigonometri"));
         assertAnyTrue(resources, r -> r.name.equals("Introduksjon til calculus"));
-        assertAllTrue(resources, r -> r.resourceTypes.get(0).name.equals("Artikkel"));
+        assertAllTrue(resources, r -> r.resourceTypes.iterator().next().name.equals("Artikkel"));
     }
 
     @Test
@@ -241,22 +244,79 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_urls_for_all_resources() throws Exception {
-        URI id = builder.subject(s -> s
-                .name("subject")
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
                 .topic(t -> t
-                        .name("topic a")
-                        .resource(r -> r.name("resource a")))
+                        .publicId("urn:topic:1")
+                        .resource(r -> r.publicId("urn:resource:1"))
+                )
                 .topic(t -> t
-                        .name("topic b")
-                        .resource(r -> r.name("resource b"))
-                        .subtopic(st -> st.name("subtopic").resource(r -> r.name("sub resource"))))
-        ).getPublicId();
+                        .publicId("urn:topic:2")
+                        .resource(r -> r.publicId("urn:resource:2"))
+                        .subtopic(st -> st
+                                .publicId("urn:topic:21")
+                                .resource(r -> r.publicId("urn:resource:3"))
+                        )
+                )
+        );
 
-        MockHttpServletResponse response = getResource("/v1/subjects/" + id + "/resources");
+        MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/resources");
         Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
 
         assertEquals(3, resources.length);
-        assertAllTrue(resources, r -> r.path.contains("topic") && r.path.contains("resource"));
+        assertAnyTrue(resources, r -> r.path.equals("/subject:1/topic:1/resource:1"));
+        assertAnyTrue(resources, r -> r.path.equals("/subject:1/topic:2/resource:2"));
+        assertAnyTrue(resources, r -> r.path.equals("/subject:1/topic:2/topic:21/resource:3"));
+    }
+
+    @Test
+    public void resource_urls_are_chosen_according_to_context() throws Exception {
+        Resource resource = builder.resource(r -> r.publicId("urn:resource:1"));
+
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .topic(t -> t
+                        .publicId("urn:topic:1")
+                        .resource(resource)
+                )
+        );
+        builder.subject(s -> s
+                .publicId("urn:subject:2")
+                .topic("topic2", t -> t
+                        .publicId("urn:topic:2")
+                        .resource(resource)
+                )
+        );
+
+        for (int i : asList(1, 2)) {
+            MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:" + i + "/resources");
+            Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
+
+            assertEquals(1, resources.length);
+            assertEquals("/subject:" + i + "/topic:" + i + "/resource:1", resources[0].path);
+        }
+    }
+
+    @Test
+    public void topic_urls_are_chosen_according_to_context() throws Exception {
+        Topic topic = builder.topic(t-> t.publicId("urn:topic:1"));
+
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .topic(topic)
+        );
+        builder.subject(s -> s
+                .publicId("urn:subject:2")
+                .topic(topic)
+        );
+
+        for (int i : asList(1, 2)) {
+            MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:" + i + "/topics");
+            Subjects.TopicIndexDocument[] resources = getObject(Subjects.TopicIndexDocument[].class, response);
+
+            assertEquals(1, resources.length);
+            assertEquals("/subject:" + i + "/topic:1", resources[0].path);
+        }
     }
 
     @Test

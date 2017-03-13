@@ -7,14 +7,12 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.repositories.ResourceRepository;
-import no.ndla.taxonomy.service.repositories.TopicResourceRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
@@ -33,14 +31,10 @@ public class Resources {
     private static final String GET_RESOURCES_QUERY = getQuery("get_resources");
 
     private ResourceRepository resourceRepository;
-    private TopicResourceRepository topicResourceRepository;
-    private EntityManager entityManager;
     private JdbcTemplate jdbcTemplate;
 
-    public Resources(ResourceRepository resourceRepository, TopicResourceRepository topicResourceRepository, EntityManager entityManager, JdbcTemplate jdbcTemplate) {
+    public Resources(ResourceRepository resourceRepository, JdbcTemplate jdbcTemplate) {
         this.resourceRepository = resourceRepository;
-        this.topicResourceRepository = topicResourceRepository;
-        this.entityManager = entityManager;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -115,7 +109,7 @@ public class Resources {
             URI location = URI.create("/resources/" + resource.getPublicId());
             return ResponseEntity.created(location).build();
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateIdException(command.id.toString());
+            throw new DuplicateIdException("" + command.id);
         }
     }
 
@@ -165,14 +159,5 @@ public class Resources {
         @JsonProperty
         @ApiModelProperty(value = "The path part of the url to this resource", example = "/subject:1/topic:1/resource:1")
         public String path;
-
-        ResourceIndexDocument() {
-        }
-
-        ResourceIndexDocument(Resource resource) {
-            id = resource.getPublicId();
-            name = resource.getName();
-            contentUri = resource.getContentUri();
-        }
     }
 }

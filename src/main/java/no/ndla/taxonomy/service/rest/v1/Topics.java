@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.service.rest.v1;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
@@ -16,8 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
@@ -166,23 +166,22 @@ public class Topics {
 
         return jdbcTemplate.query(query, setQueryParameters(args), resultSet -> {
             List<ResourceIndexDocument> result = new ArrayList<>();
-            ResourceIndexDocument current, previous = null;
+            Map<URI, ResourceIndexDocument> resources = new HashMap<>();
 
             while (resultSet.next()) {
                 URI id = toURI(resultSet.getString("resource_public_id"));
 
-                boolean duplicate = previous != null && id.equals(previous.id);
-                if (duplicate) {
-                    current = previous;
-                } else {
-                    current = new ResourceIndexDocument() {{
+                ResourceIndexDocument resource = resources.get(id);
+                if (null == resource) {
+                    resource = new ResourceIndexDocument() {{
                         topicId = toURI(resultSet.getString("topic_id"));
                         name = resultSet.getString("resource_name");
                         contentUri = toURI(resultSet.getString("resource_content_uri"));
                         id = toURI(resultSet.getString("resource_public_id"));
                         path = resultSet.getString("resource_path");
                     }};
-                    result.add(current);
+                    resources.put(id, resource);
+                    result.add(resource);
                 }
 
                 String resourceTypePublicId = resultSet.getString("resource_type_public_id");
@@ -192,9 +191,8 @@ public class Topics {
                         name = resultSet.getString("resource_type_name");
                     }};
 
-                    current.resourceTypes.add(resourceType);
+                    resource.resourceTypes.add(resourceType);
                 }
-                previous = current;
             }
 
             return result;
@@ -216,7 +214,7 @@ public class Topics {
 
         @JsonProperty
         @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resource-type:1', name = 'lecture'}]")
-        public List<ResourceTypeIndexDocument> resourceTypes = new ArrayList<>();
+        public Set<ResourceTypeIndexDocument> resourceTypes = new HashSet<>();
 
         @JsonProperty
         @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
@@ -238,6 +236,23 @@ public class Topics {
         @JsonProperty
         @ApiModelProperty(value = "Resource type name", example = "Assignment")
         public String name;
+
+        @Override
+        @JsonIgnore
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof ResourceTypeIndexDocument)) return false;
+
+            ResourceTypeIndexDocument that = (ResourceTypeIndexDocument) o;
+
+            return id.equals(that.id);
+        }
+
+        @Override
+        @JsonIgnore
+        public int hashCode() {
+            return id.hashCode();
+        }
     }
 
     public static class CreateTopicCommand {
