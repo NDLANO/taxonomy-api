@@ -36,7 +36,7 @@ public class UrlCacherFilter implements Filter {
         if (response.getStatus() < 200 || response.getStatus() >= 300) return;
 
         URI id = null;
-        URI lastPathElement = getIdFromPath(request.getPathInfo());
+        URI lastPathElement = getIdFromPath(request.getRequestURI());
 
         if (response.getStatus() == HttpServletResponse.SC_CREATED) {
             id = getIdFromPath(response.getHeader("Location"));
