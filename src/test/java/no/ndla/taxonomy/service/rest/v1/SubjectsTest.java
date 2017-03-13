@@ -153,11 +153,17 @@ public class SubjectsTest extends RestTest {
     public void can_get_topics_recursively() throws Exception {
         URI subjectid = builder.subject(s -> s
                 .name("subject")
+                .publicId("urn:subject:1")
                 .topic(parent -> parent
                         .name("parent topic")
+                        .publicId("urn:topic:a")
                         .subtopic(child -> child
                                 .name("child topic")
-                                .subtopic(grandchild -> grandchild.name("grandchild topic"))
+                                .publicId("urn:topic:aa")
+                                .subtopic(grandchild -> grandchild
+                                        .name("grandchild topic")
+                                        .publicId("urn:topic:aaa")
+                                )
                         )
                 )
         ).getPublicId();
@@ -167,8 +173,11 @@ public class SubjectsTest extends RestTest {
 
         assertEquals(3, topics.length);
         assertEquals("parent topic", topics[0].name);
+        assertEquals("/subject:1/topic:a", topics[0].path);
         assertEquals("child topic", topics[1].name);
+        assertEquals("/subject:1/topic:a/topic:aa", topics[1].path);
         assertEquals("grandchild topic", topics[2].name);
+        assertEquals("/subject:1/topic:a/topic:aa/topic:aaa", topics[2].path);
     }
 
     @Test
@@ -299,7 +308,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void topic_urls_are_chosen_according_to_context() throws Exception {
-        Topic topic = builder.topic(t-> t.publicId("urn:topic:1"));
+        Topic topic = builder.topic(t -> t.publicId("urn:topic:1"));
 
         builder.subject(s -> s
                 .publicId("urn:subject:1")

@@ -216,13 +216,6 @@ public class TopicsTest extends RestTest {
                         )
                 ));
 
-        builder.subject(s -> s.publicId("urn:subject:2")
-                .topic(t -> t
-                        .publicId("urn:topic:2")
-                        .resource("aaa")
-                )
-        );
-
         MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:a" + "/resources?recursive=true");
         Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
 
