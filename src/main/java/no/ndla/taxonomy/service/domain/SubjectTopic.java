@@ -22,6 +22,10 @@ public class SubjectTopic extends DomainEntity {
     @Column(name = "is_primary")
     private boolean primary;
 
+    protected SubjectTopic() {
+
+    }
+
     public SubjectTopic(Subject subject, Topic topic) {
         this.subject = subject;
         this.topic = topic;

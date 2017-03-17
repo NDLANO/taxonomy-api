@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+COMMAND="mvn clean install"
+if [ "$1" == "-i" ]
+then
+    COMMAND="mvn spring-boot:run"
+fi
+
 IP=127.0.0.1
 
 if which docker-machine > /dev/null
@@ -33,7 +39,7 @@ set +e
 SPRING_DATASOURCE_URL="jdbc:postgresql://${IP}:5432/postgres" \
     SPRING_DATASOURCE_USERNAME="postgres" SPRING_DATASOURCE_PASSWORD="" \
     SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT="org.hibernate.dialect.PostgreSQL94Dialect" \
-    mvn clean install
+    ${COMMAND}
 EXIT_CODE=$?
 set -e
 

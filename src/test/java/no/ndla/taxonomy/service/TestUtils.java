@@ -32,7 +32,7 @@ public class TestUtils {
 
     private static HttpMessageConverter mappingJackson2HttpMessageConverter;
     private static EntityManager entityManager;
-    public static UrlCacher urlCacher;
+    private static UrlCacher urlCacher;
     private static MockMvc mockMvc;
 
     @Autowired
