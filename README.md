@@ -2,7 +2,18 @@
 
 [![Build Status](https://travis-ci.org/NDLANO/taxonomy-api.svg?branch=master)](https://travis-ci.org/NDLANO/taxonomy-api)
 
-Rest service and graph database for organizing content
+Rest service and relational database for organizing content
+
+## What does this service do?
+
+This API is for organising content. Taxonomy covers subjects, topics, subtopics, resources, resource types, and how all these are connected. 
+You can create, retrieve, update and delete (CRUD operations) both elements and the connections between elements.  
+
+Below you can see a figure of how elements can be connected. Then we will go through how this structure can be realised through the API. 
+
+[[https://github.com/NDLANO/taxonomy-api/blob/master/mathematicsStructure.png|alt=Figure]]
+
+## Details
 
 Unless otherwise specified, all PUT and POST requests must use
 `Content-Type: application/json;charset=UTF-8`. If charset is omitted, UTF-8 will be assumed.
