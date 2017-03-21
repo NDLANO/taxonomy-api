@@ -10,8 +10,7 @@ This API is for organising content. Taxonomy covers subjects, topics, subtopics,
 You can create, retrieve, update and delete (CRUD operations) both elements and the connections between elements.  
 
 Below you can see a figure of how elements can be connected. Then we will go through how this structure can be realised through the API. 
-
-[[https://github.com/NDLANO/taxonomy-api/blob/master/mathematicsStructure.png|alt=Figure]]
+![](mathematicsStructure.png?raw=true)
 
 ## Details
 
