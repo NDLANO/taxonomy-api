@@ -6,11 +6,83 @@ Rest service and relational database for organizing content
 
 ## What does this service do?
 
-This API is for organising content. Taxonomy covers subjects, topics, subtopics, resources, resource types, and how all these are connected. 
-You can create, retrieve, update and delete (CRUD operations) both elements and the connections between elements.  
+This API is for organising content. There are two main types of content, *elements* and *connections* between elements. 
+The elements in the taxonomy are subjects, topics, resources, and resource types. The taxonomy stores metadata for each element. 
+This can be name (i.e. Mathematics) and URI to the content page. All elements, except resource types, can have content URIs. 
 
-Below you can see a figure of how elements can be connected. Then we will go through how this structure can be realised through the API. 
-![](mathematicsStructure.png?raw=true)
+In addition to the elements, the taxonomy stores the connections you make between elements. Each connection also has 
+metadata attached to it, such as which elements are connected, and whether or not this connection is the primary connection.
+Subjects can be connected to topics, topics to subtopics, topics to resources, resources to resource types, and resource types to sub resources types. 
+
+Below you can see a figure of how elements can be connected. We will go through how this structure can be realised 
+through the API. For details on the use of each service, please see the Swagger documentation. 
+
+![Figure of content structure for mathematics](mathematicsStructure.png?raw=true)
+
+### Subjects and topics
+
+First, create a Subject with the name Mathematics with a POST call to `/subjects`. When this call returns you'll get a location.
+This location contains the URI for the subject, i.e. `urn:subject:342`. Any time you need to change or retrieve this subject 
+you'll be using this id. 
+
+Next create two Topic elements for Geometry and Statistics (POST to `topics`). If you have content for the elements, 
+you can include the URI. The URIs can also be added  later (PUT to `/subjects` or `/topics`).
+
+Once you have a subject and a topic, you can connect them. Use the ids for the two elements you want to 
+connect. Connect a subject and a topic with a POST call to `/subject-topics`.
+The first connection between a subject and a topic will automatically be marked as the primary connection. Elements (except 
+subjects) can have multiple parent connections (see below for details).
+
+A topic can have subtopics. In our example Trigonometry is a subtopic of Geometry. To connect the two, create a topic named Trigonometry. 
+Then add a connection between the Geometry topic and the Trigonometry topic with a POST call to `/topic-subtopics`. 
+
+The figure above also contains a topic for Statistics and the subtopic Probability. These can be connected in the same 
+manner as previously described. The subject Mathematics will then have two topics, while each topic will have a subtopic.
+Call GET on `/subjects/{id}/topics` to list out the topics connected to the subject.  
+
+A GET call to `topics` will yield both topics and subtopics. The only thing differentiating a topic 
+from a subtopic is the connection in `/topic-subtopic`. Similar to the connections between a subject and its topics, you can 
+get all subtopics for a topic with a GET call to `/topics/{id}/subtopics`. 
+
+
+### Updating elements and connections
+
+All PUT calls will overwrite the information in the element. Be sure to include everything you want to keep. The taxonomy 
+API does not check for empty fields unless they are required. The easiest way to update an element is to first retrieve 
+the current element with a GET call to the correct service and then return the object with a PUT call after you make your changes. 
+
+
+### Resources 
+
+Resources are created in the same way as topics and subjects, but with a POST call to `/resources`. Resources can only 
+be connected to topics. This happens with POST calls to `/topic-resources`. A resource can only be connected to a subject 
+via its topic(s). Resources can have content URIs in the same way as topics and subjects. If you want to change the 
+resource by adding a content uri, you use a PUT call to `/resources/{id}`. 
+
+List all resources connected to a subject with a GET call to `/subjects/{id}/resources`. For the
+Mathematics subject, this call would return a list with these five elements: Tangens, Sine and Cosine, What is probability, 
+Adding probabilities, and Probability questions. 
+
+You can also list all resources connected to a topic with a GET call to `/topics/{id}/resources`. If you want to list all 
+resources for the topic Probability, you'll get back a list with three resources; What is probability, Adding probabilities 
+and Probability questions. 
+
+If you get all resources connected to the topic Statistics, you'll get an empty list, because it doesn't have any 
+resources connected directly to it. If you ask for all resources recursively (`/topics/{id}/resources?recursive=true`), 
+you'll get the three resources from the Probability topic. 
+
+
+### Resource types
+
+Resources can be tagged with resource types. First, create the resource type with a POST call to `/resource-types`. Then 
+connect the resource to the resource type with a POST call to `/resource-resourcetypes` including both the uri of the 
+resource and the resource type. A resource can have multiple resource types. 
+
+When you get all resources for a subject or topic you can choose to get only resources matching a particular resource type 
+(or a list of resource types).For our example, a GET call to `/subjects/{id}/resources?type={id}` with the ID for 
+articles will give you a list of three elements; Sine and Cosine, What is probability, and Adding probability.
+
+
 
 ## Details
 
