@@ -6,32 +6,52 @@ Rest service and relational database for organizing content
 
 ## What does this service do?
 
-This API is for organising content. There are two main types of content, *elements* and *connections* between elements. 
-The elements in the taxonomy are subjects, topics, resources, and resource types. The taxonomy stores metadata for each element. 
-This can be name (i.e. Mathematics) and URI to the content page. All elements, except resource types, can have content URIs. 
+This API is for organising and categorising the content provided by NDLA. At the heart of the structure are the Resources, which
+represent the actual content, such as articles, videos of lectures, quizzes, learning paths (which are compositions of other 
+resources) or any number of other media. The organisation of content allows for a context rich user interface to be built on top
+of this API where the content is displayed in context of a Subject and its Topics, with hyperlinks to related content. 
 
-In addition to the elements, the taxonomy stores the connections you make between elements. Each connection also has 
-metadata attached to it, such as which elements are connected, and whether or not this connection is the primary connection.
-Subjects can be connected to topics, topics to subtopics, topics to resources, resources to resource types, and resource types to sub resources types. 
+Please note that this API is all about metadata. The actual content is stored in other APIs, identified by the Content URI
+stored with each Subject, Topic and Resource in this API. 
 
-Below you can see a figure of how elements can be connected. We will go through how this structure can be realised 
+The Resources are categorised according to Subjects and Topics. A Subject is a high-level field of study, such as Mathematics
+or Science, loosely based on the subject curricula at [udir.no](https://www.udir.no/kl06/MAT1-04?lplang=eng), whereas a Topic 
+is a hierarchical sub-division of the subject into subject areas. The topics may be loosely based on the subject areas at 
+[udir.no](https://www.udir.no/kl06/MAT1-04/Hele/Hovedomraader?lplang=eng), or they may follow a different structure imposed by the
+editors.
+
+This organisation gives us a tree representation of the content, where the Subjects are at the roots of the tree, the 
+Topics make up the branches, and the Resources are the leaves. Note, however, that this is not a strict tree-structure, since
+topics and resources may belong to several parents (see "Multiple parent connections" below). 
+
+The taxonomy data model consists of *entities* and *connections* between entities. 
+
+The entities in the taxonomy are Subjects, Topics, Resources, and Resource Types. The taxonomy stores metadata for each entity, 
+like Name and Content URI. 
+
+In addition to the entities, the taxonomy stores the connections you make between entities. Each connection also has 
+metadata attached to it, such as which entities are connected, and whether or not this connection is the primary connection 
+(see "Multiple parent connections" below).
+Subjects can be connected to topics, topics to subtopics, topics to resources, resources to resource types, and resource types 
+to parent resources types. 
+
+Below you can see a figure of how entities can be connected. We will go through how this structure can be realised 
 through the API. For details on the use of each service, please see the Swagger documentation. 
 
-![Figure of content structure for mathematics](mathematicsStructure.png?raw=true)
+![Figure of content structure for mathematics](doc/mathematics-structure.png?raw=true)
 
 ### Subjects and topics
 
 First, create a Subject with the name Mathematics with a POST call to `/subjects`. When this call returns you'll get a location.
-This location contains the URI for the subject, i.e. `urn:subject:342`. Any time you need to change or retrieve this subject 
-you'll be using this id. 
+This location contains the path to this subject within the subjects resource, e.g., `/v1/subjects/urn:subject:342`, where `urn:subject:342` 
+is the ID of the newly created subject. Any time you need to change or retrieve this subject you'll be using this ID. 
 
-Next create two Topic elements for Geometry and Statistics (POST to `topics`). If you have content for the elements, 
-you can include the URI. The URIs can also be added  later (PUT to `/subjects` or `/topics`).
+Next, create two Topic entities for Geometry and Statistics (POST to `topics`). If you have a topic description that you want to use
+as the content for these entities, you can include the content URI. The content URIs can also be added later (PUT to `/subjects` or `/topics`).
 
-Once you have a subject and a topic, you can connect them. Use the ids for the two elements you want to 
-connect. Connect a subject and a topic with a POST call to `/subject-topics`.
-The first connection between a subject and a topic will automatically be marked as the primary connection. Elements (except 
-subjects) can have multiple parent connections (see below for details).
+Once you have a subject and a topic, you can connect them. Connect a subject and a topic with a POST call to `/subject-topics`. 
+Use the IDs for the two entities you want to connect. Topics and resources can have multiple parent parent connections.
+The first connection between a subject and a topic will automatically be marked as the primary connection (see below for details).
 
 A topic can have subtopics. In our example Trigonometry is a subtopic of Geometry. To connect the two, create a topic named Trigonometry. 
 Then add a connection between the Geometry topic and the Trigonometry topic with a POST call to `/topic-subtopics`. 
@@ -40,622 +60,120 @@ The figure above also contains a topic for Statistics and the subtopic Probabili
 manner as previously described. The subject Mathematics will then have two topics, while each topic will have a subtopic.
 Call GET on `/subjects/{id}/topics` to list out the topics connected to the subject.  
 
-A GET call to `topics` will yield both topics and subtopics. The only thing differentiating a topic 
-from a subtopic is the connection in `/topic-subtopic`. Similar to the connections between a subject and its topics, you can 
+A GET call to `/topics` will yield both topics and subtopics. The only thing differentiating a topic 
+from a subtopic is the connection in `/topic-subtopics`. Similar to the connections between a subject and its topics, you can 
 get all subtopics for a topic with a GET call to `/topics/{id}/subtopics`. 
 
 
-### Updating elements and connections
+### Updating entities and connections
 
-All PUT calls will overwrite the information in the element. Be sure to include everything you want to keep. The taxonomy 
-API does not check for empty fields unless they are required. The easiest way to update an element is to first retrieve 
-the current element with a GET call to the correct service and then return the object with a PUT call after you make your changes. 
+All PUT calls will overwrite the information in the entity. Be sure to include everything you want to keep. The taxonomy 
+API does not check for empty fields unless they are required. The easiest way to update an entity is to first retrieve 
+the current entity with a GET call to the correct service and then return the object with a PUT call after you make your changes. 
 
 
 ### Resources 
 
-Resources are created in the same way as topics and subjects, but with a POST call to `/resources`. Resources can only 
-be connected to topics. This happens with POST calls to `/topic-resources`. A resource can only be connected to a subject 
-via its topic(s). Resources can have content URIs in the same way as topics and subjects. If you want to change the 
-resource by adding a content uri, you use a PUT call to `/resources/{id}`. 
+A Resource (or learning resource) represents an article, a learning path, a video or other content. Its Content URI is 
+an ID referring to the actual content which is stored in a different API, e.g., the Article API or the Learning Path API. 
+
+Resources are created in the same way as topics and subjects, but with a POST call to `/resources`. You can connect your Resources 
+to Topics by making a POST call to `/topic-resources`. A resource can only be connected to a Subject 
+via its Topic(s). You can update a Resource (for instance, change its Content URI) by making a PUT call to `/resources/{id}`. 
 
 List all resources connected to a subject with a GET call to `/subjects/{id}/resources`. For the
-Mathematics subject, this call would return a list with these five elements: Tangens, Sine and Cosine, What is probability, 
+Mathematics subject, this call would return a list with these five entities: Tangens, Sine and Cosine, What is probability, 
 Adding probabilities, and Probability questions. 
 
 You can also list all resources connected to a topic with a GET call to `/topics/{id}/resources`. If you want to list all 
-resources for the topic Probability, you'll get back a list with three resources; What is probability, Adding probabilities 
+resources for the Probability topic, you'll get back a list with three resources; What is probability, Adding probabilities 
 and Probability questions. 
 
-If you get all resources connected to the topic Statistics, you'll get an empty list, because it doesn't have any 
+If you retrieve all resources connected to the topic Statistics, you'll get an empty list, because it doesn't have any 
 resources connected directly to it. If you ask for all resources recursively (`/topics/{id}/resources?recursive=true`), 
-you'll get the three resources from the Probability topic. 
+you'll get the three resources from the Probability topic, since it is a sub topic of Statistics.  
 
 
 ### Resource types
 
-Resources can be tagged with resource types. First, create the resource type with a POST call to `/resource-types`. Then 
-connect the resource to the resource type with a POST call to `/resource-resourcetypes` including both the uri of the 
-resource and the resource type. A resource can have multiple resource types. 
+A Resource Type is a category for tagging and filtering Resources. It is a tree structure with two levels. 
+In theory, you could make the hierarchy deeper, but that's probably not needed.  
+
+To tag a Resource with Resource Types, first create a Resource Type with a POST call to `/resource-types`. Then 
+connect the Resource to the Resource Type with a POST call to `/resource-resourcetypes` including both the ID of the 
+Resource and the Resource Type. A resource can have multiple resource types by making several calls. 
 
 When you get all resources for a subject or topic you can choose to get only resources matching a particular resource type 
-(or a list of resource types).For our example, a GET call to `/subjects/{id}/resources?type={id}` with the ID for 
-articles will give you a list of three elements; Sine and Cosine, What is probability, and Adding probability.
+(or a list of resource types). For our example, a GET call to `/subjects/{id}/resources?type={resourceTypeId}` with `resourceTypeId` 
+corresponding to the ID of Articles will give you a list of three entities; Sine and Cosine, What is probability, and Adding probability.
+
+
+### Multiple parent connections
+As some topics such as Statistics may be relevant in several Subjects, multiple parent connections are allowed. This enables you to 
+create a structure where Statistics is a topic in Mathematics, but it is also a topic in Social Studies. In these cases,
+it makes sense to select Mathematics as the primary Topic. This means that if not specified, Statistics belongs to the context of 
+Mathematics. However, if a user is currently browsing the subject of Social Studies, Statistics will still be shown in the context of 
+Social Studies. In this regard, the tree behaves a bit like a Unix filesystem, where you may have symbolic and hard links to the same
+content. 
+
+![Figure of content structure for mathematics](doc/multiple-parent-connections.png?raw=true)
+
+In the above figure, primary connections are showed in bold red, while the secondary connections are shown in black. Note that a topic or
+a resource can only have *one* primary parent. If you set a different connection to be primary, the previous primary connection will become 
+secondary.
+
+The figure above shows how Statistics is a topic in both Mathematics and Social Studies. If you list all the topics in 
+Social Studies, Statistics will be in the list. It also shows that Riemann Sums is a Resource in both Economics and Integration. If you list all
+the Resources in Social Studies or Mathematics, Riemann Sums will be in the list.  
+
+Primary connections are used to determine the default context for a Resource or a Topic. The context of a Resource or a Topic is encoded 
+in its URL path, which you get by following the primary connections from the Resource or Topic to the root of the hierarchy.
+ 
+## URLs
+
+Any entity has a URL (e.g., `https://www.ndla.no/subject:1/topic:1/resource:1`), which consists of a scheme (`https`), 
+a hostname (`www.ndla.no`) and a path (`/subject:1/topic:1/resource:1`). The taxonomy API only contains information about the path, since 
+the path is directly derived from the taxonomy itself. The hostname and scheme are determined by factors outside the bondary of the
+taxonomy API. 
+
+The path of any entity is determined by following the connections from it to the root of the hierarchy, picking up the IDs of the 
+entities along the way. Using the above figure as an example, we can derive the following paths: 
+ 
+Name                  | ID               | Path(s)
+--------------        | ---------------  | ---------------------
+Mathematics           | `urn:subject:1`  | `/subject:1`
+Social studies        | `urn:subject:2`  | `/subject:2`
+Geometry              | `urn:topic:1`    | `/subject:1/topic:1`  
+Statistics            | `urn:topic:2`    | `/subject:1/topic:2` `/subject:2/topic:2`
+Calculus              | `urn:topic:3`    | `/subject:1/topic:3`
+Economics             | `urn:topic:4`    | `/subject:2/topic:4`
+Probability           | `urn:topic:5`    | `/subject:1/topic:2/topic:5` `/subject:2/topic:2/topic:5`
+Integration           | `urn:topic:6`    | `/subject:1/topic:3/topic:6`
+What is probability?  | `urn:resource:1` | `/subject:1/topic:2/topic:5/resource:1` `/subject:2/topic:2/topic:5/resource:1`
+Adding probabilities  | `urn:resource:2` | `/subject:1/topic:2/topic:5/resource:2` `/subject:2/topic:2/topic:5/resource:2`
+Probability questions | `urn:resource:3` | `/subject:1/topic:2/topic:5/resource:3` `/subject:2/topic:2/topic:5/resource:3`
+Riemann sums          | `urn:resource:4` | `/subject:1/topic:3/topic:6/resource:4` `/subject:2/topic:4/resource:4`
+ 
+As you can see, several entities have two paths, since they have more than one path to the root of the hierarchy. The primary path is
+listed first. 
+
+### The context of URLs
+
+Say that a user is currently browsing the Social Studies subject. Perhaps the user interface shows a heading indicating that 
+Social Studies is the selected subject, there may be breadcrumbs indicating the user's current position in the hierarchy, and 
+perhaps a treeview showing the hierarchy below the Social Studies subject. User interfaces may vary, but this imaginary system 
+would fall within the norm of such systems. 
+
+Now, say that the user wants to navigate to Statistics, which is a first-level topic within Social Studies. Its primary parent, 
+however, is Mathematics. If the link were to transport the user from Social Studies to Mathematics, he would surely be confused. 
+So to preserve the current context, we find the possible paths to Statistics, and select the one most closely resembling the 
+user's current position in the hierarchy. In this scenario, the possible paths are `/subject:1/topic:2` and `/subject:2/topic:2`. 
+Since the user's current position (the current context) is `/subject:2`, we select `/subject:2/topic:2` as the preferred path, since it
+has the first nine characters in common with the current context. The other one, `/subject:1/topic:2` has only one. 
+
+When listing entities, the Taxonomy API always includes a path to each entity in the correct context determined by the request. 
+Say that you for instance list all topics under Social Studies. Statistics will be included in the result, and its path will be 
+`/subject:2/topic:2`. The API has automatically selected the correct path given the context you provided, and returns only that one. 
+If you, on the other hand, ask for all topics under Mathematics, Statistics will be listed with a path of `/subject:1/topic:2`. 
+The same principle applies for resources. 
 
-
-
-## Details
-
-Unless otherwise specified, all PUT and POST requests must use
-`Content-Type: application/json;charset=UTF-8`. If charset is omitted, UTF-8 will be assumed.
-All GET requests will return data using the same content type.
-
-When you remove an entity, its associations are also deleted. E.g., if you remove a subject,
-its associations to any topics are removed. The topics themselves are not affected.
-
-## `/subjects`
-
-A collection of school subjects, such as physics, mathematics or biology.
-
-### GET `/subjects`
-Gets a list of all subjects
-
-*example input*
-
-    GET /subjects
-
-*example output*
-
-    [
-       {
-          "id" : "urn:subject:4208",
-          "name" : "mathematics"
-       },
-       {
-          "id" : "urn:subject:4288",
-          "name" : "biology"
-       }
-    ]
-
-### GET `/subjects/{id}`
-Gets a single subject
-
-*example input*
-
-    GET /subjects/urn:subject:4288
-
-*example output*
-
-       {
-          "id" : "urn:subject:4288",
-          "name" : "biology"
-       }
-
-### GET `/subjects/{id}/topics`
-Gets all topics associated with that subject. Note that this resource is read-only.
-To update the relationship between subjects and topics, use the resource `/subject-topics`.
-
-*parameters*
-
-`recursive` `(true|false)` If true, subtopics are fetched recursively. Default: `false` 
-
-*example input*
-
-    GET /subjects/urn:subject:4288/topics?recursive=true
-
-*example output*
-
-    [
-       {
-          "name" : "photo synthesis",
-          "id" : "urn:topic:4176",
-          "subtopics" : []
-       },
-       {
-          "name" : "trigonometry",
-          "id" : "urn:topic:81924160",
-          "subtopics" : [
-             {
-                "name" : "pythagoras",
-                "id" : "urn:topic:4328",
-                "subtopics" : []
-             }
-          ]
-       }
-    ]
-    
-### PUT `/subjects/{id}`
-Update a single subject
-
-*example input*
-
-    PUT /subjects/urn:subject:4288
-
-    {
-        "name" : "biology"
-    }
-
-*example output*
-
-    < HTTP/1.1 204
-
-### POST `/subjects`
-
-Creates a new subject
-
-*properties*
-
-`name` (`string`) - the name of the subject
-
-`id` (`string`) - if specified, set the id to this value. Must start with `urn:subject:` and be a valid URI. 
-If ommitted, an id will be assigned automatically. 
-
-*example input*
-
-        POST /subjects
-
-        {
-          "id" : "urn:subject:4208",
-          "name" : "mathematics"
-        }
-
-*example output*
-
-       < HTTP/1.1 201
-       < Location: /subjects/urn:subject:4208
-       < Content-Length: 0
-
-### DELETE `/subjects/{id}`
-Removes a single subject
-
-*example input*
-
-    DELETE /subjects/urn:subject:4208
-
-*example output*
-
-    < HTTP/1.1 204
-
-## `/topics`
-
-A collection of topics.
-
-### `GET /topics`
-Gets a list of all topics
-
-*example input*
-
-    GET /topics
-
-*example output*
-
-    [
-       {
-          "id" : "urn:topic:4208",
-          "name" : "trigonometry"
-       },
-       {
-          "id" : "urn:topic:4288",
-          "name" : "photo synthesis"
-       }
-    ]
-
-### GET `/topics/{id}`
-Gets a single topic
-
-*example input*
-
-    GET /topics/urn:topic:4288
-
-*example output*
-
-       {
-          "id" : "urn:topic:4288",
-          "name" : "photo synthesis"
-       }
-
-### GET `/topics/{id}/subtopics`
-Gets a list of subtopics of a topic
-
-*example input*
-
-    GET /topics/urn:topic:4288/subtopics
-
-*example output*
-
-    [
-       {
-          "id" : "urn:topic:4285",
-          "name" : "chlorophyll"
-       },
-       {
-          "id" : "urn:topic:4222",
-          "name" : "carbon cycle"
-       }
-    ]
-
-### POST `/topics`
-
-Creates a new topic
-
-*properties*
-
-`name` (`string`) - the name of the topic
-
-`id` (`string`) - if specified, set the id to this value. Must start with `urn:topic:` and be a valid URI. 
-If ommitted, an id will be assigned automatically. 
-
-*example input*
-
-    POST /topics
-
-    {
-      "id" : "urn:topic:4288",
-      "name" : "photo synthesis"
-    }
-
-*example output*
-
-    < HTTP/1.1 201
-    < Location: /topics/urn:topic:4288
-    < Content-Length: 0
-
-
-### PUT `/topics/{id}`
-Update a single topic
-
-*example input*
-
-    PUT /topics/urn:topic:4288
-
-    {
-        "name" : "trigonometry"
-    }
-
-*example output*
-
-    < HTTP/1.1 204
-
-### DELETE `/topics/{id}`
-Removes a single topic
-
-*example input*
-
-    DELETE /topics/urn:topic:4288
-
-*example output*
-
-    < HTTP/1.1 204
-
-## `/subject-topics`
-
-Many-to-many association between subjects and topics. If you add a topic to a subject
-using this resource, the change will be also be visible at the read-only collection at
-`/subjects/{id}/topics`.
-
-### GET `/subject-topics`
-
-Gets a list of all subjects and their first-level topics. A topic may have *one* primary subject, to help with
-selecting a default context for a topic in case no context is given.
-
-*example input*
-
-    GET /subject-topics
-
-*example output*
-
-    [
-       {
-          "id" : "urn:subject-topic:odxco-3b4-27th-380",
-          "topicid" : "urn:topic:4176",
-          "subjectid" : "urn:subject:4208",
-          "primary" : false
-       },
-       {
-          "id" : "urn:subject-topic:1cruoe-38w-27th-1crx34",
-          "primary" : false,
-          "subjectid" : "urn:subject:4288",
-          "topicid" : "urn:topic:4176"
-       }
-    ]
-
-### POST `/subject-topics`
-
-Associates a subject with a topic.
-
-*example input*
-
-    POST /subject-topics
-
-    {
-      "topicid" : "urn:topic:4176",
-      "subjectid" : "urn:subject:4208",
-      "primary" : false
-    }
-
-*example output*
-
-    < HTTP/1.1 201
-    < Location: /subject-topics/urn:subject-topic:1cruoe-38w-27th-1crx34
-    < Content-Length: 0
-
-### PUT `/subject-topics/{id}`
-
-Update the association between a subject and a topic. Changes to `subjectid` or `topicid` are not
-allowed. Instead, remove the association and create a new one.
-
-*example input*
-
-    PUT /subject-topics/urn:subject-topic:1cruoe-38w-27th-1crx34
-
-    {
-      "primary" : true
-    }
-
-*example output*
-
-    < HTTP/1.1 204
-
-### DELETE `/subject-topics/{id}`
-
-Remove an association between a subject and a topic.
-
-*example input*
-
-    DELETE /subject-topics/urn:subject-topic:1cruoe-38w-27th-1crx34
-
-*example output*
-
-    < HTTP/1.1 204
-
-## `/topic-subtopics`
-
-Many-to-many association between topics and subtopics. If you add a subtopic to a topic
-using this resource, the change will be also be visible at the read-only collection at
-`/topics/{id}/subtopics`.
-
-### GET `/topic-subtopics`
-
-Gets a list of all topics and their subtopics. A subtopic may have *one* primary parent topic, to help with
-selecting a default context for a subtopic in case no context is given.
-
-*example input*
-
-    GET /topic-subtopics
-
-*example output*
-
-    [
-       {
-          "id" : "urn:topic-subtopic:odxco-3b4-27th-380",
-          "topicid" : "urn:topic:4176",
-          "subtopicid" : "urn:topic:4208",
-          "primary" : false
-       },
-       {
-          "id" : "urn:topic-subtopic:1cruoe-38w-27th-1crx34",
-          "primary" : false,
-          "topicid" : "urn:topic:4176"
-          "subtopicid" : "urn:topic:4288",
-       }
-    ]
-
-### POST `/topic-subtopics`
-
-Associates a topic with a subtopic
-
-*example input*
-
-    POST /topic-subtopics
-
-    {
-      "topicid" : "urn:topic:4176",
-      "subtopicid" : "urn:topic:4208",
-      "primary" : false
-    }
-
-*example output*
-
-    < HTTP/1.1 201
-    < Location: /topic-subtopics/urn:topic-subtopic:1cruoe-38w-27th-1crx34
-    < Content-Length: 0
-
-### PUT `/topic-subtopics/{id}`
-
-Update the association between a topic and a subtopic. Changes to `topicid` or `subtopicid` are not
-allowed. Instead, remove the association and create a new one.
-
-*example input*
-
-    PUT /topic-subtopics/urn:topic-subtopic:1cruoe-38w-27th-1crx34
-
-    {
-      "primary" : true
-    }
-
-*example output*
-
-    < HTTP/1.1 204
-
-### DELETE `/topic-subtopics/{id}`
-
-Remove an association between a topic and a subtopic.
-
-*example input*
-
-    DELETE /topic-subtopics/urn:topic-subtopic:1cruoe-38w-27th-1crx34
-
-*example output*
-
-    < HTTP/1.1 204
-
-## `/resources`
-
-A collection of learning resources, such as articles, videos or learning paths.
-
-### GET `/resources`
-Gets a list of all resources
-
-*example input*
-
-    GET /resources
-
-*example output*
-
-    [
-       {
-          "id" : "urn:resource:4208",
-          "name" : "The inner planets"
-       },
-       {
-          "id" : "urn:resource:4288",
-          "name" : "The gas giants"
-       }
-    ]
-
-### GET `/resources/{id}`
-Gets a single resource
-
-*example input*
-
-    GET /resources/urn:resource:4288
-
-*example output*
-
-       {
-          "id" : "urn:resource:4288",
-          "name" : "The inner planets"
-       }
-
-### PUT `/resources/{id}`
-Update a single resource
-
-*example input*
-
-    PUT /resources/urn:resource:4288
-
-    {
-        "name" : "The rocky planets"
-    }
-
-*example output*
-
-    < HTTP/1.1 204
-
-### POST `/resources`
-
-Creates a new resource
-
-*properties*
-
-`name` (`string`) - the name of the resource
-
-`id` (`string`) - if specified, set the id to this value. Must start with `urn:resource:` and be a valid URI. 
-If ommitted, an id will be assigned automatically. 
-
-*example input*
-
-        POST /resources
-
-        {
-          "id" : "urn:resource:4208",
-          "name" : "The inner planets"
-        }
-
-*example output*
-
-       < HTTP/1.1 201
-       < Location: /resources/urn:resource:4208
-       < Content-Length: 0
-
-### DELETE `/resources/{id}`
-Removes a single resource
-
-*example input*
-
-    DELETE /resources/urn:resource:4208
-
-*example output*
-
-    < HTTP/1.1 204
-
-## `/topic-resources`
-
-Many-to-many association between topics and resources. If you add a resource to a topic
-using this resource, the change will be also be visible at the read-only collection at
-`/topics/{id}/resources`.
-
-### GET `/topic-resources`
-
-Gets a list of all topics and their resources. A resource may have *one* primary parent topic, to help with
-selecting a default context for a resource in case no context is given.
-
-*example input*
-
-    GET /topic-resources
-
-*example output*
-
-    [
-       {
-          "id" : "urn:topic-resource:odxco-3b4-27th-380",
-          "topicid" : "urn:topic:4176",
-          "resourceid" : "urn:resource:4208",
-          "primary" : false
-       },
-       {
-          "id" : "urn:topic-resource:1cruoe-38w-27th-1crx34",
-          "primary" : false,
-          "topicid" : "urn:topic:4176"
-          "resourceid" : "urn:resource:4288",
-       }
-    ]
-
-### POST `/topic-resources`
-
-Associates a topic with a resource
-
-*example input*
-
-    POST /topic-resources
-
-    {
-      "topicid" : "urn:topic:4176",
-      "resourceid" : "urn:resource:4208",
-      "primary" : false
-    }
-
-*example output*
-
-    < HTTP/1.1 201
-    < Location: /topic-resources/urn:topic-resource:1cruoe-38w-27th-1crx34
-    < Content-Length: 0
-
-### PUT `/topic-resources/{id}`
-
-Update the association between a topic and a resource. Changes to `topicid` or `resourceid` are not
-allowed. Instead, remove the association and create a new one.
-
-*example input*
-
-    PUT /topic-resources/urn:topic-resource:1cruoe-38w-27th-1crx34
-
-    {
-      "primary" : true
-    }
-
-*example output*
-
-    < HTTP/1.1 204
-
-### DELETE `/topic-resources/{id}`
-
-Remove an association between a topic and a resource.
-
-*example input*
-
-    DELETE /topic-resources/urn:topic-resource:1cruoe-38w-27th-1crx34
-
-*example output*
-
-    < HTTP/1.1 204
