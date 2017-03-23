@@ -148,8 +148,8 @@ entities along the way. Entities without connections do not have URLs (except su
 Using the above figure as an example, we can derive the following paths: 
 
 
-Name                  | ID               | Path(s)
-|  ---------------      | ---------------  | --------------------- |
+| Name                  | ID               | Path(s)| 
+|---------------|---------------|---------------------|
 Mathematics           | `urn:subject:1`  | `/subject:1`
 Social studies        | `urn:subject:2`  | `/subject:2`
 Geometry              | `urn:topic:1`    | `/subject:1/topic:1`  
