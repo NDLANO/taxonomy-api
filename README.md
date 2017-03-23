@@ -147,20 +147,20 @@ it to the root of the hierarchy, picking up the IDs of the
 entities along the way. Entities without connections do not have URLs (except subjects, which are at the root of the hierarchy). 
 Using the above figure as an example, we can derive the following paths: 
  
-Name                  | ID               | Path(s)
---------------        | ---------------  | ---------------------
-Mathematics           | `urn:subject:1`  | `/subject:1`
-Social studies        | `urn:subject:2`  | `/subject:2`
-Geometry              | `urn:topic:1`    | `/subject:1/topic:1`  
-Statistics            | `urn:topic:2`    | `/subject:1/topic:2` `/subject:2/topic:2`
-Calculus              | `urn:topic:3`    | `/subject:1/topic:3`
-Economics             | `urn:topic:4`    | `/subject:2/topic:4`
-Probability           | `urn:topic:5`    | `/subject:1/topic:2/topic:5` `/subject:2/topic:2/topic:5`
-Integration           | `urn:topic:6`    | `/subject:1/topic:3/topic:6`
-What is probability?  | `urn:resource:1` | `/subject:1/topic:2/topic:5/resource:1` `/subject:2/topic:2/topic:5/resource:1`
-Adding probabilities  | `urn:resource:2` | `/subject:1/topic:2/topic:5/resource:2` `/subject:2/topic:2/topic:5/resource:2`
-Probability questions | `urn:resource:3` | `/subject:1/topic:2/topic:5/resource:3` `/subject:2/topic:2/topic:5/resource:3`
-Riemann sums          | `urn:resource:4` | `/subject:1/topic:3/topic:6/resource:4` `/subject:2/topic:4/resource:4`
+| Name                  | ID               | Path(s)																			|
+| --------------        | ---------------  | ---------------------																|
+| Mathematics           | `urn:subject:1`  | `/subject:1`																		|
+| Social studies        | `urn:subject:2`  | `/subject:2`																		|
+| Geometry              | `urn:topic:1`    | `/subject:1/topic:1`  |
+| Statistics            | `urn:topic:2`    | `/subject:1/topic:2` `/subject:2/topic:2` |
+| Calculus              | `urn:topic:3`    | `/subject:1/topic:3` |
+| Economics             | `urn:topic:4`    | `/subject:2/topic:4` |
+| Probability           | `urn:topic:5`    | `/subject:1/topic:2/topic:5` `/subject:2/topic:2/topic:5` |
+| Integration           | `urn:topic:6`    | `/subject:1/topic:3/topic:6`|
+| What is probability?  | `urn:resource:1` | `/subject:1/topic:2/topic:5/resource:1` `/subject:2/topic:2/topic:5/resource:1`|
+| Adding probabilities  | `urn:resource:2` | `/subject:1/topic:2/topic:5/resource:2` `/subject:2/topic:2/topic:5/resource:2`|
+| Probability questions | `urn:resource:3` | `/subject:1/topic:2/topic:5/resource:3` `/subject:2/topic:2/topic:5/resource:3`|
+| Riemann sums          | `urn:resource:4` | `/subject:1/topic:3/topic:6/resource:4` `/subject:2/topic:4/resource:4`|
  
 As you can see, several entities have two paths, since they have more than one path to the root of the hierarchy. The primary path is
 listed first. 
