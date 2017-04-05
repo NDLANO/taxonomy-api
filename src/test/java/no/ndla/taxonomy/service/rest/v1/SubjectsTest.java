@@ -129,6 +129,7 @@ public class SubjectsTest extends RestTest {
         assertAnyTrue(topics, t -> "optics".equals(t.name) && "urn:article:3".equals(t.contentUri.toString()));
         assertAllTrue(topics, t -> isValidId(t.id));
         assertAllTrue(topics, t -> !t.path.isEmpty());
+        assertAllTrue(topics, t -> t.parent.equals(subject.getPublicId()));
     }
 
     @Test
