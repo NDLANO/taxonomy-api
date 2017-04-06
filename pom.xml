@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>no.ndla.taxonomy</groupId>
-    <artifactId>taxonomy-service</artifactId>
+    <artifactId>taxonomy-api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>taxonomy-service</name>
+    <name>taxonomy-api</name>
     <description>NDLA taxonomy</description>
 
     <parent>
