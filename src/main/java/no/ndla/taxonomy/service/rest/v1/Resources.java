@@ -29,6 +29,7 @@ import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 public class Resources {
 
     private static final String GET_RESOURCES_QUERY = getQuery("get_resources");
+    private static final String GET_RESOURCE_RESOURCE_TYPES_QUERY = getQuery("get_resource_resource_types");
 
     private ResourceRepository resourceRepository;
     private JdbcTemplate jdbcTemplate;
@@ -113,6 +114,30 @@ public class Resources {
         }
     }
 
+    @GetMapping("/{id}/resource-types")
+    @ApiOperation(value = "Gets all resource types associated with this resource")
+    public List<ResourceTypeIndexDocument> getResourceTypes(
+            @PathVariable("id")
+                    URI id,
+            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language
+    ) throws Exception {
+        return jdbcTemplate.query(GET_RESOURCE_RESOURCE_TYPES_QUERY, setQueryParameters(asList(language, id.toString())),
+                resultSet -> {
+                    List<ResourceTypeIndexDocument> result = new ArrayList<>();
+                    while (resultSet.next()) {
+                        result.add(new ResourceTypeIndexDocument() {{
+                            name = resultSet.getString("resource_type_name");
+                            id = getURI(resultSet, "resource_type_public_id");
+                            parentId = getURI(resultSet, "resource_type_parent_public_id");
+                        }});
+                    }
+                    return result;
+                }
+        );
+    }
+
     public static class CreateResourceCommand {
         @JsonProperty
         @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:resource:2")
@@ -159,5 +184,19 @@ public class Resources {
         @JsonProperty
         @ApiModelProperty(value = "The path part of the url to this resource", example = "/subject:1/topic:1/resource:1")
         public String path;
+    }
+
+    public static class ResourceTypeIndexDocument {
+        @JsonProperty
+        @ApiModelProperty(example = "urn:resource-type:2")
+        public URI id;
+
+        @JsonProperty
+        @ApiModelProperty(example = "urn:resource-type:1")
+        public URI parentId;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The name of the resource type", example = "Lecture")
+        public String name;
     }
 }

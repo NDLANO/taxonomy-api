@@ -190,4 +190,26 @@ public class ResourcesTest extends RestTest {
     public void get_unknown_resource_fails_gracefully() throws Exception {
         getResource("/v1/resources/nonexistantid", status().isNotFound());
     }
+
+    @Test
+    public void can_get_resource_types() throws Exception {
+        builder.resourceType(rt -> rt
+                .name("Subject matter")
+                .publicId("urn:resource-type:1")
+                .subtype("article", st -> st.name("Article").publicId("urn:resource-type:2"))
+                .subtype("video", st -> st.name("Video").publicId("urn:resource-type:3"))
+        );
+
+        builder.resource(r -> r
+                .publicId("urn:resource:1")
+                .resourceType("article")
+                .resourceType("video")
+        );
+
+        MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1/resource-types");
+        Resources.ResourceTypeIndexDocument[] result = getObject(Resources.ResourceTypeIndexDocument[].class, response);
+        assertEquals(2, result.length);
+        assertAnyTrue(result, rt -> rt.name.equals("Article") && rt.id.toString().equals("urn:resource-type:2") && rt.parentId.toString().equals("urn:resource-type:1"));
+        assertAnyTrue(result, rt -> rt.name.equals("Video") && rt.id.toString().equals("urn:resource-type:3") && rt.parentId.toString().equals("urn:resource-type:1"));
+    }
 }

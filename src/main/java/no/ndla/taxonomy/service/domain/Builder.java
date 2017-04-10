@@ -387,6 +387,10 @@ public class Builder {
             return this;
         }
 
+        public ResourceTypeBuilder publicId(String id) {
+            resourceType.setPublicId(URI.create(id));
+            return this;
+        }
     }
 
     public class ResourceTypeTranslationBuilder {
