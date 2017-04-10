@@ -131,6 +131,7 @@ public class Resources {
                             name = resultSet.getString("resource_type_name");
                             id = getURI(resultSet, "resource_type_public_id");
                             parentId = getURI(resultSet, "resource_type_parent_public_id");
+                            connectionId = getURI(resultSet, "resource_resource_type_public_id");
                         }});
                     }
                     return result;
@@ -198,5 +199,9 @@ public class Resources {
         @JsonProperty
         @ApiModelProperty(value = "The name of the resource type", example = "Lecture")
         public String name;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The id of the resource resource type connection", example = "urn:resource-resourcetype:1")
+        public URI connectionId;
     }
 }

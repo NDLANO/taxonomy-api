@@ -209,7 +209,7 @@ public class ResourcesTest extends RestTest {
         MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1/resource-types");
         Resources.ResourceTypeIndexDocument[] result = getObject(Resources.ResourceTypeIndexDocument[].class, response);
         assertEquals(2, result.length);
-        assertAnyTrue(result, rt -> rt.name.equals("Article") && rt.id.toString().equals("urn:resource-type:2") && rt.parentId.toString().equals("urn:resource-type:1"));
+        assertAnyTrue(result, rt -> rt.name.equals("Article") && rt.id.toString().equals("urn:resource-type:2") && rt.parentId.toString().equals("urn:resource-type:1") && rt.connectionId.toString().contains("urn:resource-resourcetype"));
         assertAnyTrue(result, rt -> rt.name.equals("Video") && rt.id.toString().equals("urn:resource-type:3") && rt.parentId.toString().equals("urn:resource-type:1"));
     }
 }

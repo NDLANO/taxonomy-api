@@ -1,7 +1,8 @@
 SELECT
   rt.public_id                 AS resource_type_public_id,
   coalesce(rttr.name, rt.name) AS resource_type_name,
-  parent.public_id             AS resource_type_parent_public_id
+  parent.public_id             AS resource_type_parent_public_id,
+  rrt.public_id                AS resource_resource_type_public_id
 FROM
   resource r
   INNER JOIN resource_resource_type rrt ON rrt.resource_id = r.id
