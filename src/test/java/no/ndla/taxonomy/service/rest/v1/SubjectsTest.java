@@ -128,6 +128,7 @@ public class SubjectsTest extends RestTest {
         assertAnyTrue(topics, t -> "electricity".equals(t.name) && "urn:article:2".equals(t.contentUri.toString()));
         assertAnyTrue(topics, t -> "optics".equals(t.name) && "urn:article:3".equals(t.contentUri.toString()));
         assertAllTrue(topics, t -> isValidId(t.id));
+        assertAllTrue(topics, t -> isValidId(t.connectionId));
         assertAllTrue(topics, t -> !t.path.isEmpty());
         assertAllTrue(topics, t -> t.parent.equals(subject.getPublicId()));
     }
@@ -152,16 +153,16 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_topics_recursively() throws Exception {
-        URI subjectid = builder.subject(s -> s
+        URI subjectid = builder.subject("subject", s -> s
                 .name("subject")
                 .publicId("urn:subject:1")
-                .topic(parent -> parent
+                .topic("parent", parent -> parent
                         .name("parent topic")
                         .publicId("urn:topic:a")
-                        .subtopic(child -> child
+                        .subtopic("child", child -> child
                                 .name("child topic")
                                 .publicId("urn:topic:aa")
-                                .subtopic(grandchild -> grandchild
+                                .subtopic("grandchild", grandchild -> grandchild
                                         .name("grandchild topic")
                                         .publicId("urn:topic:aaa")
                                 )
@@ -179,6 +180,15 @@ public class SubjectsTest extends RestTest {
         assertEquals("/subject:1/topic:a/topic:aa", topics[1].path);
         assertEquals("grandchild topic", topics[2].name);
         assertEquals("/subject:1/topic:a/topic:aa/topic:aaa", topics[2].path);
+
+        Subject subject = builder.subject("subject");
+        assertEquals(first(subject.topics).getPublicId(), topics[0].connectionId);
+
+        Topic parent = builder.topic("parent");
+        assertEquals(first(parent.subtopics).getPublicId(), topics[1].connectionId);
+
+        Topic child = builder.topic("child");
+        assertEquals(first(child.subtopics).getPublicId(), topics[2].connectionId);
     }
 
     @Test
@@ -237,19 +247,23 @@ public class SubjectsTest extends RestTest {
     public void can_get_resources_for_a_subject_and_its_topics_recursively() throws Exception {
         URI id = builder.subject(s -> s
                 .name("subject")
-                .topic(t -> t
+                .topic("topic a", t -> t
                         .name("topic a")
                         .resource(r -> r.name("resource a").resourceType(rt -> rt.name("assignment"))))
-                .topic(t -> t
+                .topic("topic b", t -> t
                         .name("topic b")
                         .resource(r -> r.name("resource b").resourceType(rt -> rt.name("lecture")))
-                        .subtopic(st -> st.name("subtopic").resource(r -> r.name("sub resource"))))
+                        .subtopic("subtopic", st -> st.name("subtopic").resource(r -> r.name("sub resource"))))
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + id + "/resources");
         Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
 
         assertEquals(3, resources.length);
+
+        assertEquals(first(builder.topic("topic a").resources).getPublicId(), resources[0].connectionId);
+        assertEquals(first(builder.topic("topic b").resources).getPublicId(), resources[1].connectionId);
+        assertEquals(first(builder.topic("subtopic").resources).getPublicId(), resources[2].connectionId);
     }
 
     @Test

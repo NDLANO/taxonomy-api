@@ -1,4 +1,4 @@
-WITH RECURSIVE tree (id, public_id, name, content_uri, parent_id, parent_public_id, level) AS (
+WITH RECURSIVE tree (id, public_id, name, content_uri, parent_id, parent_public_id, connection_public_id, level) AS (
   SELECT
     t.id,
     t.public_id,
@@ -6,6 +6,7 @@ WITH RECURSIVE tree (id, public_id, name, content_uri, parent_id, parent_public_
     t.content_uri,
     cast(NULL AS INT) AS parent_id,
     s.public_id       AS parent_public_id,
+    st.public_id      AS connection_public_id,
     0                 AS level
   FROM
     subject s
@@ -22,6 +23,7 @@ WITH RECURSIVE tree (id, public_id, name, content_uri, parent_id, parent_public_
     t.content_uri,
     parent.id        AS parent_id,
     parent.public_id AS parent_public_id,
+    s.public_id      AS connection_public_id,
     parent.level + 1
   FROM
     topic t
@@ -35,6 +37,7 @@ SELECT
   t.content_uri,
   t.parent_public_id,
   t.level,
+  t.connection_public_id,
   url.path                  AS topic_path
 FROM
   tree t

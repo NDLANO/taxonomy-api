@@ -148,6 +148,16 @@ public class TestUtils {
         assertTrue(Arrays.stream(objects).allMatch(predicate));
     }
 
+    public static <T> T first(Iterable<T> iterable) {
+        return iterable.iterator().next();
+    }
+
+    public static <T> T second(Iterable<T> iterable) {
+        Iterator<T> iterator = iterable.iterator();
+        iterator.next();
+        return iterator.next();
+    }
+
     public static boolean isValidId(URI id) {
         return id != null && id.toString().contains("urn");
     }

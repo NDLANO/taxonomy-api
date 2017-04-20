@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.sql.SQLException;
 import java.util.*;
 
 import static java.util.Arrays.asList;
@@ -184,6 +183,7 @@ public class Topics {
                         name = resultSet.getString("resource_name");
                         contentUri = toURI(resultSet.getString("resource_content_uri"));
                         id = toURI(resultSet.getString("resource_public_id"));
+                        connectionId = toURI(resultSet.getString("connection_public_id"));
                     }};
                     resources.put(id, resource);
                     result.add(resource);
@@ -232,6 +232,10 @@ public class Topics {
         @JsonProperty
         @ApiModelProperty(value = "URL path for resource", example = "'/subject:1/topic:12/resource:12'")
         public String path;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The id of the topic-resource connection which causes this resource to be included in the result set.", example = "urn:topic-resource:1")
+        public URI connectionId;
     }
 
     public static class ResourceTypeIndexDocument {

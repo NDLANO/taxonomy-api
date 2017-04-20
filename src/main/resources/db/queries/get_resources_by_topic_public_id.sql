@@ -6,6 +6,7 @@ SELECT
   rt.id                        AS resource_type_id,
   rt.public_id                 AS resource_type_public_id,
   coalesce(rttr.name, rt.name) AS resource_type_name,
+  tr.public_id                 AS connection_public_id,
   url.path                     AS resource_path
 FROM
   topic t

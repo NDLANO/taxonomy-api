@@ -143,6 +143,7 @@ public class Subjects {
                                 id = public_id;
                                 contentUri = getURI(resultSet, "content_uri");
                                 parent = getURI(resultSet, "parent_public_id");
+                                connectionId = getURI(resultSet, "connection_public_id");
                             }};
                             topics.put(topic.id, topic);
                             result.add(topic);
@@ -215,6 +216,7 @@ public class Subjects {
                         contentUri = toURI(resultSet.getString("resource_content_uri"));
                         name = resultSet.getString("resource_name");
                         id = toURI(resultSet.getString("resource_public_id"));
+                        connectionId = toURI(resultSet.getString("connection_public_id"));
                     }};
                     resources.put(id, resource);
                     result.add(resource);
@@ -296,6 +298,10 @@ public class Subjects {
         @JsonProperty
         @ApiModelProperty(value = "The path part of the url to this topic.", example = "/subject:1/topic:1")
         public String path;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The id of the subject-topics or topic-subtopics connection which causes this topic to be included in the result set.", example = "urn:subject-topic:1")
+        public URI connectionId;
     }
 
     public static class ResourceIndexDocument {
@@ -323,6 +329,10 @@ public class Subjects {
         @JsonProperty
         @ApiModelProperty(value = "URL path for resource", example = "'/subject:1/topic:12/resource:12")
         public String path;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The id of the topic-resource connection which causes this resource to be included in the result set.", example = "urn:topic-resource:1")
+        public URI connectionId;
     }
 
     public static class ResourceTypeIndexDocument {
