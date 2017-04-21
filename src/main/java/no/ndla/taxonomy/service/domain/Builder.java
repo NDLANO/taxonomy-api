@@ -13,6 +13,7 @@ public class Builder {
     private Map<String, SubjectBuilder> subjects = new HashMap<>();
     private Map<String, TopicBuilder> topics = new HashMap<>();
     private Map<String, ResourceBuilder> resources = new HashMap<>();
+    private Map<String, FilterBuilder> filters = new HashMap<>();
 
     public Builder(EntityManager entityManager) {
         this.entityManager = entityManager;
@@ -62,6 +63,24 @@ public class Builder {
         ResourceTypeBuilder resourceType = getResourceTypeBuilder(key);
         if (null != consumer) consumer.accept(resourceType);
         return resourceType.resourceType;
+    }
+
+    public Filter filter(String key) {return filter(key, null); }
+
+    public Filter filter(Consumer<FilterBuilder> consumer) { return filter(null, consumer); }
+
+    public Filter filter() {return filter(null, null); }
+
+    public Filter filter(String key, Consumer<FilterBuilder> consumer) {
+        FilterBuilder filter = getFilterBuilder(key);
+        if (null != consumer) consumer.accept(filter);
+        return filter.filter;
+    }
+
+    private FilterBuilder getFilterBuilder(String key) {
+        if (key == null) return new FilterBuilder();
+        if (!filters.containsKey(key)) filters.put(key, new FilterBuilder());
+        return filters.get(key);
     }
 
     private SubjectBuilder getSubjectBuilder(String key) {
@@ -325,6 +344,24 @@ public class Builder {
 
         public ResourceBuilder publicId(String id) {
             resource.setPublicId(URI.create(id));
+            return this;
+        }
+    }
+    public class FilterBuilder {
+        private final Filter filter;
+
+        public FilterBuilder() {
+            filter = new Filter();
+            entityManager.persist(filter);
+        }
+
+        public FilterBuilder name(String name) {
+            filter.name(name);
+            return this;
+        }
+
+        public FilterBuilder publicId(String id) {
+            filter.setPublicId(URI.create(id));
             return this;
         }
     }
