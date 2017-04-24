@@ -6,8 +6,8 @@ FROM
   LEFT OUTER JOIN
   (
     SELECT *
-    FROM subject_translation
+    FROM filter_translation
     WHERE language_code = ?
-  ) t ON f.id = t.subject_id
+  ) t ON f.id = t.filter_id
 WHERE
   1 = 1

@@ -364,6 +364,27 @@ public class Builder {
             filter.setPublicId(URI.create(id));
             return this;
         }
+
+        public FilterBuilder translation(String languageCode, Consumer<FilterTranslationBuilder> consumer) {
+            FilterTranslation filterTranslation = filter.addTranslation(languageCode);
+            entityManager.persist(filterTranslation);
+            FilterTranslationBuilder builder = new FilterTranslationBuilder(filterTranslation);
+            consumer.accept(builder);
+            return this;
+        }
+    }
+
+    public class FilterTranslationBuilder {
+        private FilterTranslation filterTranslation;
+
+        public FilterTranslationBuilder(FilterTranslation filterTranslation) {
+            this.filterTranslation = filterTranslation;
+        }
+
+        public FilterTranslationBuilder name(String name) {
+            filterTranslation.setName(name);
+            return this;
+        }
     }
 
     public class ResourceTranslationBuilder {

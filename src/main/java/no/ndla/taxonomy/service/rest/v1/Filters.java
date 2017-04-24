@@ -24,7 +24,7 @@ import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
-@RequestMapping(path = "/v1/filters")
+@RequestMapping(path = {"/v1/filters", "/filters"})
 @Transactional
 public class Filters {
 
