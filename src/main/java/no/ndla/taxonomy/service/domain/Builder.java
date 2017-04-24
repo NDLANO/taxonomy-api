@@ -160,6 +160,22 @@ public class Builder {
             return this;
         }
 
+        public SubjectBuilder filter(String key) { return filter(key, null); }
+
+        public SubjectBuilder filter(String key, Consumer<FilterBuilder> consumer) {
+            FilterBuilder filterBuilder = getFilterBuilder(key);
+            if (null != consumer) consumer.accept(filterBuilder);
+            filter(filterBuilder.filter);
+            return this;
+        }
+
+        public SubjectBuilder filter(Consumer<FilterBuilder> consumer) { return filter(null, consumer); }
+
+        public SubjectBuilder filter(Filter filter) {
+            subject.addFilter(filter);
+            return this;
+        }
+
         public SubjectBuilder contentUri(String contentUri) {
             return contentUri(URI.create(contentUri));
         }
@@ -362,6 +378,11 @@ public class Builder {
 
         public FilterBuilder publicId(String id) {
             filter.setPublicId(URI.create(id));
+            return this;
+        }
+
+        public FilterBuilder subject(Subject subject) {
+            filter.setSubject(subject);
             return this;
         }
 

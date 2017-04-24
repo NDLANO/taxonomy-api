@@ -31,6 +31,7 @@ public class Subjects {
     private static final String GET_SUBJECTS_QUERY = getQuery("get_subjects");
     private static final String GET_RESOURCES_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_subject_public_id_recursively");
     private static final String GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_topics_by_subject_public_id_recursively");
+    private static final String GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY = getQuery("get_filters_by_subject_public_id");
 
     private SubjectRepository subjectRepository;
     private JdbcTemplate jdbcTemplate;
@@ -238,6 +239,28 @@ public class Subjects {
         });
     }
 
+    @GetMapping("/{id}/filters")
+    @ApiOperation(value = "Gets all filters for a subject")
+    public List<FilterIndexDocument> getFilters(@PathVariable("id") URI subjectId) {
+        String sql = GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY;
+        List<Object> args = singletonList(subjectId.toString());
+
+
+        return jdbcTemplate.query(sql, setQueryParameters(args),
+                resultSet -> {
+                    List<FilterIndexDocument> result = new ArrayList<>();
+                    while (resultSet.next()) {
+                        result.add(new FilterIndexDocument() {{
+                            name = resultSet.getString("filter_name");
+                            id = getURI(resultSet, "filter_public_id");
+                        }});
+                    }
+                    return result;
+                }
+        );
+
+    }
+
     public static class CreateSubjectCommand {
         @JsonProperty
         @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:subject:1")
@@ -360,5 +383,15 @@ public class Subjects {
         public int hashCode() {
             return id.hashCode();
         }
+    }
+
+    public static class FilterIndexDocument {
+        @JsonProperty
+        @ApiModelProperty(value = "Filter id", example = "urn:filter:12")
+        public URI id;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Filter name", example = "1T-YF")
+        public String name;
     }
 }

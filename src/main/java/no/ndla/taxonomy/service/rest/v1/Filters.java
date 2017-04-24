@@ -6,7 +6,9 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Filter;
+import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.repositories.FilterRepository;
+import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,12 +31,14 @@ import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 public class Filters {
 
     FilterRepository filterRepository;
+    SubjectRepository subjectRepository;
     private JdbcTemplate jdbcTemplate;
     private static final String GET_FILTERS_QUERY = getQuery("get_filters");
 
-    public Filters(FilterRepository filterRepository, JdbcTemplate jdbcTemplate) {
+    public Filters(FilterRepository filterRepository, JdbcTemplate jdbcTemplate, SubjectRepository subjectRepository) {
         this.filterRepository = filterRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.subjectRepository = subjectRepository;
     }
 
     @GetMapping
@@ -70,6 +74,7 @@ public class Filters {
                         result.add(new FilterIndexDocument() {{
                             name = resultSet.getString("filter_name");
                             id = getURI(resultSet, "filter_public_id");
+                            subjectId = getURI(resultSet, "subject_id");
                         }});
                     }
                     return result;
@@ -109,6 +114,11 @@ public class Filters {
     ) throws Exception {
         Filter filter = filterRepository.getByPublicId(id);
         filter.setName(command.name);
+        Subject subject = null;
+        if (command.subjectId != null) {
+            subject = subjectRepository.getByPublicId(command.subjectId);
+        }
+        filter.setSubject(subject);
     }
 
 
@@ -120,6 +130,10 @@ public class Filters {
         @JsonProperty
         @ApiModelProperty(value = "The name of the filter", example = "1T-YF")
         public String name;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The id of the connected subject", example = "urn:subject:1")
+        public URI subjectId;
     }
 
     public static class CreateFilterCommand {
@@ -136,5 +150,9 @@ public class Filters {
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the filter", example = "1T-YF")
         public String name;
+
+        @JsonProperty
+        @ApiModelProperty(value = "If specified, this filter will be a connected to this subject.")
+        public URI subjectId;
     }
 }

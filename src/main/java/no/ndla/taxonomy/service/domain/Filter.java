@@ -1,9 +1,7 @@
 package no.ndla.taxonomy.service.domain;
 
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,6 +13,10 @@ public class Filter extends DomainObject {
 
     @OneToMany(mappedBy = "filter", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<FilterTranslation> translations = new HashSet<>();
+
+    @ManyToOne
+    @JoinColumn(name = "subject_id")
+    private Subject subject;
 
     public Filter() {
         setPublicId(URI.create("urn:filter:" + UUID.randomUUID()));
@@ -51,5 +53,9 @@ public class Filter extends DomainObject {
         if (translation != null) {
             translations.remove(translation);
         }
+    }
+
+    public void setSubject(Subject subject) {
+        this.subject = subject;
     }
 }

@@ -25,6 +25,9 @@ public class Subject extends DomainObject {
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<SubjectTranslation> translations = new HashSet<>();
 
+    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
+    Set<Filter> filters = new HashSet<>();
+
     public Subject() {
         setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
     }
@@ -37,6 +40,11 @@ public class Subject extends DomainObject {
         topic.subjects.add(subjectTopic);
         if (topic.hasSingleSubject()) topic.setPrimarySubject(this);
         return subjectTopic;
+    }
+
+    public void addFilter(Filter filter) {
+        this.filters.add(filter);
+        filter.setSubject(this);
     }
 
     private void refuseIfDuplicate(Topic topic) {
