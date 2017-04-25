@@ -26,12 +26,12 @@ import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
-@RequestMapping(path = {"/v1/filters", "/filters"})
+@RequestMapping(path = {"/v1/filters"})
 @Transactional
 public class Filters {
 
-    FilterRepository filterRepository;
-    SubjectRepository subjectRepository;
+    private FilterRepository filterRepository;
+    private SubjectRepository subjectRepository;
     private JdbcTemplate jdbcTemplate;
     private static final String GET_FILTERS_QUERY = getQuery("get_filters");
 

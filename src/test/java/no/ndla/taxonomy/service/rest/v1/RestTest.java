@@ -50,6 +50,9 @@ public abstract class RestTest extends AbstractTransactionalJUnit4SpringContextT
     @Autowired
     FilterRepository filterRepository;
 
+    @Autowired
+    RelevanceRepository relevanceRepository;
+
     Builder builder;
 
     @Before

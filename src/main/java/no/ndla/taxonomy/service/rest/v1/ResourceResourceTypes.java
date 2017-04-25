@@ -37,7 +37,7 @@ public class ResourceResourceTypes {
     @PostMapping
     @ApiOperation(value = "Adds a resource type to a resource")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "Connection", value = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) throws Exception {
+            @ApiParam(name = "connection", value = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) throws Exception {
 
         Resource resource = resourceRepository.getByPublicId(command.resourceId);
         ResourceType resourceType = resourceTypeRepository.getByPublicId(command.resourceTypeId);

@@ -25,7 +25,7 @@ public class Subject extends DomainObject {
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<SubjectTranslation> translations = new HashSet<>();
 
-    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<Filter> filters = new HashSet<>();
 
     public Subject() {

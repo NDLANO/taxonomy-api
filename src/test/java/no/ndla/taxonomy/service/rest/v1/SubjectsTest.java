@@ -106,9 +106,11 @@ public class SubjectsTest extends RestTest {
         URI id = builder.subject(s -> s
                 .topic(t -> t.publicId("urn:topic:1"))
                 .translation("nb", tr -> tr.name("fag"))
+                .filter(f -> f.publicId("urn:filter:1"))
         ).getPublicId();
         deleteResource("/v1/subjects/" + id);
         assertNull(subjectRepository.findByPublicId(id));
+        assertNull(filterRepository.findByPublicId(URI.create("urn:filter:1")));
     }
 
     @Test

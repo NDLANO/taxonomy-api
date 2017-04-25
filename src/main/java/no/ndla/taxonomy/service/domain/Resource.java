@@ -29,6 +29,9 @@ public class Resource extends DomainObject {
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     public Set<TopicResource> topics = new HashSet<>();
 
+    @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<ResourceFilter> filters = new HashSet<>();
+
     public Resource() {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
     }
@@ -163,5 +166,11 @@ public class Resource extends DomainObject {
             if (resourceResourceType.getResourceType().equals(resourceType)) return resourceResourceType;
         }
         return null;
+    }
+
+    public ResourceFilter addFilter(Filter filter, Relevance relevance) {
+        ResourceFilter resourceFilter = new ResourceFilter(this, filter, relevance);
+        filters.add(resourceFilter);
+        return resourceFilter;
     }
 }

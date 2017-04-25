@@ -23,11 +23,6 @@ public class Filter extends DomainObject {
     }
 
 
-    public Filter name(String name) {
-        setName(name);
-        return this;
-    }
-
     public FilterTranslation addTranslation(String languageCode) {
         FilterTranslation filterTranslation = getTranslation(languageCode);
         if (filterTranslation != null) return filterTranslation;

@@ -14,6 +14,7 @@ public class Builder {
     private Map<String, TopicBuilder> topics = new HashMap<>();
     private Map<String, ResourceBuilder> resources = new HashMap<>();
     private Map<String, FilterBuilder> filters = new HashMap<>();
+    private Map<String, RelevanceBuilder> relevances = new HashMap<>();
 
     public Builder(EntityManager entityManager) {
         this.entityManager = entityManager;
@@ -65,11 +66,17 @@ public class Builder {
         return resourceType.resourceType;
     }
 
-    public Filter filter(String key) {return filter(key, null); }
+    public Filter filter(String key) {
+        return filter(key, null);
+    }
 
-    public Filter filter(Consumer<FilterBuilder> consumer) { return filter(null, consumer); }
+    public Filter filter(Consumer<FilterBuilder> consumer) {
+        return filter(null, consumer);
+    }
 
-    public Filter filter() {return filter(null, null); }
+    public Filter filter() {
+        return filter(null, null);
+    }
 
     public Filter filter(String key, Consumer<FilterBuilder> consumer) {
         FilterBuilder filter = getFilterBuilder(key);
@@ -81,6 +88,30 @@ public class Builder {
         if (key == null) return new FilterBuilder();
         if (!filters.containsKey(key)) filters.put(key, new FilterBuilder());
         return filters.get(key);
+    }
+
+    public Relevance relevance(String key) {
+        return relevance(key, null);
+    }
+
+    public Relevance relevance(Consumer<RelevanceBuilder> consumer) {
+        return relevance(null, consumer);
+    }
+
+    public Relevance relevance() {
+        return relevance(null, null);
+    }
+
+    public Relevance relevance(String key, Consumer<RelevanceBuilder> consumer) {
+        RelevanceBuilder relevance = getRelevanceBuilder(key);
+        if (null != consumer) consumer.accept(relevance);
+        return relevance.relevance;
+    }
+
+    private RelevanceBuilder getRelevanceBuilder(String key) {
+        if (key == null) return new RelevanceBuilder();
+        if (!relevances.containsKey(key)) relevances.put(key, new RelevanceBuilder());
+        return relevances.get(key);
     }
 
     private SubjectBuilder getSubjectBuilder(String key) {
@@ -160,7 +191,9 @@ public class Builder {
             return this;
         }
 
-        public SubjectBuilder filter(String key) { return filter(key, null); }
+        public SubjectBuilder filter(String key) {
+            return filter(key, null);
+        }
 
         public SubjectBuilder filter(String key, Consumer<FilterBuilder> consumer) {
             FilterBuilder filterBuilder = getFilterBuilder(key);
@@ -169,7 +202,9 @@ public class Builder {
             return this;
         }
 
-        public SubjectBuilder filter(Consumer<FilterBuilder> consumer) { return filter(null, consumer); }
+        public SubjectBuilder filter(Consumer<FilterBuilder> consumer) {
+            return filter(null, consumer);
+        }
 
         public SubjectBuilder filter(Filter filter) {
             subject.addFilter(filter);
@@ -362,7 +397,13 @@ public class Builder {
             resource.setPublicId(URI.create(id));
             return this;
         }
+
+        public ResourceBuilder filter(Filter filter, Relevance relevance) {
+            resource.addFilter(filter, relevance);
+            return this;
+        }
     }
+
     public class FilterBuilder {
         private final Filter filter;
 
@@ -372,7 +413,7 @@ public class Builder {
         }
 
         public FilterBuilder name(String name) {
-            filter.name(name);
+            filter.setName(name);
             return this;
         }
 
@@ -404,6 +445,46 @@ public class Builder {
 
         public FilterTranslationBuilder name(String name) {
             filterTranslation.setName(name);
+            return this;
+        }
+    }
+
+    public class RelevanceBuilder {
+        private final Relevance relevance;
+
+        public RelevanceBuilder() {
+            relevance = new Relevance();
+            entityManager.persist(relevance);
+        }
+
+        public RelevanceBuilder name(String name) {
+            relevance.setName(name);
+            return this;
+        }
+
+        public RelevanceBuilder publicId(String id) {
+            relevance.setPublicId(URI.create(id));
+            return this;
+        }
+
+        public RelevanceBuilder translation(String languageCode, Consumer<RelevanceTranslationBuilder> consumer) {
+            RelevanceTranslation relevanceTranslation = relevance.addTranslation(languageCode);
+            entityManager.persist(relevanceTranslation);
+            RelevanceTranslationBuilder builder = new RelevanceTranslationBuilder(relevanceTranslation);
+            consumer.accept(builder);
+            return this;
+        }
+    }
+
+    public class RelevanceTranslationBuilder {
+        private RelevanceTranslation relevanceTranslation;
+
+        public RelevanceTranslationBuilder(RelevanceTranslation relevanceTranslation) {
+            this.relevanceTranslation = relevanceTranslation;
+        }
+
+        public RelevanceTranslationBuilder name(String name) {
+            relevanceTranslation.setName(name);
             return this;
         }
     }

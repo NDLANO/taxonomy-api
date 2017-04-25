@@ -82,7 +82,7 @@ public class Topics {
 
     @PostMapping
     @ApiOperation(value = "Creates a new topic")
-    public ResponseEntity<Void> post(@ApiParam(name = "topic", value = "The new topic") @RequestBody CreateTopicCommand command) throws Exception {
+    public ResponseEntity<Void> post(@ApiParam(name = "connection", value = "The new topic") @RequestBody CreateTopicCommand command) throws Exception {
         try {
             Topic topic = new Topic();
             if (null != command.id) topic.setPublicId(command.id);

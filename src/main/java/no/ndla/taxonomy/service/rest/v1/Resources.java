@@ -204,4 +204,22 @@ public class Resources {
         @ApiModelProperty(value = "The id of the resource resource type connection", example = "urn:resource-resourcetype:1")
         public URI connectionId;
     }
+
+    public class FilterIndexDocument {
+        @JsonProperty
+        @ApiModelProperty(example = "urn:filter:1")
+        public URI id;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The name of the filter", example = "1T-YF")
+        public String name;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The id of the filter resource connection", example = "urn:filter-resource:1")
+        public URI connectionId;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The relevance of this resource according to the filter", example = "urn:relevance:1")
+        public URI relevanceId;
+    }
 }
