@@ -21,7 +21,7 @@ CREATE TABLE resource_filter (
   id           SERIAL PRIMARY KEY,
   public_id    VARCHAR(255) NOT NULL,
   resource_id  INT REFERENCES resource (id),
-  filter_id    INT REFERENCES FILTER (id),
+  filter_id    INT REFERENCES filter (id),
   relevance_id INT REFERENCES relevance (id)
 );
 

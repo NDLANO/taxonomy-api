@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.domain;
 
 
+import no.ndla.taxonomy.service.rest.v1.ResourceFilters;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.CascadeType;
@@ -172,5 +173,20 @@ public class Resource extends DomainObject {
         ResourceFilter resourceFilter = new ResourceFilter(this, filter, relevance);
         filters.add(resourceFilter);
         return resourceFilter;
+    }
+
+    public void removeFilter(Filter filter) {
+        ResourceFilter resourceFilter = getFilter(filter);
+        if (filter == null) {
+            throw new ChildNotFoundException("Resource with id " + this.getPublicId() + " does not have resource-filter " + resourceFilter.getPublicId());
+        }
+        filters.remove(resourceFilter);
+    }
+
+    private ResourceFilter getFilter(Filter filter) {
+        for (ResourceFilter rf : filters) {
+            if (rf.getFilter().equals(filter)) return rf;
+        }
+        return null;
     }
 }

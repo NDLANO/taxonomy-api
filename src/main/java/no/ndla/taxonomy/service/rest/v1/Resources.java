@@ -30,6 +30,7 @@ public class Resources {
 
     private static final String GET_RESOURCES_QUERY = getQuery("get_resources");
     private static final String GET_RESOURCE_RESOURCE_TYPES_QUERY = getQuery("get_resource_resource_types");
+    private static final String GET_FILTERS_BY_RESOURCE_ID_QUERY = getQuery("get_filters_by_resource_public_id");
 
     private ResourceRepository resourceRepository;
     private JdbcTemplate jdbcTemplate;
@@ -139,6 +140,31 @@ public class Resources {
         );
     }
 
+    @GetMapping("/{id}/filters")
+    @ApiOperation(value = "Gets all filters associated with this resource")
+    public List<FilterIndexDocument> getFilters(
+            @PathVariable("id")
+                    URI id,
+            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language
+    ) throws Exception {
+        return jdbcTemplate.query(GET_FILTERS_BY_RESOURCE_ID_QUERY, setQueryParameters(singletonList(id.toString())),
+                resultSet -> {
+                    List<FilterIndexDocument> result = new ArrayList<>();
+                    while (resultSet.next()) {
+                        result.add(new FilterIndexDocument() {{
+                            name = resultSet.getString("filter_name");
+                            id = getURI(resultSet, "filter_public_id");
+                            connectionId = getURI(resultSet, "filter_resource_public_id");
+                            relevanceId = getURI(resultSet, "relevance_id");
+                        }});
+                    }
+                    return result;
+                }
+        );
+    }
+
     public static class CreateResourceCommand {
         @JsonProperty
         @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:resource:2")
@@ -205,7 +231,7 @@ public class Resources {
         public URI connectionId;
     }
 
-    public class FilterIndexDocument {
+    public static class FilterIndexDocument {
         @JsonProperty
         @ApiModelProperty(example = "urn:filter:1")
         public URI id;

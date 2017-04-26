@@ -44,6 +44,10 @@ public class ResourceFilter extends DomainEntity {
         return relevance;
     }
 
+    public void setRelevance(Relevance relevance) {
+        this.relevance = relevance;
+    }
+
     public String toString() {
         return "ResourceFilter: { " + resource.getName() + " " + resource.getPublicId() + " --" + relevance.getName() + "--> " + filter.getName() + " " + filter.getPublicId() + " }";
     }
