@@ -156,7 +156,7 @@ public class Resources {
                         result.add(new FilterIndexDocument() {{
                             name = resultSet.getString("filter_name");
                             id = getURI(resultSet, "filter_public_id");
-                            connectionId = getURI(resultSet, "filter_resource_public_id");
+                            connectionId = getURI(resultSet, "resource_filter_public_id");
                             relevanceId = getURI(resultSet, "relevance_id");
                         }});
                     }
@@ -241,7 +241,7 @@ public class Resources {
         public String name;
 
         @JsonProperty
-        @ApiModelProperty(value = "The id of the filter resource connection", example = "urn:filter-resource:1")
+        @ApiModelProperty(value = "The id of the filter resource connection", example = "urn:resource-filter:1")
         public URI connectionId;
 
         @JsonProperty

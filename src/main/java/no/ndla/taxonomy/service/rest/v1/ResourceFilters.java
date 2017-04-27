@@ -37,7 +37,7 @@ public class ResourceFilters {
 
     @PostMapping
     @ApiOperation(value = "Adds a filter to a resource")
-    public ResponseEntity<Void> post(@ApiParam(name = "topic", value = "The new connection") @RequestBody AddFilterToResourceCommand command) throws Exception {
+    public ResponseEntity<Void> post(@ApiParam(name = "resource filter", value = "The new resource filter") @RequestBody AddFilterToResourceCommand command) throws Exception {
         try {
             Filter filter = filterRepository.getByPublicId(command.filterId);
             Resource resource = resourceRepository.getByPublicId(command.resourceId);
@@ -54,11 +54,10 @@ public class ResourceFilters {
         }
     }
 
-
     @PutMapping("/{id}")
     @ApiOperation(value = "Updates a resource filter connection")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void put(@PathVariable("id") URI id, @ApiParam(name = "resource filter", value = "the updated resource filter") @RequestBody UpdateResourceFilterCommand command) throws Exception {
+    public void put(@PathVariable("id") URI id, @ApiParam(name = "resource filter", value = "The updated resource filter") @RequestBody UpdateResourceFilterCommand command) throws Exception {
         ResourceFilter resourceFilter = resourceFilterRepository.getByPublicId(id);
         Relevance relevance = relevanceRepository.getByPublicId(command.relevanceId);
         resourceFilter.setRelevance(relevance);

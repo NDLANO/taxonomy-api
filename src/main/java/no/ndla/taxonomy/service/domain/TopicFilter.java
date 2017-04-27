@@ -8,36 +8,36 @@ import java.net.URI;
 import java.util.UUID;
 
 @Entity
-public class ResourceFilter extends DomainEntity {
+public class TopicFilter extends DomainEntity {
 
     @ManyToOne
     @JoinColumn(name = "filter_id")
     private Filter filter;
 
     @ManyToOne
-    @JoinColumn(name = "resource_id")
-    private Resource resource;
+    @JoinColumn(name = "topic_id")
+    private Topic topic;
 
     @ManyToOne
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 
-    protected ResourceFilter() {
+    protected TopicFilter() {
     }
 
-    public ResourceFilter(Resource resource, Filter filter, Relevance relevance) {
+    public TopicFilter(Topic topic, Filter filter, Relevance relevance) {
         this.filter = filter;
-        this.resource = resource;
+        this.topic = topic;
         this.relevance = relevance;
-        setPublicId(URI.create("urn:resource-filter:" + UUID.randomUUID()));
+        setPublicId(URI.create("urn:topic-filter:" + UUID.randomUUID()));
     }
 
     public Filter getFilter() {
         return filter;
     }
 
-    public Resource getResource() {
-        return resource;
+    public Topic getTopic() {
+        return topic;
     }
 
     public Relevance getRelevance() {
@@ -49,6 +49,6 @@ public class ResourceFilter extends DomainEntity {
     }
 
     public String toString() {
-        return "ResourceFilter: { " + resource.getName() + " " + resource.getPublicId() + " --" + relevance.getName() + "--> " + filter.getName() + " " + filter.getPublicId() + " }";
+        return "TopicFilter: { " + topic.getName() + " " + topic.getPublicId() + " --" + relevance.getName() + "--> " + filter.getName() + " " + filter.getPublicId() + " }";
     }
 }

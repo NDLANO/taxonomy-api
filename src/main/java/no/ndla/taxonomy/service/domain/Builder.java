@@ -329,6 +329,12 @@ public class Builder {
             topic.setPublicId(URI.create(id));
             return this;
         }
+
+        public TopicBuilder filter(Filter filter, Relevance relevance) {
+            TopicFilter topicFilter = topic.addFilter(filter, relevance);
+            entityManager.persist(topicFilter);
+            return this;
+        }
     }
 
     public class TopicTranslationBuilder {
@@ -399,7 +405,8 @@ public class Builder {
         }
 
         public ResourceBuilder filter(Filter filter, Relevance relevance) {
-            resource.addFilter(filter, relevance);
+            ResourceFilter resourceFilter = resource.addFilter(filter, relevance);
+            entityManager.persist(resourceFilter);
             return this;
         }
     }

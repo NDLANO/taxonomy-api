@@ -28,6 +28,9 @@ public class Topic extends DomainObject {
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     public Set<TopicResource> resources = new HashSet<>();
 
+    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<TopicFilter> filters = new HashSet<>();
+
     @Column
     @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
     private URI contentUri;
@@ -273,4 +276,24 @@ public class Topic extends DomainObject {
         return null;
     }
 
+    public TopicFilter addFilter(Filter filter, Relevance relevance) {
+        TopicFilter topicFilter = new TopicFilter(this, filter, relevance);
+        filters.add(topicFilter);
+        return topicFilter;
+    }
+
+    public void removeFilter(Filter filter) {
+        TopicFilter topicFilter = getFilter(filter);
+        if (filter == null) {
+            throw new ChildNotFoundException("Topic with id " + this.getPublicId() + " does not have topic-filter " + topicFilter.getPublicId());
+        }
+        filters.remove(topicFilter);
+    }
+
+    private TopicFilter getFilter(Filter filter) {
+        for (TopicFilter rf : filters) {
+            if (rf.getFilter().equals(filter)) return rf;
+        }
+        return null;
+    }
 }

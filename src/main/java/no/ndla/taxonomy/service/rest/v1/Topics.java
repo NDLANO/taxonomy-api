@@ -19,6 +19,7 @@ import java.net.URI;
 import java.util.*;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 import static no.ndla.taxonomy.service.rest.v1.UrlResolver.getPathMostCloselyMatchingContext;
@@ -31,9 +32,10 @@ public class Topics {
     private TopicRepository topicRepository;
     private JdbcTemplate jdbcTemplate;
 
-    private static final String getTopicsQuery = getQuery("get_topics");
-    private static final String resourceQueryRecursive = getQuery("get_resources_by_topic_public_id_recursively");
-    private static final String resourceQuery = getQuery("get_resources_by_topic_public_id");
+    private static final String GET_TOPICS_QUERY = getQuery("get_topics");
+    private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_topic_public_id_recursively");
+    private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_QUERY = getQuery("get_resources_by_topic_public_id");
+    private static final String GET_FILTERS_BY_TOPIC_ID_QUERY = getQuery("get_filters_by_topic_public_id");
 
     public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
         this.topicRepository = topicRepository;
@@ -47,7 +49,7 @@ public class Topics {
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) throws Exception {
         List<Object> args = asList(language);
-        return getTopicIndexDocuments(getTopicsQuery, args);
+        return getTopicIndexDocuments(GET_TOPICS_QUERY, args);
     }
 
     @GetMapping("/{id}")
@@ -57,7 +59,7 @@ public class Topics {
                                   @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) throws Exception {
 
-        String sql = getTopicsQuery.replace("1 = 1", "t.public_id = ?");
+        String sql = GET_TOPICS_QUERY.replace("1 = 1", "t.public_id = ?");
         List<Object> args = asList(language, id.toString());
 
         return getFirst(getTopicIndexDocuments(sql, args), "Topic", id);
@@ -146,12 +148,12 @@ public class Topics {
         List<Object> args = new ArrayList<>();
         String query;
         if (recursive) {
-            query = resourceQueryRecursive;
+            query = GET_RESOURCES_BY_TOPIC_PUBLIC_ID_RECURSIVELY_QUERY;
             args.add(topicId.toString());
             args.add(language);
             args.add(language);
         } else {
-            query = resourceQuery;
+            query = GET_RESOURCES_BY_TOPIC_PUBLIC_ID_QUERY;
             args.add(language);
             args.add(language);
             args.add(topicId.toString());
@@ -204,6 +206,32 @@ public class Topics {
             return result;
         });
     }
+
+    @GetMapping("/{id}/filters")
+    @ApiOperation(value = "Gets all filters associated with this resource")
+    public List<Resources.FilterIndexDocument> getFilters(
+            @PathVariable("id")
+                    URI id,
+            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language
+    ) throws Exception {
+        return jdbcTemplate.query(GET_FILTERS_BY_TOPIC_ID_QUERY, setQueryParameters(singletonList(id.toString())),
+                resultSet -> {
+                    List<Resources.FilterIndexDocument> result = new ArrayList<>();
+                    while (resultSet.next()) {
+                        result.add(new Resources.FilterIndexDocument() {{
+                            name = resultSet.getString("filter_name");
+                            id = getURI(resultSet, "filter_public_id");
+                            connectionId = getURI(resultSet, "topic_filter_public_id");
+                            relevanceId = getURI(resultSet, "relevance_id");
+                        }});
+                    }
+                    return result;
+                }
+        );
+    }
+
 
     public static class ResourceIndexDocument {
         @JsonProperty
@@ -308,5 +336,23 @@ public class Topics {
 
         TopicIndexDocument() {
         }
+    }
+
+    public static class FilterIndexDocument {
+        @JsonProperty
+        @ApiModelProperty(example = "urn:filter:1")
+        public URI id;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The name of the filter", example = "1T-YF")
+        public String name;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The id of the filter topic connection", example = "urn:topic-filter:1")
+        public URI connectionId;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The relevance of this topic according to the filter", example = "urn:relevance:1")
+        public URI relevanceId;
     }
 }
