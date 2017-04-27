@@ -80,9 +80,18 @@ public class ResourceFilters {
         return result;
     }
 
+
     public static class AddFilterToResourceCommand {
+        @JsonProperty
+        @ApiModelProperty(required = true, value = "Resource id", example = "urn:resource:123")
         public URI resourceId;
+
+        @JsonProperty
+        @ApiModelProperty(required = true, value = "Filter id", example = "urn:filter:234")
         public URI filterId;
+
+        @JsonProperty
+        @ApiModelProperty(required = true, value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
     }
 
@@ -93,19 +102,19 @@ public class ResourceFilters {
     public static class ResourceFilterIndexDocument {
         @JsonProperty
         @ApiModelProperty(required = true, value = "Resource id", example = "urn:resource:123")
-        URI resourceId;
+        public URI resourceId;
 
         @JsonProperty
         @ApiModelProperty(required = true, value = "Filter id", example = "urn:filter:234")
-        URI filterId;
+        public URI filterId;
 
         @JsonProperty
         @ApiModelProperty(required = true, value = "Resource to filter connection id", example = "urn:resource-filter:12")
-        URI id;
+        public URI id;
 
         @JsonProperty
         @ApiModelProperty(required = true, value = "Relevance id", example = "urn:relevance:core")
-        URI relevanceId;
+        public URI relevanceId;
 
         public ResourceFilterIndexDocument() {
         }

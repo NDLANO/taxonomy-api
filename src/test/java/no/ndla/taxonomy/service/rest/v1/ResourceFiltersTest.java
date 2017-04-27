@@ -29,6 +29,7 @@ public class ResourceFiltersTest extends RestTest {
                     relevanceId = URI.create("urn:relevance:core");
                 }})
         );
+
         assertEquals(1, resource.filters.size());
         assertEquals(first(resource.filters).getPublicId(), id);
         assertEquals("urn:relevance:core", first(resource.filters).getRelevance().getPublicId().toString());
@@ -89,17 +90,17 @@ public class ResourceFiltersTest extends RestTest {
     @Test
     public void can_change_relevance_for_filter() throws Exception {
         Filter filter = builder.filter(f -> f.publicId("urn:filter:2"));
-        Relevance relevance = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
-        Relevance relevance2 = builder.relevance(r -> r.publicId("urn:relevance:supplementary").name("Supplementary materiale"));
+        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
+        Relevance supplementary = builder.relevance(r -> r.publicId("urn:relevance:supplementary").name("Supplementary material"));
 
 
         Resource resource = builder.resource(r -> r
                 .publicId("urn:resource:1"));
 
-        URI id = save(resource.addFilter(filter, relevance)).getPublicId();
+        URI id = save(resource.addFilter(filter, core)).getPublicId();
 
         updateResource("/v1/resource-filters/" + id, new ResourceFilters.UpdateResourceFilterCommand() {{
-            relevanceId = relevance2.getPublicId();
+            relevanceId = supplementary.getPublicId();
         }});
         assertEquals("urn:relevance:supplementary", first(resource.filters).getRelevance().getPublicId().toString());
     }
@@ -116,7 +117,6 @@ public class ResourceFiltersTest extends RestTest {
         builder.resource(r -> r
         .publicId("urn:resource:2")
         .filter(filter, relevance));
-
 
         MockHttpServletResponse response = getResource("/v1/resource-filters");
         ResourceFilters.ResourceFilterIndexDocument[] resourceFilters = getObject(ResourceFilters.ResourceFilterIndexDocument[].class, response);
