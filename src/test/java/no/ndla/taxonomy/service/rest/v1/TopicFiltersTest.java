@@ -123,4 +123,61 @@ public class TopicFiltersTest extends RestTest {
         assertAnyTrue(topicFilters, rf -> URI.create("urn:topic:1").equals(rf.topicId) && filter.getPublicId().equals(rf.filterId) && relevance.getPublicId().equals(rf.relevanceId));
         assertAnyTrue(topicFilters, rf -> URI.create("urn:topic:2").equals(rf.topicId) && filter.getPublicId().equals(rf.filterId) && relevance.getPublicId().equals(rf.relevanceId));
     }
+
+
+    @Test
+    public void can_get_resources_for_a_topic_belonging_to_a_filter() throws Exception {
+        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
+        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
+
+        builder.topic(t -> t
+                .publicId("urn:topic:1")
+                .resource(r -> r
+                        .publicId("urn:resource:1")
+                        .filter(vg1, core)
+                )
+                .resource(r -> r
+                        .publicId("urn:resource:2")
+                )
+        );
+
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?filter=" + vg1.getPublicId());
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(1, result.length);
+        assertEquals("urn:resource:1", result[0].id.toString());
+    }
+
+    @Test
+    public void can_get_resources_for_a_topic_belonging_to_a_filter_recursively() throws Exception {
+        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
+        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
+        builder.subject(s -> s
+                .name("subject a")
+                .topic(t -> t
+                        .name("a")
+                        .publicId("urn:topic:a")
+                        .resource(r -> r.name("resource a").contentUri("urn:article:a").filter(vg1, core))
+                        .subtopic(st -> st
+                                .name("aa")
+                                .resource(r -> r.name("resource aa").contentUri("urn:article:aa").filter(vg1, core))
+                                .subtopic(st2 -> st2
+                                        .name("aaa")
+                                        .resource(r -> r.name("resource aaa").contentUri("urn:article:aaa").filter(vg1, core))
+                                )
+                                .subtopic(st2 -> st2
+                                        .name("aab")
+                                        .resource(r -> r.name("resource aab").contentUri("urn:article:aab"))
+                                )
+                        )
+                ));
+
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true&filter=" + vg1.getPublicId());
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(3, result.length);
+        assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));
+        assertAnyTrue(result, r -> "resource aa".equals(r.name) && "urn:article:aa".equals(r.contentUri.toString()));
+        assertAnyTrue(result, r -> "resource aaa".equals(r.name) && "urn:article:aaa".equals(r.contentUri.toString()));
+    }
 }

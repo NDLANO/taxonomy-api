@@ -20,10 +20,13 @@ FROM
   LEFT OUTER JOIN (SELECT *
                    FROM resource_type_translation
                    WHERE language_code = ?) rttr ON rttr.resource_type_id = rt.id
+  LEFT OUTER JOIN resource_filter rf ON rf.resource_id = r.id
+  LEFT OUTER JOIN filter f ON rf.filter_id = f.id
   LEFT OUTER JOIN cached_url url ON url.public_id = r.public_id
 WHERE
   t.public_id = ?
   AND 1 = 1
+  AND 2 = 2
 ORDER BY r.id
 
 

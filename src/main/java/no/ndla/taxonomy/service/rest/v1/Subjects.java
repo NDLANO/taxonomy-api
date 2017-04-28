@@ -182,7 +182,11 @@ public class Subjects {
             @RequestParam(value = "type", required = false, defaultValue = "")
             @ApiParam(value = "Filter by resource type id(s). If not specified, resources of all types will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
-                    URI[] resourceTypeIds
+                    URI[] resourceTypeIds,
+            @RequestParam(value = "filter", required = false, defaultValue = "")
+            @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned." +
+                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
+                    URI[] filterIds
     ) {
         List<Object> args = new ArrayList<>();
         args.add(subjectId.toString());
@@ -198,6 +202,16 @@ public class Subjects {
             }
             where.setLength(where.length() - " OR ".length());
             sql = sql.replace("1 = 1", "(" + where + ")");
+        }
+
+        if (filterIds.length > 0) {
+            StringBuilder where = new StringBuilder();
+            for (URI filterId : filterIds) {
+                where.append("f.public_id = ? OR ");
+                args.add(filterId.toString());
+            }
+            where.setLength(where.length() - 4);
+            sql = sql.replace("2 = 2", "(" + where + ")");
         }
 
         return jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {

@@ -315,29 +315,6 @@ public class TopicsTest extends RestTest {
         assertAnyTrue(result, r -> "an assignment".equals(r.name));
     }
 
-    @Test
-    @Ignore //TODO
-    public void can_get_resources_for_a_topic_belonging_to_a_filter() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
-
-        builder.topic(t -> t
-                .publicId("urn:topic:1")
-                .resource(r -> r
-                        .publicId("urn:resource:1")
-                        .filter(vg1, core)
-                )
-                .resource(r -> r
-                        .publicId("urn:resource:2")
-                )
-        );
-
-        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?filter=" + vg1.getPublicId());
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
-
-        assertEquals(1, result.length);
-        assertEquals("urn:resource:1", result[0].id.toString());
-    }
 
     @Test
     public void can_have_several_resource_types() throws Exception {

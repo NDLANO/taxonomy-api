@@ -1,9 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
-import no.ndla.taxonomy.service.domain.Resource;
-import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.domain.Topic;
+import no.ndla.taxonomy.service.domain.*;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -417,20 +415,4 @@ public class SubjectsTest extends RestTest {
         assertAnyTrue(result, r -> "a lecture".equals(r.name));
     }
 
-    @Test
-    public void can_get_filters_for_subject() throws Exception {
-        builder.subject(s -> s
-                .name("Byggfag")
-                .publicId("urn:subject:1")
-                .filter(f -> f.name("Tømrer"))
-                .filter(f -> f.name("Rørlegger"))
-        );
-
-        MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/filters");
-        Subjects.FilterIndexDocument[] filters = getObject(Subjects.FilterIndexDocument[].class, response);
-
-        assertEquals(2, filters.length);
-        assertAnyTrue(filters, f -> f.name.equals("Tømrer"));
-        assertAnyTrue(filters, f -> f.name.equals("Rørlegger"));
-    }
 }

@@ -173,6 +173,16 @@ public class Topics {
             query = query.replace("1 = 1", "(" + where + ")");
         }
 
+        if (filterIds.length > 0) {
+            StringBuilder where = new StringBuilder();
+            for (URI filterId : filterIds) {
+                where.append("f.public_id = ? OR ");
+                args.add(filterId.toString());
+            }
+            where.setLength(where.length() - 4);
+            query = query.replace("2 = 2", "(" + where + ")");
+        }
+
         return jdbcTemplate.query(query, setQueryParameters(args), resultSet -> {
             List<ResourceIndexDocument> result = new ArrayList<>();
             Map<URI, ResourceIndexDocument> resources = new HashMap<>();
