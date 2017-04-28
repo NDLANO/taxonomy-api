@@ -137,9 +137,13 @@ public class Topics {
             @ApiParam("If true, resources from subtopics are fetched recursively")
                     boolean recursive,
             @RequestParam(value = "type", required = false, defaultValue = "")
-            @ApiParam(value = "Filter by resource type id(s). If not specified, resources of all types will be returned." +
+            @ApiParam(value = "Select by resource type id(s). If not specified, resources of all types will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
-                    URI[] resourceTypeIds
+                    URI[] resourceTypeIds,
+            @RequestParam(value = "filter", required = false, defaultValue = "")
+            @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned." +
+                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
+                    URI[] filterIds
     ) throws Exception {
 
         TopicIndexDocument topicIndexDocument = get(topicId, null);
