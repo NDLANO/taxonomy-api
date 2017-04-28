@@ -122,11 +122,20 @@ public class Subjects {
                     String language,
             @RequestParam(value = "recursive", required = false, defaultValue = "false")
             @ApiParam("If true, subtopics are fetched recursively")
-                    boolean recursive
+                    boolean recursive,
+            @RequestParam(value = "filter", required = false, defaultValue = "")
+            @ApiParam(value = "Select by filter id(s). If not specified, all topics will be returned." +
+                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
+                    URI[] filterIds
     ) throws Exception {
         String sql = GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY;
         if (!recursive) sql = sql.replace("1 = 1", "t.level = 0");
-        List<Object> args = asList(id.toString(), language);
+
+        List<Object> args = new ArrayList<>();
+        args.add(id.toString());
+        args.add(language);
+
+        sql = addFilterToQuery(filterIds, sql, args);
 
         Map<URI, TopicIndexDocument> topics = new HashMap<>();
 
@@ -154,6 +163,19 @@ public class Subjects {
                     return result;
                 }
         );
+    }
+
+    private String addFilterToQuery(URI[] filterIds, String sql, List<Object> args) {
+        if (filterIds.length > 0) {
+            StringBuilder where = new StringBuilder();
+            for (URI filterId : filterIds) {
+                where.append("f.public_id = ? OR ");
+                args.add(filterId.toString());
+            }
+            where.setLength(where.length() - 4);
+            sql = sql.replace("2 = 2", "(" + where + ")");
+        }
+        return sql;
     }
 
     @PostMapping
@@ -204,15 +226,7 @@ public class Subjects {
             sql = sql.replace("1 = 1", "(" + where + ")");
         }
 
-        if (filterIds.length > 0) {
-            StringBuilder where = new StringBuilder();
-            for (URI filterId : filterIds) {
-                where.append("f.public_id = ? OR ");
-                args.add(filterId.toString());
-            }
-            where.setLength(where.length() - 4);
-            sql = sql.replace("2 = 2", "(" + where + ")");
-        }
+        sql = addFilterToQuery(filterIds, sql, args);
 
         return jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
             List<ResourceIndexDocument> result = new ArrayList<>();

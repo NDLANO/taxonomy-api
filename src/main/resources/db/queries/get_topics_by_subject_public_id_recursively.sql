@@ -44,6 +44,9 @@ FROM
   LEFT OUTER JOIN (SELECT *
                    FROM topic_translation
                    WHERE language_code = ?) tr ON t.id = tr.topic_id
+  LEFT OUTER JOIN topic_filter tf ON tf.topic_id = t.id
+  LEFT OUTER JOIN filter f ON tf.filter_id = f.id
   LEFT OUTER JOIN cached_url url ON url.public_id = t.public_id
 WHERE 1 = 1
+      AND 2 = 2
 ORDER BY t.level

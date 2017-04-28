@@ -125,7 +125,6 @@ public class TopicFiltersTest extends RestTest {
         assertAnyTrue(topicFilters, rf -> URI.create("urn:topic:2").equals(rf.topicId) && filter.getPublicId().equals(rf.filterId) && relevance.getPublicId().equals(rf.relevanceId));
     }
 
-
     @Test
     public void can_get_resources_belonging_to_a_filter_for_a_topic() throws Exception {
         Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
