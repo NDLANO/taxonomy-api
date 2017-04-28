@@ -3,6 +3,7 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import no.ndla.taxonomy.service.domain.Filter;
 import no.ndla.taxonomy.service.domain.Relevance;
+import no.ndla.taxonomy.service.domain.ResourceType;
 import no.ndla.taxonomy.service.domain.Topic;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -126,7 +127,7 @@ public class TopicFiltersTest extends RestTest {
 
 
     @Test
-    public void can_get_resources_for_a_topic_belonging_to_a_filter() throws Exception {
+    public void can_get_resources_belonging_to_a_filter_for_a_topic() throws Exception {
         Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
         Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
 
@@ -179,5 +180,64 @@ public class TopicFiltersTest extends RestTest {
         assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));
         assertAnyTrue(result, r -> "resource aa".equals(r.name) && "urn:article:aa".equals(r.contentUri.toString()));
         assertAnyTrue(result, r -> "resource aaa".equals(r.name) && "urn:article:aaa".equals(r.contentUri.toString()));
+    }
+
+    @Test
+    public void can_get_resources_for_a_topic_with_filter_and_resource_type() throws Exception {
+        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
+        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
+        ResourceType type = builder.resourceType(rt -> rt.name("Subject matter").publicId("urn:resource-type:subject-matter"));
+
+        builder.topic(t -> t
+                .publicId("urn:topic:1")
+                .resource(r -> r
+                        .publicId("urn:resource:1")
+                        .filter(vg1, core)
+                        .resourceType(type)
+                )
+                .resource(r -> r
+                        .publicId("urn:resource:2")
+                )
+        );
+
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?type=" + type.getPublicId() + "&filter=" + vg1.getPublicId());
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(1, result.length);
+        assertEquals("urn:resource:1", result[0].id.toString());
+    }
+
+    @Test
+    public void can_get_recursive_resources_with_filter_and_resource_type_restrictions_for_a_topic() throws Exception {
+        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
+        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
+        ResourceType type = builder.resourceType(rt -> rt.name("Subject matter").publicId("urn:resource-type:subject-matter"));
+
+        builder.subject(s -> s
+                .name("subject a")
+                .topic(t -> t
+                        .name("a")
+                        .publicId("urn:topic:a")
+                        .resource(r -> r.name("resource a").contentUri("urn:article:a").filter(vg1, core).resourceType(type))
+                        .subtopic(st -> st
+                                .name("aa")
+                                .resource(r -> r.name("resource aa").contentUri("urn:article:aa").filter(vg1, core).resourceType(type))
+                                .subtopic(st2 -> st2
+                                        .name("aaa")
+                                        .resource(r -> r.name("resource aaa").contentUri("urn:article:aaa").filter(vg1, core))
+                                )
+                                .subtopic(st2 -> st2
+                                        .name("aab")
+                                        .resource(r -> r.name("resource aab").contentUri("urn:article:aab"))
+                                )
+                        )
+                ));
+
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true&filter=" + vg1.getPublicId() + "&type=" + type.getPublicId());
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(2, result.length);
+        assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));
+        assertAnyTrue(result, r -> "resource aa".equals(r.name) && "urn:article:aa".equals(r.contentUri.toString()));
     }
 }

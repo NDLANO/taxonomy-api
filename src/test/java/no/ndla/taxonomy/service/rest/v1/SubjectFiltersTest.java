@@ -2,6 +2,7 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import no.ndla.taxonomy.service.domain.Filter;
 import no.ndla.taxonomy.service.domain.Relevance;
+import no.ndla.taxonomy.service.domain.ResourceType;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -55,5 +56,29 @@ public class SubjectFiltersTest extends RestTest{
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "a lecture in a subtopic".equals(r.name));
         assertAnyTrue(result, r -> "an assignment".equals(r.name));
+    }
+
+    @Test
+    public void can_get_resources_belonging_to_a_filter_and_resource_type_for_a_subject() throws Exception {
+        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
+        Filter vg2 = builder.filter(f -> f.publicId("urn:filter:vg2"));
+        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
+        ResourceType type = builder.resourceType(rt -> rt.name("Video").publicId("urn:resource-type:video"));
+
+        URI subjectId = builder.subject(s -> s
+                .name("subject")
+                .topic(t -> t
+                        .name("a")
+                        .subtopic(sub -> sub.name("subtopic").resource(r -> r.name("a lecture in a subtopic").filter(vg1, core).resourceType(type)))
+                        .resource(r -> r.name("an assignment").filter(vg1, core))
+                        .resource(r -> r.name("a lecture").filter(vg2, core))
+                )
+        ).getPublicId();
+
+        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources?filter=" + vg1.getPublicId() + "&type=" + type.getPublicId());
+        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(1, result.length);
+        assertAnyTrue(result, r -> "a lecture in a subtopic".equals(r.name));
     }
 }
