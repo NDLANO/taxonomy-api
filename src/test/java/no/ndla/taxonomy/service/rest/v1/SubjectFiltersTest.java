@@ -1,9 +1,6 @@
 package no.ndla.taxonomy.service.rest.v1;
 
-import no.ndla.taxonomy.service.domain.Filter;
-import no.ndla.taxonomy.service.domain.Relevance;
-import no.ndla.taxonomy.service.domain.ResourceType;
-import no.ndla.taxonomy.service.domain.Subject;
+import no.ndla.taxonomy.service.domain.*;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -101,7 +98,32 @@ public class SubjectFiltersTest extends RestTest {
     }
 
     @Test
-    @Ignore
+    public void can_get_topics_recursively_with_filter() throws Exception {
+        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
+        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
+        URI subjectid = builder.subject("subject", s -> s
+                .name("subject")
+                .publicId("urn:subject:1")
+                .topic("parent", parent -> parent
+                        .name("parent topic")
+                        .publicId("urn:topic:a")
+                        .subtopic("child", child -> child
+                                .name("child topic")
+                                .publicId("urn:topic:aa")
+                                .filter(vg1, core)
+                        )
+                )
+        ).getPublicId();
+
+        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics?recursive=true&filter=" + vg1.getPublicId());
+        Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
+
+        assertEquals(2, topics.length);
+        assertAnyTrue(topics, t -> t.name.equals("parent topic"));
+        assertAnyTrue(topics, t -> t.name.equals("child topic"));
+    }
+
+    @Test
     public void can_get_topic_without_filter_but_underlying_resource_has_filter() throws Exception {
         Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
         Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));

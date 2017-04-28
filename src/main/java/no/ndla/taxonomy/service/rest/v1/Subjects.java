@@ -135,13 +135,11 @@ public class Subjects {
         args.add(id.toString());
         args.add(language);
 
-        sql = addFilterToQuery(filterIds, sql, args);
-
         Map<URI, TopicIndexDocument> topics = new HashMap<>();
 
         return jdbcTemplate.query(sql, setQueryParameters(args),
                 resultSet -> {
-                    List<TopicIndexDocument> result = new ArrayList<>();
+                    List<TopicIndexDocument> queryresult = new ArrayList<>();
                     String context = "/" + id.toString().substring(4);
                     while (resultSet.next()) {
                         URI public_id = getURI(resultSet, "public_id");
@@ -154,13 +152,32 @@ public class Subjects {
                                 contentUri = getURI(resultSet, "content_uri");
                                 parent = getURI(resultSet, "parent_public_id");
                                 connectionId = getURI(resultSet, "connection_public_id");
+                                topicFilterId = getURI(resultSet, "topic_filter_public_id");
+                                resourceFilterId = getURI(resultSet, "resource_filter_public_id");
                             }};
                             topics.put(topic.id, topic);
-                            result.add(topic);
+                            queryresult.add(topic);
                         }
                         topic.path = getPathMostCloselyMatchingContext(context, topic.path, resultSet.getString("topic_path"));
                     }
-                    return result;
+
+                    if (filterIds.length > 0) {
+                        Set<TopicIndexDocument> result = new HashSet<>();
+                        for (TopicIndexDocument topic : queryresult) {
+                            if (asList(filterIds).contains(topic.resourceFilterId) || asList(filterIds).contains(topic.topicFilterId)) {
+                                result.add(topic);
+                                TopicIndexDocument current = topic;
+                                while (current != null) {
+                                    current = topics.get(current.parent);
+                                    if (null != current) result.add(current);
+                                }
+                            }
+                        }
+
+                        return new ArrayList<TopicIndexDocument>(result);
+                    } else {
+                        return queryresult;
+                    }
                 }
         );
     }
@@ -353,6 +370,26 @@ public class Subjects {
         @JsonProperty
         @ApiModelProperty(value = "The id of the subject-topics or topic-subtopics connection which causes this topic to be included in the result set.", example = "urn:subject-topic:1")
         public URI connectionId;
+
+        @JsonIgnore
+        URI topicFilterId, resourceFilterId;
+
+        @Override
+        @JsonIgnore
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof TopicIndexDocument)) return false;
+
+            TopicIndexDocument that = (TopicIndexDocument) o;
+
+            return id.equals(that.id);
+        }
+
+        @Override
+        @JsonIgnore
+        public int hashCode() {
+            return id.hashCode();
+        }
     }
 
     public static class ResourceIndexDocument {

@@ -31,13 +31,15 @@ WITH RECURSIVE tree (id, public_id, name, content_uri, parent_id, parent_public_
     INNER JOIN tree parent ON parent.id = s.topic_id
 )
 
-SELECT
+SELECT DISTINCT
   t.public_id,
   coalesce(tr.name, t.name) AS name,
   t.content_uri,
   t.parent_public_id,
   t.level,
   t.connection_public_id,
+  resf.public_id            AS resource_filter_public_id,
+  f.public_id               AS topic_filter_public_id,
   url.path                  AS topic_path
 FROM
   tree t
@@ -46,7 +48,12 @@ FROM
                    WHERE language_code = ?) tr ON t.id = tr.topic_id
   LEFT OUTER JOIN topic_filter tf ON tf.topic_id = t.id
   LEFT OUTER JOIN filter f ON tf.filter_id = f.id
+
+  LEFT OUTER JOIN topic_resource tore ON tore.topic_id = t.id
+  LEFT OUTER JOIN resource_filter rf ON tore.resource_id = rf.resource_id
+  LEFT OUTER JOIN filter resf ON rf.filter_id = resf.id
+
   LEFT OUTER JOIN cached_url url ON url.public_id = t.public_id
-WHERE 1 = 1
-      AND 2 = 2
+WHERE
+  1 = 1
 ORDER BY t.level
