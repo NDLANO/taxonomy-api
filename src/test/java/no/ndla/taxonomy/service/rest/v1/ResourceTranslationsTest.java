@@ -14,29 +14,29 @@ import static org.junit.Assert.assertNull;
 public class ResourceTranslationsTest extends RestTest {
 
     @Test
-    public void can_get_all_resources() throws Exception {
-        builder.resource(t -> t.name("Introduction to algrebra").translation("nb", l -> l.name("Introduksjon til algebra")));
-        builder.resource(t -> t.name("Chemistry").translation("nb", l -> l.name("Kjemi")));
+    public void can_get_all_resources_with_translation() throws Exception {
+        builder.resource(r -> r.name("The inner planets").translation("nb", tr -> tr.name("De indre planetene")));
+        builder.resource(r -> r.name("Gas giants").translation("nb", tr -> tr.name("Gasskjemper")));
 
         MockHttpServletResponse response = getResource("/v1/resources?language=nb");
         Resources.ResourceIndexDocument[] resources = getObject(Resources.ResourceIndexDocument[].class, response);
 
         assertEquals(2, resources.length);
-        assertAnyTrue(resources, s -> s.name.equals("Introduksjon til algebra"));
-        assertAnyTrue(resources, s -> s.name.equals("Kjemi"));
+        assertAnyTrue(resources, s -> "De indre planetene".equals(s.name));
+        assertAnyTrue(resources, s -> "Gasskjemper".equals(s.name));
     }
 
     @Test
-    public void can_get_single_resource() throws Exception {
-        URI id = builder.resource(t -> t
-                .name("Introduction to algrebra")
-                .translation("nb", l -> l
-                        .name("Introduksjon til algebra")
-                )
+    public void can_get_single_resource_with_translation() throws Exception {
+        URI trigonometry = builder.resource(s -> s
+                .name("introduction to trigonometry")
+                .translation("nb", tr -> tr.name("Introduksjon til trigonometri"))
         ).getPublicId();
 
-        Resources.ResourceIndexDocument resource = getResourceIndexDocument(id, "nb");
-        assertEquals("Introduksjon til algebra", resource.name);
+        MockHttpServletResponse response = getResource("/v1/resources/" + trigonometry + "?language=nb");
+        Resources.ResourceIndexDocument resource = getObject(Resources.ResourceIndexDocument.class, response);
+
+        assertEquals("Introduksjon til trigonometri", resource.name);
     }
 
     @Test

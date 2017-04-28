@@ -120,6 +120,62 @@ public class SubjectTranslationsTest extends RestTest {
         assertEquals("nb", translation.language);
     }
 
+    @Test
+    public void can_get_topics_with_language() throws Exception {
+        Subject subject = builder.subject(s -> s
+                .name("physics")
+                .topic(t -> t.name("statics").translation("nb", tr -> tr.name("statikk")))
+                .topic(t -> t.name("electricity").translation("nb", tr -> tr.name("elektrisitet")))
+                .topic(t -> t.name("optics").translation("nb", tr -> tr.name("optikk")))
+        );
+
+        MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics?language=nb");
+        Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
+
+        assertEquals(3, topics.length);
+        assertAnyTrue(topics, t -> "statikk".equals(t.name));
+        assertAnyTrue(topics, t -> "elektrisitet".equals(t.name));
+        assertAnyTrue(topics, t -> "optikk".equals(t.name));
+    }
+
+    @Test
+    public void can_get_translated_resources() throws Exception {
+
+        builder.resourceType("article", rt -> rt
+                .name("Article")
+                .translation("nb", tr -> tr.name("Artikkel"))
+        );
+
+        URI id = builder.subject(s -> s
+                .name("subject")
+                .topic(t -> t
+                        .name("Trigonometry")
+                        .resource(r -> r
+                                .name("Introduction to trigonometry")
+                                .translation("nb", tr -> tr.name("Introduksjon til trigonometri"))
+                                .resourceType("article")
+                        )
+                )
+                .topic(t -> t
+                        .name("Calculus")
+                        .resource(r -> r
+                                .name("Introduction to calculus")
+                                .translation("nb", tr -> tr.name("Introduksjon til calculus"))
+                                .resourceType("article")
+                        )
+                )
+        ).getPublicId();
+
+        MockHttpServletResponse response = getResource("/v1/subjects/" + id + "/resources?language=nb");
+        Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
+
+        assertEquals(2, resources.length);
+
+        assertAnyTrue(resources, r -> r.name.equals("Introduksjon til trigonometri"));
+        assertAnyTrue(resources, r -> r.name.equals("Introduksjon til calculus"));
+        assertAllTrue(resources, r -> r.resourceTypes.iterator().next().name.equals("Artikkel"));
+    }
+
     private Subjects.SubjectIndexDocument getSubject(URI id, String language) throws Exception {
         String path = "/v1/subjects/" + id;
         if (isNotEmpty(language)) path = path + "?language=" + language;

@@ -133,23 +133,6 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(topics, t -> t.parent.equals(subject.getPublicId()));
     }
 
-    @Test
-    public void can_get_topics_with_language() throws Exception {
-        Subject subject = builder.subject(s -> s
-                .name("physics")
-                .topic(t -> t.name("statics").translation("nb", tr -> tr.name("statikk")))
-                .topic(t -> t.name("electricity").translation("nb", tr -> tr.name("elektrisitet")))
-                .topic(t -> t.name("optics").translation("nb", tr -> tr.name("optikk")))
-        );
-
-        MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics?language=nb");
-        Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
-
-        assertEquals(3, topics.length);
-        assertAnyTrue(topics, t -> "statikk".equals(t.name));
-        assertAnyTrue(topics, t -> "elektrisitet".equals(t.name));
-        assertAnyTrue(topics, t -> "optikk".equals(t.name));
-    }
 
     @Test
     public void can_get_topics_recursively() throws Exception {
@@ -203,44 +186,6 @@ public class SubjectsTest extends RestTest {
         Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
 
         assertEquals("urn:article:1", resources[0].contentUri.toString());
-    }
-
-    @Test
-    public void can_get_translated_resources() throws Exception {
-
-        builder.resourceType("article", rt -> rt
-                .name("Article")
-                .translation("nb", tr -> tr.name("Artikkel"))
-        );
-
-        URI id = builder.subject(s -> s
-                .name("subject")
-                .topic(t -> t
-                        .name("Trigonometry")
-                        .resource(r -> r
-                                .name("Introduction to trigonometry")
-                                .translation("nb", tr -> tr.name("Introduksjon til trigonometri"))
-                                .resourceType("article")
-                        )
-                )
-                .topic(t -> t
-                        .name("Calculus")
-                        .resource(r -> r
-                                .name("Introduction to calculus")
-                                .translation("nb", tr -> tr.name("Introduksjon til calculus"))
-                                .resourceType("article")
-                        )
-                )
-        ).getPublicId();
-
-        MockHttpServletResponse response = getResource("/v1/subjects/" + id + "/resources?language=nb");
-        Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
-
-        assertEquals(2, resources.length);
-
-        assertAnyTrue(resources, r -> r.name.equals("Introduksjon til trigonometri"));
-        assertAnyTrue(resources, r -> r.name.equals("Introduksjon til calculus"));
-        assertAllTrue(resources, r -> r.resourceTypes.iterator().next().name.equals("Artikkel"));
     }
 
     @Test
@@ -342,77 +287,4 @@ public class SubjectsTest extends RestTest {
             assertEquals("/subject:" + i + "/topic:1", resources[0].path);
         }
     }
-
-    @Test
-    public void can_have_several_resource_types_recursively() throws Exception {
-        URI subjectId = builder.subject(s -> s
-                .name("subject")
-                .topic(t -> t
-                        .name("topic")
-                        .subtopic(st -> st
-                                .resource(r -> r
-                                        .name("resource 1")
-                                        .resourceType(rt -> rt.name("lecture"))
-                                        .resourceType(rt -> rt.name("assignment"))
-                                )
-                        )
-                        .resource(r -> r
-                                .name("resource 2")
-                                .resourceType(rt -> rt.name("lecture"))
-                                .resourceType(rt -> rt.name("assignment"))
-                        )
-                )
-        ).getPublicId();
-
-        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources");
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
-
-        assertEquals(2, result.length);
-        assertEquals(2, result[0].resourceTypes.size());
-        assertEquals(2, result[1].resourceTypes.size());
-    }
-
-    @Test
-    public void can_have_no_resource_type() throws Exception {
-        URI subjectId = builder.subject(s -> s
-                .name("subject")
-                .topic(t -> t
-                        .name("topic")
-                        .subtopic(st -> st
-                                .resource(r -> r
-                                        .name("resource 1")
-                                )
-                        )
-                )
-        ).getPublicId();
-
-        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources");
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
-
-        assertEquals(1, result.length);
-        assertEquals(0, result[0].resourceTypes.size());
-    }
-
-    @Test
-    public void can_get_resources_for_a_subject_filtered_on_resource_type() throws Exception {
-        builder.resourceType("assignment").getPublicId();
-        URI lecture = builder.resourceType("lecture").getPublicId();
-
-        URI subjectId = builder.subject(s -> s
-                .name("subject")
-                .topic(t -> t
-                        .name("a")
-                        .subtopic(sub -> sub.name("subtopic").resource(r -> r.name("a lecture in a subtopic").resourceType("lecture")))
-                        .resource(r -> r.name("an assignment").resourceType("assignment"))
-                        .resource(r -> r.name("a lecture").resourceType("lecture"))
-                )
-        ).getPublicId();
-
-        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources?type=" + lecture);
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
-
-        assertEquals(2, result.length);
-        assertAnyTrue(result, r -> "a lecture".equals(r.name));
-    }
-
 }
