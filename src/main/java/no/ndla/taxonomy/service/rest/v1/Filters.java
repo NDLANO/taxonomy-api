@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Filter;
 import no.ndla.taxonomy.service.domain.Subject;
+import no.ndla.taxonomy.service.domain.SubjectRequiredException;
 import no.ndla.taxonomy.service.repositories.FilterRepository;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -97,6 +98,14 @@ public class Filters {
             Filter filter = new Filter();
             if (null != command.id) filter.setPublicId(command.id);
             filter.setName(command.name);
+
+            if (command.subjectId == null) {
+                throw new SubjectRequiredException();
+            }
+
+            Subject subject = subjectRepository.getByPublicId(command.subjectId);
+            filter.setSubject(subject);
+
             URI location = URI.create("/filters/" + filter.getPublicId());
             filterRepository.save(filter);
             return ResponseEntity.created(location).build();
@@ -144,6 +153,10 @@ public class Filters {
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the filter", example = "1T-YF")
         public String name;
+
+        @JsonProperty
+        @ApiModelProperty(value = "This filter will be connected to this subject.")
+        public URI subjectId;
     }
 
     public static class UpdateFilterCommand {
@@ -152,7 +165,7 @@ public class Filters {
         public String name;
 
         @JsonProperty
-        @ApiModelProperty(value = "If specified, this filter will be a connected to this subject.")
+        @ApiModelProperty(value = "This filter will be connected to this subject.")
         public URI subjectId;
     }
 }

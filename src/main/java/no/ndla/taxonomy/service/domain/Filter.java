@@ -53,4 +53,8 @@ public class Filter extends DomainObject {
     public void setSubject(Subject subject) {
         this.subject = subject;
     }
+
+    public Subject getSubject() {
+        return this.subject;
+    }
 }

@@ -59,10 +59,39 @@ public class FiltersTest extends RestTest {
     }
 
     @Test
-    public void duplicate_ids_not_allowed() throws Exception {
+    public void can_create_filter() throws Exception {
+        builder.subject(s -> s.publicId("urn:subject:1"));
+
         Filters.CreateFilterCommand command = new Filters.CreateFilterCommand() {{
             id = URI.create("urn:filter:1");
             name = "name";
+            subjectId = URI.create("urn:subject:1");
+        }};
+        createResource("/v1/filters", command, status().isCreated());
+
+        Filter filter = filterRepository.getByPublicId(URI.create("urn:filter:1"));
+        assertEquals("urn:subject:1", filter.getSubject().getPublicId().toString());
+    }
+
+
+    @Test
+    public void subject_is_required() throws Exception {
+        Filters.CreateFilterCommand command = new Filters.CreateFilterCommand() {{
+            id = URI.create("urn:filter:1");
+            name = "name";
+        }};
+
+        createResource("/v1/filters", command, status().isBadRequest());
+    }
+
+
+    @Test
+    public void duplicate_ids_not_allowed() throws Exception {
+        builder.subject(s -> s.publicId("urn:subject:1"));
+        Filters.CreateFilterCommand command = new Filters.CreateFilterCommand() {{
+            id = URI.create("urn:filter:1");
+            name = "name";
+            subjectId = URI.create("urn:subject:1");
         }};
 
         createResource("/v1/filters", command, status().isCreated());
