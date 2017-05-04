@@ -69,7 +69,11 @@ get all subtopics for a topic with a GET call to `/topics/{id}/subtopics`.
 Updates to existing entities and connections are all handled with PUT calls to the correct service. Please note that all PUT calls will *overwrite* 
 the information in the entity. Be sure to include everything you want to keep. The taxonomy 
 API does not check for empty fields unless they are required. The easiest way to update an entity is to first retrieve 
-the current entity with a GET call to the correct service and then return the object with a PUT call after you make your changes. 
+the current entity with a GET call to the correct service and then return the object with a PUT call after you make your changes. The API cannot 
+check which fields should be unset, which is why all fields must be present (unless it should be unset). 
+
+You should verify that your changes are correct with a GET call after the PUT request (similarly for POST). This is by design, so 
+that the client verifies that the changes on the server are correct. 
 
 
 ### Resources 
