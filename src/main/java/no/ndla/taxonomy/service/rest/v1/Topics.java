@@ -5,10 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -27,7 +25,7 @@ import static no.ndla.taxonomy.service.rest.v1.UrlResolver.getPathMostCloselyMat
 @RestController
 @RequestMapping(path = {"topics", "/v1/topics"})
 @Transactional
-public class Topics {
+public class Topics extends CrudController<Topic> {
 
     private TopicRepository topicRepository;
     private JdbcTemplate jdbcTemplate;
@@ -40,6 +38,7 @@ public class Topics {
     public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
         this.topicRepository = topicRepository;
         this.jdbcTemplate = jdbcTemplate;
+        repository = topicRepository;
     }
 
     @GetMapping
@@ -85,25 +84,7 @@ public class Topics {
     @PostMapping
     @ApiOperation(value = "Creates a new topic")
     public ResponseEntity<Void> post(@ApiParam(name = "connection", value = "The new topic") @RequestBody CreateTopicCommand command) throws Exception {
-        try {
-            Topic topic = new Topic();
-            if (null != command.id) topic.setPublicId(command.id);
-            topic.name(command.name);
-            topic.setContentUri(command.contentUri);
-            URI location = URI.create("/topics/" + topic.getPublicId());
-            topicRepository.save(topic);
-            return ResponseEntity.created(location).build();
-        } catch (DataIntegrityViolationException e) {
-            throw new DuplicateIdException(command.id.toString());
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    @ApiOperation(value = "Deletes a single topic")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") URI id) throws Exception {
-        Topic topic = topicRepository.getByPublicId(id);
-        topicRepository.delete(topic);
+        return doPost(new Topic(), command);
     }
 
     @PutMapping("/{id}")
@@ -112,9 +93,7 @@ public class Topics {
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(name = "topic", value = "The updated topic") @RequestBody UpdateTopicCommand command) throws Exception {
-        Topic topic = topicRepository.getByPublicId(id);
-        topic.setName(command.name);
-        topic.setContentUri(command.contentUri);
+        doPut(id, command);
     }
 
     @PutMapping
@@ -307,7 +286,7 @@ public class Topics {
         }
     }
 
-    public static class CreateTopicCommand {
+    public static class CreateTopicCommand extends CreateCommand<Topic> {
         @JsonProperty
         @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:topic:1")
         public URI id;
@@ -319,9 +298,20 @@ public class Topics {
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the topic", example = "Trigonometry")
         public String name;
+
+        @Override
+        public URI getId() {
+            return id;
+        }
+
+        @Override
+        public void apply(Topic topic) {
+            topic.setName(name);
+            topic.setContentUri(contentUri);
+        }
     }
 
-    public static class UpdateTopicCommand {
+    public static class UpdateTopicCommand extends UpdateCommand<Topic> {
         @JsonProperty
         @ApiModelProperty(value = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
         public URI contentUri;
@@ -329,6 +319,12 @@ public class Topics {
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the topic", example = "Trigonometry")
         public String name;
+
+        @Override
+        public void apply(Topic topic) {
+            topic.setName(name);
+            topic.setContentUri(contentUri);
+        }
     }
 
     public static class TopicIndexDocument {

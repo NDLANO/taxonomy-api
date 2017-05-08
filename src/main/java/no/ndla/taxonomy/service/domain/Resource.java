@@ -1,7 +1,6 @@
 package no.ndla.taxonomy.service.domain;
 
 
-import no.ndla.taxonomy.service.rest.v1.ResourceFilters;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.CascadeType;

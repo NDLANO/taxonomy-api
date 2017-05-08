@@ -100,10 +100,13 @@ public class FiltersTest extends RestTest {
 
     @Test
     public void can_update_filter() throws Exception {
+        builder.subject(s -> s.publicId("urn:subject:1"));
+
         URI id = builder.filter().getPublicId();
 
         Filters.UpdateFilterCommand command = new Filters.UpdateFilterCommand() {{
             name = "1T-ST";
+            subjectId = URI.create("urn:subject:1");
         }};
 
         updateResource("/v1/filters/" + id, command);
@@ -158,27 +161,5 @@ public class FiltersTest extends RestTest {
         Filters.FilterIndexDocument filter = getObject(Filters.FilterIndexDocument.class, response);
 
         assertEquals("urn:subject:3", filter.subjectId.toString());
-    }
-
-    @Test
-    public void can_remove_subject_from_filter() throws Exception {
-        Subject subject = builder.subject(s -> s
-                .name("Byggfag")
-                .publicId("urn:subject:1"));
-
-        builder.filter(f -> f
-                .name("Tømrer")
-                .publicId("urn:filter:2")
-                .subject(subject));
-
-        updateResource("/v1/filters/urn:filter:2", new Filters.UpdateFilterCommand() {{
-            subjectId = null;
-            name = "Tømrer";
-        }});
-
-        MockHttpServletResponse response = getResource("/v1/filters/urn:filter:2");
-        Filters.FilterIndexDocument filter = getObject(Filters.FilterIndexDocument.class, response);
-
-        assertEquals(null, filter.subjectId);
     }
 }

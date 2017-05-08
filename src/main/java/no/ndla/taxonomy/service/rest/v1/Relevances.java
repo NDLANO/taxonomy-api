@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Relevance;
 import no.ndla.taxonomy.service.repositories.RelevanceRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -26,15 +24,14 @@ import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 @RestController
 @RequestMapping(path = {"/v1/relevances"})
 @Transactional
-public class Relevances {
+public class Relevances extends CrudController<Relevance> {
 
-    private RelevanceRepository relevanceRepository;
     private JdbcTemplate jdbcTemplate;
     private static final String GET_RELEVANCES_QUERY = getQuery("get_relevances");
 
-    public Relevances(RelevanceRepository relevanceRepository, JdbcTemplate jdbcTemplate) {
-        this.relevanceRepository = relevanceRepository;
+    public Relevances(RelevanceRepository repository, JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.repository = repository;
     }
 
     @GetMapping
@@ -77,27 +74,10 @@ public class Relevances {
         );
     }
 
-    @DeleteMapping("/{id}")
-    @ApiOperation("Deletes a single relevance")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") URI id) throws Exception {
-        Relevance relevance = relevanceRepository.getByPublicId(id);
-        relevanceRepository.delete(relevance);
-    }
-
     @PostMapping
     @ApiOperation(value = "Creates a new relevance")
     public ResponseEntity<Void> post(@ApiParam(name = "relevance", value = "The new relevance") @RequestBody CreateRelevanceCommand command) throws Exception {
-        try {
-            Relevance relevance = new Relevance();
-            if (null != command.id) relevance.setPublicId(command.id);
-            relevance.setName(command.name);
-            URI location = URI.create("/relevances/" + relevance.getPublicId());
-            relevanceRepository.save(relevance);
-            return ResponseEntity.created(location).build();
-        } catch (DataIntegrityViolationException e) {
-            throw new DuplicateIdException("" + command.id);
-        }
+        return doPost(new Relevance(), command);
     }
 
     @PutMapping("/{id}")
@@ -107,8 +87,7 @@ public class Relevances {
             @PathVariable("id") URI id,
             @ApiParam(name = "relevance", value = "The updated relevance") @RequestBody UpdateRelevanceCommand command
     ) throws Exception {
-        Relevance relevance = relevanceRepository.getByPublicId(id);
-        relevance.setName(command.name);
+        doPut(id, command);
     }
 
     public static class RelevanceIndexDocument {
@@ -122,7 +101,7 @@ public class Relevances {
 
     }
 
-    public static class CreateRelevanceCommand {
+    public static class CreateRelevanceCommand extends CreateCommand<Relevance> {
         @JsonProperty
         @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:relevance: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:relevance:1")
         public URI id;
@@ -130,11 +109,26 @@ public class Relevances {
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the relevance", example = "1T-YF")
         public String name;
+
+        @Override
+        public URI getId() {
+            return id;
+        }
+
+        @Override
+        public void apply(Relevance entity) {
+            entity.setName(name);
+        }
     }
 
-    public static class UpdateRelevanceCommand {
+    public static class UpdateRelevanceCommand extends UpdateCommand<Relevance> {
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the relevance", example = "1T-YF")
         public String name;
+
+        @Override
+        public void apply(Relevance entity) {
+            entity.setName(name);
+        }
     }
 }

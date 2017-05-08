@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.repositories.ResourceRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -26,7 +24,7 @@ import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 @RestController
 @RequestMapping(path = {"resources", "/v1/resources"})
 @Transactional
-public class Resources {
+public class Resources extends CrudController<Resource> {
 
     private static final String GET_RESOURCES_QUERY = getQuery("get_resources");
     private static final String GET_RESOURCE_RESOURCE_TYPES_QUERY = getQuery("get_resource_resource_types");
@@ -38,6 +36,7 @@ public class Resources {
     public Resources(ResourceRepository resourceRepository, JdbcTemplate jdbcTemplate) {
         this.resourceRepository = resourceRepository;
         this.jdbcTemplate = jdbcTemplate;
+        repository = resourceRepository;
     }
 
     @GetMapping
@@ -66,53 +65,28 @@ public class Resources {
 
     private List<ResourceIndexDocument> getResourceIndexDocuments(String sql, List<Object> args) {
         return jdbcTemplate.query(sql, setQueryParameters(args),
-                resultSet -> {
-                    List<ResourceIndexDocument> result = new ArrayList<>();
-                    while (resultSet.next()) {
-                        result.add(new ResourceIndexDocument() {{
-                            name = resultSet.getString("resource_name");
-                            id = getURI(resultSet, "resource_public_id");
-                            contentUri = getURI(resultSet, "resource_content_uri");
-                            path = resultSet.getString("resource_path");
-                        }});
-                    }
-                    return result;
-                }
+                (resultSet, rowNum) -> new ResourceIndexDocument() {{
+                    name = resultSet.getString("resource_name");
+                    id = getURI(resultSet, "resource_public_id");
+                    contentUri = getURI(resultSet, "resource_content_uri");
+                    path = resultSet.getString("resource_path");
+                }}
         );
-    }
-
-    @DeleteMapping("/{id}")
-    @ApiOperation(value = "Deletes a resource")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") URI id) throws Exception {
-        Resource resource = resourceRepository.getByPublicId(id);
-        resourceRepository.delete(resource);
     }
 
     @PutMapping("/{id}")
     @ApiOperation(value = "Updates a resource")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void put(@PathVariable("id") URI id, @ApiParam(name = "resource", value = "the updated resource") @RequestBody UpdateResourceCommand command) throws Exception {
-        Resource resource = resourceRepository.getByPublicId(id);
-        resource.setName(command.name);
-        resource.setContentUri(command.contentUri);
+    public void put(@PathVariable("id") URI id, @ApiParam(name = "resource", value = "the updated resource")
+    @RequestBody UpdateResourceCommand command) throws Exception {
+        doPut(id, command);
     }
 
     @PostMapping
     @ApiOperation(value = "Adds a new resource")
     public ResponseEntity<Void> post(
             @ApiParam(name = "resource", value = "the new resource") @RequestBody CreateResourceCommand command) throws Exception {
-        try {
-            Resource resource = new Resource();
-            if (null != command.id) resource.setPublicId(command.id);
-            resource.name(command.name);
-            resource.setContentUri(command.contentUri);
-            resourceRepository.save(resource);
-            URI location = URI.create("/resources/" + resource.getPublicId());
-            return ResponseEntity.created(location).build();
-        } catch (DataIntegrityViolationException e) {
-            throw new DuplicateIdException("" + command.id);
-        }
+        return doPost(new Resource(), command);
     }
 
     @GetMapping("/{id}/resource-types")
@@ -165,7 +139,7 @@ public class Resources {
         );
     }
 
-    public static class CreateResourceCommand {
+    public static class CreateResourceCommand extends CreateCommand<Resource> {
         @JsonProperty
         @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:resource:2")
         public URI id;
@@ -179,9 +153,20 @@ public class Resources {
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the resource", example = "Introduction to integration")
         public String name;
+
+        @Override
+        public URI getId() {
+            return id;
+        }
+
+        @Override
+        public void apply(Resource entity) {
+            entity.setName(name);
+            entity.setContentUri(contentUri);
+        }
     }
 
-    static class UpdateResourceCommand {
+    static class UpdateResourceCommand extends UpdateCommand<Resource> {
         @JsonProperty
         @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
                 notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
@@ -191,6 +176,12 @@ public class Resources {
         @JsonProperty
         @ApiModelProperty(value = "The name of the resource", example = "Introduction to integration")
         public String name;
+
+        @Override
+        public void apply(Resource resource) {
+            resource.setName(name);
+            resource.setContentUri(contentUri);
+        }
     }
 
     static class ResourceIndexDocument {

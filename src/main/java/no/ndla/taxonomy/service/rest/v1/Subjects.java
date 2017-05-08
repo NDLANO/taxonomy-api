@@ -5,10 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -25,9 +23,9 @@ import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 import static no.ndla.taxonomy.service.rest.v1.UrlResolver.getPathMostCloselyMatchingContext;
 
 @RestController
-@RequestMapping(path = {"subjects", "/v1/subjects"})
 @Transactional
-public class Subjects {
+@RequestMapping(path = {"/v1/subjects", "/subjects"})
+public class Subjects extends CrudController<Subject> {
     private static final String GET_SUBJECTS_QUERY = getQuery("get_subjects");
     private static final String GET_RESOURCES_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_subject_public_id_recursively");
     private static final String GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_topics_by_subject_public_id_recursively");
@@ -39,6 +37,7 @@ public class Subjects {
     public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate) {
         this.subjectRepository = subjectRepository;
         this.jdbcTemplate = jdbcTemplate;
+        repository = subjectRepository;
     }
 
     @GetMapping
@@ -83,14 +82,6 @@ public class Subjects {
         );
     }
 
-    @DeleteMapping("/{id}")
-    @ApiOperation("Deletes a single subject")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") URI id) throws Exception {
-        Subject subject = subjectRepository.getByPublicId(id);
-        subjectRepository.delete(subject);
-    }
-
     @PutMapping("/{id}")
     @ApiOperation("Updates a subject")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -98,9 +89,7 @@ public class Subjects {
             @PathVariable("id") URI id,
             @ApiParam(name = "subject", value = "The updated subject") @RequestBody UpdateSubjectCommand command
     ) throws Exception {
-        Subject subject = subjectRepository.getByPublicId(id);
-        subject.setName(command.name);
-        subject.setContentUri(command.contentUri);
+        doPut(id, command);
     }
 
     @PutMapping
@@ -198,17 +187,7 @@ public class Subjects {
     @PostMapping
     @ApiOperation(value = "Creates a new subject")
     public ResponseEntity<Void> post(@ApiParam(name = "subject", value = "The new subject") @RequestBody CreateSubjectCommand command) throws Exception {
-        try {
-            Subject subject = new Subject();
-            if (null != command.id) subject.setPublicId(command.id);
-            subject.setName(command.name);
-            subject.setContentUri(command.contentUri);
-            URI location = URI.create("/subjects/" + subject.getPublicId());
-            subjectRepository.save(subject);
-            return ResponseEntity.created(location).build();
-        } catch (DataIntegrityViolationException e) {
-            throw new DuplicateIdException("" + command.id);
-        }
+        return doPost(new Subject(), command);
     }
 
     @GetMapping("/{id}/resources")
@@ -314,7 +293,7 @@ public class Subjects {
         );
     }
 
-    public static class CreateSubjectCommand {
+    public static class CreateSubjectCommand extends CreateCommand<Subject> {
         @JsonProperty
         @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:subject:1")
         public URI id;
@@ -326,9 +305,20 @@ public class Subjects {
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the subject", example = "Mathematics")
         public String name;
+
+        @Override
+        public URI getId() {
+            return id;
+        }
+
+        @Override
+        public void apply(Subject subject) {
+            subject.setName(name);
+            subject.setContentUri(contentUri);
+        }
     }
 
-    public static class UpdateSubjectCommand {
+    public static class UpdateSubjectCommand extends UpdateCommand<Subject> {
         @JsonProperty
         @ApiModelProperty(value = "ID of article introducing this subject. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
         public URI contentUri;
@@ -336,6 +326,12 @@ public class Subjects {
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the subject", example = "Mathematics")
         public String name;
+
+        @Override
+        public void apply(Subject subject) {
+            subject.setName(name);
+            subject.setContentUri(contentUri);
+        }
     }
 
     public static class SubjectIndexDocument {

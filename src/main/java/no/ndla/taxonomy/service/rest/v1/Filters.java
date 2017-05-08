@@ -4,13 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.Filter;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.SubjectRequiredException;
 import no.ndla.taxonomy.service.repositories.FilterRepository;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -29,17 +27,16 @@ import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 @RestController
 @RequestMapping(path = {"/v1/filters"})
 @Transactional
-public class Filters {
+public class Filters extends CrudController<Filter> {
 
-    private FilterRepository filterRepository;
     private SubjectRepository subjectRepository;
     private JdbcTemplate jdbcTemplate;
     private static final String GET_FILTERS_QUERY = getQuery("get_filters");
 
-    public Filters(FilterRepository filterRepository, JdbcTemplate jdbcTemplate, SubjectRepository subjectRepository) {
-        this.filterRepository = filterRepository;
+    public Filters(FilterRepository repository, JdbcTemplate jdbcTemplate, SubjectRepository subjectRepository) {
         this.jdbcTemplate = jdbcTemplate;
         this.subjectRepository = subjectRepository;
+        this.repository = repository;
     }
 
     @GetMapping
@@ -83,35 +80,15 @@ public class Filters {
         );
     }
 
-    @DeleteMapping("/{id}")
-    @ApiOperation("Deletes a single filter")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") URI id) throws Exception {
-        Filter filter = filterRepository.getByPublicId(id);
-        filterRepository.delete(filter);
-    }
-
     @PostMapping
     @ApiOperation(value = "Creates a new filter")
     public ResponseEntity<Void> post(@ApiParam(name = "filter", value = "The new filter") @RequestBody CreateFilterCommand command) throws Exception {
-        try {
-            Filter filter = new Filter();
-            if (null != command.id) filter.setPublicId(command.id);
-            filter.setName(command.name);
+        if (command.subjectId == null) throw new SubjectRequiredException();
 
-            if (command.subjectId == null) {
-                throw new SubjectRequiredException();
-            }
-
-            Subject subject = subjectRepository.getByPublicId(command.subjectId);
-            filter.setSubject(subject);
-
-            URI location = URI.create("/filters/" + filter.getPublicId());
-            filterRepository.save(filter);
-            return ResponseEntity.created(location).build();
-        } catch (DataIntegrityViolationException e) {
-            throw new DuplicateIdException("" + command.id);
-        }
+        Filter filter = new Filter();
+        Subject subject = subjectRepository.getByPublicId(command.subjectId);
+        filter.setSubject(subject);
+        return doPost(filter, command);
     }
 
     @PutMapping("/{id}")
@@ -121,15 +98,11 @@ public class Filters {
             @PathVariable("id") URI id,
             @ApiParam(name = "filter", value = "The updated filter") @RequestBody UpdateFilterCommand command
     ) throws Exception {
-        Filter filter = filterRepository.getByPublicId(id);
-        filter.setName(command.name);
-        Subject subject = null;
-        if (command.subjectId != null) {
-            subject = subjectRepository.getByPublicId(command.subjectId);
-        }
-        filter.setSubject(subject);
-    }
+        if (command.subjectId == null) throw new SubjectRequiredException();
 
+        Filter filter = doPut(id, command);
+        filter.setSubject(subjectRepository.getByPublicId(command.subjectId));
+    }
 
     public static class FilterIndexDocument {
         @JsonProperty
@@ -145,7 +118,7 @@ public class Filters {
         public URI subjectId;
     }
 
-    public static class CreateFilterCommand {
+    public static class CreateFilterCommand extends CreateCommand<Filter> {
         @JsonProperty
         @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:filter: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:filter:1")
         public URI id;
@@ -157,9 +130,19 @@ public class Filters {
         @JsonProperty
         @ApiModelProperty(value = "This filter will be connected to this subject.")
         public URI subjectId;
+
+        @Override
+        public URI getId() {
+            return id;
+        }
+
+        @Override
+        public void apply(Filter filter) {
+            filter.setName(name);
+        }
     }
 
-    public static class UpdateFilterCommand {
+    public static class UpdateFilterCommand extends UpdateCommand<Filter> {
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the filter", example = "1T-YF")
         public String name;
@@ -167,5 +150,10 @@ public class Filters {
         @JsonProperty
         @ApiModelProperty(value = "This filter will be connected to this subject.")
         public URI subjectId;
+
+        @Override
+        public void apply(Filter filter) {
+            filter.setName(name);
+        }
     }
 }

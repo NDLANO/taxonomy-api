@@ -83,7 +83,8 @@ public class SubjectsTest extends RestTest {
             name = "name";
         }};
 
-        createResource("/v1/subjects", command);
+        MockHttpServletResponse response = createResource("/v1/subjects", command);
+        assertEquals("/v1/subjects/urn:subject:1", response.getHeader("Location"));
 
         assertNotNull(subjectRepository.getByPublicId(command.id));
     }

@@ -5,10 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.domain.DuplicateIdException;
 import no.ndla.taxonomy.service.domain.ResourceType;
 import no.ndla.taxonomy.service.repositories.ResourceTypeRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -26,9 +24,9 @@ import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
-@RequestMapping(path = {"resource-types", "/v1/resource-types"})
+@RequestMapping(path = {"/v1/resource-types", "resource-types"})
 @Transactional
-public class ResourceTypes {
+public class ResourceTypes extends CrudController<ResourceType> {
 
     private ResourceTypeRepository resourceTypeRepository;
     private JdbcTemplate jdbcTemplate;
@@ -38,6 +36,7 @@ public class ResourceTypes {
     public ResourceTypes(ResourceTypeRepository resourceTypeRepository, JdbcTemplate jdbcTemplate) {
         this.resourceTypeRepository = resourceTypeRepository;
         this.jdbcTemplate = jdbcTemplate;
+        repository = resourceTypeRepository;
     }
 
     @GetMapping
@@ -101,32 +100,14 @@ public class ResourceTypes {
     @ApiOperation(value = "Adds a new resource type")
     public ResponseEntity<Void> post(
             @ApiParam(name = "resourceType", value = "The new resource type")
-            @RequestBody
-                    CreateResourceTypeCommand command
+            @RequestBody CreateResourceTypeCommand command
     ) throws Exception {
-        try {
-            ResourceType resourceType = new ResourceType();
-            if (null != command.id) resourceType.setPublicId(command.id);
-
-            if (null != command.parentId) {
-                ResourceType parent = resourceTypeRepository.getByPublicId(command.parentId);
-                resourceType.setParent(parent);
-            }
-            resourceType.name(command.name);
-            resourceTypeRepository.save(resourceType);
-            URI location = URI.create("/resource-types/" + resourceType.getPublicId());
-            return ResponseEntity.created(location).build();
-        } catch (DataIntegrityViolationException e) {
-            throw new DuplicateIdException("" + command.id);
+        ResourceType resourceType = new ResourceType();
+        if (null != command.parentId) {
+            ResourceType parent = resourceTypeRepository.getByPublicId(command.parentId);
+            resourceType.setParent(parent);
         }
-    }
-
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation(value = "Deletes a single resource type")
-    public void delete(@PathVariable("id") URI id) throws Exception {
-        resourceTypeRepository.getByPublicId(id);
-        resourceTypeRepository.deleteByPublicId(id);
+        return doPost(resourceType, command);
     }
 
     @PutMapping("/{id}")
@@ -138,8 +119,8 @@ public class ResourceTypes {
             @RequestBody UpdateResourceTypeCommand
                     command
     ) throws Exception {
-        ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
-        resourceType.name(command.name);
+        ResourceType resourceType = doPut(id, command);
+
         ResourceType parent = null;
         if (command.parentId != null) {
             parent = resourceTypeRepository.getByPublicId(command.parentId);
@@ -191,7 +172,7 @@ public class ResourceTypes {
         public List<ResourceTypeIndexDocument> subtypes = new ArrayList<>();
     }
 
-    public static class CreateResourceTypeCommand {
+    public static class CreateResourceTypeCommand extends CreateCommand<ResourceType> {
         @JsonProperty
         @ApiModelProperty(value = "If specified, the new resource type will be a child of the mentioned resource type.")
         public URI parentId;
@@ -203,9 +184,19 @@ public class ResourceTypes {
         @JsonProperty
         @ApiModelProperty(required = true, value = "The name of the resource type", example = "Lecture")
         public String name;
+
+        @Override
+        public URI getId() {
+            return id;
+        }
+
+        @Override
+        public void apply(ResourceType entity) {
+            entity.setName(name);
+        }
     }
 
-    public static class UpdateResourceTypeCommand {
+    public static class UpdateResourceTypeCommand extends UpdateCommand<ResourceType> {
         @JsonProperty
         @ApiModelProperty(value = "If specified, this resource type will be a child of the mentioned parent resource type. If left blank, this resource type will become a top level resource type")
         public URI parentId;
@@ -213,5 +204,10 @@ public class ResourceTypes {
         @JsonProperty
         @ApiModelProperty(value = "The name of the resource type", example = "Lecture")
         public String name;
+
+        @Override
+        public void apply(ResourceType resourceType) {
+            resourceType.setName(name);
+        }
     }
 }
