@@ -22,7 +22,7 @@ import static no.ndla.taxonomy.service.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
-@RequestMapping(path = {"resources", "/v1/resources"})
+@RequestMapping(path = {"/v1/resources", "resources"})
 @Transactional
 public class Resources extends CrudController<Resource> {
 

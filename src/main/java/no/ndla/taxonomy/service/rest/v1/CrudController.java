@@ -57,6 +57,7 @@ public abstract class CrudController<T extends DomainObject> {
 
     public abstract static class CreateCommand<T> {
         public abstract URI getId();
+
         public abstract void apply(T entity);
     }
 }

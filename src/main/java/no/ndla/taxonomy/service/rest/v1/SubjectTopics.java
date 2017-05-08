@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = {"subject-topics", "/v1/subject-topics"})
+@RequestMapping(path = {"/v1/subject-topics", "subject-topics"})
 @Transactional
 public class SubjectTopics {
     private TopicRepository topicRepository;

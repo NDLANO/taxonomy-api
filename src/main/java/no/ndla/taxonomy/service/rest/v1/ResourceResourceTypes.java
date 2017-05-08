@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = {"resource-resourcetypes", "/v1/resource-resourcetypes"})
+@RequestMapping(path = {"/v1/resource-resourcetypes", "resource-resourcetypes"})
 @Transactional
 public class ResourceResourceTypes {
 
