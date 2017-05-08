@@ -189,6 +189,27 @@ public class SubjectsTest extends RestTest {
     }
 
     @Test
+    public void resources_can_have_filters() throws Exception {
+        Relevance relevance = builder.relevance(r -> r.publicId("urn:relevance:core"));
+        Filter filter = builder.filter(f -> f.publicId("urn:filter:vg1"));
+
+        URI id = builder.subject(s -> s
+                .topic(t -> t
+                        .resource(r -> r
+                                .contentUri("urn:article:1")
+                                .filter(filter, relevance)
+                        )
+                )
+        ).getPublicId();
+
+        MockHttpServletResponse response = getResource("/v1/subjects/" + id + "/resources");
+        Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
+
+        assertEquals("urn:filter:vg1", first(resources[0].filters).id.toString());
+        assertEquals("urn:relevance:core", first(resources[0].filters).relevanceId.toString());
+    }
+
+    @Test
     public void can_get_resources_for_a_subject_and_its_topics_recursively() throws Exception {
         URI id = builder.subject(s -> s
                 .name("subject")

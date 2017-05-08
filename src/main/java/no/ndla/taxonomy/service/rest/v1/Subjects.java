@@ -270,14 +270,24 @@ public class Subjects {
 
                 resource.path = getPathMostCloselyMatchingContext(context, resource.path, resultSet.getString("resource_path"));
 
-                String resource_type_id = resultSet.getString("resource_type_public_id");
+                URI resource_type_id = getURI(resultSet, "resource_type_public_id");
                 if (resource_type_id != null) {
                     ResourceTypeIndexDocument resourceType = new ResourceTypeIndexDocument() {{
-                        id = toURI(resource_type_id);
+                        id = resource_type_id;
                         name = resultSet.getString("resource_type_name");
                     }};
 
                     resource.resourceTypes.add(resourceType);
+                }
+
+                URI filterPublicId = getURI(resultSet, "filter_public_id");
+                if (null != filterPublicId) {
+                    ResourceFilterIndexDocument filter = new ResourceFilterIndexDocument() {{
+                        id = filterPublicId;
+                        relevanceId = getURI(resultSet, "relevance_public_id");
+                    }};
+
+                    resource.filters.add(filter);
                 }
             }
             return result;
@@ -289,7 +299,6 @@ public class Subjects {
     public List<FilterIndexDocument> getFilters(@PathVariable("id") URI subjectId) {
         String sql = GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY;
         List<Object> args = singletonList(subjectId.toString());
-
 
         return jdbcTemplate.query(sql, setQueryParameters(args),
                 resultSet -> {
@@ -303,7 +312,6 @@ public class Subjects {
                     return result;
                 }
         );
-
     }
 
     public static class CreateSubjectCommand {
@@ -421,6 +429,10 @@ public class Subjects {
         @JsonProperty
         @ApiModelProperty(value = "The id of the topic-resource connection which causes this resource to be included in the result set.", example = "urn:topic-resource:1")
         public URI connectionId;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Filters this resource is associated with, directly or by inheritance", example = "[{id = 'urn:filter:1', relevanceId='urn:relevance:core'}]")
+        public Set<ResourceFilterIndexDocument> filters = new HashSet<>();
     }
 
     public static class ResourceTypeIndexDocument {
@@ -458,5 +470,15 @@ public class Subjects {
         @JsonProperty
         @ApiModelProperty(value = "Filter name", example = "1T-YF")
         public String name;
+    }
+
+    public static class ResourceFilterIndexDocument {
+        @JsonProperty
+        @ApiModelProperty(value = "Filter id", example = "urn:filter:12")
+        public URI id;
+
+        @JsonProperty
+        @ApiModelProperty(required = true, value = "ID of the relevance the resource has in context of the filter", example = "urn:relevance:core")
+        public URI relevanceId;
     }
 }
