@@ -202,7 +202,7 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters associated with this resource")
-    public List<Resources.FilterIndexDocument> getFilters(
+    public List<FilterIndexDocument> getFilters(
             @PathVariable("id")
                     URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -211,9 +211,9 @@ public class Topics extends CrudController<Topic> {
     ) throws Exception {
         return jdbcTemplate.query(GET_FILTERS_BY_TOPIC_ID_QUERY, setQueryParameters(singletonList(id.toString())),
                 resultSet -> {
-                    List<Resources.FilterIndexDocument> result = new ArrayList<>();
+                    List<FilterIndexDocument> result = new ArrayList<>();
                     while (resultSet.next()) {
-                        result.add(new Resources.FilterIndexDocument() {{
+                        result.add(new FilterIndexDocument() {{
                             name = resultSet.getString("filter_name");
                             id = getURI(resultSet, "filter_public_id");
                             connectionId = getURI(resultSet, "topic_filter_public_id");
