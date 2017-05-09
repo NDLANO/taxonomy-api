@@ -23,7 +23,7 @@ import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 import static no.ndla.taxonomy.service.rest.v1.UrlResolver.getPathMostCloselyMatchingContext;
 
 @RestController
-@RequestMapping(path = {"/v1/topics", "topics"})
+@RequestMapping(path = {"/v1/topics"})
 @Transactional
 public class Topics extends CrudController<Topic> {
 

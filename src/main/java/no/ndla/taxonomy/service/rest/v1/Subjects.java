@@ -24,7 +24,7 @@ import static no.ndla.taxonomy.service.rest.v1.UrlResolver.getPathMostCloselyMat
 
 @RestController
 @Transactional
-@RequestMapping(path = {"/v1/subjects", "/subjects"})
+@RequestMapping(path = {"/v1/subjects"})
 public class Subjects extends CrudController<Subject> {
     private static final String GET_SUBJECTS_QUERY = getQuery("get_subjects");
     private static final String GET_RESOURCES_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_subject_public_id_recursively");

@@ -20,7 +20,7 @@ import java.util.List;
 import static no.ndla.taxonomy.service.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
-@RequestMapping(path = {"/v1/topics/{id}/translations", "/topics/{id}/translations"})
+@RequestMapping(path = {"/v1/topics/{id}/translations"})
 @Transactional
 public class TopicTranslations {
 
