@@ -40,7 +40,8 @@ SELECT DISTINCT
   t.connection_public_id,
   resf.public_id            AS resource_filter_public_id,
   f.public_id               AS topic_filter_public_id,
-  url.path                  AS topic_path
+  url.path                  AS topic_path,
+  rel.public_id             AS relevance_public_id
 FROM
   tree t
   LEFT OUTER JOIN (SELECT *
@@ -48,6 +49,7 @@ FROM
                    WHERE language_code = ?) tr ON t.id = tr.topic_id
   LEFT OUTER JOIN topic_filter tf ON tf.topic_id = t.id
   LEFT OUTER JOIN filter f ON tf.filter_id = f.id
+  LEFT OUTER JOIN relevance rel ON tf.relevance_id = rel.id
 
   LEFT OUTER JOIN topic_resource tore ON tore.topic_id = t.id
   LEFT OUTER JOIN resource_filter rf ON tore.resource_id = rf.resource_id

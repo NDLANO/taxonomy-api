@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 import static java.util.Arrays.asList;
@@ -122,7 +124,10 @@ public class Topics extends CrudController<Topic> {
             @RequestParam(value = "filter", required = false, defaultValue = "")
             @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
-                    URI[] filterIds
+                    URI[] filterIds,
+            @RequestParam(value = "relevance", required = false, defaultValue = "")
+            @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
+                    URI relevance
     ) throws Exception {
 
         TopicIndexDocument topicIndexDocument = get(topicId, null);
@@ -181,7 +186,7 @@ public class Topics extends CrudController<Topic> {
                         connectionId = toURI(resultSet.getString("connection_public_id"));
                     }};
                     resources.put(id, resource);
-                    result.add(resource);
+                    filterResultByRelevance(relevance, resultSet, result, resource);
                 }
                 resource.path = getPathMostCloselyMatchingContext(context, resource.path, resultSet.getString("resource_path"));
 
@@ -198,6 +203,17 @@ public class Topics extends CrudController<Topic> {
 
             return result;
         });
+    }
+
+    private void filterResultByRelevance(URI relevance, ResultSet resultSet, List<ResourceIndexDocument> result, ResourceIndexDocument resource) throws SQLException {
+        if (relevance == null || relevance.toString().equals("")) {
+            result.add(resource);
+        } else {
+            URI resourceRelevance = toURI(resultSet.getString("relevance_public_id"));
+            if (resourceRelevance != null && resourceRelevance.equals(relevance)) {
+                result.add(resource);
+            }
+        }
     }
 
     @GetMapping("/{id}/filters")

@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 import static java.util.Arrays.asList;
@@ -115,7 +117,10 @@ public class Subjects extends CrudController<Subject> {
             @RequestParam(value = "filter", required = false, defaultValue = "")
             @ApiParam(value = "Select by filter id(s). If not specified, all topics will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
-                    URI[] filterIds
+                    URI[] filterIds,
+            @RequestParam(value = "relevance", required = false, defaultValue = "")
+            @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
+                    URI relevance
     ) throws Exception {
         String sql = GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY;
         if (!recursive) sql = sql.replace("1 = 1", "t.level = 0");
@@ -145,7 +150,7 @@ public class Subjects extends CrudController<Subject> {
                                 resourceFilterId = getURI(resultSet, "resource_filter_public_id");
                             }};
                             topics.put(topic.id, topic);
-                            queryresult.add(topic);
+                            filterTopicByRelevance(relevance, resultSet, queryresult, topic);
                         }
                         topic.path = getPathMostCloselyMatchingContext(context, topic.path, resultSet.getString("topic_path"));
                     }
@@ -169,6 +174,17 @@ public class Subjects extends CrudController<Subject> {
                     }
                 }
         );
+    }
+
+    private void filterTopicByRelevance(URI relevance, ResultSet resultSet, List<TopicIndexDocument> queryresult, TopicIndexDocument topic) throws SQLException {
+        if (relevance == null || relevance.toString().equals("")) {
+            queryresult.add(topic);
+        } else {
+            URI topicRelevance = toURI(resultSet.getString("relevance_public_id"));
+            if (topicRelevance != null && topicRelevance.equals(relevance)) {
+                queryresult.add(topic);
+            }
+        }
     }
 
     private String addFilterToQuery(URI[] filterIds, String sql, List<Object> args) {
@@ -204,7 +220,10 @@ public class Subjects extends CrudController<Subject> {
             @RequestParam(value = "filter", required = false, defaultValue = "")
             @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
-                    URI[] filterIds
+                    URI[] filterIds,
+            @RequestParam(value = "relevance", required = false, defaultValue = "")
+            @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
+                    URI relevance
     ) {
         List<Object> args = new ArrayList<>();
         args.add(subjectId.toString());
@@ -244,7 +263,7 @@ public class Subjects extends CrudController<Subject> {
                         connectionId = toURI(resultSet.getString("connection_public_id"));
                     }};
                     resources.put(id, resource);
-                    result.add(resource);
+                    filterResourceByRelevance(relevance, resultSet, result, resource);
                 }
 
                 resource.path = getPathMostCloselyMatchingContext(context, resource.path, resultSet.getString("resource_path"));
@@ -271,6 +290,17 @@ public class Subjects extends CrudController<Subject> {
             }
             return result;
         });
+    }
+
+    private void filterResourceByRelevance(URI relevance, ResultSet resultSet, List<ResourceIndexDocument> result, ResourceIndexDocument resource) throws SQLException {
+        if (relevance == null || relevance.toString().equals("")) {
+            result.add(resource);
+        } else {
+            URI resourceRelevance = toURI(resultSet.getString("relevance_public_id"));
+            if (resourceRelevance != null && resourceRelevance.equals(relevance)) {
+                result.add(resource);
+            }
+        }
     }
 
     @GetMapping("/{id}/filters")
