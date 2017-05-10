@@ -2,9 +2,7 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.*;
 import no.ndla.taxonomy.service.domain.ResourceType;
 import no.ndla.taxonomy.service.repositories.ResourceTypeRepository;
 import org.springframework.http.HttpStatus;
@@ -115,7 +113,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(
             @PathVariable URI id,
-            @ApiParam(name = "resourceType", value = "The updated resource type")
+            @ApiParam(name = "resourceType", value = "The updated resource type. Fields not included will be set to null.")
             @RequestBody UpdateResourceTypeCommand
                     command
     ) throws Exception {
@@ -157,6 +155,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
         return getResourceTypeIndexDocuments(sql, args);
     }
 
+    @ApiModel("ResourceTypeIndexDocument")
     public static class ResourceTypeIndexDocument {
         @JsonProperty
         @ApiModelProperty(example = "urn:resource-type:1")

@@ -2,6 +2,7 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -89,7 +90,7 @@ public class Subjects extends CrudController<Subject> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(
             @PathVariable("id") URI id,
-            @ApiParam(name = "subject", value = "The updated subject") @RequestBody UpdateSubjectCommand command
+            @ApiParam(name = "subject", value = "The updated subject. Fields not included will be set to null.") @RequestBody UpdateSubjectCommand command
     ) throws Exception {
         doPut(id, command);
     }
@@ -323,6 +324,7 @@ public class Subjects extends CrudController<Subject> {
         );
     }
 
+
     public static class CreateSubjectCommand extends CreateCommand<Subject> {
         @JsonProperty
         @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:subject:1")
@@ -364,6 +366,7 @@ public class Subjects extends CrudController<Subject> {
         }
     }
 
+    @ApiModel("SubjectIndexDocument")
     public static class SubjectIndexDocument {
         @JsonProperty
         @ApiModelProperty(example = "urn:subject:1")
@@ -382,6 +385,7 @@ public class Subjects extends CrudController<Subject> {
         public String path;
     }
 
+    @ApiModel("SubjectTopicIndexDocument")
     public static class TopicIndexDocument {
         @JsonProperty
         public URI id;
@@ -426,6 +430,7 @@ public class Subjects extends CrudController<Subject> {
         }
     }
 
+    @ApiModel("SubjectResourceIndexDocument")
     public static class ResourceIndexDocument {
         @JsonProperty
         public URI id;
@@ -461,6 +466,7 @@ public class Subjects extends CrudController<Subject> {
         public Set<ResourceFilterIndexDocument> filters = new HashSet<>();
     }
 
+    @ApiModel("SubjectResourceTypeIndexDocument")
     public static class ResourceTypeIndexDocument {
         @JsonProperty
         @ApiModelProperty(value = "Resource type id", example = "urn:resource-type:12")
@@ -488,6 +494,7 @@ public class Subjects extends CrudController<Subject> {
         }
     }
 
+    @ApiModel("SubjectFilterIndexDocument")
     public static class FilterIndexDocument {
         @JsonProperty
         @ApiModelProperty(value = "Filter id", example = "urn:filter:12")
@@ -498,6 +505,7 @@ public class Subjects extends CrudController<Subject> {
         public String name;
     }
 
+    @ApiModel("SubjectResourceFilterIndexDocument")
     public static class ResourceFilterIndexDocument {
         @JsonProperty
         @ApiModelProperty(value = "Filter id", example = "urn:filter:12")

@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -83,6 +84,7 @@ public class ResourceResourceTypes {
         URI resourceTypeId;
     }
 
+    @ApiModel("ResourceTypeIndexDocument")
     public static class ResourceResourceTypeIndexDocument {
         @JsonProperty
         @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resource:123")

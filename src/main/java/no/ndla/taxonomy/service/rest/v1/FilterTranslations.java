@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -96,6 +97,7 @@ public class FilterTranslations {
     }
 
 
+    @ApiModel("FilterTranslationIndexDocument")
     public static class FilterTranslationIndexDocument {
         @JsonProperty
         @ApiModelProperty(value = "The translated name of the filter", example = "Carpenter")

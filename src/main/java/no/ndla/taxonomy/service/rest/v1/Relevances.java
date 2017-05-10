@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -85,29 +86,30 @@ public class Relevances extends CrudController<Relevance> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(
             @PathVariable("id") URI id,
-            @ApiParam(name = "relevance", value = "The updated relevance") @RequestBody UpdateRelevanceCommand command
+            @ApiParam(name = "relevance", value = "The updated relevance. Fields not included will be set to null.") @RequestBody UpdateRelevanceCommand command
     ) throws Exception {
         doPut(id, command);
     }
 
+    @ApiModel("RelevanceIndexDocument")
     public static class RelevanceIndexDocument {
         @JsonProperty
-        @ApiModelProperty(example = "urn:relevance:1")
+        @ApiModelProperty(example = "urn:relevance:core")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(value = "The name of the relevance", example = "1T-YF")
+        @ApiModelProperty(value = "The name of the relevance", example = "Core")
         public String name;
 
     }
 
     public static class CreateRelevanceCommand extends CreateCommand<Relevance> {
         @JsonProperty
-        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:relevance: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:relevance:1")
+        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:relevance: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:relevance:supplementary")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "The name of the relevance", example = "1T-YF")
+        @ApiModelProperty(required = true, value = "The name of the relevance", example = "Supplementary")
         public String name;
 
         @Override
@@ -123,7 +125,7 @@ public class Relevances extends CrudController<Relevance> {
 
     public static class UpdateRelevanceCommand extends UpdateCommand<Relevance> {
         @JsonProperty
-        @ApiModelProperty(required = true, value = "The name of the relevance", example = "1T-YF")
+        @ApiModelProperty(required = true, value = "The name of the relevance", example = "Supplementary")
         public String name;
 
         @Override

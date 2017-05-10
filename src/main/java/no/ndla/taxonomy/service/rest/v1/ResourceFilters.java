@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -98,6 +99,7 @@ public class ResourceFilters {
         public URI relevanceId;
     }
 
+    @ApiModel("ResourceFilterIndexDocument")
     public static class ResourceFilterIndexDocument {
         @JsonProperty
         @ApiModelProperty(required = true, value = "Resource id", example = "urn:resource:123")

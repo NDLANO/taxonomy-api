@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -104,6 +105,7 @@ public class Filters extends CrudController<Filter> {
         filter.setSubject(subjectRepository.getByPublicId(command.subjectId));
     }
 
+    @ApiModel("FilterIndexDocument")
     public static class FilterIndexDocument {
         @JsonProperty
         @ApiModelProperty(example = "urn:filter:1")
@@ -148,7 +150,7 @@ public class Filters extends CrudController<Filter> {
         public String name;
 
         @JsonProperty
-        @ApiModelProperty(value = "This filter will be connected to this subject.")
+        @ApiModelProperty(value = "This filter will be connected to this subject. Fields not included will be set to null.")
         public URI subjectId;
 
         @Override

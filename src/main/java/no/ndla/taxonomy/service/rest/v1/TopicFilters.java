@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -64,6 +65,7 @@ public class TopicFilters {
     }
 
     @DeleteMapping("/{id}")
+    @ApiOperation(value = "Deletes a connection between a topic and a filter")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@ApiParam(name = "id", value = "The id of the connection to delete") @PathVariable String id) {
         TopicFilter topicFilter = topicFilterRepository.getByPublicId(URI.create(id));
@@ -98,6 +100,7 @@ public class TopicFilters {
         public URI relevanceId;
     }
 
+    @ApiModel("TopicFilter IndexDocument")
     public static class TopicFilterIndexDocument {
         @JsonProperty
         @ApiModelProperty(required = true, value = "Topic id", example = "urn:topic:123")

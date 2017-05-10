@@ -2,6 +2,7 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -94,7 +95,7 @@ public class Topics extends CrudController<Topic> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(
             @PathVariable("id") URI id,
-            @ApiParam(name = "topic", value = "The updated topic") @RequestBody UpdateTopicCommand command) throws Exception {
+            @ApiParam(name = "topic", value = "The updated topic. Fields not included will be set to null.") @RequestBody UpdateTopicCommand command) throws Exception {
         doPut(id, command);
     }
 
@@ -242,6 +243,7 @@ public class Topics extends CrudController<Topic> {
     }
 
 
+    @ApiModel("TopicResourceIndexDocument")
     public static class ResourceIndexDocument {
         @JsonProperty
         @ApiModelProperty(value = "Topic id", example = "urn:topic:123")
@@ -275,6 +277,7 @@ public class Topics extends CrudController<Topic> {
         public URI connectionId;
     }
 
+    @ApiModel("TopicResourceTypeIndexDocument")
     public static class ResourceTypeIndexDocument {
         @JsonProperty
         @ApiModelProperty(value = "Resource type id", example = "urn:resource-type:12")
@@ -343,6 +346,7 @@ public class Topics extends CrudController<Topic> {
         }
     }
 
+    @ApiModel("TopicIndexDocument")
     public static class TopicIndexDocument {
         @JsonProperty
         @ApiModelProperty(value = "Topic id", example = "urn:topic:234")
@@ -364,6 +368,7 @@ public class Topics extends CrudController<Topic> {
         }
     }
 
+    @ApiModel("Topic FilterIndexDocument")
     public static class FilterIndexDocument {
         @JsonProperty
         @ApiModelProperty(example = "urn:filter:1")
@@ -378,7 +383,7 @@ public class Topics extends CrudController<Topic> {
         public URI connectionId;
 
         @JsonProperty
-        @ApiModelProperty(value = "The relevance of this topic according to the filter", example = "urn:relevance:1")
+        @ApiModelProperty(value = "The relevance of this topic according to the filter", example = "urn:relevance:core")
         public URI relevanceId;
     }
 }
