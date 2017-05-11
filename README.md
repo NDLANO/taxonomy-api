@@ -152,20 +152,20 @@ entities along the way. Entities without connections do not have URLs (except su
 Using the above figure as an example, we can derive the following paths: 
 
 
-| Name                  | ID               | Path(s)| 
-|---------------|---------------|---------------------|
-Mathematics           | `urn:subject:1`  | `/subject:1`
-Social studies        | `urn:subject:2`  | `/subject:2`
-Geometry              | `urn:topic:1`    | `/subject:1/topic:1`  
-Statistics            | `urn:topic:2`    | `/subject:1/topic:2` `/subject:2/topic:2`
-Calculus              | `urn:topic:3`    | `/subject:1/topic:3`
-Economics             | `urn:topic:4`    | `/subject:2/topic:4`
-Probability           | `urn:topic:5`    | `/subject:1/topic:2/topic:5` `/subject:2/topic:2/topic:5`
-Integration           | `urn:topic:6`    | `/subject:1/topic:3/topic:6`
-What is probability?  | `urn:resource:1` | `/subject:1/topic:2/topic:5/resource:1` `/subject:2/topic:2/topic:5/resource:1`
-Adding probabilities  | `urn:resource:2` | `/subject:1/topic:2/topic:5/resource:2` `/subject:2/topic:2/topic:5/resource:2`
-Probability questions | `urn:resource:3` | `/subject:1/topic:2/topic:5/resource:3` `/subject:2/topic:2/topic:5/resource:3`
-Riemann sums          | `urn:resource:4` | `/subject:1/topic:3/topic:6/resource:4` `/subject:2/topic:4/resource:4`
+| Name                  | ID               | Path(s)                                                                         | 
+|-----------------------|------------------|---------------------------------------------------------------------------------|
+| Mathematics           | `urn:subject:1`  | `/subject:1`                                                                    |
+| Social studies        | `urn:subject:2`  | `/subject:2`                                                                    |
+| Geometry              | `urn:topic:1`    | `/subject:1/topic:1`                                                            |
+| Statistics            | `urn:topic:2`    | `/subject:1/topic:2` `/subject:2/topic:2`                                       |
+| Calculus              | `urn:topic:3`    | `/subject:1/topic:3`                                                            |
+| Economics             | `urn:topic:4`    | `/subject:2/topic:4`                                                            |
+| Probability           | `urn:topic:5`    | `/subject:1/topic:2/topic:5` `/subject:2/topic:2/topic:5`                       |
+| Integration           | `urn:topic:6`    | `/subject:1/topic:3/topic:6`                                                    |
+| What is probability?  | `urn:resource:1` | `/subject:1/topic:2/topic:5/resource:1` `/subject:2/topic:2/topic:5/resource:1` |
+| Adding probabilities  | `urn:resource:2` | `/subject:1/topic:2/topic:5/resource:2` `/subject:2/topic:2/topic:5/resource:2` |
+| Probability questions | `urn:resource:3` | `/subject:1/topic:2/topic:5/resource:3` `/subject:2/topic:2/topic:5/resource:3` |
+| Riemann sums          | `urn:resource:4` | `/subject:1/topic:3/topic:6/resource:4` `/subject:2/topic:4/resource:4`         |
 
 
 As you can see, several entities have two paths, since they have more than one path to the root of the hierarchy. The primary path is
@@ -205,3 +205,42 @@ In this way the complete set of resources belonging to a topic or subject will b
 user has requested does not exist.
  
 You can also get all translations for an entity. Get all available translations with a topic with a GET call to `/v1/topics/{id}/translations`. 
+
+
+## Filters
+
+The topics and learning resources contained in a subject may be organised in a way that spans academic years and 
+academic programs. Mathematics would, for instance, contain a topic called geometry, which contains several learning 
+resources. Some of these are appropriate for first-year students, while some are more advanced and more suited for 
+second-year students. Additionally, some learning resources may be considered *core material* for second-year students, 
+but may be offered as *supplementary material* to first-year students who wish to delve deeper. 
+
+![Filters in mathematics](doc/filters.png?raw=true)
+
+In the above example, *right triangles* and *pythagoras* are both considered *core material* in the *R1* program, while
+*trigonometry* is *core material* in the *R2* program. Additionally, *trigonometry* is supplementary material in R1.
+All resources under *algebra* is core material in R1. 
+
+Using this data structure it is possible to limit the resources shown in *Mathematics* to find resources that are relevant
+to a given academic program or academic year: 
+
+#### Example: List core material in Mathematics for R2
+
+The results will contain *trigonometry*, since this is tagged as core material in R2. 
+
+#### Example: List core and supplementary material in Mathematics for R1
+
+The results will contain *Equations with one variable*, *Equations with two variables*, *Right triangles*, *Pythagoras* 
+and *Trigonometry*, since these are either tagged as core or supplementary material in R1, or is contained in a topic
+which is tagged as core or supplementary material in R1. 
+
+#### Example: List core material in Mathematics
+
+The results will contain *Equations with one variable*, *Equations with two variables*, *Right triangles*, *Pythagoras* 
+and *Trigonometry*, since these are tagged as core material 
+
+To help users find resources and topics that are
+relevant for them you can create filters associated with the subject. When listing the resources and topics under a given 
+subject, the filters may be used to limit the results. 
+
+
