@@ -4,6 +4,7 @@ import no.ndla.taxonomy.service.domain.Filter;
 import no.ndla.taxonomy.service.domain.Relevance;
 import no.ndla.taxonomy.service.domain.ResourceType;
 import no.ndla.taxonomy.service.domain.Subject;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -13,6 +14,16 @@ import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.assertEquals;
 
 public class SubjectFiltersTest extends RestTest {
+    private Filter vg1, vg2;
+    private Relevance core, supplementary;
+
+    @Before
+    public void before() throws Exception {
+        core = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
+        supplementary = builder.relevance(r -> r.publicId("urn:relevance:supplementary").name("Supplementary material"));
+        vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
+        vg2 = builder.filter(f -> f.publicId("urn:filter:vg2"));
+    }
 
     @Test
     public void can_get_filters_for_subject() throws Exception {
@@ -33,10 +44,6 @@ public class SubjectFiltersTest extends RestTest {
 
     @Test
     public void can_get_resources_belonging_to_a_filter_for_a_subject() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Filter vg2 = builder.filter(f -> f.publicId("urn:filter:vg2"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
-
         URI subjectId = builder.subject(s -> s
                 .name("subject")
                 .topic(t -> t
@@ -57,9 +64,6 @@ public class SubjectFiltersTest extends RestTest {
 
     @Test
     public void can_get_resources_belonging_to_a_filter_and_resource_type_for_a_subject() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Filter vg2 = builder.filter(f -> f.publicId("urn:filter:vg2"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
         ResourceType type = builder.resourceType(rt -> rt.name("Video").publicId("urn:resource-type:video"));
 
         URI subjectId = builder.subject(s -> s
@@ -81,9 +85,6 @@ public class SubjectFiltersTest extends RestTest {
 
     @Test
     public void can_get_topics_with_filter() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Filter vg2 = builder.filter(f -> f.publicId("urn:filter:vg2"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
         Subject subject = builder.subject(s -> s
                 .name("physics")
                 .topic(t -> t.name("statics").filter(vg1, core))
@@ -101,8 +102,6 @@ public class SubjectFiltersTest extends RestTest {
 
     @Test
     public void can_get_topics_recursively_with_filter() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
         URI subjectid = builder.subject("subject", s -> s
                 .name("subject")
                 .publicId("urn:subject:1")
@@ -127,8 +126,6 @@ public class SubjectFiltersTest extends RestTest {
 
     @Test
     public void can_get_topic_without_filter_but_underlying_resource_has_filter() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
         Subject subject = builder.subject(s -> s
                 .name("physics")
                 .topic(t -> t.name("statics").resource(r -> r.name("Introduction to statics").filter(vg1, core)))
@@ -145,10 +142,6 @@ public class SubjectFiltersTest extends RestTest {
 
     @Test
     public void can_get_resources_with_relevance() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
-        Relevance supplementary = builder.relevance(r -> r.publicId("urn:relevance:supplementary"));
-
         URI subjectId = builder.subject(s -> s
                 .name("subject")
                 .topic(t -> t
@@ -173,9 +166,6 @@ public class SubjectFiltersTest extends RestTest {
 
     @Test
     public void can_get_topics_by_relevance() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
-        Relevance supplementary = builder.relevance(r -> r.publicId("urn:relevance:supplementary"));
         URI subjectid = builder.subject("subject", s -> s
                 .name("subject")
                 .publicId("urn:subject:1")

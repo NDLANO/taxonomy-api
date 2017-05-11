@@ -62,7 +62,7 @@ public abstract class RestTest extends AbstractTransactionalJUnit4SpringContextT
     Builder builder;
 
     @Before
-    public void setUp() throws Exception {
+    public void restTestSetUp() throws Exception {
         builder = new Builder(entityManager);
     }
 

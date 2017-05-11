@@ -5,6 +5,7 @@ import no.ndla.taxonomy.service.domain.Filter;
 import no.ndla.taxonomy.service.domain.Relevance;
 import no.ndla.taxonomy.service.domain.ResourceType;
 import no.ndla.taxonomy.service.domain.Topic;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -16,17 +17,25 @@ import static org.junit.Assert.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TopicFiltersTest extends RestTest {
+    private Filter vg1, vg2;
+    private Relevance core, supplementary;
+
+    @Before
+    public void before() throws Exception {
+        core = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
+        vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
+        vg2 = builder.filter(f -> f.publicId("urn:filter:vg2"));
+        supplementary = builder.relevance(r -> r.publicId("urn:relevance:supplementary").name("Supplementary material"));
+    }
 
     @Test
     public void can_add_filter_to_topic() throws Exception {
         Topic topic = builder.topic(t -> t.publicId("urn:topic:1"));
-        builder.filter(f -> f.publicId("urn:filter:1"));
-        builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
 
         URI id = getId(
                 createResource("/v1/topic-filters", new TopicFilters.AddFilterToTopicCommand() {{
                     topicId = URI.create("urn:topic:1");
-                    filterId = URI.create("urn:filter:1");
+                    filterId = URI.create("urn:filter:vg1");
                     relevanceId = URI.create("urn:relevance:core");
                 }})
         );
@@ -38,51 +47,41 @@ public class TopicFiltersTest extends RestTest {
 
     @Test
     public void can_list_filters_on_topic() throws Exception {
-        Filter filter1 = builder.filter(f -> f.publicId("urn:filter:1"));
-        Filter filter2 = builder.filter(f -> f.publicId("urn:filter:2"));
-        Relevance relevance = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
-
         builder.topic(t -> t
                 .publicId("urn:topic:1")
-                .filter(filter1, relevance)
-                .filter(filter2, relevance)
+                .filter(vg1, core)
+                .filter(vg2, core)
         );
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/filters");
         Topics.FilterIndexDocument[] filters = getObject(Topics.FilterIndexDocument[].class, response);
 
         assertEquals(2, filters.length);
-        assertAnyTrue(filters, f -> f.id.equals(filter1.getPublicId()));
-        assertAnyTrue(filters, f -> f.id.equals(filter2.getPublicId()));
-        assertAllTrue(filters, f -> f.relevanceId.equals(relevance.getPublicId()));
+        assertAnyTrue(filters, f -> f.id.equals(vg1.getPublicId()));
+        assertAnyTrue(filters, f -> f.id.equals(vg2.getPublicId()));
+        assertAllTrue(filters, f -> f.relevanceId.equals(core.getPublicId()));
     }
 
     @Test
     public void cannot_have_duplicate_filters_for_topic() throws Exception {
-        Filter filter = builder.filter(f -> f.publicId("urn:filter:1"));
-        Relevance relevance = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
-
         builder.topic(t -> t
                 .publicId("urn:topic:1")
-                .filter(filter, relevance)
+                .filter(vg1, core)
         );
 
         createResource("/v1/topic-filters", new TopicFilters.AddFilterToTopicCommand() {{
             topicId = URI.create("urn:topic:1");
-            filterId = URI.create("urn:filter:1");
+            filterId = URI.create("urn:filter:vg1");
             relevanceId = URI.create("urn:relevance:core");
         }}, status().isConflict());
     }
 
     @Test
     public void can_remove_filter_from_topic() throws Exception {
-        Filter filter = builder.filter(f -> f.publicId("urn:filter:2"));
-        Relevance relevance = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
-
         Topic topic = builder.topic(t -> t
                 .publicId("urn:topic:1"));
 
-        URI id = save(topic.addFilter(filter, relevance)).getPublicId();
+        URI id = save(topic.addFilter(vg1, core)).getPublicId();
 
         deleteResource("/v1/topic-filters/" + id);
         assertNull(topicFilterRepository.findByPublicId(id));
@@ -90,46 +89,36 @@ public class TopicFiltersTest extends RestTest {
 
     @Test
     public void can_change_relevance_for_filter() throws Exception {
-        Filter filter = builder.filter(f -> f.publicId("urn:filter:2"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
-        Relevance supplementary = builder.relevance(r -> r.publicId("urn:relevance:supplementary").name("Supplementary material"));
-
-        Topic topic = builder.topic(t -> t
-                .publicId("urn:topic:1"));
-
-        URI id = save(topic.addFilter(filter, core)).getPublicId();
+        Topic topic = builder.topic(t -> t.publicId("urn:topic:1"));
+        URI id = save(topic.addFilter(vg1, core)).getPublicId();
 
         updateResource("/v1/topic-filters/" + id, new TopicFilters.UpdateTopicFilterCommand() {{
             relevanceId = supplementary.getPublicId();
         }});
+
         assertEquals("urn:relevance:supplementary", first(topic.filters).getRelevance().getPublicId().toString());
     }
 
     @Test
     public void can_list_all_topic_filters() throws Exception {
-        Filter filter = builder.filter(f -> f.publicId("urn:filter:2"));
-        Relevance relevance = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
         builder.topic(t -> t
                 .publicId("urn:topic:1")
-                .filter(filter, relevance)
+                .filter(vg1, core)
         );
 
         builder.topic(t -> t
-        .publicId("urn:topic:2")
-        .filter(filter, relevance));
+                .publicId("urn:topic:2")
+                .filter(vg1, core));
 
         MockHttpServletResponse response = getResource("/v1/topic-filters");
         TopicFilters.TopicFilterIndexDocument[] topicFilters = getObject(TopicFilters.TopicFilterIndexDocument[].class, response);
         assertEquals(2, topicFilters.length);
-        assertAnyTrue(topicFilters, rf -> URI.create("urn:topic:1").equals(rf.topicId) && filter.getPublicId().equals(rf.filterId) && relevance.getPublicId().equals(rf.relevanceId));
-        assertAnyTrue(topicFilters, rf -> URI.create("urn:topic:2").equals(rf.topicId) && filter.getPublicId().equals(rf.filterId) && relevance.getPublicId().equals(rf.relevanceId));
+        assertAnyTrue(topicFilters, rf -> URI.create("urn:topic:1").equals(rf.topicId) && vg1.getPublicId().equals(rf.filterId) && core.getPublicId().equals(rf.relevanceId));
+        assertAnyTrue(topicFilters, rf -> URI.create("urn:topic:2").equals(rf.topicId) && vg1.getPublicId().equals(rf.filterId) && core.getPublicId().equals(rf.relevanceId));
     }
 
     @Test
     public void can_get_resources_belonging_to_a_filter_for_a_topic() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
-
         builder.topic(t -> t
                 .publicId("urn:topic:1")
                 .resource(r -> r
@@ -150,8 +139,6 @@ public class TopicFiltersTest extends RestTest {
 
     @Test
     public void can_get_resources_for_a_topic_belonging_to_a_filter_recursively() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
         builder.subject(s -> s
                 .name("subject a")
                 .topic(t -> t
@@ -183,8 +170,6 @@ public class TopicFiltersTest extends RestTest {
 
     @Test
     public void can_get_resources_for_a_topic_with_filter_and_resource_type() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
         ResourceType type = builder.resourceType(rt -> rt.name("Subject matter").publicId("urn:resource-type:subject-matter"));
 
         builder.topic(t -> t
@@ -208,8 +193,6 @@ public class TopicFiltersTest extends RestTest {
 
     @Test
     public void can_get_recursive_resources_with_filter_and_resource_type_restrictions_for_a_topic() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
         ResourceType type = builder.resourceType(rt -> rt.name("Subject matter").publicId("urn:resource-type:subject-matter"));
 
         builder.subject(s -> s
@@ -242,10 +225,6 @@ public class TopicFiltersTest extends RestTest {
 
     @Test
     public void can_get_resources_by_relevance() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
-        Relevance supplementary = builder.relevance( r -> r.publicId("urn:relevance:supplementary"));
-
         builder.topic(t -> t
                 .publicId("urn:topic:1")
                 .resource(r -> r
@@ -267,9 +246,6 @@ public class TopicFiltersTest extends RestTest {
 
     @Test
     public void can_get_resources_by_relevance_recursively() throws Exception {
-        Filter vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        Relevance core = builder.relevance(r -> r.publicId("urn:relevance:core"));
-        Relevance supplementary = builder.relevance(r -> r.publicId("urn:relevance:supplementary"));
         builder.subject(s -> s
                 .name("subject a")
                 .topic(t -> t
