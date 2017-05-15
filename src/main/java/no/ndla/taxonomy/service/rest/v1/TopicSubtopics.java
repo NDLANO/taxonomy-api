@@ -30,7 +30,6 @@ public class TopicSubtopics {
         this.topicSubtopicRepository = topicSubtopicRepository;
     }
 
-
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and subtopics")
     public List<TopicSubtopicIndexDocument> index() throws Exception {

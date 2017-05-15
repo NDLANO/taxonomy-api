@@ -31,11 +31,9 @@ public class Resources extends CrudController<Resource> {
     private static final String GET_RESOURCE_RESOURCE_TYPES_QUERY = getQuery("get_resource_resource_types");
     private static final String GET_FILTERS_BY_RESOURCE_ID_QUERY = getQuery("get_filters_by_resource_public_id");
 
-    private ResourceRepository resourceRepository;
     private JdbcTemplate jdbcTemplate;
 
     public Resources(ResourceRepository resourceRepository, JdbcTemplate jdbcTemplate) {
-        this.resourceRepository = resourceRepository;
         this.jdbcTemplate = jdbcTemplate;
         repository = resourceRepository;
     }

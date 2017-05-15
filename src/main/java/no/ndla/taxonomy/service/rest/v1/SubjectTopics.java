@@ -51,8 +51,7 @@ public class SubjectTopics {
     @ApiOperation("Get a specific connection between a subject and a topic")
     public SubjectTopicIndexDocument get(@PathVariable("id") URI id) throws Exception {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
-        SubjectTopicIndexDocument result = new SubjectTopicIndexDocument(subjectTopic);
-        return result;
+        return new SubjectTopicIndexDocument(subjectTopic);
     }
 
     @PostMapping
