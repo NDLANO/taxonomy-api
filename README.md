@@ -41,27 +41,27 @@ through the API. For details on the use of each service, please see the Swagger 
 
 ### Subjects and topics
 
-First, create a subject with the name Mathematics with a POST call to `/subjects`. When this call returns you'll get a location.
+First, create a subject with the name Mathematics with a POST call to `/v1/subjects`. When this call returns you'll get a location.
 This location contains the path to this subject within the subjects resource, e.g., `/v1/subjects/urn:subject:342`, where `urn:subject:342` 
 is the ID of the newly created subject. Any time you need to change or retrieve this subject you'll be using this ID. 
 
-Next, create two Topic entities for Geometry and Statistics (POST to `/topics`). If you have topic descriptions that you want to use
-as the content for these entities, you can include their content URI. The content URIs can also be added later (PUT to `/subjects` or `/topics`).
+Next, create two Topic entities for Geometry and Statistics (POST to `/v1/topics`). If you have topic descriptions that you want to use
+as the content for these entities, you can include their content URI. The content URIs can also be added later (PUT to `/v1/subjects` or `/v1/topics`).
 
-The subject and topic can now be connected with a POST call to `/subject-topics`. 
+The subject and topic can now be connected with a POST call to `/v1/subject-topics`. 
 Use the IDs for the two entities you want to connect. Topics and resources can have multiple parent connections.
 The first connection between a subject and a topic will automatically be marked as the primary connection (see "Multiple parent connections" for details).
 
 A topic can have subtopics. In our example Trigonometry is a subtopic of Geometry. To connect the two, create a topic named Trigonometry. 
-Then add a connection between the Geometry topic and the Trigonometry topic with a POST call to `/topic-subtopics`. 
+Then add a connection between the Geometry topic and the Trigonometry topic with a POST call to `/v1/topic-subtopics`. 
 
 The figure above also contains a topic for Statistics and the subtopic Probability. These can be connected in the same 
 manner as previously described. The subject Mathematics will then have two topics, while each topic will have a subtopic.
-Call GET on `/subjects/{id}/topics` to list out the topics connected to the subject. From this example you will get two topics: Geometry and Statistics. 
+Call GET on `/v1/subjects/{id}/topics` to list out the topics connected to the subject. From this example you will get two topics: Geometry and Statistics. 
 
-A GET call to `/topics` will yield both topics and subtopics. The only thing differentiating a topic 
-from a subtopic is the connection in `/topic-subtopics`. Similar to the connections between a subject and its topics, you can 
-get all subtopics for a topic with a GET call to `/topics/{id}/subtopics`. 
+A GET call to `/v1/topics` will yield both topics and subtopics. The only thing differentiating a topic 
+from a subtopic is the connection in `/v1/topic-subtopics`. Similar to the connections between a subject and its topics, you can 
+get all subtopics for a topic with a GET call to `/v1/topics/{id}/subtopics`. 
 
 
 ### Updating entities and connections
@@ -81,20 +81,20 @@ that the client verifies that the changes on the server are correct.
 A resource (or learning resource) represents an article, a learning path, a video or other content. Its Content URI is 
 an ID referring to the actual content which is stored in a different API, e.g., the Article API or the Learning Path API. 
 
-Resources are created in the same way as topics and subjects, but with a POST call to `/resources`. You can connect your resources 
-to topics by making a POST call to `/topic-resources`. A resource can only be connected to a subject 
-via its topic(s). You can update a resource (for instance, change its Content URI) by making a PUT call to `/resources/{id}`. 
+Resources are created in the same way as topics and subjects, but with a POST call to `/v1/resources`. You can connect your resources 
+to topics by making a POST call to `/v1/topic-resources`. A resource can only be connected to a subject 
+via its topic(s). You can update a resource (for instance, change its Content URI) by making a PUT call to `/v1/resources/{id}`. 
 
-List all resources connected to a subject with a GET call to `/subjects/{id}/resources`. For the
+List all resources connected to a subject with a GET call to `/v1/subjects/{id}/resources`. For the
 Mathematics subject, this call would return a list with these five entities: Tangens, Sine and Cosine, What is probability, 
 Adding probabilities, and Probability questions. 
 
-You can also list all resources connected to a topic with a GET call to `/topics/{id}/resources`. If you want to list all 
+You can also list all resources connected to a topic with a GET call to `/v1/topics/{id}/resources`. If you want to list all 
 resources for the Probability topic, you'll get back a list with three resources; What is probability, Adding probabilities 
 and Probability questions. 
 
 If you retrieve all resources connected to the topic Statistics, you'll get an empty list, because it doesn't have any 
-resources connected directly to it. If you ask for all resources recursively (`/topics/{id}/resources?recursive=true`), 
+resources connected directly to it. If you ask for all resources recursively (`/v1/topics/{id}/resources?recursive=true`), 
 you'll get the three resources from the Probability topic, since it is a sub topic of Statistics.  
 
 
@@ -103,12 +103,12 @@ you'll get the three resources from the Probability topic, since it is a sub top
 A resource type is a category for tagging and filtering resources. It is a tree structure with two levels. 
 In theory, you could make the hierarchy deeper, but that's probably not needed.  
 
-To tag a resource with resource types, first create a resource type with a POST call to `/resource-types`. Then 
-connect the Resource to the resource type with a POST call to `/resource-resourcetypes` including both the ID of the 
-resource and the resource type. A resource can have multiple resource types, in that case you make several calls POST to `/resource-types`. 
+To tag a resource with resource types, first create a resource type with a POST call to `/v1/resource-types`. Then 
+connect the Resource to the resource type with a POST call to `/v1/resource-resourcetypes` including both the ID of the 
+resource and the resource type. A resource can have multiple resource types, in that case you make several calls POST to `/v1/resource-types`. 
 
 When you get all resources for a subject or topic you can choose to get only resources matching a particular resource type 
-(or a list of resource types). For our example, a GET call to `/subjects/{id}/resources?type={resourceTypeId}` with `resourceTypeId` 
+(or a list of resource types). For our example, a GET call to `/v1/subjects/{id}/resources?type={resourceTypeId}` with `resourceTypeId` 
 corresponding to the ID of Articles will give you a list of three entities; Sine and Cosine, What is probability, and Adding probability.
 
 
@@ -237,10 +237,53 @@ which is tagged as core or supplementary material in R1.
 #### Example: List core material in Mathematics
 
 The results will contain *Equations with one variable*, *Equations with two variables*, *Right triangles*, *Pythagoras* 
-and *Trigonometry*, since these are tagged as core material 
+and *Trigonometry*, since these are tagged as core material in either R1 or R2
 
-To help users find resources and topics that are
-relevant for them you can create filters associated with the subject. When listing the resources and topics under a given 
-subject, the filters may be used to limit the results. 
+#### Example: List all resources in Mathematics
 
+The results will contain *Equations with one variable*, *Equations with two variables*, *Right triangles*, *Pythagoras*, 
+*Trigonometry* and *Right triangles* since all of these resources are contained in a topic connected to Mathematics. 
+                       
+Note that the resource *Right triangles* is not marked as either core or supplementary material in neither R1 nor R2. 
+When listing all resources in R1 and R2, this resource will not be included. It will, however, be included when listing
+all resources in Mathematics.
+
+### Tagging for multiple subjects
+
+![Filters in mathematics](doc/filters.png?raw=true)
+
+If a resource is used in several subjects, you can tag it as core or supplementary material in each of the subjects
+separately. In the example above, trigonometry is tagged as core material in Mathematics R2, and supplementary material
+in Mathematics R1 and Construction VG2. 
+ 
+### Creating filters
+
+A filter belongs to one and only one subject, and resources must be associated with the filter to be included when listing
+the contents of a subject when the filter is activated. The resources can either be tagged with the filter directly, or
+by tagging a containing topic with the filter. 
+
+To create a filter, first ensure that the subject it will belong to is already created. You can then make a POST request to 
+`/v1/filters`, which must include the subject id. A filter may be modified (or associated with a different subject) later on
+by making a PUT request to `/v1/filters/{id}`. 
+
+When associating a filter with a resource, you must also indicate what relevance that resource has in context of the filter. 
+This is done by first creating an instance of *Relevance* by making a POST request to `/v1/relevances`. It is recommended that 
+you provide a programmer-friendly ID when creating a relevance, e.g., `urn:relevance:core` if the relevance is called 
+"Core material". This will make it easier to distinguish different relevances in display logic. 
+ 
+After creating the filter, you can associate a resource to it by making a POST request to `/v1/resource-filters`, including 
+the ids of both the filter, the resource and the relevance. This three-way association can be edited by making a PUT request
+to `/v1/resouce-filters/{id}` later on. Note that you cannot change the filter or the resource, but you can change the 
+relevance. If you need to change the filter this resource is associated with, delete this association and make a new one.  
+
+### Using filters
+
+When listing the contents of a subject, you can use one or more filter ids to limit the results. If you make a GET request
+to either `/v1/subjects/{id}/topics` or `/v1/subjects/{id}/resources`, you will get all topics or resources associated with 
+that subject. To limit the results based on filter, add the query string `?filter={filter id}`. You may repeat the query
+string to include results from several filters, or you may separate ids with comma. 
+
+You can also limit results by relevance by adding `?relevance={relevance id}` to the query string. When combining filters 
+and relevance in the same query, the effect is similar to this: `(filter 1 OR filter 2) AND (relevance 1 OR relevance 2)`.
+If you need more precision, you must make several queries. 
 
