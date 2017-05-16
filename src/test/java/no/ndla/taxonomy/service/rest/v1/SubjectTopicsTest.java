@@ -4,6 +4,7 @@ package no.ndla.taxonomy.service.rest.v1;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
+import no.ndla.taxonomy.service.domain.TopicSubtopic;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -35,7 +36,7 @@ public class SubjectTopicsTest extends RestTest {
     }
 
     @Test
-    public void canot_add_existing_topic_to_subject() throws Exception {
+    public void cannot_add_existing_topic_to_subject() throws Exception {
         Subject physics = newSubject().name("physics");
         Topic trigonometry = newTopic().name("trigonometry");
         physics.addTopic(trigonometry);
@@ -152,7 +153,6 @@ public class SubjectTopicsTest extends RestTest {
         });
     }
 
-
     @Test
     public void deleted_primary_subject_is_replaced() throws Exception {
         Topic topic = newTopic();
@@ -164,5 +164,135 @@ public class SubjectTopicsTest extends RestTest {
         SubjectTopic subjectTopic = topic.subjects.iterator().next();
         assertEquals(other, subjectTopic.getPublicId());
         assertTrue(subjectTopic.isPrimary());
+    }
+
+    @Test
+    public void topic_has_default_rank() throws Exception {
+        builder.subject(s -> s
+                .name("Mathematics")
+                .topic(t -> t
+                        .name("Geometry")));
+
+        MockHttpServletResponse response = getResource("/v1/subject-topics");
+        SubjectTopics.SubjectTopicIndexDocument[] topics = getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
+
+        assertAllTrue(topics, t -> t.rank == 0);
+    }
+
+    @Test
+    public void topics_can_have_same_rank() throws Exception {
+        Subject mathematics = builder.subject(s -> s
+                .name("Mathematics")
+                .publicId("urn:subject:1"));
+        Topic geometry = builder.topic(t -> t
+                .name("Geometry")
+                .publicId("urn:topic:1"));
+        Topic statistics = builder.topic(t -> t
+                .name("Statistics")
+                .publicId("urn:topic:2"));
+        SubjectTopic geometryMaths = save(mathematics.addTopic(geometry));
+        SubjectTopic statisticsMaths = save(mathematics.addTopic(statistics));
+
+        updateResource("/v1/subject-topics/" + geometryMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+            primary = true;
+            id = geometryMaths.getPublicId();
+            rank = 1;
+        }});
+
+        updateResource("/v1/subject-topics/" + statisticsMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+            primary = true;
+            id = statisticsMaths.getPublicId();
+            rank = 1;
+        }});
+
+        MockHttpServletResponse response = getResource("/v1/subject-topics");
+        SubjectTopics.SubjectTopicIndexDocument[] topics = getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
+
+        assertAllTrue(topics, t -> t.rank == 1);
+    }
+
+    @Test
+    public void can_change_sorting_order_for_topics() throws Exception {
+        Subject mathematics = builder.subject(s -> s
+                .name("Mathematics")
+                .publicId("urn:subject:1"));
+        Topic geometry = builder.topic(t -> t
+                .name("Geometry")
+                .publicId("urn:topic:1"));
+        Topic statistics = builder.topic(t -> t
+                .name("Statistics")
+                .publicId("urn:topic:2"));
+        SubjectTopic geometryMaths = save(mathematics.addTopic(geometry));
+        SubjectTopic statisticsMaths = save(mathematics.addTopic(statistics));
+
+        updateResource("/v1/subject-topics/" + geometryMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+            primary = true;
+            id = geometryMaths.getPublicId();
+            rank = 2;
+        }});
+
+        updateResource("/v1/subject-topics/" + statisticsMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+            primary = true;
+            id = statisticsMaths.getPublicId();
+            rank = 1;
+        }});
+
+        MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/topics");
+        SubjectTopics.SubjectTopicIndexDocument[] topics = getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
+
+        assertEquals(statistics.getPublicId(), topics[0].id);
+        assertEquals(geometry.getPublicId(), topics[1].id);
+    }
+
+    @Test
+    public void can_change_sorting_order_for_subtopics() throws Exception {
+        Subject mathematics = builder.subject(s -> s
+                .name("Mathematics")
+                .publicId("urn:subject:1"));
+        Topic geometry = builder.topic(t -> t
+                .name("Geometry")
+                .publicId("urn:topic:1"));
+        Topic statistics = builder.topic(t -> t
+                .name("Statistics")
+                .publicId("urn:topic:2"));
+        Topic subtopic1 = builder.topic(t -> t
+                .name("Subtopic 1")
+                .publicId("urn:topic:aa"));
+        Topic subtopic2 = builder.topic(t -> t
+                .name("Subtopic 2")
+                .publicId("urn:topic:ab"));
+        SubjectTopic geometryMaths = save(mathematics.addTopic(geometry));
+        SubjectTopic statisticsMaths = save(mathematics.addTopic(statistics));
+        TopicSubtopic tst1 = save(geometry.addSubtopic(subtopic1));
+        TopicSubtopic tst2 = save(geometry.addSubtopic(subtopic2));
+
+        updateResource("/v1/subject-topics/" + geometryMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+            primary = true;
+            id = geometryMaths.getPublicId();
+            rank = 2;
+        }});
+
+        updateResource("/v1/subject-topics/" + statisticsMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+            primary = true;
+            id = statisticsMaths.getPublicId();
+            rank = 1;
+        }});
+
+        updateResource("/v1/topic-subtopics/" + tst1.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+            primary = true;
+            rank = 2;
+        }});
+
+        updateResource("/v1/topic-subtopics/" + tst2.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+            primary = true;
+            rank = 1;
+        }});
+        MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/topics?recursive=true");
+        SubjectTopics.SubjectTopicIndexDocument[] topics = getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
+
+        assertEquals(statistics.getPublicId(), topics[0].id);
+        assertEquals(geometry.getPublicId(), topics[1].id);
+        assertEquals(subtopic2.getPublicId(), topics[2].id);
+        assertEquals(subtopic1.getPublicId(), topics[3].id);
     }
 }

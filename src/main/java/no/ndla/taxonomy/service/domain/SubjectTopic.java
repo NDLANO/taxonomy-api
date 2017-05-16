@@ -22,6 +22,9 @@ public class SubjectTopic extends DomainEntity {
     @Column(name = "is_primary")
     private boolean primary;
 
+    @Column(name = "rank")
+    private int rank;
+
     protected SubjectTopic() {
 
     }
@@ -46,5 +49,13 @@ public class SubjectTopic extends DomainEntity {
 
     void setPrimary(boolean primary) {
         this.primary = primary;
+    }
+
+    public int getRank() {
+        return rank;
+    }
+
+    public void setRank(int rank) {
+        this.rank = rank;
     }
 }

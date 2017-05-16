@@ -1,0 +1,8 @@
+ALTER TABLE topic_resource
+  ADD rank INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE topic_subtopic
+  ADD rank INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE subject_topic
+  ADD rank INTEGER NOT NULL DEFAULT 0;

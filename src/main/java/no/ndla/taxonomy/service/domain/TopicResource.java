@@ -22,6 +22,9 @@ public class TopicResource extends DomainEntity {
     @Column(name = "is_primary")
     private boolean primary;
 
+    @Column(name = "rank")
+    private int rank;
+
     protected TopicResource() {
     }
 
@@ -48,6 +51,14 @@ public class TopicResource extends DomainEntity {
     }
 
     public String toString() {
-        return "TopicResource: { " + topic.getName() + " " + topic.getPublicId() + " -> " + resource.getName() + " " + resource.getPublicId() + " " + (isPrimary() ? "P" : "") + "}";
+        return "TopicResource: { " + topic.getName() + " " + topic.getPublicId() + " -> " + resource.getName() + " " + resource.getPublicId() + " " + (isPrimary() ? "P" : "") +  " " + rank + "}";
+    }
+
+    public void setRank(int rank) {
+        this.rank = rank;
+    }
+
+    public int getRank() {
+        return rank;
     }
 }

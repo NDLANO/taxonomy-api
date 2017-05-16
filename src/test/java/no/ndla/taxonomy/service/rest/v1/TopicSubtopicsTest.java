@@ -1,6 +1,8 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
+import no.ndla.taxonomy.service.domain.Subject;
+import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.domain.TopicSubtopic;
 import org.junit.Test;
@@ -161,5 +163,51 @@ public class TopicSubtopicsTest extends RestTest {
             else assertFalse(topicResource.isPrimary());
         });
 
+    }
+
+    @Test
+    public void subtopics_have_default_rank() throws Exception {
+        builder.topic(t -> t
+                .name("electricity")
+                .subtopic(st -> st
+                        .name("alternating currents"))
+                .subtopic(st -> st
+                        .name("wiring")));
+        MockHttpServletResponse response = getResource(("/v1/topic-subtopics"));
+        TopicSubtopics.TopicSubtopicIndexDocument[] subtopics = getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);
+
+        assertAllTrue(subtopics, st -> st.rank == 0);
+    }
+
+    @Test
+    public void subtopics_can_have_same_rank() throws Exception {
+        Topic electricity = builder.topic(s -> s
+                .name("Electricity")
+                .publicId("urn:topic:1"));
+        Topic alternatingCurrents = builder.topic(t -> t
+                .name("Alternating currents")
+                .publicId("urn:topic:11"));
+        Topic wiring = builder.topic(t -> t
+                .name("Wiring")
+                .publicId("urn:topic:12"));
+        TopicSubtopic geometryMaths = save(electricity.addSubtopic(alternatingCurrents));
+        TopicSubtopic statisticsMaths = save(electricity.addSubtopic(wiring));
+
+        updateResource("/v1/topic-subtopics/" + geometryMaths.getPublicId(), new TopicSubtopics.UpdateTopicSubtopicCommand() {{
+            primary = true;
+            id = geometryMaths.getPublicId();
+            rank = 1;
+        }});
+
+        updateResource("/v1/topic-subtopics/" + statisticsMaths.getPublicId(), new TopicSubtopics.UpdateTopicSubtopicCommand() {{
+            primary = true;
+            id = statisticsMaths.getPublicId();
+            rank = 1;
+        }});
+
+        MockHttpServletResponse response = getResource("/v1/topic-subtopics");
+        TopicSubtopics.TopicSubtopicIndexDocument[] topics = getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);
+
+        assertAllTrue(topics, t -> t.rank == 1);
     }
 }

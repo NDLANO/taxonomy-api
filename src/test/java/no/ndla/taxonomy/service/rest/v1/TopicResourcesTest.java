@@ -160,4 +160,80 @@ public class TopicResourcesTest extends RestTest {
             else assertFalse(topicResource.isPrimary());
         });
     }
+
+    @Test
+    public void can_order_resources() throws Exception {
+        Topic geometry = builder.topic(t -> t
+                .name("Geometry")
+                .publicId("urn:topic:1"));
+        Resource squares = builder.resource(r -> r
+                .name("Squares")
+                .publicId("urn:resource:1"));
+        Resource circles = builder.resource(r -> r
+                .name("Circles")
+                .publicId("urn:resource:2"));
+
+
+        URI geometrySquares = save(geometry.addResource(squares)).getPublicId();
+        URI geometryCircles = save(geometry.addResource(circles)).getPublicId();
+        updateResource("/v1/topic-resources/" + geometryCircles, new TopicResources.UpdateTopicResourceCommand() {{
+            primary = true;
+            id = geometryCircles;
+            rank = 1;
+        }});
+        updateResource("/v1/topic-resources/" + geometrySquares, new TopicResources.UpdateTopicResourceCommand() {{
+            primary = true;
+            id = geometrySquares;
+            rank = 2;
+        }});
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + geometry.getPublicId() + "/resources");
+        Topics.ResourceIndexDocument[] resources = getObject(Topics.ResourceIndexDocument[].class, response);
+        assertEquals(circles.getPublicId(), resources[0].id);
+        assertEquals(squares.getPublicId(), resources[1].id);
+    }
+
+    @Test
+    public void resources_can_have_same_rank() throws Exception {
+        Topic geometry = builder.topic(t -> t
+                .name("Geometry")
+                .publicId("urn:topic:1"));
+        Resource squares = builder.resource(r -> r
+                .name("Squares")
+                .publicId("urn:resource:1"));
+        Resource circles = builder.resource(r -> r
+                .name("Circles")
+                .publicId("urn:resource:2"));
+
+
+        URI geometrySquares = save(geometry.addResource(squares)).getPublicId();
+        URI geometryCircles = save(geometry.addResource(circles)).getPublicId();
+        updateResource("/v1/topic-resources/" + geometryCircles, new TopicResources.UpdateTopicResourceCommand() {{
+            primary = true;
+            id = geometryCircles;
+            rank = 1;
+        }});
+        updateResource("/v1/topic-resources/" + geometrySquares, new TopicResources.UpdateTopicResourceCommand() {{
+            primary = true;
+            id = geometrySquares;
+            rank = 1;
+        }});
+
+        MockHttpServletResponse response = getResource("/v1/topic-resources");
+        TopicResources.TopicResourceIndexDocument[] topicResources = getObject(TopicResources.TopicResourceIndexDocument[].class, response);
+        assertAllTrue(topicResources, tr -> tr.rank == 1);
+    }
+
+    @Test
+    public void resources_can_have_default_rank() throws Exception {
+        builder.topic(t -> t
+                .name("elementary maths")
+                .resource(r -> r.name("graphs"))
+                .resource(r -> r.name("sets"))
+        );
+
+        MockHttpServletResponse response = getResource("/v1/topic-resources");
+        TopicResources.TopicResourceIndexDocument[] topicResources = getObject(TopicResources.TopicResourceIndexDocument[].class, response);
+        assertAllTrue(topicResources, tr -> tr.rank == 0);
+    }
 }

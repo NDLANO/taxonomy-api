@@ -29,6 +29,6 @@ WHERE
   t.public_id = ?
   AND 1 = 1
   AND 2 = 2
-ORDER BY r.id
+ORDER BY tr.rank
 
 

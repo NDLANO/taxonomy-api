@@ -75,10 +75,11 @@ public class TopicSubtopics {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation(value = "Updates a connection between a topic and a subtopic", notes = "Use to update which topic is primary to a subtopic")
+    @ApiOperation(value = "Updates a connection between a topic and a subtopic", notes = "Use to update which topic is primary to a subtopic or to alter sorting order")
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) throws Exception {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
+        topicSubtopic.setRank(command.rank);
         if (command.primary) {
             topicSubtopic.setPrimary(true);
         } else if (topicSubtopic.isPrimary() && !command.primary) {
@@ -118,6 +119,10 @@ public class TopicSubtopics {
         @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
         public boolean primary;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Order in which subtopic is sorted for the topic", example = "1")
+        public int rank;
     }
 
     public static class TopicSubtopicIndexDocument {
@@ -137,6 +142,10 @@ public class TopicSubtopics {
         @ApiModelProperty(value = "Primary connection", example = "true")
         public boolean primary;
 
+        @JsonProperty
+        @ApiModelProperty(value = "Order in which subtopic is sorted for the topic", example = "1")
+        public int rank;
+
         TopicSubtopicIndexDocument() {
         }
 
@@ -145,6 +154,7 @@ public class TopicSubtopics {
             topicid = topicSubtopic.getTopic().getPublicId();
             subtopicid = topicSubtopic.getSubtopic().getPublicId();
             primary = topicSubtopic.isPrimary();
+            rank = topicSubtopic.getRank();
         }
     }
 }

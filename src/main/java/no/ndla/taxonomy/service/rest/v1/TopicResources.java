@@ -78,12 +78,13 @@ public class TopicResources {
     }
 
     @PutMapping("/{id}")
-    @ApiOperation(value = "Updates a connection between a topic and a resource", notes = "Use to update which topic is primary to the resource.")
+    @ApiOperation(value = "Updates a connection between a topic and a resource", notes = "Use to update which topic is primary to the resource or to change sorting order.")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand
                             command) throws Exception {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
+        topicResource.setRank(command.rank);
         if (command.primary) {
             topicResource.setPrimary(true);
         } else if (topicResource.isPrimary() && !command.primary) {
@@ -113,6 +114,10 @@ public class TopicResources {
         @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
         public boolean primary;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Order in which the resource will be sorted for this topic.", example = "1")
+        public int rank;
     }
 
     public static class TopicResourceIndexDocument {
@@ -133,6 +138,10 @@ public class TopicResources {
         @ApiModelProperty(value = "Primary connection", example = "true")
         public boolean primary;
 
+        @JsonProperty
+        @ApiModelProperty(value = "Order in which the resource is sorted for the topic", example = "1")
+        public int rank;
+
         TopicResourceIndexDocument() {
         }
 
@@ -141,6 +150,7 @@ public class TopicResources {
             topicid = topicResource.getTopic().getPublicId();
             resourceid = topicResource.getResource().getPublicId();
             primary = topicResource.isPrimary();
+            rank = topicResource.getRank();
         }
     }
 }

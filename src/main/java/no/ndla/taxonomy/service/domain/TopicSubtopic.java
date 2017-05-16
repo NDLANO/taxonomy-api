@@ -22,6 +22,9 @@ public class TopicSubtopic extends DomainEntity {
     @Column(name = "is_primary")
     private boolean primary;
 
+    @Column(name = "rank")
+    private int rank;
+
     protected TopicSubtopic() {
     }
 
@@ -45,5 +48,13 @@ public class TopicSubtopic extends DomainEntity {
 
     public Topic getSubtopic() {
         return subtopic;
+    }
+
+    public int getRank() {
+        return rank;
+    }
+
+    public void setRank(int rank) {
+        this.rank = rank;
     }
 }

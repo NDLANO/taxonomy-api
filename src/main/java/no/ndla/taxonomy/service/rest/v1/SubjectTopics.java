@@ -81,13 +81,14 @@ public class SubjectTopics {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation(value = "Updates a connection between subject and topic", notes = "Use to update which subject is primary to a topic.")
+    @ApiOperation(value = "Updates a connection between subject and topic", notes = "Use to update which subject is primary to a topic or to change sorting order.")
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) throws Exception {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
         Topic topic = subjectTopic.getTopic();
         Subject subject = subjectTopic.getSubject();
 
+        subjectTopic.setRank(command.rank);
         if (command.primary) {
             topic.setPrimarySubject(subject);
         } else if (subjectTopic.isPrimary() && !command.primary) {
@@ -128,6 +129,10 @@ public class SubjectTopics {
         @ApiModelProperty(value = "If true, set this subject as the primary subject for this topic", example = "true",
                 notes = "This will replace any other primary subject for this topic. You must have one primary subject, so it is not allowed to set the currently primary subject to not be primary any more.")
         public boolean primary;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Order in which the topic should be sorted for the subject", example = "1")
+        public int rank;
     }
 
     public static class SubjectTopicIndexDocument {
@@ -147,6 +152,10 @@ public class SubjectTopics {
         @ApiModelProperty(value = "primary", example = "true")
         public boolean primary;
 
+        @JsonProperty
+        @ApiModelProperty(value = "Order in which the topic is sorted under the subject", example = "1")
+        public int rank;
+
         SubjectTopicIndexDocument() {
         }
 
@@ -155,6 +164,7 @@ public class SubjectTopics {
             subjectid = subjectTopic.getSubject().getPublicId();
             topicid = subjectTopic.getTopic().getPublicId();
             primary = subjectTopic.isPrimary();
+            rank = subjectTopic.getRank();
         }
     }
 }
