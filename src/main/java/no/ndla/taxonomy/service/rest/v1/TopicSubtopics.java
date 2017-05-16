@@ -58,6 +58,7 @@ public class TopicSubtopics {
         TopicSubtopic topicSubtopic = topic.addSubtopic(subtopic);
         topicSubtopicRepository.save(topicSubtopic);
 
+        topicSubtopic.setRank(command.rank);
         if (command.primary) subtopic.setPrimaryParentTopic(topic);
 
         URI location = URI.create("/topic-subtopics/" + topicSubtopic.getPublicId());
@@ -109,6 +110,10 @@ public class TopicSubtopics {
         @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
         public boolean primary;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Order in which to sort the subtopic for the topic", example = "1")
+        public int rank;
     }
 
     public static class UpdateTopicSubtopicCommand {

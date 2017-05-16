@@ -56,4 +56,4 @@ FROM
 WHERE
   1 = 1
   AND 2 = 2
-ORDER BY tr.rank
+ORDER BY level, tr.rank

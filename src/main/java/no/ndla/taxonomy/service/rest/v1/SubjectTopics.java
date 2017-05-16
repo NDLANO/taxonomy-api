@@ -63,6 +63,7 @@ public class SubjectTopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
 
         SubjectTopic subjectTopic = subject.addTopic(topic);
+        subjectTopic.setRank(command.rank);
         if (command.primary) topic.setPrimarySubject(subject);
         subjectTopicRepository.save(subjectTopic);
 
@@ -118,6 +119,10 @@ public class SubjectTopics {
         @ApiModelProperty(value = "If this is the primary subject of this topic.", example = "true",
                 notes = "The first subject added to a topic will always become primary, regardless of the value provided here.")
         public boolean primary;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Order in which the topic should be sorted for the topic", example = "1")
+        public int rank;
     }
 
     public static class UpdateSubjectTopicCommand {

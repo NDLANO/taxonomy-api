@@ -210,4 +210,38 @@ public class TopicSubtopicsTest extends RestTest {
 
         assertAllTrue(topics, t -> t.rank == 1);
     }
+
+    @Test
+    public void subtopics_can_be_created_with_rank() throws Exception {
+        Subject subject = builder.subject(s -> s.name("Subject").publicId("urn:subject:1"));
+        Topic electricity = builder.topic(s -> s
+                .name("Electricity")
+                .publicId("urn:topic:1"));
+        save(subject.addTopic(electricity));
+        Topic alternatingCurrents = builder.topic(t -> t
+                .name("Alternating currents")
+                .publicId("urn:topic:11"));
+        Topic wiring = builder.topic(t -> t
+                .name("Wiring")
+                .publicId("urn:topic:12"));
+
+        createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
+            topicid = electricity.getPublicId();
+            subtopicid = alternatingCurrents.getPublicId();
+            rank = 2;
+        }});
+
+        createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
+            topicid = electricity.getPublicId();
+            subtopicid = wiring.getPublicId();
+            rank = 1;
+        }});
+
+        MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics?recursive=true");
+        TopicSubtopics.TopicSubtopicIndexDocument[] topics = getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);
+
+        assertEquals(electricity.getPublicId(), topics[0].id);
+        assertEquals(wiring.getPublicId(), topics[1].id);
+        assertEquals(alternatingCurrents.getPublicId(), topics[2].id);
+    }
 }

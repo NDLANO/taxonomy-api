@@ -236,4 +236,38 @@ public class TopicResourcesTest extends RestTest {
         TopicResources.TopicResourceIndexDocument[] topicResources = getObject(TopicResources.TopicResourceIndexDocument[].class, response);
         assertAllTrue(topicResources, tr -> tr.rank == 0);
     }
+
+    @Test
+    public void can_create_resources_with_rank() throws Exception {
+        Topic geometry = builder.topic(t -> t
+                .name("Geometry")
+                .publicId("urn:topic:1"));
+        Resource squares = builder.resource(r -> r
+                .name("Squares")
+                .publicId("urn:resource:1"));
+        Resource circles = builder.resource(r -> r
+                .name("Circles")
+                .publicId("urn:resource:2"));
+
+
+        createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand(){{
+            primary = true;
+            topicid = geometry.getPublicId();
+            resourceid = squares.getPublicId();
+            rank = 2;
+        }});
+
+        createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
+            primary = true;
+            topicid = geometry.getPublicId();
+            resourceid = circles.getPublicId();
+            rank = 1;
+        }});
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + geometry.getPublicId() + "/resources");
+        TopicResources.TopicResourceIndexDocument[] resources = getObject(TopicResources.TopicResourceIndexDocument[].class, response);
+
+        assertEquals(circles.getPublicId(), resources[0].id);
+        assertEquals(squares.getPublicId(), resources[1].id);
+    }
 }

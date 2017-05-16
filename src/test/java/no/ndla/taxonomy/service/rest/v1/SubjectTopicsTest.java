@@ -295,4 +295,34 @@ public class SubjectTopicsTest extends RestTest {
         assertEquals(subtopic2.getPublicId(), topics[2].id);
         assertEquals(subtopic1.getPublicId(), topics[3].id);
     }
+
+    @Test
+    public void can_create_topic_with_rank() throws Exception {
+        Subject mathematics = builder.subject(s -> s
+                .name("Mathematics")
+                .publicId("urn:subject:1"));
+        Topic geometry = builder.topic(t -> t
+                .name("Geometry")
+                .publicId("urn:topic:1"));
+        Topic statistics = builder.topic(t -> t
+                .name("Statistics")
+                .publicId("urn:topic:2"));
+
+        createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
+            subjectid = mathematics.getPublicId();
+            topicid = geometry.getPublicId();
+            rank = 2;
+        }});
+        createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
+            subjectid = mathematics.getPublicId();
+            topicid = statistics.getPublicId();
+            rank = 1;
+        }});
+
+        MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/topics");
+        SubjectTopics.SubjectTopicIndexDocument[] topics = getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
+
+        assertEquals(statistics.getPublicId(), topics[0].id);
+        assertEquals(geometry.getPublicId(), topics[1].id);
+    }
 }

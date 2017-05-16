@@ -59,6 +59,7 @@ public class TopicResources {
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Resource resource = resourceRepository.getByPublicId(command.resourceid);
         TopicResource topicResource = topic.addResource(resource);
+        topicResource.setRank(command.rank);
         if (command.primary) resource.setPrimaryTopic(topic);
         topicResourceRepository.save(topicResource);
 
@@ -104,6 +105,10 @@ public class TopicResources {
         @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
         public boolean primary;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Order in which resource is sorted for the topic", example = "1")
+        public int rank;
     }
 
     public static class UpdateTopicResourceCommand {

@@ -1,8 +1,9 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
-import no.ndla.taxonomy.service.domain.*;
-import org.junit.Ignore;
+import no.ndla.taxonomy.service.domain.Resource;
+import no.ndla.taxonomy.service.domain.Subject;
+import no.ndla.taxonomy.service.domain.Topic;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -173,8 +174,13 @@ public class TopicsTest extends RestTest {
     public void can_get_resource_connection_id_recursively() throws Exception {
         builder.topic("topic", t -> t
                 .publicId("urn:topic:1")
-                .resource("a")
-                .subtopic("subtopic", st -> st.resource("b"))
+                .resource(r -> r
+                        .name("a")
+                        .publicId("urn:resource:1"))
+                .subtopic("subtopic", st -> st
+                        .publicId("urn:topic:2")
+                        .resource(r -> r.name("b")
+                                .publicId("urn:resource:2")))
         );
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?recursive=true");
