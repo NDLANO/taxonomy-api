@@ -44,7 +44,7 @@ public class UrlCacher {
     }
 
     public void rebuildEntireCache() {
-        cachedUrlRepository.deleteAll();
+        cachedUrlRepository.truncate();
         entityManager.flush();
         jdbcTemplate.query(GENERATE_URLS_RECURSIVELY_QUERY, resultSet -> {
             while (resultSet.next()) {

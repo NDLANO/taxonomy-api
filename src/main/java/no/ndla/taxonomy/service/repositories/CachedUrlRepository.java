@@ -6,7 +6,7 @@ import org.springframework.data.repository.CrudRepository;
 import java.net.URI;
 import java.util.Collection;
 
-public interface CachedUrlRepository extends CrudRepository<CachedUrl, Integer> {
+public interface CachedUrlRepository extends CrudRepository<CachedUrl, Integer>, CachedUrlRepositoryCustom {
     Collection<CachedUrl> findByPublicId(URI id);
 
     void deleteByPublicId(URI id);
