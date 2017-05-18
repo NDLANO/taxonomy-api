@@ -36,6 +36,7 @@ echo running postgres
 docker run -p ${IP}:5432:5432 --name taxonomy-postgres -d postgres:alpine
 
 set +e
+EMBEDDED="false" \
 SPRING_DATASOURCE_URL="jdbc:postgresql://${IP}:5432/postgres" \
     SPRING_DATASOURCE_USERNAME="postgres" SPRING_DATASOURCE_PASSWORD="" \
     SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT="org.hibernate.dialect.PostgreSQL94Dialect" \

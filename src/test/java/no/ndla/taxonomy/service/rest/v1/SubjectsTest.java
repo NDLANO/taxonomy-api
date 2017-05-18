@@ -228,9 +228,9 @@ public class SubjectsTest extends RestTest {
 
         assertEquals(3, resources.length);
 
-        assertEquals(first(builder.topic("topic a").resources).getPublicId(), resources[0].connectionId);
-        assertEquals(first(builder.topic("topic b").resources).getPublicId(), resources[1].connectionId);
-        assertEquals(first(builder.topic("subtopic").resources).getPublicId(), resources[2].connectionId);
+        assertAnyTrue(resources, r -> r.connectionId.equals(first(builder.topic("topic a").resources).getPublicId()));
+        assertAnyTrue(resources, r -> r.connectionId.equals(first(builder.topic("topic b").resources).getPublicId()));
+        assertAnyTrue(resources, r -> r.connectionId.equals(first(builder.topic("subtopic").resources).getPublicId()));
     }
 
     @Test

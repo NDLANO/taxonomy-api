@@ -1,10 +1,6 @@
 server.port: 5000
 
 spring.datasource:
-  url: jdbc:h2:mem:test;MODE=PostgreSQL;DB_CLOSE_ON_EXIT=FALSE;DB_CLOSE_DELAY=-1
-  username: sa
-  password:
-
   tomcat:
     initial-size: 5
     time-between-eviction-runs-millis: 5000
@@ -30,4 +26,3 @@ spring.profiles: junit
 
 spring.jpa:
   show-sql: true
-  properties.hibernate.dialect: org.hibernate.dialect.H2Dialect
