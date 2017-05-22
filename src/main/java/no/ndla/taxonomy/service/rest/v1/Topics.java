@@ -51,7 +51,10 @@ public class Topics extends CrudController<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) throws Exception {
         List<Object> args = asList(language);
-        return getTopicIndexDocuments(GET_TOPICS_QUERY, args);
+        TopicQueryExtractor extractor = new TopicQueryExtractor();
+        return jdbcTemplate.query(GET_TOPICS_QUERY, setQueryParameters(args),
+                extractor::extractTopics
+        );
     }
 
     @GetMapping("/{id}")
@@ -64,24 +67,10 @@ public class Topics extends CrudController<Topic> {
         String sql = GET_TOPICS_QUERY.replace("1 = 1", "t.public_id = ?");
         List<Object> args = asList(language, id.toString());
 
-        return getFirst(getTopicIndexDocuments(sql, args), "Topic", id);
-    }
-
-    private List<TopicIndexDocument> getTopicIndexDocuments(String sql, List<Object> args) {
-        return jdbcTemplate.query(sql, setQueryParameters(args),
-                resultSet -> {
-                    List<TopicIndexDocument> result = new ArrayList<>();
-                    while (resultSet.next()) {
-                        result.add(new TopicIndexDocument() {{
-                            name = resultSet.getString("topic_name");
-                            id = getURI(resultSet, "topic_public_id");
-                            contentUri = getURI(resultSet, "topic_content_uri");
-                            path = resultSet.getString("topic_path");
-                        }});
-                    }
-                    return result;
-                }
-        );
+        TopicQueryExtractor extractor = new TopicQueryExtractor();
+        return getFirst(jdbcTemplate.query(sql, setQueryParameters(args),
+                extractor::extractTopics
+        ), "Topic", id);
     }
 
     @PostMapping
@@ -133,7 +122,6 @@ public class Topics extends CrudController<Topic> {
 
         TopicIndexDocument topicIndexDocument = get(topicId, null);
 
-
         List<Object> args = new ArrayList<>();
         String query;
         if (recursive) {
@@ -147,75 +135,15 @@ public class Topics extends CrudController<Topic> {
             args.add(language);
             args.add(topicId.toString());
         }
-
-        if (resourceTypeIds.length > 0) {
-            StringBuilder where = new StringBuilder();
-            for (URI resourceTypeId : resourceTypeIds) {
-                where.append("rt.public_id = ? OR ");
-                args.add(resourceTypeId.toString());
-            }
-            where.setLength(where.length() - 4);
-            query = query.replace("1 = 1", "(" + where + ")");
-        }
-
-        if (filterIds.length > 0) {
-            StringBuilder where = new StringBuilder();
-            for (URI filterId : filterIds) {
-                where.append("f.public_id = ? OR ");
-                args.add(filterId.toString());
-            }
-            where.setLength(where.length() - 4);
-            query = query.replace("2 = 2", "(" + where + ")");
-        }
+        ResourceQueryExtractor extractor = new ResourceQueryExtractor();
+        query = extractor.addResourceTypesToQuery(resourceTypeIds, args, query);
+        query = extractor.addFiltersToQuery(filterIds, args, query);
 
         return jdbcTemplate.query(query, setQueryParameters(args), resultSet -> {
-            List<ResourceIndexDocument> result = new ArrayList<>();
-            Map<URI, ResourceIndexDocument> resources = new HashMap<>();
-
-            String context = topicIndexDocument.path;
-
-            while (resultSet.next()) {
-                URI id = toURI(resultSet.getString("resource_public_id"));
-
-                ResourceIndexDocument resource = resources.get(id);
-                if (null == resource) {
-                    resource = new ResourceIndexDocument() {{
-                        topicId = toURI(resultSet.getString("topic_id"));
-                        name = resultSet.getString("resource_name");
-                        contentUri = toURI(resultSet.getString("resource_content_uri"));
-                        id = toURI(resultSet.getString("resource_public_id"));
-                        connectionId = toURI(resultSet.getString("connection_public_id"));
-                    }};
-                    resources.put(id, resource);
-                    filterResultByRelevance(relevance, resultSet, result, resource);
-                }
-                resource.path = getPathMostCloselyMatchingContext(context, resource.path, resultSet.getString("resource_path"));
-
-                String resourceTypePublicId = resultSet.getString("resource_type_public_id");
-                if (resourceTypePublicId != null) {
-                    ResourceTypeIndexDocument resourceType = new ResourceTypeIndexDocument() {{
-                        id = toURI(resourceTypePublicId);
-                        name = resultSet.getString("resource_type_name");
-                    }};
-
-                    resource.resourceTypes.add(resourceType);
-                }
-            }
-
-            return result;
+            return extractor.extractResources(relevance, topicIndexDocument, resultSet);
         });
     }
 
-    private void filterResultByRelevance(URI relevance, ResultSet resultSet, List<ResourceIndexDocument> result, ResourceIndexDocument resource) throws SQLException {
-        if (relevance == null || relevance.toString().equals("")) {
-            result.add(resource);
-        } else {
-            URI resourceRelevance = toURI(resultSet.getString("relevance_public_id"));
-            if (resourceRelevance != null && resourceRelevance.equals(relevance)) {
-                result.add(resource);
-            }
-        }
-    }
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters associated with this resource")
@@ -226,19 +154,9 @@ public class Topics extends CrudController<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {
+        FilterQueryExtractor extractor = new FilterQueryExtractor();
         return jdbcTemplate.query(GET_FILTERS_BY_TOPIC_ID_QUERY, setQueryParameters(singletonList(id.toString())),
-                resultSet -> {
-                    List<FilterIndexDocument> result = new ArrayList<>();
-                    while (resultSet.next()) {
-                        result.add(new FilterIndexDocument() {{
-                            name = resultSet.getString("filter_name");
-                            id = getURI(resultSet, "filter_public_id");
-                            connectionId = getURI(resultSet, "topic_filter_public_id");
-                            relevanceId = getURI(resultSet, "relevance_id");
-                        }});
-                    }
-                    return result;
-                }
+                extractor::extractFilters
         );
     }
 
@@ -385,5 +303,114 @@ public class Topics extends CrudController<Topic> {
         @JsonProperty
         @ApiModelProperty(value = "The relevance of this topic according to the filter", example = "urn:relevance:core")
         public URI relevanceId;
+    }
+
+    private class TopicQueryExtractor {
+
+        private List<TopicIndexDocument> extractTopics(ResultSet resultSet) throws SQLException {
+            List<TopicIndexDocument> result = new ArrayList<>();
+            while (resultSet.next()) {
+                result.add(new TopicIndexDocument() {{
+                    name = resultSet.getString("topic_name");
+                    id = getURI(resultSet, "topic_public_id");
+                    contentUri = getURI(resultSet, "topic_content_uri");
+                    path = resultSet.getString("topic_path");
+                }});
+            }
+            return result;
+        }
+    }
+
+    private class ResourceQueryExtractor {
+
+        String addFiltersToQuery(URI[] filterIds, List<Object> args, String query) {
+            if (filterIds.length > 0) {
+                StringBuilder where = new StringBuilder();
+                for (URI filterId : filterIds) {
+                    where.append("f.public_id = ? OR ");
+                    args.add(filterId.toString());
+                }
+                where.setLength(where.length() - 4);
+                query = query.replace("2 = 2", "(" + where + ")");
+            }
+            return query;
+        }
+
+        String addResourceTypesToQuery(URI[] resourceTypeIds, List<Object> args, String query) {
+            if (resourceTypeIds.length > 0) {
+                StringBuilder where = new StringBuilder();
+                for (URI resourceTypeId : resourceTypeIds) {
+                    where.append("rt.public_id = ? OR ");
+                    args.add(resourceTypeId.toString());
+                }
+                where.setLength(where.length() - 4);
+                query = query.replace("1 = 1", "(" + where + ")");
+            }
+            return query;
+        }
+
+        List<ResourceIndexDocument> extractResources(@RequestParam(value = "relevance", required = false, defaultValue = "") @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.") URI relevance, TopicIndexDocument topicIndexDocument, ResultSet resultSet) throws SQLException {
+            List<ResourceIndexDocument> result = new ArrayList<>();
+            Map<URI, ResourceIndexDocument> resources = new HashMap<>();
+
+            String context = topicIndexDocument.path;
+
+            while (resultSet.next()) {
+                URI id = toURI(resultSet.getString("resource_public_id"));
+
+                ResourceIndexDocument resource = resources.get(id);
+                if (null == resource) {
+                    resource = new ResourceIndexDocument() {{
+                        topicId = toURI(resultSet.getString("topic_id"));
+                        name = resultSet.getString("resource_name");
+                        contentUri = toURI(resultSet.getString("resource_content_uri"));
+                        id = toURI(resultSet.getString("resource_public_id"));
+                        connectionId = toURI(resultSet.getString("connection_public_id"));
+                    }};
+                    resources.put(id, resource);
+                    filterResultByRelevance(relevance, resultSet, result, resource);
+                }
+                resource.path = getPathMostCloselyMatchingContext(context, resource.path, resultSet.getString("resource_path"));
+
+                String resourceTypePublicId = resultSet.getString("resource_type_public_id");
+                if (resourceTypePublicId != null) {
+                    ResourceTypeIndexDocument resourceType = new ResourceTypeIndexDocument() {{
+                        id = toURI(resourceTypePublicId);
+                        name = resultSet.getString("resource_type_name");
+                    }};
+
+                    resource.resourceTypes.add(resourceType);
+                }
+            }
+
+            return result;
+        }
+
+        private void filterResultByRelevance(URI relevance, ResultSet resultSet, List<ResourceIndexDocument> result, ResourceIndexDocument resource) throws SQLException {
+            if (relevance == null || relevance.toString().equals("")) {
+                result.add(resource);
+            } else {
+                URI resourceRelevance = toURI(resultSet.getString("relevance_public_id"));
+                if (resourceRelevance != null && resourceRelevance.equals(relevance)) {
+                    result.add(resource);
+                }
+            }
+        }
+    }
+
+    private class FilterQueryExtractor {
+
+        private List<FilterIndexDocument> extractFilters(ResultSet resultSet) throws SQLException {
+            List<FilterIndexDocument> result = new ArrayList<>();
+            while (resultSet.next()) {
+                result.add(new FilterIndexDocument() {{
+                    name = resultSet.getString("filter_name");
+                    id = getURI(resultSet, "filter_public_id");
+                    connectionId = getURI(resultSet, "topic_filter_public_id");
+                    relevanceId = getURI(resultSet, "relevance_id");
+                }});
+            }
+            return result;
+        }
     }
 }
