@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +45,10 @@ public class Relevances extends CrudController<Relevance> {
                     String language
     ) throws Exception {
         List<Object> args = singletonList(language);
-        return getRelevanceIndexDocuments(GET_RELEVANCES_QUERY, args);
+        RelevanceQueryExtractor extractor = new RelevanceQueryExtractor();
+        return jdbcTemplate.query(GET_RELEVANCES_QUERY, setQueryParameters(args),
+                extractor::extractRelevances
+        );
     }
 
     @GetMapping("/{id}")
@@ -56,23 +61,10 @@ public class Relevances extends CrudController<Relevance> {
     ) throws Exception {
         String sql = GET_RELEVANCES_QUERY.replace("1 = 1", "r.public_id = ?");
         List<Object> args = asList(language, id.toString());
-
-        return getFirst(getRelevanceIndexDocuments(sql, args), "Relevance", id);
-    }
-
-    private List<RelevanceIndexDocument> getRelevanceIndexDocuments(String sql, List<Object> args) {
-        return jdbcTemplate.query(sql, setQueryParameters(args),
-                resultSet -> {
-                    List<RelevanceIndexDocument> result = new ArrayList<>();
-                    while (resultSet.next()) {
-                        result.add(new RelevanceIndexDocument() {{
-                            name = resultSet.getString("relevance_name");
-                            id = getURI(resultSet, "relevance_public_id");
-                        }});
-                    }
-                    return result;
-                }
-        );
+        RelevanceQueryExtractor extractor = new RelevanceQueryExtractor();
+        return getFirst(jdbcTemplate.query(sql, setQueryParameters(args),
+                extractor::extractRelevances
+        ), "Relevance", id);
     }
 
     @PostMapping
@@ -131,6 +123,19 @@ public class Relevances extends CrudController<Relevance> {
         @Override
         public void apply(Relevance entity) {
             entity.setName(name);
+        }
+    }
+
+    private class RelevanceQueryExtractor {
+        private List<RelevanceIndexDocument> extractRelevances(ResultSet resultSet) throws SQLException {
+            List<RelevanceIndexDocument> result = new ArrayList<>();
+            while (resultSet.next()) {
+                result.add(new RelevanceIndexDocument() {{
+                    name = resultSet.getString("relevance_name");
+                    id = getURI(resultSet, "relevance_public_id");
+                }});
+            }
+            return result;
         }
     }
 }

@@ -2,7 +2,10 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.*;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.service.domain.ResourceType;
 import no.ndla.taxonomy.service.repositories.ResourceTypeRepository;
 import org.springframework.http.HttpStatus;
@@ -12,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +51,10 @@ public class ResourceTypes extends CrudController<ResourceType> {
     ) throws Exception {
         String sql = GET_RESOURCE_TYPES_RECURSIVELY_QUERY;
         sql = sql.replace("1 = 1", "rt.parent_id is null");
-        return getResourceTypeIndexDocuments(sql, singletonList(language));
+        ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
+        return jdbcTemplate.query(sql, setQueryParameters(singletonList(language)),
+                extractor::extractResourceTypes
+        );
     }
 
     @GetMapping("/{id}")
@@ -65,33 +73,10 @@ public class ResourceTypes extends CrudController<ResourceType> {
         sql = sql.replace("2 = 2", "t.level = 0");
         args.add(language);
 
-        return getFirst(getResourceTypeIndexDocuments(sql, args), "Subject", id);
-    }
-
-    private List<ResourceTypeIndexDocument> getResourceTypeIndexDocuments(String sql, List<Object> args) {
-        return jdbcTemplate.query(sql, setQueryParameters(args),
-                resultSet -> {
-                    List<ResourceTypeIndexDocument> result = new ArrayList<>();
-                    Map<Integer, ResourceTypeIndexDocument> parents = new HashMap<>();
-
-                    while (resultSet.next()) {
-                        int id = resultSet.getInt("id");
-                        int parentId = resultSet.getInt("parent_id");
-
-                        ResourceTypeIndexDocument resourceType = new ResourceTypeIndexDocument() {{
-                            name = resultSet.getString("name");
-                            id = getURI(resultSet, "public_id");
-                        }};
-                        parents.put(id, resourceType);
-                        if (parents.containsKey(parentId)) {
-                            parents.get(parentId).subtypes.add(resourceType);
-                        } else {
-                            result.add(resourceType);
-                        }
-                    }
-                    return result;
-                }
-        );
+        ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
+        return getFirst(jdbcTemplate.query(sql, setQueryParameters(args),
+                extractor::extractResourceTypes
+        ), "Subject", id);
     }
 
     @PostMapping
@@ -151,8 +136,11 @@ public class ResourceTypes extends CrudController<ResourceType> {
             sql = sql.replace("2 = 2", "t.level = 1");
         }
 
+        ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
         args.add(language);
-        return getResourceTypeIndexDocuments(sql, args);
+        return jdbcTemplate.query(sql, setQueryParameters(args),
+                extractor::extractResourceTypes
+        );
     }
 
     @ApiModel("ResourceTypeIndexDocument")
@@ -207,6 +195,31 @@ public class ResourceTypes extends CrudController<ResourceType> {
         @Override
         public void apply(ResourceType resourceType) {
             resourceType.setName(name);
+        }
+    }
+
+    private class ResourceTypeQueryExtractor {
+
+        private List<ResourceTypeIndexDocument> extractResourceTypes(ResultSet resultSet) throws SQLException {
+            List<ResourceTypeIndexDocument> result = new ArrayList<>();
+            Map<Integer, ResourceTypeIndexDocument> parents = new HashMap<>();
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                int parentId = resultSet.getInt("parent_id");
+
+                ResourceTypeIndexDocument resourceType = new ResourceTypeIndexDocument() {{
+                    name = resultSet.getString("name");
+                    id = getURI(resultSet, "public_id");
+                }};
+                parents.put(id, resourceType);
+                if (parents.containsKey(parentId)) {
+                    parents.get(parentId).subtypes.add(resourceType);
+                } else {
+                    result.add(resourceType);
+                }
+            }
+            return result;
         }
     }
 }

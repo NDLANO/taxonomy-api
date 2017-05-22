@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -97,19 +99,9 @@ public class Resources extends CrudController<Resource> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {
+        ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
         return jdbcTemplate.query(GET_RESOURCE_RESOURCE_TYPES_QUERY, setQueryParameters(asList(language, id.toString())),
-                resultSet -> {
-                    List<ResourceTypeIndexDocument> result = new ArrayList<>();
-                    while (resultSet.next()) {
-                        result.add(new ResourceTypeIndexDocument() {{
-                            name = resultSet.getString("resource_type_name");
-                            id = getURI(resultSet, "resource_type_public_id");
-                            parentId = getURI(resultSet, "resource_type_parent_public_id");
-                            connectionId = getURI(resultSet, "resource_resource_type_public_id");
-                        }});
-                    }
-                    return result;
-                }
+                extractor::extractResourceTypes
         );
     }
 
@@ -122,19 +114,9 @@ public class Resources extends CrudController<Resource> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {
+        FilterQueryExtractor extractor = new FilterQueryExtractor();
         return jdbcTemplate.query(GET_FILTERS_BY_RESOURCE_ID_QUERY, setQueryParameters(singletonList(id.toString())),
-                resultSet -> {
-                    List<FilterIndexDocument> result = new ArrayList<>();
-                    while (resultSet.next()) {
-                        result.add(new FilterIndexDocument() {{
-                            name = resultSet.getString("filter_name");
-                            id = getURI(resultSet, "filter_public_id");
-                            connectionId = getURI(resultSet, "resource_filter_public_id");
-                            relevanceId = getURI(resultSet, "relevance_id");
-                        }});
-                    }
-                    return result;
-                }
+                extractor::extractFilters
         );
     }
 
@@ -240,5 +222,36 @@ public class Resources extends CrudController<Resource> {
         @JsonProperty
         @ApiModelProperty(value = "The relevance of this resource according to the filter", example = "urn:relevance:1")
         public URI relevanceId;
+    }
+
+    private class ResourceTypeQueryExtractor {
+        private List<ResourceTypeIndexDocument> extractResourceTypes(ResultSet resultSet) throws SQLException {
+            List<ResourceTypeIndexDocument> result = new ArrayList<>();
+            while (resultSet.next()) {
+                result.add(new ResourceTypeIndexDocument() {{
+                    name = resultSet.getString("resource_type_name");
+                    id = getURI(resultSet, "resource_type_public_id");
+                    parentId = getURI(resultSet, "resource_type_parent_public_id");
+                    connectionId = getURI(resultSet, "resource_resource_type_public_id");
+                }});
+            }
+            return result;
+        }
+
+    }
+
+    private class FilterQueryExtractor {
+        private List<FilterIndexDocument> extractFilters(ResultSet resultSet) throws SQLException {
+            List<FilterIndexDocument> result = new ArrayList<>();
+            while (resultSet.next()) {
+                result.add(new FilterIndexDocument() {{
+                    name = resultSet.getString("filter_name");
+                    id = getURI(resultSet, "filter_public_id");
+                    connectionId = getURI(resultSet, "resource_filter_public_id");
+                    relevanceId = getURI(resultSet, "relevance_id");
+                }});
+            }
+            return result;
+        }
     }
 }
