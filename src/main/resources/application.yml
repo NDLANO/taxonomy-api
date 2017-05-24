@@ -19,7 +19,7 @@ spring.jpa:
   properties.hibernate.temp.use_jdbc_metadata_defaults: false
   properties.hibernate.dialect: org.hibernate.dialect.PostgreSQL94Dialect
 
-springfox.documentation.swagger.v2.path: /v1/api-docs
+springfox.documentation.swagger.v2.path: /api-docs
 ---
 
 spring.profiles: junit
