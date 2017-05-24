@@ -9,7 +9,6 @@ import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.builders.ResponseMessageBuilder;
 import springfox.documentation.schema.ModelRef;
 import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.Contact;
 import springfox.documentation.service.Header;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
@@ -19,6 +18,7 @@ import java.net.URI;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.HttpStatus.*;
@@ -93,9 +93,11 @@ public class SwaggerConfiguration {
                         "When you remove an entity, its associations are also deleted. E.g., if you remove a subject, its associations to any topics are removed. The topics themselves are not affected.",
                 "v1",
                 null,
-                (Contact) null,
+                null,
                 "GPL 3.0",
-                "https://www.gnu.org/licenses/gpl-3.0.en.html");
+                "https://www.gnu.org/licenses/gpl-3.0.en.html",
+                emptyList()
+        );
         return apiInfo;
     }
 
