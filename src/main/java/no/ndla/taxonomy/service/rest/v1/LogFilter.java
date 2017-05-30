@@ -3,7 +3,6 @@ package no.ndla.taxonomy.service.rest.v1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import javax.servlet.*;
@@ -18,8 +17,6 @@ public class LogFilter implements Filter {
 
     Logger logger = LoggerFactory.getLogger("accesslog");
 
-    @Value("${service:ndla-taxonomy-local}")
-    private String service;
 
     public LogFilter() {
     }
@@ -38,7 +35,6 @@ public class LogFilter implements Filter {
         filterChain.doFilter(servletRequest, servletResponse);
         long ends = currentTimeMillis();
 
-        MDC.put("service", service);
         MDC.put("remote_addr", request.getRemoteAddr());
         MDC.put("completion_time", String.valueOf(ends - starts));
         MDC.put("http_status", String.valueOf(response.getStatus()));
