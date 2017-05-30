@@ -18,7 +18,7 @@ public class LogFilter implements Filter {
 
     Logger logger = LoggerFactory.getLogger("accesslog");
 
-    @Value("${service}")
+    @Value("${service:ndla-taxonomy-local}")
     private String service;
 
     public LogFilter() {
