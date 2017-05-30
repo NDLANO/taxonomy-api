@@ -22,9 +22,32 @@ spring.jpa:
 logging.graylog.host: ""
 
 springfox.documentation.swagger.v2.path: /api-docs
+
 ---
 
 spring.profiles: junit
 
 spring.jpa:
   show-sql: true
+
+
+---
+
+spring.profiles: dev
+
+service: ndla-taxonomy-dev
+
+---
+spring.profiles: staging
+
+service: ndla-taxonomy-staging
+
+---
+spring.profiles: production
+
+service: ndla-taxonomy-prod
+
+---
+spring.profiles: test
+
+service: ndla-taxonomy-test
