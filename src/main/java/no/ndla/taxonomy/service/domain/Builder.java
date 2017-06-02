@@ -335,6 +335,10 @@ public class Builder {
             entityManager.persist(topicFilter);
             return this;
         }
+
+        public void isContext(boolean b) {
+            topic.setContext(b);
+        }
     }
 
     public class TopicTranslationBuilder {

@@ -38,6 +38,9 @@ public class Topic extends DomainObject {
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<TopicTranslation> translations = new HashSet<>();
 
+    @Column
+    private boolean context;
+
     public Topic() {
         setPublicId(URI.create("urn:topic:" + UUID.randomUUID()));
     }
@@ -295,5 +298,13 @@ public class Topic extends DomainObject {
             if (rf.getFilter().equals(filter)) return rf;
         }
         return null;
+    }
+
+    public void setContext(boolean context) {
+        this.context = context;
+    }
+
+    public boolean isContext() {
+        return context;
     }
 }

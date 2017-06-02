@@ -1,19 +1,29 @@
 WITH RECURSIVE tree (id, public_id, name, parent_public_id, level, is_primary, path) AS (
   SELECT
-    e.id,
-    e.public_id,
-    e.name,
+    contexts.id,
+    contexts.public_id,
+    contexts.name,
     cast(NULL AS VARCHAR)         AS parent_public_id,
     0                             AS level,
     TRUE                          AS is_primary,
-    '/' || substr(e.public_id, 5) AS path
-  FROM (
-         SELECT
-           id,
-           public_id,
-           name
-         FROM subject
-       ) e
+    '/' || substr(contexts.public_id, 5) AS path
+  FROM
+    (
+      SELECT
+        id,
+        public_id,
+        name
+      FROM subject
+
+      UNION ALL
+
+      SELECT
+        id,
+        public_id,
+        name
+      FROM topic
+      WHERE context = TRUE
+    ) contexts
 
   UNION ALL
 
