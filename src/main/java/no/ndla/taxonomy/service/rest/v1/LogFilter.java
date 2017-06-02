@@ -18,6 +18,7 @@ import java.util.Enumeration;
 import java.util.Map;
 
 import static java.lang.System.currentTimeMillis;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Configuration
 public class LogFilter implements Filter {
@@ -49,25 +50,7 @@ public class LogFilter implements Filter {
             MDC.put("x-consumer-username", request.getHeader("x-consumer-username"));
             MDC.put("x-consumer-id", request.getHeader("x-consumer-id"));
             MDC.put("x-correlation-id", request.getHeader("x-correlation-id"));
-
-            //Should be in doFilter, we always want this info
-            String authorizationHeader = request.getHeader("authorization");
-            DecodedJWT jwt = JWT.decode(authorizationHeader.substring(6));
-            MDC.put("JWT-signature", jwt.getSignature());
-            MDC.put("JWT-iat", jwt.getIssuedAt().toString());
-            MDC.put("JWT-exp", jwt.getExpiresAt().toString());
-            MDC.put("JWT-iss", jwt.getIssuer());
-            Map<String, Claim> claims = jwt.getClaims();
-            System.out.println("claims: " + claims.keySet().toString());
-            Claim app_metadata = claims.get("app_metadata");
-            Map<String, Object> appMetadataMap = app_metadata.asMap();
-            System.out.println("metadata keys: " + appMetadataMap.keySet().toString());
-            Object roles = appMetadataMap.get("roles");
-            System.out.println("roles: " + roles.toString());
-            MDC.put("roles", roles.toString());
-            String decoded = StringUtils.newStringUtf8(Base64.getDecoder().decode(jwt.getPayload()));
-            MDC.put("JWT-payload", decoded);
-
+            parseWebToken(request);
         } catch (Exception e) {
             //Don't fail the user request if the log system is broken
             e.printStackTrace();
@@ -94,6 +77,26 @@ public class LogFilter implements Filter {
             //Don't fail the user request if the log system is broken
             e.printStackTrace();
         }
+    }
+
+    private void parseWebToken(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader("authorization");
+        if (isBlank(authorizationHeader)) return;
+        if (!authorizationHeader.startsWith("Bearer")) return;
+
+        DecodedJWT jwt = JWT.decode(authorizationHeader.substring(6));
+
+        Map<String, Claim> claims = jwt.getClaims();
+        Claim appMetadata = claims.get("app_metadata");
+        if (null == appMetadata) return;
+
+        Map<String, Object> appMetadataMap = appMetadata.asMap();
+
+        Object roles = appMetadataMap.get("roles");
+        MDC.put("roles", "" + roles);
+
+        String payload = StringUtils.newStringUtf8(Base64.getDecoder().decode(jwt.getPayload()));
+        MDC.put("JWT-payload", payload);
     }
 
     private String extractHeaders(HttpServletRequest request) {
