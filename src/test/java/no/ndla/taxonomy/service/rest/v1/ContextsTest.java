@@ -93,4 +93,23 @@ public class ContextsTest extends RestTest {
         assertAnyTrue(contexts, c -> c.name.equals("Fag 1"));
     }
 
+    /** TODO:
+    @Test
+    public void root_context_is_more_important_than_primary_parent() throws Exception {
+        Topic topic = builder.topic(t -> t
+                .publicId("urn:topic:1")
+        );
+
+        Subject subject = builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .topic(topic)
+        );
+
+        topic.setPrimarySubject(subject);
+
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1");
+        Topics.TopicIndexDocument topicIndexDocument = getObject(Topics.TopicIndexDocument.class, response);
+        assertEquals("/topic:1", topicIndexDocument.path);
+    }
+    */
 }

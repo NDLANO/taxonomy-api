@@ -142,7 +142,7 @@ in its URL path, which you get by following the primary connections from the res
 
 Entities have URLs (e.g., `https://www.ndla.no/subject:1/topic:1/resource:1`) which consists of a scheme (`https`), 
 a hostname (`www.ndla.no`), and a path (`/subject:1/topic:1/resource:1`). The taxonomy API only contains information about the path, since 
-the path is directly derived from the taxonomy itself. The hostname and scheme are determined by factors outside the bondary of the
+the path is directly derived from the taxonomy itself. The hostname and scheme are determined by factors outside the boundary of the
 taxonomy API. When you perform a GET call on an entity (using the entity ID), you will also get the primary path to the entity along with 
 the name and content URI.
 
@@ -191,7 +191,36 @@ Say that you for instance list all topics under Social Studies. Statistics will 
 If you, on the other hand, ask for all topics under Mathematics, Statistics will be listed with a path of `/subject:1/topic:2`. 
 The same principle applies for resources. 
 
+### Topics as root contexts
 
+In the above examples, all paths start with a subject. But sometimes, you encounter a topic which is important enough that it should
+be an entry point into the taxonomy in its own right, without being a child of a particular subject. Examples of such topics could
+be current events that should have greater visibility for a limited time period, such as the US Presidential Election 2016. 
+Other examples may be strong topics that are always important in several subjects and nearly a subject in itself, such as Statistics. 
+ 
+When you mark a topic as a root context, you allow URLs to start with the id of that topic. In the above example, Statistics 
+is a child of both Mathematics and Social Studies, so it is accessible through the paths `/subject:1/topic:2` and `/subject:2/topic:2`. 
+If we add Statistics as a root context, it will also be accessible through the path `/topic:2` directly. The same goes for any
+sub topics and resources below Statistics:
+
+
+| Name                  | ID               | Path(s)                                                                                                       | 
+|-----------------------|------------------|---------------------------------------------------------------------------------------------------------------|
+| Mathematics           | `urn:subject:1`  | `/subject:1`                                                                                                  |
+| Social studies        | `urn:subject:2`  | `/subject:2`                                                                                                  |
+| Statistics            | `urn:topic:2`    | `/topic:2` `/subject:1/topic:2` `/subject:2/topic:2`                                                          |
+| Probability           | `urn:topic:5`    | `/topic:2/topic:5` `/subject:1/topic:2/topic:5` `/subject:2/topic:2/topic:5`                                  |
+| What is probability?  | `urn:resource:1` | `/topic:2/topic:5/resource:1` `/subject:1/topic:2/topic:5/resource:1` `/subject:2/topic:2/topic:5/resource:1` |
+| Adding probabilities  | `urn:resource:2` | `/topic:2/topic:5/resource:2` `/subject:1/topic:2/topic:5/resource:2` `/subject:2/topic:2/topic:5/resource:2` |
+| Probability questions | `urn:resource:3` | `/topic:2/topic:5/resource:3` `/subject:1/topic:2/topic:5/resource:3` `/subject:2/topic:2/topic:5/resource:3` |
+
+ 
+A topic can be marked as a root context by making a POST call to `/v1/contexts`, and removed by making a DELETE call to the same.  
+All subjects are root contexts. Please note that POST and DELETE calls to `/v1/contexts` does not create or remove topics, it only
+marks those topics as being a root context or not. 
+
+To list all root contexts, make a GET call to `/v1/contexts`. The contexts will be listed with their ID, (translated) name and path. 
+ 
 ### Translations
 
 When an entity is created, the textual information entered (such as name) becomes the default translation. Add other 
