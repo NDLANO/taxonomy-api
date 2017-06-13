@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.service.rest.v1;
 
+import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -93,7 +94,6 @@ public class ContextsTest extends RestTest {
         assertAnyTrue(contexts, c -> c.name.equals("Fag 1"));
     }
 
-    /** TODO:
     @Test
     public void root_context_is_more_important_than_primary_parent() throws Exception {
         Topic topic = builder.topic(t -> t
@@ -106,10 +106,10 @@ public class ContextsTest extends RestTest {
         );
 
         topic.setPrimarySubject(subject);
+        topic.setContext(true);
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1");
         Topics.TopicIndexDocument topicIndexDocument = getObject(Topics.TopicIndexDocument.class, response);
         assertEquals("/topic:1", topicIndexDocument.path);
     }
-    */
 }
