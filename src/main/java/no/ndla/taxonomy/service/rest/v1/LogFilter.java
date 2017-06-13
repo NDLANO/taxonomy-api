@@ -3,13 +3,21 @@ package no.ndla.taxonomy.service.rest.v1;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import no.ndla.taxonomy.service.JWTToken;
 import org.apache.commons.codec.binary.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.filter.GenericFilterBean;
 
-import javax.servlet.*;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -21,12 +29,17 @@ import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Configuration
-public class LogFilter implements Filter {
+public class LogFilter extends GenericFilterBean {
+
+    private final AuthenticationManager authenticationManager;
 
     Logger logger = LoggerFactory.getLogger("accesslog");
 
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    //@Value("${jwt.header}")
+    //private String tokenHeader;
+
+    public LogFilter(AuthenticationManager authenticationManager) {
+        this.authenticationManager = authenticationManager;
     }
 
     @Override
@@ -85,7 +98,8 @@ public class LogFilter implements Filter {
         if (!authorizationHeader.startsWith("Bearer")) return;
 
         DecodedJWT jwt = JWT.decode(authorizationHeader.substring(6));
-
+        JWTToken token = new JWTToken(jwt);
+        SecurityContextHolder.getContext().setAuthentication(token);
         Map<String, Claim> claims = jwt.getClaims();
         Claim appMetadata = claims.get("app_metadata");
         if (null == appMetadata) return;

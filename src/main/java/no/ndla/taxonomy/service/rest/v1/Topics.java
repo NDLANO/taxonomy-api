@@ -11,6 +11,7 @@ import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -46,6 +47,7 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping
     @ApiOperation("Gets all topics")
+    //@PreAuthorize("hasRole('READONLY')")
     public List<TopicIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
@@ -59,6 +61,7 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
+    //@PreAuthorize("hasRole('ADMIN')")
     public TopicIndexDocument get(@PathVariable("id") URI id,
                                   @ApiParam(value = LANGUAGE_DOC, example = "nb")
                                   @RequestParam(value = "language", required = false, defaultValue = "") String language
