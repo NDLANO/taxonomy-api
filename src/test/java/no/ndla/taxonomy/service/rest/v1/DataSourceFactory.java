@@ -14,7 +14,9 @@ public class DataSourceFactory {
     @Bean
     @Conditional(UseEmbeddedPostgres.class)
     public DataSource dataSource() throws IOException {
-        EmbeddedPostgres pg = EmbeddedPostgres.start();
+        EmbeddedPostgres pg = EmbeddedPostgres.builder()
+                .setLocaleConfig("locale", "no_NO.UTF-8")
+                .start();
         return pg.getPostgresDatabase();
     }
 
