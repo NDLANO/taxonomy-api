@@ -84,4 +84,20 @@ public class ResourceResourceTypesTest extends RestTest {
         assertEquals(resource.getPublicId(), result.resourceId);
         assertEquals(resourceType.getPublicId(), result.resourceTypeId);
     }
+
+    @Test
+    public void can_change_id_of_resource_type() throws Exception {
+        Resource resource = newResource().name("Advanced trigonometry");
+        ResourceType resourceType = newResourceType().name("article");
+        ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);
+        URI id = save(resourceResourceType).getPublicId();
+
+        resourceType.setPublicId(URI.create("urn:resource-type:article"));
+
+        MockHttpServletResponse response = getResource("/v1/resource-resourcetypes/" + id);
+        ResourceResourceTypes.ResourceResourceTypeIndexDocument result = getObject(ResourceResourceTypes.ResourceResourceTypeIndexDocument.class, response);
+
+        assertEquals(resource.getPublicId(), result.resourceId);
+        assertEquals(URI.create("urn:resource-type:article"), result.resourceTypeId);
+    }
 }

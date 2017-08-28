@@ -94,7 +94,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     }
 
     @PutMapping("/{id}")
-    @ApiOperation(value = "Updates a resource type. Use to update which resource type is parent.")
+    @ApiOperation(value = "Updates a resource type. Use to update which resource type is parent. You can also update the id, take care!")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void put(
             @PathVariable URI id,
@@ -109,6 +109,9 @@ public class ResourceTypes extends CrudController<ResourceType> {
             parent = resourceTypeRepository.getByPublicId(command.parentId);
         }
         resourceType.setParent(parent);
+        if (command.id != null) {
+            resourceType.setPublicId(command.id);
+        }
     }
 
 
@@ -191,6 +194,10 @@ public class ResourceTypes extends CrudController<ResourceType> {
         @JsonProperty
         @ApiModelProperty(value = "The name of the resource type", example = "Lecture")
         public String name;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The id of the resource type", example = "urn:resource-type:lecture")
+        public URI id;
 
         @Override
         public void apply(ResourceType resourceType) {

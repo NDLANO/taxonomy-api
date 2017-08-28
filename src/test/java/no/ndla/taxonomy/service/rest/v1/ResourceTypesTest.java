@@ -110,6 +110,19 @@ public class ResourceTypesTest extends RestTest {
     }
 
     @Test
+    public void can_change_resource_type_id() throws Exception {
+        URI id = builder.resourceType(rt -> rt.name("video")).getPublicId();
+
+        updateResource("/v1/resource-types/" + id, new ResourceTypes.UpdateResourceTypeCommand() {{
+            name = "Audiovideo";
+            id = URI.create("urn:resource-type:audiovideo");
+        }});
+
+        ResourceType result = resourceTypeRepository.getByPublicId(URI.create("urn:resource-type:audiovideo"));
+        assertEquals("urn:resource-type:audiovideo", result.getPublicId().toString());
+    }
+
+    @Test
     public void can_add_subresourcetype_to_resourcetype() throws Exception {
         ResourceType parent = builder.resourceType(rt -> rt.name("external"));
 
