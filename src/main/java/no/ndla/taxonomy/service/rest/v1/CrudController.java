@@ -3,6 +3,7 @@ package no.ndla.taxonomy.service.rest.v1;
 import io.swagger.annotations.ApiOperation;
 import no.ndla.taxonomy.service.domain.DomainObject;
 import no.ndla.taxonomy.service.domain.DuplicateIdException;
+import no.ndla.taxonomy.service.domain.URNValidator;
 import no.ndla.taxonomy.service.repositories.TaxonomyRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ public abstract class CrudController<T extends DomainObject> {
     protected TaxonomyRepository<T> repository;
 
     private static final Map<Class<?>, String> locations = new HashMap<>();
+    private URNValidator validator = new URNValidator();
 
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Deletes a single entity by id")
@@ -37,7 +39,10 @@ public abstract class CrudController<T extends DomainObject> {
 
     protected ResponseEntity<Void> doPost(T entity, CreateCommand<T> command) {
         try {
-            if (null != command.getId()) entity.setPublicId(command.getId());
+            if (null != command.getId()) {
+                validator.validate(command.getId(), entity);
+                entity.setPublicId(command.getId());
+            }
             command.apply(entity);
             URI location = URI.create(getLocation() + "/" + entity.getPublicId());
             repository.save(entity);
