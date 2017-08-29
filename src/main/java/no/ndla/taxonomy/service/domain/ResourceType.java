@@ -14,7 +14,7 @@ import java.util.UUID;
 public class ResourceType extends DomainObject {
 
     public ResourceType() {
-        setPublicId(URI.create("urn:resource-type:" + UUID.randomUUID()));
+        setPublicId(URI.create("urn:resourcetype:" + UUID.randomUUID()));
     }
 
     @ManyToOne
