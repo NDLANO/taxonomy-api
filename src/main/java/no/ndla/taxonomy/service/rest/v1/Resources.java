@@ -189,11 +189,11 @@ public class Resources extends CrudController<Resource> {
     @ApiModel("ConnectionResourceResourceTypeIndexDocument")
     public static class ResourceTypeIndexDocument {
         @JsonProperty
-        @ApiModelProperty(example = "urn:resource-type:2")
+        @ApiModelProperty(example = "urn:resourcetype:2")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(example = "urn:resource-type:1")
+        @ApiModelProperty(example = "urn:resourcetype:1")
         public URI parentId;
 
         @JsonProperty

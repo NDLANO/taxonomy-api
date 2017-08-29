@@ -149,7 +149,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @ApiModel("ResourceTypeIndexDocument")
     public static class ResourceTypeIndexDocument {
         @JsonProperty
-        @ApiModelProperty(example = "urn:resource-type:1")
+        @ApiModelProperty(example = "urn:resourcetype:1")
         public URI id;
 
         @JsonProperty
@@ -168,7 +168,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
         public URI parentId;
 
         @JsonProperty
-        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resource-type: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:resource-type:1")
+        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resourcetype: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:resourcetype:1")
         public URI id;
 
         @JsonProperty
@@ -196,7 +196,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
         public String name;
 
         @JsonProperty
-        @ApiModelProperty(value = "The id of the resource type", example = "urn:resource-type:lecture")
+        @ApiModelProperty(value = "The id of the resource type", example = "urn:resourcetype:lecture")
         public URI id;
 
         @Override

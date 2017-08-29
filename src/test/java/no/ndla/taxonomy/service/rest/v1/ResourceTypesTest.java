@@ -70,7 +70,7 @@ public class ResourceTypesTest extends RestTest {
     @Test
     public void can_create_resourcetype() throws Exception {
         ResourceTypes.CreateResourceTypeCommand command = new ResourceTypes.CreateResourceTypeCommand() {{
-            id = URI.create("urn:resource-type:1");
+            id = URI.create("urn:resourcetype:1");
             name = "name";
         }};
 
@@ -83,7 +83,7 @@ public class ResourceTypesTest extends RestTest {
     @Test
     public void cannot_create_duplicate_resourcetype() throws Exception {
         ResourceTypes.CreateResourceTypeCommand command = new ResourceTypes.CreateResourceTypeCommand() {{
-            id = URI.create("urn:resource-type:1");
+            id = URI.create("urn:resourcetype:1");
             name = "name";
         }};
         createResource("/v1/resource-types/", command);
@@ -115,11 +115,11 @@ public class ResourceTypesTest extends RestTest {
 
         updateResource("/v1/resource-types/" + id, new ResourceTypes.UpdateResourceTypeCommand() {{
             name = "Audiovideo";
-            id = URI.create("urn:resource-type:audiovideo");
+            id = URI.create("urn:resourcetype:audiovideo");
         }});
 
-        ResourceType result = resourceTypeRepository.getByPublicId(URI.create("urn:resource-type:audiovideo"));
-        assertEquals("urn:resource-type:audiovideo", result.getPublicId().toString());
+        ResourceType result = resourceTypeRepository.getByPublicId(URI.create("urn:resourcetype:audiovideo"));
+        assertEquals("urn:resourcetype:audiovideo", result.getPublicId().toString());
     }
 
     @Test

@@ -92,12 +92,12 @@ public class ResourceResourceTypesTest extends RestTest {
         ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);
         URI id = save(resourceResourceType).getPublicId();
 
-        resourceType.setPublicId(URI.create("urn:resource-type:article"));
+        resourceType.setPublicId(URI.create("urn:resourcetype:article"));
 
         MockHttpServletResponse response = getResource("/v1/resource-resourcetypes/" + id);
         ResourceResourceTypes.ResourceResourceTypeIndexDocument result = getObject(ResourceResourceTypes.ResourceResourceTypeIndexDocument.class, response);
 
         assertEquals(resource.getPublicId(), result.resourceId);
-        assertEquals(URI.create("urn:resource-type:article"), result.resourceTypeId);
+        assertEquals(URI.create("urn:resourcetype:article"), result.resourceTypeId);
     }
 }

@@ -170,7 +170,7 @@ public class TopicFiltersTest extends RestTest {
 
     @Test
     public void can_get_resources_for_a_topic_with_filter_and_resource_type() throws Exception {
-        ResourceType type = builder.resourceType(rt -> rt.name("Subject matter").publicId("urn:resource-type:subject-matter"));
+        ResourceType type = builder.resourceType(rt -> rt.name("Subject matter").publicId("urn:resourcetype:subject-matter"));
 
         builder.topic(t -> t
                 .publicId("urn:topic:1")
@@ -193,7 +193,7 @@ public class TopicFiltersTest extends RestTest {
 
     @Test
     public void can_get_recursive_resources_with_filter_and_resource_type_restrictions_for_a_topic() throws Exception {
-        ResourceType type = builder.resourceType(rt -> rt.name("Subject matter").publicId("urn:resource-type:subject-matter"));
+        ResourceType type = builder.resourceType(rt -> rt.name("Subject matter").publicId("urn:resourcetype:subject-matter"));
 
         builder.subject(s -> s
                 .name("subject a")

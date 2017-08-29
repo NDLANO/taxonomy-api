@@ -179,7 +179,7 @@ public class Topics extends CrudController<Topic> {
         public String name;
 
         @JsonProperty
-        @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resource-type:1', name = 'lecture'}]")
+        @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resourcetype:1', name = 'lecture'}]")
         public Set<ResourceTypeIndexDocument> resourceTypes = new HashSet<>();
 
         @JsonProperty
@@ -201,7 +201,7 @@ public class Topics extends CrudController<Topic> {
     @ApiModel("TopicResourceTypeIndexDocument")
     public static class ResourceTypeIndexDocument {
         @JsonProperty
-        @ApiModelProperty(value = "Resource type id", example = "urn:resource-type:12")
+        @ApiModelProperty(value = "Resource type id", example = "urn:resourcetype:12")
         public URI id;
 
         @JsonProperty

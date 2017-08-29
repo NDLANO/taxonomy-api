@@ -80,7 +80,7 @@ public class ResourceResourceTypes {
         URI resourceId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resource-type:234")
+        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resourcetype:234")
         URI resourceTypeId;
     }
 
@@ -91,7 +91,7 @@ public class ResourceResourceTypes {
         URI resourceId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resource-type:234")
+        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resourcetype:234")
         URI resourceTypeId;
 
         @JsonProperty

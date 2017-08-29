@@ -169,9 +169,9 @@ public class ResourcesTest extends RestTest {
     public void can_get_resource_types() throws Exception {
         builder.resourceType(rt -> rt
                 .name("Subject matter")
-                .publicId("urn:resource-type:1")
-                .subtype("article", st -> st.name("Article").publicId("urn:resource-type:2"))
-                .subtype("video", st -> st.name("Video").publicId("urn:resource-type:3"))
+                .publicId("urn:resourcetype:1")
+                .subtype("article", st -> st.name("Article").publicId("urn:resourcetype:2"))
+                .subtype("video", st -> st.name("Video").publicId("urn:resourcetype:3"))
         );
 
         builder.resource(r -> r
@@ -183,7 +183,7 @@ public class ResourcesTest extends RestTest {
         MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1/resource-types");
         Resources.ResourceTypeIndexDocument[] result = getObject(Resources.ResourceTypeIndexDocument[].class, response);
         assertEquals(2, result.length);
-        assertAnyTrue(result, rt -> rt.name.equals("Article") && rt.id.toString().equals("urn:resource-type:2") && rt.parentId.toString().equals("urn:resource-type:1") && rt.connectionId.toString().contains("urn:resource-resourcetype"));
-        assertAnyTrue(result, rt -> rt.name.equals("Video") && rt.id.toString().equals("urn:resource-type:3") && rt.parentId.toString().equals("urn:resource-type:1"));
+        assertAnyTrue(result, rt -> rt.name.equals("Article") && rt.id.toString().equals("urn:resourcetype:2") && rt.parentId.toString().equals("urn:resourcetype:1") && rt.connectionId.toString().contains("urn:resource-resourcetype"));
+        assertAnyTrue(result, rt -> rt.name.equals("Video") && rt.id.toString().equals("urn:resourcetype:3") && rt.parentId.toString().equals("urn:resourcetype:1"));
     }
 }

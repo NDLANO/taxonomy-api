@@ -64,7 +64,7 @@ public class SubjectFiltersTest extends RestTest {
 
     @Test
     public void can_get_resources_belonging_to_a_filter_and_resource_type_for_a_subject() throws Exception {
-        ResourceType type = builder.resourceType(rt -> rt.name("Video").publicId("urn:resource-type:video"));
+        ResourceType type = builder.resourceType(rt -> rt.name("Video").publicId("urn:resourcetype:video"));
 
         URI subjectId = builder.subject(s -> s
                 .name("subject")
