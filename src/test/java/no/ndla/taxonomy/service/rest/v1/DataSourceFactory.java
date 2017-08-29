@@ -15,7 +15,7 @@ public class DataSourceFactory {
     @Conditional(UseEmbeddedPostgres.class)
     public DataSource dataSource() throws IOException {
         EmbeddedPostgres pg = EmbeddedPostgres.builder()
-                .setLocaleConfig("locale", "no_NO.UTF-8")
+                .setLocaleConfig("locale", "en_US.UTF-8")
                 .start();
         return pg.getPostgresDatabase();
     }
