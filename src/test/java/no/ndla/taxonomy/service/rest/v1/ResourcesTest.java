@@ -186,4 +186,19 @@ public class ResourcesTest extends RestTest {
         assertAnyTrue(result, rt -> rt.name.equals("Article") && rt.id.toString().equals("urn:resourcetype:2") && rt.parentId.toString().equals("urn:resourcetype:1") && rt.connectionId.toString().contains("urn:resource-resourcetype"));
         assertAnyTrue(result, rt -> rt.name.equals("Video") && rt.id.toString().equals("urn:resourcetype:3") && rt.parentId.toString().equals("urn:resourcetype:1"));
     }
+
+
+    @Test
+    public void resources_can_have_same_name() throws Exception {
+        builder.resource(r -> r
+                .publicId("urn:resource:1")
+                .name("What is maths?"));
+
+        Resources.CreateResourceCommand command = new Resources.CreateResourceCommand() {{
+            id = URI.create("urn:resource:2");
+            name="What is maths?";
+        }};
+
+        createResource("/v1/resources", command, status().isCreated());
+    }
 }

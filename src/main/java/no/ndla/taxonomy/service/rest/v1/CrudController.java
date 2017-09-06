@@ -33,6 +33,7 @@ public abstract class CrudController<T extends DomainObject> {
 
     protected T doPut(URI id, UpdateCommand<T> command) {
         T entity = repository.getByPublicId(id);
+        validator.validate(id, entity);
         command.apply(entity);
         return entity;
     }
