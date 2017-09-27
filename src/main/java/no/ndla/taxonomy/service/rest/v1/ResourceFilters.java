@@ -66,10 +66,16 @@ public class ResourceFilters {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@ApiParam(name = "id", value = "The id of the connection to delete") @PathVariable String id) {
-        ResourceFilter resourceFilter = resourceFilterRepository.getByPublicId(URI.create(id));
+    public void delete(@ApiParam(name = "id", value = "The id of the connection to delete") @PathVariable URI id) {
+        ResourceFilter resourceFilter = resourceFilterRepository.getByPublicId(id);
         resourceFilter.getResource().removeFilter(resourceFilter.getFilter());
-        resourceFilterRepository.deleteByPublicId(URI.create(id));
+        resourceFilterRepository.deleteByPublicId(id);
+    }
+
+    @GetMapping("/{id}")
+    public ResourceFilterIndexDocument get(@ApiParam(name = "id", value = "The id of the connection to get") @PathVariable URI id) {
+        ResourceFilter resourceFilter = resourceFilterRepository.getByPublicId(id);
+        return new ResourceFilterIndexDocument(resourceFilter);
     }
 
     @GetMapping
