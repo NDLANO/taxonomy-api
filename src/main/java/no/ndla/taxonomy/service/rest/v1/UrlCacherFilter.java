@@ -15,6 +15,7 @@ import java.net.URI;
 public class UrlCacherFilter implements Filter {
 
     private UrlCacher urlCacher;
+    String batch = "batch";
 
     public UrlCacherFilter(UrlCacher urlCacher) {
         this.urlCacher = urlCacher;
@@ -48,7 +49,12 @@ public class UrlCacherFilter implements Filter {
         if (request.getMethod().equals(HttpMethod.DELETE.toString())) {
             urlCacher.remove(id);
         } else {
-            urlCacher.add(id);
+            String doBatch = request.getHeader(batch);
+            if (doBatch != null) {
+                if (!doBatch.equals("1")) {
+                    urlCacher.add(id);
+                }
+            }
         }
     }
 
