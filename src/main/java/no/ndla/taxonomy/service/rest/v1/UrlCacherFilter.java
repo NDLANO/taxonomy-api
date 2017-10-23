@@ -33,6 +33,7 @@ public class UrlCacherFilter implements Filter {
 
         filterChain.doFilter(servletRequest, servletResponse);
 
+        System.out.println(request.getMethod() + ": " + request.getRequestURI() + " : result: " + response.getStatus());
         if (request.getMethod().equals(HttpMethod.GET.toString())) return;
         if (response.getStatus() < 200 || response.getStatus() >= 300) return;
 
