@@ -51,3 +51,8 @@ service: ndla-taxonomy-prod
 spring.profiles: test
 
 service: ndla-taxonomy-test
+
+---
+spring.profiles: brukertest
+
+service: ndla-taxonomy-brukertest
