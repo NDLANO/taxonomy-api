@@ -196,6 +196,10 @@ public class Topics extends CrudController<Topic> {
         @JsonProperty
         @ApiModelProperty(value = "The id of the topic-resource connection which causes this resource to be included in the result set.", example = "urn:topic-resource:1")
         public URI connectionId;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The order in which to sort the topic within it's level.", example = "1")
+        public int rank;
     }
 
     @ApiModel("TopicResourceTypeIndexDocument")
@@ -369,6 +373,7 @@ public class Topics extends CrudController<Topic> {
                         contentUri = toURI(resultSet.getString("resource_content_uri"));
                         id = toURI(resultSet.getString("resource_public_id"));
                         connectionId = toURI(resultSet.getString("connection_public_id"));
+                        rank = resultSet.getInt("rank");
                     }};
                     resources.put(id, resource);
                     filterResultByRelevance(relevance, resultSet, result, resource);

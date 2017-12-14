@@ -256,6 +256,10 @@ public class Subjects extends CrudController<Subject> {
         @ApiModelProperty(value = "The id of the subject-topics or topic-subtopics connection which causes this topic to be included in the result set.", example = "urn:subject-topic:1")
         public URI connectionId;
 
+        @JsonProperty
+        @ApiModelProperty(value = "The order in which to sort the topic within it's level.", example = "1")
+        public int rank;
+
         @JsonIgnore
         URI topicFilterId, resourceFilterId;
 
@@ -504,6 +508,7 @@ public class Subjects extends CrudController<Subject> {
                     connectionId = getURI(resultSet, "connection_public_id");
                     topicFilterId = getURI(resultSet, "topic_filter_public_id");
                     resourceFilterId = getURI(resultSet, "resource_filter_public_id");
+                    rank = resultSet.getInt("rank");
                 }};
                 topics.put(topic.id, topic);
                 filterTopicByRelevance(relevance, resultSet, queryresult, topic);

@@ -8,7 +8,8 @@ SELECT
   coalesce(rttr.name, rt.name) AS resource_type_name,
   tr.public_id                 AS connection_public_id,
   url.path                     AS resource_path,
-  rel.public_id                AS relevance_public_id
+  rel.public_id                AS relevance_public_id,
+  tr.rank                      AS rank
 FROM
   topic t
   INNER JOIN topic_resource tr ON tr.topic_id = t.id
