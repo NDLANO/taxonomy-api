@@ -2,7 +2,9 @@
 
 [![Build Status](https://travis-ci.org/NDLANO/taxonomy-api.svg?branch=master)](https://travis-ci.org/NDLANO/taxonomy-api)
 
-Rest service and relational database for organizing content
+Rest service and relational database for organizing content.
+
+Are you a developer? Go [here](projectBuild.md) for project build documentation.
 
 ## What does this service do?
 
