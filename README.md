@@ -34,7 +34,8 @@ such as name and content URI. Translations of names can also be stored.
 In addition to the entities, the taxonomy stores the connections you make between entities. Each connection also has 
 metadata attached to it, such as which entities are connected, and whether or not this connection is the primary connection 
 (see "Multiple parent connections" below). Subjects can be connected to topics, topics to subtopics, topics to resources, 
-resources to resource types, and resource types to parent resources types. 
+resources to resource types, and resource types to parent resources types. The connections can also be labelled with rank. 
+This makes it easy to tell which order all the resources (or topics) is meant to be presented.  
 
 Below you can see a figure of how entities can be connected. We will go through how this structure can be realised 
 through the API. For details on the use of each service, please see the Swagger documentation. 
@@ -181,7 +182,7 @@ perhaps a treeview showing the hierarchy below the Social Studies subject. User 
 would fall within the norm of such systems. 
 
 Now, say that the user wants to navigate to Statistics, which is a first-level topic within Social Studies. Its primary parent, 
-however, is Mathematics. If the link were to transport the user from the subejct of Social Studies to Mathematics, he would surely be confused. 
+however, is Mathematics. If the link were to transport the user from the subejct of Social Studies to Mathematics, they would surely be confused. 
 So to preserve the current context, the API finds the possible paths to Statistics, and selects the one most closely resembling the 
 user's current position in the hierarchy. In this scenario, the possible paths are `/subject:1/topic:2` and `/subject:2/topic:2`. 
 Since the user's current position (the current context) is `/subject:2`, we select `/subject:2/topic:2` as the preferred path, since it
@@ -197,7 +198,7 @@ The same principle applies for resources.
 
 In the above examples, all paths start with a subject. But sometimes, you encounter a topic which is important enough that it should
 be an entry point into the taxonomy in its own right, without being a child of a particular subject. Examples of such topics could
-be current events that should have greater visibility for a limited time period, such as the US Presidential Election 2016. 
+be current events that should have greater visibility for a limited time period, such as the election of parliament. 
 Other examples may be strong topics that are always important in several subjects and nearly a subject in itself, such as Statistics. 
  
 When you mark a topic as a root context, you allow URLs to start with the id of that topic. In the above example, Statistics 
