@@ -57,7 +57,7 @@ public class TopicResources {
             @ApiParam(name = "connection", value = "new topic/resource connection ") @RequestBody AddResourceToTopicCommand command) throws Exception {
 
         Topic topic = topicRepository.getByPublicId(command.topicid);
-        Resource resource = resourceRepository.getByPublicId(command.resourceid);
+        Resource resource = resourceRepository.getByPublicId(command.resourceId);
         TopicResource topicResource = topic.addResource(resource);
         topicResource.setRank(command.rank);
         if (command.primary) resource.setPrimaryTopic(topic);
@@ -100,7 +100,7 @@ public class TopicResources {
 
         @JsonProperty
         @ApiModelProperty(required = true, value = "Resource id", example = "urn:resource:345")
-        URI resourceid;
+        URI resourceId;
 
         @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
@@ -133,7 +133,7 @@ public class TopicResources {
 
         @JsonProperty
         @ApiModelProperty(value = "Resource id", example = "urn:resource:345")
-        URI resourceid;
+        URI resourceId;
 
         @JsonProperty
         @ApiModelProperty(value = "Topic resource connection id", example = "urn:topic-has-resources:123")
@@ -153,7 +153,7 @@ public class TopicResources {
         TopicResourceIndexDocument(TopicResource topicResource) {
             id = topicResource.getPublicId();
             topicid = topicResource.getTopic().getPublicId();
-            resourceid = topicResource.getResource().getPublicId();
+            resourceId = topicResource.getResource().getPublicId();
             primary = topicResource.isPrimary();
             rank = topicResource.getRank();
         }

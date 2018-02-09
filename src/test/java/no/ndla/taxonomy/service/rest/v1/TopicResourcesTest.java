@@ -24,7 +24,7 @@ public class TopicResourcesTest extends RestTest {
         URI id = getId(
                 createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
                     topicid = calculusId;
-                    resourceid = integrationId;
+                    resourceId = integrationId;
                 }})
         );
 
@@ -48,7 +48,7 @@ public class TopicResourcesTest extends RestTest {
                 new TopicResources.AddResourceToTopicCommand() {
                     {
                         topicid = calculusId;
-                        resourceid = integrationId;
+                        resourceId = integrationId;
                     }
                 },
                 status().isConflict()
@@ -109,8 +109,8 @@ public class TopicResourcesTest extends RestTest {
         TopicResources.TopicResourceIndexDocument[] topicResources = getObject(TopicResources.TopicResourceIndexDocument[].class, response);
 
         assertEquals(2, topicResources.length);
-        assertAnyTrue(topicResources, t -> electricity.getPublicId().equals(t.topicid) && alternatingCurrent.getPublicId().equals(t.resourceid));
-        assertAnyTrue(topicResources, t -> calculus.getPublicId().equals(t.topicid) && integration.getPublicId().equals(t.resourceid));
+        assertAnyTrue(topicResources, t -> electricity.getPublicId().equals(t.topicid) && alternatingCurrent.getPublicId().equals(t.resourceId));
+        assertAnyTrue(topicResources, t -> calculus.getPublicId().equals(t.topicid) && integration.getPublicId().equals(t.resourceId));
         assertAllTrue(topicResources, t -> isValidId(t.id));
     }
 
@@ -123,7 +123,7 @@ public class TopicResourcesTest extends RestTest {
         MockHttpServletResponse resource = getResource("/v1/topic-resources/" + topicResource.getPublicId());
         TopicResources.TopicResourceIndexDocument topicResourceIndexDocument = getObject(TopicResources.TopicResourceIndexDocument.class, resource);
         assertEquals(electricity.getPublicId(), topicResourceIndexDocument.topicid);
-        assertEquals(alternatingCurrent.getPublicId(), topicResourceIndexDocument.resourceid);
+        assertEquals(alternatingCurrent.getPublicId(), topicResourceIndexDocument.resourceId);
     }
 
     @Test
@@ -151,7 +151,7 @@ public class TopicResourcesTest extends RestTest {
 
         createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
             topicid = graphTheory.getPublicId();
-            resourceid = graphs.getPublicId();
+            resourceId = graphs.getPublicId();
             primary = true;
         }});
 
@@ -253,14 +253,14 @@ public class TopicResourcesTest extends RestTest {
         createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand(){{
             primary = true;
             topicid = geometry.getPublicId();
-            resourceid = squares.getPublicId();
+            resourceId = squares.getPublicId();
             rank = 2;
         }});
 
         createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
             primary = true;
             topicid = geometry.getPublicId();
-            resourceid = circles.getPublicId();
+            resourceId = circles.getPublicId();
             rank = 1;
         }});
 
