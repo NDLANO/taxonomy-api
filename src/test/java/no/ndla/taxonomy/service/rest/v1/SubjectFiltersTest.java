@@ -1,9 +1,6 @@
 package no.ndla.taxonomy.service.rest.v1;
 
-import no.ndla.taxonomy.service.domain.Filter;
-import no.ndla.taxonomy.service.domain.Relevance;
-import no.ndla.taxonomy.service.domain.ResourceType;
-import no.ndla.taxonomy.service.domain.Subject;
+import no.ndla.taxonomy.service.domain.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -21,8 +18,8 @@ public class SubjectFiltersTest extends RestTest {
     public void before() throws Exception {
         core = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
         supplementary = builder.relevance(r -> r.publicId("urn:relevance:supplementary").name("Supplementary material"));
-        vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
-        vg2 = builder.filter(f -> f.publicId("urn:filter:vg2"));
+        vg1 = builder.filter(f -> f.name("VG1").publicId("urn:filter:vg1"));
+        vg2 = builder.filter(f -> f.name("VG2").publicId("urn:filter:vg2"));
     }
 
     @Test
@@ -87,7 +84,10 @@ public class SubjectFiltersTest extends RestTest {
     public void can_get_topics_with_filter() throws Exception {
         Subject subject = builder.subject(s -> s
                 .name("physics")
-                .topic(t -> t.name("statics").filter(vg1, core))
+                .topic(t -> t
+                        .name("statics")
+                        .filter(vg1, core)
+                )
                 .topic(t -> t.name("electricity").filter(vg2, core))
                 .topic(t -> t.name("optics").filter(vg1, core))
         );
@@ -98,6 +98,30 @@ public class SubjectFiltersTest extends RestTest {
         assertEquals(2, topics.length);
         assertAnyTrue(topics, t -> "statics".equals(t.name));
         assertAnyTrue(topics, t -> "optics".equals(t.name));
+        assertAnyTrue(topics[0].filters, f -> vg1.getPublicId().equals(f.id));
+        assertAnyTrue(topics[0].filters, f -> vg1.getName().equals(f.name));
+        assertAnyTrue(topics[0].filters, f -> core.getPublicId().equals(f.relevanceId));
+        assertEquals(1, topics[0].filters.size());
+    }
+
+    @Test
+    public void topic_can_have_multiple_filters() throws Exception {
+        Subject subject = builder.subject(s -> s
+                .name("physics")
+                .topic(t -> t
+                        .name("statics")
+                        .filter(vg1, core)
+                        .filter(vg2, supplementary))
+        );
+
+        MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics?filter=" + vg1.getPublicId());
+        Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
+
+        assertEquals(2, topics[0].filters.size());
+        assertAnyTrue(topics[0].filters, f -> vg1.getPublicId().equals(f.id));
+        assertAnyTrue(topics[0].filters, f -> core.getPublicId().equals(f.relevanceId));
+        assertAnyTrue(topics[0].filters, f -> supplementary.getPublicId().equals(f.relevanceId));
+        assertAnyTrue(topics[0].filters, f -> vg2.getPublicId().equals(f.id));
     }
 
     @Test
@@ -178,9 +202,9 @@ public class SubjectFiltersTest extends RestTest {
                                 .filter(vg1, core)
                         )
                         .subtopic("child2", child -> child
-                        .name("child 2")
-                        .publicId("urn:topic:ab")
-                        .filter(vg1, supplementary))
+                                .name("child 2")
+                                .publicId("urn:topic:ab")
+                                .filter(vg1, supplementary))
                 )
         ).getPublicId();
 

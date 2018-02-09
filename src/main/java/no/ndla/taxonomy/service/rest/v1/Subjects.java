@@ -260,6 +260,10 @@ public class Subjects extends CrudController<Subject> {
         @ApiModelProperty(value = "The order in which to sort the topic within it's level.", example = "1")
         public int rank;
 
+        @JsonProperty
+        @ApiModelProperty(value = "Filters this topic is associated with, directly or by inheritance", example = "[{id = 'urn:filter:1', relevanceId='urn:relevance:core'}]")
+        public Set<TopicFilterIndexDocument> filters = new HashSet<>();
+
         @JsonIgnore
         URI topicFilterId, resourceFilterId;
 
@@ -279,6 +283,22 @@ public class Subjects extends CrudController<Subject> {
         public int hashCode() {
             return id.hashCode();
         }
+    }
+
+    @ApiModel("SubjectTopicFilterIndexDocument")
+    public static class TopicFilterIndexDocument {
+        @JsonProperty
+        @ApiModelProperty(value = "Filter id", example = "urn:filter:12")
+        public URI id;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Filter name", example = "VG 1")
+        public String name;
+
+
+        @JsonProperty
+        @ApiModelProperty(required = true, value = "ID of the relevance the resource has in context of the filter", example = "urn:relevance:core")
+        public URI relevanceId;
     }
 
     @ApiModel("SubjectResourceIndexDocument")
@@ -473,8 +493,22 @@ public class Subjects extends CrudController<Subject> {
 
                 TopicIndexDocument topic = extractTopic(relevance, resultSet, topics, queryresult, public_id);
                 topic.path = getPathMostCloselyMatchingContext(context, topic.path, resultSet.getString("topic_path"));
+                extractFilter(resultSet, topic);
             }
             return filterTopics(filterIds, topics, queryresult);
+        }
+
+        private void extractFilter(ResultSet resultSet, TopicIndexDocument topic) throws SQLException {
+            URI filterPublicId = getURI(resultSet, "filter_public_id");
+            if (null != filterPublicId) {
+                TopicFilterIndexDocument filter = new TopicFilterIndexDocument() {{
+                    id = filterPublicId;
+                    name = resultSet.getString("filter_name");
+                    relevanceId = getURI(resultSet, "relevance_public_id");
+                }};
+
+                topic.filters.add(filter);
+            }
         }
 
         private List<TopicIndexDocument> filterTopics(URI[] filterIds, Map<URI, TopicIndexDocument> topics, List<TopicIndexDocument> queryresult) {

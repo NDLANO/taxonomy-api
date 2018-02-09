@@ -44,6 +44,8 @@ SELECT DISTINCT
   f.public_id               AS topic_filter_public_id,
   url.path                  AS topic_path,
   rel.public_id             AS relevance_public_id,
+  f.name                    AS filter_name,
+  f.public_id               AS filter_public_id,
   t.rank
 FROM
   tree t
