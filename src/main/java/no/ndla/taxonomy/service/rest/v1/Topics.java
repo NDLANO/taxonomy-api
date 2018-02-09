@@ -149,7 +149,7 @@ public class Topics extends CrudController<Topic> {
 
 
     @GetMapping("/{id}/filters")
-    @ApiOperation(value = "Gets all filters associated with this resource")
+    @ApiOperation(value = "Gets all filters associated with this topic")
     public List<FilterIndexDocument> getFilters(
             @PathVariable("id")
                     URI id,
