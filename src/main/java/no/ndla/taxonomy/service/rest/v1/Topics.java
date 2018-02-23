@@ -12,6 +12,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -47,7 +51,7 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping
     @ApiOperation("Gets all topics")
-    //@PreAuthorize("hasRole('READONLY')")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<TopicIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
@@ -61,12 +65,11 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('READONLY')")
     public TopicIndexDocument get(@PathVariable("id") URI id,
                                   @ApiParam(value = LANGUAGE_DOC, example = "nb")
                                   @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) throws Exception {
-
         String sql = GET_TOPICS_QUERY.replace("1 = 1", "t.public_id = ?");
         List<Object> args = asList(language, id.toString());
 
@@ -101,6 +104,7 @@ public class Topics extends CrudController<Topic> {
     }
 
     @GetMapping("/{id}/resources")
+    @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all resources for the given topic")
     public List<ResourceIndexDocument> getResources(
             @PathVariable("id") URI topicId,
@@ -149,6 +153,7 @@ public class Topics extends CrudController<Topic> {
 
 
     @GetMapping("/{id}/filters")
+    @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all filters associated with this topic")
     public List<FilterIndexDocument> getFilters(
             @PathVariable("id")

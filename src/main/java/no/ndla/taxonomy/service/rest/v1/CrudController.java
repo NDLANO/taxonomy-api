@@ -8,6 +8,7 @@ import no.ndla.taxonomy.service.repositories.TaxonomyRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,12 +26,14 @@ public abstract class CrudController<T extends DomainObject> {
 
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Deletes a single entity by id")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) throws Exception {
         T resource = repository.getByPublicId(id);
         repository.delete(resource);
     }
 
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     protected T doPut(URI id, UpdateCommand<T> command) {
         T entity = repository.getByPublicId(id);
         validator.validate(id, entity);
@@ -38,6 +41,7 @@ public abstract class CrudController<T extends DomainObject> {
         return entity;
     }
 
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     protected ResponseEntity<Void> doPost(T entity, CreateCommand<T> command) {
         try {
             if (null != command.getId()) {

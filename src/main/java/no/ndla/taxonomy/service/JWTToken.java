@@ -11,6 +11,9 @@ import java.util.*;
 public class JWTToken implements Authentication {
 
     private static final long serialVersionUID = 1L;
+    private static final String TAXONOMY_API = "taxonomy";
+    private static final String WRITE_PERMISSION = "write";
+    private static final String PRODUCTION = "production";
 
     private DecodedJWT jwt;
     private Collection<GrantedAuthority> authorities;
@@ -20,30 +23,20 @@ public class JWTToken implements Authentication {
     public JWTToken(DecodedJWT jwt) {
 
         this.jwt = jwt;
-        List<String> roles;
-        Map<String, Claim> claims = jwt.getClaims();
-        Claim appMetadata = claims.get("app_metadata");
-        if (null == appMetadata) return;
 
-        Map<String, Object> appMetadataMap = appMetadata.asMap();
-
-
-        Object roleMap = appMetadataMap.get("roles");
-        if (roleMap == null) {
-            roles = new ArrayList<>();
-        } else {
-            roles = (List<String>) roleMap;
-        }
-
+        Claim appMetadata = this.jwt.getClaim("scope");
 
         List<GrantedAuthority> tmp = new ArrayList<>();
-        /*for (String role : roles) {
-            tmp.add(new SimpleGrantedAuthority(role));
-        }*/
         tmp.add(new SimpleGrantedAuthority("READONLY"));
+
+        for (String jwtPermissionString : appMetadata.asString().split(" ")) {
+            final JWTPermission jwtPermission = new JWTPermission(jwtPermissionString);
+            if (jwtPermission.getApi().equals(TAXONOMY_API) && jwtPermission.getPermission().equals(WRITE_PERMISSION) && jwtPermission.getEnvironment().equals(PRODUCTION)) {
+                tmp.add(new SimpleGrantedAuthority("TAXONOMY_WRITE"));
+            }
+        }
+
         this.authorities = Collections.unmodifiableList(tmp);
-        SimpleGrantedAuthority bah = new SimpleGrantedAuthority("READONLY");
-        System.out.println(bah.getAuthority());
         this.claims = jwt.getClaims();
         authenticated = true;
     }

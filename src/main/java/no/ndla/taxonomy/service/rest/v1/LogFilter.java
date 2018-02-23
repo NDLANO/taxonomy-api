@@ -1,10 +1,15 @@
 package no.ndla.taxonomy.service.rest.v1;
 
+import com.auth0.jwk.Jwk;
+import com.auth0.jwk.JwkException;
+import com.auth0.jwk.JwkProvider;
+import com.auth0.jwk.UrlJwkProvider;
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import no.ndla.taxonomy.service.JWTToken;
-import org.apache.commons.codec.binary.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -21,9 +26,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Base64;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Enumeration;
-import java.util.Map;
 
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -35,8 +39,11 @@ public class LogFilter extends GenericFilterBean {
 
     Logger logger = LoggerFactory.getLogger("accesslog");
 
-    //@Value("${jwt.header}")
-    //private String tokenHeader;
+    @Value(value = "${auth0.issuer}")
+    private String issuer;
+
+    @Value(value="${auth0.jwks.kid}")
+    private String kid;
 
     public LogFilter(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
@@ -92,25 +99,41 @@ public class LogFilter extends GenericFilterBean {
         }
     }
 
-    private void parseWebToken(HttpServletRequest request) {
+    private void parseWebToken(HttpServletRequest request) throws JwkException {
         String authorizationHeader = request.getHeader("authorization");
         if (isBlank(authorizationHeader)) return;
         if (!authorizationHeader.startsWith("Bearer")) return;
 
-        DecodedJWT jwt = JWT.decode(authorizationHeader.substring(6));
-        JWTToken token = new JWTToken(jwt);
-        SecurityContextHolder.getContext().setAuthentication(token);
-        Map<String, Claim> claims = jwt.getClaims();
-        Claim appMetadata = claims.get("app_metadata");
-        if (null == appMetadata) return;
+        try {
+            DecodedJWT jwt = verifyWebToken(authorizationHeader.substring(6).trim());
 
-        Map<String, Object> appMetadataMap = appMetadata.asMap();
+            JWTToken token = new JWTToken(jwt);
+            SecurityContextHolder.getContext().setAuthentication(token);
+         } catch (JwkException e) {
+            System.out.println("No JWKs to verify against.");
+            throw e;
+        }
 
-        Object roles = appMetadataMap.get("roles");
-        MDC.put("roles", "" + roles);
+    }
 
-        String payload = StringUtils.newStringUtf8(Base64.getDecoder().decode(jwt.getPayload()));
-        MDC.put("JWT-payload", payload);
+    private DecodedJWT verifyWebToken(String token) throws JwkException {
+        JwkProvider provider = new UrlJwkProvider(issuer);
+        Jwk jwk = provider.get(kid);
+        RSAPublicKey publicKey = (RSAPublicKey) jwk.getPublicKey();
+
+        try {
+            Algorithm algorithm = Algorithm.RSA256(publicKey, null);
+            JWTVerifier verifier = JWT.require(algorithm)
+                    .withIssuer(issuer)
+                    .acceptExpiresAt(1515581930)
+                    .build();
+
+            final DecodedJWT decoded = verifier
+                .verify(token);
+            return decoded;
+        } catch (JWTVerificationException exception) {
+            throw exception;
+        }
     }
 
     private String extractHeaders(HttpServletRequest request) {
