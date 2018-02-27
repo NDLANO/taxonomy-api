@@ -9,6 +9,7 @@ import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.domain.TopicTranslation;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManager;
@@ -35,6 +36,7 @@ public class TopicTranslations {
 
     @GetMapping
     @ApiOperation("Gets all translations for a single topic")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<TopicTranslations.TopicTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
         Topic topic = topicRepository.getByPublicId(id);
         List<TopicTranslations.TopicTranslationIndexDocument> result = new ArrayList<>();
@@ -49,6 +51,7 @@ public class TopicTranslations {
 
     @GetMapping("/{language}")
     @ApiOperation("Gets a single translation for a single topic")
+    @PreAuthorize("hasAuthority('READONLY')")
     public TopicTranslations.TopicTranslationIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
@@ -67,6 +70,7 @@ public class TopicTranslations {
     @PutMapping("/{language}")
     @ApiOperation("Creates or updates a translation of a topic")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
@@ -83,6 +87,7 @@ public class TopicTranslations {
     @DeleteMapping("/{language}")
     @ApiOperation("Deletes a translation")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)

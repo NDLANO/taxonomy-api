@@ -89,6 +89,7 @@ public class Topics extends CrudController<Topic> {
     @PutMapping("/{id}")
     @ApiOperation(value = "Updates a single topic")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(name = "topic", value = "The updated topic. Fields not included will be set to null.") @RequestBody UpdateTopicCommand command) throws Exception {
@@ -97,6 +98,7 @@ public class Topics extends CrudController<Topic> {
 
     @PutMapping
     @ApiOperation(value = "Replaces the collection of topics.")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void putCollection(@ApiParam(name = "subjects", value = "A list of subjects") @RequestBody CreateTopicCommand[] commands) throws Exception {
         topicRepository.deleteAll();
         for (CreateTopicCommand command : commands) {

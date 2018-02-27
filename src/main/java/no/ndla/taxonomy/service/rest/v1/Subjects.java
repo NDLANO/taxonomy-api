@@ -11,6 +11,7 @@ import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -45,6 +46,7 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping
     @ApiOperation("Gets all subjects")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<SubjectIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -57,6 +59,7 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single subject", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
+    @PreAuthorize("hasAuthority('READONLY')")
     public SubjectIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -73,6 +76,7 @@ public class Subjects extends CrudController<Subject> {
     @PutMapping("/{id}")
     @ApiOperation("Updates a subject")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(name = "subject", value = "The updated subject. Fields not included will be set to null.") @RequestBody UpdateSubjectCommand command
@@ -82,6 +86,7 @@ public class Subjects extends CrudController<Subject> {
 
     @PutMapping
     @ApiOperation(value = "Replaces a collection of subjects")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void putSubjects(@ApiParam(name = "subjects", value = "A list of subjects") @RequestBody CreateSubjectCommand[] commands) throws Exception {
         subjectRepository.deleteAll();
         for (CreateSubjectCommand command : commands) {
@@ -91,12 +96,14 @@ public class Subjects extends CrudController<Subject> {
 
     @PostMapping
     @ApiOperation(value = "Creates a new subject")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(@ApiParam(name = "subject", value = "The new subject") @RequestBody CreateSubjectCommand command) throws Exception {
         return doPost(new Subject(), command);
     }
 
     @GetMapping("/{id}/topics")
     @ApiOperation(value = "Gets all topics associated with a subject", notes = "This resource is read-only. To update the relationship between subjects and topics, use the resource /subject-topics.")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<TopicIndexDocument> getTopics(
             @PathVariable("id")
                     URI id,
@@ -129,6 +136,7 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping("/{id}/resources")
     @ApiOperation(value = "Gets all resources for a subject (all topics and subtopics)")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceIndexDocument> getResources(
             @PathVariable("id") URI subjectId,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -163,6 +171,7 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters for a subject")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<FilterIndexDocument> getFilters(@PathVariable("id") URI subjectId) {
         String sql = GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY;
         List<Object> args = singletonList(subjectId.toString());

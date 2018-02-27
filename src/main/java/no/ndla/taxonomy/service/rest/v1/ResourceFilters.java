@@ -13,6 +13,7 @@ import no.ndla.taxonomy.service.repositories.ResourceRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -38,6 +39,7 @@ public class ResourceFilters {
 
     @PostMapping
     @ApiOperation(value = "Adds a filter to a resource")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(@ApiParam(name = "resource filter", value = "The new resource filter") @RequestBody AddFilterToResourceCommand command) throws Exception {
         try {
             Filter filter = filterRepository.getByPublicId(command.filterId);
@@ -58,6 +60,7 @@ public class ResourceFilters {
     @PutMapping("/{id}")
     @ApiOperation(value = "Updates a resource filter connection")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id, @ApiParam(name = "resource filter", value = "The updated resource filter") @RequestBody UpdateResourceFilterCommand command) throws Exception {
         ResourceFilter resourceFilter = resourceFilterRepository.getByPublicId(id);
         Relevance relevance = relevanceRepository.getByPublicId(command.relevanceId);
@@ -66,6 +69,7 @@ public class ResourceFilters {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@ApiParam(name = "id", value = "The id of the connection to delete") @PathVariable URI id) {
         ResourceFilter resourceFilter = resourceFilterRepository.getByPublicId(id);
         resourceFilter.getResource().removeFilter(resourceFilter.getFilter());
@@ -73,6 +77,7 @@ public class ResourceFilters {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('READONLY')")
     public ResourceFilterIndexDocument get(@ApiParam(name = "id", value = "The id of the connection to get") @PathVariable URI id) {
         ResourceFilter resourceFilter = resourceFilterRepository.getByPublicId(id);
         return new ResourceFilterIndexDocument(resourceFilter);
@@ -80,6 +85,7 @@ public class ResourceFilters {
 
     @GetMapping
     @ApiOperation("Gets all connections between resources and filters")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceFilterIndexDocument> index() throws Exception {
         List<ResourceFilterIndexDocument> result = new ArrayList<>();
         resourceFilterRepository.findAll().forEach(record -> result.add(new ResourceFilterIndexDocument(record)));

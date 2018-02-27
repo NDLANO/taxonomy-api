@@ -13,6 +13,7 @@ import no.ndla.taxonomy.service.repositories.TopicRepository;
 import no.ndla.taxonomy.service.repositories.TopicResourceRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -37,6 +38,7 @@ public class TopicResources {
 
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and resources")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<TopicResourceIndexDocument> index() throws Exception {
         List<TopicResourceIndexDocument> result = new ArrayList<>();
         topicResourceRepository.findAll().forEach(record -> result.add(new TopicResourceIndexDocument(record)));
@@ -45,6 +47,7 @@ public class TopicResources {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a specific connection between a topic and a resource")
+    @PreAuthorize("hasAuthority('READONLY')")
     public TopicResourceIndexDocument get(@PathVariable("id") URI id) throws Exception {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
         TopicResourceIndexDocument result = new TopicResourceIndexDocument(topicResource);
@@ -53,6 +56,7 @@ public class TopicResources {
 
     @PostMapping
     @ApiOperation(value = "Adds a resource to a topic")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "connection", value = "new topic/resource connection ") @RequestBody AddResourceToTopicCommand command) throws Exception {
 
@@ -71,6 +75,7 @@ public class TopicResources {
     @DeleteMapping("/{id}")
     @ApiOperation("Removes a resource from a topic")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) throws Exception {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
         topicResource.getTopic().removeResource(topicResource.getResource());
@@ -81,6 +86,7 @@ public class TopicResources {
     @PutMapping("/{id}")
     @ApiOperation(value = "Updates a connection between a topic and a resource", notes = "Use to update which topic is primary to the resource or to change sorting order.")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand
                             command) throws Exception {

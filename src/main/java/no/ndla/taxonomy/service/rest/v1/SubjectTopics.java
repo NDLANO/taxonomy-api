@@ -13,6 +13,7 @@ import no.ndla.taxonomy.service.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -37,6 +38,7 @@ public class SubjectTopics {
 
     @GetMapping
     @ApiOperation("Gets all connections between subjects and topics")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<SubjectTopicIndexDocument> index() throws Exception {
         List<SubjectTopicIndexDocument> result = new ArrayList<>();
 
@@ -49,6 +51,7 @@ public class SubjectTopics {
 
     @GetMapping("/{id}")
     @ApiOperation("Get a specific connection between a subject and a topic")
+    @PreAuthorize("hasAuthority('READONLY')")
     public SubjectTopicIndexDocument get(@PathVariable("id") URI id) throws Exception {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
         return new SubjectTopicIndexDocument(subjectTopic);
@@ -56,6 +59,7 @@ public class SubjectTopics {
 
     @PostMapping
     @ApiOperation("Adds a new topic to a subject")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "command", value = "The subject and topic getting connected. Use primary=true if primary connection for this topic.") @RequestBody AddTopicToSubjectCommand command) throws Exception {
 
@@ -74,6 +78,7 @@ public class SubjectTopics {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation("Removes a topic from a subject")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) throws Exception {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
         subjectTopic.getSubject().removeTopic(subjectTopic.getTopic());
@@ -83,6 +88,7 @@ public class SubjectTopics {
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation(value = "Updates a connection between subject and topic", notes = "Use to update which subject is primary to a topic or to change sorting order.")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) throws Exception {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
@@ -99,6 +105,7 @@ public class SubjectTopics {
 
     @PutMapping
     @ApiOperation(value = "Replaces a collection of subject-topics")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void putSubjectTopics(@ApiParam(name = "subject-topics", value = "A list of subject topic connections") @RequestBody AddTopicToSubjectCommand[] commands) throws Exception {
         subjectTopicRepository.deleteAll();
         for (AddTopicToSubjectCommand command : commands) {

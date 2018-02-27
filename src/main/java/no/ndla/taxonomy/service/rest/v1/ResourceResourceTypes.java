@@ -13,6 +13,7 @@ import no.ndla.taxonomy.service.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.service.repositories.ResourceTypeRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -37,6 +38,7 @@ public class ResourceResourceTypes {
 
     @PostMapping
     @ApiOperation(value = "Adds a resource type to a resource")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "connection", value = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) throws Exception {
 
@@ -53,6 +55,7 @@ public class ResourceResourceTypes {
     @DeleteMapping({"/{id}"})
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation("Removes a resource type from a resource")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) throws Exception {
         ResourceResourceType resourceResourceType = resourceResourceTypeRepository.getByPublicId(id);
         resourceResourceType.getResource().removeResourceType(resourceResourceType.getResourceType());
@@ -61,6 +64,7 @@ public class ResourceResourceTypes {
 
     @GetMapping
     @ApiOperation("Gets all connections between resources and resource types")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceResourceTypeIndexDocument> index() throws Exception {
         List<ResourceResourceTypeIndexDocument> result = new ArrayList<>();
         resourceResourceTypeRepository.findAll().forEach(record -> result.add(new ResourceResourceTypeIndexDocument(record)));
@@ -69,6 +73,7 @@ public class ResourceResourceTypes {
 
     @GetMapping({"/{id}"})
     @ApiOperation("Gets a single connection between resource and resource type")
+    @PreAuthorize("hasAuthority('READONLY')")
     public ResourceResourceTypeIndexDocument get(@PathVariable("id") URI id) throws Exception {
         ResourceResourceType result = resourceResourceTypeRepository.getByPublicId(id);
         return new ResourceResourceTypeIndexDocument(result);

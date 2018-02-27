@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.service.domain.NotFoundException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,6 +47,7 @@ public class UrlResolver {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('READONLY')")
     public ResolvedUrl resolve(@RequestParam String path, HttpServletResponse response) throws Exception {
         URI id = getId(path);
 

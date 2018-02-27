@@ -10,6 +10,7 @@ import no.ndla.taxonomy.service.repositories.RelevanceRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -39,6 +40,7 @@ public class Relevances extends CrudController<Relevance> {
 
     @GetMapping
     @ApiOperation("Gets all relevances")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<RelevanceIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -53,6 +55,7 @@ public class Relevances extends CrudController<Relevance> {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single relevance", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
+    @PreAuthorize("hasAuthority('READONLY')")
     public RelevanceIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -69,6 +72,7 @@ public class Relevances extends CrudController<Relevance> {
 
     @PostMapping
     @ApiOperation(value = "Creates a new relevance")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(@ApiParam(name = "relevance", value = "The new relevance") @RequestBody CreateRelevanceCommand command) throws Exception {
         return doPost(new Relevance(), command);
     }
@@ -76,6 +80,7 @@ public class Relevances extends CrudController<Relevance> {
     @PutMapping("/{id}")
     @ApiOperation("Updates a relevance")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(name = "relevance", value = "The updated relevance. Fields not included will be set to null.") @RequestBody UpdateRelevanceCommand command

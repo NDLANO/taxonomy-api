@@ -9,6 +9,7 @@ import no.ndla.taxonomy.service.domain.ResourceType;
 import no.ndla.taxonomy.service.domain.ResourceTypeTranslation;
 import no.ndla.taxonomy.service.repositories.ResourceTypeRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManager;
@@ -35,6 +36,7 @@ public class ResourceTypeTranslations {
 
     @GetMapping
     @ApiOperation("Gets all translations for a single resource type")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> result = new ArrayList<>();
@@ -49,6 +51,7 @@ public class ResourceTypeTranslations {
 
     @GetMapping("/{language}")
     @ApiOperation("Gets a single translation for a single resource type")
+    @PreAuthorize("hasAuthority('READONLY')")
     public ResourceTypeTranslations.ResourceTypeTranslationIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
@@ -67,6 +70,7 @@ public class ResourceTypeTranslations {
     @PutMapping("/{language}")
     @ApiOperation("Creates or updates a translation of a resource type")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
@@ -83,6 +87,7 @@ public class ResourceTypeTranslations {
     @DeleteMapping("/{language}")
     @ApiOperation("Deletes a translation")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
