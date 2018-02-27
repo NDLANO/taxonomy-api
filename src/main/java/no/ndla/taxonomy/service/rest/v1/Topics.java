@@ -96,16 +96,6 @@ public class Topics extends CrudController<Topic> {
         doPut(id, command);
     }
 
-    @PutMapping
-    @ApiOperation(value = "Replaces the collection of topics.")
-    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void putCollection(@ApiParam(name = "subjects", value = "A list of subjects") @RequestBody CreateTopicCommand[] commands) throws Exception {
-        topicRepository.deleteAll();
-        for (CreateTopicCommand command : commands) {
-            post(command);
-        }
-    }
-
     @GetMapping("/{id}/resources")
     @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all resources for the given topic")

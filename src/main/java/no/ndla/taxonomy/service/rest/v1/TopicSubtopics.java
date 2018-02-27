@@ -94,16 +94,6 @@ public class TopicSubtopics {
         }
     }
 
-    @PutMapping
-    @ApiOperation(value = "Replaces a collection of topic subtopics connections")
-    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void putTopicSubtopics(@ApiParam(name = "topic-subtopics", value = "A list of topic subtopic connections") @RequestBody AddSubtopicToTopicCommand[] commands) throws Exception {
-        topicSubtopicRepository.deleteAll();
-        for (AddSubtopicToTopicCommand command : commands) {
-            post(command);
-        }
-    }
-
 
     public static class AddSubtopicToTopicCommand {
         @JsonProperty

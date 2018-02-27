@@ -84,16 +84,6 @@ public class Subjects extends CrudController<Subject> {
         doPut(id, command);
     }
 
-    @PutMapping
-    @ApiOperation(value = "Replaces a collection of subjects")
-    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void putSubjects(@ApiParam(name = "subjects", value = "A list of subjects") @RequestBody CreateSubjectCommand[] commands) throws Exception {
-        subjectRepository.deleteAll();
-        for (CreateSubjectCommand command : commands) {
-            post(command);
-        }
-    }
-
     @PostMapping
     @ApiOperation(value = "Creates a new subject")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
