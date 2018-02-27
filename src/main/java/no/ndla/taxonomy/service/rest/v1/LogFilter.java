@@ -125,7 +125,6 @@ public class LogFilter extends GenericFilterBean {
             Algorithm algorithm = Algorithm.RSA256(publicKey, null);
             JWTVerifier verifier = JWT.require(algorithm)
                     .withIssuer(issuer)
-                    .acceptExpiresAt(1515581930)
                     .build();
 
             final DecodedJWT decoded = verifier
