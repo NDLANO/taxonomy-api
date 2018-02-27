@@ -9,22 +9,6 @@ fi
 
 IP=127.0.0.1
 
-if which docker-machine > /dev/null
-then
-    if ! docker-machine inspect default > /dev/null
-    then
-        echo creating docker-machine default
-        docker-machine create --driver virtualbox default
-    fi
-    if [ "$(docker-machine status default)" != "Running" ]
-    then
-        echo starting docker-machine default
-        docker-machine start default
-    fi
-    eval "$(docker-machine env default)"
-    IP=$(docker-machine ip default)
-fi
-
 if docker inspect taxonomy-postgres > /dev/null 2>&1
 then
     echo removing old instance
