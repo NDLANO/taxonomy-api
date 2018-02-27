@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -37,6 +38,7 @@ public class Queries {
 
     @GetMapping("/resources")
     @ApiOperation(value = "Gets a list of resources matching given contentURI, empty list of no matches are found.")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<Queries.ResourceIndexDocument> queryResources(
             @RequestParam("contentURI") URI contentURI,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -60,6 +62,7 @@ public class Queries {
 
     @GetMapping("/topics")
     @ApiOperation(value = "Gets a list of topics matching given contentURI, empty list of no matches are found.")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<Queries.TopicIndexDocument> queryTopics(
             @RequestParam("contentURI") URI contentURI,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")

@@ -13,6 +13,7 @@ import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -42,6 +43,7 @@ public class Filters extends CrudController<Filter> {
 
     @GetMapping
     @ApiOperation("Gets all filters")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<FilterIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -53,6 +55,7 @@ public class Filters extends CrudController<Filter> {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single filter", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
+    @PreAuthorize("hasAuthority('READONLY')")
     public FilterIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -83,6 +86,7 @@ public class Filters extends CrudController<Filter> {
 
     @PostMapping
     @ApiOperation(value = "Creates a new filter")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(@ApiParam(name = "filter", value = "The new filter") @RequestBody CreateFilterCommand command) throws Exception {
         if (command.subjectId == null) throw new SubjectRequiredException();
 
@@ -95,6 +99,7 @@ public class Filters extends CrudController<Filter> {
     @PutMapping("/{id}")
     @ApiOperation("Updates a filter")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(name = "filter", value = "The updated filter") @RequestBody UpdateFilterCommand command

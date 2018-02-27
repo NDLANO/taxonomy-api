@@ -9,6 +9,7 @@ import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.SubjectTranslation;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManager;
@@ -34,6 +35,7 @@ public class SubjectTranslations {
 
     @GetMapping
     @ApiOperation("Gets all translations for a single subject")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<SubjectTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
         Subject subject = subjectRepository.getByPublicId(id);
         List<SubjectTranslationIndexDocument> result = new ArrayList<>();
@@ -48,6 +50,7 @@ public class SubjectTranslations {
 
     @GetMapping("/{language}")
     @ApiOperation("Gets a single translation for a single subject")
+    @PreAuthorize("hasAuthority('READONLY')")
     public SubjectTranslationIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
@@ -66,6 +69,7 @@ public class SubjectTranslations {
     @DeleteMapping("/{language}")
     @ApiOperation("Deletes a translation")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
@@ -81,6 +85,7 @@ public class SubjectTranslations {
     @PutMapping("/{language}")
     @ApiOperation("Creates or updates a translation of a subject")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)

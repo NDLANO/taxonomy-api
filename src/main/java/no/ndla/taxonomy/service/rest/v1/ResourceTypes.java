@@ -11,6 +11,7 @@ import no.ndla.taxonomy.service.repositories.ResourceTypeRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -44,6 +45,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
 
     @GetMapping
     @ApiOperation("Gets a list of all resource types")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceTypeIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -59,6 +61,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single resource type")
+    @PreAuthorize("hasAuthority('READONLY')")
     public ResourceTypeIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -81,6 +84,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
 
     @PostMapping
     @ApiOperation(value = "Adds a new resource type")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "resourceType", value = "The new resource type")
             @RequestBody CreateResourceTypeCommand command
@@ -96,6 +100,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @PutMapping("/{id}")
     @ApiOperation(value = "Updates a resource type. Use to update which resource type is parent. You can also update the id, take care!")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable URI id,
             @ApiParam(name = "resourceType", value = "The updated resource type. Fields not included will be set to null.")
@@ -117,6 +122,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
 
     @GetMapping("/{id}/subtypes")
     @ApiOperation(value = "Gets subtypes of one resource type")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceTypeIndexDocument> getSubtypes(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")

@@ -8,6 +8,7 @@ import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -33,6 +34,7 @@ public class Contexts {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<ContextIndexDocument> get(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -49,6 +51,7 @@ public class Contexts {
 
     @PostMapping
     @ApiOperation(value = "Adds a new context", notes="All subjects are already contexts and may not be added again. Only topics may be added as a context. The topic must exist already.")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "context", value = "the new context") @RequestBody CreateContextCommand command) throws Exception {
         Topic topic = topicRepository.getByPublicId(command.id);
@@ -60,6 +63,7 @@ public class Contexts {
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Removes a context", notes = "Does not remove the underlying resource, only marks it as not being a context")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
         Topic topic = topicRepository.getByPublicId(id);
         topic.setContext(false);

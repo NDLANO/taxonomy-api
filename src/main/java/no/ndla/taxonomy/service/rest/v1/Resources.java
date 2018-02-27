@@ -10,6 +10,7 @@ import no.ndla.taxonomy.service.repositories.ResourceRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -42,6 +43,7 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping
     @ApiOperation(value = "Lists all resources")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -52,6 +54,7 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single resource")
+    @PreAuthorize("hasAuthority('READONLY')")
     public ResourceIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -78,6 +81,7 @@ public class Resources extends CrudController<Resource> {
     @PutMapping("/{id}")
     @ApiOperation(value = "Updates a resource")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id, @ApiParam(name = "resource", value = "the updated resource. Fields not included will be set to null.")
     @RequestBody UpdateResourceCommand command) throws Exception {
         doPut(id, command);
@@ -85,6 +89,7 @@ public class Resources extends CrudController<Resource> {
 
     @PostMapping
     @ApiOperation(value = "Adds a new resource")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "resource", value = "the new resource") @RequestBody CreateResourceCommand command) throws Exception {
         return doPost(new Resource(), command);
@@ -92,6 +97,7 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}/resource-types")
     @ApiOperation(value = "Gets all resource types associated with this resource")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceTypeIndexDocument> getResourceTypes(
             @PathVariable("id")
                     URI id,
@@ -107,6 +113,7 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters associated with this resource")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<FilterIndexDocument> getFilters(
             @PathVariable("id")
                     URI id,

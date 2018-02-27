@@ -11,6 +11,7 @@ import no.ndla.taxonomy.service.repositories.TopicRepository;
 import no.ndla.taxonomy.service.repositories.TopicSubtopicRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -32,6 +33,7 @@ public class TopicSubtopics {
 
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and subtopics")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<TopicSubtopicIndexDocument> index() throws Exception {
         List<TopicSubtopicIndexDocument> result = new ArrayList<>();
 
@@ -41,6 +43,7 @@ public class TopicSubtopics {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single connection between a topic and a subtopic")
+    @PreAuthorize("hasAuthority('READONLY')")
     public TopicSubtopicIndexDocument get(@PathVariable("id") URI id) throws Exception {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
         TopicSubtopicIndexDocument result = new TopicSubtopicIndexDocument(topicSubtopic);
@@ -49,6 +52,7 @@ public class TopicSubtopics {
 
     @PostMapping
     @ApiOperation(value = "Adds a subtopic to a topic")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "connection", value = "The new connection") @RequestBody AddSubtopicToTopicCommand command) throws Exception {
 
@@ -68,6 +72,7 @@ public class TopicSubtopics {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation(value = "Removes a connection between a topic and a subtopic")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) throws Exception {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
         topicSubtopic.getTopic().removeSubtopic(topicSubtopic.getSubtopic());
@@ -77,6 +82,7 @@ public class TopicSubtopics {
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation(value = "Updates a connection between a topic and a subtopic", notes = "Use to update which topic is primary to a subtopic or to alter sorting order")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) throws Exception {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
@@ -90,6 +96,7 @@ public class TopicSubtopics {
 
     @PutMapping
     @ApiOperation(value = "Replaces a collection of topic subtopics connections")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void putTopicSubtopics(@ApiParam(name = "topic-subtopics", value = "A list of topic subtopic connections") @RequestBody AddSubtopicToTopicCommand[] commands) throws Exception {
         topicSubtopicRepository.deleteAll();
         for (AddSubtopicToTopicCommand command : commands) {

@@ -13,6 +13,7 @@ import no.ndla.taxonomy.service.repositories.TopicRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -38,6 +39,7 @@ public class TopicFilters {
 
     @PostMapping
     @ApiOperation(value = "Adds a filter to a topic")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(@ApiParam(name = "topic filter", value = "The new topic filter") @RequestBody AddFilterToTopicCommand command) throws Exception {
         try {
             Filter filter = filterRepository.getByPublicId(command.filterId);
@@ -58,6 +60,7 @@ public class TopicFilters {
     @PutMapping("/{id}")
     @ApiOperation(value = "Updates a topic filter connection")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id, @ApiParam(name = "topic filter", value = "The updated topic filter") @RequestBody UpdateTopicFilterCommand command) throws Exception {
         TopicFilter topicFilter = topicFilterRepository.getByPublicId(id);
         Relevance relevance = relevanceRepository.getByPublicId(command.relevanceId);
@@ -67,6 +70,7 @@ public class TopicFilters {
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Deletes a connection between a topic and a filter")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@ApiParam(name = "id", value = "The id of the connection to delete") @PathVariable String id) {
         TopicFilter topicFilter = topicFilterRepository.getByPublicId(URI.create(id));
         topicFilter.getTopic().removeFilter(topicFilter.getFilter());
@@ -75,6 +79,7 @@ public class TopicFilters {
 
     @GetMapping
     @ApiOperation("Gets all connections between topics and filters")
+    @PreAuthorize("hasAuthority('READONLY')")
     public List<TopicFilterIndexDocument> index() throws Exception {
         List<TopicFilterIndexDocument> result = new ArrayList<>();
         topicFilterRepository.findAll().forEach(record -> result.add(new TopicFilterIndexDocument(record)));
