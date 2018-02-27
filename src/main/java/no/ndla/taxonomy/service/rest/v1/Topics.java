@@ -81,6 +81,7 @@ public class Topics extends CrudController<Topic> {
 
     @PostMapping
     @ApiOperation(value = "Creates a new topic")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(@ApiParam(name = "connection", value = "The new topic") @RequestBody CreateTopicCommand command) throws Exception {
         return doPost(new Topic(), command);
     }
