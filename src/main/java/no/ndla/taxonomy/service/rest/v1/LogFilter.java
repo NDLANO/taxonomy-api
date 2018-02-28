@@ -131,6 +131,7 @@ public class LogFilter extends GenericFilterBean {
                 .verify(token);
             return decoded;
         } catch (JWTVerificationException exception) {
+            MDC.put("Exception in verification: ", exception.toString());
             throw exception;
         }
     }
