@@ -2,7 +2,7 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
 
-    <springProfile name="production,staging,dev,test">
+    <springProfile name="prod,staging,dev,test">
         <springProperty name="graylogHost" source="logging.graylog.host" defaultValue=""/>
         <springProperty name="service" source="service" defaultValue=""/>
 
