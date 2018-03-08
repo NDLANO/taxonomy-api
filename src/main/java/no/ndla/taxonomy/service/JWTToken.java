@@ -29,11 +29,16 @@ public class JWTToken implements Authentication {
         List<GrantedAuthority> tmp = new ArrayList<>();
         tmp.add(new SimpleGrantedAuthority("READONLY"));
 
-        for (String jwtPermissionString : appMetadata.asString().split(" ")) {
-            final JWTPermission jwtPermission = new JWTPermission(jwtPermissionString);
-            if (jwtPermission.getApi().equals(TAXONOMY_API) && jwtPermission.getPermission().equals(WRITE_PERMISSION) && jwtPermission.getEnvironment().equals(PRODUCTION)) {
-                tmp.add(new SimpleGrantedAuthority("TAXONOMY_WRITE"));
+        try {
+            final String[] allPermissions = appMetadata.asString().split(" ");
+            for (String jwtPermissionString : allPermissions) {
+                final JWTPermission jwtPermission = new JWTPermission(jwtPermissionString);
+                if (jwtPermission.getApi().equals(TAXONOMY_API) && jwtPermission.getPermission().equals(WRITE_PERMISSION) && jwtPermission.getEnvironment().equals(PRODUCTION)) {
+                    tmp.add(new SimpleGrantedAuthority("TAXONOMY_WRITE"));
+                }
             }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
 
         this.authorities = Collections.unmodifiableList(tmp);
