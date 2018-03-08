@@ -18,6 +18,12 @@ public class Filter extends DomainObject {
     @JoinColumn(name = "subject_id")
     private Subject subject;
 
+    @OneToMany(mappedBy = "filter", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<ResourceFilter> resources = new HashSet<>();
+
+    @OneToMany(mappedBy = "filter", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<TopicFilter> topics = new HashSet<>();
+
     public Filter() {
         setPublicId(URI.create("urn:filter:" + UUID.randomUUID()));
     }

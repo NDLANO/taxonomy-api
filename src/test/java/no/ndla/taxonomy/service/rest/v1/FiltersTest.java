@@ -2,8 +2,11 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import no.ndla.taxonomy.service.domain.Filter;
 import no.ndla.taxonomy.service.domain.Subject;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.TestPropertySource;
 
 import java.net.URI;
 
@@ -55,6 +58,23 @@ public class FiltersTest extends RestTest {
         );
 
         deleteResource("/v1/filters/" + "urn:filter:1");
+        assertNull(filterRepository.findByPublicId(URI.create("urn:filter:1")));
+    }
+
+    @Test
+    @Ignore
+    public void can_delete_filter_connected_to_resource() throws Exception {
+        Filter f = builder.filter(filter -> filter.publicId("urn:filter:1").name("Vg 1"));
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .filter(f)
+                .topic(t -> t
+                        .name("Statics")
+                        .publicId("urn:topic:1")
+                        .resource(r -> r
+                                .publicId("urn:resource:1")
+                                .filter(f, builder.relevance(rel -> rel.publicId("urn:relevance:core"))))));
+        deleteResource("/v1/filters/urn:filter:1");
         assertNull(filterRepository.findByPublicId(URI.create("urn:filter:1")));
     }
 

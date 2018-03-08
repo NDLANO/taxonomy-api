@@ -14,6 +14,12 @@ public class Relevance extends DomainObject {
     @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<RelevanceTranslation> translations = new HashSet<>();
 
+    @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<ResourceFilter> resources = new HashSet<>();
+
+    @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<TopicFilter> topics = new HashSet<>();
+
     public Relevance() {
         setPublicId(URI.create("urn:relevance:" + UUID.randomUUID()));
     }
