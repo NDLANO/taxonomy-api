@@ -51,10 +51,10 @@ public class UrlCacherFilter implements Filter {
             urlCacher.remove(id);
         } else {
             String doBatch = request.getHeader(batch);
-            if (doBatch != null) {
-                if (!doBatch.equals("1")) {
+            if (doBatch == null) {
+                urlCacher.add(id);
+            } else if (!doBatch.equals("1")) {
                     urlCacher.add(id);
-                }
             }
         }
     }
