@@ -13,7 +13,7 @@ public class JWTToken implements Authentication {
     private static final long serialVersionUID = 1L;
     private static final String TAXONOMY_API = "taxonomy";
     private static final String WRITE_PERMISSION = "write";
-    private static final String PRODUCTION = "production";
+    private static final String PRODUCTION = "prod";
 
     private DecodedJWT jwt;
     private Collection<GrantedAuthority> authorities;
