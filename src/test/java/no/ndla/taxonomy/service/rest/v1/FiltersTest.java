@@ -2,17 +2,13 @@ package no.ndla.taxonomy.service.rest.v1;
 
 import no.ndla.taxonomy.service.domain.Filter;
 import no.ndla.taxonomy.service.domain.Subject;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.context.TestPropertySource;
 
 import java.net.URI;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class FiltersTest extends RestTest {
@@ -52,30 +48,97 @@ public class FiltersTest extends RestTest {
 
     @Test
     public void can_delete_filter() throws Exception {
-        builder.filter(f -> f
-                .publicId("urn:filter:1")
-                .name("1T-YF")
-        );
+        Filter filter = builder.filter(f -> f.publicId("urn:filter:1").name("1T-YF"));
 
-        deleteResource("/v1/filters/" + "urn:filter:1");
-        assertNull(filterRepository.findByPublicId(URI.create("urn:filter:1")));
+        assertNotNull(filterRepository.findByPublicId(filter.getPublicId()));
+        deleteResource("/v1/filters/" + filter.getPublicId());
+        assertNull(filterRepository.findByPublicId(filter.getPublicId()));
     }
 
     @Test
-    @Ignore
     public void can_delete_filter_connected_to_resource() throws Exception {
-        Filter f = builder.filter(filter -> filter.publicId("urn:filter:1").name("Vg 1"));
+        final Filter filter = builder.filter(f -> f.publicId("urn:filter:1").name("Vg 1"));
+
         builder.subject(s -> s
                 .publicId("urn:subject:1")
-                .filter(f)
                 .topic(t -> t
                         .name("Statics")
                         .publicId("urn:topic:1")
                         .resource(r -> r
                                 .publicId("urn:resource:1")
-                                .filter(f, builder.relevance(rel -> rel.publicId("urn:relevance:core"))))));
-        deleteResource("/v1/filters/urn:filter:1");
-        assertNull(filterRepository.findByPublicId(URI.create("urn:filter:1")));
+                                .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core"))))));
+
+        Filter preResultFilter = filterRepository.findByPublicId(filter.getPublicId());
+        entityManager.refresh(preResultFilter); //as filter.resources would otherwise be empty.
+
+        deleteResource("/v1/filters/" + filter.getPublicId());
+
+        Filter resultFilter = filterRepository.findByPublicId(filter.getPublicId());
+        assertNull(resultFilter);
+    }
+
+    @Test
+    public void can_delete_filter_connected_to_2_resources() throws Exception {
+        final Filter filter = builder.filter(f -> f.publicId("urn:filter:1").name("Vg 1"));
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .topic(t -> t
+                        .publicId("urn:topic:1")
+                        .resource(r -> r
+                                .publicId("urn:resource:1")
+                                .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core1"))))));
+        builder.subject(s -> s
+                .publicId("urn:subject:2")
+                .topic(t -> t
+                        .publicId("urn:topic:2")
+                        .resource(r -> r
+                                .publicId("urn:resource:2")
+                                .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core2"))))));
+        Filter preResultFilter = filterRepository.findByPublicId(filter.getPublicId());
+        entityManager.refresh(preResultFilter); //as filter.resources would otherwise be empty.
+
+        deleteResource("/v1/filters/" + filter.getPublicId());
+
+        Filter resultFilter = filterRepository.findByPublicId(filter.getPublicId());
+        assertNull(resultFilter);
+    }
+
+    @Test
+    public void can_delete_filter_connected_to_subject() throws Exception {
+        builder.subject(s -> s.publicId("urn:subject:1"));
+        Filters.CreateFilterCommand command = new Filters.CreateFilterCommand() {{
+            id = URI.create("urn:filter:1");
+            name = "name";
+            subjectId = URI.create("urn:subject:1");
+        }};
+        createResource("/v1/filters", command, status().isCreated());
+        Filter preResultFilter = filterRepository.findByPublicId(URI.create("urn:filter:1"));
+        assertNotNull(preResultFilter);
+
+        deleteResource("/v1/filters/" + URI.create("urn:filter:1"));
+
+        Filter resultFilter = filterRepository.findByPublicId(URI.create("urn:filter:1"));
+        assertNull(resultFilter);
+    }
+
+    @Test
+    public void can_delete_filter_connected_to_2_topics() throws Exception {
+        builder.subject(s -> s.publicId("urn:subject:1"));
+        Filters.CreateFilterCommand command = new Filters.CreateFilterCommand() {{
+            id = URI.create("urn:filter:1");
+            name = "name";
+            subjectId = URI.create("urn:subject:1");
+        }};
+        createResource("/v1/filters", command, status().isCreated());
+        Filter filter = filterRepository.findByPublicId(URI.create("urn:filter:1"));
+        builder.topic(t -> t.publicId("urn:topic:1").filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core1"))));
+        builder.topic(t -> t.publicId("urn:topic:2").filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core2"))));
+        entityManager.refresh(filter);
+
+        deleteResource("/v1/filters/" + URI.create("urn:filter:1"));
+
+        Filter resultFilter = filterRepository.findByPublicId(URI.create("urn:filter:1"));
+        assertNull(resultFilter);
     }
 
     @Test

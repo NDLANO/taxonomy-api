@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
+import no.ndla.taxonomy.service.domain.Filter;
 import no.ndla.taxonomy.service.domain.Resource;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
@@ -11,8 +12,7 @@ import java.net.URI;
 
 import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.service.TestUtils.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TopicsTest extends RestTest {
@@ -140,23 +140,99 @@ public class TopicsTest extends RestTest {
     }
 
     @Test
-    public void can_delete_topic() throws Exception {
-        builder.topic(parent -> parent
-                .subtopic("topic", topic -> topic
-                        .name("DELETE ME")
-                        .translation("nb", tr -> tr.name("emne"))
-                        .subtopic(sub -> sub.publicId("urn:topic:2"))
-                        .resource(r -> r.publicId("urn:resource:1"))
-                )
-        );
-        builder.subject(s -> s.topic("topic"));
-        URI id = builder.topic("topic").getPublicId();
+    public void can_delete_topic_with_2_subtopics() throws Exception {
+        Topic childTopic1 = builder.topic(child -> child.name("DELETE EDGE TO ME"));
+        Topic childTopic2 = builder.topic(child -> child.name("DELETE EDGE TO ME ALSO"));
 
-        deleteResource("/v1/topics/" + id);
+        URI parentId = builder.topic(parent -> parent
+                .subtopic(childTopic1)
+                .subtopic(childTopic2)
+        ).getPublicId();
 
-        assertNull(topicRepository.findByPublicId(id));
+        deleteResource("/v1/topics/" + parentId);
+
+        assertNull(topicRepository.findByPublicId(parentId));
     }
 
+    @Test
+    public void can_delete_topic_that_exists_in_2_subjects() throws Exception {
+        Topic topic = builder.topic(child -> child
+                .name("MAIN TOPIC")
+                .translation("nb", tr -> tr.name("HovedEmne"))
+                .resource(r -> r.publicId("urn:resource:1")));
+
+        builder.subject(s -> s.name("primary").topic(topic)).getPublicId();
+        builder.subject(s -> s.name("secondary").topic(topic)).getPublicId();
+
+        deleteResource("/v1/topics/" + topic.getPublicId());
+
+        assertNull(topicRepository.findByPublicId(topic.getPublicId()));
+    }
+
+    @Test
+    public void can_delete_topic_that_has_2_parenttopics() throws Exception {
+        Topic topic = builder.topic(child -> child
+                .name("MAIN TOPIC")
+                .translation("nb", tr -> tr.name("HovedEmne"))
+                .resource(r -> r.publicId("urn:resource:1")));
+
+        builder.topic(t -> t.name("primary").subtopic(topic)).getPublicId();
+        builder.topic(t -> t.name("secondary").subtopic(topic)).getPublicId();
+
+        deleteResource("/v1/topics/" + topic.getPublicId());
+
+        assertNull(topicRepository.findByPublicId(topic.getPublicId()));
+    }
+
+    @Test
+    public void can_delete_topic_with_2_resources() throws Exception {
+        Topic topic = builder.topic(child -> child
+                .name("MAIN TOPIC")
+                .translation("nb", tr -> tr.name("HovedEmne"))
+                .resource(r -> r.publicId("urn:resource:1"))
+                .resource(r -> r.publicId("urn:resource:2")));
+
+        deleteResource("/v1/topics/" + topic.getPublicId());
+
+        assertNull(topicRepository.findByPublicId(topic.getPublicId()));
+    }
+
+    @Test
+    public void can_delete_topic_but_subtopics_remain() throws Exception {
+        Topic childTopic = builder.topic(child -> child
+                .name("DELETE EDGE TO ME")
+                .translation("nb", tr -> tr.name("emne"))
+                .subtopic(sub -> sub.publicId("urn:topic:1"))
+                .resource(r -> r.publicId("urn:resource:1")));
+
+        URI parentId = builder.topic(parent -> parent
+                .subtopic(childTopic)
+        ).getPublicId();
+
+        deleteResource("/v1/topics/" + parentId);
+
+        assertNull(topicRepository.findByPublicId(parentId));
+        assertNotNull(topicRepository.findByPublicId(childTopic.getPublicId()));
+    }
+
+    @Test
+    public void can_delete_topic_but_resources_and_filter_remain() throws Exception {
+        Resource resource = builder.resource("resource", r -> r
+                .translation("nb", tr -> tr.name("ressurs"))
+                .resourceType(rt -> rt.name("Learning path")));
+        Filter filter = builder.filter(f -> f.publicId("urn:filter:1").name("Vg 1"));
+
+        URI parentId = builder.topic(parent -> parent
+                .resource(resource)
+                .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core")))
+        ).getPublicId();
+
+        deleteResource("/v1/topics/" + parentId);
+
+        assertNull(topicRepository.findByPublicId(parentId));
+        assertNotNull(resourceRepository.findByPublicId(resource.getPublicId()));
+        assertNotNull(filterRepository.findByPublicId(filter.getPublicId()));
+    }
 
     @Test
     public void can_get_resource_connection_id() throws Exception {

@@ -151,6 +151,17 @@ public class ResourcesTest extends RestTest {
     }
 
     @Test
+    public void can_delete_resource_with_two_parent_topics() throws Exception {
+        Resource resource = builder.resource("resource");
+
+        builder.topic(child -> child.resource(resource)).name("DELETE EDGE TO ME");
+        builder.topic(child -> child.resource(resource)).name("DELETE EDGE TO ME ALSO");
+
+        deleteResource("/v1/resources/" + resource.getPublicId());
+        assertNull(resourceRepository.findByPublicId(resource.getPublicId()));
+    }
+
+    @Test
     public void can_get_resource_by_id() throws Exception {
         URI id = newResource().name("The inner planets").getPublicId();
 

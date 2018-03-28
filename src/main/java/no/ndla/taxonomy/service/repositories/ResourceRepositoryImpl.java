@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service.repositories;
 
 import no.ndla.taxonomy.service.domain.Resource;
+import no.ndla.taxonomy.service.domain.TopicResource;
 
 import javax.persistence.EntityManager;
 
@@ -13,7 +14,9 @@ public class ResourceRepositoryImpl implements TaxonomyRepositoryCustom<Resource
 
     @Override
     public void delete(Resource resource) {
-        resource.getTopics().forEachRemaining(topic -> topic.removeResource(resource));
+        for (TopicResource edge : resource.topics.toArray(new TopicResource[]{})) {
+            edge.getTopic().removeResource(resource);
+        }
         entityManager.remove(resource);
     }
 }

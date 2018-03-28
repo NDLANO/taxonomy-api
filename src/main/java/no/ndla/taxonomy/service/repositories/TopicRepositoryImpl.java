@@ -1,6 +1,9 @@
 package no.ndla.taxonomy.service.repositories;
 
+import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
+import no.ndla.taxonomy.service.domain.TopicResource;
+import no.ndla.taxonomy.service.domain.TopicSubtopic;
 
 import javax.persistence.EntityManager;
 
@@ -14,10 +17,18 @@ public class TopicRepositoryImpl implements TaxonomyRepositoryCustom<Topic> {
 
     @Override
     public void delete(Topic topic) {
-        topic.getParentTopics().forEachRemaining(parent -> parent.removeSubtopic(topic));
-        topic.getSubtopics().forEachRemaining(subtopic -> topic.removeSubtopic(subtopic));
-        topic.getSubjects().forEachRemaining(subject -> subject.removeTopic(topic));
-        topic.getResources().forEachRemaining(resource -> topic.removeResource(resource));
+        for (TopicSubtopic edge : topic.parentTopics.toArray(new TopicSubtopic[]{})) {
+            edge.getTopic().removeSubtopic(topic);
+        }
+        for (TopicSubtopic edge : topic.subtopics.toArray(new TopicSubtopic[]{})) {
+            topic.removeSubtopic(edge.getSubtopic());
+        }
+        for (SubjectTopic edge : topic.subjects.toArray(new SubjectTopic[]{})) {
+            edge.getSubject().removeTopic(topic);
+        }
+        for (TopicResource edge : topic.resources.toArray(new TopicResource[]{})) {
+            topic.removeResource(edge.getResource());
+        }
 
         entityManager.remove(topic);
     }
