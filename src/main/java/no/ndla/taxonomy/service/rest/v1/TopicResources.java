@@ -106,7 +106,7 @@ public class TopicResources {
 
         @JsonProperty
         @ApiModelProperty(required = true, value = "Resource id", example = "urn:resource:345")
-        URI resourceId;
+        public URI resourceId;
 
         @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
