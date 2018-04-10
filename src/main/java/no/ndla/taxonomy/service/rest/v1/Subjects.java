@@ -264,7 +264,7 @@ public class Subjects extends CrudController<Subject> {
         public Set<TopicFilterIndexDocument> filters = new HashSet<>();
 
         @JsonIgnore
-        URI topicFilterId, resourceFilterId;
+        URI topicFilterId, resourceFilterId, filterPublicId;
 
         @Override
         @JsonIgnore
@@ -514,7 +514,7 @@ public class Subjects extends CrudController<Subject> {
             if (filterIds.length > 0) {
                 Set<TopicIndexDocument> result = new HashSet<>();
                 for (TopicIndexDocument topic : queryresult) {
-                    if (asList(filterIds).contains(topic.resourceFilterId) || asList(filterIds).contains(topic.topicFilterId)) {
+                    if (asList(filterIds).contains(topic.filterPublicId) || asList(filterIds).contains(topic.resourceFilterId)) {
                         result.add(topic);
                         TopicIndexDocument current = topic;
                         while (current != null) {
@@ -540,6 +540,7 @@ public class Subjects extends CrudController<Subject> {
                     parent = getURI(resultSet, "parent_public_id");
                     connectionId = getURI(resultSet, "connection_public_id");
                     topicFilterId = getURI(resultSet, "topic_filter_public_id");
+                    filterPublicId = getURI(resultSet, "filter_public_id");
                     resourceFilterId = getURI(resultSet, "resource_filter_public_id");
                     rank = resultSet.getInt("rank");
                 }};
