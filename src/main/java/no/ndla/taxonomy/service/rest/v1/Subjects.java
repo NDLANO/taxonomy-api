@@ -298,6 +298,20 @@ public class Subjects extends CrudController<Subject> {
         @JsonProperty
         @ApiModelProperty(required = true, value = "ID of the relevance the resource has in context of the filter", example = "urn:relevance:core")
         public URI relevanceId;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TopicFilterIndexDocument that = (TopicFilterIndexDocument) o;
+            return id.equals(that.id);
+        }
+
+        @Override
+        public int hashCode() {
+
+            return Objects.hash(id.toASCIIString());
+        }
     }
 
     @ApiModel("SubjectResourceIndexDocument")
@@ -513,18 +527,16 @@ public class Subjects extends CrudController<Subject> {
         private List<TopicIndexDocument> filterTopics(URI[] filterIds, Map<URI, TopicIndexDocument> topics, List<TopicIndexDocument> queryresult) {
             if (filterIds.length > 0) {
                 Set<TopicIndexDocument> result = new HashSet<>();
-                for (TopicIndexDocument topic : queryresult) {
-                    if (asList(filterIds).contains(topic.filterPublicId) || asList(filterIds).contains(topic.resourceFilterId)) {
-                        result.add(topic);
-                        TopicIndexDocument current = topic;
-                        while (current != null) {
-                            current = topics.get(current.parent);
-                            if (null != current) result.add(current);
-                        }
+                for (URI aFilter : filterIds) {
+                    for (TopicIndexDocument doc : queryresult) {
+                        doc.filters.iterator().forEachRemaining(filter -> {
+                            if (filter.id.equals(aFilter)) {
+                                result.add(doc);
+                            }
+                        });
                     }
                 }
-
-                return new ArrayList<TopicIndexDocument>(result);
+                return new ArrayList<>(result);
             } else {
                 return queryresult;
             }
