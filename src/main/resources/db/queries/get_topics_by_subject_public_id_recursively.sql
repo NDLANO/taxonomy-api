@@ -60,7 +60,7 @@ FROM
   LEFT OUTER JOIN resource_filter rf ON tore.resource_id = rf.resource_id
   LEFT OUTER JOIN filter resf ON rf.filter_id = resf.id
 
-  LEFT OUTER JOIN cached_url_v url ON url.public_id = t.public_id
+  LEFT OUTER JOIN cached_url url ON url.public_id = t.public_id
 WHERE
   1 = 1
 ORDER BY t.level, t.rank

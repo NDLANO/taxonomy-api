@@ -6,7 +6,7 @@ import javax.persistence.*;
 import java.net.URI;
 
 @Entity
-@Table(name = "cached_url_v")
+@Table(name = "cached_url")
 public class CachedUrl {
 
     public CachedUrl() {

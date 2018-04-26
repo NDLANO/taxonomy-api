@@ -1,6 +1,6 @@
 DROP TABLE cached_url;
 
-CREATE MATERIALIZED VIEW cached_url_v as (
+CREATE VIEW cached_url as (
   WITH RECURSIVE tree (id, public_id, name, parent_public_id, level, is_primary, path) AS (
     SELECT
       contexts.id,

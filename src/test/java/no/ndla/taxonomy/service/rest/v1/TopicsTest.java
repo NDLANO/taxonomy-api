@@ -141,35 +141,6 @@ public class TopicsTest extends RestTest {
         assertEquals("urn:article:1", topic.getContentUri().toString());
     }
 
-
-    @Test
-    @Rollback(false)
-    public void can_update_many_topics_in_parallell() throws Exception {
-
-        for (int i = 100_000; i < 100_128; i++) {
-            final int idx = i;
-            Topics.CreateTopicCommand createTopicCommand = new Topics.CreateTopicCommand() {{
-                id = URI.create("urn:topic:"+idx);
-                name = "Topic "+idx;
-            }};
-            createResource("/v1/topics", createTopicCommand, status().isCreated());
-        }
-
-        IntStream.range(100_000, 100_127).parallel().forEach(operand -> {
-            final int idx = operand;
-            URI uri = URI.create("urn:topic:"+idx);
-            try {
-                updateResource("/v1/topics/" + uri, new Topics.UpdateTopicCommand() {{
-                    name = "Test Modified " + idx;
-                    contentUri = URI.create("urn:article:" + idx);
-                }});
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-
     @Test
     public void can_delete_topic_with_2_subtopics() throws Exception {
         Topic childTopic1 = builder.topic(child -> child.name("DELETE EDGE TO ME"));

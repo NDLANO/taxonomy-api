@@ -29,5 +29,5 @@ FROM (
          name
        FROM resource
      ) e
-  INNER JOIN cached_url_v url ON url.public_id = e.public_id
+  INNER JOIN cached_url url ON url.public_id = e.public_id
 WHERE e.public_id = ?
