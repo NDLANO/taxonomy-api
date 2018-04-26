@@ -1,6 +1,5 @@
 package no.ndla.taxonomy.service.domain;
 
-import no.ndla.taxonomy.service.repositories.CachedUrlRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -9,18 +8,17 @@ import javax.transaction.Transactional;
 import java.net.URI;
 
 import static no.ndla.taxonomy.service.jdbc.QueryUtils.getQuery;
-import static no.ndla.taxonomy.service.jdbc.QueryUtils.getURI;
 
 @Transactional
 @Component
 public class UrlCacher {
-    private CachedUrlRepository cachedUrlRepository;
+
     private EntityManager entityManager;
     private JdbcTemplate jdbcTemplate;
     private static final String GENERATE_URLS_RECURSIVELY_QUERY = getQuery("generate_urls_recursively");
 
-    public UrlCacher(CachedUrlRepository cachedUrlRepository, EntityManager entityManager, JdbcTemplate jdbcTemplate) {
-        this.cachedUrlRepository = cachedUrlRepository;
+    public UrlCacher( EntityManager entityManager, JdbcTemplate jdbcTemplate) {
+
         this.entityManager = entityManager;
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -30,31 +28,23 @@ public class UrlCacher {
     }
 
     public void add(URI publicId) {
-        //Naive implementation for now
         rebuildEntireCache();
     }
 
     public void remove(DomainObject domainObject) {
-        remove(domainObject.getPublicId());
+        rebuildEntireCache();
     }
 
     public void remove(URI publicId) {
-        //Naive implementation for now
         rebuildEntireCache();
     }
 
     public void rebuildEntireCache() {
-        cachedUrlRepository.truncate();
-        entityManager.flush();
-        jdbcTemplate.query(GENERATE_URLS_RECURSIVELY_QUERY, resultSet -> {
-            while (resultSet.next()) {
-                CachedUrl url = new CachedUrl();
-                url.setPublicId(getURI(resultSet, "public_id"));
-                url.setPath(resultSet.getString("path"));
-                url.setPrimary(resultSet.getBoolean("is_primary"));
-                cachedUrlRepository.save(url);
-            }
-            return null;
+        jdbcTemplate.update("REFRESH MATERIALIZED VIEW cached_url_v;");
+        jdbcTemplate.query("select count(*) from cached_url_v", resultSet -> {
+            System.out.println(resultSet.getInt(1));
         });
+
+
     }
 }

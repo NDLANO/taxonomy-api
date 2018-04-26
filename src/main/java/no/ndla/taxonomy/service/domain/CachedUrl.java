@@ -6,6 +6,7 @@ import javax.persistence.*;
 import java.net.URI;
 
 @Entity
+@Table(name = "cached_url_v")
 public class CachedUrl {
 
     public CachedUrl() {
@@ -18,7 +19,6 @@ public class CachedUrl {
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column
     private int id;
 

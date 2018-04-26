@@ -53,7 +53,7 @@ FROM
   LEFT OUTER JOIN resource_filter rf ON rf.resource_id = r.id
   LEFT OUTER JOIN filter f ON rf.filter_id = f.id
   LEFT OUTER JOIN relevance rel ON rf.relevance_id = rel.id
-  LEFT OUTER JOIN cached_url url ON url.public_id = r.public_id
+  LEFT OUTER JOIN cached_url_v url ON url.public_id = r.public_id
 WHERE
   1 = 1
   AND 2 = 2

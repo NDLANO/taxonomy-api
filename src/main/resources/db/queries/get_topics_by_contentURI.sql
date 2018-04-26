@@ -8,7 +8,7 @@ FROM
   LEFT OUTER JOIN
   (
     SELECT *
-    FROM cached_url
+    FROM cached_url_v
     WHERE is_primary = TRUE
   ) url ON url.public_id = t.public_id
   LEFT OUTER JOIN (SELECT *
