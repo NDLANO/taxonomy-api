@@ -375,4 +375,48 @@ public class TopicsTest extends RestTest {
         assertAnyTrue(result, r -> "resource 1".equals(r.name));
         assertAnyTrue(result, r -> "resource 2".equals(r.name));
     }
+
+    @Test
+    public void can_get_primary_and_secondary_subtopics() throws Exception {
+        Topic externalTopic = builder.topic("secondary topic", t -> t
+                .name("secondary topic")
+                .publicId("urn:topic:b"));
+
+        URI parentTopicId = URI.create("urn:topic:a");
+        builder.subject("subject", s -> s
+                .name("subject")
+                .publicId("urn:subject:1")
+                .topic("parent", t -> t
+                        .name("parent topic")
+                        .publicId(parentTopicId.toString())
+                        .subtopic("child aa", child -> child
+                                .name("child topic aa")
+                                .publicId("urn:topic:aa")
+                                .subtopic("ignored grandchild", grandchild -> grandchild
+                                        .name("ignored grandchild topic")
+                                        .publicId("urn:topic:aaa")
+                                )
+                        )
+                        .subtopic("child ab", child -> child
+                                .name("child topic ab")
+                                .publicId("urn:topic:ab")
+                        )
+                        .subtopic(externalTopic, false)
+                )
+        );
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + parentTopicId + "/topics");
+        Topics.SubTopicIndexDocument[] topics = getObject(Topics.SubTopicIndexDocument[].class, response);
+
+        assertEquals(3, topics.length);
+        assertEquals("child topic aa", topics[1].name);
+        assertEquals("urn:topic:aa", topics[1].id.toString());
+        assertTrue(topics[1].isPrimary);
+        assertEquals("child topic ab", topics[2].name);
+        assertEquals("urn:topic:ab", topics[2].id.toString());
+        assertTrue(topics[2].isPrimary);
+        assertEquals("secondary topic", topics[0].name);
+        assertEquals("urn:topic:b", topics[0].id.toString());
+        assertFalse(topics[0].isPrimary);
+    }
 }

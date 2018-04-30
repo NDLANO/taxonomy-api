@@ -60,6 +60,17 @@ public class Topic extends DomainObject {
         return topicSubtopic;
     }
 
+
+    public TopicSubtopic addSecondarySubtopic(Topic subtopic) {
+        refuseIfDuplicateSubtopic(subtopic);
+
+        TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic);
+        topicSubtopic.setPrimary(false);
+        subtopic.parentTopics.add(topicSubtopic);
+        subtopics.add(topicSubtopic);
+        return topicSubtopic;
+    }
+
     public boolean hasSingleParentTopic() {
         return parentTopics.size() == 1;
     }
@@ -307,4 +318,5 @@ public class Topic extends DomainObject {
     public boolean isContext() {
         return context;
     }
+
 }

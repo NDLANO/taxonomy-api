@@ -261,7 +261,7 @@ public class Builder {
         }
 
         public TopicBuilder subtopic() {
-            return subtopic(null, null);
+            return subtopic((Topic) null, null);
         }
 
         public TopicBuilder subtopic(String topicKey) {
@@ -281,6 +281,16 @@ public class Builder {
 
         public TopicBuilder subtopic(Topic subtopic) {
             entityManager.persist(topic.addSubtopic(subtopic));
+            return this;
+        }
+
+        public TopicBuilder subtopic(Topic subtopic, Boolean isPrimary) {
+            if(isPrimary)
+            {
+                entityManager.persist(topic.addSubtopic(subtopic));
+            }else {
+                entityManager.persist(topic.addSecondarySubtopic(subtopic));
+            }
             return this;
         }
 

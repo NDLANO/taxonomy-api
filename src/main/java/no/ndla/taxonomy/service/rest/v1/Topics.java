@@ -12,10 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -42,6 +38,7 @@ public class Topics extends CrudController<Topic> {
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_topic_public_id_recursively");
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_QUERY = getQuery("get_resources_by_topic_public_id");
     private static final String GET_FILTERS_BY_TOPIC_ID_QUERY = getQuery("get_filters_by_topic_public_id");
+    private static final String GET_SUBTOPICS_BY_TOPIC_ID_QUERY = getQuery("get_subtopics_by_topic_id_query");
 
     public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
         this.topicRepository = topicRepository;
@@ -158,6 +155,25 @@ public class Topics extends CrudController<Topic> {
         FilterQueryExtractor extractor = new FilterQueryExtractor();
         return jdbcTemplate.query(GET_FILTERS_BY_TOPIC_ID_QUERY, setQueryParameters(singletonList(id.toString())),
                 extractor::extractFilters
+        );
+    }
+
+    @GetMapping("/{id}/topics")
+    @PreAuthorize("hasAuthority('READONLY')")
+    @ApiOperation(value = "Gets all subtopics for this topic")
+    public List<SubTopicIndexDocument> getSubTopics(
+            @PathVariable("id")
+                    URI id,
+            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language
+    ) throws Exception {
+        String sql = GET_SUBTOPICS_BY_TOPIC_ID_QUERY.replace("1 = 1", "t.public_id = ?");
+        List<Object> args = asList(language, id.toString());
+
+        SubTopicQueryExtractor extractor = new SubTopicQueryExtractor();
+        return jdbcTemplate.query(sql, setQueryParameters(args),
+                extractor::extractSubTopics
         );
     }
 
@@ -291,6 +307,28 @@ public class Topics extends CrudController<Topic> {
         }
     }
 
+    @ApiModel("SubTopicIndexDocument")
+    public static class SubTopicIndexDocument {
+        @JsonProperty
+        @ApiModelProperty(value = "Topic id", example = "urn:topic:234")
+        public URI id;
+
+        @JsonProperty
+        @ApiModelProperty(value = "The name of the subtopic", example = "Trigonometry")
+        public String name;
+
+        @JsonProperty
+        @ApiModelProperty(value = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+        public URI contentUri;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Whether this subtopic is owned by some other topic or has its primary connection here", example = "true")
+        public Boolean isPrimary;
+
+        SubTopicIndexDocument() {
+        }
+    }
+
     @ApiModel("Topic FilterIndexDocument")
     public static class FilterIndexDocument {
         @JsonProperty
@@ -414,6 +452,22 @@ public class Topics extends CrudController<Topic> {
                     id = getURI(resultSet, "filter_public_id");
                     connectionId = getURI(resultSet, "topic_filter_public_id");
                     relevanceId = getURI(resultSet, "relevance_id");
+                }});
+            }
+            return result;
+        }
+    }
+
+    private class SubTopicQueryExtractor {
+
+        private List<SubTopicIndexDocument> extractSubTopics(ResultSet resultSet) throws SQLException {
+            List<SubTopicIndexDocument> result = new ArrayList<>();
+            while (resultSet.next()) {
+                result.add(new SubTopicIndexDocument() {{
+                    name = resultSet.getString("subtopic_name");
+                    id = getURI(resultSet, "subtopic_public_id");
+                    contentUri = getURI(resultSet, "subtopic_content_uri");
+                    isPrimary = resultSet.getBoolean("subtopic_is_primary");
                 }});
             }
             return result;
