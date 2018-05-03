@@ -161,8 +161,8 @@ public class TopicsTest extends RestTest {
                 .translation("nb", tr -> tr.name("HovedEmne"))
                 .resource(r -> r.publicId("urn:resource:1")));
 
-        builder.subject(s -> s.name("primary").topic(topic)).getPublicId();
-        builder.subject(s -> s.name("secondary").topic(topic)).getPublicId();
+        builder.subject(s -> s.name("primary").topic(topic));
+        builder.subject(s -> s.name("secondary").topic(topic));
 
         deleteResource("/v1/topics/" + topic.getPublicId());
 
@@ -176,8 +176,8 @@ public class TopicsTest extends RestTest {
                 .translation("nb", tr -> tr.name("HovedEmne"))
                 .resource(r -> r.publicId("urn:resource:1")));
 
-        builder.topic(t -> t.name("primary").subtopic(topic)).getPublicId();
-        builder.topic(t -> t.name("secondary").subtopic(topic)).getPublicId();
+        builder.topic(t -> t.name("primary").subtopic(topic));
+        builder.topic(t -> t.name("secondary").subtopic(topic));
 
         deleteResource("/v1/topics/" + topic.getPublicId());
 
@@ -418,5 +418,42 @@ public class TopicsTest extends RestTest {
         assertEquals("secondary topic", topics[0].name);
         assertEquals("urn:topic:b", topics[0].id.toString());
         assertFalse(topics[0].isPrimary);
+    }
+
+    @Test
+    public void can_get_primary_and_secondary_ressources() throws Exception {
+        Resource externalResource = builder.resource(r -> r
+                .name("external resource")
+                .publicId("urn:resource:ext"));
+        Topic externalTopic = builder.topic("secondary topic", t -> t
+                .name("secondary topic")
+                .publicId("urn:topic:b")
+                .resource(externalResource));
+
+        URI primaryTopicId = URI.create("urn:topic:pri");
+        builder.subject("subject", s -> s
+                .name("subject")
+                .publicId("urn:subject:1")
+                .topic("parent", t -> t
+                        .name("parent topic")
+                        .publicId(primaryTopicId.toString())
+                        .resource("primary resource", child -> child
+                                .name("primary resource")
+                                .publicId("urn:resource:pri")
+                        )
+                        .resource(externalResource, false)
+                )
+        );
+
+        MockHttpServletResponse response = getResource("/v1/topics/" + primaryTopicId + "/resources");
+        Topics.ResourceIndexDocument[] resources = getObject(Topics.ResourceIndexDocument[].class, response);
+
+        assertEquals(2, resources.length);
+        assertEquals("primary resource", resources[1].name);
+        assertEquals("urn:resource:pri", resources[1].id.toString());
+        assertTrue(resources[1].isPrimary);
+        assertEquals("external resource", resources[0].name);
+        assertEquals("urn:resource:ext", resources[0].id.toString());
+        assertFalse(resources[0].isPrimary);
     }
 }

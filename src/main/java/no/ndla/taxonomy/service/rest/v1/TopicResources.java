@@ -39,7 +39,7 @@ public class TopicResources {
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and resources")
     @PreAuthorize("hasAuthority('READONLY')")
-    public List<TopicResourceIndexDocument> index() throws Exception {
+    public List<TopicResourceIndexDocument> index() {
         List<TopicResourceIndexDocument> result = new ArrayList<>();
         topicResourceRepository.findAll().forEach(record -> result.add(new TopicResourceIndexDocument(record)));
         return result;
@@ -48,7 +48,7 @@ public class TopicResources {
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a specific connection between a topic and a resource")
     @PreAuthorize("hasAuthority('READONLY')")
-    public TopicResourceIndexDocument get(@PathVariable("id") URI id) throws Exception {
+    public TopicResourceIndexDocument get(@PathVariable("id") URI id) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
         TopicResourceIndexDocument result = new TopicResourceIndexDocument(topicResource);
         return result;
@@ -58,13 +58,14 @@ public class TopicResources {
     @ApiOperation(value = "Adds a resource to a topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "connection", value = "new topic/resource connection ") @RequestBody AddResourceToTopicCommand command) throws Exception {
+            @ApiParam(name = "connection", value = "new topic/resource connection ") @RequestBody AddResourceToTopicCommand command) {
 
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Resource resource = resourceRepository.getByPublicId(command.resourceId);
-        TopicResource topicResource = topic.addResource(resource);
+
+        TopicResource topicResource = Boolean.FALSE.equals(command.primary) ? topic.addSecondaryResource(resource): topic.addResource(resource);
         topicResource.setRank(command.rank);
-        if (command.primary) resource.setPrimaryTopic(topic);
+
         topicResourceRepository.save(topicResource);
 
         URI location = URI.create("/topic-resources/" + topicResource.getPublicId());
@@ -76,7 +77,7 @@ public class TopicResources {
     @ApiOperation("Removes a resource from a topic")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void delete(@PathVariable("id") URI id) throws Exception {
+    public void delete(@PathVariable("id") URI id) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
         topicResource.getTopic().removeResource(topicResource.getResource());
 
@@ -89,7 +90,7 @@ public class TopicResources {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand
-                            command) throws Exception {
+                            command) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
         topicResource.setRank(command.rank);
         if (command.primary) {
@@ -110,7 +111,7 @@ public class TopicResources {
 
         @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
-        public boolean primary;
+        public Boolean primary;
 
         @JsonProperty
         @ApiModelProperty(value = "Order in which resource is sorted for the topic", example = "1")

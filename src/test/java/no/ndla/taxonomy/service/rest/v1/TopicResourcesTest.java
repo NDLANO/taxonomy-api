@@ -32,6 +32,28 @@ public class TopicResourcesTest extends RestTest {
         assertEquals(1, count(calculus.getResources()));
         assertAnyTrue(calculus.getResources(), t -> "Introduction to integration".equals(t.getName()));
         assertNotNull(topicResourceRepository.getByPublicId(id));
+        assertTrue(calculus.resources.iterator().next().isPrimary());
+    }
+
+    @Test
+    public void can_add_secondary_resource_to_topic() throws Exception {
+        URI integrationId, calculusId;
+        calculusId = newTopic().name("calculus").getPublicId();
+        integrationId = newResource().name("Introduction to integration").getPublicId();
+
+        URI id = getId(
+                createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
+                    topicid = calculusId;
+                    resourceId = integrationId;
+                    primary = false;
+                }})
+        );
+
+        Topic calculus = topicRepository.getByPublicId(calculusId);
+        assertEquals(1, count(calculus.getResources()));
+        assertAnyTrue(calculus.getResources(), t -> "Introduction to integration".equals(t.getName()));
+        assertNotNull(topicResourceRepository.getByPublicId(id));
+        assertFalse(calculus.resources.iterator().next().isPrimary());
     }
 
     @Test

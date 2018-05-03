@@ -285,7 +285,7 @@ public class Builder {
         }
 
         public TopicBuilder subtopic(Topic subtopic, Boolean isPrimary) {
-            if(isPrimary)
+            if(isPrimary!=null && isPrimary)
             {
                 entityManager.persist(topic.addSubtopic(subtopic));
             }else {
@@ -314,6 +314,13 @@ public class Builder {
 
         public TopicBuilder resource(Resource resource) {
             TopicResource topicResource = topic.addResource(resource);
+            entityManager.persist(topicResource);
+            return this;
+        }
+
+        public TopicBuilder resource(Resource resource, boolean isPrimary) {
+            TopicResource topicResource = topic.addResource(resource);
+            topicResource.setPrimary(isPrimary);
             entityManager.persist(topicResource);
             return this;
         }
@@ -349,6 +356,7 @@ public class Builder {
         public void isContext(boolean b) {
             topic.setContext(b);
         }
+
     }
 
     public class TopicTranslationBuilder {

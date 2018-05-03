@@ -34,7 +34,7 @@ public class TopicSubtopics {
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and subtopics")
     @PreAuthorize("hasAuthority('READONLY')")
-    public List<TopicSubtopicIndexDocument> index() throws Exception {
+    public List<TopicSubtopicIndexDocument> index()  {
         List<TopicSubtopicIndexDocument> result = new ArrayList<>();
 
         topicSubtopicRepository.findAll().forEach(record -> result.add(new TopicSubtopicIndexDocument(record)));
@@ -44,7 +44,7 @@ public class TopicSubtopics {
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single connection between a topic and a subtopic")
     @PreAuthorize("hasAuthority('READONLY')")
-    public TopicSubtopicIndexDocument get(@PathVariable("id") URI id) throws Exception {
+    public TopicSubtopicIndexDocument get(@PathVariable("id") URI id) {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
         TopicSubtopicIndexDocument result = new TopicSubtopicIndexDocument(topicSubtopic);
         return result;
@@ -54,16 +54,15 @@ public class TopicSubtopics {
     @ApiOperation(value = "Adds a subtopic to a topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "connection", value = "The new connection") @RequestBody AddSubtopicToTopicCommand command) throws Exception {
+            @ApiParam(name = "connection", value = "The new connection") @RequestBody AddSubtopicToTopicCommand command) {
 
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Topic subtopic = topicRepository.getByPublicId(command.subtopicid);
 
-        TopicSubtopic topicSubtopic = topic.addSubtopic(subtopic);
+        TopicSubtopic topicSubtopic = Boolean.FALSE.equals(command.primary) ? topic.addSecondarySubtopic(subtopic) : topic.addSubtopic(subtopic);
         topicSubtopicRepository.save(topicSubtopic);
 
         topicSubtopic.setRank(command.rank);
-        if (command.primary) subtopic.setPrimaryParentTopic(topic);
 
         URI location = URI.create("/topic-subtopics/" + topicSubtopic.getPublicId());
         return ResponseEntity.created(location).build();
@@ -73,7 +72,7 @@ public class TopicSubtopics {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation(value = "Removes a connection between a topic and a subtopic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void delete(@PathVariable("id") URI id) throws Exception {
+    public void delete(@PathVariable("id") URI id) {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
         topicSubtopic.getTopic().removeSubtopic(topicSubtopic.getSubtopic());
         topicSubtopicRepository.delete(topicSubtopic);
@@ -84,7 +83,7 @@ public class TopicSubtopics {
     @ApiOperation(value = "Updates a connection between a topic and a subtopic", notes = "Use to update which topic is primary to a subtopic or to alter sorting order")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) throws Exception {
+                    @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
         topicSubtopic.setRank(command.rank);
         if (command.primary) {
@@ -106,7 +105,7 @@ public class TopicSubtopics {
 
         @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
-        public boolean primary;
+        public Boolean primary;
 
         @JsonProperty
         @ApiModelProperty(value = "Order in which to sort the subtopic for the topic", example = "1")

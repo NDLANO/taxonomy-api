@@ -2,7 +2,6 @@ package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.domain.TopicSubtopic;
 import org.junit.Test;
@@ -34,6 +33,28 @@ public class TopicSubtopicsTest extends RestTest {
         assertEquals(1, count(calculus.getSubtopics()));
         assertAnyTrue(calculus.getSubtopics(), t -> "integration".equals(t.getName()));
         assertNotNull(topicSubtopicRepository.getByPublicId(id));
+        assertTrue(calculus.subtopics.iterator().next().isPrimary());
+    }
+
+    @Test
+    public void can_add_secondary_subtopic_to_topic() throws Exception {
+        URI integrationId, calculusId;
+        calculusId = builder.topic(t -> t.name("calculus")).getPublicId();
+        integrationId = builder.topic(t -> t.name("integration")).getPublicId();
+
+        URI id = getId(
+                createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
+                    topicid = calculusId;
+                    subtopicid = integrationId;
+                    primary = false;
+                }})
+        );
+
+        Topic calculus = topicRepository.getByPublicId(calculusId);
+        assertEquals(1, count(calculus.getSubtopics()));
+        assertAnyTrue(calculus.getSubtopics(), t -> "integration".equals(t.getName()));
+        assertNotNull(topicSubtopicRepository.getByPublicId(id));
+        assertFalse(calculus.subtopics.iterator().next().isPrimary());
     }
 
     @Test
@@ -159,7 +180,8 @@ public class TopicSubtopicsTest extends RestTest {
         }});
 
         subtopic.parentTopics.forEach(topicResource -> {
-            if (topicResource.getTopic().equals(newPrimary)) assertTrue(topicResource.isPrimary());
+            Topic topic = topicResource.getTopic();
+            if (topic.equals(newPrimary)) assertTrue(topicResource.isPrimary());
             else assertFalse(topicResource.isPrimary());
         });
 
