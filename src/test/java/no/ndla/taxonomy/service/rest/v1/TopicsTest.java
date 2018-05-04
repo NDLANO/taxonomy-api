@@ -7,8 +7,10 @@ import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.annotation.Rollback;
 
 import java.net.URI;
+import java.util.stream.IntStream;
 
 import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.service.TestUtils.*;

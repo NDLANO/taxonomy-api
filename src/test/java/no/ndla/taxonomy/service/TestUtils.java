@@ -1,7 +1,5 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.service.domain.UrlCacher;
-import no.ndla.taxonomy.service.rest.v1.UrlCacherFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -32,22 +30,18 @@ public class TestUtils {
 
     private static HttpMessageConverter mappingJackson2HttpMessageConverter;
     private static EntityManager entityManager;
-    private static UrlCacher urlCacher;
     private static MockMvc mockMvc;
 
     @Autowired
-    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext, EntityManager entityManager, UrlCacher urlCacher) {
+    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext, EntityManager entityManager) {
         mappingJackson2HttpMessageConverter = Arrays.stream(converters)
                 .filter(hmc -> hmc instanceof MappingJackson2HttpMessageConverter)
                 .findAny()
                 .orElse(null);
         this.entityManager = entityManager;
-        this.urlCacher = urlCacher;
 
         assertNotNull("the JSON message converter must not be null", TestUtils.mappingJackson2HttpMessageConverter);
-
-        UrlCacherFilter urlCacherFilter = new UrlCacherFilter(urlCacher);
-        TestUtils.mockMvc = webAppContextSetup(webApplicationContext).addFilter(urlCacherFilter).build();
+        TestUtils.mockMvc = webAppContextSetup(webApplicationContext).build();
     }
 
     public static String json(Object o) throws IOException {
@@ -73,7 +67,6 @@ public class TestUtils {
 
     public static MockHttpServletResponse getResource(String path, ResultMatcher resultMatcher) throws Exception {
         entityManager.flush();
-        urlCacher.rebuildEntireCache();
         return mockMvc.perform(
                 get(path)
                         .accept(APPLICATION_JSON_UTF8))
