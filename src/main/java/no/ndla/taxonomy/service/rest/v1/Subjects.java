@@ -525,15 +525,16 @@ public class Subjects extends CrudController<Subject> {
         }
 
         private List<TopicIndexDocument> filterTopics(URI[] filterIds, Map<URI, TopicIndexDocument> topics, List<TopicIndexDocument> queryresult) {
-            if (filterIds.length > 0) {
+            if (filterIds != null && filterIds.length > 0) {
                 Set<TopicIndexDocument> result = new HashSet<>();
-                for (URI aFilter : filterIds) {
-                    for (TopicIndexDocument doc : queryresult) {
-                        doc.filters.iterator().forEachRemaining(filter -> {
-                            if (filter.id.equals(aFilter)) {
-                                result.add(doc);
-                            }
-                        });
+                List<URI> filtersInQuery = asList(filterIds);
+                for (TopicIndexDocument doc : queryresult) {
+                    if (filtersInQuery.contains(doc.filterPublicId) || filtersInQuery.contains(doc.resourceFilterId)) {
+                        result.add(doc);
+                        TopicIndexDocument current = doc;
+                        while ((current = topics.get(current.parent)) != null) {
+                            result.add(current);
+                        }
                     }
                 }
                 return new ArrayList<>(result);
