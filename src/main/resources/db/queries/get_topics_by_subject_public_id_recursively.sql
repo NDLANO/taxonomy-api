@@ -41,7 +41,7 @@ SELECT DISTINCT
   t.level,
   t.connection_public_id,
   resf.public_id            AS resource_filter_public_id,
-  f.public_id               AS topic_filter_public_id,
+  tf.public_id              AS topic_filter_public_id,
   url.path                  AS topic_path,
   rel.public_id             AS relevance_public_id,
   f.name                    AS filter_name,

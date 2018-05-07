@@ -114,7 +114,7 @@ public class SubjectFiltersTest extends RestTest {
                         .filter(vg2, supplementary))
         );
 
-        MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics?filter=" + vg1.getPublicId());
+        MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
         Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
 
         assertEquals(2, topics[0].filters.size());

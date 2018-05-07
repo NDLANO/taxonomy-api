@@ -45,9 +45,6 @@ public abstract class RestTest extends AbstractTransactionalJUnit4SpringContextT
     ResourceTypeRepository resourceTypeRepository;
 
     @Autowired
-    CachedUrlRepository cachedUrlRepository;
-
-    @Autowired
     FilterRepository filterRepository;
 
     @Autowired
