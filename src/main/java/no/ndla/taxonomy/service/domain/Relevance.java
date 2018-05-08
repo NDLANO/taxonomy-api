@@ -11,8 +11,9 @@ import java.util.UUID;
 
 @Entity
 public class Relevance extends DomainObject {
+
     @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<RelevanceTranslation> translations = new HashSet<>();
+    public Set<RelevanceTranslation> translations = new HashSet<>();
 
     @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
     public Set<ResourceFilter> resources = new HashSet<>();

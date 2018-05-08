@@ -1,6 +1,5 @@
 package no.ndla.taxonomy.service.domain;
 
-
 import javax.persistence.*;
 
 @Entity

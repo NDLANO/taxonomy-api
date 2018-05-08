@@ -2,6 +2,7 @@ package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.domain.Resource;
+import no.ndla.taxonomy.service.domain.ResourceTranslation;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -138,12 +139,13 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_delete_resource() throws Exception {
+        Resource resource = builder.resource(r -> r
+                .translation("nb", tr -> tr.name("ressurs"))
+                .resourceType(rt -> rt.name("Learning path")));
+        ResourceTranslation resourceTranslation = resource.getTranslation("nb");
+
         builder.topic(t -> t
-                .resource("resource", r -> r
-                        .translation("nb", tr -> tr.name("ressurs"))
-                        .resourceType(rt -> rt.name("Learning path"))
-                )
-        );
+                .resource(resource));
 
         URI id = builder.resource("resource").getPublicId();
         deleteResource("/v1/resources/" + id);

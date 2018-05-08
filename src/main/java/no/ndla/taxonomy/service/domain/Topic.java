@@ -55,13 +55,19 @@ public class Topic extends DomainObject {
 
         TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic);
         subtopic.parentTopics.add(topicSubtopic);
+        subtopic.setPrimaryParentTopic(this);
         subtopics.add(topicSubtopic);
-        if (subtopic.hasSingleParentTopic()) subtopic.setPrimaryParentTopic(this);
         return topicSubtopic;
     }
 
-    public boolean hasSingleParentTopic() {
-        return parentTopics.size() == 1;
+    public TopicSubtopic addSecondarySubtopic(Topic subtopic) {
+        refuseIfDuplicateSubtopic(subtopic);
+
+        TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic);
+        topicSubtopic.setPrimary(false);
+        subtopic.parentTopics.add(topicSubtopic);
+        subtopics.add(topicSubtopic);
+        return topicSubtopic;
     }
 
     public boolean hasSingleSubject() {
@@ -113,7 +119,17 @@ public class Topic extends DomainObject {
         TopicResource topicResource = new TopicResource(this, resource);
         this.resources.add(topicResource);
         resource.topics.add(topicResource);
-        if (resource.hasSingleParentTopic()) resource.setPrimaryTopic(this);
+        resource.setPrimaryTopic(this);
+        return topicResource;
+    }
+
+    public TopicResource addSecondaryResource(Resource resource) {
+        refuseIfDuplicateResource(resource);
+
+        TopicResource topicResource = new TopicResource(this, resource);
+        topicResource.setPrimary(false);
+        this.resources.add(topicResource);
+        resource.topics.add(topicResource);
         return topicResource;
     }
 
@@ -307,4 +323,5 @@ public class Topic extends DomainObject {
     public boolean isContext() {
         return context;
     }
+
 }
