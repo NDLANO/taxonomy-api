@@ -161,8 +161,8 @@ public class TopicSubtopicsTest extends RestTest {
     }
 
     @Test
-    public void subtopic_can_only_have_one_primary_topic_connection() throws Exception {
-        Topic subtopic = builder.topic(t -> t.name("alternating current"));
+    public void setting_new_parent_makes_old_one_secondary() throws Exception {
+        Topic subtopic = builder.topic(t -> t.name("a subtopic"));
 
         builder.topic("electricity", t -> t
                 .name("electricity")
@@ -185,6 +185,38 @@ public class TopicSubtopicsTest extends RestTest {
             else assertFalse(topicResource.isPrimary());
         });
 
+    }
+
+    @Test
+    public void setting_secondary_parent_primary_makes_old_primary_parent_secondary() throws Exception {
+        Topic subtopic = builder.topic(t -> t.name("a subtopic"));
+
+        Topic oldprimary = builder.topic("electricity", t -> t
+                .name("electricity")
+                .subtopic(subtopic)
+        );
+
+        Topic newPrimary = builder.topic("wiring", t -> t
+                .name("Wiring")
+        );
+
+        createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
+            topicid = newPrimary.getPublicId();
+            subtopicid = subtopic.getPublicId();
+            primary = true;
+        }});
+
+        TopicSubtopic topicSubtopic = oldprimary.subtopics.iterator().next();
+
+        updateResource("/v1/topic-subtopics/" + topicSubtopic.getPublicId().toString(), new TopicSubtopics.AddSubtopicToTopicCommand() {{
+            primary = true;
+        }});
+
+        subtopic.parentTopics.forEach(topicResource -> {
+            Topic topic = topicResource.getTopic();
+            if (topic.equals(oldprimary)) assertTrue(topicResource.isPrimary());
+            else assertFalse(topicResource.isPrimary());
+        });
     }
 
     @Test

@@ -87,12 +87,16 @@ public class TopicSubtopics {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
         topicSubtopic.setRank(command.rank);
         if (command.primary) {
+            Topic topic = topicSubtopic.getSubtopic();
+            for(TopicSubtopic otherTopics : topic.parentTopics)
+            {
+                otherTopics.setPrimary(false);
+            }
             topicSubtopic.setPrimary(true);
         } else if (topicSubtopic.isPrimary() && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
     }
-
 
     public static class AddSubtopicToTopicCommand {
         @JsonProperty
