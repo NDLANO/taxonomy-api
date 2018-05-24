@@ -1,7 +1,10 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
+import no.ndla.taxonomy.service.domain.Filter;
 import no.ndla.taxonomy.service.domain.Resource;
+import no.ndla.taxonomy.service.domain.ResourceType;
+import no.ndla.taxonomy.service.domain.Topic;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -211,5 +214,27 @@ public class ResourcesTest extends RestTest {
         }};
 
         createResource("/v1/resources", command, status().isCreated());
+    }
+
+    @Test
+    public void get_resource_with_topics_filters_resourceTypes_expanded() throws Exception {
+        final ResourceType resourceType = builder.resourceType(rt -> rt.name("Læringssti").translation("nb", tr -> tr.name("Læringssti")));
+        final Filter filter = builder.filter(f -> f.publicId("urn:filter:1").name("Vg 3"));
+        final Resource resource = builder.resource(r -> r
+                        .publicId("urn:resource:1")
+                        .resourceType(resourceType)
+                        .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core"))));
+        final Topic topic = builder.topic("primary",t -> t
+                        .name("Philosophy and Mind")
+                        .publicId("urn:topic:1")
+                        .resource(resource));
+
+        MockHttpServletResponse response = getResource("/v1/resources/" + resource.getPublicId() + "/full");
+        Resources.ResourceFullIndexDocument result = getObject(Resources.ResourceFullIndexDocument.class, response);
+
+        assertEquals(resource.getPublicId(), result.id);
+        assertEquals(resource.getName(), result.name);
+        assertEquals(1, result.topics.size());
+        assertEquals( 0, result.resourceTypes.size());
     }
 }
