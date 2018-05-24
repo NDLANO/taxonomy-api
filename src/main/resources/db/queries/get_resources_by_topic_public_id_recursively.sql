@@ -35,6 +35,7 @@ SELECT
   rt.public_id                 AS resource_type_public_id,
   coalesce(rttr.name, rt.name) AS resource_type_name,
   tr.public_id                 AS connection_public_id,
+  tr.is_primary                AS resource_is_primary,
   url.path                     AS resource_path,
   rel.public_id                AS relevance_public_id,
   tr.rank                      AS rank

@@ -261,7 +261,7 @@ public class Builder {
         }
 
         public TopicBuilder subtopic() {
-            return subtopic(null, null);
+            return subtopic((Topic) null, null);
         }
 
         public TopicBuilder subtopic(String topicKey) {
@@ -281,6 +281,16 @@ public class Builder {
 
         public TopicBuilder subtopic(Topic subtopic) {
             entityManager.persist(topic.addSubtopic(subtopic));
+            return this;
+        }
+
+        public TopicBuilder subtopic(Topic subtopic, Boolean isPrimary) {
+            if(isPrimary!=null && isPrimary)
+            {
+                entityManager.persist(topic.addSubtopic(subtopic));
+            }else {
+                entityManager.persist(topic.addSecondarySubtopic(subtopic));
+            }
             return this;
         }
 
@@ -304,6 +314,13 @@ public class Builder {
 
         public TopicBuilder resource(Resource resource) {
             TopicResource topicResource = topic.addResource(resource);
+            entityManager.persist(topicResource);
+            return this;
+        }
+
+        public TopicBuilder resource(Resource resource, boolean isPrimary) {
+            TopicResource topicResource = topic.addResource(resource);
+            topicResource.setPrimary(isPrimary);
             entityManager.persist(topicResource);
             return this;
         }
@@ -339,6 +356,7 @@ public class Builder {
         public void isContext(boolean b) {
             topic.setContext(b);
         }
+
     }
 
     public class TopicTranslationBuilder {

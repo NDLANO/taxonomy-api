@@ -1,6 +1,5 @@
 package no.ndla.taxonomy.service.domain;
 
-
 import org.hibernate.annotations.Type;
 
 import javax.persistence.CascadeType;

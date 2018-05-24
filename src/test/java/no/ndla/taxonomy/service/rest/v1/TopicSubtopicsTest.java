@@ -2,7 +2,6 @@ package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.domain.TopicSubtopic;
 import org.junit.Test;
@@ -34,6 +33,28 @@ public class TopicSubtopicsTest extends RestTest {
         assertEquals(1, count(calculus.getSubtopics()));
         assertAnyTrue(calculus.getSubtopics(), t -> "integration".equals(t.getName()));
         assertNotNull(topicSubtopicRepository.getByPublicId(id));
+        assertTrue(calculus.subtopics.iterator().next().isPrimary());
+    }
+
+    @Test
+    public void can_add_secondary_subtopic_to_topic() throws Exception {
+        URI integrationId, calculusId;
+        calculusId = builder.topic(t -> t.name("calculus")).getPublicId();
+        integrationId = builder.topic(t -> t.name("integration")).getPublicId();
+
+        URI id = getId(
+                createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
+                    topicid = calculusId;
+                    subtopicid = integrationId;
+                    primary = false;
+                }})
+        );
+
+        Topic calculus = topicRepository.getByPublicId(calculusId);
+        assertEquals(1, count(calculus.getSubtopics()));
+        assertAnyTrue(calculus.getSubtopics(), t -> "integration".equals(t.getName()));
+        assertNotNull(topicSubtopicRepository.getByPublicId(id));
+        assertFalse(calculus.subtopics.iterator().next().isPrimary());
     }
 
     @Test
@@ -140,8 +161,8 @@ public class TopicSubtopicsTest extends RestTest {
     }
 
     @Test
-    public void subtopic_can_only_have_one_primary_topic_connection() throws Exception {
-        Topic subtopic = builder.topic(t -> t.name("alternating current"));
+    public void setting_new_parent_makes_old_one_secondary() throws Exception {
+        Topic subtopic = builder.topic(t -> t.name("a subtopic"));
 
         builder.topic("electricity", t -> t
                 .name("electricity")
@@ -159,10 +180,43 @@ public class TopicSubtopicsTest extends RestTest {
         }});
 
         subtopic.parentTopics.forEach(topicResource -> {
-            if (topicResource.getTopic().equals(newPrimary)) assertTrue(topicResource.isPrimary());
+            Topic topic = topicResource.getTopic();
+            if (topic.equals(newPrimary)) assertTrue(topicResource.isPrimary());
             else assertFalse(topicResource.isPrimary());
         });
 
+    }
+
+    @Test
+    public void setting_secondary_parent_primary_makes_old_primary_parent_secondary() throws Exception {
+        Topic subtopic = builder.topic(t -> t.name("a subtopic"));
+
+        Topic oldprimary = builder.topic("electricity", t -> t
+                .name("electricity")
+                .subtopic(subtopic)
+        );
+
+        Topic newPrimary = builder.topic("wiring", t -> t
+                .name("Wiring")
+        );
+
+        createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
+            topicid = newPrimary.getPublicId();
+            subtopicid = subtopic.getPublicId();
+            primary = true;
+        }});
+
+        TopicSubtopic topicSubtopic = oldprimary.subtopics.iterator().next();
+
+        updateResource("/v1/topic-subtopics/" + topicSubtopic.getPublicId().toString(), new TopicSubtopics.AddSubtopicToTopicCommand() {{
+            primary = true;
+        }});
+
+        subtopic.parentTopics.forEach(topicResource -> {
+            Topic topic = topicResource.getTopic();
+            if (topic.equals(oldprimary)) assertTrue(topicResource.isPrimary());
+            else assertFalse(topicResource.isPrimary());
+        });
     }
 
     @Test
