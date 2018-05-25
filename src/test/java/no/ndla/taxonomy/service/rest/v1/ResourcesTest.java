@@ -236,8 +236,8 @@ public class ResourcesTest extends RestTest {
         assertEquals(resourceType.getName(), result.resourceTypes.iterator().next().name);
         assertEquals(1, result.filters.size());
         assertEquals(filter.getName(), result.filters.iterator().next().name);
-        assertEquals(1, result.topics.size());
-        Resources.ParentTopicIndexDocument t = result.topics.iterator().next();
+        assertEquals(1, result.parentTopics.size());
+        Resources.ParentTopicIndexDocument t = result.parentTopics.iterator().next();
         assertEquals(topic.getName(), t.name);
         assertEquals(true, t.isPrimary);
         assertEquals(URI.create("urn:article:6662"), t.contentUri);
