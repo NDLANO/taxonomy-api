@@ -18,10 +18,7 @@ import javax.transaction.Transactional;
 import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -52,7 +49,7 @@ public class Resources extends CrudController<Resource> {
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
-    ) throws Exception {
+    ) {
         return getResourceIndexDocuments(GET_RESOURCES_QUERY, singletonList(language));
     }
 
@@ -64,7 +61,7 @@ public class Resources extends CrudController<Resource> {
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
-    ) throws Exception {
+    ) {
         String sql = GET_RESOURCES_QUERY.replace("1 = 1", "r.public_id = ?");
         List<Object> args = asList(language, id.toString());
 
@@ -87,7 +84,7 @@ public class Resources extends CrudController<Resource> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id, @ApiParam(name = "resource", value = "the updated resource. Fields not included will be set to null.")
-    @RequestBody UpdateResourceCommand command) throws Exception {
+    @RequestBody UpdateResourceCommand command) {
         doPut(id, command);
     }
 
@@ -95,7 +92,7 @@ public class Resources extends CrudController<Resource> {
     @ApiOperation(value = "Adds a new resource")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "resource", value = "the new resource") @RequestBody CreateResourceCommand command) throws Exception {
+            @ApiParam(name = "resource", value = "the new resource") @RequestBody CreateResourceCommand command) {
         return doPost(new Resource(), command);
     }
 
@@ -108,7 +105,7 @@ public class Resources extends CrudController<Resource> {
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
-    ) throws Exception {
+    ) {
         ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
         return jdbcTemplate.query(GET_RESOURCE_RESOURCE_TYPES_QUERY, setQueryParameters(asList(language, id.toString())),
                 extractor::extractResourceTypes
@@ -124,7 +121,7 @@ public class Resources extends CrudController<Resource> {
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
-    ) throws Exception {
+    ) {
         FilterQueryExtractor extractor = new FilterQueryExtractor();
         return jdbcTemplate.query(GET_FILTERS_BY_RESOURCE_ID_QUERY, setQueryParameters(singletonList(id.toString())),
                 resultSet -> {
@@ -134,7 +131,7 @@ public class Resources extends CrudController<Resource> {
     }
 
     @GetMapping("/{id}/full")
-    @ApiOperation(value = "Gets all topics, filters and resourceTypes for this resource")
+    @ApiOperation(value = "Gets all parent topics, all filters and resourceTypes for this resource")
     @PreAuthorize("hasAuthority('READONLY')")
     public ResourceFullIndexDocument getResourceFull(
             @PathVariable("id")
@@ -147,24 +144,44 @@ public class Resources extends CrudController<Resource> {
         List<Object> args = asList(language, id.toString());
 
         ResourceIndexDocument resource = getFirst(getResourceIndexDocuments(sql, args), "Resource", id);
-        TopicQueryExtractor extractor = new TopicQueryExtractor();
 
-        List<TopicAndPrimaryIndexDocument> topics = jdbcTemplate.query(GET_TOPICS_FOR_RESOURCE, setQueryParameters(asList("nb", id.toString())), resultSet ->
-        {
-            return extractor.extractTopics(resultSet);
-        });
+        ResourceTypeQueryExtractor resourceTypeQueryExtractor = new ResourceTypeQueryExtractor();
+        List<ResourceTypeIndexDocument> resourceTypes = jdbcTemplate.query(GET_RESOURCE_RESOURCE_TYPES_QUERY, setQueryParameters(asList(language, id.toString())),
+                resultSet -> {
+                    return resourceTypeQueryExtractor.extractResourceTypes(resultSet);
+                }
+        );
 
-        ResourceFullIndexDocument result = new ResourceFullIndexDocument();
-        return result;
+        FilterQueryExtractor filterQueryExtractor = new FilterQueryExtractor();
+        List<FilterIndexDocument> filters = jdbcTemplate.query(GET_FILTERS_BY_RESOURCE_ID_QUERY, setQueryParameters(singletonList(id.toString())),
+                resultSet -> {
+                    return filterQueryExtractor.extractFilters(resultSet);
+                }
+        );
+
+        TopicQueryExtractor topicQueryExtractor = new TopicQueryExtractor();
+        List<ParentTopicIndexDocument> topics = jdbcTemplate.query(GET_TOPICS_FOR_RESOURCE, setQueryParameters(asList(language, id.toString())),
+                resultSet ->
+                {
+                    return topicQueryExtractor.extractTopics(resultSet);
+                });
+
+        ResourceFullIndexDocument r = ResourceFullIndexDocument.from(resource);
+        r.resourceTypes.addAll(resourceTypes);
+        r.filters.addAll(filters);
+        r.parentTopics.addAll(topics);
+        return r;
     }
 
     class TopicQueryExtractor {
-        private List<TopicAndPrimaryIndexDocument> extractTopics(ResultSet resultSet) throws SQLException {
-            List<TopicAndPrimaryIndexDocument> result = new ArrayList<>();
+        private List<ParentTopicIndexDocument> extractTopics(ResultSet resultSet) throws SQLException {
+            List<ParentTopicIndexDocument> result = new ArrayList<>();
             while (resultSet.next()) {
-                result.add(new TopicAndPrimaryIndexDocument() {{
+                result.add(new ParentTopicIndexDocument() {{
                     name = resultSet.getString("name");
                     id = getURI(resultSet, "id");
+                    isPrimary = resultSet.getBoolean("is_primary");
+                    contentUri = URI.create(resultSet.getString("content_uri") != null ? resultSet.getString("content_uri") : "");
                 }});
             }
             return result;
@@ -240,16 +257,37 @@ public class Resources extends CrudController<Resource> {
     @ApiModel("ResourceFullIndexDocument")
     static class ResourceFullIndexDocument extends ResourceIndexDocument {
         @JsonProperty
-        @ApiModelProperty(value = "Owning topology nodes and whether or not connection type is primary", example = "[{id = 'urn:resourcetype:1', name = 'lecture'}]")
-        public Set<TopicAndPrimaryIndexDocument> topics = new HashSet<>();
+        @ApiModelProperty(value = "Related resource type(s)", example = "[{id: urn:resourcetype:learningPath,name: Læringssti}]")
+        public Set<ResourceTypeIndexDocument> resourceTypes = new HashSet<>();
 
         @JsonProperty
-        @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resourcetype:1', name = 'lecture'}]")
-        public Set<Subjects.ResourceTypeIndexDocument> resourceTypes = new HashSet<>();
+        @ApiModelProperty(value = "Filters", example = "[{id: urn:filter:047bb226-48d1-4122-8791-7d4f5d83cf8b," +
+                "name: VG2," +
+                "connectionId: urn:resource-filter:a41d6162-b67f-44d8-b440-c1fdc7b4d05e," +
+                "relevanceId: urn:relevance:core}]")
+        public Set<FilterIndexDocument> filters = new HashSet<>();
+
+        @JsonProperty
+        @ApiModelProperty(value = "Parent topology nodes and whether or not connection type is primary",
+                example = "[{id: urn:topic:1:181900," +
+                        "name: I dyrehagen," +
+                        "contentUri: urn:article:6662," +
+                        "path: /subject:2/topic:1:181900," +
+                        "primary: true}]")
+        public Set<ParentTopicIndexDocument> parentTopics = new HashSet<>();
+
+        static ResourceFullIndexDocument from(ResourceIndexDocument resource) {
+            ResourceFullIndexDocument r = new ResourceFullIndexDocument();
+            r.id = resource.id;
+            r.name = resource.name;
+            r.contentUri = resource.contentUri;
+            r.path = resource.path;
+            return r;
+        }
     }
 
-    @ApiModel("TopicAndPrimaryIndexDocument")
-    static class TopicAndPrimaryIndexDocument {
+    @ApiModel("ParentTopicIndexDocument")
+    static class ParentTopicIndexDocument {
         @JsonProperty
         public URI id;
 
@@ -261,10 +299,6 @@ public class Resources extends CrudController<Resource> {
         public URI contentUri;
 
         @JsonProperty
-        @ApiModelProperty(value = "The primary path part of the url to this topic.", example = "/subject:1/topic:1")
-        public String path;
-
-        @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
         public boolean isPrimary;
 
@@ -272,11 +306,9 @@ public class Resources extends CrudController<Resource> {
         @JsonIgnore
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof Subjects.TopicIndexDocument)) return false;
-
-            Subjects.TopicIndexDocument that = (Subjects.TopicIndexDocument) o;
-
-            return id.equals(that.id);
+            if (o == null || getClass() != o.getClass()) return false;
+            ParentTopicIndexDocument that = (ParentTopicIndexDocument) o;
+            return Objects.equals(id, that.id);
         }
 
         @Override
@@ -286,7 +318,7 @@ public class Resources extends CrudController<Resource> {
         }
     }
 
-    @ApiModel("ConnectionResourceResourceTypeIndexDocument")
+    @ApiModel("ResourceTypeIndexDocument")
     public static class ResourceTypeIndexDocument {
         @JsonProperty
         @ApiModelProperty(example = "urn:resourcetype:2")
@@ -303,9 +335,24 @@ public class Resources extends CrudController<Resource> {
         @JsonProperty
         @ApiModelProperty(value = "The id of the resource resource type connection", example = "urn:resource-resourcetype:1")
         public URI connectionId;
+
+        @Override
+        @JsonIgnore
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ResourceTypeIndexDocument that = (ResourceTypeIndexDocument) o;
+            return Objects.equals(id, that.id);
+        }
+
+        @Override
+        @JsonIgnore
+        public int hashCode() {
+            return id.hashCode();
+        }
     }
 
-    @ApiModel("ResourceFilterIndexDocument")
+    @ApiModel("FilterIndexDocument")
     public static class FilterIndexDocument {
         @JsonProperty
         @ApiModelProperty(example = "urn:filter:1")
@@ -322,6 +369,21 @@ public class Resources extends CrudController<Resource> {
         @JsonProperty
         @ApiModelProperty(value = "The relevance of this resource according to the filter", example = "urn:relevance:1")
         public URI relevanceId;
+
+        @JsonIgnore
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            FilterIndexDocument that = (FilterIndexDocument) o;
+            return Objects.equals(id, that.id);
+        }
+
+        @JsonIgnore
+        @Override
+        public int hashCode() {
+            return id.hashCode();
+        }
     }
 
     private class ResourceTypeQueryExtractor {
