@@ -51,7 +51,7 @@ public class Subjects extends CrudController<Subject> {
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
-    ) throws Exception {
+    ) {
         List<Object> args = singletonList(language);
         SubjectQueryExtractor extractor = new SubjectQueryExtractor();
         return jdbcTemplate.query(GET_SUBJECTS_QUERY, setQueryParameters(args), extractor::extractSubjects);
@@ -65,7 +65,7 @@ public class Subjects extends CrudController<Subject> {
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
-    ) throws Exception {
+    ) {
         String sql = GET_SUBJECTS_QUERY.replace("1 = 1", "s.public_id = ?");
         List<Object> args = asList(language, id.toString());
 
@@ -80,21 +80,21 @@ public class Subjects extends CrudController<Subject> {
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(name = "subject", value = "The updated subject. Fields not included will be set to null.") @RequestBody UpdateSubjectCommand command
-    ) throws Exception {
+    ) {
         doPut(id, command);
     }
 
     @PostMapping
     @ApiOperation(value = "Creates a new subject")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public ResponseEntity<Void> post(@ApiParam(name = "subject", value = "The new subject") @RequestBody CreateSubjectCommand command) throws Exception {
+    public ResponseEntity<Void> post(@ApiParam(name = "subject", value = "The new subject") @RequestBody CreateSubjectCommand command) {
         return doPost(new Subject(), command);
     }
 
     @GetMapping("/{id}/topics")
     @ApiOperation(value = "Gets all topics associated with a subject", notes = "This resource is read-only. To update the relationship between subjects and topics, use the resource /subject-topics.")
     @PreAuthorize("hasAuthority('READONLY')")
-    public List<TopicIndexDocument> getTopics(
+    public List<SubTopicIndexDocument> getTopics(
             @PathVariable("id")
                     URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -110,7 +110,7 @@ public class Subjects extends CrudController<Subject> {
             @RequestParam(value = "relevance", required = false, defaultValue = "")
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
                     URI relevance
-    ) throws Exception {
+    ) {
         String sql = GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY;
         if (!recursive) sql = sql.replace("1 = 1", "t.level = 0");
 
@@ -232,7 +232,7 @@ public class Subjects extends CrudController<Subject> {
     }
 
     @ApiModel("SubjectTopicIndexDocument")
-    public static class TopicIndexDocument {
+    public static class SubTopicIndexDocument {
         @JsonProperty
         public URI id;
 
@@ -248,12 +248,12 @@ public class Subjects extends CrudController<Subject> {
         public URI parent;
 
         @JsonProperty
-        @ApiModelProperty(value = "The path part of the url to this topic.", example = "/subject:1/topic:1")
-        public String path;
-
-        @JsonProperty
         @ApiModelProperty(value = "The id of the subject-topics or topic-subtopics connection which causes this topic to be included in the result set.", example = "urn:subject-topic:1")
         public URI connectionId;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Primary connection", example = "true")
+        public boolean isPrimary;
 
         @JsonProperty
         @ApiModelProperty(value = "The order in which to sort the topic within it's level.", example = "1")
@@ -270,9 +270,9 @@ public class Subjects extends CrudController<Subject> {
         @JsonIgnore
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof TopicIndexDocument)) return false;
+            if (!(o instanceof SubTopicIndexDocument)) return false;
 
-            TopicIndexDocument that = (TopicIndexDocument) o;
+            SubTopicIndexDocument that = (SubTopicIndexDocument) o;
 
             return id.equals(that.id);
         }
@@ -293,7 +293,6 @@ public class Subjects extends CrudController<Subject> {
         @JsonProperty
         @ApiModelProperty(value = "Filter name", example = "VG 1")
         public String name;
-
 
         @JsonProperty
         @ApiModelProperty(required = true, value = "ID of the relevance the resource has in context of the filter", example = "urn:relevance:core")
@@ -497,21 +496,20 @@ public class Subjects extends CrudController<Subject> {
     }
 
     class TopicQueryExtractor {
-        List<TopicIndexDocument> extractTopics(URI id, URI[] filterIds, URI relevance, ResultSet resultSet) throws SQLException {
-            Map<URI, TopicIndexDocument> topics = new HashMap<>();
-            List<TopicIndexDocument> queryresult = new ArrayList<>();
+        List<SubTopicIndexDocument> extractTopics(URI id, URI[] filterIds, URI relevance, ResultSet resultSet) throws SQLException {
+            Map<URI, SubTopicIndexDocument> topics = new HashMap<>();
+            List<SubTopicIndexDocument> queryresult = new ArrayList<>();
             String context = "/" + id.toString().substring(4);
             while (resultSet.next()) {
                 URI public_id = getURI(resultSet, "public_id");
 
-                TopicIndexDocument topic = extractTopic(relevance, resultSet, topics, queryresult, public_id);
-                topic.path = getPathMostCloselyMatchingContext(context, topic.path, resultSet.getString("topic_path"));
+                SubTopicIndexDocument topic = extractTopic(relevance, resultSet, topics, queryresult, public_id);
                 extractFilter(resultSet, topic);
             }
             return filterTopics(filterIds, topics, queryresult);
         }
 
-        private void extractFilter(ResultSet resultSet, TopicIndexDocument topic) throws SQLException {
+        private void extractFilter(ResultSet resultSet, SubTopicIndexDocument topic) throws SQLException {
             URI filterPublicId = getURI(resultSet, "filter_public_id");
             if (null != filterPublicId) {
                 TopicFilterIndexDocument filter = new TopicFilterIndexDocument() {{
@@ -524,14 +522,14 @@ public class Subjects extends CrudController<Subject> {
             }
         }
 
-        private List<TopicIndexDocument> filterTopics(URI[] filterIds, Map<URI, TopicIndexDocument> topics, List<TopicIndexDocument> queryresult) {
+        private List<SubTopicIndexDocument> filterTopics(URI[] filterIds, Map<URI, SubTopicIndexDocument> topics, List<SubTopicIndexDocument> queryresult) {
             if (filterIds != null && filterIds.length > 0) {
-                Set<TopicIndexDocument> result = new HashSet<>();
+                Set<SubTopicIndexDocument> result = new HashSet<>();
                 List<URI> filtersInQuery = asList(filterIds);
-                for (TopicIndexDocument doc : queryresult) {
+                for (SubTopicIndexDocument doc : queryresult) {
                     if (filtersInQuery.contains(doc.filterPublicId) || filtersInQuery.contains(doc.resourceFilterId)) {
                         result.add(doc);
-                        TopicIndexDocument current = doc;
+                        SubTopicIndexDocument current = doc;
                         while ((current = topics.get(current.parent)) != null) {
                             result.add(current);
                         }
@@ -543,10 +541,10 @@ public class Subjects extends CrudController<Subject> {
             }
         }
 
-        private TopicIndexDocument extractTopic(URI relevance, ResultSet resultSet, Map<URI, TopicIndexDocument> topics, List<TopicIndexDocument> queryresult, URI public_id) throws SQLException {
-            TopicIndexDocument topic = topics.get(public_id);
+        private SubTopicIndexDocument extractTopic(URI relevance, ResultSet resultSet, Map<URI, SubTopicIndexDocument> topics, List<SubTopicIndexDocument> queryresult, URI public_id) throws SQLException {
+            SubTopicIndexDocument topic = topics.get(public_id);
             if (topic == null) {
-                topic = new TopicIndexDocument() {{
+                topic = new SubTopicIndexDocument() {{
                     name = resultSet.getString("name");
                     id = public_id;
                     contentUri = getURI(resultSet, "content_uri");
@@ -555,6 +553,7 @@ public class Subjects extends CrudController<Subject> {
                     topicFilterId = getURI(resultSet, "topic_filter_public_id");
                     filterPublicId = getURI(resultSet, "filter_public_id");
                     resourceFilterId = getURI(resultSet, "resource_filter_public_id");
+                    isPrimary = resultSet.getBoolean("is_primary");
                     rank = resultSet.getInt("rank");
                 }};
                 topics.put(topic.id, topic);
@@ -563,7 +562,7 @@ public class Subjects extends CrudController<Subject> {
             return topic;
         }
 
-        private void filterTopicByRelevance(URI relevance, ResultSet resultSet, List<TopicIndexDocument> queryresult, TopicIndexDocument topic) throws SQLException {
+        private void filterTopicByRelevance(URI relevance, ResultSet resultSet, List<SubTopicIndexDocument> queryresult, SubTopicIndexDocument topic) throws SQLException {
             if (relevance == null || relevance.toString().equals("")) {
                 queryresult.add(topic);
             } else {

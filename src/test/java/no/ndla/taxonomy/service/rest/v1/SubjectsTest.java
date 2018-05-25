@@ -122,15 +122,15 @@ public class SubjectsTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
-        Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
+        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
 
         assertEquals(3, topics.length);
         assertAnyTrue(topics, t -> "statics".equals(t.name) && "urn:article:1".equals(t.contentUri.toString()));
         assertAnyTrue(topics, t -> "electricity".equals(t.name) && "urn:article:2".equals(t.contentUri.toString()));
         assertAnyTrue(topics, t -> "optics".equals(t.name) && "urn:article:3".equals(t.contentUri.toString()));
+        assertAnyTrue(topics, t -> t.isPrimary);
         assertAllTrue(topics, t -> isValidId(t.id));
         assertAllTrue(topics, t -> isValidId(t.connectionId));
-        assertAllTrue(topics, t -> !t.path.isEmpty());
         assertAllTrue(topics, t -> t.parent.equals(subject.getPublicId()));
     }
 
@@ -155,15 +155,12 @@ public class SubjectsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics?recursive=true");
-        Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
+        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
 
         assertEquals(3, topics.length);
         assertEquals("parent topic", topics[0].name);
-        assertEquals("/subject:1/topic:a", topics[0].path);
         assertEquals("child topic", topics[1].name);
-        assertEquals("/subject:1/topic:a/topic:aa", topics[1].path);
         assertEquals("grandchild topic", topics[2].name);
-        assertEquals("/subject:1/topic:a/topic:aa/topic:aaa", topics[2].path);
 
         Subject subject = builder.subject("subject");
         assertEquals(first(subject.topics).getPublicId(), topics[0].connectionId);
@@ -303,10 +300,9 @@ public class SubjectsTest extends RestTest {
 
         for (int i : asList(1, 2)) {
             MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:" + i + "/topics");
-            Subjects.TopicIndexDocument[] resources = getObject(Subjects.TopicIndexDocument[].class, response);
+            Subjects.SubTopicIndexDocument[] resources = getObject(Subjects.SubTopicIndexDocument[].class, response);
 
             assertEquals(1, resources.length);
-            assertEquals("/subject:" + i + "/topic:1", resources[0].path);
         }
     }
 }
