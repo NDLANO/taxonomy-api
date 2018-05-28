@@ -248,6 +248,10 @@ public class Subjects extends CrudController<Subject> {
         public URI parent;
 
         @JsonProperty
+        @ApiModelProperty(value = "The primary path to this topic.", example = "/subject:1/topic:1")
+        public String path;
+
+        @JsonProperty
         @ApiModelProperty(value = "The id of the subject-topics or topic-subtopics connection which causes this topic to be included in the result set.", example = "urn:subject-topic:1")
         public URI connectionId;
 
@@ -504,6 +508,7 @@ public class Subjects extends CrudController<Subject> {
                 URI public_id = getURI(resultSet, "public_id");
 
                 SubTopicIndexDocument topic = extractTopic(relevance, resultSet, topics, queryresult, public_id);
+                topic.path = getPathMostCloselyMatchingContext(context, topic.path, resultSet.getString("topic_path"));
                 extractFilter(resultSet, topic);
             }
             return filterTopics(filterIds, topics, queryresult);
