@@ -1,4 +1,4 @@
-WITH RECURSIVE tree (id, public_id, name, content_uri, parent_id, parent_public_id, connection_public_id, level, rank) AS (
+WITH RECURSIVE tree (id, public_id, name, content_uri, parent_id, parent_public_id, connection_public_id, level, rank, is_primary) AS (
   SELECT
     t.id,
     t.public_id,
@@ -8,7 +8,8 @@ WITH RECURSIVE tree (id, public_id, name, content_uri, parent_id, parent_public_
     s.public_id       AS parent_public_id,
     st.public_id      AS connection_public_id,
     0                 AS level,
-    st.rank           AS rank
+    st.rank           AS rank,
+    st.is_primary      AS is_primary
   FROM
     subject s
     INNER JOIN subject_topic st ON s.id = st.subject_id
@@ -26,7 +27,8 @@ WITH RECURSIVE tree (id, public_id, name, content_uri, parent_id, parent_public_
     parent.public_id AS parent_public_id,
     tst.public_id    AS connection_public_id,
     parent.level + 1,
-    tst.rank         AS rank
+    tst.rank         AS rank,
+    tst.is_primary      AS is_primary
   FROM
     topic t
     LEFT OUTER JOIN topic_subtopic tst ON t.id = tst.subtopic_id
@@ -46,7 +48,8 @@ SELECT DISTINCT
   rel.public_id             AS relevance_public_id,
   f.name                    AS filter_name,
   f.public_id               AS filter_public_id,
-  t.rank
+  t.rank,
+  t.is_primary
 FROM
   tree t
   LEFT OUTER JOIN (SELECT *

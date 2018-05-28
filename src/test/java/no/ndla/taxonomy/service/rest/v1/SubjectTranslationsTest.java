@@ -130,7 +130,7 @@ public class SubjectTranslationsTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics?language=nb");
-        Subjects.TopicIndexDocument[] topics = getObject(Subjects.TopicIndexDocument[].class, response);
+        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
 
         assertEquals(3, topics.length);
         assertAnyTrue(topics, t -> "statikk".equals(t.name));
