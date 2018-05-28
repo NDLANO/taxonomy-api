@@ -1,10 +1,6 @@
 server.port: 5000
 
 spring.datasource:
-#  driver-class-name: org.postgresql.Driver
-#  url: jdbc:postgresql://localhost:5432
-#  username: test
-#  password: oe9jaacZLbR9pN
   tomcat:
     initial-size: 5
     time-between-eviction-runs-millis: 5000
