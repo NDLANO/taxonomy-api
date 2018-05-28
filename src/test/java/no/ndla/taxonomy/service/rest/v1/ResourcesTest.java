@@ -1,8 +1,7 @@
 package no.ndla.taxonomy.service.rest.v1;
 
 
-import no.ndla.taxonomy.service.domain.Resource;
-import no.ndla.taxonomy.service.domain.ResourceTranslation;
+import no.ndla.taxonomy.service.domain.*;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -200,7 +199,6 @@ public class ResourcesTest extends RestTest {
         assertAnyTrue(result, rt -> rt.name.equals("Video") && rt.id.toString().equals("urn:resourcetype:3") && rt.parentId.toString().equals("urn:resourcetype:1"));
     }
 
-
     @Test
     public void resources_can_have_same_name() throws Exception {
         builder.resource(r -> r
@@ -213,5 +211,35 @@ public class ResourcesTest extends RestTest {
         }};
 
         createResource("/v1/resources", command, status().isCreated());
+    }
+
+    @Test
+    public void get_resource_with_related_topics_filters_resourceTypes() throws Exception {
+        final ResourceType resourceType = builder.resourceType(rt -> rt.name("Læringssti").translation("nb", tr -> tr.name("Læringssti")));
+        final Filter filter = builder.filter(f -> f.publicId("urn:filter:1").name("Vg 3"));
+        final Resource resource = builder.resource(r -> r
+                .publicId("urn:resource:1")
+                .resourceType(resourceType)
+                .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core"))));
+        final Topic topic = builder.topic("primary",t -> t
+                .name("Philosophy and Mind")
+                .publicId("urn:topic:1")
+                .contentUri(URI.create("urn:article:6662"))
+                .resource(resource));
+
+        MockHttpServletResponse response = getResource("/v1/resources/" + resource.getPublicId() + "/full");
+        Resources.ResourceFullIndexDocument result = getObject(Resources.ResourceFullIndexDocument.class, response);
+
+        assertEquals(resource.getPublicId(), result.id);
+        assertEquals(resource.getName(), result.name);
+        assertEquals(1, result.resourceTypes.size());
+        assertEquals(resourceType.getName(), result.resourceTypes.iterator().next().name);
+        assertEquals(1, result.filters.size());
+        assertEquals(filter.getName(), result.filters.iterator().next().name);
+        assertEquals(1, result.parentTopics.size());
+        Resources.ParentTopicIndexDocument t = result.parentTopics.iterator().next();
+        assertEquals(topic.getName(), t.name);
+        assertEquals(true, t.isPrimary);
+        assertEquals(URI.create("urn:article:6662"), t.contentUri);
     }
 }

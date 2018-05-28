@@ -1,6 +1,7 @@
 server.port: 5000
 
 spring.datasource:
+
   tomcat:
     initial-size: 5
     time-between-eviction-runs-millis: 5000
