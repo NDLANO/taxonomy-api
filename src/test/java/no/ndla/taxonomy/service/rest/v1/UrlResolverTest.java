@@ -128,4 +128,10 @@ public class UrlResolverTest extends RestTest {
     private UrlResolver.ResolvedUrl resolveUrl(String url) throws Exception {
         return getObject(UrlResolver.ResolvedUrl.class, getResource("/v1/url/resolve?path=" + url));
     }
+
+    @Test
+    public void remaps301whenUrlInCache() throws Exception {
+        UrlResolver.ResolvedUrl response = resolveUrl("ndla.no/nb/node/154044?fag=127756");
+        assertEquals("urn:article:1", "");
+    }
 }
