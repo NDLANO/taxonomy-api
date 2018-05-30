@@ -38,6 +38,9 @@ public class Topics extends CrudController<Topic> {
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_QUERY = getQuery("get_resources_by_topic_public_id");
     private static final String GET_FILTERS_BY_TOPIC_ID_QUERY = getQuery("get_filters_by_topic_public_id");
     private static final String GET_SUBTOPICS_BY_TOPIC_ID_QUERY = getQuery("get_subtopics_by_topic_id_query");
+    private static final String GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_subject_connections_by_topic_id");
+    private static final String GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_subtopic_connections_by_topic_id");
+
 
     public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -175,6 +178,19 @@ public class Topics extends CrudController<Topic> {
         );
     }
 
+    @GetMapping("/{id}/connections")
+    @PreAuthorize("hasAuthority('READONLY')")
+    @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
+    public List<ConnectionIndexDocument> getAllConnections(@PathVariable("id") URI id) {
+        String subtopicQuery = GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY.replace("1 = 1", "t.public_id = ?");
+        String subjectTopicQuery = GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY.replace("1 = 1", "t.public_id = ?");
+        List<Object> args = asList(id.toString());
+        List<ConnectionIndexDocument> results = new ArrayList<>();
+        ConnectionQueryExctractor connectionQueryExctractor = new ConnectionQueryExctractor();
+        results.addAll(jdbcTemplate.query(subjectTopicQuery, setQueryParameters(args), connectionQueryExctractor::extractConnections));
+        results.addAll(jdbcTemplate.query(subtopicQuery, setQueryParameters(args), connectionQueryExctractor::extractConnections));
+        return results;
+    }
 
     @ApiModel("TopicResourceIndexDocument")
     public static class ResourceIndexDocument {
@@ -350,6 +366,23 @@ public class Topics extends CrudController<Topic> {
         public URI relevanceId;
     }
 
+    @ApiModel("Connections")
+    public static class ConnectionIndexDocument {
+
+        @JsonProperty
+        @ApiModelProperty(value = "The id of the subject-topic or topic-subtopic connection", example = "urn:subject-topic:1")
+        public URI connectionId;
+        @JsonProperty
+        @ApiModelProperty(value = "The id of the connected subject or topic", example = "urn:subject-topic:1")
+        public URI targetId;
+        @JsonProperty
+        @ApiModelProperty(value = "The path part of the url for the subject or subtopic connected to this topic", example = "/subject:1/topic:1")
+        public String path;
+        @JsonProperty
+        @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
+        public Boolean isPrimary;
+    }
+
     private class TopicQueryExtractor {
 
         private List<TopicIndexDocument> extractTopics(ResultSet resultSet) throws SQLException {
@@ -475,5 +508,22 @@ public class Topics extends CrudController<Topic> {
             }
             return result;
         }
+    }
+
+    private class ConnectionQueryExctractor {
+        private List<ConnectionIndexDocument> extractConnections(ResultSet resultSet) throws SQLException {
+            List<ConnectionIndexDocument> result = new ArrayList<>();
+            while (resultSet.next()) {
+                result.add(new ConnectionIndexDocument() {{
+                    connectionId = getURI(resultSet, "connection_id");
+                    isPrimary = resultSet.getBoolean("is_primary");
+                    targetId = getURI(resultSet, "target_id");
+                    path = resultSet.getString("path");
+                }});
+
+            }
+            return result;
+        }
+
     }
 }
