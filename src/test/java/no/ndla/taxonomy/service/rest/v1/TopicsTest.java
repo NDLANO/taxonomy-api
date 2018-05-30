@@ -7,10 +7,9 @@ import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.Topic;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.annotation.Rollback;
 
 import java.net.URI;
-import java.util.stream.IntStream;
+import java.util.Arrays;
 
 import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.service.TestUtils.*;
@@ -89,16 +88,25 @@ public class TopicsTest extends RestTest {
     }
 
     @Test
-    public void can_
-    get_all_connections() throws Exception {
+    public void can_get_all_subject_and_subtopic_connections() throws Exception {
         builder.subject(s -> s
-        .name("Subject 1")
+                .name("Su 1")
                 .publicId("urn:subject:1")
-        .topic(t -> {t.name("Subject1Topic1").publicId("urn:topic:1"); t.subtopic( st -> st.name("Subject1Topic1Subtopic").publicId("urn:topic:11")); }));
+                .topic(t -> {
+                    t.name("To1").publicId("urn:topic:1");
+                    t.subtopic(st -> st.name("SuTo1").publicId("urn:topic:2"));
+                    t.subtopic(st -> st.name("SuTo3").publicId("urn:topic:3"));
+                })
+        );
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/connections");
-        System.out.println(response.getContentAsString());
+        Topics.ConnectionIndexDocument[] connections = getObject(Topics.ConnectionIndexDocument[].class, response);
+        assertEquals(3, connections.length);
+        assertAllTrue(connections, c -> isValidId(c.connectionId));
+        assertAllTrue(connections, c -> isValidId(c.targetId));
+        assertAnyTrue(connections, c -> c.path.equals("/subject:1"));
+        assertAnyTrue(connections, c -> c.path.equals("/subject:1/topic:1/topic:2"));
+        assertAnyTrue(connections, c -> c.path.equals("/subject:1/topic:1/topic:3"));
     }
-
 
     @Test
     public void can_create_topic() throws Exception {

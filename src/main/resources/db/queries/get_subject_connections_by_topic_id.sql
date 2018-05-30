@@ -9,4 +9,3 @@ FROM subject_topic st
   JOIN cached_url c ON c.public_id = s.public_id
 WHERE
   1 = 1;
-
