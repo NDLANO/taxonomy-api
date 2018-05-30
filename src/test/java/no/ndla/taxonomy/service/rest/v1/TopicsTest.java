@@ -89,6 +89,18 @@ public class TopicsTest extends RestTest {
     }
 
     @Test
+    public void can_
+    get_all_connections() throws Exception {
+        builder.subject(s -> s
+        .name("Subject 1")
+                .publicId("urn:subject:1")
+        .topic(t -> {t.name("Subject1Topic1").publicId("urn:topic:1"); t.subtopic( st -> st.name("Subject1Topic1Subtopic").publicId("urn:topic:11")); }));
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/connections");
+        System.out.println(response.getContentAsString());
+    }
+
+
+    @Test
     public void can_create_topic() throws Exception {
         Topics.CreateTopicCommand createTopicCommand = new Topics.CreateTopicCommand() {{
             name = "trigonometry";
