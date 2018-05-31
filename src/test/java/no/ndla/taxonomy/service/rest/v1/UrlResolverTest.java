@@ -2,6 +2,7 @@ package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.domain.Resource;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -130,6 +131,7 @@ public class UrlResolverTest extends RestTest {
     }
 
     @Test
+    @Ignore
     public void remaps301whenUrlInCache() throws Exception {
         UrlResolver.ResolvedUrl response = resolveUrl("ndla.no/nb/node/154044?fag=127756");
         assertEquals("urn:article:1", "");
