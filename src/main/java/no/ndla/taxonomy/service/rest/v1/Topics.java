@@ -373,7 +373,7 @@ public class Topics extends CrudController<Topic> {
         @ApiModelProperty(value = "The id of the subject-topic or topic-subtopic connection", example = "urn:subject-topic:1")
         public URI connectionId;
         @JsonProperty
-        @ApiModelProperty(value = "The id of the connected subject or topic", example = "urn:subject-topic:1")
+        @ApiModelProperty(value = "The id of the connected subject or topic", example = "urn:subject:1")
         public URI targetId;
         @JsonProperty
         @ApiModelProperty(value = "The path part of the url for the subject or subtopic connected to this topic", example = "/subject:1/topic:1")
