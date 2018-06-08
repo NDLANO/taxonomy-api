@@ -12,7 +12,7 @@ public class DomainEntity {
     private Integer id;
 
     @Column
-    @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
+    @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI publicId;
 
     protected Integer getId() {

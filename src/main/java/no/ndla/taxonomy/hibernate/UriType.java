@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.hibernate;
+package no.ndla.taxonomy.hibernate;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;

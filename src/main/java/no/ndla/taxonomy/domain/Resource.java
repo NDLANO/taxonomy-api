@@ -16,7 +16,7 @@ import java.util.UUID;
 public class Resource extends DomainObject {
 
     @Column
-    @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
+    @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI contentUri;
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)

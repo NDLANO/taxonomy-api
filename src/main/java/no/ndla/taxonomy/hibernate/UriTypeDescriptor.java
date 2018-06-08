@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.hibernate;
+package no.ndla.taxonomy.hibernate;
 
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.WrapperOptions;

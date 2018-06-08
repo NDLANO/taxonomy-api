@@ -32,7 +32,7 @@ public class Topic extends DomainObject {
     public Set<TopicFilter> filters = new HashSet<>();
 
     @Column
-    @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
+    @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI contentUri;
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)

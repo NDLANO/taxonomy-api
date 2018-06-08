@@ -26,7 +26,7 @@ public class CachedUrl {
     private int id;
 
     @Column
-    @Type(type = "no.ndla.taxonomy.service.hibernate.UriType")
+    @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI publicId;
 
     @Column
