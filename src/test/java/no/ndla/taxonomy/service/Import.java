@@ -1,9 +1,9 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.service.rest.v1.SubjectTopics;
-import no.ndla.taxonomy.service.rest.v1.Subjects;
-import no.ndla.taxonomy.service.rest.v1.TopicSubtopics;
-import no.ndla.taxonomy.service.rest.v1.Topics;
+import no.ndla.taxonomy.rest.v1.SubjectTopics;
+import no.ndla.taxonomy.rest.v1.Subjects;
+import no.ndla.taxonomy.rest.v1.TopicSubtopics;
+import no.ndla.taxonomy.rest.v1.Topics;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.web.client.RestTemplate;

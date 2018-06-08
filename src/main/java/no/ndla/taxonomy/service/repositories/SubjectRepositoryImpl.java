@@ -1,9 +1,9 @@
 package no.ndla.taxonomy.service.repositories;
 
-import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.domain.SubjectTopic;
-import no.ndla.taxonomy.service.domain.Topic;
-import no.ndla.taxonomy.service.domain.TopicResource;
+import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.domain.SubjectTopic;
+import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.domain.TopicResource;
 
 import javax.persistence.EntityManager;
 import java.util.Set;

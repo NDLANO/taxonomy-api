@@ -1,8 +1,8 @@
 package no.ndla.taxonomy.service.repositories;
 
-import no.ndla.taxonomy.service.domain.Filter;
-import no.ndla.taxonomy.service.domain.ResourceFilter;
-import no.ndla.taxonomy.service.domain.TopicFilter;
+import no.ndla.taxonomy.domain.Filter;
+import no.ndla.taxonomy.domain.ResourceFilter;
+import no.ndla.taxonomy.domain.TopicFilter;
 
 import javax.persistence.EntityManager;
 

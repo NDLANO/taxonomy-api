@@ -1,6 +1,6 @@
 package no.ndla.taxonomy.service.repositories;
 
-import no.ndla.taxonomy.service.domain.NotFoundException;
+import no.ndla.taxonomy.domain.NotFoundException;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 
