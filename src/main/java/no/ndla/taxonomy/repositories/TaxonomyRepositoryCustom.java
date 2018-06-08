@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.repositories;
+package no.ndla.taxonomy.repositories;
 
 public interface TaxonomyRepositoryCustom<T> {
     void delete(T t);

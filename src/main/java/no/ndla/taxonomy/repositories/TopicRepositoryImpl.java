@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.repositories;
+package no.ndla.taxonomy.repositories;
 
 import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.Topic;

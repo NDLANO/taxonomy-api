@@ -1,7 +1,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.service.repositories.*;
+import no.ndla.taxonomy.repositories.*;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

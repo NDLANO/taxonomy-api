@@ -8,7 +8,7 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.FilterTranslation;
 import no.ndla.taxonomy.domain.NotFoundException;
-import no.ndla.taxonomy.service.repositories.FilterRepository;
+import no.ndla.taxonomy.repositories.FilterRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

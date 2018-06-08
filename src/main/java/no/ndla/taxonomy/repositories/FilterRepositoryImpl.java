@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.repositories;
+package no.ndla.taxonomy.repositories;
 
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.ResourceFilter;

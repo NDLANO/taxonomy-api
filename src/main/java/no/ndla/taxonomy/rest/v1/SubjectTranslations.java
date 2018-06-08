@@ -7,7 +7,7 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.NotFoundException;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.SubjectTranslation;
-import no.ndla.taxonomy.service.repositories.SubjectRepository;
+import no.ndla.taxonomy.repositories.SubjectRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

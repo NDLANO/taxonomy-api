@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiOperation;
 import no.ndla.taxonomy.domain.DomainObject;
 import no.ndla.taxonomy.domain.DuplicateIdException;
 import no.ndla.taxonomy.domain.URNValidator;
-import no.ndla.taxonomy.service.repositories.TaxonomyRepository;
+import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
