@@ -5,9 +5,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
-import static no.ndla.taxonomy.service.TestUtils.assertAnyTrue;
-import static no.ndla.taxonomy.service.TestUtils.getObject;
-import static no.ndla.taxonomy.service.TestUtils.getResource;
+import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.assertEquals;
 
 public class SubjectResourceTypesTest extends RestTest {

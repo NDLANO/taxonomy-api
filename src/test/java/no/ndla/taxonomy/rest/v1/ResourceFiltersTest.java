@@ -115,8 +115,8 @@ public class ResourceFiltersTest extends RestTest {
         );
 
         builder.resource(r -> r
-        .publicId("urn:resource:2")
-        .filter(filter, relevance));
+                .publicId("urn:resource:2")
+                .filter(filter, relevance));
 
         MockHttpServletResponse response = getResource("/v1/resource-filters");
         ResourceFilters.ResourceFilterIndexDocument[] resourceFilters = getObject(ResourceFilters.ResourceFilterIndexDocument[].class, response);

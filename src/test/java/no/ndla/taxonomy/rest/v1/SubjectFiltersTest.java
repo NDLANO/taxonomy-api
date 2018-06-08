@@ -1,6 +1,9 @@
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Filter;
+import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.ResourceType;
+import no.ndla.taxonomy.domain.Subject;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;

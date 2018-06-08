@@ -1,9 +1,9 @@
 package no.ndla.taxonomy.rest.v1;
 
 
-import no.ndla.taxonomy.service.TestUtils;
 import no.ndla.taxonomy.domain.CachedUrlOldRig;
 import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.service.TestUtils;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.ResultActions;

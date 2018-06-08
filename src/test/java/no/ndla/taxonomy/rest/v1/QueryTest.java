@@ -5,9 +5,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import static no.ndla.taxonomy.service.TestUtils.assertAnyTrue;
-import static no.ndla.taxonomy.service.TestUtils.getObject;
-import static no.ndla.taxonomy.service.TestUtils.getResource;
+import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.assertEquals;
 
 public class QueryTest extends RestTest {

@@ -15,6 +15,22 @@ public class Import {
 
     RestTemplate restTemplate = new RestTemplate();
 
+    private static Integer getInt(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String getString(String value) {
+        return value == null ? "" : value;
+    }
+
+    private static boolean isNotBlank(String column) {
+        return null != column && column.trim().length() > 0;
+    }
+
     @Test
     @Ignore
     public void name() throws Exception {
@@ -51,7 +67,6 @@ public class Import {
             }
         }
     }
-
 
     private URI addSubtopic(URI topicid, URI subtopicid) {
         TopicSubtopics.AddSubtopicToTopicCommand cmd = new TopicSubtopics.AddSubtopicToTopicCommand();
@@ -95,21 +110,5 @@ public class Import {
         URI uri = restTemplate.postForLocation("http://localhost:5000/subject-topics", cmd);
         System.out.println("Added subject-topic: " + uri);
         return uri;
-    }
-
-    private static Integer getInt(String value) {
-        try {
-            return Integer.parseInt(value);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static String getString(String value) {
-        return value == null ? "" : value;
-    }
-
-    private static boolean isNotBlank(String column) {
-        return null != column && column.trim().length() > 0;
     }
 }

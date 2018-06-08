@@ -9,7 +9,6 @@ import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
-import java.util.Arrays;
 
 import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.service.TestUtils.*;

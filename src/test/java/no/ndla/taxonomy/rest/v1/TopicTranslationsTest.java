@@ -122,7 +122,6 @@ public class TopicTranslationsTest extends RestTest {
     }
 
 
-
     @Test
     public void can_get_resources_for_a_topic_recursively_with_translation() throws Exception {
         builder.resourceType("article", rt -> rt.name("Article").translation("nb", tr -> tr.name("Artikkel")));

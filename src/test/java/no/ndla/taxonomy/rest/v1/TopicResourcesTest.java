@@ -272,7 +272,7 @@ public class TopicResourcesTest extends RestTest {
                 .publicId("urn:resource:2"));
 
 
-        createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand(){{
+        createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
             primary = true;
             topicid = geometry.getPublicId();
             resourceId = squares.getPublicId();

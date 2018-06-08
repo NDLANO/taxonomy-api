@@ -207,7 +207,7 @@ public class ResourcesTest extends RestTest {
 
         Resources.CreateResourceCommand command = new Resources.CreateResourceCommand() {{
             id = URI.create("urn:resource:2");
-            name="What is maths?";
+            name = "What is maths?";
         }};
 
         createResource("/v1/resources", command, status().isCreated());
@@ -221,7 +221,7 @@ public class ResourcesTest extends RestTest {
                 .publicId("urn:resource:1")
                 .resourceType(resourceType)
                 .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core"))));
-        final Topic topic = builder.topic("primary",t -> t
+        final Topic topic = builder.topic("primary", t -> t
                 .name("Philosophy and Mind")
                 .publicId("urn:topic:1")
                 .contentUri(URI.create("urn:article:6662"))
