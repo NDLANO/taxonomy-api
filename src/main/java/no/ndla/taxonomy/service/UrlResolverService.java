@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.sql.DataSource;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -16,8 +17,8 @@ public class UrlResolverService {
     JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public UrlResolverService(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public UrlResolverService(DataSource dataSource) {
+        jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
     public String resolveOldUrl(String oldUrl) {

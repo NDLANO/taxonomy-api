@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.NotFoundException;
 import no.ndla.taxonomy.service.UrlResolverService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +32,7 @@ public class UrlResolver {
     private JdbcTemplate jdbcTemplate;
     private UrlResolverService urlResolverService;
 
+    @Autowired
     public UrlResolver(JdbcTemplate jdbcTemplate, UrlResolverService urlResolverService) {
         this.jdbcTemplate = jdbcTemplate;
         this.urlResolverService = urlResolverService;
@@ -139,10 +141,11 @@ public class UrlResolver {
         public String path;
     }
 
-
     public static class ResolvedOldUrl {
         @JsonProperty
         @ApiModelProperty(value = "URL path for resource", example = "'/subject:1/topic:12/resource:12'")
         public String path;
     }
+
+
 }

@@ -28,9 +28,9 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 @Component
 public class TestUtils {
 
-    public static EntityManager entityManager;
-    public static MockMvc mockMvc;
     private static HttpMessageConverter mappingJackson2HttpMessageConverter;
+    private static EntityManager entityManager;
+    private static MockMvc mockMvc;
 
     @Autowired
     public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext, EntityManager entityManager) {

@@ -1,21 +1,17 @@
 package no.ndla.taxonomy.rest.v1;
 
 
-import no.ndla.taxonomy.TestUtils;
-import no.ndla.taxonomy.domain.CachedUrlOldRig;
 import no.ndla.taxonomy.domain.Resource;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.web.servlet.ResultActions;
 
 import static no.ndla.taxonomy.TestUtils.getObject;
 import static no.ndla.taxonomy.TestUtils.getResource;
 import static org.junit.Assert.assertEquals;
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class UrlResolverTest extends RestTest {
+
     @Test
     public void can_resolve_url_for_subject() throws Exception {
         builder.subject(s -> s.publicId("urn:subject:1").contentUri("urn:article:1").name("the subject"));
@@ -133,34 +129,4 @@ public class UrlResolverTest extends RestTest {
     private UrlResolver.ResolvedUrl resolveUrl(String url) throws Exception {
         return getObject(UrlResolver.ResolvedUrl.class, getResource("/v1/url/resolve?path=" + url));
     }
-
-    private UrlResolver.ResolvedOldUrl resolveOldUrl(String oldUrl) {
-        return null;
-    }
-
-    @Test
-    public void resolveOldUrl404WhenNotImported() throws Exception {
-        TestUtils.entityManager.flush();
-        ResultActions result = TestUtils.mockMvc.perform(
-                get("/v1/url/resolveOldUrl?oldUrl=/no/such/path")
-                        .accept(APPLICATION_JSON_UTF8));
-
-        result.andExpect(status().isNotFound());
-    }
-
-    @Test
-    public void resolveOldUrlExpectNewPathWhenImported() throws Exception {
-        String oldUrl = "ndla.no/nb/node/183926?fag=127013";
-        CachedUrlOldRig cachedUrlOldRig = builder.cachedUrlOldRig(c -> c.oldUrl(oldUrl).public_id("topic:1:183926").subject_id("subject:11"));
-
-        TestUtils.entityManager.flush();
-        ResultActions result = TestUtils.mockMvc.perform(
-                get("/v1/url/resolveOldUrl?oldUrl=" + oldUrl)
-                        .accept(APPLICATION_JSON_UTF8));
-
-        result.andExpect(status().isOk());
-        UrlResolver.ResolvedOldUrl resolvedOldUrl = getObject(UrlResolver.ResolvedOldUrl.class, result.andReturn().getResponse());
-        assertEquals(cachedUrlOldRig.getPublic_id(), resolvedOldUrl.path);
-    }
-
 }
