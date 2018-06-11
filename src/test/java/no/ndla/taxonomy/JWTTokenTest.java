@@ -1,13 +1,12 @@
-package no.ndla.taxonomy.service;
+package no.ndla.taxonomy;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import no.ndla.taxonomy.JWTToken;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import static no.ndla.taxonomy.service.TestUtils.assertAnyTrue;
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;

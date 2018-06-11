@@ -1,15 +1,15 @@
 package no.ndla.taxonomy.rest.v1;
 
 
+import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.domain.CachedUrlOldRig;
 import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.service.TestUtils;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.ResultActions;
 
-import static no.ndla.taxonomy.service.TestUtils.getObject;
-import static no.ndla.taxonomy.service.TestUtils.getResource;
+import static no.ndla.taxonomy.TestUtils.getObject;
+import static no.ndla.taxonomy.TestUtils.getResource;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -115,13 +115,7 @@ public class UrlResolverTest extends RestTest {
     @Test
     public void sends_404_when_not_found() throws Exception {
         String path = "/no/such/element";
-        TestUtils.entityManager.flush();
-        TestUtils.mockMvc.perform(
-                get("/v1/url/resolve?path=" + path)
-                        .accept(APPLICATION_JSON_UTF8))
-                .andExpect(status().isNotFound())
-                .andReturn()
-                .getResponse();
+        getResource("/v1/url/resolve?path=" + path, status().isNotFound());
     }
 
     private void assertParents(UrlResolver.ResolvedUrl path, String... expected) {
@@ -157,7 +151,7 @@ public class UrlResolverTest extends RestTest {
     @Test
     public void resolveOldUrlExpectNewPathWhenImported() throws Exception {
         String oldUrl = "ndla.no/nb/node/183926?fag=127013";
-        CachedUrlOldRig cachedUrlOldRig = builder.cachedUrlOldRig(c -> c.oldUrl(oldUrl).newPath("/subject:11/topic:1:183926/"));
+        CachedUrlOldRig cachedUrlOldRig = builder.cachedUrlOldRig(c -> c.oldUrl(oldUrl).public_id("topic:1:183926").subject_id("subject:11"));
 
         TestUtils.entityManager.flush();
         ResultActions result = TestUtils.mockMvc.perform(
@@ -166,7 +160,7 @@ public class UrlResolverTest extends RestTest {
 
         result.andExpect(status().isOk());
         UrlResolver.ResolvedOldUrl resolvedOldUrl = getObject(UrlResolver.ResolvedOldUrl.class, result.andReturn().getResponse());
-        assertEquals(cachedUrlOldRig.getNewPath(), resolvedOldUrl.path);
+        assertEquals(cachedUrlOldRig.getPublic_id(), resolvedOldUrl.path);
     }
 
 }

@@ -16,7 +16,10 @@ public class CachedUrlOldRig {
     private String oldUrl;
 
     @Column
-    private String newPath;
+    private String public_id;
+
+    @Column
+    private String subject_id;
 
     public String getOldUrl() {
         return oldUrl;
@@ -26,11 +29,19 @@ public class CachedUrlOldRig {
         this.oldUrl = oldUrl;
     }
 
-    public String getNewPath() {
-        return newPath;
+    public String getPublic_id() {
+        return public_id;
     }
 
-    public void setNewPath(String newPath) {
-        this.newPath = newPath;
+    public void setPublic_id(String public_id) {
+        this.public_id = public_id;
+    }
+
+    public String getSubject_id() {
+        return subject_id;
+    }
+
+    public void setSubject_id(String subject_id) {
+        this.subject_id = subject_id;
     }
 }

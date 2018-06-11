@@ -1,6 +1,5 @@
-package no.ndla.taxonomy.service;
+package no.ndla.taxonomy;
 
-import no.ndla.taxonomy.JWTPermission;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

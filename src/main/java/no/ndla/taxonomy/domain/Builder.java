@@ -628,8 +628,13 @@ public class Builder {
             return this;
         }
 
-        public CachedUrlOldRigBuilder newPath(String p) {
-            cachedUrlOldRig.setNewPath(p);
+        public CachedUrlOldRigBuilder public_id(String p) {
+            cachedUrlOldRig.setPublic_id(p);
+            return this;
+        }
+
+        public CachedUrlOldRigBuilder subject_id(String s) {
+            cachedUrlOldRig.setSubject_id(s);
             return this;
         }
 

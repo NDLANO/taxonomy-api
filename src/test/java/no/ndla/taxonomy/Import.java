@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service;
+package no.ndla.taxonomy;
 
 import no.ndla.taxonomy.rest.v1.SubjectTopics;
 import no.ndla.taxonomy.rest.v1.Subjects;

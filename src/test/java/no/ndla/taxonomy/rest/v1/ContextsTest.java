@@ -5,7 +5,7 @@ import no.ndla.taxonomy.domain.Topic;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import static no.ndla.taxonomy.service.TestUtils.*;
+import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.Assert.*;
 
 public class ContextsTest extends RestTest {

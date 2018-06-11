@@ -4,6 +4,7 @@ package no.ndla.taxonomy.rest.v1;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.NotFoundException;
+import no.ndla.taxonomy.service.UrlResolverService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,9 +29,11 @@ public class UrlResolver {
     private static final String RESOLVE_URL_QUERY = getQuery("resolve_url");
 
     private JdbcTemplate jdbcTemplate;
+    private UrlResolverService urlResolverService;
 
-    public UrlResolver(JdbcTemplate jdbcTemplate) {
+    public UrlResolver(JdbcTemplate jdbcTemplate, UrlResolverService urlResolverService) {
         this.jdbcTemplate = jdbcTemplate;
+        this.urlResolverService = urlResolverService;
     }
 
     public static String getPathMostCloselyMatchingContext(String context, String... urls) {
@@ -100,9 +103,15 @@ public class UrlResolver {
 
     @GetMapping("/resolveOldUrl")
     @PreAuthorize("hasAuthority('READONLY')")
-    public ResolvedOldUrl resolveOldUrl(@RequestParam String oldUrl, HttpServletResponse response) throws Exception {
-
-        return new ResolvedOldUrl();
+    public ResolvedOldUrl resolveOldUrl(@RequestParam String oldUrl) {
+        String resolveOldUrl = urlResolverService.resolveOldUrl(oldUrl);
+        if (resolveOldUrl != null) {
+            ResolvedOldUrl resolvedOldUrl = new ResolvedOldUrl();
+            resolvedOldUrl.path = resolveOldUrl;
+            return resolvedOldUrl;
+        } else {
+            throw new NotFoundException(oldUrl);
+        }
     }
 
     public static class ResolvedUrl {
@@ -130,11 +139,10 @@ public class UrlResolver {
         public String path;
     }
 
+
     public static class ResolvedOldUrl {
         @JsonProperty
         @ApiModelProperty(value = "URL path for resource", example = "'/subject:1/topic:12/resource:12'")
         public String path;
     }
-
-
 }

@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service;
+package no.ndla.taxonomy;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

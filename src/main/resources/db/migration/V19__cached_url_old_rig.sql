@@ -1,7 +1,8 @@
 CREATE TABLE cached_url_old_rig (
-  id        SERIAL PRIMARY KEY,
-  old_url   VARCHAR(255) NOT NULL,
-  new_path  VARCHAR(255) NOT NULL
+  id          SERIAL PRIMARY KEY,
+  old_url    VARCHAR(255) NOT NULL,
+  public_id  VARCHAR(255) NOT NULL,
+  subject_id VARCHAR(255) NOT NULL
 );
 
 CREATE UNIQUE INDEX cached_url_old_rig_id

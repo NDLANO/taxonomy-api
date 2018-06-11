@@ -8,7 +8,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.net.URI;
 
 import static java.util.Arrays.asList;
-import static no.ndla.taxonomy.service.TestUtils.*;
+import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 

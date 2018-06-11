@@ -10,7 +10,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
-import static no.ndla.taxonomy.service.TestUtils.*;
+import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.Assert.assertEquals;
 
 public class SubjectFiltersTest extends RestTest {
