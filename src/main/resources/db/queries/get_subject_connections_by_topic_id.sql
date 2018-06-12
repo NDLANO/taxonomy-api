@@ -8,4 +8,4 @@ FROM subject_topic st
   JOIN topic t ON t.id = st.topic_id
   JOIN cached_url c ON c.public_id = s.public_id
 WHERE
-  1 = 1;
+  t.public_id = ?;
