@@ -9,7 +9,6 @@ import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
-import java.util.Arrays;
 
 import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.service.TestUtils.*;
@@ -89,17 +88,44 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_all__connections() throws Exception {
-        builder.subject(s -> s
-                .name("Su 1")
-                .publicId("urn:subject:1")
-                .topic(t -> {
-                    t.name("To1").publicId("urn:topic:1");
-                    t.subtopic(st -> st.name("SuTo1").publicId("urn:topic:2"));
-                    t.subtopic(st -> st.name("SuTo3").publicId("urn:topic:3"));
-                })
-        );
-        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/connections");
+
+        executeSqlScript("classpath:topic_connections_test_setup.sql", false);
+
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:2000/connections");
         Topics.ConnectionIndexDocument[] connections = getObject(Topics.ConnectionIndexDocument[].class, response);
+        assertEquals(4, connections.length);
+        assertAnyTrue(connections, c -> c.targetId.toASCIIString().equals("urn:topic:1000"));
+        assertAnyTrue(connections, c -> c.targetId.toASCIIString().equals("urn:topic:3000"));
+        assertAnyTrue(connections, c -> c.targetId.toASCIIString().equals("urn:topic:4000"));
+        assertAnyTrue(connections, c -> c.targetId.toASCIIString().equals("urn:subject:2000"));
+        assertAllTrue(connections, c -> c.paths.size() > 0);
+        int subjectCount = 0, parentCount = 0, childCount = 0;
+        for (Topics.ConnectionIndexDocument connection : connections) {
+            switch (connection.type) {
+                case "parent-subject":
+                    subjectCount++;
+                    assertTrue(!connection.isPrimary );
+                    break;
+                case "parent-topic":
+                    parentCount++;
+                    assertTrue(connection.isPrimary);
+                    break;
+                case "subtopic":
+                    childCount++;
+                    if(connection.targetId.toString().equals("urn:topic:4000")){
+                        assertTrue(!connection.isPrimary);
+                    } else {
+                        assertTrue(connection.isPrimary);
+                    }
+                    break;
+                default:
+                    fail("Unexpected connection type :" + connection.type);
+            }
+        }
+        assertEquals(1, subjectCount);
+        assertEquals(1, parentCount);
+        assertEquals(2, childCount);
+
     }
 
     @Test

@@ -1,5 +1,6 @@
 SELECT
   st.public_id AS connection_id,
+  'parent-subject' as connection_type,
   st.is_primary,
   s.public_id  AS target_id,
   c."path"

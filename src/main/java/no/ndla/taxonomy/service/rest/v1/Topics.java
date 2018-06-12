@@ -379,6 +379,9 @@ public class Topics extends CrudController<Topic> {
         @ApiModelProperty(value = "The path part of the url for the subject or subtopic connected to this topic", example = "/subject:1/topic:1")
         public List<String> paths = new ArrayList<>();
         @JsonProperty
+        @ApiModelProperty(value = "The type of connection (parent subject, parent topic or subtopic")
+        public String type;
+        @JsonProperty
         @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
         public Boolean isPrimary;
     }
@@ -516,17 +519,20 @@ public class Topics extends CrudController<Topic> {
             while (resultSet.next()) {
                 String connectionId = resultSet.getString("connection_id");
                 ConnectionIndexDocument doc = resultsByConnectionId.get(connectionId);
-                if(doc == null){
+                if (doc == null) {
                     doc = new ConnectionIndexDocument();
                     resultsByConnectionId.put(connectionId, doc);
                 }
                 doc.connectionId = getURI(resultSet, "connection_id");
                 doc.isPrimary = resultSet.getBoolean("is_primary");
                 doc.targetId = getURI(resultSet, "target_id");
-                if(doc.isPrimary)
+                doc.type = resultSet.getString("connection_type");
+                if (doc.isPrimary) {
                     doc.paths.add(0, resultSet.getString("path"));
-                else doc.paths.add(resultSet.getString("path"));
-             }
+                } else{
+                    doc.paths.add(resultSet.getString("path"));
+                }
+            }
             return new ArrayList<>(resultsByConnectionId.values());
         }
 
