@@ -23,6 +23,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+/*
+ Test controller only
+ */
 public class UrlResolverMockTest {
     @MockBean
     UrlResolverService urlResolverService;

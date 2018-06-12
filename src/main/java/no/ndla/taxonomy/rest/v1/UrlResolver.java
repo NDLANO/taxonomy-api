@@ -27,7 +27,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @Transactional
 public class UrlResolver {
 
-    private static final String RESOLVE_URL_QUERY = getQuery("resolve_url");
+    public static final String RESOLVE_URL_QUERY = getQuery("resolve_url");
 
     private JdbcTemplate jdbcTemplate;
     private UrlResolverService urlResolverService;

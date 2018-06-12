@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.net.URI;
 
 @Entity
 @Table(name = "cached_url_old_rig")
@@ -29,19 +30,27 @@ public class CachedUrlOldRig {
         this.oldUrl = oldUrl;
     }
 
-    public String getPublic_id() {
-        return public_id;
+    public URI getPublic_id() {
+        return URI.create(public_id);
+    }
+
+    public void setPublic_id(URI public_id) {
+        this.public_id = public_id.toString();
     }
 
     public void setPublic_id(String public_id) {
-        this.public_id = public_id;
+        this.public_id = URI.create(public_id).toString(); //will force a IllegalArgumentException
     }
 
-    public String getSubject_id() {
-        return subject_id;
+    public URI getSubject_id() {
+        return subject_id != null ? URI.create(subject_id) : null;
+    }
+
+    public void setSubject_id(URI subject_id) {
+        this.subject_id = subject_id.toString();
     }
 
     public void setSubject_id(String subject_id) {
-        this.subject_id = subject_id;
+        this.subject_id = URI.create(subject_id).toString(); //will force a IllegalArgumentException
     }
 }
