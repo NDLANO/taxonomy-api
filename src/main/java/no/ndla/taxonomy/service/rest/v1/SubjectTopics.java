@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @RestController
@@ -67,7 +68,16 @@ public class SubjectTopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
 
         SubjectTopic subjectTopic = subject.addTopic(topic);
-        subjectTopic.setRank(command.rank);
+        if (command.rank == 0) {
+            List<SubjectTopic> connectionsForSubject = subjectTopicRepository.findBySubjectPublicIdOrderByRank(command.subjectid);
+            int maxExistingRank = 0;
+            for (SubjectTopic st : connectionsForSubject) {
+                maxExistingRank = Math.max(maxExistingRank, st.getRank());
+            }
+            subjectTopic.setRank(maxExistingRank + 1);
+        } else {
+            updateRanks(subjectTopic, command.rank);
+        }
         if (command.primary) topic.setPrimarySubject(subject);
         subjectTopicRepository.save(subjectTopic);
 
@@ -94,13 +104,33 @@ public class SubjectTopics {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
         Topic topic = subjectTopic.getTopic();
         Subject subject = subjectTopic.getSubject();
-
-        subjectTopic.setRank(command.rank);
+        updateRanks(subjectTopic, command.rank);
         if (command.primary) {
             topic.setPrimarySubject(subject);
         } else if (subjectTopic.isPrimary() && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
+    }
+
+    private void updateRanks(SubjectTopic subjectTopic, int requestedNewRank) {
+        if (requestedNewRank != 0) {
+            Subject subject = subjectTopic.getSubject();
+            List<SubjectTopic> connectionsForSubject = subjectTopicRepository.findBySubjectPublicIdOrderByRank(subject.getPublicId());
+            connectionsForSubject.remove(subjectTopic);
+            int adjustedRank = ensureNewRankFitsInCollection(requestedNewRank, connectionsForSubject);
+            connectionsForSubject.add(adjustedRank, subjectTopic);
+            setRanksToCurrentOrder(connectionsForSubject);
+        }
+    }
+
+    private void setRanksToCurrentOrder(List<SubjectTopic> connectionsForSubject) {
+        for (int i = 0; i < connectionsForSubject.size(); i++) {
+            connectionsForSubject.get(i).setRank(i + 1);
+        }
+    }
+
+    private int ensureNewRankFitsInCollection(int requestedNewRank, Collection collection) {
+        return Math.min(collection.size(), requestedNewRank - 1);
     }
 
     public static class AddTopicToSubjectCommand {
@@ -124,7 +154,7 @@ public class SubjectTopics {
 
     public static class UpdateSubjectTopicCommand {
         @JsonProperty
-        @ApiModelProperty(required = true, value = "connection id", example = "urn:subject-has-topics:2")
+        @ApiModelProperty(required = true, value = "connection id", example = "urn:subject-topic:2")
         public URI id;
 
         @JsonProperty

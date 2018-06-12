@@ -180,38 +180,6 @@ public class SubjectTopicsTest extends RestTest {
     }
 
     @Test
-    public void topics_can_have_same_rank() throws Exception {
-        Subject mathematics = builder.subject(s -> s
-                .name("Mathematics")
-                .publicId("urn:subject:1"));
-        Topic geometry = builder.topic(t -> t
-                .name("Geometry")
-                .publicId("urn:topic:1"));
-        Topic statistics = builder.topic(t -> t
-                .name("Statistics")
-                .publicId("urn:topic:2"));
-        SubjectTopic geometryMaths = save(mathematics.addTopic(geometry));
-        SubjectTopic statisticsMaths = save(mathematics.addTopic(statistics));
-
-        updateResource("/v1/subject-topics/" + geometryMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
-            primary = true;
-            id = geometryMaths.getPublicId();
-            rank = 1;
-        }});
-
-        updateResource("/v1/subject-topics/" + statisticsMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
-            primary = true;
-            id = statisticsMaths.getPublicId();
-            rank = 1;
-        }});
-
-        MockHttpServletResponse response = getResource("/v1/subject-topics");
-        SubjectTopics.SubjectTopicIndexDocument[] topics = getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
-
-        assertAllTrue(topics, t -> t.rank == 1);
-    }
-
-    @Test
     public void can_change_sorting_order_for_topics() throws Exception {
         Subject mathematics = builder.subject(s -> s
                 .name("Mathematics")
