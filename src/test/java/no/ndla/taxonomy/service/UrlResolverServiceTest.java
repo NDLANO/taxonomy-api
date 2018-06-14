@@ -20,16 +20,16 @@ import static org.junit.Assert.assertEquals;
  * Test Service and database together.
  */
 public class UrlResolverServiceTest {
-    Builder builder;
+    private Builder builder;
 
     @Autowired
-    EntityManager entityManager;
+    private EntityManager entityManager;
 
     @Autowired
-    UrlResolverService urlResolverService;
+    private UrlResolverService urlResolverService;
 
     @Before
-    public void restTestSetUp() throws Exception {
+    public void restTestSetUp() {
         builder = new Builder(entityManager);
     }
 
@@ -57,7 +57,7 @@ public class UrlResolverServiceTest {
     @Transactional
     public void resolveOldUrlNoSubjectPrimaryPath() {
         builder.subject(s -> s
-                .publicId("urn:subject:1")
+                .publicId("urn:subject:2")
                 .topic(t -> t
                         .publicId("urn:topic:1:183926")
                 )
@@ -70,14 +70,14 @@ public class UrlResolverServiceTest {
 
         String path = urlResolverService.resolveOldUrl(oldUrl);
 
-        assertEquals("/subject:1/topic:1:183926", path);
+        assertEquals("/subject:2/topic:1:183926", path);
     }
 
     @Test
     @Transactional
     public void resolveOldUrlBadSubjectPrimaryPath() {
         builder.subject(s -> s
-                .publicId("urn:subject:1")
+                .publicId("urn:subject:2")
                 .topic(t -> t
                         .publicId("urn:topic:1:183926")
                 )
@@ -90,7 +90,7 @@ public class UrlResolverServiceTest {
 
         String path = urlResolverService.resolveOldUrl(oldUrl);
 
-        assertEquals("/subject:1/topic:1:183926", path);
+        assertEquals("/subject:2/topic:1:183926", path);
     }
 
 

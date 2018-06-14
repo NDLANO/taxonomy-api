@@ -4,12 +4,14 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Resource;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.annotation.DirtiesContext;
 
 import static no.ndla.taxonomy.TestUtils.getObject;
 import static no.ndla.taxonomy.TestUtils.getResource;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 public class UrlResolverTest extends RestTest {
 
     @Test

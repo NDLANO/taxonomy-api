@@ -1,7 +1,6 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.CachedUrlOldRig;
-import no.ndla.taxonomy.rest.v1.UrlResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -13,14 +12,12 @@ import java.util.Comparator;
 import java.util.List;
 
 import static java.util.Arrays.asList;
-import static no.ndla.taxonomy.jdbc.QueryUtils.getURI;
 import static no.ndla.taxonomy.jdbc.QueryUtils.setQueryParameters;
-import static no.ndla.taxonomy.rest.v1.UrlResolver.RESOLVE_URL_QUERY;
 
 @Service
 public class UrlResolverService {
 
-    JdbcTemplate jdbcTemplate;
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
     public UrlResolverService(DataSource dataSource) {
@@ -51,16 +48,10 @@ public class UrlResolverService {
         }
     }
 
-
     private String findshortestPathStartingWith(URI subject_id, List<String> allPaths) {
         String subject = "/" + subject_id.toString().split("urn:")[1];
         allPaths.sort(Comparator.comparing(String::length));
-        for (String path : allPaths) {
-            if (path.startsWith(subject)) {
-                return path;
-            }
-        }
-        return null;
+        return allPaths.stream().filter(path -> path.startsWith(subject)).findFirst().orElse(null);
     }
 
     private List<String> getAllPaths(URI public_id) {
@@ -71,19 +62,11 @@ public class UrlResolverService {
     }
 
     private String getPrimaryPath(URI public_id) {
-        UrlResolver.ResolvedUrl returnedResolvedUrl = jdbcTemplate.query(RESOLVE_URL_QUERY, setQueryParameters(Collections.singletonList(public_id.toString())),
-                resultSet -> {
-                    UrlResolver.ResolvedUrl resolvedUrl = new UrlResolver.ResolvedUrl();
-                    while (resultSet.next()) {
-                        resolvedUrl.id = getURI(resultSet, "public_id");
-                        resolvedUrl.contentUri = getURI(resultSet, "content_uri");
-                        resolvedUrl.name = resultSet.getString("name");
-                        resolvedUrl.path = resultSet.getString("resource_path");
-                    }
-                    return resolvedUrl;
-                }
+        List<String> primaryPaths = jdbcTemplate.query("SELECT PATH, IS_PRIMARY FROM CACHED_URL WHERE PUBLIC_ID=? AND IS_PRIMARY=TRUE", setQueryParameters(Collections.singletonList(public_id.toString())),
+                (resultSet, rowNum) -> resultSet.getString("path")
         );
-        return "/subject:1/topic:1:183926";
+        if (primaryPaths.isEmpty()) return null;
+        return primaryPaths.get(0);
     }
 
     private List<CachedUrlOldRig> getCachedUrlOldRig(String sql, List<Object> args) {
@@ -98,9 +81,4 @@ public class UrlResolverService {
         return query;
     }
 
-
-    private class PathInfo {
-        public String path;
-        public Boolean is_primary;
-    }
 }

@@ -35,7 +35,7 @@ public class SwaggerConfiguration {
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("no.ndla.taxonomy.service.rest.v1"))
+                .apis(RequestHandlerSelectors.basePackage("no.ndla.taxonomy.rest.v1"))
                 .paths(PathSelectors.regex("/v1/.*"))
                 .build()
                 .pathMapping("/")
