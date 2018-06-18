@@ -15,6 +15,9 @@ import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.setQueryParameters;
 
 @Service
+/*
+ This class is both a service and a database repository class
+ */
 public class UrlResolverService {
 
     private JdbcTemplate jdbcTemplate;
@@ -29,7 +32,7 @@ public class UrlResolverService {
      * @return return a resolved URL or null
      */
     public String resolveOldUrl(String oldUrl) {
-        List<CachedUrlOldRig> results = getCachedUrlOldRig("SELECT PUBLIC_ID, SUBJECT_ID FROM CACHED_URL_OLD_RIG WHERE OLD_URL=?", asList(oldUrl));
+        List<CachedUrlOldRig> results = getCachedUrlOldRig(oldUrl);
         if (!results.isEmpty()) {
             CachedUrlOldRig result = results.get(0);
             List<String> allPaths = getAllPaths(result.getPublic_id());
@@ -69,8 +72,9 @@ public class UrlResolverService {
         return primaryPaths.get(0);
     }
 
-    private List<CachedUrlOldRig> getCachedUrlOldRig(String sql, List<Object> args) {
-        final List<CachedUrlOldRig> query = jdbcTemplate.query(sql, setQueryParameters(args),
+    private List<CachedUrlOldRig> getCachedUrlOldRig(String oldUrl) {
+        final String sql = "SELECT PUBLIC_ID, SUBJECT_ID FROM CACHED_URL_OLD_RIG WHERE OLD_URL=?";
+        final List<CachedUrlOldRig> query = jdbcTemplate.query(sql, setQueryParameters(asList(oldUrl)),
                 (resultSet, rowNum) -> new CachedUrlOldRig() {{
                     setPublic_id(resultSet.getString("public_id"));
                     if (resultSet.getString("subject_id") != null) {
@@ -81,4 +85,25 @@ public class UrlResolverService {
         return query;
     }
 
+    /**
+     * put old url into CACHED_URL_OLD_RIG
+     *
+     * @param oldUrl    url to put
+     * @param nodeId    nodeID to be associated with this URL
+     * @param subjectId subjectID to be associated with this URL (optional)
+     * @return true in order to be mockable "given" ugh!
+     * @throws Exception
+     */
+    public Boolean putPath(String oldUrl, URI nodeId, URI subjectId) throws Exception {
+        if (getAllPaths(nodeId).isEmpty())
+            throw new Exception();
+        if (getCachedUrlOldRig(oldUrl).isEmpty()) {
+            String sql = "INSERT INTO CACHED_URL_OLD_RIG (OLD_URL, PUBLIC_ID, SUBJECT_ID) VALUES (?, ?, ?)";
+            jdbcTemplate.update(sql, oldUrl, nodeId.toString(), subjectId.toString());
+        } else {
+            String sql = "UPDATE CACHED_URL_OLD_RIG SET PUBLIC_ID=?, SUBJECT_ID=? WHERE OLD_URL=?";
+            jdbcTemplate.update(sql, nodeId.toString(), subjectId.toString(), oldUrl);
+        }
+        return true;
+    }
 }

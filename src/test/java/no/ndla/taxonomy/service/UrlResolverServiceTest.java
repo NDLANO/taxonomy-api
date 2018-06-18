@@ -11,6 +11,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+import java.net.URI;
 
 import static org.junit.Assert.assertEquals;
 
@@ -36,15 +37,16 @@ public class UrlResolverServiceTest {
     @Test
     @Transactional
     public void resolveOldUrl() {
+        final String subjectId = "urn:subject:11";
+        final String nodeId = "urn:topic:1:183926";
         builder.subject(s -> s
-                .publicId("urn:subject:11")
+                .publicId(subjectId)
                 .topic(t -> t
-                        .publicId("urn:topic:1:183926")
+                        .publicId(nodeId)
                 )
         );
-
-        String oldUrl = "ndla.no/nb/node/183926?fag=127013";
-        CachedUrlOldRig cachedUrlOldRig = builder.cachedUrlOldRig(c -> c.oldUrl(oldUrl).public_id("urn:topic:1:183926").subject_id("urn:subject:11"));
+        final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
+        CachedUrlOldRig cachedUrlOldRig = builder.cachedUrlOldRig(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
         entityManager.persist(cachedUrlOldRig);
         entityManager.flush();
 
@@ -56,15 +58,15 @@ public class UrlResolverServiceTest {
     @Test
     @Transactional
     public void resolveOldUrlNoSubjectPrimaryPath() {
+        String nodeId = "urn:topic:1:183926";
         builder.subject(s -> s
                 .publicId("urn:subject:2")
                 .topic(t -> t
-                        .publicId("urn:topic:1:183926")
+                        .publicId(nodeId)
                 )
         );
-
         String oldUrl = "ndla.no/nb/node/183926?fag=127013";
-        CachedUrlOldRig cachedUrlOldRig = builder.cachedUrlOldRig(c -> c.oldUrl(oldUrl).public_id("urn:topic:1:183926"));
+        CachedUrlOldRig cachedUrlOldRig = builder.cachedUrlOldRig(c -> c.oldUrl(oldUrl).public_id(nodeId));
         entityManager.persist(cachedUrlOldRig);
         entityManager.flush();
 
@@ -82,7 +84,6 @@ public class UrlResolverServiceTest {
                         .publicId("urn:topic:1:183926")
                 )
         );
-
         String oldUrl = "ndla.no/nb/node/183926?fag=127013";
         CachedUrlOldRig cachedUrlOldRig = builder.cachedUrlOldRig(c -> c.oldUrl(oldUrl).public_id("urn:topic:1:183926").subject_id("urn:subject:11"));
         entityManager.persist(cachedUrlOldRig);
@@ -93,5 +94,53 @@ public class UrlResolverServiceTest {
         assertEquals("/subject:2/topic:1:183926", path);
     }
 
+    @Test(expected = Exception.class)
+    @Transactional
+    public void putOldUrlForNonexistentResource() throws Exception {
+        urlResolverService.putPath("abc", URI.create("urn:topic:1:12"), URI.create("urn:subject:12"));
+    }
+
+    @Test
+    @Transactional
+    public void putOldUrl() throws Exception {
+        final String subjectId = "urn:subject:12";
+        final String nodeId = "urn:topic:1:183926";
+        builder.subject(s -> s
+                .publicId(subjectId)
+                .topic(t -> t
+                        .publicId(nodeId)
+                )
+        );
+        entityManager.flush();
+
+        final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
+        urlResolverService.putPath(oldUrl, URI.create(nodeId), URI.create(subjectId));
+        entityManager.flush();
+
+        String path = urlResolverService.resolveOldUrl(oldUrl);
+        assertEquals("/subject:12/topic:1:183926", path);
+    }
+
+    @Test
+    @Transactional
+    public void putOldUrlTwice() throws Exception {
+        final String subjectId = "urn:subject:12";
+        final String nodeId = "urn:topic:1:183926";
+        builder.subject(s -> s
+                .publicId(subjectId)
+                .topic(t -> t
+                        .publicId(nodeId)
+                )
+        );
+        entityManager.flush();
+
+        final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
+        urlResolverService.putPath(oldUrl, URI.create(nodeId), URI.create(subjectId));
+        urlResolverService.putPath(oldUrl, URI.create(nodeId), URI.create(subjectId));
+        entityManager.flush();
+
+        String path = urlResolverService.resolveOldUrl(oldUrl);
+        assertEquals("/subject:12/topic:1:183926", path);
+    }
 
 }

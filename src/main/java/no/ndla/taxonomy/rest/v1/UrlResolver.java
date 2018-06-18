@@ -3,16 +3,16 @@ package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiOperation;
 import no.ndla.taxonomy.domain.NotFoundException;
+import no.ndla.taxonomy.rest.BadHttpRequestException;
 import no.ndla.taxonomy.service.UrlResolverService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
@@ -103,9 +103,10 @@ public class UrlResolver {
         return result;
     }
 
-    @GetMapping("/resolveOldUrl")
+    @GetMapping("/pathMap")
+    @ApiOperation(value = "Returns path for an old url or HTTP 404")
     @PreAuthorize("hasAuthority('READONLY')")
-    public ResolvedOldUrl resolveOldUrl(@RequestParam String oldUrl) {
+    public ResolvedOldUrl getTaxonomyPathForUrl(@RequestParam String oldUrl) {
         String resolveOldUrl = urlResolverService.resolveOldUrl(oldUrl);
         if (resolveOldUrl != null) {
             ResolvedOldUrl resolvedOldUrl = new ResolvedOldUrl();
@@ -113,6 +114,20 @@ public class UrlResolver {
             return resolvedOldUrl;
         } else {
             throw new NotFoundException(oldUrl);
+        }
+    }
+
+    @PutMapping("/pathMap")
+    @ApiOperation(value = "Inserts or updates a path to a pathmap, given nodeID and optionally subjectId")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    public void putTaxonomyNodeAndSubjectForOldUrl(@RequestParam String oldUrl, @RequestParam String nodeId, @RequestParam String subjectId) {
+        try {
+            urlResolverService.putPath(oldUrl, URI.create(nodeId), URI.create(subjectId));
+        } catch (IllegalArgumentException ex) {
+            throw new BadHttpRequestException(ex.getMessage());
+        } catch (Exception ex) {
+            throw new NotFoundException("Node id not found in taxonomy for " + oldUrl);
         }
     }
 
