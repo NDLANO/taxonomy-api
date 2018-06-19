@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.service.SubjectTopicRankUpdater;
 import no.ndla.taxonomy.service.domain.PrimaryParentRequiredException;
 import no.ndla.taxonomy.service.domain.Subject;
 import no.ndla.taxonomy.service.domain.SubjectTopic;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @RestController
@@ -29,11 +29,13 @@ public class SubjectTopics {
     private TopicRepository topicRepository;
     private SubjectTopicRepository subjectTopicRepository;
     private SubjectRepository subjectRepository;
+    private SubjectTopicRankUpdater rankUpdater;
 
     public SubjectTopics(SubjectRepository subjectRepository, TopicRepository topicRepository, SubjectTopicRepository subjectTopicRepository) {
         this.subjectRepository = subjectRepository;
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicRepository = topicRepository;
+        rankUpdater = new SubjectTopicRankUpdater();
     }
 
 
@@ -68,16 +70,10 @@ public class SubjectTopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
 
         SubjectTopic subjectTopic = subject.addTopic(topic);
-        if (command.rank == 0) {
-            List<SubjectTopic> connectionsForSubject = subjectTopicRepository.findBySubjectPublicIdOrderByRank(command.subjectid);
-            int maxExistingRank = 0;
-            for (SubjectTopic st : connectionsForSubject) {
-                maxExistingRank = Math.max(maxExistingRank, st.getRank());
-            }
-            subjectTopic.setRank(maxExistingRank + 1);
-        } else {
-            updateRanks(subjectTopic, command.rank);
-        }
+        List<SubjectTopic> connectionsForSubject = subjectTopicRepository.findBySubject(subject);
+
+        //TODO: rank
+
         if (command.primary) topic.setPrimarySubject(subject);
         subjectTopicRepository.save(subjectTopic);
 
@@ -104,7 +100,11 @@ public class SubjectTopics {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
         Topic topic = subjectTopic.getTopic();
         Subject subject = subjectTopic.getSubject();
-        updateRanks(subjectTopic, command.rank);
+
+        List<SubjectTopic> existingConnections = subjectTopicRepository.findBySubject(subject);
+        List<SubjectTopic> rankedConnections = rankUpdater.rank(existingConnections, subjectTopic, command.rank);
+        subjectTopicRepository.save(rankedConnections);
+
         if (command.primary) {
             topic.setPrimarySubject(subject);
         } else if (subjectTopic.isPrimary() && !command.primary) {
@@ -112,26 +112,6 @@ public class SubjectTopics {
         }
     }
 
-    private void updateRanks(SubjectTopic subjectTopic, int requestedNewRank) {
-        if (requestedNewRank != 0) {
-            Subject subject = subjectTopic.getSubject();
-            List<SubjectTopic> connectionsForSubject = subjectTopicRepository.findBySubjectPublicIdOrderByRank(subject.getPublicId());
-            connectionsForSubject.remove(subjectTopic);
-            int adjustedRank = ensureNewRankFitsInCollection(requestedNewRank, connectionsForSubject);
-            connectionsForSubject.add(adjustedRank, subjectTopic);
-            setRanksToCurrentOrder(connectionsForSubject);
-        }
-    }
-
-    private void setRanksToCurrentOrder(List<SubjectTopic> connectionsForSubject) {
-        for (int i = 0; i < connectionsForSubject.size(); i++) {
-            connectionsForSubject.get(i).setRank(i + 1);
-        }
-    }
-
-    private int ensureNewRankFitsInCollection(int requestedNewRank, Collection collection) {
-        return Math.min(collection.size(), requestedNewRank - 1);
-    }
 
     public static class AddTopicToSubjectCommand {
         @JsonProperty
