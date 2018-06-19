@@ -119,7 +119,7 @@ public class UrlResolver {
     }
 
     @RequestMapping(value = "/pathMap", method = RequestMethod.PUT)
-    @ApiOperation(value = "Inserts or updates a path to a pathmap, given nodeID and optionally subjectId")
+    @ApiOperation(value = "Inserts or updates a path to a pathmap, given nodeId and optionally subjectId")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void putTaxonomyNodeAndSubjectForOldUrl(@RequestBody OldUrlMapping oldUrlMapping) {
