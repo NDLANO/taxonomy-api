@@ -1,14 +1,18 @@
-package no.ndla.taxonomy.rest.v1;
+package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.rest.v1.Topics.ConnectionIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.TestUtils.*;
@@ -86,25 +90,59 @@ public class TopicsTest extends RestTest {
         assertAllTrue(topics, t -> t.path.contains("subject") && t.path.contains("topic"));
     }
 
+
+    /**
+     * This test creates a structure of subjects and topics as follows:
+     * <pre>
+     *   S:1         S:2
+     *    \         /
+     *     T:1    /
+     *      \   /
+     *       T:2
+     *      /  \
+     *    T:3   T:4
+     * </pre>
+     *
+     * S:1 = urn:subject:1000
+     * S:2 = urn:subject:2000
+     * T:1 = urn:topic:1000
+     * T:2 = urn:topic:2000
+     * T:3 = urn:topic:3000
+     * T:4 = urn:topic:4000
+     *
+     * The test examines the T:2 node and verifies that it reports the correct parent-subject, parent-topic and
+     * subtopic connections. As shown in the figure above, it should have 1 parent-subject (S:2), 1 parent-topic (T:1),
+     * and 2 subtopics (T:3 and T:4).
+     */
     @Test
-    public void can_get_all_subject_and_subtopic_connections() throws Exception {
-        builder.subject(s -> s
-                .name("Su 1")
-                .publicId("urn:subject:1")
-                .topic(t -> {
-                    t.name("To1").publicId("urn:topic:1");
-                    t.subtopic(st -> st.name("SuTo1").publicId("urn:topic:2"));
-                    t.subtopic(st -> st.name("SuTo3").publicId("urn:topic:3"));
-                })
-        );
-        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/connections");
-        Topics.ConnectionIndexDocument[] connections = getObject(Topics.ConnectionIndexDocument[].class, response);
-        assertEquals(3, connections.length);
-        assertAllTrue(connections, c -> isValidId(c.connectionId));
-        assertAllTrue(connections, c -> isValidId(c.targetId));
-        assertAnyTrue(connections, c -> c.path.equals("/subject:1"));
-        assertAnyTrue(connections, c -> c.path.equals("/subject:1/topic:1/topic:2"));
-        assertAnyTrue(connections, c -> c.path.equals("/subject:1/topic:1/topic:3"));
+    public void can_get_all_connections() throws Exception {
+
+        executeSqlScript("classpath:topic_connections_test_setup.sql", false);
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:2000/connections");
+        ConnectionIndexDocument[] connections = getObject(ConnectionIndexDocument[].class, response);
+
+        assertEquals("Correct number of connections", 4, connections.length);
+        assertAllTrue(connections, c -> c.paths.size() > 0); //all connections have at least one path
+
+        connectionsHaveCorrectTypes(connections);
+        primaryConnectionsAreReportedCorrectly(connections);
+    }
+
+    private void primaryConnectionsAreReportedCorrectly(ConnectionIndexDocument[] connections) {
+        Map<String, ConnectionIndexDocument> connectionsByName = new HashMap<>();
+        Arrays.stream(connections).forEach(c -> connectionsByName.put(c.targetId.toString(), c));
+        assertFalse(connectionsByName.containsKey("urn:subject:1000"));
+        assertFalse(connectionsByName.get("urn:subject:2000").isPrimary);
+        assertFalse(connectionsByName.get("urn:topic:4000").isPrimary);
+        assertTrue(connectionsByName.get("urn:topic:1000").isPrimary);
+        assertTrue(connectionsByName.get("urn:topic:3000").isPrimary);
+    }
+
+    private void connectionsHaveCorrectTypes(ConnectionIndexDocument[] connections) {
+        ConnectionTypeCounter connectionTypeCounter = new ConnectionTypeCounter(connections).countTypes();
+        assertEquals(1, connectionTypeCounter.getSubjectCount());
+        assertEquals(1, connectionTypeCounter.getParentCount());
+        assertEquals(2, connectionTypeCounter.getChildCount());
     }
 
     @Test
@@ -476,5 +514,50 @@ public class TopicsTest extends RestTest {
         assertEquals("external resource", resources[0].name);
         assertEquals("urn:resource:ext", resources[0].id.toString());
         assertFalse(resources[0].isPrimary);
+    }
+
+    private class ConnectionTypeCounter {
+        private ConnectionIndexDocument[] connections;
+        private int subjectCount;
+        private int parentCount;
+        private int childCount;
+
+        public ConnectionTypeCounter(ConnectionIndexDocument[] connections) {
+            this.connections = connections;
+        }
+
+        public int getSubjectCount() {
+            return subjectCount;
+        }
+
+        public int getParentCount() {
+            return parentCount;
+        }
+
+        public int getChildCount() {
+            return childCount;
+        }
+
+        public ConnectionTypeCounter countTypes() {
+            subjectCount = 0;
+            parentCount = 0;
+            childCount = 0;
+            for (ConnectionIndexDocument connection : connections) {
+                switch (connection.type) {
+                    case "parent-subject":
+                        subjectCount++;
+                        break;
+                    case "parent-topic":
+                        parentCount++;
+                        break;
+                    case "subtopic":
+                        childCount++;
+                        break;
+                    default:
+                        fail("Unexpected connection type :" + connection.type);
+                }
+            }
+            return this;
+        }
     }
 }
