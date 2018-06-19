@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service.rest.v1;
+package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.domain.Filter;
@@ -102,14 +102,14 @@ public class TopicsTest extends RestTest {
      *      /  \
      *    T:3   T:4
      * </pre>
-     *
+     * <p>
      * S:1 = urn:subject:1000
      * S:2 = urn:subject:2000
      * T:1 = urn:topic:1000
      * T:2 = urn:topic:2000
      * T:3 = urn:topic:3000
      * T:4 = urn:topic:4000
-     *
+     * <p>
      * The test examines the T:2 node and verifies that it reports the correct parent-subject, parent-topic and
      * subtopic connections. As shown in the figure above, it should have 1 parent-subject (S:2), 1 parent-topic (T:1),
      * and 2 subtopics (T:3 and T:4).
@@ -522,23 +522,23 @@ public class TopicsTest extends RestTest {
         private int parentCount;
         private int childCount;
 
-        public ConnectionTypeCounter(ConnectionIndexDocument[] connections) {
+        ConnectionTypeCounter(ConnectionIndexDocument[] connections) {
             this.connections = connections;
         }
 
-        public int getSubjectCount() {
+        int getSubjectCount() {
             return subjectCount;
         }
 
-        public int getParentCount() {
+        int getParentCount() {
             return parentCount;
         }
 
-        public int getChildCount() {
+        int getChildCount() {
             return childCount;
         }
 
-        public ConnectionTypeCounter countTypes() {
+        ConnectionTypeCounter countTypes() {
             subjectCount = 0;
             parentCount = 0;
             childCount = 0;

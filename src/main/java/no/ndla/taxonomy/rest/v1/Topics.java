@@ -529,7 +529,7 @@ public class Topics extends CrudController<Topic> {
                 doc.type = resultSet.getString("connection_type");
                 if (doc.isPrimary) {
                     doc.paths.add(0, resultSet.getString("path"));
-                } else{
+                } else {
                     doc.paths.add(resultSet.getString("path"));
                 }
             }
