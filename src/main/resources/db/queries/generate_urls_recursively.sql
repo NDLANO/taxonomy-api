@@ -81,6 +81,7 @@ SELECT
   id,
   public_id,
   path,
-  is_primary
+  is_primary,
+  parent_public_id
 FROM
   tree t
