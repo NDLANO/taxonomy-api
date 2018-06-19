@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
@@ -117,17 +118,17 @@ public class UrlResolver {
         }
     }
 
-    @PutMapping("/pathMap")
+    @RequestMapping(value = "/pathMap", method = RequestMethod.PUT)
     @ApiOperation(value = "Inserts or updates a path to a pathmap, given nodeID and optionally subjectId")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void putTaxonomyNodeAndSubjectForOldUrl(@RequestParam String oldUrl, @RequestParam String nodeId, @RequestParam String subjectId) {
+    public void putTaxonomyNodeAndSubjectForOldUrl(@RequestBody OldUrlMapping oldUrlMapping) {
         try {
-            urlResolverService.putPath(oldUrl, URI.create(nodeId), URI.create(subjectId));
+            urlResolverService.putPath(oldUrlMapping.oldUrl, URI.create(oldUrlMapping.nodeId), URI.create(oldUrlMapping.subjectId));
         } catch (IllegalArgumentException ex) {
             throw new BadHttpRequestException(ex.getMessage());
         } catch (Exception ex) {
-            throw new NotFoundException("Node id not found in taxonomy for " + oldUrl);
+            throw new NotFoundException("Node id not found in taxonomy for " + oldUrlMapping.oldUrl);
         }
     }
 
@@ -163,4 +164,27 @@ public class UrlResolver {
     }
 
 
+    public static class OldUrlMapping {
+        @ApiModelProperty(value = "URL for resource in old system", example = "ndla.no/nb/node/183926?fag=127013")
+        @JsonProperty
+        public String oldUrl;
+
+        @ApiModelProperty(value = "Node URN for resource in new system", example = "urn:topic:1:183926")
+        @JsonProperty
+        public String nodeId;
+
+        @ApiModelProperty(value = "Subject URN for resource in new system (optional)", example = "urn:subject:5")
+        @JsonProperty
+        public String subjectId;
+
+        @JsonCreator
+        public OldUrlMapping() {
+        }
+
+        public OldUrlMapping(String oldUrl, URI nodeId, URI subjectId) {
+            this.oldUrl = oldUrl;
+            this.nodeId = nodeId.toString();
+            this.subjectId = subjectId.toString();
+        }
+    }
 }
