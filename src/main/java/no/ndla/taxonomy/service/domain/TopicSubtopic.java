@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.UUID;
 
 @Entity
-public class TopicSubtopic extends DomainEntity {
+public class TopicSubtopic extends DomainEntity implements Rankable{
 
     @ManyToOne
     @JoinColumn(name = "topic_id")

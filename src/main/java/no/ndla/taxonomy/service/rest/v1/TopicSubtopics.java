@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.service.RankableConnectionUpdater;
 import no.ndla.taxonomy.service.domain.PrimaryParentRequiredException;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.domain.TopicSubtopic;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @RestController
@@ -59,11 +61,19 @@ public class TopicSubtopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Topic subtopic = topicRepository.getByPublicId(command.subtopicid);
 
-        TopicSubtopic topicSubtopic = Boolean.FALSE.equals(command.primary) ? topic.addSecondarySubtopic(subtopic) : topic.addSubtopic(subtopic);
+        TopicSubtopic topicSubtopic = !command.primary ? topic.addSecondarySubtopic(subtopic) : topic.addSubtopic(subtopic);
+
+        List<TopicSubtopic> connectionsForTopic = topicSubtopicRepository.findByTopic(topic);
+        connectionsForTopic.sort(Comparator.comparingInt(TopicSubtopic::getRank));
+        if(command.rank == 0){
+            TopicSubtopic highestRankedConnection = connectionsForTopic.get(connectionsForTopic.size()-1);
+            topicSubtopic.setRank(highestRankedConnection.getRank() +1 );
+        } else {
+            List<TopicSubtopic> rankedConnections = RankableConnectionUpdater.rank(connectionsForTopic, topicSubtopic, command.rank);
+            topicSubtopicRepository.save(rankedConnections);
+        }
         topicSubtopicRepository.save(topicSubtopic);
-
-        topicSubtopic.setRank(command.rank);
-
+        
         URI location = URI.create("/topic-subtopics/" + topicSubtopic.getPublicId());
         return ResponseEntity.created(location).build();
     }
