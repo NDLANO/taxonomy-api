@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @RestController
@@ -29,13 +30,11 @@ public class SubjectTopics {
     private TopicRepository topicRepository;
     private SubjectTopicRepository subjectTopicRepository;
     private SubjectRepository subjectRepository;
-    private SubjectTopicRankUpdater rankUpdater;
 
     public SubjectTopics(SubjectRepository subjectRepository, TopicRepository topicRepository, SubjectTopicRepository subjectTopicRepository) {
         this.subjectRepository = subjectRepository;
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicRepository = topicRepository;
-        rankUpdater = new SubjectTopicRankUpdater();
     }
 
 
@@ -70,11 +69,21 @@ public class SubjectTopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
 
         SubjectTopic subjectTopic = subject.addTopic(topic);
+
+        if (command.primary) {
+            topic.setPrimarySubject(subject);
+        }
+
         List<SubjectTopic> connectionsForSubject = subjectTopicRepository.findBySubject(subject);
+        connectionsForSubject.sort(Comparator.comparingInt(SubjectTopic::getRank));
+        if (command.rank == 0) {
+            SubjectTopic highestRankingConnection = connectionsForSubject.get(connectionsForSubject.size() - 1);
+            subjectTopic.setRank(highestRankingConnection.getRank() + 1);
+        } else {
+            List<SubjectTopic> rankedConnections = SubjectTopicRankUpdater.rank(connectionsForSubject, subjectTopic, command.rank);
+            subjectTopicRepository.save(rankedConnections);
+        }
 
-        //TODO: rank
-
-        if (command.primary) topic.setPrimarySubject(subject);
         subjectTopicRepository.save(subjectTopic);
 
         URI location = URI.create("/subject-topics/" + subjectTopic.getPublicId());
@@ -102,7 +111,7 @@ public class SubjectTopics {
         Subject subject = subjectTopic.getSubject();
 
         List<SubjectTopic> existingConnections = subjectTopicRepository.findBySubject(subject);
-        List<SubjectTopic> rankedConnections = rankUpdater.rank(existingConnections, subjectTopic, command.rank);
+        List<SubjectTopic> rankedConnections = SubjectTopicRankUpdater.rank(existingConnections, subjectTopic, command.rank);
         subjectTopicRepository.save(rankedConnections);
 
         if (command.primary) {
