@@ -40,6 +40,7 @@ public class Topics extends CrudController<Topic> {
     private static final String GET_SUBTOPICS_BY_TOPIC_ID_QUERY = getQuery("get_subtopics_by_topic_id_query");
     private static final String GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_subject_connections_by_topic_id");
     private static final String GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_subtopic_connections_by_topic_id");
+    private static final String GET_PARENT_TOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_parent_topic_connections_by_topic_id");
 
 
     public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
@@ -182,13 +183,12 @@ public class Topics extends CrudController<Topic> {
     @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
     public List<ConnectionIndexDocument> getAllConnections(@PathVariable("id") URI id) {
-        String subtopicQuery = GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY.replace("1 = 1", "t.public_id = ?");
-        String subjectTopicQuery = GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY.replace("1 = 1", "t.public_id = ?");
         List<Object> args = asList(id.toString());
         List<ConnectionIndexDocument> results = new ArrayList<>();
         ConnectionQueryExctractor connectionQueryExctractor = new ConnectionQueryExctractor();
-        results.addAll(jdbcTemplate.query(subjectTopicQuery, setQueryParameters(args), connectionQueryExctractor::extractConnections));
-        results.addAll(jdbcTemplate.query(subtopicQuery, setQueryParameters(args), connectionQueryExctractor::extractConnections));
+        results.addAll(jdbcTemplate.query(GET_PARENT_TOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(args), connectionQueryExctractor::extractConnections));
+        results.addAll(jdbcTemplate.query(GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(args), connectionQueryExctractor::extractConnections));
+        results.addAll(jdbcTemplate.query(GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(args), connectionQueryExctractor::extractConnections));
         return results;
     }
 
@@ -373,11 +373,14 @@ public class Topics extends CrudController<Topic> {
         @ApiModelProperty(value = "The id of the subject-topic or topic-subtopic connection", example = "urn:subject-topic:1")
         public URI connectionId;
         @JsonProperty
-        @ApiModelProperty(value = "The id of the connected subject or topic", example = "urn:subject-topic:1")
+        @ApiModelProperty(value = "The id of the connected subject or topic", example = "urn:subject:1")
         public URI targetId;
         @JsonProperty
         @ApiModelProperty(value = "The path part of the url for the subject or subtopic connected to this topic", example = "/subject:1/topic:1")
-        public String path;
+        public List<String> paths = new ArrayList<>();
+        @JsonProperty
+        @ApiModelProperty(value = "The type of connection (parent subject, parent topic or subtopic")
+        public String type;
         @JsonProperty
         @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
         public Boolean isPrimary;
@@ -512,17 +515,25 @@ public class Topics extends CrudController<Topic> {
 
     private class ConnectionQueryExctractor {
         private List<ConnectionIndexDocument> extractConnections(ResultSet resultSet) throws SQLException {
-            List<ConnectionIndexDocument> result = new ArrayList<>();
+            HashMap<String, ConnectionIndexDocument> resultsByConnectionId = new HashMap<>();
             while (resultSet.next()) {
-                result.add(new ConnectionIndexDocument() {{
-                    connectionId = getURI(resultSet, "connection_id");
-                    isPrimary = resultSet.getBoolean("is_primary");
-                    targetId = getURI(resultSet, "target_id");
-                    path = resultSet.getString("path");
-                }});
-
+                String connectionId = resultSet.getString("connection_id");
+                ConnectionIndexDocument doc = resultsByConnectionId.get(connectionId);
+                if (doc == null) {
+                    doc = new ConnectionIndexDocument();
+                    resultsByConnectionId.put(connectionId, doc);
+                }
+                doc.connectionId = getURI(resultSet, "connection_id");
+                doc.isPrimary = resultSet.getBoolean("is_primary");
+                doc.targetId = getURI(resultSet, "target_id");
+                doc.type = resultSet.getString("connection_type");
+                if (doc.isPrimary) {
+                    doc.paths.add(0, resultSet.getString("path"));
+                } else{
+                    doc.paths.add(resultSet.getString("path"));
+                }
             }
-            return result;
+            return new ArrayList<>(resultsByConnectionId.values());
         }
 
     }

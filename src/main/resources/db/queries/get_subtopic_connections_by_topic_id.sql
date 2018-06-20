@@ -1,9 +1,11 @@
-SELECT
-  ts.public_id AS connection_id,
+select
+  ts.public_id as connection_id,
+  'subtopic' as connection_type,
   ts.is_primary,
-  (SELECT public_id AS target_id FROM topic WHERE id = ts.subtopic_id),
-  (SELECT path FROM cached_url WHERE public_id =
-    (SELECT public_id FROM topic WHERE id = ts.subtopic_id))
-FROM topic_subtopic ts
-  JOIN topic t on ts.topic_id = t.id
-WHERE 1 = 1;
+  (select public_id as target_id from topic  where id = ts.subtopic_id ),
+  c."path"
+from topic_subtopic ts
+  join topic t on ts.topic_id = t.id
+  join cached_url c on c.public_id = (select public_id as subtopic_public_id from topic  where id = ts.subtopic_id )
+where t.public_id = ?
+and c.parent_public_id = t.public_id;
