@@ -4,11 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.SubjectTopicRankUpdater;
-import no.ndla.taxonomy.service.domain.PrimaryParentRequiredException;
-import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.domain.SubjectTopic;
-import no.ndla.taxonomy.service.domain.Topic;
+import no.ndla.taxonomy.service.RankableConnectionUpdater;
+import no.ndla.taxonomy.service.domain.*;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import no.ndla.taxonomy.service.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
@@ -80,7 +77,7 @@ public class SubjectTopics {
             SubjectTopic highestRankingConnection = connectionsForSubject.get(connectionsForSubject.size() - 1);
             subjectTopic.setRank(highestRankingConnection.getRank() + 1);
         } else {
-            List<SubjectTopic> rankedConnections = SubjectTopicRankUpdater.rank(connectionsForSubject, subjectTopic, command.rank);
+            List<SubjectTopic> rankedConnections = RankableConnectionUpdater.rank(connectionsForSubject, subjectTopic, command.rank);
             subjectTopicRepository.save(rankedConnections);
         }
 
@@ -111,7 +108,7 @@ public class SubjectTopics {
         Subject subject = subjectTopic.getSubject();
 
         List<SubjectTopic> existingConnections = subjectTopicRepository.findBySubject(subject);
-        List<SubjectTopic> rankedConnections = SubjectTopicRankUpdater.rank(existingConnections, subjectTopic, command.rank);
+        List<SubjectTopic> rankedConnections = RankableConnectionUpdater.rank(existingConnections, subjectTopic, command.rank);
         subjectTopicRepository.save(rankedConnections);
 
         if (command.primary) {
