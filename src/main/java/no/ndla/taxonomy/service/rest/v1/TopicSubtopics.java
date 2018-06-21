@@ -36,7 +36,7 @@ public class TopicSubtopics {
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and subtopics")
     @PreAuthorize("hasAuthority('READONLY')")
-    public List<TopicSubtopicIndexDocument> index()  {
+    public List<TopicSubtopicIndexDocument> index() {
         List<TopicSubtopicIndexDocument> result = new ArrayList<>();
 
         topicSubtopicRepository.findAll().forEach(record -> result.add(new TopicSubtopicIndexDocument(record)));
@@ -61,19 +61,19 @@ public class TopicSubtopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Topic subtopic = topicRepository.getByPublicId(command.subtopicid);
 
-        TopicSubtopic topicSubtopic = !command.primary ? topic.addSecondarySubtopic(subtopic) : topic.addSubtopic(subtopic);
+        TopicSubtopic topicSubtopic = command.primary == Boolean.FALSE ? topic.addSecondarySubtopic(subtopic) : topic.addSubtopic(subtopic);
 
         List<TopicSubtopic> connectionsForTopic = topicSubtopicRepository.findByTopic(topic);
         connectionsForTopic.sort(Comparator.comparingInt(TopicSubtopic::getRank));
-        if(command.rank == 0){
-            TopicSubtopic highestRankedConnection = connectionsForTopic.get(connectionsForTopic.size()-1);
-            topicSubtopic.setRank(highestRankedConnection.getRank() +1 );
+        if (command.rank == 0) {
+            TopicSubtopic highestRankedConnection = connectionsForTopic.get(connectionsForTopic.size() - 1);
+            topicSubtopic.setRank(highestRankedConnection.getRank() + 1);
         } else {
             List<TopicSubtopic> rankedConnections = RankableConnectionUpdater.rank(connectionsForTopic, topicSubtopic, command.rank);
             topicSubtopicRepository.save(rankedConnections);
         }
         topicSubtopicRepository.save(topicSubtopic);
-        
+
         URI location = URI.create("/topic-subtopics/" + topicSubtopic.getPublicId());
         return ResponseEntity.created(location).build();
     }
@@ -95,17 +95,21 @@ public class TopicSubtopics {
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
-        topicSubtopic.setRank(command.rank);
+        Topic topic = topicSubtopic.getTopic();
+
         if (command.primary) {
-            Topic topic = topicSubtopic.getSubtopic();
-            for(TopicSubtopic otherTopics : topic.parentTopics)
-            {
+            for (TopicSubtopic otherTopics : topic.parentTopics) {
                 otherTopics.setPrimary(false);
             }
             topicSubtopic.setPrimary(true);
+            topicSubtopicRepository.save(topicSubtopic);
         } else if (topicSubtopic.isPrimary() && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
+        List<TopicSubtopic> existingConnections = topicSubtopicRepository.findByTopic(topic);
+        List<TopicSubtopic> rankedConnections = RankableConnectionUpdater.rank(existingConnections, topicSubtopic, command.rank);
+        topicSubtopicRepository.save(rankedConnections);
+
     }
 
     public static class AddSubtopicToTopicCommand {

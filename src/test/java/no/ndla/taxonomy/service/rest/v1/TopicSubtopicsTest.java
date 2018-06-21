@@ -234,38 +234,6 @@ public class TopicSubtopicsTest extends RestTest {
     }
 
     @Test
-    public void subtopics_can_have_same_rank() throws Exception {
-        Topic electricity = builder.topic(s -> s
-                .name("Electricity")
-                .publicId("urn:topic:1"));
-        Topic alternatingCurrents = builder.topic(t -> t
-                .name("Alternating currents")
-                .publicId("urn:topic:11"));
-        Topic wiring = builder.topic(t -> t
-                .name("Wiring")
-                .publicId("urn:topic:12"));
-        TopicSubtopic geometryMaths = save(electricity.addSubtopic(alternatingCurrents));
-        TopicSubtopic statisticsMaths = save(electricity.addSubtopic(wiring));
-
-        updateResource("/v1/topic-subtopics/" + geometryMaths.getPublicId(), new TopicSubtopics.UpdateTopicSubtopicCommand() {{
-            primary = true;
-            id = geometryMaths.getPublicId();
-            rank = 1;
-        }});
-
-        updateResource("/v1/topic-subtopics/" + statisticsMaths.getPublicId(), new TopicSubtopics.UpdateTopicSubtopicCommand() {{
-            primary = true;
-            id = statisticsMaths.getPublicId();
-            rank = 1;
-        }});
-
-        MockHttpServletResponse response = getResource("/v1/topic-subtopics");
-        TopicSubtopics.TopicSubtopicIndexDocument[] topics = getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);
-
-        assertAllTrue(topics, t -> t.rank == 1);
-    }
-
-    @Test
     public void subtopics_can_be_created_with_rank() throws Exception {
         Subject subject = builder.subject(s -> s.name("Subject").publicId("urn:subject:1"));
         Topic electricity = builder.topic(s -> s
