@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import no.ndla.taxonomy.domain.NotFoundException;
 import no.ndla.taxonomy.rest.BadHttpRequestException;
+import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.service.UrlResolverService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,8 +128,8 @@ public class UrlResolver {
             urlResolverService.putPath(oldUrlMapping.oldUrl, URI.create(oldUrlMapping.nodeId), URI.create(oldUrlMapping.subjectId));
         } catch (IllegalArgumentException ex) {
             throw new BadHttpRequestException(ex.getMessage());
-        } catch (Exception ex) {
-            throw new NotFoundException("Node id not found in taxonomy for " + oldUrlMapping.oldUrl);
+        } catch (UrlResolverService.NodeIdNotFoundExeption ex) {
+            throw new NotFoundHttpRequestException(ex.getMessage());
         }
     }
 

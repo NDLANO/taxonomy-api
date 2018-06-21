@@ -92,11 +92,12 @@ public class UrlResolverService {
      * @param nodeId    nodeID to be associated with this URL
      * @param subjectId subjectID to be associated with this URL (optional)
      * @return true in order to be mockable "given" ugh!
-     * @throws Exception
+     * @throws NodeIdNotFoundExeption if node ide not found in taxonomy
      */
-    public Boolean putPath(String oldUrl, URI nodeId, URI subjectId) throws Exception {
+    public Boolean putPath(String oldUrl, URI nodeId, URI subjectId) throws NodeIdNotFoundExeption {
+
         if (getAllPaths(nodeId).isEmpty())
-            throw new Exception();
+            throw new NodeIdNotFoundExeption("Node id not found in taxonomy for " + oldUrl);
         if (getCachedUrlOldRig(oldUrl).isEmpty()) {
             String sql = "INSERT INTO CACHED_URL_OLD_RIG (OLD_URL, PUBLIC_ID, SUBJECT_ID) VALUES (?, ?, ?)";
             jdbcTemplate.update(sql, oldUrl, nodeId.toString(), subjectId.toString());
@@ -104,6 +105,16 @@ public class UrlResolverService {
             String sql = "UPDATE CACHED_URL_OLD_RIG SET PUBLIC_ID=?, SUBJECT_ID=? WHERE OLD_URL=?";
             jdbcTemplate.update(sql, nodeId.toString(), subjectId.toString(), oldUrl);
         }
+
+        if (oldUrl.contains("?fag=")) {
+            return putPath(oldUrl.substring(0, oldUrl.indexOf("?fag=")), nodeId, subjectId);
+        }
         return true;
+    }
+
+    public static class NodeIdNotFoundExeption extends Exception {
+        public NodeIdNotFoundExeption(String message) {
+            super(message);
+        }
     }
 }

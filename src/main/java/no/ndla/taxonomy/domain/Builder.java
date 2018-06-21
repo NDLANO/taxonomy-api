@@ -87,7 +87,7 @@ public class Builder {
 
     private FilterBuilder getFilterBuilder(String key) {
         if (key == null) return new FilterBuilder();
-        if (!filters.containsKey(key)) filters.put(key, new FilterBuilder());
+        filters.putIfAbsent(key, new FilterBuilder());
         return filters.get(key);
     }
 
@@ -111,31 +111,31 @@ public class Builder {
 
     private RelevanceBuilder getRelevanceBuilder(String key) {
         if (key == null) return new RelevanceBuilder();
-        if (!relevances.containsKey(key)) relevances.put(key, new RelevanceBuilder());
+        relevances.putIfAbsent(key, new RelevanceBuilder());
         return relevances.get(key);
     }
 
     private SubjectBuilder getSubjectBuilder(String key) {
         if (key == null) return new SubjectBuilder();
-        if (!subjects.containsKey(key)) subjects.put(key, new SubjectBuilder());
+        subjects.putIfAbsent(key, new SubjectBuilder());
         return subjects.get(key);
     }
 
     private TopicBuilder getTopicBuilder(String key) {
         if (key == null) return new TopicBuilder();
-        if (!topics.containsKey(key)) topics.put(key, new TopicBuilder());
+        topics.putIfAbsent(key, new TopicBuilder());
         return topics.get(key);
     }
 
     private ResourceTypeBuilder getResourceTypeBuilder(String key) {
         if (key == null) return new ResourceTypeBuilder();
-        if (!resourceTypes.containsKey(key)) resourceTypes.put(key, new ResourceTypeBuilder());
+        resourceTypes.putIfAbsent(key, new ResourceTypeBuilder());
         return resourceTypes.get(key);
     }
 
     private ResourceBuilder getResourceBuilder(String key) {
         if (key == null) return new ResourceBuilder();
-        if (!resources.containsKey(key)) resources.put(key, new ResourceBuilder());
+        resources.putIfAbsent(key, new ResourceBuilder());
         return resources.get(key);
     }
 
@@ -585,7 +585,7 @@ public class Builder {
 
     private CachedUrlOldRigBuilder getCachedUrlOldRigBuilder(String key) {
         if (key == null) return new CachedUrlOldRigBuilder();
-        if (!cachedUrlOldRigBuilders.containsKey(key)) cachedUrlOldRigBuilders.put(key, new CachedUrlOldRigBuilder());
+        cachedUrlOldRigBuilders.putIfAbsent(key, new CachedUrlOldRigBuilder());
         return cachedUrlOldRigBuilders.get(key);
     }
 

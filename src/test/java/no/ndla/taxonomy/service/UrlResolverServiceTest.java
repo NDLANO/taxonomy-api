@@ -143,4 +143,27 @@ public class UrlResolverServiceTest {
         assertEquals("/subject:12/topic:1:183926", path);
     }
 
+    @Test
+    @Transactional
+    public void putOldUrlWithSubjectQueryWithoutSubject() throws Exception {
+        final String subjectId = "urn:subject:12";
+        final String nodeId = "urn:topic:1:183926";
+        builder.subject(s -> s
+                .publicId(subjectId)
+                .topic(t -> t
+                        .publicId(nodeId)
+                )
+        );
+        entityManager.flush();
+
+        final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
+        urlResolverService.putPath(oldUrl, URI.create(nodeId), URI.create(subjectId));
+
+        entityManager.flush();
+
+        String path = urlResolverService.resolveOldUrl("ndla.no/nb/node/183926");
+        assertEquals("/subject:12/topic:1:183926", path);
+    }
+
+
 }
