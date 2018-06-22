@@ -1,6 +1,6 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.CachedUrlOldRig;
+import no.ndla.taxonomy.domain.UrlMapping;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -31,10 +31,10 @@ public class UrlResolverService {
      * @param oldUrl url previously imported into taxonomy with taxonomy-import
      * @return return a resolved URL or null
      */
-    public String resolveOldUrl(String oldUrl) {
-        List<CachedUrlOldRig> results = getCachedUrlOldRig(oldUrl);
+    public String resolveUrl(String oldUrl) {
+        List<UrlMapping> results = getCachedUrlOldRig(oldUrl);
         if (!results.isEmpty()) {
-            CachedUrlOldRig result = results.get(0);
+            UrlMapping result = results.get(0);
             List<String> allPaths = getAllPaths(result.getPublic_id());
             if (result.getSubject_id() != null) {
                 String shortestPath = findshortestPathStartingWith(result.getSubject_id(), allPaths);
@@ -72,10 +72,10 @@ public class UrlResolverService {
         return primaryPaths.get(0);
     }
 
-    private List<CachedUrlOldRig> getCachedUrlOldRig(String oldUrl) {
-        final String sql = "SELECT PUBLIC_ID, SUBJECT_ID FROM CACHED_URL_OLD_RIG WHERE OLD_URL=?";
-        final List<CachedUrlOldRig> query = jdbcTemplate.query(sql, setQueryParameters(asList(oldUrl)),
-                (resultSet, rowNum) -> new CachedUrlOldRig() {{
+    private List<UrlMapping> getCachedUrlOldRig(String oldUrl) {
+        final String sql = "SELECT PUBLIC_ID, SUBJECT_ID FROM URL_MAP WHERE OLD_URL=?";
+        final List<UrlMapping> query = jdbcTemplate.query(sql, setQueryParameters(asList(oldUrl)),
+                (resultSet, rowNum) -> new UrlMapping() {{
                     setPublic_id(resultSet.getString("public_id"));
                     if (resultSet.getString("subject_id") != null) {
                         setSubject_id(resultSet.getString("subject_id"));
@@ -86,7 +86,7 @@ public class UrlResolverService {
     }
 
     /**
-     * put old url into CACHED_URL_OLD_RIG
+     * put old url into URL_MAP
      *
      * @param oldUrl    url to put
      * @param nodeId    nodeID to be associated with this URL
@@ -94,20 +94,20 @@ public class UrlResolverService {
      * @return true in order to be mockable "given" ugh!
      * @throws NodeIdNotFoundExeption if node ide not found in taxonomy
      */
-    public Boolean putPath(String oldUrl, URI nodeId, URI subjectId) throws NodeIdNotFoundExeption {
+    public Boolean putUrlMapping(String oldUrl, URI nodeId, URI subjectId) throws NodeIdNotFoundExeption {
 
         if (getAllPaths(nodeId).isEmpty())
             throw new NodeIdNotFoundExeption("Node id not found in taxonomy for " + oldUrl);
         if (getCachedUrlOldRig(oldUrl).isEmpty()) {
-            String sql = "INSERT INTO CACHED_URL_OLD_RIG (OLD_URL, PUBLIC_ID, SUBJECT_ID) VALUES (?, ?, ?)";
+            String sql = "INSERT INTO URL_MAP (OLD_URL, PUBLIC_ID, SUBJECT_ID) VALUES (?, ?, ?)";
             jdbcTemplate.update(sql, oldUrl, nodeId.toString(), subjectId.toString());
         } else {
-            String sql = "UPDATE CACHED_URL_OLD_RIG SET PUBLIC_ID=?, SUBJECT_ID=? WHERE OLD_URL=?";
+            String sql = "UPDATE URL_MAP SET PUBLIC_ID=?, SUBJECT_ID=? WHERE OLD_URL=?";
             jdbcTemplate.update(sql, nodeId.toString(), subjectId.toString(), oldUrl);
         }
 
         if (oldUrl.contains("?fag=")) {
-            return putPath(oldUrl.substring(0, oldUrl.indexOf("?fag=")), nodeId, subjectId);
+            return putUrlMapping(oldUrl.substring(0, oldUrl.indexOf("?fag=")), nodeId, subjectId);
         }
         return true;
     }

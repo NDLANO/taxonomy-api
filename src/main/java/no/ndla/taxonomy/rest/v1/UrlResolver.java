@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.NotFoundException;
 import no.ndla.taxonomy.rest.BadHttpRequestException;
 import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
@@ -105,27 +106,27 @@ public class UrlResolver {
         return result;
     }
 
-    @GetMapping("/pathMap")
-    @ApiOperation(value = "Returns path for an old url or HTTP 404")
+    @GetMapping("/mapping")
+    @ApiOperation(value = "Returns path for an url or HTTP 404")
     @PreAuthorize("hasAuthority('READONLY')")
-    public ResolvedOldUrl getTaxonomyPathForUrl(@RequestParam String oldUrl) {
-        String resolveOldUrl = urlResolverService.resolveOldUrl(oldUrl);
+    public ResolvedOldUrl getTaxonomyPathForUrl(@ApiParam(value = "url in old rig except 'https://'", example = "ndla.no/nb/node/142542?fag=52253") @RequestParam String url) {
+        String resolveOldUrl = urlResolverService.resolveUrl(url);
         if (resolveOldUrl != null) {
             ResolvedOldUrl resolvedOldUrl = new ResolvedOldUrl();
             resolvedOldUrl.path = resolveOldUrl;
             return resolvedOldUrl;
         } else {
-            throw new NotFoundException(oldUrl);
+            throw new NotFoundException(url);
         }
     }
 
-    @RequestMapping(value = "/pathMap", method = RequestMethod.PUT)
-    @ApiOperation(value = "Inserts or updates a path to a pathmap, given nodeId and optionally subjectId")
+    @PutMapping("/mapping")
+    @ApiOperation(value = "Inserts or updates an map from url to nodeId and optionally subjectId")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void putTaxonomyNodeAndSubjectForOldUrl(@RequestBody OldUrlMapping oldUrlMapping) {
+    public void putTaxonomyNodeAndSubjectForOldUrl(@RequestBody UrlMapping urlMapping) {
         try {
-            urlResolverService.putPath(oldUrlMapping.oldUrl, URI.create(oldUrlMapping.nodeId), URI.create(oldUrlMapping.subjectId));
+            urlResolverService.putUrlMapping(urlMapping.url, URI.create(urlMapping.nodeId), URI.create(urlMapping.subjectId));
         } catch (IllegalArgumentException ex) {
             throw new BadHttpRequestException(ex.getMessage());
         } catch (UrlResolverService.NodeIdNotFoundExeption ex) {
@@ -165,10 +166,10 @@ public class UrlResolver {
     }
 
 
-    public static class OldUrlMapping {
+    public static class UrlMapping {
         @ApiModelProperty(value = "URL for resource in old system", example = "ndla.no/nb/node/183926?fag=127013")
         @JsonProperty
-        public String oldUrl;
+        public String url;
 
         @ApiModelProperty(value = "Node URN for resource in new system", example = "urn:topic:1:183926")
         @JsonProperty
@@ -179,11 +180,11 @@ public class UrlResolver {
         public String subjectId;
 
         @JsonCreator
-        public OldUrlMapping() {
+        public UrlMapping() {
         }
 
-        public OldUrlMapping(String oldUrl, URI nodeId, URI subjectId) {
-            this.oldUrl = oldUrl;
+        public UrlMapping(String url, URI nodeId, URI subjectId) {
+            this.url = url;
             this.nodeId = nodeId.toString();
             this.subjectId = subjectId.toString();
         }

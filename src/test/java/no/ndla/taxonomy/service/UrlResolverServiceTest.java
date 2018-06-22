@@ -1,7 +1,7 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
-import no.ndla.taxonomy.domain.CachedUrlOldRig;
+import no.ndla.taxonomy.domain.UrlMapping;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,11 +46,11 @@ public class UrlResolverServiceTest {
                 )
         );
         final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
-        CachedUrlOldRig cachedUrlOldRig = builder.cachedUrlOldRig(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
-        entityManager.persist(cachedUrlOldRig);
+        UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
+        entityManager.persist(urlMapping);
         entityManager.flush();
 
-        String path = urlResolverService.resolveOldUrl(oldUrl);
+        String path = urlResolverService.resolveUrl(oldUrl);
 
         assertEquals("/subject:11/topic:1:183926", path);
     }
@@ -66,11 +66,11 @@ public class UrlResolverServiceTest {
                 )
         );
         String oldUrl = "ndla.no/nb/node/183926?fag=127013";
-        CachedUrlOldRig cachedUrlOldRig = builder.cachedUrlOldRig(c -> c.oldUrl(oldUrl).public_id(nodeId));
-        entityManager.persist(cachedUrlOldRig);
+        UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId));
+        entityManager.persist(urlMapping);
         entityManager.flush();
 
-        String path = urlResolverService.resolveOldUrl(oldUrl);
+        String path = urlResolverService.resolveUrl(oldUrl);
 
         assertEquals("/subject:2/topic:1:183926", path);
     }
@@ -85,11 +85,11 @@ public class UrlResolverServiceTest {
                 )
         );
         String oldUrl = "ndla.no/nb/node/183926?fag=127013";
-        CachedUrlOldRig cachedUrlOldRig = builder.cachedUrlOldRig(c -> c.oldUrl(oldUrl).public_id("urn:topic:1:183926").subject_id("urn:subject:11"));
-        entityManager.persist(cachedUrlOldRig);
+        UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id("urn:topic:1:183926").subject_id("urn:subject:11"));
+        entityManager.persist(urlMapping);
         entityManager.flush();
 
-        String path = urlResolverService.resolveOldUrl(oldUrl);
+        String path = urlResolverService.resolveUrl(oldUrl);
 
         assertEquals("/subject:2/topic:1:183926", path);
     }
@@ -97,7 +97,7 @@ public class UrlResolverServiceTest {
     @Test(expected = Exception.class)
     @Transactional
     public void putOldUrlForNonexistentResource() throws Exception {
-        urlResolverService.putPath("abc", URI.create("urn:topic:1:12"), URI.create("urn:subject:12"));
+        urlResolverService.putUrlMapping("abc", URI.create("urn:topic:1:12"), URI.create("urn:subject:12"));
     }
 
     @Test
@@ -114,10 +114,10 @@ public class UrlResolverServiceTest {
         entityManager.flush();
 
         final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
-        urlResolverService.putPath(oldUrl, URI.create(nodeId), URI.create(subjectId));
+        urlResolverService.putUrlMapping(oldUrl, URI.create(nodeId), URI.create(subjectId));
         entityManager.flush();
 
-        String path = urlResolverService.resolveOldUrl(oldUrl);
+        String path = urlResolverService.resolveUrl(oldUrl);
         assertEquals("/subject:12/topic:1:183926", path);
     }
 
@@ -135,11 +135,11 @@ public class UrlResolverServiceTest {
         entityManager.flush();
 
         final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
-        urlResolverService.putPath(oldUrl, URI.create(nodeId), URI.create(subjectId));
-        urlResolverService.putPath(oldUrl, URI.create(nodeId), URI.create(subjectId));
+        urlResolverService.putUrlMapping(oldUrl, URI.create(nodeId), URI.create(subjectId));
+        urlResolverService.putUrlMapping(oldUrl, URI.create(nodeId), URI.create(subjectId));
         entityManager.flush();
 
-        String path = urlResolverService.resolveOldUrl(oldUrl);
+        String path = urlResolverService.resolveUrl(oldUrl);
         assertEquals("/subject:12/topic:1:183926", path);
     }
 
@@ -157,11 +157,11 @@ public class UrlResolverServiceTest {
         entityManager.flush();
 
         final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
-        urlResolverService.putPath(oldUrl, URI.create(nodeId), URI.create(subjectId));
+        urlResolverService.putUrlMapping(oldUrl, URI.create(nodeId), URI.create(subjectId));
 
         entityManager.flush();
 
-        String path = urlResolverService.resolveOldUrl("ndla.no/nb/node/183926");
+        String path = urlResolverService.resolveUrl("ndla.no/nb/node/183926");
         assertEquals("/subject:12/topic:1:183926", path);
     }
 

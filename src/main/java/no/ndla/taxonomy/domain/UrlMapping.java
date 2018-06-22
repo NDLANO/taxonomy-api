@@ -8,7 +8,7 @@ import java.net.URI;
 
 @Entity
 @Table(name = "cached_url_old_rig")
-public class CachedUrlOldRig {
+public class UrlMapping {
     @Id
     @Column
     private String oldUrl;

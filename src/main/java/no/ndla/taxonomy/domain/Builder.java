@@ -15,7 +15,7 @@ public class Builder {
     private Map<String, ResourceBuilder> resources = new HashMap<>();
     private Map<String, FilterBuilder> filters = new HashMap<>();
     private Map<String, RelevanceBuilder> relevances = new HashMap<>();
-    private Map<String, CachedUrlOldRigBuilder> cachedUrlOldRigBuilders;
+    private Map<String, UrlMappingBuilder> cachedUrlOldRigBuilders;
 
     public Builder(EntityManager entityManager) {
         this.entityManager = entityManager;
@@ -583,24 +583,24 @@ public class Builder {
         }
     }
 
-    private CachedUrlOldRigBuilder getCachedUrlOldRigBuilder(String key) {
-        if (key == null) return new CachedUrlOldRigBuilder();
-        cachedUrlOldRigBuilders.putIfAbsent(key, new CachedUrlOldRigBuilder());
+    private UrlMappingBuilder getUrlMappingBuilder(String key) {
+        if (key == null) return new UrlMappingBuilder();
+        cachedUrlOldRigBuilders.putIfAbsent(key, new UrlMappingBuilder());
         return cachedUrlOldRigBuilders.get(key);
     }
 
-    public CachedUrlOldRig cachedUrlOldRig(String key) {
-        return cachedUrlOldRig(key, null);
+    public UrlMapping urlMapping(String key) {
+        return urlMapping(key, null);
     }
 
-    public CachedUrlOldRig cachedUrlOldRig(Consumer<CachedUrlOldRigBuilder> consumer) {
-        return cachedUrlOldRig(null, consumer);
+    public UrlMapping urlMapping(Consumer<UrlMappingBuilder> consumer) {
+        return urlMapping(null, consumer);
     }
 
-    public CachedUrlOldRig cachedUrlOldRig(String key, Consumer<CachedUrlOldRigBuilder> consumer) {
-        CachedUrlOldRigBuilder cachedUrlOldRig = getCachedUrlOldRigBuilder(key);
-        if (null != consumer) consumer.accept(cachedUrlOldRig);
-        return cachedUrlOldRig.cachedUrlOldRig;
+    public UrlMapping urlMapping(String key, Consumer<UrlMappingBuilder> consumer) {
+        UrlMappingBuilder urlMapping = getUrlMappingBuilder(key);
+        if (null != consumer) consumer.accept(urlMapping);
+        return urlMapping.urlMapping;
     }
 
     public class ResourceTypeTranslationBuilder {
@@ -616,25 +616,25 @@ public class Builder {
         }
     }
 
-    public class CachedUrlOldRigBuilder {
-        private CachedUrlOldRig cachedUrlOldRig;
+    public class UrlMappingBuilder {
+        private UrlMapping urlMapping;
 
-        public CachedUrlOldRigBuilder() {
-            cachedUrlOldRig = new CachedUrlOldRig();
+        public UrlMappingBuilder() {
+            urlMapping = new UrlMapping();
         }
 
-        public CachedUrlOldRigBuilder oldUrl(String p) {
-            cachedUrlOldRig.setOldUrl(p);
+        public UrlMappingBuilder oldUrl(String p) {
+            urlMapping.setOldUrl(p);
             return this;
         }
 
-        public CachedUrlOldRigBuilder public_id(String p) {
-            cachedUrlOldRig.setPublic_id(p);
+        public UrlMappingBuilder public_id(String p) {
+            urlMapping.setPublic_id(p);
             return this;
         }
 
-        public CachedUrlOldRigBuilder subject_id(String s) {
-            cachedUrlOldRig.setSubject_id(s);
+        public UrlMappingBuilder subject_id(String s) {
+            urlMapping.setSubject_id(s);
             return this;
         }
 
