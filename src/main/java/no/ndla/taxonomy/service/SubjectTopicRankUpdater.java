@@ -1,6 +1,6 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.service.domain.SubjectTopic;
+import no.ndla.taxonomy.domain.SubjectTopic;
 
 import java.util.Comparator;
 import java.util.List;
