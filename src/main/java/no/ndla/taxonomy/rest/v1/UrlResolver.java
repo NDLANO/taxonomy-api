@@ -121,7 +121,7 @@ public class UrlResolver {
     }
 
     @PutMapping("/mapping")
-    @ApiOperation(value = "Inserts or updates an map from url to nodeId and optionally subjectId")
+    @ApiOperation(value = "Inserts or updates a mapping from url to nodeId and optionally subjectId")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void putTaxonomyNodeAndSubjectForOldUrl(@RequestBody UrlMapping urlMapping) {
