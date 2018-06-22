@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service;
+package no.ndla.taxonomy.domain;
 
 import no.ndla.taxonomy.domain.SubjectTopic;
 

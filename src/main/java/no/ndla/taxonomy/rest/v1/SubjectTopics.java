@@ -7,7 +7,7 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
-import no.ndla.taxonomy.service.SubjectTopicRankUpdater;
+import no.ndla.taxonomy.domain.SubjectTopicRankUpdater;
 import no.ndla.taxonomy.domain.PrimaryParentRequiredException;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.SubjectTopic;
