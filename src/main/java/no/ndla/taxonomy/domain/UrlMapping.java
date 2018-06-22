@@ -7,7 +7,7 @@ import javax.persistence.Table;
 import java.net.URI;
 
 @Entity
-@Table(name = "cached_url_old_rig")
+@Table(name = "url_map")
 public class UrlMapping {
     @Id
     @Column

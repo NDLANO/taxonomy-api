@@ -50,7 +50,7 @@ public class UrlResolverMockTest {
 
         given(this.urlResolverService.resolveUrl(oldUrl)).willReturn(null);
         ResultActions result = mvc.perform(
-                get("/v1/url/pathMap?oldUrl=" + oldUrl)
+                get("/v1/url/mapping?url=" + oldUrl)
                         .accept(APPLICATION_JSON_UTF8));
 
         result.andExpect(status().isNotFound());
@@ -63,7 +63,7 @@ public class UrlResolverMockTest {
 
         given(this.urlResolverService.resolveUrl(oldUrl)).willReturn(newPath);
         ResultActions result = mvc.perform(
-                get("/v1/url/pathMap?oldUrl=" + oldUrl)
+                get("/v1/url/mapping?url=" + oldUrl)
                         .accept(APPLICATION_JSON_UTF8));
 
         result.andExpect(status().isOk());
@@ -78,7 +78,7 @@ public class UrlResolverMockTest {
         URI subjectId = new URI("urn:subject:11");
 
         ResultActions result = mvc.perform(
-                put("/v1/url/pathMap")
+                put("/v1/url/mapping")
                         .content(new ObjectMapper().writeValueAsString(new UrlResolver.UrlMapping(oldUrl, nodeId, subjectId)))
                         .contentType(MediaType.APPLICATION_JSON_UTF8));
 
@@ -94,7 +94,7 @@ public class UrlResolverMockTest {
         urlMapping.subjectId = "b a d";
 
         ResultActions result = mvc.perform(
-                put("/v1/url/pathMap")
+                put("/v1/url/mapping")
                         .content(new ObjectMapper().writeValueAsString(urlMapping))
                         .contentType(MediaType.APPLICATION_JSON_UTF8));
 
@@ -106,10 +106,10 @@ public class UrlResolverMockTest {
         String oldUrl = "ndla.no/nb/node/183926?fag=127013";
         URI nodeId = new URI("urn:topic:1:183926");
         URI subjectId = new URI("urn:subject:11");
-        given(this.urlResolverService.putUrlMapping(any(), any(), any())).willThrow(new Exception());
+        given(this.urlResolverService.putUrlMapping(any(), any(), any())).willThrow(new UrlResolverService.NodeIdNotFoundExeption("urk på burk"));
 
         ResultActions result = mvc.perform(
-                put("/v1/url/pathMap")
+                put("/v1/url/mapping")
                         .content(new ObjectMapper().writeValueAsString(new UrlResolver.UrlMapping(oldUrl, nodeId, subjectId)))
                         .contentType(MediaType.APPLICATION_JSON_UTF8));
 
