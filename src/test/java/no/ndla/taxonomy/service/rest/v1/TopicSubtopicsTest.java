@@ -2,12 +2,17 @@ package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.domain.Subject;
+import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.domain.TopicSubtopic;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static no.ndla.taxonomy.service.TestUtils.*;
 import static org.junit.Assert.*;
@@ -265,5 +270,84 @@ public class TopicSubtopicsTest extends RestTest {
         assertEquals(electricity.getPublicId(), topics[0].id);
         assertEquals(wiring.getPublicId(), topics[1].id);
         assertEquals(alternatingCurrents.getPublicId(), topics[2].id);
+    }
+
+    @Test
+    public void can_update_subtopic_rank() throws Exception {
+        URI id = save(newTopic().addSubtopic(newTopic())).getPublicId();
+
+        updateResource("/v1/topic-subtopics/" + id, new TopicSubtopics.UpdateTopicSubtopicCommand() {{
+            primary = true;
+            rank = 99;
+        }});
+
+        assertEquals(99,topicSubtopicRepository.getByPublicId(id).getRank());
+
+    }
+
+    @Test
+    public void update_subject_rank_modifies_other_contiguous_ranks() throws Exception {
+        List<TopicSubtopic> topicSubtopics = createTenContiguousRankedConnections(); //creates ranks 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+        Map<String, Integer> mappedRanks = mapConnectionRanks(topicSubtopics);
+
+        //make the last object the first
+        TopicSubtopic updatedConnection = topicSubtopics.get(topicSubtopics.size() - 1);
+        assertEquals(10, updatedConnection.getRank());
+        updateResource("/v1/topic-subtopic/" + updatedConnection.getPublicId().toString(), new TopicSubtopic.() {{
+            primary = true;
+            rank = 1;
+        }});
+        assertEquals(1, updatedConnection.getRank());
+
+        //verify that the other connections have been updated
+        for (SubjectTopic subjectTopic : topicSubtopics) {
+            MockHttpServletResponse response = getResource("/v1/subject-topics/" + subjectTopic.getPublicId().toString());
+            SubjectTopics.SubjectTopicIndexDocument connectionFromDb = getObject(SubjectTopics.SubjectTopicIndexDocument.class, response);
+            //verify that the other connections have had their rank bumped up 1
+            if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
+                int oldRank = mappedRanks.get(connectionFromDb.id.toString());
+                assertEquals(oldRank + 1, connectionFromDb.rank);
+            }
+        }
+    }
+
+    private Map<String, Integer> mapConnectionRanks(List<TopicSubtopic> topicSubtopics) {
+        Map<String, Integer> mappedRanks = new HashMap<>();
+        for (TopicSubtopic ts : topicSubtopics) {
+            mappedRanks.put(ts.getPublicId().toString(), ts.getRank());
+        }
+        return mappedRanks;
+    }
+
+
+
+    private List<TopicSubtopic> createTenContiguousRankedConnections() {
+        List<TopicSubtopic> connections = new ArrayList<>();
+        Topic parent = newTopic();
+        for (int i = 1; i < 11; i++) {
+            Topic sub = newTopic();
+            TopicSubtopic topicSubtopic = parent.addSubtopic(sub);
+            topicSubtopic.setRank(i);
+            connections.add(topicSubtopic);
+            save(topicSubtopic);
+        }
+        return connections;
+    }
+
+    private List<TopicSubtopic> createTenNonContiguousRankedConnections() {
+        List<TopicSubtopic> connections = new ArrayList<>();
+        Topic parent = newTopic();
+        for (int i = 1; i < 11; i++) {
+            Topic sub = newTopic();
+            TopicSubtopic topicSubtopic = parent.addSubtopic(sub);
+            if(i <= 5){
+            topicSubtopic.setRank(i);}
+            else {
+                topicSubtopic.setRank(i * 10);
+            }
+            connections.add(topicSubtopic);
+            save(topicSubtopic);
+        }
+        return connections;
     }
 }

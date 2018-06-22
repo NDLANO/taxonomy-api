@@ -98,8 +98,10 @@ public class TopicSubtopics {
         Topic topic = topicSubtopic.getTopic();
 
         if (command.primary) {
-            for (TopicSubtopic otherTopics : topic.parentTopics) {
-                otherTopics.setPrimary(false);
+            Topic subtopic = topicSubtopic.getSubtopic();
+            for (TopicSubtopic otherConnection : subtopic.parentTopics) {
+                otherConnection.setPrimary(false);
+                topicSubtopicRepository.save(otherConnection);
             }
             topicSubtopic.setPrimary(true);
             topicSubtopicRepository.save(topicSubtopic);
