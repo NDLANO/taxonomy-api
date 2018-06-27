@@ -1,6 +1,4 @@
-package no.ndla.taxonomy.service;
-
-import no.ndla.taxonomy.service.domain.Rankable;
+package no.ndla.taxonomy.service.domain;
 
 import java.util.Comparator;
 import java.util.List;

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.RankableConnectionUpdater;
+import no.ndla.taxonomy.service.domain.RankableConnectionUpdater;
 import no.ndla.taxonomy.service.domain.*;
 import no.ndla.taxonomy.service.repositories.SubjectRepository;
 import no.ndla.taxonomy.service.repositories.SubjectTopicRepository;

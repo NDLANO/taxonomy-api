@@ -286,23 +286,23 @@ public class TopicSubtopicsTest extends RestTest {
     }
 
     @Test
-    public void update_subject_rank_modifies_other_contiguous_ranks() throws Exception {
+    public void update_subtopic_rank_modifies_other_contiguous_ranks() throws Exception {
         List<TopicSubtopic> topicSubtopics = createTenContiguousRankedConnections(); //creates ranks 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
         Map<String, Integer> mappedRanks = mapConnectionRanks(topicSubtopics);
 
         //make the last object the first
         TopicSubtopic updatedConnection = topicSubtopics.get(topicSubtopics.size() - 1);
         assertEquals(10, updatedConnection.getRank());
-        updateResource("/v1/topic-subtopic/" + updatedConnection.getPublicId().toString(), new TopicSubtopic.() {{
+        updateResource("/v1/topic-subtopics/" + updatedConnection.getPublicId().toString(), new TopicSubtopics.UpdateTopicSubtopicCommand() {{
             primary = true;
             rank = 1;
         }});
         assertEquals(1, updatedConnection.getRank());
 
         //verify that the other connections have been updated
-        for (SubjectTopic subjectTopic : topicSubtopics) {
-            MockHttpServletResponse response = getResource("/v1/subject-topics/" + subjectTopic.getPublicId().toString());
-            SubjectTopics.SubjectTopicIndexDocument connectionFromDb = getObject(SubjectTopics.SubjectTopicIndexDocument.class, response);
+        for (TopicSubtopic topicSubtopic : topicSubtopics) {
+            MockHttpServletResponse response = getResource("/v1/topic-subtopics/" + topicSubtopic.getPublicId().toString());
+            TopicSubtopics.TopicSubtopicIndexDocument connectionFromDb = getObject(TopicSubtopics.TopicSubtopicIndexDocument.class, response);
             //verify that the other connections have had their rank bumped up 1
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
@@ -310,6 +310,9 @@ public class TopicSubtopicsTest extends RestTest {
             }
         }
     }
+
+
+
 
     private Map<String, Integer> mapConnectionRanks(List<TopicSubtopic> topicSubtopics) {
         Map<String, Integer> mappedRanks = new HashMap<>();
