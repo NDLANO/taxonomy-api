@@ -2,7 +2,6 @@ package no.ndla.taxonomy.service.rest.v1;
 
 
 import no.ndla.taxonomy.service.domain.Subject;
-import no.ndla.taxonomy.service.domain.SubjectTopic;
 import no.ndla.taxonomy.service.domain.Topic;
 import no.ndla.taxonomy.service.domain.TopicSubtopic;
 import org.junit.Test;
@@ -281,7 +280,7 @@ public class TopicSubtopicsTest extends RestTest {
             rank = 99;
         }});
 
-        assertEquals(99,topicSubtopicRepository.getByPublicId(id).getRank());
+        assertEquals(99, topicSubtopicRepository.getByPublicId(id).getRank());
 
     }
 
@@ -311,8 +310,60 @@ public class TopicSubtopicsTest extends RestTest {
         }
     }
 
+    @Test
+    public void update_subtopic_rank_does_not_alter_noncontiguous_ranks() throws Exception {
 
+        List<TopicSubtopic> topicSubtopics = createTenNonContiguousRankedConnections(); //creates ranks 1, 2, 3, 4, 5, 60, 70, 80, 90, 100
+        Map<String, Integer> mappedRanks = mapConnectionRanks(topicSubtopics);
 
+        //make the last object the first
+        TopicSubtopic updatedConnection = topicSubtopics.get(topicSubtopics.size() - 1);
+        assertEquals(100, updatedConnection.getRank());
+        updateResource("/v1/topic-subtopics/" + updatedConnection.getPublicId().toString(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+            primary = true;
+            rank = 1;
+        }});
+        assertEquals(1, updatedConnection.getRank());
+
+        //verify that the other connections have been updated
+        for (TopicSubtopic topicSubtopic : topicSubtopics) {
+            MockHttpServletResponse response = getResource("/v1/topic-subtopics/" + topicSubtopic.getPublicId().toString());
+            TopicSubtopics.TopicSubtopicIndexDocument connectionFromDb = getObject(TopicSubtopics.TopicSubtopicIndexDocument.class, response);
+            //verify that only the contiguous connections are updated
+            if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
+                int oldRank = mappedRanks.get(connectionFromDb.id.toString());
+                if (oldRank <= 5) {
+                    assertEquals(oldRank + 1, connectionFromDb.rank);
+                } else {
+                    assertEquals(oldRank, connectionFromDb.rank);
+                }
+            }
+        }
+    }
+
+    @Test
+    public void update_subtopic_rank_higher_rank_does_not_modify_existing_connections() throws Exception {
+        List<TopicSubtopic> topicSubtopics = createTenContiguousRankedConnections();
+        Map<String, Integer> mappedRanks = mapConnectionRanks(topicSubtopics);
+
+        //set rank for last object to higher than any existing
+        TopicSubtopic updatedConnection = topicSubtopics.get(topicSubtopics.size() - 1);
+        assertEquals(10, updatedConnection.getRank());
+        updateResource("/v1/topic-subtopics/" + topicSubtopics.get(9).getPublicId().toString(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+            primary = true;
+            rank = 99;
+        }});
+        assertEquals(99, updatedConnection.getRank());
+
+        //verify that the other connections are unchanged
+        for (TopicSubtopic topicSubtopic : topicSubtopics) {
+            MockHttpServletResponse response = getResource("/v1/topic-subtopics/" + topicSubtopic.getPublicId().toString());
+            TopicSubtopics.TopicSubtopicIndexDocument connection = getObject(TopicSubtopics.TopicSubtopicIndexDocument.class, response);
+            if (!connection.id.equals(updatedConnection.getPublicId())) {
+                assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);
+            }
+        }
+    }
 
     private Map<String, Integer> mapConnectionRanks(List<TopicSubtopic> topicSubtopics) {
         Map<String, Integer> mappedRanks = new HashMap<>();
@@ -321,7 +372,6 @@ public class TopicSubtopicsTest extends RestTest {
         }
         return mappedRanks;
     }
-
 
 
     private List<TopicSubtopic> createTenContiguousRankedConnections() {
@@ -343,9 +393,9 @@ public class TopicSubtopicsTest extends RestTest {
         for (int i = 1; i < 11; i++) {
             Topic sub = newTopic();
             TopicSubtopic topicSubtopic = parent.addSubtopic(sub);
-            if(i <= 5){
-            topicSubtopic.setRank(i);}
-            else {
+            if (i <= 5) {
+                topicSubtopic.setRank(i);
+            } else {
                 topicSubtopic.setRank(i * 10);
             }
             connections.add(topicSubtopic);
