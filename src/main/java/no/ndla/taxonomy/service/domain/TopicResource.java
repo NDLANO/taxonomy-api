@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.UUID;
 
 @Entity
-public class TopicResource extends DomainEntity {
+public class TopicResource extends DomainEntity implements Rankable {
 
     @ManyToOne
     @JoinColumn(name = "topic_id")
@@ -51,7 +51,7 @@ public class TopicResource extends DomainEntity {
     }
 
     public String toString() {
-        return "TopicResource: { " + topic.getName() + " " + topic.getPublicId() + " -> " + resource.getName() + " " + resource.getPublicId() + " " + (isPrimary() ? "P" : "") +  " " + rank + "}";
+        return "TopicResource: { " + topic.getName() + " " + topic.getPublicId() + " -> " + resource.getName() + " " + resource.getPublicId() + " " + (isPrimary() ? "P" : "") + " " + rank + "}";
     }
 
     public void setRank(int rank) {

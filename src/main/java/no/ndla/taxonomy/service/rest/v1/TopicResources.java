@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.domain.PrimaryParentRequiredException;
-import no.ndla.taxonomy.service.domain.Resource;
-import no.ndla.taxonomy.service.domain.Topic;
-import no.ndla.taxonomy.service.domain.TopicResource;
+import no.ndla.taxonomy.service.domain.*;
 import no.ndla.taxonomy.service.repositories.ResourceRepository;
 import no.ndla.taxonomy.service.repositories.TopicRepository;
 import no.ndla.taxonomy.service.repositories.TopicResourceRepository;
@@ -19,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @RestController
@@ -63,9 +61,17 @@ public class TopicResources {
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Resource resource = resourceRepository.getByPublicId(command.resourceId);
 
-        TopicResource topicResource = Boolean.FALSE.equals(command.primary) ? topic.addSecondaryResource(resource): topic.addResource(resource);
-        topicResource.setRank(command.rank);
+        TopicResource topicResource = Boolean.FALSE.equals(command.primary) ? topic.addSecondaryResource(resource) : topic.addResource(resource);
 
+        List<TopicResource> connectionsForTopic = topicResourceRepository.findByTopic(topic);
+        connectionsForTopic.sort(Comparator.comparingInt(TopicResource::getRank));
+        if (command.rank == 0) {
+            TopicResource highestRankedConnection = connectionsForTopic.get(connectionsForTopic.size() - 1);
+            topicResource.setRank(highestRankedConnection.getRank() + 1);
+        } else {
+            List<TopicResource> rankedConnections = RankableConnectionUpdater.rank(connectionsForTopic, topicResource, command.rank);
+            topicResourceRepository.save(rankedConnections);
+        }
         topicResourceRepository.save(topicResource);
 
         URI location = URI.create("/topic-resources/" + topicResource.getPublicId());
@@ -92,12 +98,17 @@ public class TopicResources {
                     @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand
                             command) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
-        topicResource.setRank(command.rank);
+        Topic topic = topicResource.getTopic();
+
         if (command.primary) {
             topicResource.setPrimary(true);
+            topicResourceRepository.save(topicResource);
         } else if (topicResource.isPrimary() && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
+        List<TopicResource> existingConnections = topicResourceRepository.findByTopic(topic);
+        List<TopicResource> rankedConnections = RankableConnectionUpdater.rank(existingConnections, topicResource, command.rank);
+        topicResourceRepository.save(rankedConnections);
     }
 
     public static class AddResourceToTopicCommand {
