@@ -1,10 +1,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 
-import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.domain.SubjectTopic;
-import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.domain.TopicSubtopic;
+import no.ndla.taxonomy.domain.*;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -142,15 +139,14 @@ public class SubjectTopicsTest extends RestTest {
             //verify that only the contiguous connections are updated
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
-                if(oldRank <= 5) {
+                if (oldRank <= 5) {
                     assertEquals(oldRank + 1, connectionFromDb.rank);
-                } else{
+                } else {
                     assertEquals(oldRank, connectionFromDb.rank);
                 }
             }
         }
     }
-
 
 
     @Test
@@ -175,6 +171,17 @@ public class SubjectTopicsTest extends RestTest {
                 assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);
             }
         }
+    }
+
+    @Test
+    public void update_subject_rank_no_existing_connections_returns_single_connection() throws Exception {
+        Subject s = new Subject();
+        Topic t = new Topic();
+
+        SubjectTopic st = new SubjectTopic(s,t);
+        List<SubjectTopic> rankedList = SubjectTopicRankUpdater.rank(new ArrayList<>(), st, 99);
+        assertEquals(1, rankedList.size());
+
     }
 
     @Test
