@@ -4,13 +4,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.repositories.SubjectRepository;
+import no.ndla.taxonomy.repositories.SubjectTopicRepository;
+import no.ndla.taxonomy.repositories.TopicRepository;
+import no.ndla.taxonomy.domain.SubjectTopicRankUpdater;
 import no.ndla.taxonomy.domain.PrimaryParentRequiredException;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.repositories.SubjectTopicRepository;
-import no.ndla.taxonomy.repositories.TopicRepository;
+
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @RestController
@@ -67,8 +71,21 @@ public class SubjectTopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
 
         SubjectTopic subjectTopic = subject.addTopic(topic);
-        subjectTopic.setRank(command.rank);
-        if (command.primary) topic.setPrimarySubject(subject);
+
+        if (command.primary) {
+            topic.setPrimarySubject(subject);
+        }
+
+        List<SubjectTopic> connectionsForSubject = subjectTopicRepository.findBySubject(subject);
+        connectionsForSubject.sort(Comparator.comparingInt(SubjectTopic::getRank));
+        if (command.rank == 0) {
+            SubjectTopic highestRankingConnection = connectionsForSubject.get(connectionsForSubject.size() - 1);
+            subjectTopic.setRank(highestRankingConnection.getRank() + 1);
+        } else {
+            List<SubjectTopic> rankedConnections = SubjectTopicRankUpdater.rank(connectionsForSubject, subjectTopic, command.rank);
+            subjectTopicRepository.save(rankedConnections);
+        }
+
         subjectTopicRepository.save(subjectTopic);
 
         URI location = URI.create("/subject-topics/" + subjectTopic.getPublicId());
@@ -95,13 +112,17 @@ public class SubjectTopics {
         Topic topic = subjectTopic.getTopic();
         Subject subject = subjectTopic.getSubject();
 
-        subjectTopic.setRank(command.rank);
+        List<SubjectTopic> existingConnections = subjectTopicRepository.findBySubject(subject);
+        List<SubjectTopic> rankedConnections = SubjectTopicRankUpdater.rank(existingConnections, subjectTopic, command.rank);
+        subjectTopicRepository.save(rankedConnections);
+
         if (command.primary) {
             topic.setPrimarySubject(subject);
         } else if (subjectTopic.isPrimary() && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
     }
+
 
     public static class AddTopicToSubjectCommand {
         @JsonProperty
@@ -124,7 +145,7 @@ public class SubjectTopics {
 
     public static class UpdateSubjectTopicCommand {
         @JsonProperty
-        @ApiModelProperty(required = true, value = "connection id", example = "urn:subject-has-topics:2")
+        @ApiModelProperty(required = true, value = "connection id", example = "urn:subject-topic:2")
         public URI id;
 
         @JsonProperty
