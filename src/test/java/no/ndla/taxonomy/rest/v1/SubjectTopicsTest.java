@@ -179,7 +179,7 @@ public class SubjectTopicsTest extends RestTest {
         Topic t = new Topic();
 
         SubjectTopic st = new SubjectTopic(s,t);
-        List<SubjectTopic> rankedList = SubjectTopicRankUpdater.rank(new ArrayList<>(), st, 99);
+        List<SubjectTopic> rankedList = RankableConnectionUpdater.rank(new ArrayList<>(), st, 99);
         assertEquals(1, rankedList.size());
 
     }
