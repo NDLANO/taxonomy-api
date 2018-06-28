@@ -1,6 +1,6 @@
 select
-  ts.public_id as connection_id,
-  'parent-topic' as connection_type,
+  ts.public_id     as connection_id,
+  'parent-topic'   as connection_type,
   ts.is_primary,
   parent.public_id as target_id,
   c."path"
