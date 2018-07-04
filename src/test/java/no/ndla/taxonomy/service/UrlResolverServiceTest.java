@@ -45,7 +45,7 @@ public class UrlResolverServiceTest {
                         .publicId(nodeId)
                 )
         );
-        final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
+        final String oldUrl = "ndla.no/node/183926?fag=127013";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
         entityManager.persist(urlMapping);
         entityManager.flush();
@@ -57,7 +57,28 @@ public class UrlResolverServiceTest {
 
     @Test
     @Transactional
-    public void resolveOldUrlNoSubjectPrimaryPath() {
+    public void resolveOldUrlWithLanguage() {
+        final String subjectId = "urn:subject:11";
+        final String nodeId = "urn:topic:1:183926";
+        builder.subject(s -> s
+                .publicId(subjectId)
+                .topic(t -> t
+                        .publicId(nodeId)
+                )
+        );
+        final String oldUrl = "ndla.no/node/183926?fag=127013";
+        UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
+        entityManager.persist(urlMapping);
+        entityManager.flush();
+
+        String path = urlResolverService.resolveUrl("ndla.no/nb/node/183926?fag=127013");
+
+        assertEquals("/subject:11/topic:1:183926", path);
+    }
+
+    @Test
+    @Transactional
+    public void resolveOldUrlWhenNoSubjectImportedToPrimaryPath() {
         String nodeId = "urn:topic:1:183926";
         builder.subject(s -> s
                 .publicId("urn:subject:2")
@@ -65,7 +86,7 @@ public class UrlResolverServiceTest {
                         .publicId(nodeId)
                 )
         );
-        String oldUrl = "ndla.no/nb/node/183926?fag=127013";
+        String oldUrl = "ndla.no/node/183926?fag=127013";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId));
         entityManager.persist(urlMapping);
         entityManager.flush();
@@ -77,6 +98,47 @@ public class UrlResolverServiceTest {
 
     @Test
     @Transactional
+    public void resolveOldUrlWhenNoSubjectImportedOrQueriedToPrimaryPath() {
+        String nodeId = "urn:topic:1:183926";
+        builder.subject(s -> s
+                .publicId("urn:subject:2")
+                .topic(t -> t
+                        .publicId(nodeId)
+                )
+        );
+        String oldUrl = "ndla.no/node/183926";
+        UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId));
+        entityManager.persist(urlMapping);
+        entityManager.flush();
+
+        String path = urlResolverService.resolveUrl(oldUrl);
+
+        assertEquals("/subject:2/topic:1:183926", path);
+    }
+
+    @Test
+    @Transactional
+    public void resolveOldUrlWhenSubjectImportedButNotQueriedToPrimaryPath() {
+        final String subjectId = "urn:subject:11";
+        String nodeId = "urn:topic:1:183926";
+        builder.subject(s -> s
+                .publicId(subjectId)
+                .topic(t -> t
+                        .publicId(nodeId)
+                )
+        );
+        String oldUrl = "ndla.no/node/183926?fag=127013";
+        UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
+        entityManager.persist(urlMapping);
+        entityManager.flush();
+
+        String path = urlResolverService.resolveUrl("ndla.no/node/183926");
+
+        assertEquals("/subject:11/topic:1:183926", path);
+    }
+
+    @Test
+    @Transactional
     public void resolveOldUrlBadSubjectPrimaryPath() {
         builder.subject(s -> s
                 .publicId("urn:subject:2")
@@ -84,7 +146,7 @@ public class UrlResolverServiceTest {
                         .publicId("urn:topic:1:183926")
                 )
         );
-        String oldUrl = "ndla.no/nb/node/183926?fag=127013";
+        String oldUrl = "ndla.no/node/183926?fag=127013";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id("urn:topic:1:183926").subject_id("urn:subject:11"));
         entityManager.persist(urlMapping);
         entityManager.flush();

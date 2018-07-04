@@ -10,6 +10,8 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.setQueryParameters;
@@ -73,8 +75,9 @@ public class UrlResolverService {
     }
 
     private List<UrlMapping> getCachedUrlOldRig(String oldUrl) {
-        final String sql = "SELECT PUBLIC_ID, SUBJECT_ID FROM URL_MAP WHERE OLD_URL=?";
-        final List<UrlMapping> query = jdbcTemplate.query(sql, setQueryParameters(asList(oldUrl)),
+        String canonicalUrl = canonify(oldUrl) + "%";
+        final String sql = "SELECT PUBLIC_ID, SUBJECT_ID FROM URL_MAP WHERE OLD_URL LIKE ?";
+        final List<UrlMapping> query = jdbcTemplate.query(sql, setQueryParameters(asList(canonicalUrl)),
                 (resultSet, rowNum) -> new UrlMapping() {{
                     setPublic_id(resultSet.getString("public_id"));
                     if (resultSet.getString("subject_id") != null) {
@@ -83,6 +86,30 @@ public class UrlResolverService {
                 }}
         );
         return query;
+    }
+
+    private String canonify(String oldUrl) {
+        String nodeId = "";
+        String fagId = "";
+        for (String token : tokenize(oldUrl)) {
+            if (!token.contains("=")) {
+                int nodeStartsAt = findNodeStartsAt(token);
+                nodeId = token.substring(nodeStartsAt);
+            } else if (token.contains("fag=")) {
+                fagId = "?" + token.substring(token.indexOf("fag="));
+            }
+        }
+        return "ndla.no" + nodeId + fagId;
+    }
+
+    private int findNodeStartsAt(String token) {
+        return token.substring(0, token.lastIndexOf("/")).lastIndexOf("/");
+    }
+
+    private List<String> tokenize(String oldUrl) {
+        return Collections.list(new StringTokenizer(oldUrl, "?")).stream()
+                .map(token -> (String) token)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -95,7 +122,7 @@ public class UrlResolverService {
      * @throws NodeIdNotFoundExeption if node ide not found in taxonomy
      */
     public Boolean putUrlMapping(String oldUrl, URI nodeId, URI subjectId) throws NodeIdNotFoundExeption {
-
+        oldUrl = canonify(oldUrl);
         if (getAllPaths(nodeId).isEmpty())
             throw new NodeIdNotFoundExeption("Node id not found in taxonomy for " + oldUrl);
         if (getCachedUrlOldRig(oldUrl).isEmpty()) {
@@ -106,9 +133,6 @@ public class UrlResolverService {
             jdbcTemplate.update(sql, nodeId.toString(), subjectId.toString(), oldUrl);
         }
 
-        if (oldUrl.contains("?fag=")) {
-            return putUrlMapping(oldUrl.substring(0, oldUrl.indexOf("?fag=")), nodeId, subjectId);
-        }
         return true;
     }
 
