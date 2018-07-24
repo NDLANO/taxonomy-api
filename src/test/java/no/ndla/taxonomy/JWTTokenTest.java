@@ -19,7 +19,7 @@ public class JWTTokenTest {
     public void no_taxonomy_in_jwt_token_gives_read_permission() {
         DecodedJWT jwt = JWT.decode(authorizationHeader.substring(6).trim());
 
-        JWTToken token = new JWTToken(jwt);
+        JWTAuthentication token = new JWTAuthentication(jwt);
         assertTrue(token.isAuthenticated());
         assertEquals(1, token.getAuthorities().size());
     }
@@ -32,7 +32,7 @@ public class JWTTokenTest {
         Claim claim = Mockito.mock(Claim.class);
         when(claim.asString()).thenReturn("taxonomy-prod:write drafts-staging:write articles-test:publish images-prod:write listing-test:write articles-brukertest:write listing-prod:write articles-test:write articles-staging:write listing-brukertest:write images-staging:write images-test:write articles-prod:publish articles-brukertest:publish drafts-test:set_to_publish listing-staging:write audio-brukertest:write drafts-prod:write images-brukertest:write drafts-test:write audio-prod:write audio-test:write articles-staging:publish articles-prod:write drafts-staging:set_to_publish audio-staging:write drafts-brukertest:set_to_publish drafts-prod:set_to_publish drafts-brukertest:write drafts-taxonomy:write ");
         when(mockDecodedJWT.getClaim("scope")).thenReturn(claim);
-        JWTToken token = new JWTToken(mockDecodedJWT);
+        JWTAuthentication token = new JWTAuthentication(mockDecodedJWT);
         assertEquals(2, token.getAuthorities().size());
         assertAnyTrue(token.getAuthorities(), au -> "TAXONOMY_WRITE".equals(au.getAuthority()));
     }

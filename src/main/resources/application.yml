@@ -23,8 +23,9 @@ logging.graylog.host: ""
 
 springfox.documentation.swagger.v2.path: /api-docs
 
-auth0.issuer: https://ndla.eu.auth0.com/
-auth0.jwks.kid: OEI1MUU4ODk5NzM5MzI2MzZDODk1N0YwQzdDMDQyODVCQzQ3QTI0MA
+auth0:
+  issuer: https://ndla.eu.auth0.com/
+  jwks.kid: OEI1MUU4ODk5NzM5MzI2MzZDODk1N0YwQzdDMDQyODVCQzQ3QTI0MA
 
 ---
 
