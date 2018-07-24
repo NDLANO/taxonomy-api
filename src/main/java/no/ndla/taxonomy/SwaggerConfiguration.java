@@ -8,13 +8,15 @@ import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.builders.ResponseMessageBuilder;
 import springfox.documentation.schema.ModelRef;
-import springfox.documentation.service.*;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.service.ApiKey;
+import springfox.documentation.service.Header;
 import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import java.net.URI;
+import java.util.Collections;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
@@ -29,8 +31,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 @EnableSwagger2
 public class SwaggerConfiguration {
 
-    private AuthorizationScope oauthScope = new AuthorizationScope("taxonomy:all", "taxonomy:all");
-
     @Bean
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
@@ -40,8 +40,7 @@ public class SwaggerConfiguration {
                 .build()
                 .pathMapping("/")
                 .apiInfo(apiInfo())
-                .securitySchemes(newArrayList(oauth()))
-                .securityContexts(newArrayList(securityContext()))
+                .securitySchemes(Collections.singletonList(new ApiKey("Authorization", "Bearer", "header")))
                 .directModelSubstitute(URI.class, String.class)
                 .useDefaultResponseMessages(false)
                 .produces(newHashSet(APPLICATION_JSON_UTF8.toString()))
@@ -84,28 +83,11 @@ public class SwaggerConfiguration {
                                 .code(HttpStatus.CONFLICT.value())
                                 .message(CONFLICT.getReasonPhrase())
                                 .build()
-                ))
-                ;
-    }
-
-    private SecurityContext securityContext() {
-        return SecurityContext.builder()
-                .securityReferences(newArrayList(new SecurityReference("oauth2", new AuthorizationScope[]{oauthScope})))
-                .forPaths(s -> s.startsWith("/v1/"))
-                .build();
-    }
-
-    private SecurityScheme oauth() {
-        return new OAuth("oauth2", newArrayList(oauthScope), newArrayList(new ClientCredentialsGrant("/auth/tokens"))) {
-            @Override
-            public String getType() {
-                return super.getType();
-            }
-        };
+                ));
     }
 
     private ApiInfo apiInfo() {
-        ApiInfo apiInfo = new ApiInfo(
+        return new ApiInfo(
                 "NDLA Taxonomy API",
                 "Rest service and graph database for organizing content." +
                         "\n\n" +
@@ -119,8 +101,6 @@ public class SwaggerConfiguration {
                 "https://www.gnu.org/licenses/gpl-3.0.en.html",
                 emptyList()
         );
-
-        return apiInfo;
     }
 
 }

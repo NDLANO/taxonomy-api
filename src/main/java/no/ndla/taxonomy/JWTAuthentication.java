@@ -2,29 +2,28 @@ package no.ndla.taxonomy;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.*;
 
-public class JWTToken implements Authentication {
+public class JWTAuthentication implements Authentication {
 
     private static final long serialVersionUID = 1L;
     private static final String TAXONOMY_API = "taxonomy";
     private static final String WRITE_PERMISSION = "write";
     private static final String PRODUCTION = "prod";
 
-    private DecodedJWT jwt;
     private Collection<GrantedAuthority> authorities;
     private boolean authenticated;
     private Map<String, Claim> claims;
+    private static final Logger LOGGER = LoggerFactory.getLogger(JWTAuthentication.class);
 
-    public JWTToken(DecodedJWT jwt) {
-
-        this.jwt = jwt;
-
-        Claim appMetadata = this.jwt.getClaim("scope");
+    public JWTAuthentication(DecodedJWT token) {
+        Claim appMetadata = token.getClaim("scope");
 
         List<GrantedAuthority> tmp = new ArrayList<>();
         tmp.add(new SimpleGrantedAuthority("READONLY"));
@@ -38,20 +37,12 @@ public class JWTToken implements Authentication {
                 }
             }
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            LOGGER.error("JWT Authentication failed", e);
         }
 
         this.authorities = Collections.unmodifiableList(tmp);
-        this.claims = jwt.getClaims();
+        this.claims = token.getClaims();
         authenticated = true;
-    }
-
-    public DecodedJWT getJwt() {
-        return jwt;
-    }
-
-    public Map<String, Claim> getClaims() {
-        return claims;
     }
 
     @Override
