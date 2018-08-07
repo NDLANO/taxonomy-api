@@ -110,7 +110,7 @@ public class Filters extends CrudController<Filter> {
         filter.setSubject(subjectRepository.getByPublicId(command.subjectId));
     }
 
-    @ApiModel("FilterIndexDocument")
+    @ApiModel("Filters.FilterIndexDocument")
     public static class FilterIndexDocument {
         @JsonProperty
         @ApiModelProperty(example = "urn:filter:1")
