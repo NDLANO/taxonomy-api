@@ -21,7 +21,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -41,8 +40,9 @@ public class AuthFilter extends GenericFilterBean {
     @Value(value = "${auth0.jwks.kid}")
     private String kid;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthFilter.class);
     private RSAPublicKey publicKey;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthFilter.class);
 
     @EventListener(ApplicationReadyEvent.class)
     public void initializePublicKeyOnApplicationStartup() {
@@ -56,7 +56,7 @@ public class AuthFilter extends GenericFilterBean {
     }
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException {
         try {
             parseWebToken((HttpServletRequest) servletRequest);
             filterChain.doFilter(servletRequest, servletResponse);
