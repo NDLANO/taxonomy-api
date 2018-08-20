@@ -14,6 +14,7 @@ import javax.transaction.Transactional;
 import java.net.URI;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -54,6 +55,31 @@ public class UrlResolverServiceTest {
 
         assertEquals("/subject:11/topic:1:183926", path);
     }
+
+
+    @Test()
+    @Transactional
+    public void queryShouldNotMatchSimilarlyNamedNode() {
+        String oldUrl = "ndla.no/node/54";
+        String otherSubjectId = "urn:subject:1";
+        String otherTopicId = "urn:topic:1:54321";
+        String otherTopicUrl = "ndla.no/node/54321";
+
+        //create another topic and mapping that should NOT match the query for the url above
+        builder.subject(s -> s
+                .publicId(otherSubjectId)
+                .topic(t -> t
+                        .publicId("urn:topic:1:54321")
+                )
+        );
+
+        entityManager.persist(builder.urlMapping(c -> c.oldUrl(otherTopicUrl).public_id(otherTopicId).subject_id(otherSubjectId)));
+        entityManager.flush();
+
+        String path = urlResolverService.resolveUrl(oldUrl);
+        assertNull(path);
+    }
+
 
     @Test
     @Transactional
