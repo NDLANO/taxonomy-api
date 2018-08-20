@@ -3,14 +3,12 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.UrlMapping;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.net.URI;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
@@ -76,16 +74,34 @@ public class UrlResolverService {
 
     private List<UrlMapping> getCachedUrlOldRig(String oldUrl) {
         String canonicalUrl = canonify(oldUrl) + "%";
-        final String sql = "SELECT PUBLIC_ID, SUBJECT_ID FROM URL_MAP WHERE OLD_URL LIKE ?";
-        final List<UrlMapping> query = jdbcTemplate.query(sql, setQueryParameters(asList(canonicalUrl)),
-                (resultSet, rowNum) -> new UrlMapping() {{
+
+        final String sql = "SELECT OLD_URL, PUBLIC_ID, SUBJECT_ID FROM URL_MAP WHERE OLD_URL LIKE ?";
+        List<UrlMapping> result = new ArrayList<>();
+        jdbcTemplate.query(sql, setQueryParameters(asList(canonicalUrl)), (RowCallbackHandler) resultSet -> {
+            String matchedUrl = resultSet.getString("old_url");
+            //the LIKE query may match node IDs that __start with__ the same node ID as in old url
+            //e.g. oldUrl /node/54 should not match /node/54321 - therefore we add only if IDs match
+            if (getNodeId(oldUrl).equals(getNodeId(matchedUrl))) {
+                result.add(new UrlMapping() {{
                     setPublic_id(resultSet.getString("public_id"));
                     if (resultSet.getString("subject_id") != null) {
                         setSubject_id(resultSet.getString("subject_id"));
                     }
-                }}
-        );
-        return query;
+                }});
+            }
+        });
+        return result;
+    }
+
+    private String getNodeId(String url) {
+        if (url != null) {
+            if (url.contains("?") && url.contains("/")) {
+                return url.substring(url.lastIndexOf("/"), url.indexOf("?"));
+            } else if (url.contains("/")) {
+                return url.substring(url.lastIndexOf("/"));
+            }
+        }
+        return null;
     }
 
     private String canonify(String oldUrl) {
