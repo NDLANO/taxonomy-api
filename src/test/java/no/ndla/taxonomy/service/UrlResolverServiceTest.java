@@ -59,7 +59,7 @@ public class UrlResolverServiceTest {
 
     @Test()
     @Transactional
-    public void queryShouldNotMatchSimilarlyNamedNode() {
+    public void queryForNonExistingNodeShouldNotMatchSimilarNodeId() {
         String oldUrl = "ndla.no/node/54";
         String otherSubjectId = "urn:subject:1";
         String otherTopicId = "urn:topic:1:54321";
@@ -72,7 +72,6 @@ public class UrlResolverServiceTest {
                         .publicId("urn:topic:1:54321")
                 )
         );
-
         entityManager.persist(builder.urlMapping(c -> c.oldUrl(otherTopicUrl).public_id(otherTopicId).subject_id(otherSubjectId)));
         entityManager.flush();
 
