@@ -29,7 +29,7 @@ public class JWTAuthentication implements Authentication {
         tmp.add(new SimpleGrantedAuthority("READONLY"));
 
         try {
-            if(appMetadata != null) {
+            if(appMetadata != null && appMetadata.asString() != null) {
                 final String[] allPermissions = appMetadata.asString().split(" ");
                 for (String jwtPermissionString : allPermissions) {
                     final JWTPermission jwtPermission = new JWTPermission(jwtPermissionString);

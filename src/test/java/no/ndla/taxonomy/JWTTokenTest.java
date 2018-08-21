@@ -39,8 +39,13 @@ public class JWTTokenTest {
 
     @Test
     public void no_scope_gives_readonly() {
+
+        DecodedJWT jwt = JWT.decode(authorizationHeader.substring(6).trim());
+
         final DecodedJWT mockDecodedJWT = Mockito.mock(DecodedJWT.class);
-        when(mockDecodedJWT.getClaim("scope")).thenReturn(null);
+        Claim claim = Mockito.mock(Claim.class);
+        when(claim.asString()).thenReturn(null);
+        when(mockDecodedJWT.getClaim("scope")).thenReturn(claim);
         JWTAuthentication token = new JWTAuthentication(mockDecodedJWT);
         assertEquals(1, token.getAuthorities().size());
         assertAnyTrue(token.getAuthorities(), au -> "READONLY".equals(au.getAuthority()));
