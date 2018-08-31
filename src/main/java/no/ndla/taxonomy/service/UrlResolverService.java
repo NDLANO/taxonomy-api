@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
 import java.net.URI;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.setQueryParameters;
@@ -21,6 +20,7 @@ import static no.ndla.taxonomy.jdbc.QueryUtils.setQueryParameters;
 public class UrlResolverService {
 
     private JdbcTemplate jdbcTemplate;
+    private OldUrlCanonifier canonifier = new OldUrlCanonifier();
 
     @Autowired
     public UrlResolverService(DataSource dataSource) {
@@ -73,8 +73,7 @@ public class UrlResolverService {
     }
 
     private List<UrlMapping> getCachedUrlOldRig(String oldUrl) {
-        String canonicalUrl = canonify(oldUrl) + "%";
-
+        String canonicalUrl = canonifier.canonify(oldUrl) + "%";
         final String sql = "SELECT OLD_URL, PUBLIC_ID, SUBJECT_ID FROM URL_MAP WHERE OLD_URL LIKE ?";
         List<UrlMapping> result = new ArrayList<>();
         jdbcTemplate.query(sql, setQueryParameters(asList(canonicalUrl)), (RowCallbackHandler) resultSet -> {
@@ -104,30 +103,6 @@ public class UrlResolverService {
         return null;
     }
 
-    private String canonify(String oldUrl) {
-        String nodeId = "";
-        String fagId = "";
-        for (String token : tokenize(oldUrl)) {
-            if (!token.contains("=")) {
-                int nodeStartsAt = findNodeStartsAt(token);
-                nodeId = token.substring(nodeStartsAt);
-            } else if (token.contains("fag=")) {
-                fagId = "?" + token.substring(token.indexOf("fag="));
-            }
-        }
-        return "ndla.no" + nodeId + fagId;
-    }
-
-    private int findNodeStartsAt(String token) {
-        return token.substring(0, token.lastIndexOf("/")).lastIndexOf("/");
-    }
-
-    private List<String> tokenize(String oldUrl) {
-        return Collections.list(new StringTokenizer(oldUrl, "?")).stream()
-                .map(token -> (String) token)
-                .collect(Collectors.toList());
-    }
-
     /**
      * put old url into URL_MAP
      *
@@ -138,7 +113,7 @@ public class UrlResolverService {
      * @throws NodeIdNotFoundExeption if node ide not found in taxonomy
      */
     public Boolean putUrlMapping(String oldUrl, URI nodeId, URI subjectId) throws NodeIdNotFoundExeption {
-        oldUrl = canonify(oldUrl);
+        oldUrl = canonifier.canonify(oldUrl);
         if (getAllPaths(nodeId).isEmpty())
             throw new NodeIdNotFoundExeption("Node id not found in taxonomy for " + oldUrl);
         if (getCachedUrlOldRig(oldUrl).isEmpty()) {
@@ -148,7 +123,6 @@ public class UrlResolverService {
             String sql = "UPDATE URL_MAP SET PUBLIC_ID=?, SUBJECT_ID=? WHERE OLD_URL=?";
             jdbcTemplate.update(sql, nodeId.toString(), subjectId.toString(), oldUrl);
         }
-
         return true;
     }
 
