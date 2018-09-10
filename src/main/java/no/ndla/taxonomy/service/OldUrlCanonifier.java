@@ -6,11 +6,11 @@ package no.ndla.taxonomy.service;
  */
 public class OldUrlCanonifier {
 
-    private static final String[] KNOWN_NODE_PREFIXES = new String[]{"printpdf", "easyreader", "h5p/embed", "h5pcontent"};
+    private static final String[] KNOWN_NODE_PREFIXES = new String[]{"printpdf", "easyreader", "h5p/embed", "h5pcontent", "aktualitet", "package", "fagstoff", "oppgave"};
     private static final String[] KNOWN_NODE_SUFFIXES = new String[]{"/menu", "/oembed", "/download"};
 
 
-    String canonify(String oldUrl) {
+    public String canonify(String oldUrl) {
         oldUrl = replaceKnownNodePrefixes(oldUrl);
         oldUrl = discardKnownNodeSuffixes(oldUrl);
         String nodeId = "";
