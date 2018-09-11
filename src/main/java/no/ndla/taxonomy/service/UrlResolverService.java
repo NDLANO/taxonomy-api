@@ -73,14 +73,15 @@ public class UrlResolverService {
     }
 
     private List<UrlMapping> getCachedUrlOldRig(String oldUrl) {
-        String canonicalUrl = canonifier.canonify(oldUrl) + "%";
-        final String sql = "SELECT OLD_URL, PUBLIC_ID, SUBJECT_ID FROM URL_MAP WHERE OLD_URL LIKE ?";
+        String canonicalUrl = canonifier.canonify(oldUrl);
+        String queryUrl = canonicalUrl + "%";
+        final String sql = "SELECT old_url, public_id, subject_id FROM URL_MAP WHERE old_url LIKE ?";
         List<UrlMapping> result = new ArrayList<>();
-        jdbcTemplate.query(sql, setQueryParameters(asList(canonicalUrl)), (RowCallbackHandler) resultSet -> {
+        jdbcTemplate.query(sql, setQueryParameters(asList(queryUrl)), (RowCallbackHandler) resultSet -> {
             String matchedUrl = resultSet.getString("old_url");
             //the LIKE query may match node IDs that __start with__ the same node ID as in old url
             //e.g. oldUrl /node/54 should not match /node/54321 - therefore we add only if IDs match
-            if (getNodeId(oldUrl).equals(getNodeId(matchedUrl))) {
+            if (getNodeId(canonicalUrl).equals(getNodeId(matchedUrl))) {
                 result.add(new UrlMapping() {{
                     setPublic_id(resultSet.getString("public_id"));
                     if (resultSet.getString("subject_id") != null) {

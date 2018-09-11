@@ -6,8 +6,8 @@ package no.ndla.taxonomy.service;
  */
 public class OldUrlCanonifier {
 
-    private static final String[] KNOWN_NODE_PREFIXES = new String[]{"printpdf", "easyreader", "h5p/embed", "h5pcontent", "aktualitet", "package", "fagstoff", "oppgave"};
-    private static final String[] KNOWN_NODE_SUFFIXES = new String[]{"/menu", "/oembed", "/download"};
+    private static final String[] KNOWN_NODE_PREFIXES = new String[]{"printpdf", "easyreader", "h5p/embed", "h5pcontent", "aktualitet", "package", "fagstoff", "oppgave", "print"};
+    private static final String[] KNOWN_NODE_SUFFIXES = new String[]{"/menu", "/oembed", "/download", "/lightbox"};
 
 
     public String canonify(String oldUrl) {
