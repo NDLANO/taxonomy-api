@@ -532,11 +532,13 @@ public class Subjects extends CrudController<Subject> {
                 Set<SubTopicIndexDocument> result = new HashSet<>();
                 List<URI> filtersInQuery = asList(filterIds);
                 for (SubTopicIndexDocument doc : queryresult) {
-                    if (filtersInQuery.contains(doc.filterPublicId)){
-                        result.add(doc);
-                        SubTopicIndexDocument current = doc;
-                        while ((current = topics.get(current.parent)) != null) {
-                            result.add(current);
+                    for (TopicFilterIndexDocument filterInDoc : doc.filters) {
+                        if (filtersInQuery.contains(filterInDoc.id)) {
+                            result.add(doc);
+                            SubTopicIndexDocument current = doc;
+                            while ((current = topics.get(current.parent)) != null) {
+                                result.add(current);
+                            }
                         }
                     }
                 }
