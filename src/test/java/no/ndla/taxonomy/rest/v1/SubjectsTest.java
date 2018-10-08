@@ -2,6 +2,7 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.domain.*;
+import org.junit.After;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -174,6 +175,50 @@ public class SubjectsTest extends RestTest {
 
         Topic child = builder.topic("child");
         assertEquals(first(child.subtopics).getPublicId(), topics[2].connectionId);
+    }
+
+
+    @Test
+    public void recursive_topics_are_ordered_by_rank_relative_to_parent() throws Exception {
+        executeSqlScript("classpath:recursive_topics_test_setup.sql", false);
+        MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/topics?recursive=true");
+        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
+        assertEquals(8, topics.length);
+        assertEquals("urn:topic:1", topics[0].id.toString());
+        assertEquals("urn:topic:2", topics[1].id.toString());
+        assertEquals("urn:topic:3", topics[2].id.toString());
+        assertEquals("urn:topic:4", topics[3].id.toString());
+        assertEquals("urn:topic:5", topics[4].id.toString());
+        assertEquals("urn:topic:6", topics[5].id.toString());
+        assertEquals("urn:topic:7", topics[6].id.toString());
+        assertEquals("urn:topic:8", topics[7].id.toString());
+    }
+
+
+    @Test
+    public void recursive_topics_with_filter_are_ordered_relative_to_parent() throws Exception {
+        executeSqlScript("classpath:recursive_topics_with_filters_test_setup.sql", false);
+
+        //test filter 1
+        MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/topics?recursive=true&filter=urn:filter:1");
+        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
+        assertEquals(5, topics.length);
+        assertEquals("urn:topic:1", topics[0].id.toString());
+        assertEquals("urn:topic:2", topics[1].id.toString());
+        assertEquals("urn:topic:5", topics[2].id.toString());
+        assertEquals("urn:topic:6", topics[3].id.toString());
+        assertEquals("urn:topic:7", topics[4].id.toString());
+
+        //test filter 2
+        MockHttpServletResponse response2 = getResource("/v1/subjects/urn:subject:1/topics?recursive=true&filter=urn:filter:2");
+        Subjects.SubTopicIndexDocument[] topics2 = getObject(Subjects.SubTopicIndexDocument[].class, response2);
+        assertEquals(4, topics2.length);
+        assertEquals("urn:topic:3", topics2[0].id.toString());
+        assertEquals("urn:topic:4", topics2[1].id.toString());
+        assertEquals("urn:topic:5", topics2[2].id.toString());
+        assertEquals("urn:topic:8", topics2[3].id.toString());
+
+
     }
 
     @Test

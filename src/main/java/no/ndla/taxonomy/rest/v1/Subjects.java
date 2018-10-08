@@ -19,6 +19,8 @@ import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -119,9 +121,46 @@ public class Subjects extends CrudController<Subject> {
         args.add(language);
 
         TopicQueryExtractor extractor = new TopicQueryExtractor();
-        return jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
+        List<SubTopicIndexDocument> results = jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
             return extractor.extractTopics(id, filterIds, relevance, resultSet);
         });
+        if (!recursive) {
+            results.sort(Comparator.comparing(o -> Integer.valueOf(o.rank)));
+        } else {
+            //sort input by path length so parent nodes are processed first (then we can add to them)
+            results.sort(Comparator.comparing(o -> o.path.length()));
+
+            //temp structures for creating a sorted tree
+            ArrayList<SubTopicIndexDocument> levelOneItems = new ArrayList<>();
+            Map<String, List<SubTopicIndexDocument>> mappedChildren = new HashMap<>();
+
+            results.forEach(
+                    subTopicIndexDocument -> {
+                        String idInPathFormat = id.toString().substring(4);
+                        String pathWithoutSubject = subTopicIndexDocument.path.replace("/" + idInPathFormat + "/", "");
+                        String[] pathElements = pathWithoutSubject.split("/");
+                        if (pathElements.length == 1) {
+                            levelOneItems.add(subTopicIndexDocument);
+                        } else {
+                            int parentIndex = pathElements.length - 2;
+                            mappedChildren.get(pathElements[parentIndex]).add(subTopicIndexDocument);
+                        }
+                        mappedChildren.putIfAbsent(subTopicIndexDocument.id.toString().substring(4), subTopicIndexDocument.children);
+                    }
+            );
+            //sort all child lists members by their rank relative to the parent
+            mappedChildren.values().forEach(childList -> childList.sort(Comparator.comparing(child -> Integer.valueOf(child.rank))));
+            //sort the top level list
+            levelOneItems.sort(Comparator.comparing(o -> o.rank));
+            //flatten tree with (potentially) 3 levels to one
+            return levelOneItems.stream()
+                    .flatMap(levelOneItem ->
+                            Stream.concat(Stream.of(levelOneItem), levelOneItem.children.stream()
+                                    .flatMap(levelTwoItem ->
+                                            Stream.concat(Stream.of(levelTwoItem), levelTwoItem.children.stream()))))
+                    .collect(Collectors.toList());
+        }
+        return results;
     }
 
     @GetMapping("/{id}/resources")
@@ -269,6 +308,9 @@ public class Subjects extends CrudController<Subject> {
 
         @JsonIgnore
         URI topicFilterId, filterPublicId;
+
+        @JsonIgnore
+        List<SubTopicIndexDocument> children = new ArrayList<>();
 
         @Override
         @JsonIgnore
