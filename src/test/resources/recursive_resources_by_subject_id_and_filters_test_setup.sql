@@ -29,8 +29,8 @@ insert into resource(id, public_id, name, content_uri)
 VALUES (1, 'urn:resource:1', 'R:1', null),
        (2, 'urn:resource:2', 'R:2', null),
        (3, 'urn:resource:3', 'R:3', null),
-       (4, 'urn:resource:4', 'R:4', null);
-       (5, 'urn:resource:5', 'R:5', null);
+       (4, 'urn:resource:4', 'R:4', null),
+       (5, 'urn:resource:5', 'R:5', null),
        (6, 'urn:resource:6', 'R:6', null);
 
 insert into topic_resource(id, public_id, topic_id, resource_id, is_primary, rank)

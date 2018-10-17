@@ -34,11 +34,16 @@ import static no.ndla.taxonomy.rest.v1.UrlResolver.getPathMostCloselyMatchingCon
 public class Subjects extends CrudController<Subject> {
     private static final String GET_SUBJECTS_QUERY = getQuery("get_subjects");
     private static final String GET_RESOURCES_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_subject_public_id_recursively");
+    private static final String RESOURCES_BY_SUBJECT_ID = getQuery("resources_by_subject_id");
+    private static final String TOPIC_TREE_BY_SUBJECT_ID = getQuery("topic_tree_by_subject_id");
+
     private static final String GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_topics_by_subject_public_id_recursively");
     private static final String GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY = getQuery("get_filters_by_subject_public_id");
 
     private SubjectRepository subjectRepository;
     private JdbcTemplate jdbcTemplate;
+    private static final Comparator<ResourceNode> RESOURCE_BY_RANK = Comparator.comparing(resourceNode -> resourceNode.rank);
+    private static final Comparator<TopicNode> TOPIC_BY_RANK = Comparator.comparing(topicNode -> topicNode.rank);
 
     public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate) {
         this.subjectRepository = subjectRepository;
@@ -164,9 +169,10 @@ public class Subjects extends CrudController<Subject> {
     }
 
     @GetMapping("/{id}/resources")
-    @ApiOperation(value = "Gets all resources for a subject (all topics and subtopics)")
+    @ApiOperation(value = "Gets all resources for a subject. Searches recursively in all topics belonging to this subject." +
+            "The ordering of resources will be based on the rank of resources relative to the topics they belong to.")
     @PreAuthorize("hasAuthority('READONLY')")
-    public List<ResourceIndexDocument> getResources(
+    public List<ResourceNode> getResources(
             @PathVariable("id") URI subjectId,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -183,20 +189,70 @@ public class Subjects extends CrudController<Subject> {
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
                     URI relevance
     ) {
-        List<Object> args = new ArrayList<>();
-        args.add(subjectId.toString());
-        args.add(language);
-        args.add(language);
 
-        String sql = GET_RESOURCES_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY;
-        ResourceQueryExtractor extractor = new ResourceQueryExtractor();
-        sql = extractor.addResourceTypesToQuery(resourceTypeIds, sql, args);
-        sql = extractor.addFilterToQuery(filterIds, sql, args);
+        final Map<Integer, TopicNode> nodeMap = jdbcTemplate.query(TOPIC_TREE_BY_SUBJECT_ID, new Object[]{}, this::buildTopicTree);
 
-        return jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
-            return extractor.extractResources(subjectId, relevance, resultSet);
+        Map<Integer, TopicNode> resourceMap = jdbcTemplate.query(RESOURCES_BY_SUBJECT_ID, new Object[]{}, resultSet -> {
+            return populateTopicTree(resultSet, nodeMap);
         });
+
+        //turn tree of topics and resources into a list of only resources, sorted by their rank relative to parent topic in the tree
+        return resourceMap.values().stream()
+                .filter(topicNode -> topicNode.level == 0).sorted(TOPIC_BY_RANK) //level 1 is subject-topics
+                .flatMap(subjectTopic ->
+                        Stream.concat(
+                                subjectTopic.resources.stream().sorted(RESOURCE_BY_RANK), //resources on level 1
+                                subjectTopic.subTopics.stream().sorted(TOPIC_BY_RANK).flatMap(subtopics1 -> //level 2 is topic-subtopic
+                                        Stream.concat(
+                                                subtopics1.resources.stream().sorted(RESOURCE_BY_RANK), //resources on level 2
+                                                subtopics1.subTopics.stream().sorted(TOPIC_BY_RANK).flatMap(sub2 -> //level 3 is topic-subtopic
+                                                        sub2.resources.stream().sorted(RESOURCE_BY_RANK)) //resources on level 3
+                                        )
+                                )
+                        )
+                ).collect(Collectors.toList());
     }
+
+
+    private Map<Integer, TopicNode> buildTopicTree(ResultSet resultSet) throws SQLException {
+        Map<Integer, TopicNode> nodeMap = new HashMap<>();
+
+        while (resultSet.next()) {
+            int parentTopicId = resultSet.getInt("parent_topic_id");
+
+            TopicNode t = new TopicNode();
+            t.topicId = resultSet.getInt("topic_id");
+            t.rank = resultSet.getInt("topic_rank");
+            t.publicId = resultSet.getString("public_id");
+            t.level = resultSet.getInt("topic_level");
+
+            if (t.level == 0) {
+                nodeMap.put(t.topicId, t);
+            } else {
+                nodeMap.get(parentTopicId).subTopics.add(t);
+                nodeMap.put(t.topicId, t);
+            }
+        }
+        return nodeMap;
+    }
+
+    private Map<Integer, TopicNode> populateTopicTree(ResultSet resourceResults, Map<Integer, TopicNode> nodeMap) throws SQLException {
+
+        while (resourceResults.next()) {
+            int topicId = resourceResults.getInt("topic_id");
+            String publicId = resourceResults.getString("public_id");
+            String name = resourceResults.getString("name");
+            int rank = resourceResults.getInt("rank_in_parent");
+
+            ResourceNode r = new ResourceNode();
+            r.publicId = publicId;
+            r.rank = rank;
+            r.name = name;
+            nodeMap.get(topicId).resources.add(r);
+        }
+        return nodeMap;
+    }
+
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters for a subject")
@@ -393,6 +449,11 @@ public class Subjects extends CrudController<Subject> {
         @JsonProperty
         @ApiModelProperty(value = "Filters this resource is associated with, directly or by inheritance", example = "[{id = 'urn:filter:1', relevanceId='urn:relevance:core'}]")
         public Set<ResourceFilterIndexDocument> filters = new HashSet<>();
+
+        @JsonProperty
+        @ApiModelProperty(value = "Rank relative to parent", example = "1")
+        public int rank;
+
     }
 
     @ApiModel("SubjectResourceTypeIndexDocument")
@@ -522,6 +583,7 @@ public class Subjects extends CrudController<Subject> {
                     name = resultSet.getString("resource_name");
                     id = toURI(resultSet.getString("resource_public_id"));
                     connectionId = toURI(resultSet.getString("connection_public_id"));
+                    rank = resultSet.getInt("rank");
                 }};
                 resources.put(id, resource);
                 filterResourceByRelevance(relevance, resultSet, result, resource);
@@ -649,4 +711,24 @@ public class Subjects extends CrudController<Subject> {
             return result;
         }
     }
+
+    public static class TopicNode {
+
+        int topicId;
+        int rank;
+        int level;
+        String publicId;
+        List<TopicNode> subTopics = new ArrayList<>();
+        List<ResourceNode> resources = new ArrayList<>();
+    }
+
+    public static class ResourceNode {
+        @JsonProperty
+        int rank;
+        @JsonProperty
+        String publicId;
+        @JsonProperty
+        String name;
+    }
+
 }

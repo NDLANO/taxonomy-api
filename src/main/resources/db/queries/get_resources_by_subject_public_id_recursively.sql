@@ -4,7 +4,8 @@ WITH RECURSIVE tree (topic_id, public_id, parent_id, is_primary, level) AS (
     t.public_id AS public_id,
     0           AS parent_id,
     FALSE       AS is_primary,
-    0           AS level
+    0           AS level,
+    st.rank     AS rank_in_subject
   FROM
     subject s
     INNER JOIN subject_topic st ON st.subject_id = s.id
@@ -19,7 +20,8 @@ WITH RECURSIVE tree (topic_id, public_id, parent_id, is_primary, level) AS (
     t.public_id      AS public_id,
     parent.topic_id  AS parent_id,
     st.is_primary    AS is_primary,
-    parent.level + 1 AS level
+    parent.level + 1 AS level,
+    NULL             AS rank_in_subject
   FROM
     topic t
     LEFT OUTER JOIN topic_subtopic st ON t.id = st.subtopic_id
@@ -37,7 +39,9 @@ SELECT
   f.public_id                  AS filter_public_id,
   rf.public_id                 AS resource_filter_public_id,
   rel.public_id                AS relevance_public_id,
-  url.path                     AS resource_path
+  url.path                     AS resource_path,
+  tr.rank                      AS rank,
+  rank_in_subject              AS rank_in_subject
 FROM
   tree t
   INNER JOIN topic_resource tr ON tr.topic_id = t.topic_id

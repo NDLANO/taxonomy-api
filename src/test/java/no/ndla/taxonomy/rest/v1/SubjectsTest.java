@@ -2,7 +2,6 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.domain.*;
-import org.junit.After;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -180,7 +179,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void recursive_topics_are_ordered_by_rank_relative_to_parent() throws Exception {
-        executeSqlScript("classpath:recursive_topics_test_setup.sql", false);
+        executeSqlScript("classpath:recursive_topics_by_subject_id_test_setup.sql", false);
         MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/topics?recursive=true");
         Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
         assertEquals(8, topics.length);
@@ -197,8 +196,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void recursive_topics_with_filter_are_ordered_relative_to_parent() throws Exception {
-        executeSqlScript("classpath:recursive_topics_with_filters_test_setup.sql", false);
-
+        executeSqlScript("classpath:recursive_topics_by_subject_id_and_filters_test_setup.sql", false);
         //test filter 1
         MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/topics?recursive=true&filter=urn:filter:1");
         Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
@@ -208,7 +206,6 @@ public class SubjectsTest extends RestTest {
         assertEquals("urn:topic:5", topics[2].id.toString());
         assertEquals("urn:topic:6", topics[3].id.toString());
         assertEquals("urn:topic:7", topics[4].id.toString());
-
         //test filter 2
         MockHttpServletResponse response2 = getResource("/v1/subjects/urn:subject:1/topics?recursive=true&filter=urn:filter:2");
         Subjects.SubTopicIndexDocument[] topics2 = getObject(Subjects.SubTopicIndexDocument[].class, response2);
@@ -217,9 +214,31 @@ public class SubjectsTest extends RestTest {
         assertEquals("urn:topic:4", topics2[1].id.toString());
         assertEquals("urn:topic:5", topics2[2].id.toString());
         assertEquals("urn:topic:8", topics2[3].id.toString());
+    }
+
+    @Test
+    public void resources_are_ordered_relative_to_parent() throws Exception {
+        executeSqlScript("classpath:resources_by_subject_id_test_setup.sql", false);
+
+        MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/resources");
+        Subjects.ResourceNode[] resources = getObject(Subjects.ResourceNode[].class, response);
+
+        assertEquals(10, resources.length);
+        assertEquals("R:9", resources[0].name);
+        assertEquals("R:1", resources[1].name);
+        assertEquals("R:2", resources[2].name);
+        assertEquals("R:10", resources[3].name);
+        assertEquals("R:3", resources[4].name);
+        assertEquals("R:5", resources[5].name);
+        assertEquals("R:4", resources[6].name);
+        assertEquals("R:6", resources[7].name);
+        assertEquals("R:7", resources[8].name);
+        assertEquals("R:8", resources[9].name);
 
 
     }
+
+
 
     @Test
     public void resources_can_have_content_uri() throws Exception {
