@@ -2,6 +2,11 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.rest.v1.command.CreateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.command.UpdateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.dto.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.SubTopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.SubjectIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -23,7 +28,7 @@ public class SubjectsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + english);
-        Subjects.SubjectIndexDocument subject = getObject(Subjects.SubjectIndexDocument.class, response);
+        SubjectIndexDocument subject = getObject(SubjectIndexDocument.class, response);
 
         assertEquals("english", subject.name);
         assertEquals("urn:article:1", subject.contentUri.toString());
@@ -36,7 +41,7 @@ public class SubjectsTest extends RestTest {
         builder.subject(s -> s.name("mathematics"));
 
         MockHttpServletResponse response = getResource("/v1/subjects");
-        Subjects.SubjectIndexDocument[] subjects = getObject(Subjects.SubjectIndexDocument[].class, response);
+        SubjectIndexDocument[] subjects = getObject(SubjectIndexDocument[].class, response);
         assertEquals(2, subjects.length);
 
         assertAnyTrue(subjects, s -> "english".equals(s.name));
@@ -47,7 +52,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_create_subject() throws Exception {
-        Subjects.CreateSubjectCommand createSubjectCommand = new Subjects.CreateSubjectCommand() {{
+        CreateSubjectCommand createSubjectCommand = new CreateSubjectCommand() {{
             name = "testsubject";
             contentUri = URI.create("urn:article:1");
         }};
@@ -64,7 +69,7 @@ public class SubjectsTest extends RestTest {
     public void can_update_subject() throws Exception {
         URI id = builder.subject().getPublicId();
 
-        Subjects.UpdateSubjectCommand command = new Subjects.UpdateSubjectCommand() {{
+        UpdateSubjectCommand command = new UpdateSubjectCommand() {{
             name = "physics";
             contentUri = URI.create("urn:article:1");
         }};
@@ -78,7 +83,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_create_subject_with_id() throws Exception {
-        Subjects.CreateSubjectCommand command = new Subjects.CreateSubjectCommand() {{
+        CreateSubjectCommand command = new CreateSubjectCommand() {{
             id = URI.create("urn:subject:1");
             name = "name";
         }};
@@ -91,7 +96,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        Subjects.CreateSubjectCommand command = new Subjects.CreateSubjectCommand() {{
+        CreateSubjectCommand command = new CreateSubjectCommand() {{
             id = URI.create("urn:subject:1");
             name = "name";
         }};
@@ -122,7 +127,7 @@ public class SubjectsTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
-        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
+        SubTopicIndexDocument[] topics = getObject(SubTopicIndexDocument[].class, response);
 
         assertEquals(3, topics.length);
         assertAnyTrue(topics, t -> "statics".equals(t.name) && "urn:article:1".equals(t.contentUri.toString()));
@@ -156,7 +161,7 @@ public class SubjectsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics?recursive=true");
-        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
+        SubTopicIndexDocument[] topics = getObject(SubTopicIndexDocument[].class, response);
 
         assertEquals(3, topics.length);
         assertEquals("parent topic", topics[0].name);
@@ -181,7 +186,7 @@ public class SubjectsTest extends RestTest {
     public void recursive_topics_are_ordered_by_rank_relative_to_parent() throws Exception {
         executeSqlScript("classpath:recursive_topics_by_subject_id_test_setup.sql", false);
         MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/topics?recursive=true");
-        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
+        SubTopicIndexDocument[] topics = getObject(SubTopicIndexDocument[].class, response);
         assertEquals(8, topics.length);
         assertEquals("urn:topic:1", topics[0].id.toString());
         assertEquals("urn:topic:2", topics[1].id.toString());
@@ -199,7 +204,7 @@ public class SubjectsTest extends RestTest {
         executeSqlScript("classpath:recursive_topics_by_subject_id_and_filters_test_setup.sql", false);
         //test filter 1
         MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/topics?recursive=true&filter=urn:filter:1");
-        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
+        SubTopicIndexDocument[] topics = getObject(SubTopicIndexDocument[].class, response);
         assertEquals(5, topics.length);
         assertEquals("urn:topic:1", topics[0].id.toString());
         assertEquals("urn:topic:2", topics[1].id.toString());
@@ -208,7 +213,7 @@ public class SubjectsTest extends RestTest {
         assertEquals("urn:topic:7", topics[4].id.toString());
         //test filter 2
         MockHttpServletResponse response2 = getResource("/v1/subjects/urn:subject:1/topics?recursive=true&filter=urn:filter:2");
-        Subjects.SubTopicIndexDocument[] topics2 = getObject(Subjects.SubTopicIndexDocument[].class, response2);
+        SubTopicIndexDocument[] topics2 = getObject(SubTopicIndexDocument[].class, response2);
         assertEquals(4, topics2.length);
         assertEquals("urn:topic:3", topics2[0].id.toString());
         assertEquals("urn:topic:4", topics2[1].id.toString());
@@ -221,7 +226,7 @@ public class SubjectsTest extends RestTest {
         executeSqlScript("classpath:resources_by_subject_id_test_setup.sql", false);
 
         MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/resources");
-        Subjects.ResourceNode[] resources = getObject(Subjects.ResourceNode[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(10, resources.length);
         assertEquals("R:9", resources[0].name);
@@ -249,7 +254,7 @@ public class SubjectsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + id + "/resources");
-        Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals("urn:article:1", resources[0].contentUri.toString());
     }
@@ -269,7 +274,7 @@ public class SubjectsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + id + "/resources");
-        Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals("urn:filter:vg1", first(resources[0].filters).id.toString());
         assertEquals("urn:relevance:core", first(resources[0].filters).relevanceId.toString());
@@ -289,7 +294,7 @@ public class SubjectsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + id + "/resources");
-        Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(3, resources.length);
 
@@ -317,7 +322,7 @@ public class SubjectsTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/resources");
-        Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(3, resources.length);
         assertAnyTrue(resources, r -> r.path.equals("/subject:1/topic:1/resource:1"));
@@ -346,7 +351,7 @@ public class SubjectsTest extends RestTest {
 
         for (int i : asList(1, 2)) {
             MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:" + i + "/resources");
-            Subjects.ResourceIndexDocument[] resources = getObject(Subjects.ResourceIndexDocument[].class, response);
+            ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
             assertEquals(1, resources.length);
             assertEquals("/subject:" + i + "/topic:" + i + "/resource:1", resources[0].path);
@@ -368,7 +373,7 @@ public class SubjectsTest extends RestTest {
 
         for (int i : asList(1, 2)) {
             MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:" + i + "/topics");
-            Subjects.SubTopicIndexDocument[] resources = getObject(Subjects.SubTopicIndexDocument[].class, response);
+            SubTopicIndexDocument[] resources = getObject(SubTopicIndexDocument[].class, response);
 
             assertEquals(1, resources.length);
             assertEquals("/subject:" + i + "/topic:1", resources[0].path);

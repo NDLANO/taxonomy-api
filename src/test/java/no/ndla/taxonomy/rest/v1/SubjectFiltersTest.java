@@ -4,6 +4,8 @@ import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.rest.v1.dto.FilterIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.SubTopicIndexDocument;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -35,7 +37,7 @@ public class SubjectFiltersTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/filters");
-        Subjects.FilterIndexDocument[] filters = getObject(Subjects.FilterIndexDocument[].class, response);
+        FilterIndexDocument[] filters = getObject(FilterIndexDocument[].class, response);
 
         assertEquals(2, filters.length);
         assertAnyTrue(filters, f -> f.name.equals("Tømrer"));
@@ -96,7 +98,7 @@ public class SubjectFiltersTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics?filter=" + vg1.getPublicId());
-        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
+        SubTopicIndexDocument[] topics = getObject(SubTopicIndexDocument[].class, response);
 
         assertEquals(2, topics.length);
         assertAnyTrue(topics, t -> "statics".equals(t.name));
@@ -118,7 +120,7 @@ public class SubjectFiltersTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
-        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
+        SubTopicIndexDocument[] topics = getObject(SubTopicIndexDocument[].class, response);
 
         assertEquals(2, topics[0].filters.size());
         assertAnyTrue(topics[0].filters, f -> vg1.getPublicId().equals(f.id));
@@ -144,7 +146,7 @@ public class SubjectFiltersTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics?recursive=true&filter=" + vg1.getPublicId());
-        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
+        SubTopicIndexDocument[] topics = getObject(SubTopicIndexDocument[].class, response);
 
         assertEquals(2, topics.length);
         assertAnyTrue(topics, t -> t.name.equals("parent topic"));
@@ -213,7 +215,7 @@ public class SubjectFiltersTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectid + "/topics?recursive=true&filter=" + vg1.getPublicId() + "&relevance=" + core.getPublicId());
-        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
+        SubTopicIndexDocument[] topics = getObject(SubTopicIndexDocument[].class, response);
 
         assertEquals(2, topics.length);
         assertAnyTrue(topics, t -> t.name.equals("parent topic"));

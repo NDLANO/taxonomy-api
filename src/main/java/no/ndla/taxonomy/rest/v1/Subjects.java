@@ -1,13 +1,16 @@
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.repositories.SubjectRepository;
+import no.ndla.taxonomy.rest.v1.command.CreateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.command.UpdateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.dto.*;
+import no.ndla.taxonomy.rest.v1.extractors.FilterExtractor;
+import no.ndla.taxonomy.rest.v1.extractors.ResourceExctractor;
+import no.ndla.taxonomy.rest.v1.extractors.SubjectExtractor;
+import no.ndla.taxonomy.rest.v1.extractors.TopicExtractor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -26,7 +29,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
-import static no.ndla.taxonomy.rest.v1.UrlResolver.getPathMostCloselyMatchingContext;
 
 @RestController
 @Transactional
@@ -42,7 +44,7 @@ public class Subjects extends CrudController<Subject> {
 
     private SubjectRepository subjectRepository;
     private JdbcTemplate jdbcTemplate;
-    private static final Comparator<ResourceNode> RESOURCE_BY_RANK = Comparator.comparing(resourceNode -> resourceNode.rank);
+    private static final Comparator<ResourceIndexDocument> RESOURCE_BY_RANK = Comparator.comparing(resourceNode -> resourceNode.rank);
     private static final Comparator<TopicNode> TOPIC_BY_RANK = Comparator.comparing(topicNode -> topicNode.rank);
 
     public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate) {
@@ -60,7 +62,7 @@ public class Subjects extends CrudController<Subject> {
                     String language
     ) {
         List<Object> args = singletonList(language);
-        SubjectQueryExtractor extractor = new SubjectQueryExtractor();
+        SubjectExtractor extractor = new SubjectExtractor();
         return jdbcTemplate.query(GET_SUBJECTS_QUERY, setQueryParameters(args), extractor::extractSubjects);
     }
 
@@ -76,7 +78,7 @@ public class Subjects extends CrudController<Subject> {
         String sql = GET_SUBJECTS_QUERY.replace("1 = 1", "s.public_id = ?");
         List<Object> args = asList(language, id.toString());
 
-        SubjectQueryExtractor extractor = new SubjectQueryExtractor();
+        SubjectExtractor extractor = new SubjectExtractor();
         return getFirst(jdbcTemplate.query(sql, setQueryParameters(args), extractor::extractSubjects), "Subject", id);
     }
 
@@ -125,7 +127,7 @@ public class Subjects extends CrudController<Subject> {
         args.add(id.toString());
         args.add(language);
 
-        TopicQueryExtractor extractor = new TopicQueryExtractor();
+        TopicExtractor extractor = new TopicExtractor();
         List<SubTopicIndexDocument> results = jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
             return extractor.extractTopics(id, filterIds, relevance, resultSet);
         });
@@ -172,7 +174,7 @@ public class Subjects extends CrudController<Subject> {
     @ApiOperation(value = "Gets all resources for a subject. Searches recursively in all topics belonging to this subject." +
             "The ordering of resources will be based on the rank of resources relative to the topics they belong to.")
     @PreAuthorize("hasAuthority('READONLY')")
-    public List<ResourceNode> getResources(
+    public List<ResourceIndexDocument> getResources(
             @PathVariable("id") URI subjectId,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -193,7 +195,7 @@ public class Subjects extends CrudController<Subject> {
         final Map<Integer, TopicNode> nodeMap = jdbcTemplate.query(TOPIC_TREE_BY_SUBJECT_ID, new Object[]{}, this::buildTopicTree);
 
         Map<Integer, TopicNode> resourceMap = jdbcTemplate.query(RESOURCES_BY_SUBJECT_ID, new Object[]{}, resultSet -> {
-            return populateTopicTree(resultSet, nodeMap);
+            return populateTopicTree(subjectId, resultSet, nodeMap);
         });
 
         //turn tree of topics and resources into a list of only resources, sorted by their rank relative to parent topic in the tree
@@ -230,19 +232,29 @@ public class Subjects extends CrudController<Subject> {
                 nodeMap.put(t.topicId, t);
             } else {
                 nodeMap.get(parentTopicId).subTopics.add(t);
+                System.out.println("Adding topic "+t.topicId +" to node map");
                 nodeMap.put(t.topicId, t);
             }
         }
+
         return nodeMap;
     }
 
-    private Map<Integer, TopicNode> populateTopicTree(ResultSet resourceResults, Map<Integer, TopicNode> nodeMap) throws SQLException {
+    private Map<Integer, TopicNode> populateTopicTree(URI subjectURI, ResultSet resourceResults, Map<Integer, TopicNode> nodeMap) throws SQLException {
+        ResourceExctractor extractor = new ResourceExctractor();
 
-        while (resourceResults.next()) {
+        List<ResourceIndexDocument> resourceIndexDocuments = extractor.extractResources(subjectURI, null, resourceResults);
+        resourceIndexDocuments.stream().forEach(resourceIndexDocument -> {
+            Integer topicId = resourceIndexDocument.topicNumericId;
+            System.out.println("Looking up "+topicId +" in node map");
+            nodeMap.get(topicId).resources.add(resourceIndexDocument);
+        });
+
+        /*while (resourceResults.next()) {
             int topicId = resourceResults.getInt("topic_id");
-            String publicId = resourceResults.getString("public_id");
-            String name = resourceResults.getString("name");
-            int rank = resourceResults.getInt("rank_in_parent");
+            String publicId = resourceResults.getString("resource_public_id");
+            String name = resourceResults.getString("resource_name");
+            int rank = resourceResults.getInt("rank");
 
             ResourceNode r = new ResourceNode();
             r.publicId = publicId;
@@ -250,9 +262,9 @@ public class Subjects extends CrudController<Subject> {
             r.name = name;
             nodeMap.get(topicId).resources.add(r);
         }
+        */
         return nodeMap;
     }
-
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters for a subject")
@@ -261,455 +273,34 @@ public class Subjects extends CrudController<Subject> {
         String sql = GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY;
         List<Object> args = singletonList(subjectId.toString());
 
-        FilterQueryExtractor extractor = new FilterQueryExtractor();
+        FilterExtractor extractor = new FilterExtractor();
         return jdbcTemplate.query(sql, setQueryParameters(args), extractor::extractFilters);
     }
 
-
-    public static class CreateSubjectCommand extends CreateCommand<Subject> {
-        @JsonProperty
-        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:subject:1")
-        public URI id;
-
-        @JsonProperty
-        @ApiModelProperty(value = "ID of article introducing this subject. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
-        public URI contentUri;
-
-        @JsonProperty
-        @ApiModelProperty(required = true, value = "The name of the subject", example = "Mathematics")
-        public String name;
-
-        @Override
-        public URI getId() {
-            return id;
+    private String addFilterToQuery(URI[] filterIds, String sql, List<Object> args) {
+        if (filterIds.length > 0) {
+            StringBuilder where = new StringBuilder();
+            for (URI filterId : filterIds) {
+                where.append("f.public_id = ? OR ");
+                args.add(filterId.toString());
+            }
+            where.setLength(where.length() - 4);
+            sql = sql.replace("2 = 2", "(" + where + ")");
         }
-
-        @Override
-        public void apply(Subject subject) {
-            subject.setName(name);
-            subject.setContentUri(contentUri);
-        }
+        return sql;
     }
 
-    public static class UpdateSubjectCommand extends UpdateCommand<Subject> {
-        @JsonProperty
-        @ApiModelProperty(value = "ID of article introducing this subject. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
-        public URI contentUri;
-
-        @JsonProperty
-        @ApiModelProperty(required = true, value = "The name of the subject", example = "Mathematics")
-        public String name;
-
-        @Override
-        public void apply(Subject subject) {
-            subject.setName(name);
-            subject.setContentUri(contentUri);
-        }
-    }
-
-    @ApiModel("SubjectIndexDocument")
-    public static class SubjectIndexDocument {
-        @JsonProperty
-        @ApiModelProperty(example = "urn:subject:1")
-        public URI id;
-
-        @JsonProperty
-        @ApiModelProperty(value = "ID of article introducing this subject. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
-        public URI contentUri;
-
-        @JsonProperty
-        @ApiModelProperty(value = "The name of the subject", example = "Mathematics")
-        public String name;
-
-        @JsonProperty
-        @ApiModelProperty(value = "The path part of the url to this subject.", example = "/subject:1")
-        public String path;
-    }
-
-    @ApiModel("SubjectTopicIndexDocument")
-    public static class SubTopicIndexDocument {
-        @JsonProperty
-        public URI id;
-
-        @JsonProperty
-        public String name;
-
-        @JsonProperty
-        @ApiModelProperty(value = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
-        public URI contentUri;
-
-        @JsonProperty
-        @ApiModelProperty("Parent id in the current context, null if none exists")
-        public URI parent;
-
-        @JsonProperty
-        @ApiModelProperty(value = "The primary path to this topic.", example = "/subject:1/topic:1")
-        public String path;
-
-        @JsonProperty
-        @ApiModelProperty(value = "The id of the subject-topics or topic-subtopics connection which causes this topic to be included in the result set.", example = "urn:subject-topic:1")
-        public URI connectionId;
-
-        @JsonProperty
-        @ApiModelProperty(value = "Primary connection", example = "true")
-        public boolean isPrimary;
-
-        @JsonProperty
-        @ApiModelProperty(value = "The order in which to sort the topic within it's level.", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @ApiModelProperty(value = "Filters this topic is associated with, directly or by inheritance", example = "[{id = 'urn:filter:1', relevanceId='urn:relevance:core'}]")
-        public Set<TopicFilterIndexDocument> filters = new HashSet<>();
-
-        @JsonIgnore
-        URI topicFilterId, filterPublicId;
-
-        @JsonIgnore
-        List<SubTopicIndexDocument> children = new ArrayList<>();
-
-        @Override
-        @JsonIgnore
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof SubTopicIndexDocument)) return false;
-
-            SubTopicIndexDocument that = (SubTopicIndexDocument) o;
-
-            return id.equals(that.id);
-        }
-
-        @Override
-        @JsonIgnore
-        public int hashCode() {
-            return id.hashCode();
-        }
-    }
-
-    @ApiModel("SubjectTopicFilterIndexDocument")
-    public static class TopicFilterIndexDocument {
-        @JsonProperty
-        @ApiModelProperty(value = "Filter id", example = "urn:filter:12")
-        public URI id;
-
-        @JsonProperty
-        @ApiModelProperty(value = "Filter name", example = "VG 1")
-        public String name;
-
-        @JsonProperty
-        @ApiModelProperty(required = true, value = "ID of the relevance the resource has in context of the filter", example = "urn:relevance:core")
-        public URI relevanceId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            TopicFilterIndexDocument that = (TopicFilterIndexDocument) o;
-            return id.equals(that.id);
-        }
-
-        @Override
-        public int hashCode() {
-
-            return Objects.hash(id.toASCIIString());
-        }
-    }
-
-    @ApiModel("SubjectResourceIndexDocument")
-    public static class ResourceIndexDocument {
-        @JsonProperty
-        public URI id;
-
-        @JsonProperty
-        @ApiModelProperty(value = "Topic id", example = "urn:topic:12")
-        public URI topicId;
-
-        @JsonProperty
-        public String name;
-
-        @JsonProperty
-        @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resourcetype:1', name = 'lecture'}]")
-        public Set<ResourceTypeIndexDocument> resourceTypes = new HashSet<>();
-
-        @JsonProperty
-        @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
-                notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
-                        "for the system, and <id> is the id of this content in that system.",
-                example = "urn:article:1")
-        public URI contentUri;
-
-        @JsonProperty
-        @ApiModelProperty(value = "URL path for resource", example = "'/subject:1/topic:12/resource:12")
-        public String path;
-
-        @JsonProperty
-        @ApiModelProperty(value = "The id of the topic-resource connection which causes this resource to be included in the result set.", example = "urn:topic-resource:1")
-        public URI connectionId;
-
-        @JsonProperty
-        @ApiModelProperty(value = "Filters this resource is associated with, directly or by inheritance", example = "[{id = 'urn:filter:1', relevanceId='urn:relevance:core'}]")
-        public Set<ResourceFilterIndexDocument> filters = new HashSet<>();
-
-        @JsonProperty
-        @ApiModelProperty(value = "Rank relative to parent", example = "1")
-        public int rank;
-
-    }
-
-    @ApiModel("SubjectResourceTypeIndexDocument")
-    public static class ResourceTypeIndexDocument {
-        @JsonProperty
-        @ApiModelProperty(value = "Resource type id", example = "urn:resourcetype:12")
-        public URI id;
-
-        @JsonProperty
-        @ApiModelProperty(value = "Resource type name", example = "Assignment")
-        public String name;
-
-        @Override
-        @JsonIgnore
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof ResourceTypeIndexDocument)) return false;
-
-            ResourceTypeIndexDocument that = (ResourceTypeIndexDocument) o;
-
-            return id.equals(that.id);
-        }
-
-        @Override
-        @JsonIgnore
-        public int hashCode() {
-            return id.hashCode();
-        }
-    }
-
-    @ApiModel("SubjectFilterIndexDocument")
-    public static class FilterIndexDocument {
-        @JsonProperty
-        @ApiModelProperty(value = "Filter id", example = "urn:filter:12")
-        public URI id;
-
-        @JsonProperty
-        @ApiModelProperty(value = "Filter name", example = "1T-YF")
-        public String name;
-    }
-
-    @ApiModel("SubjectResourceFilterIndexDocument")
-    public static class ResourceFilterIndexDocument {
-        @JsonProperty
-        @ApiModelProperty(value = "Filter id", example = "urn:filter:12")
-        public URI id;
-
-        @JsonProperty
-        @ApiModelProperty(required = true, value = "ID of the relevance the resource has in context of the filter", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
-
-    class ResourceQueryExtractor {
-        String addFilterToQuery(URI[] filterIds, String sql, List<Object> args) {
-            if (filterIds.length > 0) {
-                StringBuilder where = new StringBuilder();
-                for (URI filterId : filterIds) {
-                    where.append("f.public_id = ? OR ");
-                    args.add(filterId.toString());
-                }
-                where.setLength(where.length() - 4);
-                sql = sql.replace("2 = 2", "(" + where + ")");
+    private String addResourceTypesToQuery(URI[] resourceTypeIds, String sql, List<Object> args) {
+        if (resourceTypeIds.length > 0) {
+            StringBuilder where = new StringBuilder();
+            for (URI resourceTypeId : resourceTypeIds) {
+                where.append("rt.public_id = ? OR ");
+                args.add(resourceTypeId.toString());
             }
-            return sql;
+            where.setLength(where.length() - " OR ".length());
+            sql = sql.replace("1 = 1", "(" + where + ")");
         }
-
-        String addResourceTypesToQuery(URI[] resourceTypeIds, String sql, List<Object> args) {
-            if (resourceTypeIds.length > 0) {
-                StringBuilder where = new StringBuilder();
-                for (URI resourceTypeId : resourceTypeIds) {
-                    where.append("rt.public_id = ? OR ");
-                    args.add(resourceTypeId.toString());
-                }
-                where.setLength(where.length() - " OR ".length());
-                sql = sql.replace("1 = 1", "(" + where + ")");
-            }
-            return sql;
-        }
-
-        List<ResourceIndexDocument> extractResources(URI subjectId, URI relevance, ResultSet resultSet) throws SQLException {
-            List<ResourceIndexDocument> result = new ArrayList<>();
-            Map<URI, ResourceIndexDocument> resources = new HashMap<>();
-
-            String context = "/" + subjectId.toString().substring(4);
-
-            while (resultSet.next()) {
-                URI id = toURI(resultSet.getString("resource_public_id"));
-
-                ResourceIndexDocument resource = extractResource(relevance, resultSet, result, resources, id);
-                resource.path = getPathMostCloselyMatchingContext(context, resource.path, resultSet.getString("resource_path"));
-                extractResourceType(resultSet, resource);
-                extractFilter(resultSet, resource);
-            }
-            return result;
-        }
-
-        private void extractFilter(ResultSet resultSet, ResourceIndexDocument resource) throws SQLException {
-            URI filterPublicId = getURI(resultSet, "filter_public_id");
-            if (null != filterPublicId) {
-                ResourceFilterIndexDocument filter = new ResourceFilterIndexDocument() {{
-                    id = filterPublicId;
-                    relevanceId = getURI(resultSet, "relevance_public_id");
-                }};
-
-                resource.filters.add(filter);
-            }
-        }
-
-        private void extractResourceType(ResultSet resultSet, ResourceIndexDocument resource) throws SQLException {
-            URI resource_type_id = getURI(resultSet, "resource_type_public_id");
-            if (resource_type_id != null) {
-                ResourceTypeIndexDocument resourceType = new ResourceTypeIndexDocument() {{
-                    id = resource_type_id;
-                    name = resultSet.getString("resource_type_name");
-                }};
-
-                resource.resourceTypes.add(resourceType);
-            }
-        }
-
-        private ResourceIndexDocument extractResource(URI relevance, ResultSet resultSet, List<ResourceIndexDocument> result, Map<URI, ResourceIndexDocument> resources, URI id) throws SQLException {
-            ResourceIndexDocument resource = resources.get(id);
-            if (null == resource) {
-                resource = new ResourceIndexDocument() {{
-                    topicId = toURI(resultSet.getString("topic_public_id"));
-                    contentUri = toURI(resultSet.getString("resource_content_uri"));
-                    name = resultSet.getString("resource_name");
-                    id = toURI(resultSet.getString("resource_public_id"));
-                    connectionId = toURI(resultSet.getString("connection_public_id"));
-                    rank = resultSet.getInt("rank");
-                }};
-                resources.put(id, resource);
-                filterResourceByRelevance(relevance, resultSet, result, resource);
-            }
-            return resource;
-        }
-
-        private void filterResourceByRelevance(URI relevance, ResultSet resultSet, List<ResourceIndexDocument> result, ResourceIndexDocument resource) throws SQLException {
-            if (relevance == null || relevance.toString().equals("")) {
-                result.add(resource);
-            } else {
-                URI resourceRelevance = toURI(resultSet.getString("relevance_public_id"));
-                if (resourceRelevance != null && resourceRelevance.equals(relevance)) {
-                    result.add(resource);
-                }
-            }
-        }
-    }
-
-    class TopicQueryExtractor {
-        List<SubTopicIndexDocument> extractTopics(URI id, URI[] filterIds, URI relevance, ResultSet resultSet) throws SQLException {
-            Map<URI, SubTopicIndexDocument> topics = new HashMap<>();
-            List<SubTopicIndexDocument> queryresult = new ArrayList<>();
-            String context = "/" + id.toString().substring(4);
-            while (resultSet.next()) {
-                URI public_id = getURI(resultSet, "public_id");
-
-                SubTopicIndexDocument topic = extractTopic(relevance, resultSet, topics, queryresult, public_id);
-                topic.path = getPathMostCloselyMatchingContext(context, topic.path, resultSet.getString("topic_path"));
-                extractFilter(resultSet, topic);
-            }
-            return filterTopics(filterIds, topics, queryresult);
-        }
-
-        private void extractFilter(ResultSet resultSet, SubTopicIndexDocument topic) throws SQLException {
-            URI filterPublicId = getURI(resultSet, "filter_public_id");
-            if (null != filterPublicId) {
-                TopicFilterIndexDocument filter = new TopicFilterIndexDocument() {{
-                    id = filterPublicId;
-                    name = resultSet.getString("filter_name");
-                    relevanceId = getURI(resultSet, "relevance_public_id");
-                }};
-
-                topic.filters.add(filter);
-            }
-        }
-
-        private List<SubTopicIndexDocument> filterTopics(URI[] filterIds, Map<URI, SubTopicIndexDocument> topics, List<SubTopicIndexDocument> queryresult) {
-            if (filterIds != null && filterIds.length > 0) {
-                Set<SubTopicIndexDocument> result = new HashSet<>();
-                List<URI> filtersInQuery = asList(filterIds);
-                for (SubTopicIndexDocument doc : queryresult) {
-                    for (TopicFilterIndexDocument filterInDoc : doc.filters) {
-                        if (filtersInQuery.contains(filterInDoc.id)) {
-                            result.add(doc);
-                            SubTopicIndexDocument current = doc;
-                            while ((current = topics.get(current.parent)) != null) {
-                                result.add(current);
-                            }
-                        }
-                    }
-                }
-                return new ArrayList<>(result);
-            } else {
-                return queryresult;
-            }
-        }
-
-        private SubTopicIndexDocument extractTopic(URI relevance, ResultSet resultSet, Map<URI, SubTopicIndexDocument> topics, List<SubTopicIndexDocument> queryresult, URI public_id) throws SQLException {
-            SubTopicIndexDocument topic = topics.get(public_id);
-            if (topic == null) {
-                topic = new SubTopicIndexDocument() {{
-                    name = resultSet.getString("name");
-                    id = public_id;
-                    contentUri = getURI(resultSet, "content_uri");
-                    parent = getURI(resultSet, "parent_public_id");
-                    connectionId = getURI(resultSet, "connection_public_id");
-                    topicFilterId = getURI(resultSet, "topic_filter_public_id");
-                    filterPublicId = getURI(resultSet, "filter_public_id");
-                    isPrimary = resultSet.getBoolean("is_primary");
-                    rank = resultSet.getInt("rank");
-                }};
-                topics.put(topic.id, topic);
-                filterTopicByRelevance(relevance, resultSet, queryresult, topic);
-            }
-            return topic;
-        }
-
-        private void filterTopicByRelevance(URI relevance, ResultSet resultSet, List<SubTopicIndexDocument> queryresult, SubTopicIndexDocument topic) throws SQLException {
-            if (relevance == null || relevance.toString().equals("")) {
-                queryresult.add(topic);
-            } else {
-                URI topicRelevance = toURI(resultSet.getString("relevance_public_id"));
-                if (topicRelevance != null && topicRelevance.equals(relevance)) {
-                    queryresult.add(topic);
-                }
-            }
-        }
-    }
-
-    class SubjectQueryExtractor {
-        List<SubjectIndexDocument> extractSubjects(ResultSet resultSet) throws SQLException {
-            List<SubjectIndexDocument> result = new ArrayList<>();
-            while (resultSet.next()) {
-                result.add(new SubjectIndexDocument() {{
-                    name = resultSet.getString("subject_name");
-                    id = getURI(resultSet, "subject_public_id");
-                    contentUri = getURI(resultSet, "subject_content_uri");
-                    path = resultSet.getString("subject_path");
-                }});
-            }
-            return result;
-        }
-    }
-
-    class FilterQueryExtractor {
-        List<FilterIndexDocument> extractFilters(ResultSet resultSet) throws SQLException {
-            List<FilterIndexDocument> result = new ArrayList<>();
-            while (resultSet.next()) {
-                result.add(new FilterIndexDocument() {{
-                    name = resultSet.getString("filter_name");
-                    id = getURI(resultSet, "filter_public_id");
-                }});
-            }
-            return result;
-        }
+        return sql;
     }
 
     public static class TopicNode {
@@ -719,16 +310,7 @@ public class Subjects extends CrudController<Subject> {
         int level;
         String publicId;
         List<TopicNode> subTopics = new ArrayList<>();
-        List<ResourceNode> resources = new ArrayList<>();
-    }
-
-    public static class ResourceNode {
-        @JsonProperty
-        int rank;
-        @JsonProperty
-        String publicId;
-        @JsonProperty
-        String name;
+        List<ResourceIndexDocument> resources = new ArrayList<>();
     }
 
 }
