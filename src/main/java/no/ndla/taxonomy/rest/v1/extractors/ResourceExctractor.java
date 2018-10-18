@@ -47,7 +47,7 @@ public class ResourceExctractor {
                 id = filterPublicId;
                 relevanceId = getURI(resultSet, "relevance_public_id");
             }};
-
+            System.out.println("Adding filter "+filterPublicId +" with relevance "+ filter.relevanceId);
             resource.filters.add(filter);
         }
     }

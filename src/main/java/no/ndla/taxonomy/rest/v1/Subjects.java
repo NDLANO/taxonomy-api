@@ -192,10 +192,16 @@ public class Subjects extends CrudController<Subject> {
                     URI relevance
     ) {
 
-        final Map<Integer, TopicNode> nodeMap = jdbcTemplate.query(TOPIC_TREE_BY_SUBJECT_ID, new Object[]{}, this::buildTopicTree);
+        System.out.println("Getting resources for subject "+subjectId.toString());
 
-        Map<Integer, TopicNode> resourceMap = jdbcTemplate.query(RESOURCES_BY_SUBJECT_ID, new Object[]{}, resultSet -> {
-            return populateTopicTree(subjectId, resultSet, nodeMap);
+        final Map<Integer, TopicNode> nodeMap = jdbcTemplate.query(TOPIC_TREE_BY_SUBJECT_ID, new Object[]{subjectId.toString()}, this::buildTopicTree);
+
+        List<Object> args = new ArrayList<>();
+        args.add(subjectId.toString());
+        String resourceQuery = addFiltersToQuery(filterIds, RESOURCES_BY_SUBJECT_ID, args);
+
+        Map<Integer, TopicNode> resourceMap = jdbcTemplate.query(resourceQuery, args.toArray(), resultSet -> {
+            return populateTopicTree(subjectId, relevance, resultSet, nodeMap);
         });
 
         //turn tree of topics and resources into a list of only resources, sorted by their rank relative to parent topic in the tree
@@ -227,8 +233,8 @@ public class Subjects extends CrudController<Subject> {
             t.rank = resultSet.getInt("topic_rank");
             t.publicId = resultSet.getString("public_id");
             t.level = resultSet.getInt("topic_level");
-
             if (t.level == 0) {
+                System.out.println("Adding top level topic "+t.topicId + " to node map");
                 nodeMap.put(t.topicId, t);
             } else {
                 nodeMap.get(parentTopicId).subTopics.add(t);
@@ -240,11 +246,11 @@ public class Subjects extends CrudController<Subject> {
         return nodeMap;
     }
 
-    private Map<Integer, TopicNode> populateTopicTree(URI subjectURI, ResultSet resourceResults, Map<Integer, TopicNode> nodeMap) throws SQLException {
+    private Map<Integer, TopicNode> populateTopicTree(URI subjectURI, URI relevance, ResultSet resourceResults, Map<Integer, TopicNode> nodeMap) throws SQLException {
         ResourceExctractor extractor = new ResourceExctractor();
 
-        List<ResourceIndexDocument> resourceIndexDocuments = extractor.extractResources(subjectURI, null, resourceResults);
-        resourceIndexDocuments.stream().forEach(resourceIndexDocument -> {
+        List<ResourceIndexDocument> resourceIndexDocuments = extractor.extractResources(subjectURI, relevance, resourceResults);
+        resourceIndexDocuments.forEach(resourceIndexDocument -> {
             Integer topicId = resourceIndexDocument.topicNumericId;
             System.out.println("Looking up "+topicId +" in node map");
             nodeMap.get(topicId).resources.add(resourceIndexDocument);
@@ -277,14 +283,14 @@ public class Subjects extends CrudController<Subject> {
         return jdbcTemplate.query(sql, setQueryParameters(args), extractor::extractFilters);
     }
 
-    private String addFilterToQuery(URI[] filterIds, String sql, List<Object> args) {
+    private String addFiltersToQuery(URI[] filterIds, String sql, List<Object> args) {
         if (filterIds.length > 0) {
             StringBuilder where = new StringBuilder();
             for (URI filterId : filterIds) {
                 where.append("f.public_id = ? OR ");
                 args.add(filterId.toString());
             }
-            where.setLength(where.length() - 4);
+            where.setLength(where.length() - 4); //remove the last " OR "
             sql = sql.replace("2 = 2", "(" + where + ")");
         }
         return sql;

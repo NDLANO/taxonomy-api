@@ -211,6 +211,7 @@ public class SubjectsTest extends RestTest {
         assertEquals("urn:topic:5", topics[2].id.toString());
         assertEquals("urn:topic:6", topics[3].id.toString());
         assertEquals("urn:topic:7", topics[4].id.toString());
+
         //test filter 2
         MockHttpServletResponse response2 = getResource("/v1/subjects/urn:subject:1/topics?recursive=true&filter=urn:filter:2");
         SubTopicIndexDocument[] topics2 = getObject(SubTopicIndexDocument[].class, response2);
@@ -239,15 +240,40 @@ public class SubjectsTest extends RestTest {
         assertEquals("R:6", resources[7].name);
         assertEquals("R:7", resources[8].name);
         assertEquals("R:8", resources[9].name);
-
-
     }
 
+    @Test
+    public void filtered_resources_are_ordered_relative_to_parent() throws Exception {
+        executeSqlScript("classpath:resources_by_subject_id_test_setup.sql", false);
+
+        //filter 1
+        MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/resources?filter=urn:filter:1");
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
+
+        assertEquals(5, resources.length);
+        assertEquals("R:9", resources[0].name);
+        assertEquals("R:1", resources[1].name);
+        assertEquals("R:3", resources[2].name);
+        assertEquals("R:5", resources[3].name);
+        assertEquals("R:7", resources[4].name);
+
+        //filter 2
+        MockHttpServletResponse response2 = getResource("/v1/subjects/urn:subject:1/resources?filter=urn:filter:2");
+        ResourceIndexDocument[] resources2 = getObject(ResourceIndexDocument[].class, response2);
+
+        assertEquals(5, resources2.length);
+        assertEquals("R:2", resources2[0].name);
+        assertEquals("R:10", resources2[1].name);
+        assertEquals("R:4", resources2[2].name);
+        assertEquals("R:6", resources2[3].name);
+        assertEquals("R:8", resources2[4].name);
+    }
 
 
     @Test
     public void resources_can_have_content_uri() throws Exception {
         URI id = builder.subject(s -> s
+                .publicId("urn:subject:1")
                 .topic(t -> t
                         .resource(r -> r.contentUri("urn:article:1"))
                 )
@@ -265,6 +291,7 @@ public class SubjectsTest extends RestTest {
         Filter filter = builder.filter(f -> f.publicId("urn:filter:vg1"));
 
         URI id = builder.subject(s -> s
+                .publicId("urn:subject:1")
                 .topic(t -> t
                         .resource(r -> r
                                 .contentUri("urn:article:1")
@@ -283,6 +310,7 @@ public class SubjectsTest extends RestTest {
     @Test
     public void can_get_resources_for_a_subject_and_its_topics_recursively() throws Exception {
         URI id = builder.subject(s -> s
+                .publicId("urn:subject:1")
                 .name("subject")
                 .topic("topic a", t -> t
                         .name("topic a")
@@ -332,22 +360,8 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void resource_urls_are_chosen_according_to_context() throws Exception {
-        Resource resource = builder.resource(r -> r.publicId("urn:resource:1"));
 
-        builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .topic(t -> t
-                        .publicId("urn:topic:1")
-                        .resource(resource)
-                )
-        );
-        builder.subject(s -> s
-                .publicId("urn:subject:2")
-                .topic("topic2", t -> t
-                        .publicId("urn:topic:2")
-                        .resource(resource)
-                )
-        );
+        executeSqlScript("classpath:resource_in_dual_subjects_test_setup.sql", false);
 
         for (int i : asList(1, 2)) {
             MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:" + i + "/resources");

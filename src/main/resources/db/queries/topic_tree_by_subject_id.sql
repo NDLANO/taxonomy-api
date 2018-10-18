@@ -2,7 +2,7 @@ with recursive topic_tree(topic_id, parent_topic_id, topic_rank, topic_level) as
     -- topics first level
     select st.topic_id, 0 as parent_topic_id, st.rank as topic_rank, 0 as topic_level
     from subject_topic st
-    where subject_id = (select id from subject where public_id = 'urn:subject:1')
+    where subject_id = (select id from subject where public_id = ?)
 
         union all
 
