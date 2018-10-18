@@ -2,7 +2,6 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.rest.v1.dto.FilterIndexDocument;
 import no.ndla.taxonomy.rest.v1.dto.SubTopicIndexDocument;
@@ -64,26 +63,6 @@ public class SubjectFiltersTest extends RestTest {
         assertAnyTrue(result, r -> "an assignment".equals(r.name));
     }
 
-    @Test
-    public void can_get_resources_belonging_to_a_filter_and_resource_type_for_a_subject() throws Exception {
-        ResourceType type = builder.resourceType(rt -> rt.name("Video").publicId("urn:resourcetype:video"));
-
-        URI subjectId = builder.subject(s -> s
-                .name("subject")
-                .topic(t -> t
-                        .name("a")
-                        .subtopic(sub -> sub.name("subtopic").resource(r -> r.name("a lecture in a subtopic").filter(vg1, core).resourceType(type)))
-                        .resource(r -> r.name("an assignment").filter(vg1, core))
-                        .resource(r -> r.name("a lecture").filter(vg2, core))
-                )
-        ).getPublicId();
-
-        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources?filter=" + vg1.getPublicId() + "&type=" + type.getPublicId());
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
-
-        assertEquals(1, result.length);
-        assertAnyTrue(result, r -> "a lecture in a subtopic".equals(r.name));
-    }
 
     @Test
     public void can_get_topics_with_filter() throws Exception {
@@ -154,21 +133,23 @@ public class SubjectFiltersTest extends RestTest {
     }
 
 
-    /** taken out while experimenting with changes to the way filters work
-    public void can_get_topic_without_filter_but_underlying_resource_has_filter() throws Exception {
-        Subject subject = builder.subject(s -> s
-                .name("physics")
-                .topic(t -> t.name("statics").resource(r -> r.name("Introduction to statics").filter(vg1, core)))
-                .topic(t -> t.name("optics").filter(vg1, core))
-        );
-
-        MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics?filter=" + vg1.getPublicId());
-        Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
-
-        assertEquals(2, topics.length);
-        assertAnyTrue(topics, t -> "statics".equals(t.name));
-        assertAnyTrue(topics, t -> "optics".equals(t.name));
-    }*/
+    /**
+     * taken out while experimenting with changes to the way filters work
+     * public void can_get_topic_without_filter_but_underlying_resource_has_filter() throws Exception {
+     * Subject subject = builder.subject(s -> s
+     * .name("physics")
+     * .topic(t -> t.name("statics").resource(r -> r.name("Introduction to statics").filter(vg1, core)))
+     * .topic(t -> t.name("optics").filter(vg1, core))
+     * );
+     * <p>
+     * MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics?filter=" + vg1.getPublicId());
+     * Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
+     * <p>
+     * assertEquals(2, topics.length);
+     * assertAnyTrue(topics, t -> "statics".equals(t.name));
+     * assertAnyTrue(topics, t -> "optics".equals(t.name));
+     * }
+     */
 
     @Test
     public void can_get_resources_with_relevance() throws Exception {

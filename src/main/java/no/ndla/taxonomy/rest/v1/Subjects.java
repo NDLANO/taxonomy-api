@@ -193,13 +193,25 @@ public class Subjects extends CrudController<Subject> {
     ) {
 
         System.out.println("Getting resources for subject "+subjectId.toString());
+        for( URI f: filterIds){
+            System.out.println("Filter: "+f.toString());
+        }
+        for (URI t:resourceTypeIds){
+            System.out.println("ResourceType: "+t.toString());
+        }
 
         final Map<Integer, TopicNode> nodeMap = jdbcTemplate.query(TOPIC_TREE_BY_SUBJECT_ID, new Object[]{subjectId.toString()}, this::buildTopicTree);
 
         List<Object> args = new ArrayList<>();
         args.add(subjectId.toString());
-        String resourceQuery = addFiltersToQuery(filterIds, RESOURCES_BY_SUBJECT_ID, args);
+        String resourceQuery = addResourceTypesToQuery(resourceTypeIds, RESOURCES_BY_SUBJECT_ID, args);
+        resourceQuery = addFiltersToQuery(filterIds, resourceQuery, args);
 
+        System.out.println(resourceQuery);
+        System.out.println("ARGS:");
+        for(Object o: args){
+            System.out.println(o.toString());
+        }
         Map<Integer, TopicNode> resourceMap = jdbcTemplate.query(resourceQuery, args.toArray(), resultSet -> {
             return populateTopicTree(subjectId, relevance, resultSet, nodeMap);
         });
@@ -302,9 +314,10 @@ public class Subjects extends CrudController<Subject> {
             for (URI resourceTypeId : resourceTypeIds) {
                 where.append("rt.public_id = ? OR ");
                 args.add(resourceTypeId.toString());
+                System.out.println("Resource type "+resourceTypeId.toString()+ " added to args");
             }
             where.setLength(where.length() - " OR ".length());
-            sql = sql.replace("1 = 1", "(" + where + ")");
+            sql = sql.replace("1 = 1", "(" + where + ") ");
         }
         return sql;
     }
