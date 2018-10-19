@@ -333,19 +333,25 @@ public class TopicsTest extends RestTest {
     @Test
     public void can_get_resources_for_a_topic_recursively() throws Exception {
         builder.subject(s -> s
+                .publicId("urn:subject:1")
                 .name("subject a")
                 .topic(t -> t
-                        .name("a")
                         .publicId("urn:topic:a")
-                        .resource(r -> r.name("resource a").contentUri("urn:article:a"))
+                        .name("a")
+                        .resource(r -> r
+                                        .publicId("urn:resource:1")
+                                .name("resource a").contentUri("urn:article:a"))
                         .subtopic(st -> st
+                                .publicId("urn:topic:a:1")
                                 .name("aa")
                                 .resource(r -> r.name("resource aa").contentUri("urn:article:aa"))
                                 .subtopic(st2 -> st2
+                                        .publicId("urn:topic:a:1:1")
                                         .name("aaa")
                                         .resource(r -> r.name("resource aaa").contentUri("urn:article:aaa"))
                                 )
                                 .subtopic(st2 -> st2
+                                        .publicId("urn:topic:a:1:2")
                                         .name("aab")
                                         .resource(r -> r.name("resource aab").contentUri("urn:article:aab"))
                                 )
@@ -355,6 +361,10 @@ public class TopicsTest extends RestTest {
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true");
         ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
+        for(ResourceIndexDocument r:result){
+            System.out.println("Resource in result : " +r.topicNumericId+" "+r.name);
+        }
+
         assertEquals(4, result.length);
         assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));
         assertAnyTrue(result, r -> "resource aa".equals(r.name) && "urn:article:aa".equals(r.contentUri.toString()));
@@ -362,6 +372,22 @@ public class TopicsTest extends RestTest {
         assertAnyTrue(result, r -> "resource aab".equals(r.name) && "urn:article:aab".equals(r.contentUri.toString()));
         assertAllTrue(result, r -> !r.path.isEmpty());
     }
+
+    @Test
+    public void resources_by_topic_id_recursively_are_ordered_by_rank_in_parent() throws Exception {
+        executeSqlScript("classpath:resources_by_topic_id_test_setup.sql", false);
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:5/resources?recursive=true");
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        assertEquals(6, result.length);
+        assertEquals("urn:resource:3", result[0].id.toString());
+        assertEquals("urn:resource:5", result[1].id.toString());
+        assertEquals("urn:resource:4", result[2].id.toString());
+        assertEquals("urn:resource:6", result[3].id.toString());
+        assertEquals("urn:resource:7", result[4].id.toString());
+        assertEquals("urn:resource:8", result[5].id.toString());
+
+    }
+
 
     @Test
     public void can_get_urls_for_resources_for_a_topic_recursively() throws Exception {

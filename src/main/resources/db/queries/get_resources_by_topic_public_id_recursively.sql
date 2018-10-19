@@ -28,6 +28,7 @@ WITH RECURSIVE tree (topic_id, public_id, name, parent_id, is_primary, level) AS
 
 SELECT
   t.public_id                  AS topic_id,
+  t.topic_id                   AS topic_numeric_id,
   coalesce(rtr.name, r.name)   AS resource_name,
   r.public_id                  AS resource_public_id,
   r.content_uri                AS resource_content_uri,

@@ -61,6 +61,7 @@ public class ResourceQueryExtractor {
             if (null == resource) {
                 resource = new ResourceIndexDocument() {{
                     topicId = toURI(resultSet.getString("topic_id"));
+                    topicNumericId = resultSet.getInt("topic_numeric_id");
                     name = resultSet.getString("resource_name");
                     contentUri = toURI(resultSet.getString("resource_content_uri"));
                     id = toURI(resultSet.getString("resource_public_id"));

@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.rest.v1.dto.topics;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -51,4 +52,7 @@ public class ResourceIndexDocument {
     @JsonProperty
     @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
     public Boolean isPrimary;
+
+    @JsonIgnore
+    public int topicNumericId;
 }
