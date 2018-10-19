@@ -1,6 +1,6 @@
-package no.ndla.taxonomy.rest.v1.extractors;
+package no.ndla.taxonomy.rest.v1.extractors.subjects;
 
-import no.ndla.taxonomy.rest.v1.dto.SubjectIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.subjects.SubjectIndexDocument;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

@@ -1,6 +1,8 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.rest.v1.dto.topics.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.topics.TopicIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -19,7 +21,7 @@ public class TopicTranslationsTest extends RestTest {
         builder.topic(t -> t.name("Integration").translation("nb", l -> l.name("Integrasjon")));
 
         MockHttpServletResponse response = getResource("/v1/topics?language=nb");
-        Topics.TopicIndexDocument[] topics = getObject(Topics.TopicIndexDocument[].class, response);
+        TopicIndexDocument[] topics = getObject(TopicIndexDocument[].class, response);
 
         assertEquals(2, topics.length);
         assertAnyTrue(topics, s -> s.name.equals("Trigonometri"));
@@ -35,7 +37,7 @@ public class TopicTranslationsTest extends RestTest {
                 )
         ).getPublicId();
 
-        Topics.TopicIndexDocument topic = getTopic(id, "nb");
+        TopicIndexDocument topic = getTopic(id, "nb");
         assertEquals("Trigonometri", topic.name);
     }
 
@@ -45,7 +47,7 @@ public class TopicTranslationsTest extends RestTest {
         URI id = builder.topic(t -> t
                 .name("Trigonometry")
         ).getPublicId();
-        Topics.TopicIndexDocument topic = getTopic(id, "XX");
+        TopicIndexDocument topic = getTopic(id, "XX");
         assertEquals("Trigonometry", topic.name);
     }
 
@@ -58,7 +60,7 @@ public class TopicTranslationsTest extends RestTest {
                 )
         ).getPublicId();
 
-        Topics.TopicIndexDocument topic = getTopic(id, null);
+        TopicIndexDocument topic = getTopic(id, null);
         assertEquals("Trigonometry", topic.name);
     }
 
@@ -142,7 +144,7 @@ public class TopicTranslationsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/topics/" + a + "/resources?recursive=true&language=nb");
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "Introduksjon til calculus".equals(r.name));
@@ -171,7 +173,7 @@ public class TopicTranslationsTest extends RestTest {
                 ));
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?language=nb");
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "ressurs 1".equals(r.name));
@@ -179,10 +181,10 @@ public class TopicTranslationsTest extends RestTest {
         assertAllTrue(result, r -> r.resourceTypes.iterator().next().name.equals("Artikkel"));
     }
 
-    private Topics.TopicIndexDocument getTopic(URI id, String language) throws Exception {
+    private TopicIndexDocument getTopic(URI id, String language) throws Exception {
         String path = "/v1/topics/" + id;
         if (isNotEmpty(language)) path = path + "?language=" + language;
-        return getObject(Topics.TopicIndexDocument.class, getResource(path));
+        return getObject(TopicIndexDocument.class, getResource(path));
     }
 
 }

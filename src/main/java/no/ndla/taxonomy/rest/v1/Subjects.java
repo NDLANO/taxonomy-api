@@ -4,13 +4,16 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.rest.v1.command.CreateSubjectCommand;
-import no.ndla.taxonomy.rest.v1.command.UpdateSubjectCommand;
-import no.ndla.taxonomy.rest.v1.dto.*;
-import no.ndla.taxonomy.rest.v1.extractors.FilterExtractor;
-import no.ndla.taxonomy.rest.v1.extractors.ResourceExctractor;
-import no.ndla.taxonomy.rest.v1.extractors.SubjectExtractor;
-import no.ndla.taxonomy.rest.v1.extractors.TopicExtractor;
+import no.ndla.taxonomy.rest.v1.command.subjects.CreateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.command.subjects.UpdateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.dto.subjects.FilterIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.subjects.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.subjects.SubTopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.subjects.SubjectIndexDocument;
+import no.ndla.taxonomy.rest.v1.extractors.subjects.FilterExtractor;
+import no.ndla.taxonomy.rest.v1.extractors.subjects.ResourceExctractor;
+import no.ndla.taxonomy.rest.v1.extractors.subjects.SubjectExtractor;
+import no.ndla.taxonomy.rest.v1.extractors.subjects.TopicExtractor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -125,7 +128,7 @@ public class Subjects extends CrudController<Subject> {
 
         List<Object> args = new ArrayList<>();
         args.add(id.toString());
-        args.add(language); 
+        args.add(language);
         TopicExtractor extractor = new TopicExtractor();
         List<SubTopicIndexDocument> results = jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
             return extractor.extractTopics(id, filterIds, relevance, resultSet);

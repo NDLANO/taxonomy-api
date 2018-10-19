@@ -3,8 +3,9 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.rest.v1.dto.FilterIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.SubTopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.subjects.FilterIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.subjects.SubTopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.topics.ResourceIndexDocument;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -56,7 +57,7 @@ public class SubjectFiltersTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources?filter=" + vg1.getPublicId());
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "a lecture in a subtopic".equals(r.name));
@@ -168,7 +169,7 @@ public class SubjectFiltersTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources?filter=" + vg1.getPublicId() + "&relevance=" + core.getPublicId());
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "a lecture in a subtopic".equals(r.name));

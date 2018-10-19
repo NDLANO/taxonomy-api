@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.rest.v1.dto;
+package no.ndla.taxonomy.rest.v1.dto.subjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

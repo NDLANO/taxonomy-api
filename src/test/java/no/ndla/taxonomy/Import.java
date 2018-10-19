@@ -2,8 +2,8 @@ package no.ndla.taxonomy;
 
 import no.ndla.taxonomy.rest.v1.SubjectTopics;
 import no.ndla.taxonomy.rest.v1.TopicSubtopics;
-import no.ndla.taxonomy.rest.v1.Topics;
-import no.ndla.taxonomy.rest.v1.command.CreateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.command.subjects.CreateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.command.topics.CreateTopicCommand;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.web.client.RestTemplate;
@@ -80,7 +80,7 @@ public class Import {
     }
 
     private URI createTopic(Integer id, String name) {
-        Topics.CreateTopicCommand cmd = new Topics.CreateTopicCommand();
+        CreateTopicCommand cmd = new CreateTopicCommand();
         if (null != id) cmd.id = URI.create("urn:topic:" + id);
         cmd.name = name;
 

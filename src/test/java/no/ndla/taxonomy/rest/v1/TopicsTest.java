@@ -5,7 +5,12 @@ import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.rest.v1.Topics.ConnectionIndexDocument;
+import no.ndla.taxonomy.rest.v1.command.topics.CreateTopicCommand;
+import no.ndla.taxonomy.rest.v1.command.topics.UpdateTopicCommand;
+import no.ndla.taxonomy.rest.v1.dto.topics.ConnectionIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.topics.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.topics.SubTopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.topics.TopicIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -33,7 +38,7 @@ public class TopicsTest extends RestTest {
 
 
         MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:1");
-        Topics.TopicIndexDocument topic = getObject(Topics.TopicIndexDocument.class, response);
+        TopicIndexDocument topic = getObject(TopicIndexDocument.class, response);
 
         assertEquals("trigonometry", topic.name);
         assertEquals("urn:article:1", topic.contentUri.toString());
@@ -54,7 +59,7 @@ public class TopicsTest extends RestTest {
         builder.topic("topic").setPrimarySubject(primary);
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1");
-        Topics.TopicIndexDocument topic = getObject(Topics.TopicIndexDocument.class, response);
+        TopicIndexDocument topic = getObject(TopicIndexDocument.class, response);
 
         assertEquals("/subject:2/topic:1", topic.path);
     }
@@ -66,7 +71,7 @@ public class TopicsTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1");
-        Topics.TopicIndexDocument topic = getObject(Topics.TopicIndexDocument.class, response);
+        TopicIndexDocument topic = getObject(TopicIndexDocument.class, response);
 
         assertNull(topic.path);
     }
@@ -81,7 +86,7 @@ public class TopicsTest extends RestTest {
                 .topic(t -> t.name("trigonometry")));
 
         MockHttpServletResponse response = getResource("/v1/topics");
-        Topics.TopicIndexDocument[] topics = getObject(Topics.TopicIndexDocument[].class, response);
+        TopicIndexDocument[] topics = getObject(TopicIndexDocument[].class, response);
         assertEquals(2, topics.length);
 
         assertAnyTrue(topics, s -> "photo synthesis".equals(s.name));
@@ -147,7 +152,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_create_topic() throws Exception {
-        Topics.CreateTopicCommand createTopicCommand = new Topics.CreateTopicCommand() {{
+        CreateTopicCommand createTopicCommand = new CreateTopicCommand() {{
             name = "trigonometry";
             contentUri = URI.create("urn:article:1");
         }};
@@ -162,7 +167,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_create_topic_with_id() throws Exception {
-        Topics.CreateTopicCommand createTopicCommand = new Topics.CreateTopicCommand() {{
+        CreateTopicCommand createTopicCommand = new CreateTopicCommand() {{
             id = URI.create("urn:topic:1");
             name = "trigonometry";
         }};
@@ -175,7 +180,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        Topics.CreateTopicCommand command = new Topics.CreateTopicCommand() {{
+        CreateTopicCommand command = new CreateTopicCommand() {{
             id = URI.create("urn:topic:1");
             name = "name";
         }};
@@ -188,7 +193,7 @@ public class TopicsTest extends RestTest {
     public void can_update_topic() throws Exception {
         URI id = builder.topic().getPublicId();
 
-        updateResource("/v1/topics/" + id, new Topics.UpdateTopicCommand() {{
+        updateResource("/v1/topics/" + id, new UpdateTopicCommand() {{
             name = "trigonometry";
             contentUri = URI.create("urn:article:1");
         }});
@@ -300,7 +305,7 @@ public class TopicsTest extends RestTest {
                 .resource()
         );
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources");
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(first(topic.resources).getPublicId(), result[0].connectionId);
     }
@@ -319,7 +324,7 @@ public class TopicsTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?recursive=true");
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(first(builder.topic("topic").resources).getPublicId(), result[0].connectionId);
         assertEquals(first(builder.topic("subtopic").resources).getPublicId(), result[1].connectionId);
@@ -348,7 +353,7 @@ public class TopicsTest extends RestTest {
                 ));
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true");
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(4, result.length);
         assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));
@@ -379,7 +384,7 @@ public class TopicsTest extends RestTest {
                 ));
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true");
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(4, result.length);
         assertAnyTrue(result, r -> "/subject:1/topic:a/resource:a".equals(r.path));
@@ -409,7 +414,7 @@ public class TopicsTest extends RestTest {
 
         for (int i : asList(1, 2)) {
             MockHttpServletResponse response = getResource("/v1/topics/urn:topic:" + i + "/resources");
-            Topics.ResourceIndexDocument[] resources = getObject(Topics.ResourceIndexDocument[].class, response);
+            ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
             assertEquals(1, resources.length);
             assertEquals("/subject:" + i + "/topic:" + i + "/resource:1", resources[0].path);
@@ -428,7 +433,7 @@ public class TopicsTest extends RestTest {
                 ));
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources");
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "resource 1".equals(r.name));
@@ -465,7 +470,7 @@ public class TopicsTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/topics/" + parentTopicId + "/topics");
-        Topics.SubTopicIndexDocument[] topics = getObject(Topics.SubTopicIndexDocument[].class, response);
+        SubTopicIndexDocument[] topics = getObject(SubTopicIndexDocument[].class, response);
 
         assertEquals(3, topics.length);
         assertEquals("child topic aa", topics[1].name);
@@ -505,7 +510,7 @@ public class TopicsTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/topics/" + primaryTopicId + "/resources");
-        Topics.ResourceIndexDocument[] resources = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, resources.length);
         assertEquals("primary resource", resources[1].name);

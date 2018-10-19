@@ -1,8 +1,8 @@
-package no.ndla.taxonomy.rest.v1.extractors;
+package no.ndla.taxonomy.rest.v1.extractors.subjects;
 
-import no.ndla.taxonomy.rest.v1.dto.ResourceFilterIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.ResourceIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.ResourceTypeIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.subjects.ResourceFilterIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.subjects.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.subjects.ResourceTypeIndexDocument;
 
 import java.net.URI;
 import java.sql.ResultSet;

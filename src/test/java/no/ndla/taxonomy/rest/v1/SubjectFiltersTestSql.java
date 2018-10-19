@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.rest.v1;
 
+import no.ndla.taxonomy.rest.v1.dto.topics.ResourceIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -13,7 +14,7 @@ public class SubjectFiltersTestSql extends RestTest {
         executeSqlScript("classpath:resource_with_filter_and_type_test_setup.sql", false);
 
         MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/resources?filter=urn:filter:1&type=urn:resourcetype:video");
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, result.length);
         assertAnyTrue(result, r -> "R:1".equals(r.name));

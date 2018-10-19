@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.rest.v1;
 
+import no.ndla.taxonomy.rest.v1.dto.topics.ResourceIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -32,7 +33,7 @@ public class SubjectResourceTypesTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources");
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertEquals(2, result[0].resourceTypes.size());
@@ -54,7 +55,7 @@ public class SubjectResourceTypesTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources");
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, result.length);
         assertEquals(0, result[0].resourceTypes.size());
@@ -76,7 +77,7 @@ public class SubjectResourceTypesTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources?type=" + lecture);
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "a lecture".equals(r.name));

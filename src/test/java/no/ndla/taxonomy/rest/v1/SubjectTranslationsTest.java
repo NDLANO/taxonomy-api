@@ -2,9 +2,9 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.rest.v1.dto.ResourceIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.SubTopicIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.SubjectIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.subjects.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.subjects.SubTopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.subjects.SubjectIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
