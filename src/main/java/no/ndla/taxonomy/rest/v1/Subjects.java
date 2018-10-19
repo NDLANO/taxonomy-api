@@ -125,8 +125,7 @@ public class Subjects extends CrudController<Subject> {
 
         List<Object> args = new ArrayList<>();
         args.add(id.toString());
-        args.add(language);
-
+        args.add(language); 
         TopicExtractor extractor = new TopicExtractor();
         List<SubTopicIndexDocument> results = jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
             return extractor.extractTopics(id, filterIds, relevance, resultSet);
@@ -204,6 +203,8 @@ public class Subjects extends CrudController<Subject> {
 
         List<Object> args = new ArrayList<>();
         args.add(subjectId.toString());
+        args.add(language); //resource
+        args.add(language); //resource type
         String resourceQuery = addResourceTypesToQuery(resourceTypeIds, RESOURCES_BY_SUBJECT_ID, args);
         resourceQuery = addFiltersToQuery(filterIds, resourceQuery, args);
 
