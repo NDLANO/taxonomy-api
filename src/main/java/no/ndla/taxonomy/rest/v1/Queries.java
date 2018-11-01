@@ -126,7 +126,7 @@ public class Queries {
         @JsonIgnore
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof Topics.ResourceTypeIndexDocument)) return false;
+            if (!(o instanceof no.ndla.taxonomy.rest.v1.dto.topics.ResourceTypeIndexDocument)) return false;
 
             Queries.ResourceTypeIndexDocument that = (Queries.ResourceTypeIndexDocument) o;
 

@@ -5,6 +5,8 @@ import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.rest.v1.dto.topics.FilterIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.topics.ResourceIndexDocument;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -54,7 +56,7 @@ public class TopicFiltersTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/filters");
-        Topics.FilterIndexDocument[] filters = getObject(Topics.FilterIndexDocument[].class, response);
+        FilterIndexDocument[] filters = getObject(FilterIndexDocument[].class, response);
 
         assertEquals(2, filters.length);
         assertAnyTrue(filters, f -> f.id.equals(vg1.getPublicId()));
@@ -131,7 +133,7 @@ public class TopicFiltersTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?filter=" + vg1.getPublicId());
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, result.length);
         assertEquals("urn:resource:1", result[0].id.toString());
@@ -160,7 +162,7 @@ public class TopicFiltersTest extends RestTest {
                 ));
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true&filter=" + vg1.getPublicId());
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(3, result.length);
         assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));
@@ -185,7 +187,7 @@ public class TopicFiltersTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?type=" + type.getPublicId() + "&filter=" + vg1.getPublicId());
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, result.length);
         assertEquals("urn:resource:1", result[0].id.toString());
@@ -216,7 +218,7 @@ public class TopicFiltersTest extends RestTest {
                 ));
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true&filter=" + vg1.getPublicId() + "&type=" + type.getPublicId());
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));
@@ -238,7 +240,7 @@ public class TopicFiltersTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?filter=" + vg1.getPublicId() + "&relevance=" + core.getPublicId());
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, result.length);
         assertEquals("urn:resource:1", result[0].id.toString());
@@ -267,7 +269,7 @@ public class TopicFiltersTest extends RestTest {
                 ));
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true&filter=" + vg1.getPublicId() + "&relevance=" + core.getPublicId());
-        Topics.ResourceIndexDocument[] result = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(3, result.length);
         assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));

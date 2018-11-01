@@ -1,5 +1,6 @@
 SELECT
   t.public_id                  AS topic_id,
+  t.id                         AS topic_numeric_id,
   coalesce(rtr.name, r.name)   AS resource_name,
   r.public_id                  AS resource_public_id,
   r.content_uri                AS resource_content_uri,
