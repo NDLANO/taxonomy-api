@@ -22,7 +22,6 @@ import static no.ndla.taxonomy.rest.v1.UrlResolver.getPathMostCloselyMatchingCon
 public class ResourceExctractor {
 
 
-
     public List<ResourceIndexDocument> extractResources(URI subjectId, URI relevance, ResultSet resultSet) throws SQLException {
         List<ResourceIndexDocument> result = new ArrayList<>();
         Map<URI, ResourceIndexDocument> resources = new HashMap<>();
@@ -47,7 +46,7 @@ public class ResourceExctractor {
                 id = filterPublicId;
                 relevanceId = getURI(resultSet, "relevance_public_id");
             }};
-            System.out.println("Adding filter "+filterPublicId +" with relevance "+ filter.relevanceId);
+            System.out.println("Adding filter " + filterPublicId + " with relevance " + filter.relevanceId);
             resource.filters.add(filter);
         }
     }
@@ -77,17 +76,17 @@ public class ResourceExctractor {
                 rank = resultSet.getInt("rank");
             }};
             resources.put(id, resource);
-            filterResourceByRelevance(relevance, resultSet, result, resource);
         }
+        filterResourceByRelevance(relevance, resultSet, result, resource);
         return resource;
     }
 
     private void filterResourceByRelevance(URI relevance, ResultSet resultSet, List<ResourceIndexDocument> result, ResourceIndexDocument resource) throws SQLException {
-        if (relevance == null || relevance.toString().equals("")) {
+        if (relevance == null || relevance.toString().equals("") && !result.contains(resource)) {
             result.add(resource);
         } else {
             URI resourceRelevance = toURI(resultSet.getString("relevance_public_id"));
-            if (resourceRelevance != null && resourceRelevance.equals(relevance)) {
+            if (resourceRelevance != null && resourceRelevance.equals(relevance) && !result.contains(resource)) {
                 result.add(resource);
             }
         }

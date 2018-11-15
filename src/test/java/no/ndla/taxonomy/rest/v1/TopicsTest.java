@@ -36,7 +36,6 @@ public class TopicsTest extends RestTest {
                         .publicId("urn:topic:1")
                 ));
 
-
         MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:1");
         TopicIndexDocument topic = getObject(TopicIndexDocument.class, response);
 
@@ -88,7 +87,6 @@ public class TopicsTest extends RestTest {
         MockHttpServletResponse response = getResource("/v1/topics");
         TopicIndexDocument[] topics = getObject(TopicIndexDocument[].class, response);
         assertEquals(2, topics.length);
-
         assertAnyTrue(topics, s -> "photo synthesis".equals(s.name));
         assertAnyTrue(topics, s -> "trigonometry".equals(s.name));
         assertAllTrue(topics, s -> isValidId(s.id));
@@ -339,7 +337,7 @@ public class TopicsTest extends RestTest {
                         .publicId("urn:topic:a")
                         .name("a")
                         .resource(r -> r
-                                        .publicId("urn:resource:1")
+                                .publicId("urn:resource:1")
                                 .name("resource a").contentUri("urn:article:a"))
                         .subtopic(st -> st
                                 .publicId("urn:topic:a:1")
@@ -361,8 +359,8 @@ public class TopicsTest extends RestTest {
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true");
         ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
-        for(ResourceIndexDocument r:result){
-            System.out.println("Resource in result : " +r.topicNumericId+" "+r.name);
+        for (ResourceIndexDocument r : result) {
+            System.out.println("Resource in result : " + r.topicNumericId + " " + r.name);
         }
 
         assertEquals(4, result.length);
@@ -385,7 +383,6 @@ public class TopicsTest extends RestTest {
         assertEquals("urn:resource:6", result[3].id.toString());
         assertEquals("urn:resource:7", result[4].id.toString());
         assertEquals("urn:resource:8", result[5].id.toString());
-
     }
 
 
@@ -545,6 +542,20 @@ public class TopicsTest extends RestTest {
         assertEquals("external resource", resources[0].name);
         assertEquals("urn:resource:ext", resources[0].id.toString());
         assertFalse(resources[0].isPrimary);
+    }
+
+    @Test
+    public void resources_can_be_filtered_by_relevance() throws Exception {
+        executeSqlScript("classpath:resource_with_filters_and_relevances_test_setup.sql", false);
+
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?relevance=urn:relevance:core");
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
+        assertEquals(10, resources.length);
+
+        MockHttpServletResponse response2 = getResource("/v1/topics/urn:topic:1/resources?relevance=urn:relevance:supplementary");
+        ResourceIndexDocument[] resources2 = getObject(ResourceIndexDocument[].class, response2);
+        assertEquals(5, resources2.length);
+
     }
 
     private class ConnectionTypeCounter {
