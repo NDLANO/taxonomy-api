@@ -182,6 +182,7 @@ public class Resources extends CrudController<Resource> {
                     id = getURI(resultSet, "id");
                     isPrimary = resultSet.getBoolean("is_primary");
                     contentUri = URI.create(resultSet.getString("content_uri") != null ? resultSet.getString("content_uri") : "");
+                    connectionId = URI.create(resultSet.getString("connection_id"));
                 }});
             }
             return result;
@@ -301,6 +302,9 @@ public class Resources extends CrudController<Resource> {
         @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
         public boolean isPrimary;
+
+        @JsonProperty
+        public URI connectionId;
 
         @Override
         @JsonIgnore
