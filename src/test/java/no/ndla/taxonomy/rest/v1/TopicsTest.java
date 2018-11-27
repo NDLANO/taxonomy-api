@@ -361,10 +361,6 @@ public class TopicsTest extends RestTest {
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true");
         ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
-        for(ResourceIndexDocument r:result){
-            System.out.println("Resource in result : " +r.topicNumericId+" "+r.name);
-        }
-
         assertEquals(4, result.length);
         assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));
         assertAnyTrue(result, r -> "resource aa".equals(r.name) && "urn:article:aa".equals(r.contentUri.toString()));

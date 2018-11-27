@@ -193,15 +193,6 @@ public class Subjects extends CrudController<Subject> {
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
                     URI relevance
     ) {
-
-        System.out.println("Getting resources for subject "+subjectId.toString());
-        for( URI f: filterIds){
-            System.out.println("Filter: "+f.toString());
-        }
-        for (URI t:resourceTypeIds){
-            System.out.println("ResourceType: "+t.toString());
-        }
-
         final Map<Integer, TopicNode> nodeMap = jdbcTemplate.query(TOPIC_TREE_BY_SUBJECT_ID, new Object[]{subjectId.toString()}, this::buildTopicTree);
 
         List<Object> args = new ArrayList<>();
@@ -211,11 +202,6 @@ public class Subjects extends CrudController<Subject> {
         String resourceQuery = addResourceTypesToQuery(resourceTypeIds, RESOURCES_BY_SUBJECT_ID, args);
         resourceQuery = addFiltersToQuery(filterIds, resourceQuery, args);
 
-        System.out.println(resourceQuery);
-        System.out.println("ARGS:");
-        for(Object o: args){
-            System.out.println(o.toString());
-        }
         Map<Integer, TopicNode> resourceMap = jdbcTemplate.query(resourceQuery, args.toArray(), resultSet -> {
             return populateTopicTree(subjectId, relevance, resultSet, nodeMap);
         });
@@ -250,11 +236,9 @@ public class Subjects extends CrudController<Subject> {
             t.publicId = resultSet.getString("public_id");
             t.level = resultSet.getInt("topic_level");
             if (t.level == 0) {
-                System.out.println("Adding top level topic "+t.topicId + " to node map");
                 nodeMap.put(t.topicId, t);
             } else {
                 nodeMap.get(parentTopicId).subTopics.add(t);
-                System.out.println("Adding topic "+t.topicId +" to node map");
                 nodeMap.put(t.topicId, t);
             }
         }
@@ -268,23 +252,9 @@ public class Subjects extends CrudController<Subject> {
         List<ResourceIndexDocument> resourceIndexDocuments = extractor.extractResources(subjectURI, relevance, resourceResults);
         resourceIndexDocuments.forEach(resourceIndexDocument -> {
             Integer topicId = resourceIndexDocument.topicNumericId;
-            System.out.println("Looking up "+topicId +" in node map");
             nodeMap.get(topicId).resources.add(resourceIndexDocument);
         });
 
-        /*while (resourceResults.next()) {
-            int topicId = resourceResults.getInt("topic_id");
-            String publicId = resourceResults.getString("resource_public_id");
-            String name = resourceResults.getString("resource_name");
-            int rank = resourceResults.getInt("rank");
-
-            ResourceNode r = new ResourceNode();
-            r.publicId = publicId;
-            r.rank = rank;
-            r.name = name;
-            nodeMap.get(topicId).resources.add(r);
-        }
-        */
         return nodeMap;
     }
 
@@ -318,7 +288,6 @@ public class Subjects extends CrudController<Subject> {
             for (URI resourceTypeId : resourceTypeIds) {
                 where.append("rt.public_id = ? OR ");
                 args.add(resourceTypeId.toString());
-                System.out.println("Resource type "+resourceTypeId.toString()+ " added to args");
             }
             where.setLength(where.length() - " OR ".length());
             sql = sql.replace("1 = 1", "(" + where + ") ");
