@@ -99,16 +99,18 @@ public class TopicResources {
                             command) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
         Topic topic = topicResource.getTopic();
+        Resource resource = topicResource.getResource();
 
         if (command.primary) {
-            topicResource.setPrimary(true);
-            topicResourceRepository.save(topicResource);
+            resource.setPrimaryTopic(topic);
         } else if (topicResource.isPrimary() && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
-        List<TopicResource> existingConnections = topicResourceRepository.findByTopic(topic);
-        List<TopicResource> rankedConnections = RankableConnectionUpdater.rank(existingConnections, topicResource, command.rank);
-        topicResourceRepository.save(rankedConnections);
+        if (command.rank > 0) {
+            List<TopicResource> existingConnections = topicResourceRepository.findByTopic(topic);
+            List<TopicResource> rankedConnections = RankableConnectionUpdater.rank(existingConnections, topicResource, command.rank);
+            topicResourceRepository.save(rankedConnections);
+        }
     }
 
     public static class AddResourceToTopicCommand {
