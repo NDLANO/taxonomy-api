@@ -3,7 +3,8 @@ SELECT
   t.public_id               AS id,
   coalesce(trl.name, t.name) AS name,
   t.content_uri             AS content_uri,
-  tr.is_primary             AS is_primary
+  tr.is_primary             AS is_primary,
+  tr.public_id              AS connection_id
 FROM
   topic t
   LEFT OUTER JOIN
