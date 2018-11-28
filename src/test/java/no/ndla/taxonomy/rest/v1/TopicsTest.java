@@ -339,7 +339,7 @@ public class TopicsTest extends RestTest {
                         .publicId("urn:topic:a")
                         .name("a")
                         .resource(r -> r
-                                        .publicId("urn:resource:1")
+                                .publicId("urn:resource:1")
                                 .name("resource a").contentUri("urn:article:a"))
                         .subtopic(st -> st
                                 .publicId("urn:topic:a:1")
@@ -541,6 +541,20 @@ public class TopicsTest extends RestTest {
         assertEquals("external resource", resources[0].name);
         assertEquals("urn:resource:ext", resources[0].id.toString());
         assertFalse(resources[0].isPrimary);
+    }
+
+    @Test
+    public void resources_can_be_filtered_by_relevance() throws Exception {
+        executeSqlScript("classpath:resource_with_filters_and_relevances_test_setup.sql", false);
+
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?relevance=urn:relevance:core");
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
+        assertEquals(10, resources.length);
+
+        MockHttpServletResponse response2 = getResource("/v1/topics/urn:topic:1/resources?relevance=urn:relevance:supplementary");
+        ResourceIndexDocument[] resources2 = getObject(ResourceIndexDocument[].class, response2);
+        assertEquals(5, resources2.length);
+
     }
 
     private class ConnectionTypeCounter {

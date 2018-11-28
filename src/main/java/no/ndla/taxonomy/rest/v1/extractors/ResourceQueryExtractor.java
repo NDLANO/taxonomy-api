@@ -70,8 +70,8 @@ public class ResourceQueryExtractor {
                     isPrimary = resultSet.getBoolean("resource_is_primary");
                 }};
                 resources.put(id, resource);
-                filterResultByRelevance(relevance, resultSet, result, resource);
             }
+            filterResultByRelevance(relevance, resultSet, result, resource);
             resource.path = getPathMostCloselyMatchingContext(context, resource.path, resultSet.getString("resource_path"));
 
             String resourceTypePublicId = resultSet.getString("resource_type_public_id");
@@ -88,12 +88,12 @@ public class ResourceQueryExtractor {
         return result;
     }
 
-    public void filterResultByRelevance(URI relevance, ResultSet resultSet, List<ResourceIndexDocument> result, ResourceIndexDocument resource) throws SQLException {
-        if (relevance == null || relevance.toString().equals("")) {
-            result.add(resource);
+    private void filterResultByRelevance(URI relevance, ResultSet resultSet, List<ResourceIndexDocument> result, ResourceIndexDocument resource) throws SQLException {
+        if (relevance == null || relevance.toString().equals("") && !result.contains(resource)) {
+                result.add(resource);
         } else {
             URI resourceRelevance = toURI(resultSet.getString("relevance_public_id"));
-            if (resourceRelevance != null && resourceRelevance.equals(relevance)) {
+            if (resourceRelevance != null && resourceRelevance.equals(relevance) && !result.contains(resource)) {
                 result.add(resource);
             }
         }
