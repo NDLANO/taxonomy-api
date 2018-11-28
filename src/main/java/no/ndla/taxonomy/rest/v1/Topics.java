@@ -128,16 +128,7 @@ public class Topics extends CrudController<Topic> {
                     URI relevance
     ) throws Exception {
 
-        System.out.println("Getting resources for topic " + topicId.toString());
-        for (URI f : filterIds) {
-            System.out.println("Filter: " + f.toString());
-        }
-        for (URI t : resourceTypeIds) {
-            System.out.println("ResourceType: " + t.toString());
-        }
-
         final Map<Integer, TopicNode> nodeMap = jdbcTemplate.query(TOPIC_TREE_BY_TOPIC_ID, new Object[]{topicId.toString()}, this::buildTopicTree);
-
 
         TopicIndexDocument topicIndexDocument = get(topicId, null);
 
@@ -194,7 +185,6 @@ public class Topics extends CrudController<Topic> {
 
         resources.forEach(resourceIndexDocument -> {
             Integer topicId = resourceIndexDocument.topicNumericId;
-            System.out.println("Looking up " + topicId + " in node map");
             nodeMap.get(topicId).resources.add(resourceIndexDocument);
         });
         return nodeMap;
@@ -213,11 +203,9 @@ public class Topics extends CrudController<Topic> {
             t.publicId = resultSet.getString("public_id");
             t.level = resultSet.getInt("topic_level");
             if (t.level == 0) {
-                System.out.println("Adding top level topic " + t.topicId + " to node map");
                 nodeMap.put(t.topicId, t);
             } else {
                 nodeMap.get(parentTopicId).subTopics.add(t);
-                System.out.println("Adding topic " + t.topicId + " to node map");
                 nodeMap.put(t.topicId, t);
             }
         }

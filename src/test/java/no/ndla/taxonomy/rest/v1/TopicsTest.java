@@ -36,6 +36,7 @@ public class TopicsTest extends RestTest {
                         .publicId("urn:topic:1")
                 ));
 
+
         MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:1");
         TopicIndexDocument topic = getObject(TopicIndexDocument.class, response);
 
@@ -87,6 +88,7 @@ public class TopicsTest extends RestTest {
         MockHttpServletResponse response = getResource("/v1/topics");
         TopicIndexDocument[] topics = getObject(TopicIndexDocument[].class, response);
         assertEquals(2, topics.length);
+
         assertAnyTrue(topics, s -> "photo synthesis".equals(s.name));
         assertAnyTrue(topics, s -> "trigonometry".equals(s.name));
         assertAllTrue(topics, s -> isValidId(s.id));
@@ -359,10 +361,6 @@ public class TopicsTest extends RestTest {
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true");
         ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
-        for (ResourceIndexDocument r : result) {
-            System.out.println("Resource in result : " + r.topicNumericId + " " + r.name);
-        }
-
         assertEquals(4, result.length);
         assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));
         assertAnyTrue(result, r -> "resource aa".equals(r.name) && "urn:article:aa".equals(r.contentUri.toString()));
@@ -383,6 +381,7 @@ public class TopicsTest extends RestTest {
         assertEquals("urn:resource:6", result[3].id.toString());
         assertEquals("urn:resource:7", result[4].id.toString());
         assertEquals("urn:resource:8", result[5].id.toString());
+
     }
 
 
