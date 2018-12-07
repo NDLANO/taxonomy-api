@@ -45,7 +45,7 @@ public class UrlResolver {
         String longestPrefix = "";
         String bestUrl = "";
         for (String possibleUrl : urls) {
-            String commonPrefix = StringUtils.getCommonPrefix(context, possibleUrl);
+            String commonPrefix = StringUtils.getCommonPrefix(context+"/", possibleUrl);
             if (commonPrefix.length() >= longestPrefix.length()) {
                 bestUrl = possibleUrl;
                 longestPrefix = commonPrefix;
