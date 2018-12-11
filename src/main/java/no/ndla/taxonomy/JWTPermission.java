@@ -6,9 +6,15 @@ public class JWTPermission {
     private String permission;
 
     public JWTPermission(String scope) {
-        this.api = scope.split("-")[0].trim();
-        this.environment = scope.split("-")[1].split(":")[0].trim();
-        this.permission = scope.split(":")[1].trim();
+        if(scope.contains("-")){
+            this.api = scope.split("-")[0].trim();
+            this.environment = scope.split("-")[1].split(":")[0].trim();
+            this.permission = scope.split(":")[1].trim();
+        }else {
+            this.api = scope.split(":")[0].trim();
+            this.environment = null;
+            this.permission = scope.split(":")[1].trim();
+        }
     }
 
     public String getApi() {
