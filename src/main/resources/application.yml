@@ -23,9 +23,6 @@ logging.graylog.host: ""
 
 springfox.documentation.swagger.v2.path: /api-docs
 
-auth0:
-  issuer: https://ndla.eu.auth0.com/
-  jwks.kid: OEI1MUU4ODk5NzM5MzI2MzZDODk1N0YwQzdDMDQyODVCQzQ3QTI0MA
 
 ---
 
@@ -44,15 +41,27 @@ service: ndla-taxonomy-dev
 ---
 spring.profiles: staging
 
+auth0:
+  issuer: https://ndla-staging.eu.auth0.com/
+  jwks.kid: NDFFOTUxMjQ1ODNDMTlBRkE0RkQ4NDc0RjUxNjUxREE0MTUyQTQ3NQ
+
 service: ndla-taxonomy-staging
 
 ---
 spring.profiles: prod
 
+auth0:
+  issuer: https://ndla.eu.auth0.com/
+  jwks.kid: OEI1MUU4ODk5NzM5MzI2MzZDODk1N0YwQzdDMDQyODVCQzQ3QTI0MA
+
 service: ndla-taxonomy-prod
 
 ---
 spring.profiles: test
+
+auth0:
+  issuer: https://ndla-test.eu.auth0.com/
+  jwks.kid: QzlEOTQ5M0NGMDk4NjExOEJGMjc2MjVFODhEQkE1NUI2NkE0RTQyRg
 
 service: ndla-taxonomy-test
 
