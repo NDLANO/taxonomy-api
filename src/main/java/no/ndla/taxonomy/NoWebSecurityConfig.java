@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 
 @Configuration
 @EnableWebSecurity
-@Profile("!prod")
+@Profile("!auth")
 public class NoWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
