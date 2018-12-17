@@ -97,7 +97,7 @@ public class Queries {
         public String name;
 
         @JsonProperty
-        @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resourcetype:learningPath', name = 'Learning path'}]")
+        @ApiModelProperty(value = "Resource type(s)", example = "[{\"id\":\"urn:resourcetype:learningPath\", \"name\":\"Learning path\"}]")
         public Set<Queries.ResourceTypeIndexDocument> resourceTypes = new HashSet<>();
 
         @JsonProperty

@@ -9,7 +9,7 @@ import java.net.URI;
 /**
  *
  */
-@ApiModel("Topic FilterIndexDocument")
+@ApiModel("TopicFilterIndexDocument")
 public class FilterIndexDocument {
     @JsonProperty
     @ApiModelProperty(example = "urn:filter:1")

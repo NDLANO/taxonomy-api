@@ -14,7 +14,7 @@ import java.util.Set;
 /**
  *
  */
-@ApiModel("SubjectTopicIndexDocument")
+@ApiModel("SubTopicIndexDocument")
 public class SubTopicIndexDocument {
     @JsonProperty
     public URI id;
@@ -47,7 +47,7 @@ public class SubTopicIndexDocument {
     public int rank;
 
     @JsonProperty
-    @ApiModelProperty(value = "Filters this topic is associated with, directly or by inheritance", example = "[{id = 'urn:filter:1', relevanceId='urn:relevance:core'}]")
+    @ApiModelProperty(value = "Filters this topic is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
     public Set<TopicFilterIndexDocument> filters = new HashSet<>();
 
     @JsonIgnore

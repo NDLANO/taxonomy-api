@@ -61,7 +61,7 @@ public class ResourceFilters {
     @ApiOperation(value = "Updates a resource filter connection")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void put(@PathVariable("id") URI id, @ApiParam(name = "resource filter", value = "The updated resource filter") @RequestBody UpdateResourceFilterCommand command) throws Exception {
+    public void put(@PathVariable("id") URI id, @ApiParam(name = "resource filter", value = "The updated resource filter", required = true) @RequestBody UpdateResourceFilterCommand command) throws Exception {
         ResourceFilter resourceFilter = resourceFilterRepository.getByPublicId(id);
         Relevance relevance = relevanceRepository.getByPublicId(command.relevanceId);
         resourceFilter.setRelevance(relevance);
@@ -70,7 +70,7 @@ public class ResourceFilters {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void delete(@ApiParam(name = "id", value = "The id of the connection to delete") @PathVariable URI id) {
+    public void delete(@ApiParam(name = "id", value = "The id of the connection to delete", required = true) @PathVariable URI id) {
         ResourceFilter resourceFilter = resourceFilterRepository.getByPublicId(id);
         resourceFilter.getResource().removeFilter(resourceFilter.getFilter());
         resourceFilterRepository.deleteByPublicId(id);
@@ -78,7 +78,7 @@ public class ResourceFilters {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('READONLY')")
-    public ResourceFilterIndexDocument get(@ApiParam(name = "id", value = "The id of the connection to get") @PathVariable URI id) {
+    public ResourceFilterIndexDocument get(@ApiParam(name = "id", value = "The id of the connection to get", required = true) @PathVariable URI id) {
         ResourceFilter resourceFilter = resourceFilterRepository.getByPublicId(id);
         return new ResourceFilterIndexDocument(resourceFilter);
     }

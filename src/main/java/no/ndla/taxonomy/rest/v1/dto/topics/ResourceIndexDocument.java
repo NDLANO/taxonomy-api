@@ -27,7 +27,7 @@ public class ResourceIndexDocument {
     public String name;
 
     @JsonProperty
-    @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resourcetype:1', name = 'lecture'}]")
+    @ApiModelProperty(value = "Resource type(s)", example = "[{\"id\":\"urn:resourcetype:1\", \"name\":\"lecture\"}]")
     public Set<ResourceTypeIndexDocument> resourceTypes = new HashSet<>();
 
     @JsonProperty

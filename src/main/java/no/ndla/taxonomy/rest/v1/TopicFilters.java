@@ -61,7 +61,7 @@ public class TopicFilters {
     @ApiOperation(value = "Updates a topic filter connection")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void put(@PathVariable("id") URI id, @ApiParam(name = "topic filter", value = "The updated topic filter") @RequestBody UpdateTopicFilterCommand command) throws Exception {
+    public void put(@PathVariable("id") URI id, @ApiParam(name = "topic filter", value = "The updated topic filter", required = true) @RequestBody UpdateTopicFilterCommand command) throws Exception {
         TopicFilter topicFilter = topicFilterRepository.getByPublicId(id);
         Relevance relevance = relevanceRepository.getByPublicId(command.relevanceId);
         topicFilter.setRelevance(relevance);
@@ -71,7 +71,7 @@ public class TopicFilters {
     @ApiOperation(value = "Deletes a connection between a topic and a filter")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void delete(@ApiParam(name = "id", value = "The id of the connection to delete") @PathVariable String id) {
+    public void delete(@ApiParam(name = "id", value = "The id of the connection to delete", required = true) @PathVariable String id) {
         TopicFilter topicFilter = topicFilterRepository.getByPublicId(URI.create(id));
         topicFilter.getTopic().removeFilter(topicFilter.getFilter());
         topicFilterRepository.deleteByPublicId(URI.create(id));
@@ -105,7 +105,7 @@ public class TopicFilters {
         public URI relevanceId;
     }
 
-    @ApiModel("TopicFilter IndexDocument")
+    @ApiModel("TopicFilterIndexDocument")
     public static class TopicFilterIndexDocument {
         @JsonProperty
         @ApiModelProperty(required = true, value = "Topic id", example = "urn:topic:123")
