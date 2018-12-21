@@ -67,11 +67,10 @@ public class SwaggerConfiguration {
     private ApiInfo apiInfo() {
         return new ApiInfo(
                 "NDLA Taxonomy API",
-                "Rest service and graph database for organizing content." +
-                        "\n\n" +
-                        "Unless otherwise specified, all PUT and POST requests must use Content-Type: application/json;charset=UTF-8. If charset is omitted, UTF-8 will be assumed. All GET requests will return data using the same content type." +
-                        "\n\n" +
-                        "When you remove an entity, its associations are also deleted. E.g., if you remove a subject, its associations to any topics are removed. The topics themselves are not affected.",
+                "Rest service and graph database for organizing content.\n\n" +
+                        "Unless otherwise specified, all PUT and POST requests must use Content-Type: application/json;charset=UTF-8. If charset is omitted, UTF-8 will be assumed. All GET requests will return data using the same content type.\n\n" +
+                        "When you remove an entity, its associations are also deleted. E.g., if you remove a subject, its associations to any topics are removed. The topics themselves are not affected.\n\n" +
+                        "If you are using Swagger in an environment that requires authentication you will need a valid JWT token. Apply this by typing 'Bearer [YOUR TOKEN]' in the 'Authorize' dialog",
                 "v1",
                 null,
                 null,
