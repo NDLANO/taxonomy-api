@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.rest.v1;
 
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Topic;
@@ -108,6 +109,7 @@ public class Topics extends CrudController<Topic> {
     @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all resources for the given topic")
     public List<ResourceIndexDocument> getResources(
+            @ApiParam(value = "id", required = true)
             @PathVariable("id") URI topicId,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -217,6 +219,7 @@ public class Topics extends CrudController<Topic> {
     @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all filters associated with this topic")
     public List<FilterIndexDocument> getFilters(
+            @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -233,6 +236,7 @@ public class Topics extends CrudController<Topic> {
     @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all subtopics for this topic")
     public List<SubTopicIndexDocument> getSubTopics(
+            @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")

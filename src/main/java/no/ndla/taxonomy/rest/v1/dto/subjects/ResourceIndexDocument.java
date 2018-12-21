@@ -25,7 +25,7 @@ public class ResourceIndexDocument {
     public String name;
 
     @JsonProperty
-    @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resourcetype:1', name = 'lecture'}]")
+    @ApiModelProperty(value = "Resource type(s)", example = "[{\"id\": \"urn:resourcetype:1\",\"name\":\"lecture\"}]")
     public Set<ResourceTypeIndexDocument> resourceTypes = new HashSet<>();
 
     @JsonProperty
@@ -44,7 +44,7 @@ public class ResourceIndexDocument {
     public URI connectionId;
 
     @JsonProperty
-    @ApiModelProperty(value = "Filters this resource is associated with, directly or by inheritance", example = "[{id = 'urn:filter:1', relevanceId='urn:relevance:core'}]")
+    @ApiModelProperty(value = "Filters this resource is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
     public Set<ResourceFilterIndexDocument> filters = new HashSet<>();
 
     @JsonProperty
