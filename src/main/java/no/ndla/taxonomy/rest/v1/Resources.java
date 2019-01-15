@@ -166,10 +166,21 @@ public class Resources extends CrudController<Resource> {
                     return topicQueryExtractor.extractTopics(resultSet);
                 });
 
+        List<String> paths = jdbcTemplate.query("SELECT path FROM cached_url WHERE public_id = ?", setQueryParameters(asList(id.toString())),
+                resultSet -> {
+                    List<String> res = new ArrayList<>();
+                    while (resultSet.next()){
+                        res.add(resultSet.getString("path"));
+                    }
+                    return res;
+                });
+
+
         ResourceFullIndexDocument r = ResourceFullIndexDocument.from(resource);
         r.resourceTypes.addAll(resourceTypes);
         r.filters.addAll(filters);
         r.parentTopics.addAll(topics);
+        r.paths.addAll(paths);
         return r;
     }
 
@@ -273,13 +284,15 @@ public class Resources extends CrudController<Resource> {
 
         @JsonProperty
         @ApiModelProperty(value = "Parent topology nodes and whether or not connection type is primary",
-                example = "["+
-                "{\"id\": \"urn:topic:1:181900\"," +
+                example = "[" +
+                        "{\"id\": \"urn:topic:1:181900\"," +
                         "\"name\": \"I dyrehagen\"," +
                         "\"contentUri\": \"urn:article:6662\"," +
                         "\"path\": \"/subject:2/topic:1:181900\"," +
                         "\"primary\": \"true\"}]")
         public Set<ParentTopicIndexDocument> parentTopics = new HashSet<>();
+
+        public List<String> paths = new ArrayList<>();
 
         static ResourceFullIndexDocument from(ResourceIndexDocument resource) {
             ResourceFullIndexDocument r = new ResourceFullIndexDocument();

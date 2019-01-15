@@ -242,4 +242,13 @@ public class ResourcesTest extends RestTest {
         assertEquals(true, t.isPrimary);
         assertEquals(URI.create("urn:article:6662"), t.contentUri);
     }
+
+    @Test
+    public void full_resource_has_all_paths() throws Exception {
+        executeSqlScript("classpath:resource_in_dual_subjects_test_setup.sql", false);
+        MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1/full");
+        Resources.ResourceFullIndexDocument result = getObject(Resources.ResourceFullIndexDocument.class, response);
+        assertNotNull(result.paths);
+        assertEquals(2, result.paths.size());
+    }
 }
