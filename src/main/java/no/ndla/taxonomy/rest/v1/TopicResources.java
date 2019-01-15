@@ -36,7 +36,6 @@ public class TopicResources {
 
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and resources")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<TopicResourceIndexDocument> index() {
         List<TopicResourceIndexDocument> result = new ArrayList<>();
         topicResourceRepository.findAll().forEach(record -> result.add(new TopicResourceIndexDocument(record)));
@@ -45,7 +44,6 @@ public class TopicResources {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a specific connection between a topic and a resource")
-    @PreAuthorize("hasAuthority('READONLY')")
     public TopicResourceIndexDocument get(@PathVariable("id") URI id) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
         TopicResourceIndexDocument result = new TopicResourceIndexDocument(topicResource);

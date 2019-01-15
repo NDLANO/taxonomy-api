@@ -77,7 +77,6 @@ public class ResourceFilters {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('READONLY')")
     public ResourceFilterIndexDocument get(@ApiParam(name = "id", value = "The id of the connection to get", required = true) @PathVariable URI id) {
         ResourceFilter resourceFilter = resourceFilterRepository.getByPublicId(id);
         return new ResourceFilterIndexDocument(resourceFilter);
@@ -85,7 +84,6 @@ public class ResourceFilters {
 
     @GetMapping
     @ApiOperation("Gets all connections between resources and filters")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceFilterIndexDocument> index() throws Exception {
         List<ResourceFilterIndexDocument> result = new ArrayList<>();
         resourceFilterRepository.findAll().forEach(record -> result.add(new ResourceFilterIndexDocument(record)));

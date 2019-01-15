@@ -44,7 +44,6 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping
     @ApiOperation(value = "Lists all resources")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -55,7 +54,6 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single resource")
-    @PreAuthorize("hasAuthority('READONLY')")
     public ResourceIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -98,7 +96,6 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}/resource-types")
     @ApiOperation(value = "Gets all resource types associated with this resource")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceTypeIndexDocument> getResourceTypes(
             @PathVariable("id")
                     URI id,
@@ -114,7 +111,6 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters associated with this resource")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<FilterIndexDocument> getFilters(
             @PathVariable("id")
                     URI id,
@@ -132,7 +128,6 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}/full")
     @ApiOperation(value = "Gets all parent topics, all filters and resourceTypes for this resource")
-    @PreAuthorize("hasAuthority('READONLY')")
     public ResourceFullIndexDocument getResourceFull(
             @PathVariable("id")
                     URI id,

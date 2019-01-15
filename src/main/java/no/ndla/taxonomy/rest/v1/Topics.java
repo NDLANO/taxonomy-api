@@ -56,7 +56,6 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping
     @ApiOperation("Gets all topics")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<TopicIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
@@ -71,7 +70,6 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
-    @PreAuthorize("hasAuthority('READONLY')")
     public TopicIndexDocument get(@PathVariable("id") URI id,
                                   @ApiParam(value = LANGUAGE_DOC, example = "nb")
                                   @RequestParam(value = "language", required = false, defaultValue = "") String language
@@ -106,7 +104,6 @@ public class Topics extends CrudController<Topic> {
 
 
     @GetMapping("/{id}/resources")
-    @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all resources for the given topic")
     public List<ResourceIndexDocument> getResources(
             @ApiParam(value = "id", required = true)
@@ -216,7 +213,6 @@ public class Topics extends CrudController<Topic> {
 
 
     @GetMapping("/{id}/filters")
-    @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all filters associated with this topic")
     public List<FilterIndexDocument> getFilters(
             @ApiParam(value = "id", required = true)
@@ -233,12 +229,14 @@ public class Topics extends CrudController<Topic> {
     }
 
     @GetMapping("/{id}/topics")
-    @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all subtopics for this topic")
     public List<SubTopicIndexDocument> getSubTopics(
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
+            @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned." +
+                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
+                    URI[] filterIds,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
@@ -253,7 +251,6 @@ public class Topics extends CrudController<Topic> {
     }
 
     @GetMapping("/{id}/connections")
-    @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
     public List<ConnectionIndexDocument> getAllConnections(@PathVariable("id") URI id) {
         List<Object> args = asList(id.toString());

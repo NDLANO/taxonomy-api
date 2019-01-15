@@ -58,7 +58,6 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping
     @ApiOperation("Gets all subjects")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<SubjectIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -71,7 +70,6 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single subject", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
-    @PreAuthorize("hasAuthority('READONLY')")
     public SubjectIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -105,7 +103,6 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping("/{id}/topics")
     @ApiOperation(value = "Gets all topics associated with a subject", notes = "This resource is read-only. To update the relationship between subjects and topics, use the resource /subject-topics.")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<SubTopicIndexDocument> getTopics(
             @PathVariable("id")
                     URI id,
@@ -175,7 +172,6 @@ public class Subjects extends CrudController<Subject> {
     @GetMapping("/{id}/resources")
     @ApiOperation(value = "Gets all resources for a subject. Searches recursively in all topics belonging to this subject." +
             "The ordering of resources will be based on the rank of resources relative to the topics they belong to.")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceIndexDocument> getResources(
             @PathVariable("id") URI subjectId,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -260,7 +256,6 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters for a subject")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<FilterIndexDocument> getFilters(@PathVariable("id") URI subjectId) {
         String sql = GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY;
         List<Object> args = singletonList(subjectId.toString());

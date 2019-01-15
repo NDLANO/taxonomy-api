@@ -38,7 +38,6 @@ public class Queries {
 
     @GetMapping("/resources")
     @ApiOperation(value = "Gets a list of resources matching given contentURI, empty list of no matches are found.")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<Queries.ResourceIndexDocument> queryResources(
             @RequestParam("contentURI") URI contentURI,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -62,7 +61,6 @@ public class Queries {
 
     @GetMapping("/topics")
     @ApiOperation(value = "Gets a list of topics matching given contentURI, empty list of no matches are found.")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<Queries.TopicIndexDocument> queryTopics(
             @RequestParam("contentURI") URI contentURI,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
