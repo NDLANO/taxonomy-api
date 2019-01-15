@@ -1,6 +1,5 @@
 package no.ndla.taxonomy.rest.v1;
 
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Topic;
@@ -42,6 +41,7 @@ public class Topics extends CrudController<Topic> {
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_QUERY = getQuery("get_resources_by_topic_public_id");
     private static final String GET_FILTERS_BY_TOPIC_ID_QUERY = getQuery("get_filters_by_topic_public_id");
     private static final String GET_SUBTOPICS_BY_TOPIC_ID_QUERY = getQuery("get_subtopics_by_topic_id_query");
+    private static final String GET_SUBTOPICS_BY_TOPIC_ID_AND_FILTERS_QUERY = getQuery("get_subtopics_by_topic_id_and_filters_query");
     private static final String GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_subject_connections_by_topic_id");
     private static final String GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_subtopic_connections_by_topic_id");
     private static final String GET_PARENT_TOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_parent_topic_connections_by_topic_id");
@@ -239,13 +239,25 @@ public class Topics extends CrudController<Topic> {
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
+            @RequestParam(value = "filter", required = false, defaultValue = "")
+            @ApiParam(value = "Select by filter id(s). If not specified, all subtopics connected to this topic will be returned." +
+                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
+                    URI[] filterIds,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        String sql = GET_SUBTOPICS_BY_TOPIC_ID_QUERY.replace("1 = 1", "t.public_id = ?");
-        List<Object> args = asList(language, id.toString());
-
+        String sql;
+        List<Object> args;
+        if (filterIds != null && filterIds.length > 0) {
+            sql = GET_SUBTOPICS_BY_TOPIC_ID_AND_FILTERS_QUERY;
+            StringBuffer filtersCombined = new StringBuffer();
+            Arrays.stream(filterIds).forEach(filtersCombined::append);
+            args = asList(language, id.toString(), filtersCombined.toString());
+        } else {
+            sql = GET_SUBTOPICS_BY_TOPIC_ID_QUERY.replace("1 = 1", "t.public_id = ?");
+            args = asList(language, id.toString());
+        }
         SubTopicQueryExtractor extractor = new SubTopicQueryExtractor();
         return jdbcTemplate.query(sql, setQueryParameters(args),
                 extractor::extractSubTopics
