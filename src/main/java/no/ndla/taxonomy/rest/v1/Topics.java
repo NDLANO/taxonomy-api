@@ -234,9 +234,6 @@ public class Topics extends CrudController<Topic> {
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
-            @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned." +
-                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
-                    URI[] filterIds,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
