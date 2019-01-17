@@ -42,7 +42,6 @@ public class SubjectTopics {
 
     @GetMapping
     @ApiOperation("Gets all connections between subjects and topics")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<SubjectTopicIndexDocument> index() throws Exception {
         List<SubjectTopicIndexDocument> result = new ArrayList<>();
 
@@ -55,7 +54,6 @@ public class SubjectTopics {
 
     @GetMapping("/{id}")
     @ApiOperation("Get a specific connection between a subject and a topic")
-    @PreAuthorize("hasAuthority('READONLY')")
     public SubjectTopicIndexDocument get(@PathVariable("id") URI id) throws Exception {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
         return new SubjectTopicIndexDocument(subjectTopic);

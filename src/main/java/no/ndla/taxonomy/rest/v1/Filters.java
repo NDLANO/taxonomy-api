@@ -43,7 +43,6 @@ public class Filters extends CrudController<Filter> {
 
     @GetMapping
     @ApiOperation("Gets all filters")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<FilterIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -55,7 +54,6 @@ public class Filters extends CrudController<Filter> {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single filter", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
-    @PreAuthorize("hasAuthority('READONLY')")
     public FilterIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")

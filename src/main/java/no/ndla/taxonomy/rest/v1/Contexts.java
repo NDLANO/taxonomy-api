@@ -34,7 +34,6 @@ public class Contexts {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<ContextIndexDocument> get(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")

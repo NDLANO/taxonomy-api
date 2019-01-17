@@ -79,7 +79,6 @@ public class TopicFilters {
 
     @GetMapping
     @ApiOperation("Gets all connections between topics and filters")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<TopicFilterIndexDocument> index() throws Exception {
         List<TopicFilterIndexDocument> result = new ArrayList<>();
         topicFilterRepository.findAll().forEach(record -> result.add(new TopicFilterIndexDocument(record)));
