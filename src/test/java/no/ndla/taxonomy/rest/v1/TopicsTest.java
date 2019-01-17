@@ -133,6 +133,26 @@ public class TopicsTest extends RestTest {
         primaryConnectionsAreReportedCorrectly(connections);
     }
 
+    @Test
+    public void can_get_unfiltered_subtopics() throws Exception {
+        executeSqlScript("classpath:subtopics_by_topic_id_and_filters_test_setup.sql", false);
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/topics");
+        TopicIndexDocument[] subtopics = getObject(TopicIndexDocument[].class, response);
+        assertEquals("Unfiltered subtopics", 7, subtopics.length);
+    }
+
+    @Test
+    public void can_get_filtered_subtopics() throws Exception {
+        executeSqlScript("classpath:subtopics_by_topic_id_and_filters_test_setup.sql", false);
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:1");
+        TopicIndexDocument[] subtopics = getObject(TopicIndexDocument[].class, response);
+        assertEquals("Filter 1 subtopics", 3, subtopics.length);
+
+        response = getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:2");
+        subtopics = getObject(TopicIndexDocument[].class, response);
+        assertEquals("Filter 2 subtopics", 4, subtopics.length);
+    }
+
     private void primaryConnectionsAreReportedCorrectly(ConnectionIndexDocument[] connections) {
         Map<String, ConnectionIndexDocument> connectionsByName = new HashMap<>();
         Arrays.stream(connections).forEach(c -> connectionsByName.put(c.targetId.toString(), c));
