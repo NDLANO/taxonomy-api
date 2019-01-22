@@ -21,6 +21,15 @@ public class QueryUtils {
         };
     }
 
+    public static PreparedStatementSetter setQueryParameters(Object...args) {
+        return statement -> {
+            for (int i = 0; i < args.length; i++) {
+                statement.setObject(i + 1, args[i]);
+            }
+        };
+    }
+
+
     public static URI toURI(String uri) {
         if (uri == null) return null;
         return URI.create(uri);

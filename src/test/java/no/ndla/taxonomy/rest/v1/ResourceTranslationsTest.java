@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.rest.v1.dto.resources.ResourceIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -19,7 +20,7 @@ public class ResourceTranslationsTest extends RestTest {
         builder.resource(r -> r.name("Gas giants").translation("nb", tr -> tr.name("Gasskjemper")));
 
         MockHttpServletResponse response = getResource("/v1/resources?language=nb");
-        Resources.ResourceIndexDocument[] resources = getObject(Resources.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, resources.length);
         assertAnyTrue(resources, s -> "De indre planetene".equals(s.name));
@@ -34,7 +35,7 @@ public class ResourceTranslationsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/resources/" + trigonometry + "?language=nb");
-        Resources.ResourceIndexDocument resource = getObject(Resources.ResourceIndexDocument.class, response);
+        ResourceIndexDocument resource = getObject(ResourceIndexDocument.class, response);
 
         assertEquals("Introduksjon til trigonometri", resource.name);
     }
@@ -44,7 +45,7 @@ public class ResourceTranslationsTest extends RestTest {
         URI id = builder.resource(t -> t
                 .name("Introduction to algrebra")
         ).getPublicId();
-        Resources.ResourceIndexDocument resource = getResourceIndexDocument(id, "XX");
+        ResourceIndexDocument resource = getResourceIndexDocument(id, "XX");
         assertEquals("Introduction to algrebra", resource.name);
     }
 
@@ -57,7 +58,7 @@ public class ResourceTranslationsTest extends RestTest {
                 )
         ).getPublicId();
 
-        Resources.ResourceIndexDocument resource = getResourceIndexDocument(id, null);
+        ResourceIndexDocument resource = getResourceIndexDocument(id, null);
         assertEquals("Introduction to algrebra", resource.name);
     }
 
@@ -120,10 +121,10 @@ public class ResourceTranslationsTest extends RestTest {
         assertEquals("nb", translation.language);
     }
 
-    private Resources.ResourceIndexDocument getResourceIndexDocument(URI id, String language) throws Exception {
+    private ResourceIndexDocument getResourceIndexDocument(URI id, String language) throws Exception {
         String path = "/v1/resources/" + id;
         if (isNotEmpty(language)) path = path + "?language=" + language;
-        return getObject(Resources.ResourceIndexDocument.class, getResource(path));
+        return getObject(ResourceIndexDocument.class, getResource(path));
     }
 
 }

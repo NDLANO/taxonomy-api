@@ -24,7 +24,8 @@ public class TopicIndexDocument {
     public URI contentUri;
 
     @JsonProperty
-    @ApiModelProperty(value = "The path part of the url for this topic", example = "/subject:1/topic:1")
+    @ApiModelProperty(value = "The primary path for this topic", example = "/subject:1/topic:1")
     public String path;
+
 
 }

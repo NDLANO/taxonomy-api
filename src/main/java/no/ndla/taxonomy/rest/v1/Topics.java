@@ -1,12 +1,11 @@
 package no.ndla.taxonomy.rest.v1;
 
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.repositories.TopicRepository;
-import no.ndla.taxonomy.rest.v1.command.topics.CreateTopicCommand;
-import no.ndla.taxonomy.rest.v1.command.topics.UpdateTopicCommand;
+import no.ndla.taxonomy.rest.v1.command.CreateTopicCommand;
+import no.ndla.taxonomy.rest.v1.command.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.dto.topics.*;
 import no.ndla.taxonomy.rest.v1.extractors.*;
 import org.springframework.http.HttpStatus;
@@ -38,6 +37,7 @@ public class Topics extends CrudController<Topic> {
 
     private static final String TOPIC_TREE_BY_TOPIC_ID = getQuery("topic_tree_by_topic_id");
     private static final String GET_TOPICS_QUERY = getQuery("get_topics");
+    private static final String GET_TOPICS_WITH_ALL_PATHS_QUERY = getQuery("get_topics_with_all_paths");
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_topic_public_id_recursively");
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_QUERY = getQuery("get_resources_by_topic_public_id");
     private static final String GET_FILTERS_BY_TOPIC_ID_QUERY = getQuery("get_filters_by_topic_public_id");
@@ -63,8 +63,7 @@ public class Topics extends CrudController<Topic> {
     ) throws Exception {
         List<Object> args = asList(language);
         TopicQueryExtractor extractor = new TopicQueryExtractor();
-        return jdbcTemplate.query(GET_TOPICS_QUERY, setQueryParameters(args),
-                extractor::extractTopics
+        return jdbcTemplate.query(GET_TOPICS_QUERY, setQueryParameters(args), extractor::extractTopics
         );
     }
 
@@ -72,17 +71,15 @@ public class Topics extends CrudController<Topic> {
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
     @PreAuthorize("hasAuthority('READONLY')")
-    public TopicIndexDocument get(@PathVariable("id") URI id,
+    public TopicWithPathsIndexDocument get(@PathVariable("id") URI id,
                                   @ApiParam(value = LANGUAGE_DOC, example = "nb")
                                   @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) {
-        String sql = GET_TOPICS_QUERY.replace("1 = 1", "t.public_id = ?");
+        String sql = GET_TOPICS_WITH_ALL_PATHS_QUERY;
         List<Object> args = asList(language, id.toString());
 
-        TopicQueryExtractor extractor = new TopicQueryExtractor();
-        return getFirst(jdbcTemplate.query(sql, setQueryParameters(args),
-                extractor::extractTopics
-        ), "Topic", id);
+        TopicWithAllPathsQueryExtractor extractor = new TopicWithAllPathsQueryExtractor();
+        return jdbcTemplate.query(sql, setQueryParameters(args), extractor::extractTopic);
     }
 
 

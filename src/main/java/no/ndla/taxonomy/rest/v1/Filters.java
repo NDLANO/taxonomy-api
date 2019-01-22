@@ -10,6 +10,8 @@ import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.SubjectRequiredException;
 import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
+import no.ndla.taxonomy.rest.v1.command.CreateCommand;
+import no.ndla.taxonomy.rest.v1.command.UpdateCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;

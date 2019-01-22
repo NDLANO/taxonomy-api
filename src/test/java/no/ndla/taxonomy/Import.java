@@ -2,8 +2,8 @@ package no.ndla.taxonomy;
 
 import no.ndla.taxonomy.rest.v1.SubjectTopics;
 import no.ndla.taxonomy.rest.v1.TopicSubtopics;
-import no.ndla.taxonomy.rest.v1.command.subjects.CreateSubjectCommand;
-import no.ndla.taxonomy.rest.v1.command.topics.CreateTopicCommand;
+import no.ndla.taxonomy.rest.v1.command.CreateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.command.CreateTopicCommand;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.web.client.RestTemplate;

@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.rest.v1;
+package no.ndla.taxonomy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

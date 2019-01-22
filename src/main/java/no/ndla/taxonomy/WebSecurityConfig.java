@@ -1,7 +1,5 @@
 package no.ndla.taxonomy;
 
-import no.ndla.taxonomy.rest.v1.AuthFilter;
-import no.ndla.taxonomy.rest.v1.LogFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
