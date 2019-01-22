@@ -42,7 +42,6 @@ public class Relevances extends CrudController<Relevance> {
 
     @GetMapping
     @ApiOperation("Gets all relevances")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<RelevanceIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -57,7 +56,6 @@ public class Relevances extends CrudController<Relevance> {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single relevance", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
-    @PreAuthorize("hasAuthority('READONLY')")
     public RelevanceIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")

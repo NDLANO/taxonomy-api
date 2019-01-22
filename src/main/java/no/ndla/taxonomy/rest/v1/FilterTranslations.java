@@ -37,7 +37,6 @@ public class FilterTranslations {
 
     @GetMapping
     @ApiOperation("Gets all translations for a single filter")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<FilterTranslations.FilterTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
         Filter filter = filterRepository.getByPublicId(id);
         List<FilterTranslations.FilterTranslationIndexDocument> result = new ArrayList<>();
@@ -52,7 +51,6 @@ public class FilterTranslations {
 
     @GetMapping("/{language}")
     @ApiOperation("Gets a single translation for a single filter")
-    @PreAuthorize("hasAuthority('READONLY')")
     public FilterTranslations.FilterTranslationIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)

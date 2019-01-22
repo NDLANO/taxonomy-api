@@ -42,6 +42,7 @@ public class Topics extends CrudController<Topic> {
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_QUERY = getQuery("get_resources_by_topic_public_id");
     private static final String GET_FILTERS_BY_TOPIC_ID_QUERY = getQuery("get_filters_by_topic_public_id");
     private static final String GET_SUBTOPICS_BY_TOPIC_ID_QUERY = getQuery("get_subtopics_by_topic_id_query");
+    private static final String GET_SUBTOPICS_BY_TOPIC_ID_AND_FILTERS_QUERY = getQuery("get_subtopics_by_topic_id_and_filters_query");
     private static final String GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_subject_connections_by_topic_id");
     private static final String GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_subtopic_connections_by_topic_id");
     private static final String GET_PARENT_TOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_parent_topic_connections_by_topic_id");
@@ -56,7 +57,6 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping
     @ApiOperation("Gets all topics")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<TopicIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
@@ -70,7 +70,6 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
-    @PreAuthorize("hasAuthority('READONLY')")
     public TopicWithPathsIndexDocument get(@PathVariable("id") URI id,
                                   @ApiParam(value = LANGUAGE_DOC, example = "nb")
                                   @RequestParam(value = "language", required = false, defaultValue = "") String language
@@ -103,7 +102,6 @@ public class Topics extends CrudController<Topic> {
 
 
     @GetMapping("/{id}/resources")
-    @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all resources for the given topic")
     public List<ResourceIndexDocument> getResources(
             @ApiParam(value = "id", required = true)
@@ -213,7 +211,6 @@ public class Topics extends CrudController<Topic> {
 
 
     @GetMapping("/{id}/filters")
-    @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all filters associated with this topic")
     public List<FilterIndexDocument> getFilters(
             @ApiParam(value = "id", required = true)
@@ -230,19 +227,30 @@ public class Topics extends CrudController<Topic> {
     }
 
     @GetMapping("/{id}/topics")
-    @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all subtopics for this topic")
     public List<SubTopicIndexDocument> getSubTopics(
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
+            @RequestParam(value = "filter", required = false, defaultValue = "")
+            @ApiParam(value = "Select by filter id(s). If not specified, all subtopics connected to this topic will be returned." +
+                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
+                    URI[] filterIds,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        String sql = GET_SUBTOPICS_BY_TOPIC_ID_QUERY.replace("1 = 1", "t.public_id = ?");
-        List<Object> args = asList(language, id.toString());
-
+        String sql;
+        List<Object> args;
+        if (filterIds != null && filterIds.length > 0) {
+            sql = GET_SUBTOPICS_BY_TOPIC_ID_AND_FILTERS_QUERY;
+            StringBuffer filtersCombined = new StringBuffer();
+            Arrays.stream(filterIds).forEach(filtersCombined::append);
+            args = asList(language, id.toString(), filtersCombined.toString());
+        } else {
+            sql = GET_SUBTOPICS_BY_TOPIC_ID_QUERY.replace("1 = 1", "t.public_id = ?");
+            args = asList(language, id.toString());
+        }
         SubTopicQueryExtractor extractor = new SubTopicQueryExtractor();
         return jdbcTemplate.query(sql, setQueryParameters(args),
                 extractor::extractSubTopics
@@ -250,7 +258,6 @@ public class Topics extends CrudController<Topic> {
     }
 
     @GetMapping("/{id}/connections")
-    @PreAuthorize("hasAuthority('READONLY')")
     @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
     public List<ConnectionIndexDocument> getAllConnections(@PathVariable("id") URI id) {
         List<Object> args = asList(id.toString());

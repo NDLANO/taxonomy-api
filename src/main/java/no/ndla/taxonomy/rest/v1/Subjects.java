@@ -38,7 +38,6 @@ import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 @RequestMapping(path = {"/v1/subjects"})
 public class Subjects extends CrudController<Subject> {
     private static final String GET_SUBJECTS_QUERY = getQuery("get_subjects");
-    private static final String GET_RESOURCES_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_subject_public_id_recursively");
     private static final String RESOURCES_BY_SUBJECT_ID = getQuery("resources_by_subject_id");
     private static final String TOPIC_TREE_BY_SUBJECT_ID = getQuery("topic_tree_by_subject_id");
 
@@ -58,7 +57,6 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping
     @ApiOperation("Gets all subjects")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<SubjectIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -71,7 +69,6 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single subject", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
-    @PreAuthorize("hasAuthority('READONLY')")
     public SubjectIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -105,7 +102,6 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping("/{id}/topics")
     @ApiOperation(value = "Gets all topics associated with a subject", notes = "This resource is read-only. To update the relationship between subjects and topics, use the resource /subject-topics.")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<SubTopicIndexDocument> getTopics(
             @PathVariable("id")
                     URI id,
@@ -129,9 +125,14 @@ public class Subjects extends CrudController<Subject> {
         List<Object> args = new ArrayList<>();
         args.add(id.toString());
         args.add(language);
+        if (filterIds == null || filterIds.length == 0) {
+            filterIds = getFilters(id).stream().map(filterIndexDocument -> filterIndexDocument.id).toArray(URI[]::new);
+        }
+
         TopicExtractor extractor = new TopicExtractor();
+        URI[] finalFilterIds = filterIds;
         List<SubTopicIndexDocument> results = jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
-            return extractor.extractTopics(id, filterIds, relevance, resultSet);
+            return extractor.extractTopics(id, finalFilterIds, relevance, resultSet);
         });
         if (!recursive) {
             results.sort(Comparator.comparing(o -> Integer.valueOf(o.rank)));
@@ -175,7 +176,6 @@ public class Subjects extends CrudController<Subject> {
     @GetMapping("/{id}/resources")
     @ApiOperation(value = "Gets all resources for a subject. Searches recursively in all topics belonging to this subject." +
             "The ordering of resources will be based on the rank of resources relative to the topics they belong to.")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceIndexDocument> getResources(
             @PathVariable("id") URI subjectId,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -200,6 +200,9 @@ public class Subjects extends CrudController<Subject> {
         args.add(language); //resource
         args.add(language); //resource type
         String resourceQuery = addResourceTypesToQuery(resourceTypeIds, RESOURCES_BY_SUBJECT_ID, args);
+        if (filterIds == null || filterIds.length == 0) {
+            filterIds = getFilters(subjectId).stream().map(filterIndexDocument -> filterIndexDocument.id).toArray(URI[]::new);
+        }
         resourceQuery = addFiltersToQuery(filterIds, resourceQuery, args);
 
         Map<Integer, TopicNode> resourceMap = jdbcTemplate.query(resourceQuery, args.toArray(), resultSet -> {
@@ -260,7 +263,6 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters for a subject")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<FilterIndexDocument> getFilters(@PathVariable("id") URI subjectId) {
         String sql = GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY;
         List<Object> args = singletonList(subjectId.toString());
