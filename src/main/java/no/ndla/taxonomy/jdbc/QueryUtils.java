@@ -29,10 +29,8 @@ public class QueryUtils {
         };
     }
 
-
     public static URI toURI(String uri) {
-        if (uri == null) return null;
-        return URI.create(uri);
+        return uri == null ? null: URI.create(uri);
     }
 
     public static URI getURI(ResultSet resultSet, String columnLabel) throws SQLException {
