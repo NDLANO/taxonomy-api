@@ -3,6 +3,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.rest.v1.dto.topics.TopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dto.topics.TopicWithPathsIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -110,7 +111,7 @@ public class ContextsTest extends RestTest {
         topic.setContext(true);
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1");
-        TopicIndexDocument topicIndexDocument = getObject(TopicIndexDocument.class, response);
+        TopicWithPathsIndexDocument topicIndexDocument = getObject(TopicWithPathsIndexDocument.class, response);
         assertEquals("/topic:1", topicIndexDocument.path);
     }
 }

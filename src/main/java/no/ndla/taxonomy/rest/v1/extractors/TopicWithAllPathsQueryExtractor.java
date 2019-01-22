@@ -25,7 +25,7 @@ public class TopicWithAllPathsQueryExtractor {
                 doc.contentUri = getURI(resultSet, "topic_content_uri");
                 doc.paths = new ArrayList<>();
             }
-            if (primary) {
+            if (primary && (doc.path == null || !doc.path.startsWith("/topic"))) {
                 doc.path = path;
             }
             doc.paths.add(path);

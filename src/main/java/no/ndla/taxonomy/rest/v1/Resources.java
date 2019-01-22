@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.ResourceRepository;
+import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.command.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.command.UpdateResourceCommand;
 import no.ndla.taxonomy.rest.v1.dto.resources.*;
@@ -59,8 +60,13 @@ public class Resources extends CrudController<Resource> {
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return jdbcTemplate.query(GET_RESOURCE_WITH_PATHS_QUERY, setQueryParameters(language, id.toString()),
+        ResourceWithPathsIndexDocument result = jdbcTemplate.query(GET_RESOURCE_WITH_PATHS_QUERY, setQueryParameters(language, id.toString()),
                 this::extractResourceWithPaths);
+        if (result == null) {
+            throw new NotFoundHttpRequestException("No such resource found");
+        }
+        return result;
+
     }
 
     private List<ResourceIndexDocument> getResourceIndexDocuments(String sql, List<Object> args) {
@@ -175,12 +181,14 @@ public class Resources extends CrudController<Resource> {
                 doc.name = resultSet.getString("resource_name");
                 doc.paths = new ArrayList<>();
             }
-            if (primary) {
+            if (primary && (doc.path == null || !doc.path.startsWith("/topic"))) {
                 doc.path = path;
             }
             doc.paths.add(path);
         }
-        Collections.sort(doc.paths);
+        if (doc != null) {
+            Collections.sort(doc.paths);
+        }
         return doc;
     }
 
