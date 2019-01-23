@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.rest.v1.command;
+package no.ndla.taxonomy.rest.v1.commands;
 
 
 public abstract class UpdateCommand<T> {

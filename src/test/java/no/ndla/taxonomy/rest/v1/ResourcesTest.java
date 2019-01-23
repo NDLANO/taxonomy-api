@@ -2,8 +2,8 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.rest.v1.command.CreateResourceCommand;
-import no.ndla.taxonomy.rest.v1.command.UpdateResourceCommand;
+import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
+import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
 import no.ndla.taxonomy.rest.v1.dto.resources.ParentTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dto.resources.ResourceFullIndexDocument;
 import no.ndla.taxonomy.rest.v1.dto.resources.ResourceIndexDocument;

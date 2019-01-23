@@ -1,9 +1,8 @@
-package no.ndla.taxonomy.rest.v1.command;
+package no.ndla.taxonomy.rest.v1.commands;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.rest.v1.command.CreateCommand;
 
 import java.net.URI;
 

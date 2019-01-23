@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.rest.v1.extractors;
+package no.ndla.taxonomy.rest.v1.extractors.topics;
 
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.rest.v1.dto.topics.ResourceIndexDocument;

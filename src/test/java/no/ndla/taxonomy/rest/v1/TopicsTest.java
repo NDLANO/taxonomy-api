@@ -5,8 +5,8 @@ import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.rest.v1.command.CreateTopicCommand;
-import no.ndla.taxonomy.rest.v1.command.UpdateTopicCommand;
+import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
+import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.dto.topics.ConnectionIndexDocument;
 import no.ndla.taxonomy.rest.v1.dto.topics.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dto.topics.SubTopicIndexDocument;
@@ -19,7 +19,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
