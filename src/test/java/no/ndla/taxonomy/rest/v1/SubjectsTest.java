@@ -359,20 +359,6 @@ public class SubjectsTest extends RestTest {
     }
 
     @Test
-    public void resource_urls_are_chosen_according_to_context() throws Exception {
-
-        executeSqlScript("classpath:resource_in_dual_subjects_test_setup.sql", false);
-
-        for (int i : asList(1, 2)) {
-            MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:" + i + "/resources");
-            ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
-
-            assertEquals(1, resources.length);
-            assertEquals("/subject:" + i + "/topic:" + i + "/resource:1", resources[0].path);
-        }
-    }
-
-    @Test
     public void topic_urls_are_chosen_according_to_context() throws Exception {
         Topic topic = builder.topic(t -> t.publicId("urn:topic:1"));
 
