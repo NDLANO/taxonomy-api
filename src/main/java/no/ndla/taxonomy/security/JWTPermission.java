@@ -1,4 +1,4 @@
-package no.ndla.taxonomy;
+package no.ndla.taxonomy.security;
 
 public class JWTPermission {
     private String api;
