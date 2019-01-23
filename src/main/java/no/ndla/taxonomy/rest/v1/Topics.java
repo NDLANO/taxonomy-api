@@ -133,7 +133,7 @@ public class Topics extends CrudController<Topic> {
             query = extractor.addResourceTypesToQuery(resourceTypeIds, args, query);
             query = extractor.addFiltersToQuery(filterIds, args, query);
 
-            Map<Integer, TopicNode> resourceMap = jdbcTemplate.query(query, setQueryParameters(args), resultSet -> {
+            Map<Integer, TopicNode> resourceMap = jdbcTemplate.query(query, setQueryParameters(args.toArray()), resultSet -> {
                 return populateTopicTree(extractor, relevance, topicIndexDocument, resultSet, nodeMap);
             });
             return resourceMap
@@ -163,7 +163,7 @@ public class Topics extends CrudController<Topic> {
             query = extractor.addResourceTypesToQuery(resourceTypeIds, args, query);
             query = extractor.addFiltersToQuery(filterIds, args, query);
 
-            return jdbcTemplate.query(query, setQueryParameters(args), resultSet -> {
+            return jdbcTemplate.query(query, setQueryParameters(args.toArray()), resultSet -> {
                 return extractor.extractResources(relevance, topicIndexDocument, resultSet);
             });
         }
@@ -245,7 +245,7 @@ public class Topics extends CrudController<Topic> {
             args = Arrays.asList(language, id.toString());
         }
         SubTopicQueryExtractor extractor = new SubTopicQueryExtractor();
-        return jdbcTemplate.query(sql, setQueryParameters(args),
+        return jdbcTemplate.query(sql, setQueryParameters(args.toArray()),
                 extractor::extractSubTopics
         );
     }

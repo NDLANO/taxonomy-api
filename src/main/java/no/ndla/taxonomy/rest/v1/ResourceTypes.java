@@ -127,11 +127,8 @@ public class ResourceTypes extends CrudController<ResourceType> {
     ) throws Exception {
 
         String sql = GET_RESOURCE_TYPES_RECURSIVELY_QUERY;
-        List<Object> args = new ArrayList<>();
 
         sql = sql.replace("1 = 1", "rt.public_id = ?");
-        args.add(id.toString());
-
         if (recursive) {
             sql = sql.replace("2 = 2", "t.level >= 1");
         } else {
@@ -139,8 +136,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
         }
 
         ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
-        args.add(language);
-        return jdbcTemplate.query(sql, setQueryParameters(args),
+        return jdbcTemplate.query(sql, setQueryParameters(id.toString(), language),
                 extractor::extractResourceTypes
         );
     }
