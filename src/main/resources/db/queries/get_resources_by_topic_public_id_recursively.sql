@@ -38,6 +38,7 @@ SELECT
   tr.public_id                 AS connection_public_id,
   tr.is_primary                AS resource_is_primary,
   url.path                     AS resource_path,
+  url.is_primary               AS path_is_primary,
   rel.public_id                AS relevance_public_id,
   tr.rank                      AS rank
 FROM

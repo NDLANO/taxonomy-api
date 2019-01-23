@@ -42,6 +42,10 @@ public class ResourceIndexDocument {
     public String path;
 
     @JsonProperty
+    @ApiModelProperty(value = "Paths containing the given topic that lead to this resource", example = "[\"/subject:1/topic:12/resource:1\", \"/subject:2/topic:12/resource:1\"]")
+    public Set<String> paths;
+
+    @JsonProperty
     @ApiModelProperty(value = "The id of the topic-resource connection which causes this resource to be included in the result set.", example = "urn:topic-resource:1")
     public URI connectionId;
 

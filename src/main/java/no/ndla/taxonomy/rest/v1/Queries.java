@@ -38,11 +38,10 @@ public class Queries {
     public List<ResourceIndexDocument> queryResources(
             @RequestParam("contentURI") URI contentURI,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
-    ) throws Exception {
-
-        return jdbcTemplate.query(GET_RESOURCES_BY_CONTENT_URI_QUERY, setQueryParameters(language, language, contentURI.toString()),
+            @RequestParam(value = "language", required = false, defaultValue = "") String language
+    ) {
+        return jdbcTemplate.query(GET_RESOURCES_BY_CONTENT_URI_QUERY,
+                setQueryParameters(language, language, contentURI.toString()),
                 this::extractResources);
     }
 
@@ -51,18 +50,35 @@ public class Queries {
     public List<TopicIndexDocument> queryTopics(
             @RequestParam("contentURI") URI contentURI,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language,
-            @RequestParam(value = "context", required = false, defaultValue = "") String context
-    ) throws Exception {
+            @RequestParam(value = "language", required = false, defaultValue = "") String language
+    ) {
+        return jdbcTemplate.query(GET_TOPICS_BY_CONTENT_URI_QUERY,
+                setQueryParameters(language, contentURI.toString()),
+                this::extractTopics);
+    }
 
-        return jdbcTemplate.query(GET_TOPICS_BY_CONTENT_URI_QUERY, setQueryParameters(language, contentURI.toString()),
-                (resultSet, rowNum) -> new TopicIndexDocument() {{
-                    name = resultSet.getString("topic_name");
-                    id = getURI(resultSet, "topic_public_id");
-                    contentUri = getURI(resultSet, "topic_content_uri");
-                    path = resultSet.getString("topic_path");
-                }});
+    private List<TopicIndexDocument> extractTopics(ResultSet resultSet) throws SQLException {
+        Map<URI, TopicIndexDocument> topics = new HashMap<>();
+        while (resultSet.next()) {
+            URI id = toURI(resultSet.getString("topic_public_id"));
+            String path = resultSet.getString("topic_path");
+            boolean primary = resultSet.getBoolean("path_is_primary");
+
+            TopicIndexDocument topic = topics.get(id);
+            if (null == topic) {
+                topic = new TopicIndexDocument();
+                topic.name = resultSet.getString("topic_name");
+                topic.contentUri = getURI(resultSet, "topic_content_uri");
+                topic.id = id;
+                topic.paths = new HashSet<>();
+                topics.put(id, topic);
+            }
+            if (primary && (topic.path == null || !topic.path.startsWith("/topic"))) {
+                topic.path = path;
+            }
+            topic.paths.add(path);
+        }
+        return new ArrayList<>(topics.values());
     }
 
     private List<ResourceIndexDocument> extractResources(ResultSet resultSet) throws SQLException {
@@ -75,13 +91,12 @@ public class Queries {
 
             ResourceIndexDocument resource = resources.get(id);
             if (null == resource) {
-                resource = new ResourceIndexDocument() {{
-                    name = resultSet.getString("resource_name");
-                    contentUri = toURI(resultSet.getString("resource_content_uri"));
-                    id = toURI(resultSet.getString("resource_public_id"));
-                    paths = new HashSet<>();
-                    resourceTypes = new HashSet<>();
-                }};
+                resource = new ResourceIndexDocument();
+                resource.name = resultSet.getString("resource_name");
+                resource.contentUri = toURI(resultSet.getString("resource_content_uri"));
+                resource.id = id;
+                resource.paths = new HashSet<>();
+                resource.resourceTypes = new HashSet<>();
                 resources.put(id, resource);
             }
             String resourceTypePublicId = resultSet.getString("resource_type_public_id");
