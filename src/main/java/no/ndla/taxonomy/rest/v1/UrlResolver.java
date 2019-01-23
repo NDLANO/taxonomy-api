@@ -58,7 +58,7 @@ public class UrlResolver {
     public ResolvedUrl resolve(@RequestParam String path, HttpServletResponse response) throws Exception {
         URI id = getId(path);
 
-        ResolvedUrl returnedResolvedUrl = jdbcTemplate.query(RESOLVE_URL_QUERY, setQueryParameters(Collections.singletonList(id.toString())),
+        ResolvedUrl returnedResolvedUrl = jdbcTemplate.query(RESOLVE_URL_QUERY, setQueryParameters(id.toString()),
                 resultSet -> {
                     ResolvedUrl resolvedUrl = new ResolvedUrl();
                     while (resultSet.next()) {

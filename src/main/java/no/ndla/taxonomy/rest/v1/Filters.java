@@ -23,8 +23,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
@@ -50,8 +48,7 @@ public class Filters extends CrudController<Filter> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {
-        List<Object> args = singletonList(language);
-        return getFilterIndexDocuments(GET_FILTERS_QUERY, args);
+        return getFilterIndexDocuments(GET_FILTERS_QUERY, language);
     }
 
     @GetMapping("/{id}")
@@ -63,12 +60,10 @@ public class Filters extends CrudController<Filter> {
                     String language
     ) throws Exception {
         String sql = GET_FILTERS_QUERY.replace("1 = 1", "f.public_id = ?");
-        List<Object> args = asList(language, id.toString());
-
-        return getFirst(getFilterIndexDocuments(sql, args), "Filter", id);
+        return getFirst(getFilterIndexDocuments(sql, language, id.toString()), "Filter", id);
     }
 
-    private List<FilterIndexDocument> getFilterIndexDocuments(String sql, List<Object> args) {
+    private List<FilterIndexDocument> getFilterIndexDocuments(String sql, Object... args) {
         return jdbcTemplate.query(sql, setQueryParameters(args),
                 resultSet -> {
                     List<FilterIndexDocument> result = new ArrayList<>();

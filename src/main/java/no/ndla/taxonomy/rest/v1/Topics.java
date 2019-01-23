@@ -22,8 +22,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
@@ -61,9 +59,8 @@ public class Topics extends CrudController<Topic> {
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) throws Exception {
-        List<Object> args = asList(language);
         TopicQueryExtractor extractor = new TopicQueryExtractor();
-        return jdbcTemplate.query(GET_TOPICS_QUERY, setQueryParameters(args), extractor::extractTopics
+        return jdbcTemplate.query(GET_TOPICS_QUERY, setQueryParameters(language), extractor::extractTopics
         );
     }
 
@@ -74,11 +71,8 @@ public class Topics extends CrudController<Topic> {
                                   @ApiParam(value = LANGUAGE_DOC, example = "nb")
                                   @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) {
-        String sql = GET_TOPICS_WITH_ALL_PATHS_QUERY;
-        List<Object> args = asList(language, id.toString());
-
         TopicWithAllPathsQueryExtractor extractor = new TopicWithAllPathsQueryExtractor();
-        return jdbcTemplate.query(sql, setQueryParameters(args), extractor::extractTopic);
+        return jdbcTemplate.query(GET_TOPICS_WITH_ALL_PATHS_QUERY, setQueryParameters(language, id.toString()), extractor::extractTopic);
     }
 
 
@@ -221,7 +215,7 @@ public class Topics extends CrudController<Topic> {
                     String language
     ) {
         FilterQueryExtractor extractor = new FilterQueryExtractor();
-        return jdbcTemplate.query(GET_FILTERS_BY_TOPIC_ID_QUERY, setQueryParameters(singletonList(id.toString())),
+        return jdbcTemplate.query(GET_FILTERS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()),
                 extractor::extractFilters
         );
     }
@@ -246,10 +240,10 @@ public class Topics extends CrudController<Topic> {
             sql = GET_SUBTOPICS_BY_TOPIC_ID_AND_FILTERS_QUERY;
             StringBuffer filtersCombined = new StringBuffer();
             Arrays.stream(filterIds).forEach(filtersCombined::append);
-            args = asList(language, id.toString(), filtersCombined.toString());
+            args = Arrays.asList(language, id.toString(), filtersCombined.toString());
         } else {
             sql = GET_SUBTOPICS_BY_TOPIC_ID_QUERY.replace("1 = 1", "t.public_id = ?");
-            args = asList(language, id.toString());
+            args = Arrays.asList(language, id.toString());
         }
         SubTopicQueryExtractor extractor = new SubTopicQueryExtractor();
         return jdbcTemplate.query(sql, setQueryParameters(args),
@@ -260,12 +254,11 @@ public class Topics extends CrudController<Topic> {
     @GetMapping("/{id}/connections")
     @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
     public List<ConnectionIndexDocument> getAllConnections(@PathVariable("id") URI id) {
-        List<Object> args = asList(id.toString());
         List<ConnectionIndexDocument> results = new ArrayList<>();
         ConnectionQueryExtractor ConnectionQueryExtractor = new ConnectionQueryExtractor();
-        results.addAll(jdbcTemplate.query(GET_PARENT_TOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(args), ConnectionQueryExtractor::extractConnections));
-        results.addAll(jdbcTemplate.query(GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(args), ConnectionQueryExtractor::extractConnections));
-        results.addAll(jdbcTemplate.query(GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(args), ConnectionQueryExtractor::extractConnections));
+        results.addAll(jdbcTemplate.query(GET_PARENT_TOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()), ConnectionQueryExtractor::extractConnections));
+        results.addAll(jdbcTemplate.query(GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()), ConnectionQueryExtractor::extractConnections));
+        results.addAll(jdbcTemplate.query(GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()), ConnectionQueryExtractor::extractConnections));
         return results;
     }
 

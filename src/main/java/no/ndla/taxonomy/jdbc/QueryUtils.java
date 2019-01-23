@@ -13,13 +13,6 @@ import java.util.List;
 import java.util.Scanner;
 
 public class QueryUtils {
-    public static PreparedStatementSetter setQueryParameters(final List<Object> args) {
-        return statement -> {
-            for (int i = 0; i < args.size(); i++) {
-                statement.setObject(i + 1, args.get(i));
-            }
-        };
-    }
 
     public static PreparedStatementSetter setQueryParameters(Object...args) {
         return statement -> {

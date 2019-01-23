@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
@@ -55,7 +54,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
         String sql = GET_RESOURCE_TYPES_RECURSIVELY_QUERY;
         sql = sql.replace("1 = 1", "rt.parent_id is null");
         ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
-        return jdbcTemplate.query(sql, setQueryParameters(singletonList(language)),
+        return jdbcTemplate.query(sql, setQueryParameters(language),
                 extractor::extractResourceTypes
         );
     }
@@ -69,15 +68,11 @@ public class ResourceTypes extends CrudController<ResourceType> {
                     String language
     ) throws Exception {
         String sql = GET_RESOURCE_TYPES_RECURSIVELY_QUERY;
-        List<Object> args = new ArrayList<>();
 
-        sql = sql.replace("1 = 1", "rt.public_id = ?");
-        args.add(id.toString());
-        sql = sql.replace("2 = 2", "t.level = 0");
-        args.add(language);
+        sql = sql.replace("1 = 1", "rt.public_id = ?").replace("2 = 2", "t.level = 0");
 
         ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
-        return getFirst(jdbcTemplate.query(sql, setQueryParameters(args),
+        return getFirst(jdbcTemplate.query(sql, setQueryParameters(id.toString(), language),
                 extractor::extractResourceTypes
         ), "Subject", id);
     }

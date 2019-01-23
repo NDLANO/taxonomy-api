@@ -39,7 +39,7 @@ public class Contexts {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return jdbcTemplate.query(GET_CONTEXTS_QUERY, setQueryParameters(asList(language, language)),
+        return jdbcTemplate.query(GET_CONTEXTS_QUERY, setQueryParameters(language, language),
                 (resultSet, rowNum) -> new ContextIndexDocument() {{
                     name = resultSet.getString("context_name");
                     id = getURI(resultSet, "context_public_id");

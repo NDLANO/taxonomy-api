@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
@@ -51,7 +49,7 @@ public class Resources extends CrudController<Resource> {
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) {
-        return getResourceIndexDocuments(GET_RESOURCES_QUERY, singletonList(language));
+        return getResourceIndexDocuments(GET_RESOURCES_QUERY, language);
     }
 
     @GetMapping("/{id}")
@@ -69,7 +67,7 @@ public class Resources extends CrudController<Resource> {
 
     }
 
-    private List<ResourceIndexDocument> getResourceIndexDocuments(String sql, List<Object> args) {
+    private List<ResourceIndexDocument> getResourceIndexDocuments(String sql, Object... args) {
         return jdbcTemplate.query(sql, setQueryParameters(args),
                 (resultSet, rowNum) -> new ResourceIndexDocument() {{
                     name = resultSet.getString("resource_name");
@@ -106,7 +104,7 @@ public class Resources extends CrudController<Resource> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return jdbcTemplate.query(GET_RESOURCE_RESOURCE_TYPES_QUERY, setQueryParameters(asList(language, id.toString())),
+        return jdbcTemplate.query(GET_RESOURCE_RESOURCE_TYPES_QUERY, setQueryParameters(language, id.toString()),
                 this::extractResourceTypes
         );
     }
@@ -120,7 +118,7 @@ public class Resources extends CrudController<Resource> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return jdbcTemplate.query(GET_FILTERS_BY_RESOURCE_ID_QUERY, setQueryParameters(singletonList(id.toString())),
+        return jdbcTemplate.query(GET_FILTERS_BY_RESOURCE_ID_QUERY, setQueryParameters(id.toString()),
                 this::extractFilters
         );
     }
@@ -135,22 +133,21 @@ public class Resources extends CrudController<Resource> {
                     String language
     ) {
         String sql = GET_RESOURCES_QUERY.replace("1 = 1", "r.public_id = ?");
-        List<Object> args = asList(language, id.toString());
 
-        ResourceIndexDocument resource = getFirst(getResourceIndexDocuments(sql, args), "Resource", id);
+        ResourceIndexDocument resource = getFirst(getResourceIndexDocuments(sql, language, id.toString()), "Resource", id);
 
-        List<ResourceTypeIndexDocument> resourceTypes = jdbcTemplate.query(GET_RESOURCE_RESOURCE_TYPES_QUERY, setQueryParameters(asList(language, id.toString())),
+        List<ResourceTypeIndexDocument> resourceTypes = jdbcTemplate.query(GET_RESOURCE_RESOURCE_TYPES_QUERY, setQueryParameters(language, id.toString()),
                 this::extractResourceTypes
         );
 
-        List<FilterIndexDocument> filters = jdbcTemplate.query(GET_FILTERS_BY_RESOURCE_ID_QUERY, setQueryParameters(singletonList(id.toString())),
+        List<FilterIndexDocument> filters = jdbcTemplate.query(GET_FILTERS_BY_RESOURCE_ID_QUERY, setQueryParameters(id.toString()),
                 this::extractFilters
         );
 
-        List<ParentTopicIndexDocument> topics = jdbcTemplate.query(GET_TOPICS_FOR_RESOURCE, setQueryParameters(asList(language, id.toString())),
+        List<ParentTopicIndexDocument> topics = jdbcTemplate.query(GET_TOPICS_FOR_RESOURCE, setQueryParameters(language, id.toString()),
                 this::extractParentTopics);
 
-        List<String> paths = jdbcTemplate.query("SELECT path FROM cached_url WHERE public_id = ?", setQueryParameters(asList(id.toString())),
+        List<String> paths = jdbcTemplate.query("SELECT path FROM cached_url WHERE public_id = ?", setQueryParameters(id.toString()),
                 resultSet -> {
                     List<String> res = new ArrayList<>();
                     while (resultSet.next()) {

@@ -28,8 +28,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
@@ -62,9 +60,8 @@ public class Subjects extends CrudController<Subject> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        List<Object> args = singletonList(language);
         SubjectExtractor extractor = new SubjectExtractor();
-        return jdbcTemplate.query(GET_SUBJECTS_QUERY, setQueryParameters(args), extractor::extractSubjects);
+        return jdbcTemplate.query(GET_SUBJECTS_QUERY, setQueryParameters(language), extractor::extractSubjects);
     }
 
     @GetMapping("/{id}")
@@ -76,10 +73,8 @@ public class Subjects extends CrudController<Subject> {
                     String language
     ) {
         String sql = GET_SUBJECTS_QUERY.replace("1 = 1", "s.public_id = ?");
-        List<Object> args = asList(language, id.toString());
-
         SubjectExtractor extractor = new SubjectExtractor();
-        return getFirst(jdbcTemplate.query(sql, setQueryParameters(args), extractor::extractSubjects), "Subject", id);
+        return getFirst(jdbcTemplate.query(sql, setQueryParameters(language, id.toString()), extractor::extractSubjects), "Subject", id);
     }
 
     @PutMapping("/{id}")
@@ -122,16 +117,13 @@ public class Subjects extends CrudController<Subject> {
         String sql = GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY;
         if (!recursive) sql = sql.replace("1 = 1", "t.level = 0");
 
-        List<Object> args = new ArrayList<>();
-        args.add(id.toString());
-        args.add(language);
         if (filterIds == null || filterIds.length == 0) {
             filterIds = getFilters(id).stream().map(filterIndexDocument -> filterIndexDocument.id).toArray(URI[]::new);
         }
 
         TopicExtractor extractor = new TopicExtractor();
         URI[] finalFilterIds = filterIds;
-        List<SubTopicIndexDocument> results = jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
+        List<SubTopicIndexDocument> results = jdbcTemplate.query(sql, setQueryParameters(id.toString(), language), resultSet -> {
             return extractor.extractTopics(id, finalFilterIds, relevance, resultSet);
         });
         if (!recursive) {
@@ -264,11 +256,8 @@ public class Subjects extends CrudController<Subject> {
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters for a subject")
     public List<FilterIndexDocument> getFilters(@PathVariable("id") URI subjectId) {
-        String sql = GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY;
-        List<Object> args = singletonList(subjectId.toString());
-
         FilterExtractor extractor = new FilterExtractor();
-        return jdbcTemplate.query(sql, setQueryParameters(args), extractor::extractFilters);
+        return jdbcTemplate.query(GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY, setQueryParameters(subjectId.toString()), extractor::extractFilters);
     }
 
     private String addFiltersToQuery(URI[] filterIds, String sql, List<Object> args) {

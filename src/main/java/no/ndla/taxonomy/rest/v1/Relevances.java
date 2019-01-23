@@ -22,8 +22,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
 import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
@@ -47,9 +45,8 @@ public class Relevances extends CrudController<Relevance> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {
-        List<Object> args = singletonList(language);
         RelevanceQueryExtractor extractor = new RelevanceQueryExtractor();
-        return jdbcTemplate.query(GET_RELEVANCES_QUERY, setQueryParameters(args),
+        return jdbcTemplate.query(GET_RELEVANCES_QUERY, setQueryParameters(language),
                 extractor::extractRelevances
         );
     }
@@ -63,9 +60,8 @@ public class Relevances extends CrudController<Relevance> {
                     String language
     ) throws Exception {
         String sql = GET_RELEVANCES_QUERY.replace("1 = 1", "r.public_id = ?");
-        List<Object> args = asList(language, id.toString());
         RelevanceQueryExtractor extractor = new RelevanceQueryExtractor();
-        return getFirst(jdbcTemplate.query(sql, setQueryParameters(args),
+        return getFirst(jdbcTemplate.query(sql, setQueryParameters(language, id.toString()),
                 extractor::extractRelevances
         ), "Relevance", id);
     }
