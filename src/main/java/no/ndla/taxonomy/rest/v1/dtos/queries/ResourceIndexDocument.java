@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.rest.v1.dto.queries;
+package no.ndla.taxonomy.rest.v1.dtos.queries;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;

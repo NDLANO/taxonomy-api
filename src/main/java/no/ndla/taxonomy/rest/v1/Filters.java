@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
-import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
 @RequestMapping(path = {"/v1/filters"})
@@ -44,7 +43,7 @@ public class Filters extends CrudController<Filter> {
     @GetMapping
     @ApiOperation("Gets all filters")
     public List<FilterIndexDocument> index(
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {
@@ -55,7 +54,7 @@ public class Filters extends CrudController<Filter> {
     @ApiOperation(value = "Gets a single filter", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
     public FilterIndexDocument get(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {

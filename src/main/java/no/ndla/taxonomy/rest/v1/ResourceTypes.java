@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
-import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
 @RequestMapping(path = {"/v1/resource-types"})
@@ -47,7 +46,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @GetMapping
     @ApiOperation("Gets a list of all resource types")
     public List<ResourceTypeIndexDocument> index(
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {
@@ -63,7 +62,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @ApiOperation("Gets a single resource type")
     public ResourceTypeIndexDocument get(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {
@@ -119,7 +118,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @ApiOperation(value = "Gets subtypes of one resource type")
     public List<ResourceTypeIndexDocument> getSubtypes(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language,
             @RequestParam(value = "recursive", required = false, defaultValue = "false")

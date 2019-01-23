@@ -1,6 +1,6 @@
 package no.ndla.taxonomy.rest.v1.extractors.topics;
 
-import no.ndla.taxonomy.rest.v1.dto.topics.TopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.topics.TopicIndexDocument;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

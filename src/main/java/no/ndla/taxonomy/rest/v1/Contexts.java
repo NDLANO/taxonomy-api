@@ -15,9 +15,8 @@ import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
 
-import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
-import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
+
 
 @RestController
 @RequestMapping(path = {"/v1/contexts"})
@@ -35,7 +34,7 @@ public class Contexts {
 
     @GetMapping
     public List<ContextIndexDocument> get(
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
@@ -49,7 +48,7 @@ public class Contexts {
     }
 
     @PostMapping
-    @ApiOperation(value = "Adds a new context", notes="All subjects are already contexts and may not be added again. Only topics may be added as a context. The topic must exist already.")
+    @ApiOperation(value = "Adds a new context", notes = "All subjects are already contexts and may not be added again. Only topics may be added as a context. The topic must exist already.")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "context", value = "the new context") @RequestBody CreateContextCommand command) throws Exception {

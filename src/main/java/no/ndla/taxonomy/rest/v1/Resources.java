@@ -7,7 +7,7 @@ import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
-import no.ndla.taxonomy.rest.v1.dto.resources.*;
+import no.ndla.taxonomy.rest.v1.dtos.resources.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
-import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
 @RequestMapping(path = {"/v1/resources"})
@@ -46,7 +45,7 @@ public class Resources extends CrudController<Resource> {
     @GetMapping
     @ApiOperation(value = "Lists all resources")
     public List<ResourceIndexDocument> index(
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) {
         return getResourceIndexDocuments(GET_RESOURCES_QUERY, language);
@@ -56,7 +55,7 @@ public class Resources extends CrudController<Resource> {
     @ApiOperation(value = "Gets a single resource")
     public ResourceIndexDocument get(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         ResourceWithPathsIndexDocument result = jdbcTemplate.query(GET_RESOURCE_WITH_PATHS_QUERY, setQueryParameters(language, id.toString()),
                 this::extractResourceWithPaths);
@@ -100,7 +99,7 @@ public class Resources extends CrudController<Resource> {
     public List<ResourceTypeIndexDocument> getResourceTypes(
             @PathVariable("id")
                     URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
@@ -114,7 +113,7 @@ public class Resources extends CrudController<Resource> {
     public List<FilterIndexDocument> getFilters(
             @PathVariable("id")
                     URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
@@ -128,7 +127,7 @@ public class Resources extends CrudController<Resource> {
     public ResourceFullIndexDocument getResourceFull(
             @PathVariable("id")
                     URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {

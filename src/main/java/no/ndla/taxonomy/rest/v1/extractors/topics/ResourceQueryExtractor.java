@@ -1,9 +1,9 @@
 package no.ndla.taxonomy.rest.v1.extractors.topics;
 
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.rest.v1.dto.topics.ResourceIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.topics.ResourceTypeIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.topics.TopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceTypeIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.topics.TopicIndexDocument;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.net.URI;
@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static no.ndla.taxonomy.jdbc.QueryUtils.toURI;
-import static no.ndla.taxonomy.rest.v1.UrlResolver.getPathMostCloselyMatchingContext;
 
 /**
  *

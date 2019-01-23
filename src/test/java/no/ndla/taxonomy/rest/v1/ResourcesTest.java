@@ -4,10 +4,10 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
-import no.ndla.taxonomy.rest.v1.dto.resources.ParentTopicIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.resources.ResourceFullIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.resources.ResourceIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.resources.ResourceTypeIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.resources.ParentTopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceFullIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 

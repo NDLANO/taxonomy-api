@@ -6,7 +6,7 @@ import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
-import no.ndla.taxonomy.rest.v1.dto.topics.*;
+import no.ndla.taxonomy.rest.v1.dtos.topics.*;
 import no.ndla.taxonomy.rest.v1.extractors.topics.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
-import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
 @RequestMapping(path = {"/v1/topics"})
@@ -56,7 +55,7 @@ public class Topics extends CrudController<Topic> {
     @GetMapping
     @ApiOperation("Gets all topics")
     public List<TopicIndexDocument> index(
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) throws Exception {
         TopicQueryExtractor extractor = new TopicQueryExtractor();
@@ -68,8 +67,8 @@ public class Topics extends CrudController<Topic> {
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
     public TopicWithPathsIndexDocument get(@PathVariable("id") URI id,
-                                  @ApiParam(value = LANGUAGE_DOC, example = "nb")
-                                  @RequestParam(value = "language", required = false, defaultValue = "") String language
+                                           @ApiParam(value = "ISO-639-1 language code", example = "nb")
+                                           @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) {
         TopicWithAllPathsQueryExtractor extractor = new TopicWithAllPathsQueryExtractor();
         return jdbcTemplate.query(GET_TOPICS_WITH_ALL_PATHS_QUERY, setQueryParameters(language, id.toString()), extractor::extractTopic);
@@ -100,7 +99,7 @@ public class Topics extends CrudController<Topic> {
     public List<ResourceIndexDocument> getResources(
             @ApiParam(value = "id", required = true)
             @PathVariable("id") URI topicId,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language,
             @RequestParam(value = "recursive", required = false, defaultValue = "false")
@@ -210,7 +209,7 @@ public class Topics extends CrudController<Topic> {
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
@@ -230,7 +229,7 @@ public class Topics extends CrudController<Topic> {
             @ApiParam(value = "Select by filter id(s). If not specified, all subtopics connected to this topic will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
                     URI[] filterIds,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {

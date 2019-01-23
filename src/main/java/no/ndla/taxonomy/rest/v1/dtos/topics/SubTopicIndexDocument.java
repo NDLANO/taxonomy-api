@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.rest.v1.dto.topics;
+package no.ndla.taxonomy.rest.v1.dtos.topics;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
@@ -9,14 +9,14 @@ import java.net.URI;
 /**
  *
  */
-@ApiModel("TopicIndexDocument")
-public class TopicIndexDocument {
+@ApiModel("SubTopicIndexDocument")
+public class SubTopicIndexDocument {
     @JsonProperty
     @ApiModelProperty(value = "Topic id", example = "urn:topic:234")
     public URI id;
 
     @JsonProperty
-    @ApiModelProperty(value = "The name of the topic", example = "Trigonometry")
+    @ApiModelProperty(value = "The name of the subtopic", example = "Trigonometry")
     public String name;
 
     @JsonProperty
@@ -24,8 +24,7 @@ public class TopicIndexDocument {
     public URI contentUri;
 
     @JsonProperty
-    @ApiModelProperty(value = "The primary path for this topic", example = "/subject:1/topic:1")
-    public String path;
-
+    @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
+    public Boolean isPrimary;
 
 }

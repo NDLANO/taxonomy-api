@@ -4,7 +4,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.rest.v1.dto.resources.FilterIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.resources.FilterIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 

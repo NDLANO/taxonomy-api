@@ -3,9 +3,9 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.rest.v1.dto.queries.ResourceIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.queries.ResourceTypeIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.queries.TopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.queries.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.queries.ResourceTypeIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.queries.TopicIndexDocument;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +18,6 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
-import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
 @RequestMapping(path = {"/v1/queries"})
@@ -37,7 +36,7 @@ public class Queries {
     @ApiOperation(value = "Gets a list of resources matching given contentURI, empty list of no matches are found.")
     public List<ResourceIndexDocument> queryResources(
             @RequestParam("contentURI") URI contentURI,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) {
         return jdbcTemplate.query(GET_RESOURCES_BY_CONTENT_URI_QUERY,
@@ -49,7 +48,7 @@ public class Queries {
     @ApiOperation(value = "Gets a list of topics matching given contentURI, empty list of no matches are found.")
     public List<TopicIndexDocument> queryTopics(
             @RequestParam("contentURI") URI contentURI,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) {
         return jdbcTemplate.query(GET_TOPICS_BY_CONTENT_URI_QUERY,

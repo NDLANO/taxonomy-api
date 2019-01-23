@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.rest.v1.dto.topics;
+package no.ndla.taxonomy.rest.v1.dtos.subjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,22 +12,20 @@ import java.util.Set;
 /**
  *
  */
-@ApiModel("TopicResourceIndexDocument")
+@ApiModel("SubjectResourceIndexDocument")
 public class ResourceIndexDocument {
     @JsonProperty
-    @ApiModelProperty(value = "Topic id", example = "urn:topic:123")
-    public URI topicId;
-
-    @JsonProperty
-    @ApiModelProperty(value = "Resource id", example = "urn:resource:12")
     public URI id;
 
     @JsonProperty
-    @ApiModelProperty(value = "Resource name", example = "Basic physics")
+    @ApiModelProperty(value = "Topic id", example = "urn:topic:12")
+    public URI topicId;
+
+    @JsonProperty
     public String name;
 
     @JsonProperty
-    @ApiModelProperty(value = "Resource type(s)", example = "[{\"id\":\"urn:resourcetype:1\", \"name\":\"lecture\"}]")
+    @ApiModelProperty(value = "Resource type(s)", example = "[{\"id\": \"urn:resourcetype:1\",\"name\":\"lecture\"}]")
     public Set<ResourceTypeIndexDocument> resourceTypes = new HashSet<>();
 
     @JsonProperty
@@ -38,25 +36,22 @@ public class ResourceIndexDocument {
     public URI contentUri;
 
     @JsonProperty
-    @ApiModelProperty(value = "URL path for resource", example = "'/subject:1/topic:12/resource:12'")
+    @ApiModelProperty(value = "URL path for resource", example = "'/subject:1/topic:12/resource:12")
     public String path;
-
-    @JsonProperty
-    @ApiModelProperty(value = "Paths containing the given topic that lead to this resource", example = "[\"/subject:1/topic:12/resource:1\", \"/subject:2/topic:12/resource:1\"]")
-    public Set<String> paths;
 
     @JsonProperty
     @ApiModelProperty(value = "The id of the topic-resource connection which causes this resource to be included in the result set.", example = "urn:topic-resource:1")
     public URI connectionId;
 
     @JsonProperty
-    @ApiModelProperty(value = "The order in which to sort the topic within it's level.", example = "1")
-    public int rank;
+    @ApiModelProperty(value = "Filters this resource is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
+    public Set<ResourceFilterIndexDocument> filters = new HashSet<>();
 
     @JsonProperty
-    @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
-    public Boolean isPrimary;
+    @ApiModelProperty(value = "Rank relative to parent", example = "1")
+    public int rank;
 
     @JsonIgnore
     public int topicNumericId;
+
 }

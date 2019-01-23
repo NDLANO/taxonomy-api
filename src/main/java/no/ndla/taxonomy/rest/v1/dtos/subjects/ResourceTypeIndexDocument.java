@@ -1,17 +1,16 @@
-package no.ndla.taxonomy.rest.v1.dto.topics;
+package no.ndla.taxonomy.rest.v1.dtos.subjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import no.ndla.taxonomy.rest.v1.Topics;
 
 import java.net.URI;
 
 /**
  *
  */
-@ApiModel("TopicResourceTypeIndexDocument")
+@ApiModel("SubjectResourceTypeIndexDocument")
 public class ResourceTypeIndexDocument {
     @JsonProperty
     @ApiModelProperty(value = "Resource type id", example = "urn:resourcetype:12")

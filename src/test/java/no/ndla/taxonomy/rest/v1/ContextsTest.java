@@ -2,8 +2,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.rest.v1.dto.topics.TopicIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.topics.TopicWithPathsIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.topics.TopicWithPathsIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 

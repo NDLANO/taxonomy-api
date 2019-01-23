@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
-import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
 @RequestMapping(path = {"/v1/relevances"})
@@ -41,7 +40,7 @@ public class Relevances extends CrudController<Relevance> {
     @GetMapping
     @ApiOperation("Gets all relevances")
     public List<RelevanceIndexDocument> index(
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {
@@ -55,7 +54,7 @@ public class Relevances extends CrudController<Relevance> {
     @ApiOperation(value = "Gets a single relevance", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
     public RelevanceIndexDocument get(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {

@@ -6,10 +6,10 @@ import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
-import no.ndla.taxonomy.rest.v1.dto.subjects.FilterIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.subjects.ResourceIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.subjects.SubTopicIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.subjects.SubjectIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.subjects.FilterIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.FilterExtractor;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.ResourceExctractor;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.SubjectExtractor;
@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
-import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
 @Transactional
@@ -56,7 +55,7 @@ public class Subjects extends CrudController<Subject> {
     @GetMapping
     @ApiOperation("Gets all subjects")
     public List<SubjectIndexDocument> index(
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
@@ -68,7 +67,7 @@ public class Subjects extends CrudController<Subject> {
     @ApiOperation(value = "Gets a single subject", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
     public SubjectIndexDocument get(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
@@ -100,7 +99,7 @@ public class Subjects extends CrudController<Subject> {
     public List<SubTopicIndexDocument> getTopics(
             @PathVariable("id")
                     URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language,
             @RequestParam(value = "recursive", required = false, defaultValue = "false")
@@ -170,7 +169,7 @@ public class Subjects extends CrudController<Subject> {
             "The ordering of resources will be based on the rank of resources relative to the topics they belong to.")
     public List<ResourceIndexDocument> getResources(
             @PathVariable("id") URI subjectId,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language,
             @RequestParam(value = "type", required = false, defaultValue = "")

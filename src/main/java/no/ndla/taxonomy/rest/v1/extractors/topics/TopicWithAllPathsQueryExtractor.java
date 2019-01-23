@@ -1,6 +1,6 @@
 package no.ndla.taxonomy.rest.v1.extractors.topics;
 
-import no.ndla.taxonomy.rest.v1.dto.topics.TopicWithPathsIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.topics.TopicWithPathsIndexDocument;
 
 import java.net.URI;
 import java.sql.ResultSet;
