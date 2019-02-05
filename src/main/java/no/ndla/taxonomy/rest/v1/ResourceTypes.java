@@ -45,7 +45,6 @@ public class ResourceTypes extends CrudController<ResourceType> {
 
     @GetMapping
     @ApiOperation("Gets a list of all resource types")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceTypeIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -61,7 +60,6 @@ public class ResourceTypes extends CrudController<ResourceType> {
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single resource type")
-    @PreAuthorize("hasAuthority('READONLY')")
     public ResourceTypeIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -122,7 +120,6 @@ public class ResourceTypes extends CrudController<ResourceType> {
 
     @GetMapping("/{id}/subtypes")
     @ApiOperation(value = "Gets subtypes of one resource type")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceTypeIndexDocument> getSubtypes(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")

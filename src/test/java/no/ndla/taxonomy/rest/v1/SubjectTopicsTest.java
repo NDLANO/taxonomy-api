@@ -135,7 +135,6 @@ public class SubjectTopicsTest extends RestTest {
         for (SubjectTopic subjectTopic : subjectTopics) {
             MockHttpServletResponse response = getResource("/v1/subject-topics/" + subjectTopic.getPublicId().toString());
             SubjectTopics.SubjectTopicIndexDocument connectionFromDb = getObject(SubjectTopics.SubjectTopicIndexDocument.class, response);
-            System.out.println("*** " + connectionFromDb.id.toString() + ": " + connectionFromDb.rank);
             //verify that only the contiguous connections are updated
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());

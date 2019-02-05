@@ -44,7 +44,6 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping
     @ApiOperation(value = "Lists all resources")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceIndexDocument> index(
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
@@ -55,7 +54,6 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single resource")
-    @PreAuthorize("hasAuthority('READONLY')")
     public ResourceIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -98,7 +96,6 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}/resource-types")
     @ApiOperation(value = "Gets all resource types associated with this resource")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceTypeIndexDocument> getResourceTypes(
             @PathVariable("id")
                     URI id,
@@ -114,7 +111,6 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters associated with this resource")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<FilterIndexDocument> getFilters(
             @PathVariable("id")
                     URI id,
@@ -132,7 +128,6 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}/full")
     @ApiOperation(value = "Gets all parent topics, all filters and resourceTypes for this resource")
-    @PreAuthorize("hasAuthority('READONLY')")
     public ResourceFullIndexDocument getResourceFull(
             @PathVariable("id")
                     URI id,
@@ -182,6 +177,7 @@ public class Resources extends CrudController<Resource> {
                     id = getURI(resultSet, "id");
                     isPrimary = resultSet.getBoolean("is_primary");
                     contentUri = URI.create(resultSet.getString("content_uri") != null ? resultSet.getString("content_uri") : "");
+                    connectionId = URI.create(resultSet.getString("connection_id"));
                 }});
             }
             return result;
@@ -257,23 +253,27 @@ public class Resources extends CrudController<Resource> {
     @ApiModel("ResourceFullIndexDocument")
     static class ResourceFullIndexDocument extends ResourceIndexDocument {
         @JsonProperty
-        @ApiModelProperty(value = "Related resource type(s)", example = "[{id: urn:resourcetype:learningPath,name: Læringssti}]")
+        @ApiModelProperty(value = "Related resource type(s)", example = "[" +
+                "{\"id\": \"urn:resourcetype:learningPath\"," +
+                " \"name\": \"Læringssti\"}]")
         public Set<ResourceTypeIndexDocument> resourceTypes = new HashSet<>();
 
         @JsonProperty
-        @ApiModelProperty(value = "Filters", example = "[{id: urn:filter:047bb226-48d1-4122-8791-7d4f5d83cf8b," +
-                "name: VG2," +
-                "connectionId: urn:resource-filter:a41d6162-b67f-44d8-b440-c1fdc7b4d05e," +
-                "relevanceId: urn:relevance:core}]")
+        @ApiModelProperty(value = "Filters", example = "[" +
+                "{\"id\": \"urn:filter:047bb226-48d1-4122-8791-7d4f5d83cf8b\"," +
+                "\"name\": \"VG2\"," +
+                "\"connectionId\": \"urn:resource-filter:a41d6162-b67f-44d8-b440-c1fdc7b4d05e\"," +
+                "\"relevanceId\": \"urn:relevance:core\"}]")
         public Set<FilterIndexDocument> filters = new HashSet<>();
 
         @JsonProperty
         @ApiModelProperty(value = "Parent topology nodes and whether or not connection type is primary",
-                example = "[{id: urn:topic:1:181900," +
-                        "name: I dyrehagen," +
-                        "contentUri: urn:article:6662," +
-                        "path: /subject:2/topic:1:181900," +
-                        "primary: true}]")
+                example = "["+
+                "{\"id\": \"urn:topic:1:181900\"," +
+                        "\"name\": \"I dyrehagen\"," +
+                        "\"contentUri\": \"urn:article:6662\"," +
+                        "\"path\": \"/subject:2/topic:1:181900\"," +
+                        "\"primary\": \"true\"}]")
         public Set<ParentTopicIndexDocument> parentTopics = new HashSet<>();
 
         static ResourceFullIndexDocument from(ResourceIndexDocument resource) {
@@ -301,6 +301,9 @@ public class Resources extends CrudController<Resource> {
         @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
         public boolean isPrimary;
+
+        @JsonProperty
+        public URI connectionId;
 
         @Override
         @JsonIgnore

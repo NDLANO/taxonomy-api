@@ -35,7 +35,6 @@ public class TopicSubtopics {
 
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and subtopics")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<TopicSubtopicIndexDocument> index() {
         List<TopicSubtopicIndexDocument> result = new ArrayList<>();
 
@@ -45,7 +44,6 @@ public class TopicSubtopics {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single connection between a topic and a subtopic")
-    @PreAuthorize("hasAuthority('READONLY')")
     public TopicSubtopicIndexDocument get(@PathVariable("id") URI id) {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
         TopicSubtopicIndexDocument result = new TopicSubtopicIndexDocument(topicSubtopic);

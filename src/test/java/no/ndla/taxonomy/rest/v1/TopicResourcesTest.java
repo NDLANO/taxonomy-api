@@ -4,6 +4,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicResource;
+import no.ndla.taxonomy.rest.v1.dto.topics.ResourceIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -215,7 +216,7 @@ public class TopicResourcesTest extends RestTest {
         }});
 
         MockHttpServletResponse response = getResource("/v1/topics/" + geometry.getPublicId() + "/resources");
-        Topics.ResourceIndexDocument[] resources = getObject(Topics.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
         assertEquals(circles.getPublicId(), resources[0].id);
         assertEquals(squares.getPublicId(), resources[1].id);
     }

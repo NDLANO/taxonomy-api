@@ -45,7 +45,7 @@ public class UrlResolver {
         String longestPrefix = "";
         String bestUrl = "";
         for (String possibleUrl : urls) {
-            String commonPrefix = StringUtils.getCommonPrefix(context, possibleUrl);
+            String commonPrefix = StringUtils.getCommonPrefix(context+"/", possibleUrl);
             if (commonPrefix.length() >= longestPrefix.length()) {
                 bestUrl = possibleUrl;
                 longestPrefix = commonPrefix;
@@ -55,7 +55,6 @@ public class UrlResolver {
     }
 
     @GetMapping("/resolve")
-    @PreAuthorize("hasAuthority('READONLY')")
     public ResolvedUrl resolve(@RequestParam String path, HttpServletResponse response) throws Exception {
         URI id = getId(path);
 
@@ -108,7 +107,6 @@ public class UrlResolver {
 
     @GetMapping("/mapping")
     @ApiOperation(value = "Returns path for an url or HTTP 404")
-    @PreAuthorize("hasAuthority('READONLY')")
     public ResolvedOldUrl getTaxonomyPathForUrl(@ApiParam(value = "url in old rig except 'https://'", example = "ndla.no/nb/node/142542?fag=52253") @RequestParam String url) {
         String resolveOldUrl = urlResolverService.resolveUrl(url);
         if (resolveOldUrl != null) {

@@ -38,7 +38,6 @@ public class Queries {
 
     @GetMapping("/resources")
     @ApiOperation(value = "Gets a list of resources matching given contentURI, empty list of no matches are found.")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<Queries.ResourceIndexDocument> queryResources(
             @RequestParam("contentURI") URI contentURI,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -62,7 +61,6 @@ public class Queries {
 
     @GetMapping("/topics")
     @ApiOperation(value = "Gets a list of topics matching given contentURI, empty list of no matches are found.")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<Queries.TopicIndexDocument> queryTopics(
             @RequestParam("contentURI") URI contentURI,
             @ApiParam(value = LANGUAGE_DOC, example = "nb")
@@ -97,7 +95,7 @@ public class Queries {
         public String name;
 
         @JsonProperty
-        @ApiModelProperty(value = "Resource type(s)", example = "[{id = 'urn:resourcetype:learningPath', name = 'Learning path'}]")
+        @ApiModelProperty(value = "Resource type(s)", example = "[{\"id\":\"urn:resourcetype:learningPath\", \"name\":\"Learning path\"}]")
         public Set<Queries.ResourceTypeIndexDocument> resourceTypes = new HashSet<>();
 
         @JsonProperty
@@ -126,7 +124,7 @@ public class Queries {
         @JsonIgnore
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof Topics.ResourceTypeIndexDocument)) return false;
+            if (!(o instanceof no.ndla.taxonomy.rest.v1.dto.topics.ResourceTypeIndexDocument)) return false;
 
             Queries.ResourceTypeIndexDocument that = (Queries.ResourceTypeIndexDocument) o;
 

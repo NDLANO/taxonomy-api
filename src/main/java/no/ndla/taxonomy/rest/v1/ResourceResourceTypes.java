@@ -64,7 +64,6 @@ public class ResourceResourceTypes {
 
     @GetMapping
     @ApiOperation("Gets all connections between resources and resource types")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceResourceTypeIndexDocument> index() throws Exception {
         List<ResourceResourceTypeIndexDocument> result = new ArrayList<>();
         resourceResourceTypeRepository.findAll().forEach(record -> result.add(new ResourceResourceTypeIndexDocument(record)));
@@ -73,7 +72,6 @@ public class ResourceResourceTypes {
 
     @GetMapping({"/{id}"})
     @ApiOperation("Gets a single connection between resource and resource type")
-    @PreAuthorize("hasAuthority('READONLY')")
     public ResourceResourceTypeIndexDocument get(@PathVariable("id") URI id) throws Exception {
         ResourceResourceType result = resourceResourceTypeRepository.getByPublicId(id);
         return new ResourceResourceTypeIndexDocument(result);

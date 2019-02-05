@@ -36,7 +36,6 @@ public class ResourceTypeTranslations {
 
     @GetMapping
     @ApiOperation("Gets all translations for a single resource type")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> result = new ArrayList<>();
@@ -51,7 +50,6 @@ public class ResourceTypeTranslations {
 
     @GetMapping("/{language}")
     @ApiOperation("Gets a single translation for a single resource type")
-    @PreAuthorize("hasAuthority('READONLY')")
     public ResourceTypeTranslations.ResourceTypeTranslationIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)

@@ -36,7 +36,6 @@ public class TopicTranslations {
 
     @GetMapping
     @ApiOperation("Gets all translations for a single topic")
-    @PreAuthorize("hasAuthority('READONLY')")
     public List<TopicTranslations.TopicTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
         Topic topic = topicRepository.getByPublicId(id);
         List<TopicTranslations.TopicTranslationIndexDocument> result = new ArrayList<>();
@@ -51,7 +50,6 @@ public class TopicTranslations {
 
     @GetMapping("/{language}")
     @ApiOperation("Gets a single translation for a single topic")
-    @PreAuthorize("hasAuthority('READONLY')")
     public TopicTranslations.TopicTranslationIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
