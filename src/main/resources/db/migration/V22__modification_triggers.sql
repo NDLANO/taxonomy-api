@@ -1,3 +1,11 @@
+CREATE TABLE freshness (
+  resource VARCHAR(128) NOT NULL,
+  last_modified TIMESTAMP NOT NULL
+);
+
+CREATE UNIQUE INDEX freshness_idx
+  ON freshness (resource);
+
 drop function if exists updatelastmodified() cascade;
 
 CREATE OR REPLACE FUNCTION updatelastmodified()
