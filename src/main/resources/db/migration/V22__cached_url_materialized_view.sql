@@ -92,3 +92,6 @@ CREATE MATERIALIZED VIEW cached_url as (
 
 CREATE UNIQUE INDEX cached_url_path_idx
   ON cached_url (path);
+
+CREATE INDEX cached_url_public_id_idx
+  ON cached_url (public_id);
