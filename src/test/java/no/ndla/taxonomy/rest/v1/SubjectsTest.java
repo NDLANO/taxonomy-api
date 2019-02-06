@@ -2,11 +2,11 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.rest.v1.command.subjects.CreateSubjectCommand;
-import no.ndla.taxonomy.rest.v1.command.subjects.UpdateSubjectCommand;
-import no.ndla.taxonomy.rest.v1.dto.subjects.ResourceIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.subjects.SubTopicIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.subjects.SubjectIndexDocument;
+import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -356,20 +356,6 @@ public class SubjectsTest extends RestTest {
         assertAnyTrue(resources, r -> r.path.equals("/subject:1/topic:1/resource:1"));
         assertAnyTrue(resources, r -> r.path.equals("/subject:1/topic:2/resource:2"));
         assertAnyTrue(resources, r -> r.path.equals("/subject:1/topic:2/topic:21/resource:3"));
-    }
-
-    @Test
-    public void resource_urls_are_chosen_according_to_context() throws Exception {
-
-        executeSqlScript("classpath:resource_in_dual_subjects_test_setup.sql", false);
-
-        for (int i : asList(1, 2)) {
-            MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:" + i + "/resources");
-            ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
-
-            assertEquals(1, resources.length);
-            assertEquals("/subject:" + i + "/topic:" + i + "/resource:1", resources[0].path);
-        }
     }
 
     @Test

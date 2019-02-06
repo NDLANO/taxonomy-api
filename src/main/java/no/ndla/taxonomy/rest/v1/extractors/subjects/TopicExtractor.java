@@ -1,7 +1,7 @@
 package no.ndla.taxonomy.rest.v1.extractors.subjects;
 
-import no.ndla.taxonomy.rest.v1.dto.subjects.SubTopicIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.subjects.TopicFilterIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.subjects.TopicFilterIndexDocument;
 
 import java.net.URI;
 import java.sql.ResultSet;

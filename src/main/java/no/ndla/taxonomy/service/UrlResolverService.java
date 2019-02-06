@@ -58,14 +58,14 @@ public class UrlResolverService {
     }
 
     private List<String> getAllPaths(URI public_id) {
-        List<String> allpaths = jdbcTemplate.query("SELECT PATH, IS_PRIMARY FROM CACHED_URL WHERE PUBLIC_ID=?", setQueryParameters(Collections.singletonList(public_id.toString())),
+        List<String> allpaths = jdbcTemplate.query("SELECT PATH, IS_PRIMARY FROM CACHED_URL WHERE PUBLIC_ID=?", setQueryParameters(public_id.toString()),
                 (resultSet, rowNum) -> resultSet.getString("path")
         );
         return allpaths;
     }
 
     private String getPrimaryPath(URI public_id) {
-        List<String> primaryPaths = jdbcTemplate.query("SELECT PATH, IS_PRIMARY FROM CACHED_URL WHERE PUBLIC_ID=? AND IS_PRIMARY=TRUE", setQueryParameters(Collections.singletonList(public_id.toString())),
+        List<String> primaryPaths = jdbcTemplate.query("SELECT PATH, IS_PRIMARY FROM CACHED_URL WHERE PUBLIC_ID=? AND IS_PRIMARY=TRUE", setQueryParameters(public_id.toString()),
                 (resultSet, rowNum) -> resultSet.getString("path")
         );
         if (primaryPaths.isEmpty()) return null;
@@ -77,7 +77,7 @@ public class UrlResolverService {
         String queryUrl = canonicalUrl + "%";
         final String sql = "SELECT old_url, public_id, subject_id FROM URL_MAP WHERE old_url LIKE ?";
         List<UrlMapping> result = new ArrayList<>();
-        jdbcTemplate.query(sql, setQueryParameters(asList(queryUrl)), (RowCallbackHandler) resultSet -> {
+        jdbcTemplate.query(sql, setQueryParameters(queryUrl), (RowCallbackHandler) resultSet -> {
             String matchedUrl = resultSet.getString("old_url");
             //the LIKE query may match node IDs that __start with__ the same node ID as in old url
             //e.g. oldUrl /node/54 should not match /node/54321 - therefore we add only if IDs match

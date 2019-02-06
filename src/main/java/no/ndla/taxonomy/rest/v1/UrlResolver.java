@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.Collections;
 
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -30,7 +29,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @Transactional
 public class UrlResolver {
 
-    public static final String RESOLVE_URL_QUERY = getQuery("resolve_url");
+    private static final String RESOLVE_URL_QUERY = getQuery("resolve_url");
 
     private JdbcTemplate jdbcTemplate;
     private UrlResolverService urlResolverService;
@@ -45,7 +44,7 @@ public class UrlResolver {
         String longestPrefix = "";
         String bestUrl = "";
         for (String possibleUrl : urls) {
-            String commonPrefix = StringUtils.getCommonPrefix(context+"/", possibleUrl);
+            String commonPrefix = StringUtils.getCommonPrefix(context + "/", possibleUrl);
             if (commonPrefix.length() >= longestPrefix.length()) {
                 bestUrl = possibleUrl;
                 longestPrefix = commonPrefix;
@@ -58,7 +57,7 @@ public class UrlResolver {
     public ResolvedUrl resolve(@RequestParam String path, HttpServletResponse response) throws Exception {
         URI id = getId(path);
 
-        ResolvedUrl returnedResolvedUrl = jdbcTemplate.query(RESOLVE_URL_QUERY, setQueryParameters(Collections.singletonList(id.toString())),
+        ResolvedUrl returnedResolvedUrl = jdbcTemplate.query(RESOLVE_URL_QUERY, setQueryParameters(id.toString()),
                 resultSet -> {
                     ResolvedUrl resolvedUrl = new ResolvedUrl();
                     while (resultSet.next()) {
