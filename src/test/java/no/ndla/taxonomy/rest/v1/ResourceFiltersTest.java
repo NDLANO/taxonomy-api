@@ -4,6 +4,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.rest.v1.dtos.resources.FilterIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -48,7 +49,7 @@ public class ResourceFiltersTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1/filters");
-        Resources.FilterIndexDocument[] filters = getObject(Resources.FilterIndexDocument[].class, response);
+        FilterIndexDocument[] filters = getObject(FilterIndexDocument[].class, response);
 
         assertEquals(2, filters.length);
         assertAnyTrue(filters, f -> f.id.equals(filter1.getPublicId()));

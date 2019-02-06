@@ -8,6 +8,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
+import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
+import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,9 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
-import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
 @RequestMapping(path = {"/v1/resource-types"})
@@ -46,14 +46,14 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @GetMapping
     @ApiOperation("Gets a list of all resource types")
     public List<ResourceTypeIndexDocument> index(
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {
         String sql = GET_RESOURCE_TYPES_RECURSIVELY_QUERY;
         sql = sql.replace("1 = 1", "rt.parent_id is null");
         ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
-        return jdbcTemplate.query(sql, setQueryParameters(singletonList(language)),
+        return jdbcTemplate.query(sql, setQueryParameters(language),
                 extractor::extractResourceTypes
         );
     }
@@ -62,20 +62,16 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @ApiOperation("Gets a single resource type")
     public ResourceTypeIndexDocument get(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) throws Exception {
         String sql = GET_RESOURCE_TYPES_RECURSIVELY_QUERY;
-        List<Object> args = new ArrayList<>();
 
-        sql = sql.replace("1 = 1", "rt.public_id = ?");
-        args.add(id.toString());
-        sql = sql.replace("2 = 2", "t.level = 0");
-        args.add(language);
+        sql = sql.replace("1 = 1", "rt.public_id = ?").replace("2 = 2", "t.level = 0");
 
         ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
-        return getFirst(jdbcTemplate.query(sql, setQueryParameters(args),
+        return getFirst(jdbcTemplate.query(sql, setQueryParameters(id.toString(), language),
                 extractor::extractResourceTypes
         ), "Subject", id);
     }
@@ -122,7 +118,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @ApiOperation(value = "Gets subtypes of one resource type")
     public List<ResourceTypeIndexDocument> getSubtypes(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language,
             @RequestParam(value = "recursive", required = false, defaultValue = "false")
@@ -131,11 +127,8 @@ public class ResourceTypes extends CrudController<ResourceType> {
     ) throws Exception {
 
         String sql = GET_RESOURCE_TYPES_RECURSIVELY_QUERY;
-        List<Object> args = new ArrayList<>();
 
         sql = sql.replace("1 = 1", "rt.public_id = ?");
-        args.add(id.toString());
-
         if (recursive) {
             sql = sql.replace("2 = 2", "t.level >= 1");
         } else {
@@ -143,8 +136,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
         }
 
         ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
-        args.add(language);
-        return jdbcTemplate.query(sql, setQueryParameters(args),
+        return jdbcTemplate.query(sql, setQueryParameters(id.toString(), language),
                 extractor::extractResourceTypes
         );
     }

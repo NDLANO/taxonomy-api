@@ -1,5 +1,7 @@
 package no.ndla.taxonomy.rest.v1;
 
+import no.ndla.taxonomy.rest.v1.dtos.queries.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.queries.TopicIndexDocument;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -22,7 +24,7 @@ public class QueryTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/queries/resources?contentURI=urn:article:345");
-        Queries.ResourceIndexDocument[] resources = getObject(Queries.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, resources.length);
         assertEquals(resources[0].resourceTypes.size(), 1);
@@ -31,7 +33,7 @@ public class QueryTest extends RestTest {
     @Test
     public void no_resources_matching_contentURI() throws Exception {
         MockHttpServletResponse response = getResource("/v1/queries/resources?contentURI=urn:article:345");
-        Queries.ResourceIndexDocument[] resources = getObject(Queries.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(0, resources.length);
     }
@@ -55,7 +57,7 @@ public class QueryTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/queries/resources?contentURI=urn:article:345");
-        Queries.ResourceIndexDocument[] resources = getObject(Queries.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, resources.length);
         assertAnyTrue(resources, r -> "urn:resource:1".equals(r.id.toString()));
@@ -72,7 +74,7 @@ public class QueryTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/queries/resources?contentURI=urn:article:345");
-        Queries.ResourceIndexDocument[] resources = getObject(Queries.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, resources.length);
         assertEquals(2, resources[0].resourceTypes.size());
@@ -89,7 +91,7 @@ public class QueryTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/queries/resources?contentURI=urn:article:345&language=nb");
-        Queries.ResourceIndexDocument[] resources = getObject(Queries.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, resources.length);
         assertEquals(resources[0].resourceTypes.size(), 1);
@@ -109,7 +111,7 @@ public class QueryTest extends RestTest {
                 .contentUri("urn:article:345"));
 
         MockHttpServletResponse response = getResource("/v1/queries/topics?contentURI=urn:article:345");
-        Queries.ResourceIndexDocument[] resources = getObject(Queries.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, resources.length);
         assertAnyTrue(resources, r -> "urn:topic:2".equals(r.id.toString()));
@@ -126,7 +128,7 @@ public class QueryTest extends RestTest {
                 .contentUri("urn:article:345"));
 
         MockHttpServletResponse response = getResource("/v1/queries/topics?contentURI=urn:article:345");
-        Queries.ResourceIndexDocument[] resources = getObject(Queries.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, resources.length);
         assertAnyTrue(resources, r -> "urn:topic:2".equals(r.id.toString()));
@@ -136,7 +138,7 @@ public class QueryTest extends RestTest {
     @Test
     public void no_topics_matching_contentURI() throws Exception {
         MockHttpServletResponse response = getResource("/v1/queries/topics?contentURI=urn:article:345");
-        Queries.TopicIndexDocument[] resources = getObject(Queries.TopicIndexDocument[].class, response);
+        TopicIndexDocument[] resources = getObject(TopicIndexDocument[].class, response);
 
         assertEquals(0, resources.length);
     }
@@ -150,7 +152,7 @@ public class QueryTest extends RestTest {
                 .contentUri("urn:article:345"));
 
         MockHttpServletResponse response = getResource("/v1/queries/topics?contentURI=urn:article:345&language=nb");
-        Queries.ResourceIndexDocument[] resources = getObject(Queries.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, resources.length);
         assertEquals("Emne", resources[0].name);

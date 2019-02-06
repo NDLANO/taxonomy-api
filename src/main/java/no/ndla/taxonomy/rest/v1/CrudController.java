@@ -5,6 +5,8 @@ import no.ndla.taxonomy.domain.DomainObject;
 import no.ndla.taxonomy.domain.DuplicateIdException;
 import no.ndla.taxonomy.domain.URNValidator;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
+import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
+import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,13 +63,4 @@ public abstract class CrudController<T extends DomainObject> {
         return locations.computeIfAbsent(getClass(), aClass -> aClass.getAnnotation(RequestMapping.class).path()[0]);
     }
 
-    public abstract static class UpdateCommand<T> {
-        public abstract void apply(T entity);
-    }
-
-    public abstract static class CreateCommand<T> {
-        public abstract URI getId();
-
-        public abstract void apply(T entity);
-    }
 }

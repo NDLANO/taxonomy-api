@@ -2,6 +2,12 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
+import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
+import no.ndla.taxonomy.rest.v1.dtos.resources.ParentTopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceFullIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -26,7 +32,7 @@ public class ResourcesTest extends RestTest {
                         )));
 
         MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1");
-        Resources.ResourceIndexDocument resource = getObject(Resources.ResourceIndexDocument.class, response);
+        ResourceIndexDocument resource = getObject(ResourceIndexDocument.class, response);
 
         assertEquals("introduction to trigonometry", resource.name);
         assertEquals("urn:article:1", resource.contentUri.toString());
@@ -53,7 +59,7 @@ public class ResourcesTest extends RestTest {
         builder.resource("resource").setPrimaryTopic(builder.topic("primary"));
 
         MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1");
-        Resources.ResourceIndexDocument resource = getObject(Resources.ResourceIndexDocument.class, response);
+        ResourceIndexDocument resource = getObject(ResourceIndexDocument.class, response);
 
         assertEquals("/subject:2/topic:2/resource:1", resource.path);
     }
@@ -65,7 +71,7 @@ public class ResourcesTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1");
-        Resources.ResourceIndexDocument resource = getObject(Resources.ResourceIndexDocument.class, response);
+        ResourceIndexDocument resource = getObject(ResourceIndexDocument.class, response);
 
         assertNull(resource.path);
     }
@@ -76,7 +82,7 @@ public class ResourcesTest extends RestTest {
         builder.subject(s -> s.topic(t -> t.resource(r -> r.name("Gas giants"))));
 
         MockHttpServletResponse response = getResource("/v1/resources");
-        Resources.ResourceIndexDocument[] resources = getObject(Resources.ResourceIndexDocument[].class, response);
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, resources.length);
         assertAnyTrue(resources, s -> "The inner planets".equals(s.name));
@@ -87,7 +93,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_create_resource() throws Exception {
-        URI id = getId(createResource("/v1/resources", new Resources.CreateResourceCommand() {{
+        URI id = getId(createResource("/v1/resources", new CreateResourceCommand() {{
             name = "testresource";
             contentUri = URI.create("urn:article:1");
         }}));
@@ -101,7 +107,7 @@ public class ResourcesTest extends RestTest {
     public void can_update_resource() throws Exception {
         URI id = newResource().getPublicId();
 
-        Resources.UpdateResourceCommand command = new Resources.UpdateResourceCommand() {{
+        UpdateResourceCommand command = new UpdateResourceCommand() {{
             name = "The inner planets";
             contentUri = URI.create("urn:article:1");
         }};
@@ -115,7 +121,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_create_resource_with_id() throws Exception {
-        Resources.CreateResourceCommand command = new Resources.CreateResourceCommand() {{
+        CreateResourceCommand command = new CreateResourceCommand() {{
             id = URI.create("urn:resource:1");
             name = "name";
         }};
@@ -127,7 +133,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        Resources.CreateResourceCommand command = new Resources.CreateResourceCommand() {{
+        CreateResourceCommand command = new CreateResourceCommand() {{
             id = URI.create("urn:resource:1");
             name = "name";
         }};
@@ -167,7 +173,7 @@ public class ResourcesTest extends RestTest {
         URI id = newResource().name("The inner planets").getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/resources/" + id);
-        Resources.ResourceIndexDocument result = getObject(Resources.ResourceIndexDocument.class, response);
+        ResourceIndexDocument result = getObject(ResourceIndexDocument.class, response);
 
         assertEquals(id, result.id);
     }
@@ -193,7 +199,7 @@ public class ResourcesTest extends RestTest {
         );
 
         MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1/resource-types");
-        Resources.ResourceTypeIndexDocument[] result = getObject(Resources.ResourceTypeIndexDocument[].class, response);
+        ResourceTypeIndexDocument[] result = getObject(ResourceTypeIndexDocument[].class, response);
         assertEquals(2, result.length);
         assertAnyTrue(result, rt -> rt.name.equals("Article") && rt.id.toString().equals("urn:resourcetype:2") && rt.parentId.toString().equals("urn:resourcetype:1") && rt.connectionId.toString().contains("urn:resource-resourcetype"));
         assertAnyTrue(result, rt -> rt.name.equals("Video") && rt.id.toString().equals("urn:resourcetype:3") && rt.parentId.toString().equals("urn:resourcetype:1"));
@@ -205,7 +211,7 @@ public class ResourcesTest extends RestTest {
                 .publicId("urn:resource:1")
                 .name("What is maths?"));
 
-        Resources.CreateResourceCommand command = new Resources.CreateResourceCommand() {{
+        CreateResourceCommand command = new CreateResourceCommand() {{
             id = URI.create("urn:resource:2");
             name = "What is maths?";
         }};
@@ -228,7 +234,7 @@ public class ResourcesTest extends RestTest {
                 .resource(resource));
 
         MockHttpServletResponse response = getResource("/v1/resources/" + resource.getPublicId() + "/full");
-        Resources.ResourceFullIndexDocument result = getObject(Resources.ResourceFullIndexDocument.class, response);
+        ResourceFullIndexDocument result = getObject(ResourceFullIndexDocument.class, response);
 
         assertEquals(resource.getPublicId(), result.id);
         assertEquals(resource.getName(), result.name);
@@ -237,9 +243,18 @@ public class ResourcesTest extends RestTest {
         assertEquals(1, result.filters.size());
         assertEquals(filter.getName(), result.filters.iterator().next().name);
         assertEquals(1, result.parentTopics.size());
-        Resources.ParentTopicIndexDocument t = result.parentTopics.iterator().next();
+        ParentTopicIndexDocument t = result.parentTopics.iterator().next();
         assertEquals(topic.getName(), t.name);
         assertEquals(true, t.isPrimary);
         assertEquals(URI.create("urn:article:6662"), t.contentUri);
+    }
+
+    @Test
+    public void full_resource_has_all_paths() throws Exception {
+        executeSqlScript("classpath:resource_in_dual_subjects_test_setup.sql", false);
+        MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1/full");
+        ResourceFullIndexDocument result = getObject(ResourceFullIndexDocument.class, response);
+        assertNotNull(result.paths);
+        assertEquals(2, result.paths.size());
     }
 }

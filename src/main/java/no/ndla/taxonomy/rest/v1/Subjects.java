@@ -4,12 +4,12 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.rest.v1.command.subjects.CreateSubjectCommand;
-import no.ndla.taxonomy.rest.v1.command.subjects.UpdateSubjectCommand;
-import no.ndla.taxonomy.rest.v1.dto.subjects.FilterIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.subjects.ResourceIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.subjects.SubTopicIndexDocument;
-import no.ndla.taxonomy.rest.v1.dto.subjects.SubjectIndexDocument;
+import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.dtos.subjects.FilterIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.FilterExtractor;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.ResourceExctractor;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.SubjectExtractor;
@@ -28,10 +28,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
-import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
 @Transactional
@@ -58,28 +55,25 @@ public class Subjects extends CrudController<Subject> {
     @GetMapping
     @ApiOperation("Gets all subjects")
     public List<SubjectIndexDocument> index(
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        List<Object> args = singletonList(language);
         SubjectExtractor extractor = new SubjectExtractor();
-        return jdbcTemplate.query(GET_SUBJECTS_QUERY, setQueryParameters(args), extractor::extractSubjects);
+        return jdbcTemplate.query(GET_SUBJECTS_QUERY, setQueryParameters(language), extractor::extractSubjects);
     }
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single subject", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
     public SubjectIndexDocument get(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
         String sql = GET_SUBJECTS_QUERY.replace("1 = 1", "s.public_id = ?");
-        List<Object> args = asList(language, id.toString());
-
         SubjectExtractor extractor = new SubjectExtractor();
-        return getFirst(jdbcTemplate.query(sql, setQueryParameters(args), extractor::extractSubjects), "Subject", id);
+        return getFirst(jdbcTemplate.query(sql, setQueryParameters(language, id.toString()), extractor::extractSubjects), "Subject", id);
     }
 
     @PutMapping("/{id}")
@@ -105,7 +99,7 @@ public class Subjects extends CrudController<Subject> {
     public List<SubTopicIndexDocument> getTopics(
             @PathVariable("id")
                     URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language,
             @RequestParam(value = "recursive", required = false, defaultValue = "false")
@@ -122,16 +116,13 @@ public class Subjects extends CrudController<Subject> {
         String sql = GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY;
         if (!recursive) sql = sql.replace("1 = 1", "t.level = 0");
 
-        List<Object> args = new ArrayList<>();
-        args.add(id.toString());
-        args.add(language);
         if (filterIds == null || filterIds.length == 0) {
             filterIds = getFilters(id).stream().map(filterIndexDocument -> filterIndexDocument.id).toArray(URI[]::new);
         }
 
         TopicExtractor extractor = new TopicExtractor();
         URI[] finalFilterIds = filterIds;
-        List<SubTopicIndexDocument> results = jdbcTemplate.query(sql, setQueryParameters(args), resultSet -> {
+        List<SubTopicIndexDocument> results = jdbcTemplate.query(sql, setQueryParameters(id.toString(), language), resultSet -> {
             return extractor.extractTopics(id, finalFilterIds, relevance, resultSet);
         });
         if (!recursive) {
@@ -178,7 +169,7 @@ public class Subjects extends CrudController<Subject> {
             "The ordering of resources will be based on the rank of resources relative to the topics they belong to.")
     public List<ResourceIndexDocument> getResources(
             @PathVariable("id") URI subjectId,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language,
             @RequestParam(value = "type", required = false, defaultValue = "")
@@ -264,11 +255,8 @@ public class Subjects extends CrudController<Subject> {
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters for a subject")
     public List<FilterIndexDocument> getFilters(@PathVariable("id") URI subjectId) {
-        String sql = GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY;
-        List<Object> args = singletonList(subjectId.toString());
-
         FilterExtractor extractor = new FilterExtractor();
-        return jdbcTemplate.query(sql, setQueryParameters(args), extractor::extractFilters);
+        return jdbcTemplate.query(GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY, setQueryParameters(subjectId.toString()), extractor::extractFilters);
     }
 
     private String addFiltersToQuery(URI[] filterIds, String sql, List<Object> args) {

@@ -19,8 +19,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
-
 @RestController
 @RequestMapping(path = {"/v1/filters/{id}/translations"})
 @Transactional
@@ -53,7 +51,7 @@ public class FilterTranslations {
     @ApiOperation("Gets a single translation for a single filter")
     public FilterTranslations.FilterTranslationIndexDocument get(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language
     ) throws Exception {
         Filter filter = filterRepository.getByPublicId(id);
@@ -72,7 +70,7 @@ public class FilterTranslations {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language,
             @ApiParam(name = "filter", value = "The new or updated translation")
             @RequestBody FilterTranslations.UpdateFilterTranslationCommand command
@@ -89,7 +87,7 @@ public class FilterTranslations {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language
     ) throws Exception {
         Filter filter = filterRepository.getByPublicId(id);

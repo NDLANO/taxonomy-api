@@ -18,8 +18,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
-
 @RestController
 @RequestMapping(path = {"/v1/topics/{id}/translations"})
 @Transactional
@@ -52,7 +50,7 @@ public class TopicTranslations {
     @ApiOperation("Gets a single translation for a single topic")
     public TopicTranslations.TopicTranslationIndexDocument get(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language
     ) throws Exception {
         Topic topic = topicRepository.getByPublicId(id);
@@ -71,7 +69,7 @@ public class TopicTranslations {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language,
             @ApiParam(name = "topic", value = "The new or updated translation")
             @RequestBody TopicTranslations.UpdateTopicTranslationCommand command
@@ -88,7 +86,7 @@ public class TopicTranslations {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(
             @PathVariable("id") URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb", required = true)
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language
     ) throws Exception {
         Topic topic = topicRepository.getByPublicId(id);

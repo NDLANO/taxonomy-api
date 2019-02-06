@@ -13,17 +13,17 @@ import java.util.List;
 import java.util.Scanner;
 
 public class QueryUtils {
-    public static PreparedStatementSetter setQueryParameters(final List<Object> args) {
+
+    public static PreparedStatementSetter setQueryParameters(Object...args) {
         return statement -> {
-            for (int i = 0; i < args.size(); i++) {
-                statement.setObject(i + 1, args.get(i));
+            for (int i = 0; i < args.length; i++) {
+                statement.setObject(i + 1, args[i]);
             }
         };
     }
 
     public static URI toURI(String uri) {
-        if (uri == null) return null;
-        return URI.create(uri);
+        return uri == null ? null: URI.create(uri);
     }
 
     public static URI getURI(ResultSet resultSet, String columnLabel) throws SQLException {

@@ -4,10 +4,10 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.repositories.TopicRepository;
-import no.ndla.taxonomy.rest.v1.command.topics.CreateTopicCommand;
-import no.ndla.taxonomy.rest.v1.command.topics.UpdateTopicCommand;
-import no.ndla.taxonomy.rest.v1.dto.topics.*;
-import no.ndla.taxonomy.rest.v1.extractors.*;
+import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
+import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
+import no.ndla.taxonomy.rest.v1.dtos.topics.*;
+import no.ndla.taxonomy.rest.v1.extractors.topics.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,10 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.*;
-import static no.ndla.taxonomy.rest.v1.DocStrings.LANGUAGE_DOC;
 
 @RestController
 @RequestMapping(path = {"/v1/topics"})
@@ -37,6 +34,7 @@ public class Topics extends CrudController<Topic> {
 
     private static final String TOPIC_TREE_BY_TOPIC_ID = getQuery("topic_tree_by_topic_id");
     private static final String GET_TOPICS_QUERY = getQuery("get_topics");
+    private static final String GET_TOPICS_WITH_ALL_PATHS_QUERY = getQuery("get_topics_with_all_paths");
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_topic_public_id_recursively");
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_QUERY = getQuery("get_resources_by_topic_public_id");
     private static final String GET_FILTERS_BY_TOPIC_ID_QUERY = getQuery("get_filters_by_topic_public_id");
@@ -57,30 +55,23 @@ public class Topics extends CrudController<Topic> {
     @GetMapping
     @ApiOperation("Gets all topics")
     public List<TopicIndexDocument> index(
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) throws Exception {
-        List<Object> args = asList(language);
         TopicQueryExtractor extractor = new TopicQueryExtractor();
-        return jdbcTemplate.query(GET_TOPICS_QUERY, setQueryParameters(args),
-                extractor::extractTopics
+        return jdbcTemplate.query(GET_TOPICS_QUERY, setQueryParameters(language), extractor::extractTopics
         );
     }
 
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
-    public TopicIndexDocument get(@PathVariable("id") URI id,
-                                  @ApiParam(value = LANGUAGE_DOC, example = "nb")
-                                  @RequestParam(value = "language", required = false, defaultValue = "") String language
+    public TopicWithPathsIndexDocument get(@PathVariable("id") URI id,
+                                           @ApiParam(value = "ISO-639-1 language code", example = "nb")
+                                           @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) {
-        String sql = GET_TOPICS_QUERY.replace("1 = 1", "t.public_id = ?");
-        List<Object> args = asList(language, id.toString());
-
-        TopicQueryExtractor extractor = new TopicQueryExtractor();
-        return getFirst(jdbcTemplate.query(sql, setQueryParameters(args),
-                extractor::extractTopics
-        ), "Topic", id);
+        TopicWithAllPathsQueryExtractor extractor = new TopicWithAllPathsQueryExtractor();
+        return jdbcTemplate.query(GET_TOPICS_WITH_ALL_PATHS_QUERY, setQueryParameters(language, id.toString()), extractor::extractTopic);
     }
 
 
@@ -108,7 +99,7 @@ public class Topics extends CrudController<Topic> {
     public List<ResourceIndexDocument> getResources(
             @ApiParam(value = "id", required = true)
             @PathVariable("id") URI topicId,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language,
             @RequestParam(value = "recursive", required = false, defaultValue = "false")
@@ -142,7 +133,7 @@ public class Topics extends CrudController<Topic> {
             query = extractor.addResourceTypesToQuery(resourceTypeIds, args, query);
             query = extractor.addFiltersToQuery(filterIds, args, query);
 
-            Map<Integer, TopicNode> resourceMap = jdbcTemplate.query(query, setQueryParameters(args), resultSet -> {
+            Map<Integer, TopicNode> resourceMap = jdbcTemplate.query(query, setQueryParameters(args.toArray()), resultSet -> {
                 return populateTopicTree(extractor, relevance, topicIndexDocument, resultSet, nodeMap);
             });
             return resourceMap
@@ -172,7 +163,7 @@ public class Topics extends CrudController<Topic> {
             query = extractor.addResourceTypesToQuery(resourceTypeIds, args, query);
             query = extractor.addFiltersToQuery(filterIds, args, query);
 
-            return jdbcTemplate.query(query, setQueryParameters(args), resultSet -> {
+            return jdbcTemplate.query(query, setQueryParameters(args.toArray()), resultSet -> {
                 return extractor.extractResources(relevance, topicIndexDocument, resultSet);
             });
         }
@@ -218,12 +209,12 @@ public class Topics extends CrudController<Topic> {
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
         FilterQueryExtractor extractor = new FilterQueryExtractor();
-        return jdbcTemplate.query(GET_FILTERS_BY_TOPIC_ID_QUERY, setQueryParameters(singletonList(id.toString())),
+        return jdbcTemplate.query(GET_FILTERS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()),
                 extractor::extractFilters
         );
     }
@@ -238,7 +229,7 @@ public class Topics extends CrudController<Topic> {
             @ApiParam(value = "Select by filter id(s). If not specified, all subtopics connected to this topic will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
                     URI[] filterIds,
-            @ApiParam(value = LANGUAGE_DOC, example = "nb")
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
@@ -248,13 +239,13 @@ public class Topics extends CrudController<Topic> {
             sql = GET_SUBTOPICS_BY_TOPIC_ID_AND_FILTERS_QUERY;
             StringBuffer filtersCombined = new StringBuffer();
             Arrays.stream(filterIds).forEach(filtersCombined::append);
-            args = asList(language, id.toString(), filtersCombined.toString());
+            args = Arrays.asList(language, id.toString(), filtersCombined.toString());
         } else {
             sql = GET_SUBTOPICS_BY_TOPIC_ID_QUERY.replace("1 = 1", "t.public_id = ?");
-            args = asList(language, id.toString());
+            args = Arrays.asList(language, id.toString());
         }
         SubTopicQueryExtractor extractor = new SubTopicQueryExtractor();
-        return jdbcTemplate.query(sql, setQueryParameters(args),
+        return jdbcTemplate.query(sql, setQueryParameters(args.toArray()),
                 extractor::extractSubTopics
         );
     }
@@ -262,12 +253,11 @@ public class Topics extends CrudController<Topic> {
     @GetMapping("/{id}/connections")
     @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
     public List<ConnectionIndexDocument> getAllConnections(@PathVariable("id") URI id) {
-        List<Object> args = asList(id.toString());
         List<ConnectionIndexDocument> results = new ArrayList<>();
         ConnectionQueryExtractor ConnectionQueryExtractor = new ConnectionQueryExtractor();
-        results.addAll(jdbcTemplate.query(GET_PARENT_TOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(args), ConnectionQueryExtractor::extractConnections));
-        results.addAll(jdbcTemplate.query(GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(args), ConnectionQueryExtractor::extractConnections));
-        results.addAll(jdbcTemplate.query(GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(args), ConnectionQueryExtractor::extractConnections));
+        results.addAll(jdbcTemplate.query(GET_PARENT_TOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()), ConnectionQueryExtractor::extractConnections));
+        results.addAll(jdbcTemplate.query(GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()), ConnectionQueryExtractor::extractConnections));
+        results.addAll(jdbcTemplate.query(GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()), ConnectionQueryExtractor::extractConnections));
         return results;
     }
 
