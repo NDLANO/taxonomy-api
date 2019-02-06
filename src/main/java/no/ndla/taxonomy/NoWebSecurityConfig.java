@@ -17,5 +17,6 @@ public class NoWebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/**").permitAll();
+        http.headers().cacheControl().disable();
     }
 }
