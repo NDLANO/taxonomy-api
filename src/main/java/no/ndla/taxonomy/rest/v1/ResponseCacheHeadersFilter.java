@@ -15,10 +15,11 @@ import java.io.IOException;
  *
  */
 @Component
-@Order(3)
+@Order(4)
 public class ResponseCacheHeadersFilter extends GenericFilterBean {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         response.setHeader("Cache-Control", "max-age=300");
         filterChain.doFilter(servletRequest,servletResponse);

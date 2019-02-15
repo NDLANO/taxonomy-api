@@ -32,7 +32,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Profile("auth")
 @Component
-@Order(2)
+@Order(3)
 public class AuthFilter extends GenericFilterBean {
 
     @Value(value = "${auth0.issuer}")

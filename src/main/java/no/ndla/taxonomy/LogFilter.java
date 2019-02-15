@@ -19,7 +19,7 @@ import java.util.Enumeration;
 import static java.lang.System.currentTimeMillis;
 
 @Component
-@Order(1)
+@Order(2)
 public class LogFilter extends GenericFilterBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("accesslog");
