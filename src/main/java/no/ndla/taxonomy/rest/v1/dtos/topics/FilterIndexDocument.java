@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.net.URI;
+import java.util.Objects;
 
 /**
  *
@@ -26,4 +27,18 @@ public class FilterIndexDocument {
     @JsonProperty
     @ApiModelProperty(value = "The relevance of this topic according to the filter", example = "urn:relevance:core")
     public URI relevanceId;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FilterIndexDocument that = (FilterIndexDocument) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(relevanceId, that.relevanceId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, relevanceId);
+    }
 }

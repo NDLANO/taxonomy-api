@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.net.URI;
+import java.util.Objects;
 
 /**
  *
@@ -18,4 +19,18 @@ public class FilterIndexDocument {
     @JsonProperty
     @ApiModelProperty(value = "Filter name", example = "1T-YF")
     public String name;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FilterIndexDocument that = (FilterIndexDocument) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name);
+    }
 }
