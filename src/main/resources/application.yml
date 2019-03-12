@@ -73,8 +73,10 @@ spring.profiles: brukertest
 
 service: ndla-taxonomy-brukertest
 ---
-spring.profiles: requestqueuer
+spring.profiles: queue-requests
 
 requestqueue:
   enabled: true
   target-host: ${REQUEST_QUEUE_TARGET_HOST:null}
+
+---
