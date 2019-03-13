@@ -11,7 +11,7 @@ import java.util.*;
 import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.getURI;
 import static no.ndla.taxonomy.jdbc.QueryUtils.toURI;
-import static no.ndla.taxonomy.rest.v1.UrlResolver.getPathMostCloselyMatchingContext;
+import static no.ndla.taxonomy.rest.v1.controllers.UrlResolver.getPathMostCloselyMatchingContext;
 
 /**
  *

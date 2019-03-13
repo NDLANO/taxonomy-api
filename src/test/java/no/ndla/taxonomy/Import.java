@@ -1,7 +1,7 @@
 package no.ndla.taxonomy;
 
-import no.ndla.taxonomy.rest.v1.SubjectTopics;
-import no.ndla.taxonomy.rest.v1.TopicSubtopics;
+import no.ndla.taxonomy.rest.v1.controllers.SubjectTopics;
+import no.ndla.taxonomy.rest.v1.controllers.TopicSubtopics;
 import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import org.junit.Ignore;
