@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.rest.v1;
+package no.ndla.taxonomy.configurations;
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres;
 import org.slf4j.Logger;
@@ -12,8 +12,8 @@ import java.io.IOException;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Configuration
-public class DataSourceFactory {
-    Logger logger = LoggerFactory.getLogger(DataSourceFactory.class);
+public class DataSourceConfiguration {
+    Logger logger = LoggerFactory.getLogger(DataSourceConfiguration.class);
 
     @Bean
     @Conditional(UseEmbeddedPostgres.class)

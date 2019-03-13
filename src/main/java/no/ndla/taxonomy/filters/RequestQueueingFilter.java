@@ -1,4 +1,4 @@
-package no.ndla.taxonomy;
+package no.ndla.taxonomy.filters;
 
 import no.ndla.taxonomy.domain.TaxonomyApiRequest;
 import no.ndla.taxonomy.service.RequestQueueService;

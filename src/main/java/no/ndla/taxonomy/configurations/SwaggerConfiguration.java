@@ -1,4 +1,4 @@
-package no.ndla.taxonomy;
+package no.ndla.taxonomy.configurations;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

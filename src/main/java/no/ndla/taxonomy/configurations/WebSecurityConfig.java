@@ -1,6 +1,7 @@
-package no.ndla.taxonomy.security;
+package no.ndla.taxonomy.configurations;
 
-import no.ndla.taxonomy.LogFilter;
+import no.ndla.taxonomy.filters.LogFilter;
+import no.ndla.taxonomy.filters.AuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;

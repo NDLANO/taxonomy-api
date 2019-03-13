@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.security;
+package no.ndla.taxonomy.filters;
 
 import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkException;
@@ -9,6 +9,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import no.ndla.taxonomy.security.JWTAuthentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

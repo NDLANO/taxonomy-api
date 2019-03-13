@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.security;
+package no.ndla.taxonomy.configurations;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
