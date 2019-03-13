@@ -1,7 +1,7 @@
 package no.ndla.taxonomy.filters;
 
 import no.ndla.taxonomy.domain.TaxonomyApiRequest;
-import no.ndla.taxonomy.service.RequestQueueService;
+import no.ndla.taxonomy.services.RequestQueueService;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;

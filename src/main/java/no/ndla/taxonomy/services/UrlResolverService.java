@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service;
+package no.ndla.taxonomy.services;
 
 import no.ndla.taxonomy.domain.UrlMapping;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +10,6 @@ import javax.sql.DataSource;
 import java.net.URI;
 import java.util.*;
 
-import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.setQueryParameters;
 
 @Service

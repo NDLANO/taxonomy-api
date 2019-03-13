@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service;
+package no.ndla.taxonomy.services;
 
 import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.domain.UrlMapping;

@@ -9,7 +9,7 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.NotFoundException;
 import no.ndla.taxonomy.rest.BadHttpRequestException;
 import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
-import no.ndla.taxonomy.service.UrlResolverService;
+import no.ndla.taxonomy.services.UrlResolverService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

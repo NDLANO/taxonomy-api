@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service;
+package no.ndla.taxonomy.services;
 
 import org.junit.Before;
 import org.junit.Test;

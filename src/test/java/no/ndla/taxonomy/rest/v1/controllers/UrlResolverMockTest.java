@@ -1,8 +1,7 @@
 package no.ndla.taxonomy.rest.v1.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import no.ndla.taxonomy.rest.v1.controllers.UrlResolver;
-import no.ndla.taxonomy.service.UrlResolverService;
+import no.ndla.taxonomy.services.UrlResolverService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

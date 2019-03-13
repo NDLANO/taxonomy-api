@@ -1,6 +1,6 @@
 package db.migration;
 
-import no.ndla.taxonomy.service.OldUrlCanonifier;
+import no.ndla.taxonomy.services.OldUrlCanonifier;
 import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
 
 import java.sql.Connection;

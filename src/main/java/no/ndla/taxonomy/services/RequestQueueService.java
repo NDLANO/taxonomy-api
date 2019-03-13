@@ -1,6 +1,7 @@
-package no.ndla.taxonomy.service;
+package no.ndla.taxonomy.services;
 
 
+import no.ndla.taxonomy.configurations.RequestQueueConfig;
 import no.ndla.taxonomy.domain.TaxonomyApiRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 
@@ -20,13 +22,22 @@ public class RequestQueueService {
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestQueueService.class);
-    private static final long WAIT_TIME_BETWEEN_RETRIES = 1000 * 60 * 5;
+    private long waitTimeBetweenRetries;
     private boolean autoEnqueueingRunning;
-    private final LinkedBlockingQueue<TaxonomyApiRequest> requestQueue = new LinkedBlockingQueue<>();
-    private String syncEndpoint = "http://10.99.1.181:5000/api/requests/queue";
-    private RestTemplate restTemplate = new RestTemplate();
+    private final BlockingQueue<TaxonomyApiRequest> requestQueue;
+
+    private String syncEndpoint;
+    private RestTemplate restTemplate;
     private TaxonomyApiRequest currentRequest = null;
     private int currentAttemptCount = 0;
+
+    public RequestQueueService(RequestQueueConfig config){
+        syncEndpoint = config.getTargetHost()+"/api/requests/queue";
+        waitTimeBetweenRetries = config.getWaitTimeBetweenRetries();
+        restTemplate = new RestTemplate();
+        requestQueue = new LinkedBlockingQueue<>();
+    }
+
 
     public void add(TaxonomyApiRequest request) {
         LOGGER.info("Adding taxonomy API request to local queue {}" + request.toString());
@@ -52,12 +63,12 @@ public class RequestQueueService {
                             currentRequest = null;
                             currentAttemptCount = 0;
                         } else {
-                            LOGGER.error("Received non-success HTTP code ({})when posting a Taxonomy API Request to sync, will retry in {} seconds", response.getStatusCode().value(), WAIT_TIME_BETWEEN_RETRIES / 1000);
-                            Thread.sleep(WAIT_TIME_BETWEEN_RETRIES);
+                            LOGGER.error("Received non-success HTTP code ({})when posting a Taxonomy API Request to sync, will retry in {} seconds", response.getStatusCode().value(), waitTimeBetweenRetries / 1000);
+                            Thread.sleep(waitTimeBetweenRetries);
                         }
                     } catch (Exception e) {
-                        LOGGER.error("An error occurred when posting a Taxonomy API Request to sync, will retry in {} seconds", WAIT_TIME_BETWEEN_RETRIES / 1000, e);
-                        Thread.sleep(WAIT_TIME_BETWEEN_RETRIES);
+                        LOGGER.error("An error occurred when posting a Taxonomy API Request to sync, will retry in {} seconds", waitTimeBetweenRetries / 1000, e);
+                        Thread.sleep(waitTimeBetweenRetries);
                     }
                 } catch (InterruptedException e) {
                     LOGGER.warn("Thread was interrupted, retrying", e);

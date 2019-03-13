@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.service;
+package no.ndla.taxonomy.services;
 
 /**
  * Used to ensure that queries for old style URLS of various kinds (ndla.no/node/xxx) are transformed to the same format,
