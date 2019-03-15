@@ -41,10 +41,11 @@ public class RequestQueueServiceTest {
     }
 
     @Test
-    public void itemAddedIsAttemptedSent() {
+    public void itemAddedIsAttemptedSent() throws InterruptedException {
         Mockito.when(requestPoster.postTaxonomyRequestToSync(Mockito.any(TaxonomyApiRequest.class))).thenReturn(ResponseEntity.noContent().build());
         TaxonomyApiRequest taxonomyApiRequest = new TaxonomyApiRequest("POST", "/v1/dummy", "{}", "2001-01-01T11:22:33:444");
         requestQueueService.add(taxonomyApiRequest);
+        Thread.sleep(50L); //give blocking queue a chance to catch up
         Mockito.verify(requestPoster, times(1)).postTaxonomyRequestToSync(taxonomyApiRequest);
     }
 
