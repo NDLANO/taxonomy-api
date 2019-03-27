@@ -29,6 +29,10 @@ public class RequestQueueConfig {
     }
 
     public long getWaitTimeBetweenRetries() {
-        return 0;
+        return waitTimeBetweenRetries;
+    }
+
+    public void setWaitTimeBetweenRetries(long waitTimeBetweenRetries) {
+        this.waitTimeBetweenRetries = waitTimeBetweenRetries;
     }
 }

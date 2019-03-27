@@ -1,0 +1,61 @@
+version: '3'
+services:
+  draft-db:
+    image: postgres:alpine
+    ports:
+      - 5432:5432
+  target-db:
+    image: postgres:alpine
+    ports:
+      - 5433:5432
+  taxonomy-api-draft:
+    build:
+      context: ../target
+      dockerfile: ../docker/Dockerfile
+      args:
+        - JAR_FILE=taxonomy-service.jar
+    ports:
+      - 5000:5000
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://draft-db:5432/postgres
+      - SPRING_DATASOURCE_PASSWORD=
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - EMBEDDED=false
+      - REQUEST_QUEUE_TARGET_HOST=http://taxonomy-sync:5000
+      - SPRING_PROFILES_ACTIVE=queue-requests
+  dynamodb-sync:
+    image: amazon/dynamodb-local:latest
+    ports:
+      - 8000:8000
+  taxonomy-sync:
+    build:
+      context: ../../taxonomy-sync/build/libs/
+      dockerfile: ../../../taxonomy-api/docker/Dockerfile-sync
+      args:
+        - JAR_FILE=taxonomy-sync-1.0.0-SNAPSHOT.jar
+    environment:
+      - SOURCE_SERVER=target-db
+      - SOURCE_PW=
+      - TARGET_SERVER=draft-db
+      - TARGET_PW=
+      - QUEUE_SERVER=http://dynamodb-sync:8000
+      - SYNC_TARGET=taxonomy-api-target:5000
+      - CLIENT_ID=ITEST
+      - dynamodb.region=null
+      - AWS_ACCESS_KEY_ID=bogus
+      - AWS_SECRET_KEY=bogus
+    ports:
+      - 5002:5000
+  taxonomy-api-target:
+    build:
+      context: ../target
+      dockerfile: ../docker/Dockerfile
+      args:
+        - JAR_FILE=taxonomy-service.jar
+    ports:
+      - 5001:5000
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://target-db:5432/postgres
+      - SPRING_DATASOURCE_PASSWORD=
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - EMBEDDED=false

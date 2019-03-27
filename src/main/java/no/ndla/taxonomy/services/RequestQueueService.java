@@ -30,6 +30,7 @@ public class RequestQueueService {
 
     public RequestQueueService(RequestQueueConfig config, TaxonomyApiRequestPoster requestPoster) {
         this.requestPoster = requestPoster;
+        LOGGER.info("Sync server: "+config.getTargetHost());
         waitTimeBetweenRetries = config.getWaitTimeBetweenRetries();
         requestQueue = new LinkedBlockingQueue<>();
         startAutomaticEnqueuing();

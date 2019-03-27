@@ -79,5 +79,5 @@ spring.profiles: queue-requests
 requestqueue:
   enabled: true
   target-host: ${REQUEST_QUEUE_TARGET_HOST:null}
-
+  wait-time-between-retries: 10000
 ---
