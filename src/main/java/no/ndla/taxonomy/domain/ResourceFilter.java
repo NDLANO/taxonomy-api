@@ -22,6 +22,11 @@ public class ResourceFilter extends DomainEntity {
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 
+
+    protected ResourceFilter() {
+        //used by Hibernate, do not remove
+    }
+
     public ResourceFilter(Resource resource, Filter filter, Relevance relevance, URI publicId) {
         this.filter = filter;
         this.resource = resource;
