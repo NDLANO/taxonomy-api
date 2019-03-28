@@ -14,7 +14,7 @@ public class TaxonomyApiRequestPoster {
 
     public TaxonomyApiRequestPoster(RequestQueueConfig config){
         restTemplate = new RestTemplate();
-        syncEndpoint = config.getTargetHost() + "/requests/queue";
+        syncEndpoint = config.getTargetHost() + "/api/requests/queue";
     }
 
 

@@ -25,7 +25,7 @@ springfox.documentation.swagger.v2.path: /api-docs
 
 requestqueue:
   enabled: false
-  target-host:
+  target-host: http://localhost
   wait-time-between-retries: 300000
 
 ---
@@ -34,7 +34,6 @@ spring.profiles: junit
 
 spring.jpa:
   show-sql: true
-
 
 ---
 
@@ -73,6 +72,7 @@ service: ndla-taxonomy-test
 spring.profiles: brukertest
 
 service: ndla-taxonomy-brukertest
+
 ---
 spring.profiles: queue-requests
 
@@ -80,4 +80,5 @@ requestqueue:
   enabled: true
   target-host: ${REQUEST_QUEUE_TARGET_HOST:null}
   wait-time-between-retries: 10000
+
 ---
