@@ -15,6 +15,7 @@ import no.ndla.taxonomy.rest.v1.extractors.subjects.FilterExtractor;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.ResourceExctractor;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.SubjectExtractor;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.TopicExtractor;
+import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -47,10 +48,11 @@ public class Subjects extends CrudController<Subject> {
     private static final Comparator<ResourceIndexDocument> RESOURCE_BY_RANK = Comparator.comparing(resourceNode -> resourceNode.rank);
     private static final Comparator<TopicNode> TOPIC_BY_RANK = Comparator.comparing(topicNode -> topicNode.rank);
 
-    public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate) {
+    public Subjects(SubjectRepository subjectRepository, JdbcTemplate jdbcTemplate, PublicIdGeneratorService publicIdGeneratorService) {
         this.subjectRepository = subjectRepository;
         this.jdbcTemplate = jdbcTemplate;
         repository = subjectRepository;
+        this.publicIdGeneratorService = publicIdGeneratorService;
     }
 
     @GetMapping
@@ -92,6 +94,9 @@ public class Subjects extends CrudController<Subject> {
     @ApiOperation(value = "Creates a new subject")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(@ApiParam(name = "subject", value = "The new subject") @RequestBody CreateSubjectCommand command) {
+        if(command.id == null){
+            command.id = publicIdGeneratorService.getNext("urn:subject");
+        }
         return doPost(new Subject(), command);
     }
 

@@ -1,0 +1,1 @@
+CREATE SEQUENCE uuid_generator_seq;

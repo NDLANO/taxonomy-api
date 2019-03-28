@@ -9,10 +9,10 @@ import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
+import java.util.UUID;
 
 import static no.ndla.taxonomy.TestUtils.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ResourceFiltersTest extends RestTest {
@@ -82,8 +82,9 @@ public class ResourceFiltersTest extends RestTest {
         Resource resource = builder.resource(r -> r
                 .publicId("urn:resource:1"));
 
-        URI id = save(resource.addFilter(filter, relevance)).getPublicId();
-
+        URI id = URI.create("urn:resource-filter:"+ UUID.randomUUID());
+        save(resource.addFilter(filter, relevance, id));
+        assertNotNull(resourceFilterRepository.findByPublicId(id));
         deleteResource("/v1/resource-filters/" + id);
         assertNull(resourceFilterRepository.findByPublicId(id));
     }
@@ -97,9 +98,9 @@ public class ResourceFiltersTest extends RestTest {
 
         Resource resource = builder.resource(r -> r
                 .publicId("urn:resource:1"));
-
-        URI id = save(resource.addFilter(filter, core)).getPublicId();
-
+        URI id = URI.create("urn:resource-filter:"+ UUID.randomUUID());
+        save(resource.addFilter(filter, core, id)).getPublicId();
+        assertNotNull(resourceFilterRepository.findByPublicId(id));
         updateResource("/v1/resource-filters/" + id, new ResourceFilters.UpdateResourceFilterCommand() {{
             relevanceId = supplementary.getPublicId();
         }});

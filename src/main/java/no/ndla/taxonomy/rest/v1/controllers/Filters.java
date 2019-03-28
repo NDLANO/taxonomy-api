@@ -12,6 +12,7 @@ import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
+import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -34,10 +35,12 @@ public class Filters extends CrudController<Filter> {
     private JdbcTemplate jdbcTemplate;
     private static final String GET_FILTERS_QUERY = getQuery("get_filters");
 
-    public Filters(FilterRepository repository, JdbcTemplate jdbcTemplate, SubjectRepository subjectRepository) {
+    public Filters(FilterRepository repository, JdbcTemplate jdbcTemplate, SubjectRepository subjectRepository,
+                   PublicIdGeneratorService publicIdGeneratorService) {
         this.jdbcTemplate = jdbcTemplate;
         this.subjectRepository = subjectRepository;
         this.repository = repository;
+        this.publicIdGeneratorService = publicIdGeneratorService;
     }
 
     @GetMapping
@@ -85,6 +88,9 @@ public class Filters extends CrudController<Filter> {
         if (command.subjectId == null) throw new SubjectRequiredException();
 
         Filter filter = new Filter();
+        if (command.id == null) {
+            command.id = publicIdGeneratorService.getNext("urn:filter");
+        }
         Subject subject = subjectRepository.getByPublicId(command.subjectId);
         filter.setSubject(subject);
         return doPost(filter, command);

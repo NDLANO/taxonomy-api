@@ -167,8 +167,8 @@ public class Resource extends DomainObject {
         return null;
     }
 
-    public ResourceFilter addFilter(Filter filter, Relevance relevance) {
-        ResourceFilter resourceFilter = new ResourceFilter(this, filter, relevance);
+    public ResourceFilter addFilter(Filter filter, Relevance relevance, URI publicId) {
+        ResourceFilter resourceFilter = new ResourceFilter(this, filter, relevance, publicId);
         filters.add(resourceFilter);
         return resourceFilter;
     }

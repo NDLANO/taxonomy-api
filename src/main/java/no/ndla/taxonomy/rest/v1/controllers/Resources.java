@@ -9,6 +9,7 @@ import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
 import no.ndla.taxonomy.rest.v1.controllers.CrudController;
 import no.ndla.taxonomy.rest.v1.dtos.resources.*;
+import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -38,9 +39,10 @@ public class Resources extends CrudController<Resource> {
 
     private JdbcTemplate jdbcTemplate;
 
-    public Resources(ResourceRepository resourceRepository, JdbcTemplate jdbcTemplate) {
+    public Resources(ResourceRepository resourceRepository, JdbcTemplate jdbcTemplate, PublicIdGeneratorService publicIdGeneratorService) {
         this.jdbcTemplate = jdbcTemplate;
         repository = resourceRepository;
+        this.publicIdGeneratorService = publicIdGeneratorService;
     }
 
     @GetMapping
@@ -92,6 +94,9 @@ public class Resources extends CrudController<Resource> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "resource", value = "the new resource") @RequestBody CreateResourceCommand command) {
+        if(command.id == null){
+            command.id = publicIdGeneratorService.getNext("urn:resource");
+        }
         return doPost(new Resource(), command);
     }
 

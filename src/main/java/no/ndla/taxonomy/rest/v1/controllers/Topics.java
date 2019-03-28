@@ -9,6 +9,7 @@ import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.controllers.CrudController;
 import no.ndla.taxonomy.rest.v1.dtos.topics.*;
 import no.ndla.taxonomy.rest.v1.extractors.topics.*;
+import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -47,9 +48,10 @@ public class Topics extends CrudController<Topic> {
     private static final Comparator<ResourceIndexDocument> RESOURCE_BY_RANK = Comparator.comparing(resourceNode -> resourceNode.rank);
     private static final Comparator<TopicNode> TOPIC_BY_RANK = Comparator.comparing(topicNode -> topicNode.rank);
 
-    public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
+    public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate, PublicIdGeneratorService publicIdGeneratorService) {
         this.jdbcTemplate = jdbcTemplate;
         repository = topicRepository;
+        this.publicIdGeneratorService = publicIdGeneratorService;
     }
 
 
@@ -80,6 +82,9 @@ public class Topics extends CrudController<Topic> {
     @ApiOperation(value = "Creates a new topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(@ApiParam(name = "connection", value = "The new topic") @RequestBody CreateTopicCommand command) {
+        if(command.id == null){
+            command.id = publicIdGeneratorService.getNext("urn:topic:");
+        }
         return doPost(new Topic(), command);
     }
 

@@ -9,6 +9,7 @@ import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
+import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -32,9 +33,10 @@ public class Relevances extends CrudController<Relevance> {
     private JdbcTemplate jdbcTemplate;
     private static final String GET_RELEVANCES_QUERY = getQuery("get_relevances");
 
-    public Relevances(RelevanceRepository repository, JdbcTemplate jdbcTemplate) {
+    public Relevances(RelevanceRepository repository, JdbcTemplate jdbcTemplate, PublicIdGeneratorService publicIdGeneratorService) {
         this.jdbcTemplate = jdbcTemplate;
         this.repository = repository;
+        this.publicIdGeneratorService = publicIdGeneratorService;
     }
 
     @GetMapping
@@ -69,6 +71,9 @@ public class Relevances extends CrudController<Relevance> {
     @ApiOperation(value = "Creates a new relevance")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(@ApiParam(name = "relevance", value = "The new relevance") @RequestBody CreateRelevanceCommand command) throws Exception {
+        if(command.id == null){
+            command.id = publicIdGeneratorService.getNext("urn:relevance");
+        }
         return doPost(new Relevance(), command);
     }
 

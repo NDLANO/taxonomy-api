@@ -7,6 +7,7 @@ import no.ndla.taxonomy.domain.URNValidator;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
+import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +23,10 @@ import java.util.Map;
 
 public abstract class CrudController<T extends DomainObject> {
     protected TaxonomyRepository<T> repository;
-
+    protected PublicIdGeneratorService publicIdGeneratorService;
     private static final Map<Class<?>, String> locations = new HashMap<>();
     private URNValidator validator = new URNValidator();
+
 
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Deletes a single entity by id")

@@ -10,6 +10,7 @@ import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.repositories.ResourceFilterRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
+import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,12 +30,16 @@ public class ResourceFilters {
     private ResourceFilterRepository resourceFilterRepository;
     private ResourceRepository resourceRepository;
     private RelevanceRepository relevanceRepository;
+    private PublicIdGeneratorService publicIdGeneratorService;
 
-    public ResourceFilters(FilterRepository filterRepository, ResourceRepository resourceRepository, ResourceFilterRepository resourceFilterRepository, RelevanceRepository relevanceRepository) {
+    public ResourceFilters(FilterRepository filterRepository, ResourceRepository resourceRepository,
+                           ResourceFilterRepository resourceFilterRepository, RelevanceRepository relevanceRepository,
+                           PublicIdGeneratorService publicIdGeneratorService ) {
         this.filterRepository = filterRepository;
         this.resourceRepository = resourceRepository;
         this.resourceFilterRepository = resourceFilterRepository;
         this.relevanceRepository = relevanceRepository;
+        this.publicIdGeneratorService = publicIdGeneratorService;
     }
 
     @PostMapping
@@ -46,7 +51,7 @@ public class ResourceFilters {
             Resource resource = resourceRepository.getByPublicId(command.resourceId);
             Relevance relevance = relevanceRepository.getByPublicId(command.relevanceId);
 
-            ResourceFilter resourceFilter = resource.addFilter(filter, relevance);
+            ResourceFilter resourceFilter = resource.addFilter(filter, relevance, publicIdGeneratorService.getNext("urn:resource-filter"));
             resourceFilterRepository.save(resourceFilter);
 
             URI location = URI.create("/v1/resource-filters/" + resourceFilter.getPublicId());

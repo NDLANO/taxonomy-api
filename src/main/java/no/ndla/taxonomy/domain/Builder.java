@@ -4,6 +4,7 @@ import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public class Builder {
@@ -428,7 +429,7 @@ public class Builder {
         }
 
         public ResourceBuilder filter(Filter filter, Relevance relevance) {
-            ResourceFilter resourceFilter = resource.addFilter(filter, relevance);
+            ResourceFilter resourceFilter = resource.addFilter(filter, relevance, URI.create("urn:resource-filter:"+ UUID.randomUUID()));
             entityManager.persist(resourceFilter);
             return this;
         }

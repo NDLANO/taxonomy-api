@@ -22,14 +22,11 @@ public class ResourceFilter extends DomainEntity {
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 
-    protected ResourceFilter() {
-    }
-
-    public ResourceFilter(Resource resource, Filter filter, Relevance relevance) {
+    public ResourceFilter(Resource resource, Filter filter, Relevance relevance, URI publicId) {
         this.filter = filter;
         this.resource = resource;
         this.relevance = relevance;
-        setPublicId(URI.create("urn:resource-filter:" + UUID.randomUUID()));
+        this.setPublicId(publicId);
     }
 
     public Filter getFilter() {
