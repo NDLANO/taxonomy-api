@@ -112,7 +112,7 @@ public class Topics extends CrudController<Topic> {
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
                     URI[] resourceTypeIds,
             @RequestParam(value = "subject", required = false, defaultValue = "")
-            @ApiParam(value = "Select filters by subject id if filterIds is empty. Used as alternative to specify filters.")
+            @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.")
                     URI subjectId,
             @RequestParam(value = "filter", required = false, defaultValue = "")
             @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned." +
@@ -244,7 +244,7 @@ public class Topics extends CrudController<Topic> {
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
-            @ApiParam(value = "Select filters by subject id if filterIds is empty. Used as alternative to specify filters.")
+            @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.")
                     URI subjectId,
             @RequestParam(value = "filter", required = false, defaultValue = "")
             @ApiParam(value = "Select by filter id(s). If not specified, all subtopics connected to this topic will be returned." +
