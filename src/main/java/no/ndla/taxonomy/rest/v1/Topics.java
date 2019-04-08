@@ -244,6 +244,7 @@ public class Topics extends CrudController<Topic> {
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
+            @RequestParam(value = "subject", required = false, defaultValue = "")
             @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.")
                     URI subjectId,
             @RequestParam(value = "filter", required = false, defaultValue = "")
