@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.net.URI;
+import java.util.Objects;
 
 /**
  *
@@ -18,4 +19,18 @@ public class ResourceFilterIndexDocument {
     @JsonProperty
     @ApiModelProperty(required = true, value = "ID of the relevance the resource has in context of the filter", example = "urn:relevance:core")
     public URI relevanceId;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ResourceFilterIndexDocument that = (ResourceFilterIndexDocument) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(relevanceId, that.relevanceId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, relevanceId);
+    }
 }
