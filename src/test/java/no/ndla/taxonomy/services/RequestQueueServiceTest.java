@@ -3,6 +3,7 @@ package no.ndla.taxonomy.services;
 import no.ndla.taxonomy.configurations.RequestQueueConfig;
 import no.ndla.taxonomy.domain.RequestQueueStatus;
 import no.ndla.taxonomy.domain.TaxonomyApiRequest;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -17,7 +18,7 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
 public class RequestQueueServiceTest {
 
 
-    private RequestQueueService requestQueueService;
+    private static RequestQueueService requestQueueService;
     private RequestQueueConfig config;
     private TaxonomyApiRequestPoster requestPoster;
     private static final long WAIT_TIME = 10L;
@@ -26,9 +27,14 @@ public class RequestQueueServiceTest {
     public void init() {
         config = Mockito.mock(RequestQueueConfig.class);
         Mockito.when(config.getTargetHost()).thenReturn("dummyhost");
-        Mockito.when(config.getWaitTimeBetweenRetries()).thenReturn(10L);
+        Mockito.when(config.getWaitTimeBetweenRetries()).thenReturn(WAIT_TIME);
         requestPoster = Mockito.mock(TaxonomyApiRequestPoster.class);
         requestQueueService = new RequestQueueService(config, requestPoster);
+    }
+
+    @AfterClass
+    public static void cleanUp(){
+        requestQueueService.shutdown();
     }
 
 

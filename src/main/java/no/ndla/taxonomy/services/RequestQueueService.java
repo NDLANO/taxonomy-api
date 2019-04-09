@@ -27,6 +27,7 @@ public class RequestQueueService {
     private TaxonomyApiRequest currentRequest = null;
     private TaxonomyApiRequestPoster requestPoster;
     private int currentAttemptCount = 0;
+    private Thread processingThread;
 
     public RequestQueueService(RequestQueueConfig config, TaxonomyApiRequestPoster requestPoster) {
         this.requestPoster = requestPoster;
@@ -49,7 +50,7 @@ public class RequestQueueService {
 
     private void startAutomaticEnqueuing() {
         autoEnqueueingRunning = true;
-        new Thread(() -> {
+        processingThread = new Thread(() -> {
             while (autoEnqueueingRunning) {
                 try {
                     if (currentRequest == null) {
@@ -72,15 +73,21 @@ public class RequestQueueService {
                         Thread.sleep(waitTimeBetweenRetries);
                     }
                 } catch (InterruptedException e) {
-                    LOGGER.warn("Thread was interrupted, retrying", e);
+                    LOGGER.warn("Thread was interrupted, exiting", e);
                 }
             }
-        }).start();
+        });
+        processingThread.start();
     }
-
 
     @PreDestroy
     private void preDestroy() {
         autoEnqueueingRunning = false;
+    }
+
+    void shutdown() {
+        autoEnqueueingRunning = false;
+        if(processingThread != null)
+            processingThread.interrupt();
     }
 }
