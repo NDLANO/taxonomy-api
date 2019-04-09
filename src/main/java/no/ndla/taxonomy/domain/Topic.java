@@ -50,20 +50,20 @@ public class Topic extends DomainObject {
         return this;
     }
 
-    public TopicSubtopic addSubtopic(Topic subtopic) {
+    public TopicSubtopic addSubtopic(Topic subtopic, URI publicId) {
         refuseIfDuplicateSubtopic(subtopic);
 
-        TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic);
+        TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic, publicId);
         subtopic.parentTopics.add(topicSubtopic);
         subtopic.setPrimaryParentTopic(this);
         subtopics.add(topicSubtopic);
         return topicSubtopic;
     }
 
-    public TopicSubtopic addSecondarySubtopic(Topic subtopic) {
+    public TopicSubtopic addSecondarySubtopic(Topic subtopic, URI publicId) {
         refuseIfDuplicateSubtopic(subtopic);
 
-        TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic);
+        TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic, publicId);
         topicSubtopic.setPrimary(false);
         subtopic.parentTopics.add(topicSubtopic);
         subtopics.add(topicSubtopic);
@@ -113,20 +113,20 @@ public class Topic extends DomainObject {
         return null;
     }
 
-    public TopicResource addResource(Resource resource) {
+    public TopicResource addResource(Resource resource, URI publicId) {
         refuseIfDuplicateResource(resource);
 
-        TopicResource topicResource = new TopicResource(this, resource);
+        TopicResource topicResource = new TopicResource(this, resource, publicId);
         this.resources.add(topicResource);
         resource.topics.add(topicResource);
         resource.setPrimaryTopic(this);
         return topicResource;
     }
 
-    public TopicResource addSecondaryResource(Resource resource) {
+    public TopicResource addSecondaryResource(Resource resource, URI publicId) {
         refuseIfDuplicateResource(resource);
 
-        TopicResource topicResource = new TopicResource(this, resource);
+        TopicResource topicResource = new TopicResource(this, resource, publicId);
         topicResource.setPrimary(false);
         this.resources.add(topicResource);
         resource.topics.add(topicResource);
@@ -295,8 +295,8 @@ public class Topic extends DomainObject {
         return null;
     }
 
-    public TopicFilter addFilter(Filter filter, Relevance relevance) {
-        TopicFilter topicFilter = new TopicFilter(this, filter, relevance);
+    public TopicFilter addFilter(Filter filter, Relevance relevance, URI publicId) {
+        TopicFilter topicFilter = new TopicFilter(this, filter, relevance, publicId);
         filters.add(topicFilter);
         return topicFilter;
     }
@@ -323,5 +323,6 @@ public class Topic extends DomainObject {
     public boolean isContext() {
         return context;
     }
+
 
 }

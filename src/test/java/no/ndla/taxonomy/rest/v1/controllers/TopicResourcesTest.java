@@ -9,10 +9,7 @@ import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static no.ndla.taxonomy.TestUtils.createResource;
 import static no.ndla.taxonomy.TestUtils.*;
@@ -67,7 +64,7 @@ public class TopicResourcesTest extends RestTest {
         URI integrationId, calculusId;
         Topic calculus = newTopic().name("calculus");
         Resource integration = newResource().name("Introduction to integration");
-        calculus.addResource(integration);
+        calculus.addResource(integration, randomTopicResourceId());
 
         calculusId = calculus.getPublicId();
         integrationId = integration.getPublicId();
@@ -86,14 +83,14 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void can_delete_topic_resource() throws Exception {
-        URI id = save(newTopic().addResource(newResource())).getPublicId();
+        URI id = save(newTopic().addResource(newResource(), randomTopicResourceId())).getPublicId();
         deleteResource("/v1/topic-resources/" + id);
         assertNull(topicRepository.findByPublicId(id));
     }
 
     @Test
     public void can_update_topic_resource() throws Exception {
-        URI id = save(newTopic().addResource(newResource())).getPublicId();
+        URI id = save(newTopic().addResource(newResource(), randomTopicResourceId())).getPublicId();
 
         updateResource("/v1/topic-resources/" + id, new TopicResources.UpdateTopicResourceCommand() {{
             primary = true;
@@ -104,7 +101,7 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void cannot_unset_primary_topic() throws Exception {
-        URI id = save(newTopic().addResource(newResource())).getPublicId();
+        URI id = save(newTopic().addResource(newResource(), randomTopicResourceId())).getPublicId();
 
         updateResource("/v1/topic-resources/" + id, new TopicResources.UpdateTopicResourceCommand() {{
             primary = false;
@@ -127,11 +124,11 @@ public class TopicResourcesTest extends RestTest {
     public void can_get_resources() throws Exception {
         Topic electricity = newTopic().name("electricity");
         Resource alternatingCurrent = newResource().name("How alternating current works");
-        save(electricity.addResource(alternatingCurrent));
+        save(electricity.addResource(alternatingCurrent, randomTopicResourceId()));
 
         Topic calculus = newTopic().name("calculus");
         Resource integration = newResource().name("Introduction to integration");
-        save(calculus.addResource(integration));
+        save(calculus.addResource(integration, randomTopicResourceId()));
 
         MockHttpServletResponse response = getResource("/v1/topic-resources");
         TopicResources.TopicResourceIndexDocument[] topicResources = getObject(TopicResources.TopicResourceIndexDocument[].class, response);
@@ -146,7 +143,7 @@ public class TopicResourcesTest extends RestTest {
     public void can_get_topic_resource() throws Exception {
         Topic electricity = newTopic().name("electricity");
         Resource alternatingCurrent = newResource().name("How alternating current works");
-        TopicResource topicResource = save(electricity.addResource(alternatingCurrent));
+        TopicResource topicResource = save(electricity.addResource(alternatingCurrent, randomTopicResourceId()));
 
         MockHttpServletResponse resource = getResource("/v1/topic-resources/" + topicResource.getPublicId());
         TopicResources.TopicResourceIndexDocument topicResourceIndexDocument = getObject(TopicResources.TopicResourceIndexDocument.class, resource);
@@ -158,7 +155,7 @@ public class TopicResourcesTest extends RestTest {
     public void first_topic_connected_to_resource_is_primary() throws Exception {
         Topic electricity = newTopic().name("electricity");
         Resource alternatingCurrent = newResource().name("How alternating current works");
-        TopicResource topicResource = save(electricity.addResource(alternatingCurrent));
+        TopicResource topicResource = save(electricity.addResource(alternatingCurrent, randomTopicResourceId()));
 
         MockHttpServletResponse resource = getResource("/v1/topic-resources/" + topicResource.getPublicId());
         TopicResources.TopicResourceIndexDocument topicResourceIndexDocument = getObject(TopicResources.TopicResourceIndexDocument.class, resource);
@@ -202,8 +199,8 @@ public class TopicResourcesTest extends RestTest {
                 .publicId("urn:resource:2"));
 
 
-        URI geometrySquares = save(geometry.addResource(squares)).getPublicId();
-        URI geometryCircles = save(geometry.addResource(circles)).getPublicId();
+        URI geometrySquares = save(geometry.addResource(squares, randomTopicResourceId())).getPublicId();
+        URI geometryCircles = save(geometry.addResource(circles, randomTopicResourceId())).getPublicId();
         updateResource("/v1/topic-resources/" + geometryCircles, new TopicResources.UpdateTopicResourceCommand() {{
             primary = true;
             id = geometryCircles;
@@ -362,7 +359,7 @@ public class TopicResourcesTest extends RestTest {
         Topic parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Resource sub = newResource();
-            TopicResource topicResource = parent.addResource(sub);
+            TopicResource topicResource = parent.addResource(sub, randomTopicResourceId());
             topicResource.setRank(i);
             connections.add(topicResource);
             save(topicResource);
@@ -375,7 +372,7 @@ public class TopicResourcesTest extends RestTest {
         Topic parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Resource sub = newResource();
-            TopicResource topicSubtopic = parent.addResource(sub);
+            TopicResource topicSubtopic = parent.addResource(sub, randomTopicResourceId());
             if (i <= 5) {
                 topicSubtopic.setRank(i);
             } else {
@@ -386,4 +383,9 @@ public class TopicResourcesTest extends RestTest {
         }
         return connections;
     }
+
+    private URI randomTopicResourceId(){
+        return URI.create("urn:topic-resource:"+ UUID.randomUUID());
+    }
+
 }

@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
+import java.util.UUID;
 
 import static junit.framework.TestCase.assertEquals;
 import static no.ndla.taxonomy.TestUtils.*;
@@ -36,7 +37,7 @@ public class ResourceResourceTypesTest extends RestTest {
     public void cannot_have_duplicate_resourcetypes_for_resource() throws Exception {
         Resource integrationResource = newResource().name("Introduction to integration");
         ResourceType resourceType = newResourceType().name("text");
-        save(integrationResource.addResourceType(resourceType));
+        save(integrationResource.addResourceType(resourceType, randomPublicId()));
 
         createResource("/v1/resource-resourcetypes", new ResourceResourceTypes.CreateResourceResourceTypeCommand() {{
             resourceId = integrationResource.getPublicId();
@@ -48,7 +49,7 @@ public class ResourceResourceTypesTest extends RestTest {
     public void can_delete_resource_resourcetype() throws Exception {
         Resource integrationResource = builder.resource(r -> r.name("Introduction to integration"));
         ResourceType resourceType = builder.resourceType(rt -> rt.name("text"));
-        URI id = save(integrationResource.addResourceType(resourceType)).getPublicId();
+        URI id = save(integrationResource.addResourceType(resourceType, randomPublicId())).getPublicId();
 
         deleteResource("/v1/resource-resourcetypes/" + id);
         assertNull(resourceResourceTypeRepository.findByPublicId(id));
@@ -58,11 +59,11 @@ public class ResourceResourceTypesTest extends RestTest {
     public void can_list_all_resource_resourcetypes() throws Exception {
         Resource trigonometry = newResource().name("Advanced trigonometry");
         ResourceType article = newResourceType().name("article");
-        save(trigonometry.addResourceType(article));
+        save(trigonometry.addResourceType(article, randomPublicId()));
 
         Resource integration = newResource().name("Introduction to integration");
         ResourceType text = newResourceType().name("text");
-        save(integration.addResourceType(text));
+        save(integration.addResourceType(text, randomPublicId()));
 
         MockHttpServletResponse response = getResource("/v1/resource-resourcetypes");
         ResourceResourceTypes.ResourceResourceTypeIndexDocument[] resourceResourcetypes = getObject(ResourceResourceTypes.ResourceResourceTypeIndexDocument[].class, response);
@@ -75,7 +76,7 @@ public class ResourceResourceTypesTest extends RestTest {
     public void can_get_a_resource_resourcetype() throws Exception {
         Resource resource = newResource().name("Advanced trigonometry");
         ResourceType resourceType = newResourceType().name("article");
-        ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);
+        ResourceResourceType resourceResourceType = resource.addResourceType(resourceType, randomPublicId());
         URI id = save(resourceResourceType).getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/resource-resourcetypes/" + id);
@@ -89,7 +90,7 @@ public class ResourceResourceTypesTest extends RestTest {
     public void can_change_id_of_resource_type() throws Exception {
         Resource resource = newResource().name("Advanced trigonometry");
         ResourceType resourceType = newResourceType().name("article");
-        ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);
+        ResourceResourceType resourceResourceType = resource.addResourceType(resourceType, randomPublicId());
         URI id = save(resourceResourceType).getPublicId();
 
         resourceType.setPublicId(URI.create("urn:resourcetype:article"));
@@ -99,5 +100,9 @@ public class ResourceResourceTypesTest extends RestTest {
 
         assertEquals(resource.getPublicId(), result.resourceId);
         assertEquals(URI.create("urn:resourcetype:article"), result.resourceTypeId);
+    }
+
+    private URI randomPublicId() {
+        return URI.create("urn:resource-resourcetype" + UUID.randomUUID());
     }
 }

@@ -32,10 +32,10 @@ public class Subject extends DomainObject {
         setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
     }
 
-    public SubjectTopic addTopic(Topic topic) {
+    public SubjectTopic addTopic(Topic topic, URI publicId) {
         refuseIfDuplicate(topic);
 
-        SubjectTopic subjectTopic = new SubjectTopic(this, topic);
+        SubjectTopic subjectTopic = new SubjectTopic(this, topic, publicId);
         this.topics.add(subjectTopic);
         topic.subjects.add(subjectTopic);
         if (topic.hasSingleSubject()) topic.setPrimarySubject(this);

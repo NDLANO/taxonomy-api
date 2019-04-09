@@ -10,6 +10,7 @@ import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.repositories.TopicFilterRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
+import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,12 +30,16 @@ public class TopicFilters {
     private TopicFilterRepository topicFilterRepository;
     private TopicRepository topicRepository;
     private RelevanceRepository relevanceRepository;
+    private PublicIdGeneratorService publicIdGeneratorService;
 
-    public TopicFilters(FilterRepository filterRepository, TopicRepository topicRepository, TopicFilterRepository topicFilterRepository, RelevanceRepository relevanceRepository) {
+    public TopicFilters(FilterRepository filterRepository, TopicRepository topicRepository,
+                        TopicFilterRepository topicFilterRepository, RelevanceRepository relevanceRepository,
+                        PublicIdGeneratorService publicIdGeneratorService) {
         this.filterRepository = filterRepository;
         this.topicRepository = topicRepository;
         this.topicFilterRepository = topicFilterRepository;
         this.relevanceRepository = relevanceRepository;
+        this.publicIdGeneratorService = publicIdGeneratorService;
     }
 
     @PostMapping
@@ -46,7 +51,7 @@ public class TopicFilters {
             Topic topic = topicRepository.getByPublicId(command.topicId);
             Relevance relevance = relevanceRepository.getByPublicId(command.relevanceId);
 
-            TopicFilter topicFilter = topic.addFilter(filter, relevance);
+            TopicFilter topicFilter = topic.addFilter(filter, relevance, publicIdGeneratorService.getNext("urn:topic-filter"));
             topicFilterRepository.save(topicFilter);
 
             URI location = URI.create("/v1/topic-filters/" + topicFilter.getPublicId());

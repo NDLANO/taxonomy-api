@@ -11,6 +11,7 @@ import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
+import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,11 +30,15 @@ public class ResourceResourceTypes {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private ResourceTypeRepository resourceTypeRepository;
     private final ResourceRepository resourceRepository;
+    private PublicIdGeneratorService publicIdGeneratorService;
 
-    public ResourceResourceTypes(ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceTypeRepository resourceTypeRepository, ResourceRepository resourceRepository) {
+    public ResourceResourceTypes(ResourceResourceTypeRepository resourceResourceTypeRepository,
+                                 ResourceTypeRepository resourceTypeRepository, ResourceRepository resourceRepository,
+                                 PublicIdGeneratorService publicIdGeneratorService) {
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceTypeRepository = resourceTypeRepository;
         this.resourceRepository = resourceRepository;
+        this.publicIdGeneratorService = publicIdGeneratorService;
     }
 
     @PostMapping
@@ -45,7 +50,7 @@ public class ResourceResourceTypes {
         Resource resource = resourceRepository.getByPublicId(command.resourceId);
         ResourceType resourceType = resourceTypeRepository.getByPublicId(command.resourceTypeId);
 
-        ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);
+        ResourceResourceType resourceResourceType = resource.addResourceType(resourceType, publicIdGeneratorService.getNext("urn:resource-resourcetype"));
         resourceResourceTypeRepository.save(resourceResourceType);
 
         URI location = URI.create("/resource-resourcetypes/" + resourceResourceType.getPublicId());

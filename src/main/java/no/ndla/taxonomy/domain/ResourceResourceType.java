@@ -20,10 +20,10 @@ public class ResourceResourceType extends DomainEntity {
     protected ResourceResourceType() {
     }
 
-    public ResourceResourceType(Resource resource, ResourceType resourceType) {
+    public ResourceResourceType(Resource resource, ResourceType resourceType, URI publicId) {
         this.resource = resource;
         this.resourceType = resourceType;
-        setPublicId(URI.create("urn:resource-resourcetype:" + UUID.randomUUID()));
+        setPublicId(publicId);
     }
 
     public Resource getResource() {

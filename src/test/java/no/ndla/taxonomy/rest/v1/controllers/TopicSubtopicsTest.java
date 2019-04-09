@@ -8,10 +8,7 @@ import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.Assert.*;
@@ -81,14 +78,22 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void can_delete_topic_subtopic() throws Exception {
-        URI id = save(newTopic().addSubtopic(newTopic())).getPublicId();
-        deleteResource("/v1/topic-subtopics/" + id);
-        assertNull(topicRepository.findByPublicId(id));
+        Topic one = newTopic();
+        Topic two = newTopic();
+
+        TopicSubtopic saved = save(one.addSubtopic(two, randomTopicSubtopicId()));
+
+        deleteResource("/v1/topic-subtopics/" + saved.getPublicId());
+        assertNull(topicRepository.findByPublicId(saved.getPublicId()));
+    }
+
+    private URI randomTopicSubtopicId() {
+        return URI.create("urn:topic-subtopic:" + UUID.randomUUID());
     }
 
     @Test
     public void can_update_topic_subtopic() throws Exception {
-        URI id = save(newTopic().addSubtopic(newTopic())).getPublicId();
+        URI id = save(newTopic().addSubtopic(newTopic(), randomTopicSubtopicId())).getPublicId();
 
         updateResource("/v1/topic-subtopics/" + id, new TopicSubtopics.UpdateTopicSubtopicCommand() {{
             primary = true;
@@ -99,7 +104,7 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void cannot_unset_primary_topic() throws Exception {
-        URI id = save(newTopic().addSubtopic(newTopic())).getPublicId();
+        URI id = save(newTopic().addSubtopic(newTopic(), randomTopicSubtopicId())).getPublicId();
 
         updateResource("/v1/topic-subtopics/" + id, new TopicSubtopics.UpdateTopicSubtopicCommand() {{
             primary = false;
@@ -127,7 +132,7 @@ public class TopicSubtopicsTest extends RestTest {
         URI topicid, subtopicid, id;
         Topic electricity = newTopic().name("electricity");
         Topic alternatingCurrent = newTopic().name("alternating current");
-        TopicSubtopic topicSubtopic = save(electricity.addSubtopic(alternatingCurrent));
+        TopicSubtopic topicSubtopic = save(electricity.addSubtopic(alternatingCurrent, randomTopicSubtopicId()));
 
         topicid = electricity.getPublicId();
         subtopicid = alternatingCurrent.getPublicId();
@@ -145,7 +150,7 @@ public class TopicSubtopicsTest extends RestTest {
     public void first_topic_connected_to_subtopic_is_primary() throws Exception {
         Topic electricity = newTopic().name("electricity");
         Topic alternatingCurrent = newTopic().name("How alternating current works");
-        TopicSubtopic topicSubtopic = save(electricity.addSubtopic(alternatingCurrent));
+        TopicSubtopic topicSubtopic = save(electricity.addSubtopic(alternatingCurrent, randomTopicSubtopicId()));
 
         MockHttpServletResponse response = getResource("/v1/topic-subtopics/" + topicSubtopic.getPublicId());
         TopicSubtopics.TopicSubtopicIndexDocument topicSubtopicIndexDocument = getObject(TopicSubtopics.TopicSubtopicIndexDocument.class, response);
@@ -243,7 +248,7 @@ public class TopicSubtopicsTest extends RestTest {
         Topic electricity = builder.topic(s -> s
                 .name("Electricity")
                 .publicId("urn:topic:1"));
-        save(subject.addTopic(electricity));
+        save(subject.addTopic(electricity, URI.create("urn:subject-topic:"+UUID.randomUUID())));
         Topic alternatingCurrents = builder.topic(t -> t
                 .name("Alternating currents")
                 .publicId("urn:topic:11"));
@@ -273,7 +278,7 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void can_update_subtopic_rank() throws Exception {
-        URI id = save(newTopic().addSubtopic(newTopic())).getPublicId();
+        URI id = save(newTopic().addSubtopic(newTopic(), randomTopicSubtopicId())).getPublicId();
 
         updateResource("/v1/topic-subtopics/" + id, new TopicSubtopics.UpdateTopicSubtopicCommand() {{
             primary = true;
@@ -379,7 +384,7 @@ public class TopicSubtopicsTest extends RestTest {
         Topic parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Topic sub = newTopic();
-            TopicSubtopic topicSubtopic = parent.addSubtopic(sub);
+            TopicSubtopic topicSubtopic = parent.addSubtopic(sub, randomTopicSubtopicId());
             topicSubtopic.setRank(i);
             connections.add(topicSubtopic);
             save(topicSubtopic);
@@ -392,7 +397,7 @@ public class TopicSubtopicsTest extends RestTest {
         Topic parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Topic sub = newTopic();
-            TopicSubtopic topicSubtopic = parent.addSubtopic(sub);
+            TopicSubtopic topicSubtopic = parent.addSubtopic(sub, randomTopicSubtopicId());
             if (i <= 5) {
                 topicSubtopic.setRank(i);
             } else {
@@ -403,4 +408,6 @@ public class TopicSubtopicsTest extends RestTest {
         }
         return connections;
     }
+
+
 }

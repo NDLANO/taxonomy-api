@@ -28,10 +28,10 @@ public class TopicResource extends DomainEntity implements Rankable {
     protected TopicResource() {
     }
 
-    public TopicResource(Topic topic, Resource resource) {
+    public TopicResource(Topic topic, Resource resource, URI publicId) {
         this.topic = topic;
         this.resource = resource;
-        setPublicId(URI.create("urn:topic-resource:" + UUID.randomUUID()));
+        setPublicId(publicId);
     }
 
     public boolean isPrimary() {

@@ -11,6 +11,7 @@ import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
 import no.ndla.taxonomy.rest.v1.controllers.CrudController;
+import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -38,10 +39,11 @@ public class ResourceTypes extends CrudController<ResourceType> {
 
     private static final String GET_RESOURCE_TYPES_RECURSIVELY_QUERY = getQuery("get_resource_types_recursively");
 
-    public ResourceTypes(ResourceTypeRepository resourceTypeRepository, JdbcTemplate jdbcTemplate) {
+    public ResourceTypes(ResourceTypeRepository resourceTypeRepository, JdbcTemplate jdbcTemplate, PublicIdGeneratorService publicIdGeneratorService) {
         this.resourceTypeRepository = resourceTypeRepository;
         this.jdbcTemplate = jdbcTemplate;
         repository = resourceTypeRepository;
+        this.publicIdGeneratorService = publicIdGeneratorService;
     }
 
     @GetMapping
@@ -85,6 +87,9 @@ public class ResourceTypes extends CrudController<ResourceType> {
             @RequestBody CreateResourceTypeCommand command
     ) throws Exception {
         ResourceType resourceType = new ResourceType();
+        if(command.id == null){
+            command.id = publicIdGeneratorService.getNext("urn:resourcetype");
+        }
         if (null != command.parentId) {
             ResourceType parent = resourceTypeRepository.getByPublicId(command.parentId);
             resourceType.setParent(parent);

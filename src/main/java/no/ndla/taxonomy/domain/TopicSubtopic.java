@@ -28,10 +28,10 @@ public class TopicSubtopic extends DomainEntity implements Rankable{
     protected TopicSubtopic() {
     }
 
-    public TopicSubtopic(Topic topic, Topic subtopic) {
+    public TopicSubtopic(Topic topic, Topic subtopic, URI publicId) {
         this.topic = topic;
         this.subtopic = subtopic;
-        setPublicId(URI.create("urn:topic-subtopic:" + UUID.randomUUID()));
+        setPublicId(publicId);
     }
 
     public boolean isPrimary() {

@@ -14,6 +14,7 @@ import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.Topic;
 
 
+import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,11 +33,14 @@ public class SubjectTopics {
     private TopicRepository topicRepository;
     private SubjectTopicRepository subjectTopicRepository;
     private SubjectRepository subjectRepository;
+    private PublicIdGeneratorService publicIdGeneratorService;
 
-    public SubjectTopics(SubjectRepository subjectRepository, TopicRepository topicRepository, SubjectTopicRepository subjectTopicRepository) {
+    public SubjectTopics(SubjectRepository subjectRepository, TopicRepository topicRepository,
+                         SubjectTopicRepository subjectTopicRepository, PublicIdGeneratorService publicIdGeneratorService) {
         this.subjectRepository = subjectRepository;
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicRepository = topicRepository;
+        this.publicIdGeneratorService = publicIdGeneratorService;
     }
 
 
@@ -68,7 +72,7 @@ public class SubjectTopics {
         Subject subject = subjectRepository.getByPublicId(command.subjectid);
         Topic topic = topicRepository.getByPublicId(command.topicid);
 
-        SubjectTopic subjectTopic = subject.addTopic(topic);
+        SubjectTopic subjectTopic = subject.addTopic(topic, publicIdGeneratorService.getNext("urn:subject-topic"));
 
         if (command.primary) {
             topic.setPrimarySubject(subject);

@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
+import java.util.UUID;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.Assert.assertEquals;
@@ -83,7 +84,7 @@ public class TopicFiltersTest extends RestTest {
         Topic topic = builder.topic(t -> t
                 .publicId("urn:topic:1"));
 
-        URI id = save(topic.addFilter(vg1, core)).getPublicId();
+        URI id = save(topic.addFilter(vg1, core, randomPublicId())).getPublicId();
 
         deleteResource("/v1/topic-filters/" + id);
         assertNull(topicFilterRepository.findByPublicId(id));
@@ -92,7 +93,7 @@ public class TopicFiltersTest extends RestTest {
     @Test
     public void can_change_relevance_for_filter() throws Exception {
         Topic topic = builder.topic(t -> t.publicId("urn:topic:1"));
-        URI id = save(topic.addFilter(vg1, core)).getPublicId();
+        URI id = save(topic.addFilter(vg1, core, randomPublicId())).getPublicId();
 
         updateResource("/v1/topic-filters/" + id, new TopicFilters.UpdateTopicFilterCommand() {{
             relevanceId = supplementary.getPublicId();
@@ -275,5 +276,9 @@ public class TopicFiltersTest extends RestTest {
         assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));
         assertAnyTrue(result, r -> "resource aa".equals(r.name) && "urn:article:aa".equals(r.contentUri.toString()));
         assertAnyTrue(result, r -> "resource aaa".equals(r.name) && "urn:article:aaa".equals(r.contentUri.toString()));
+    }
+
+    private URI randomPublicId(){
+        return URI.create("urn:topic-filter:"+ UUID.randomUUID());
     }
 }

@@ -33,7 +33,7 @@ requestqueue:
 spring.profiles: junit
 
 spring.jpa:
-  show-sql: true
+  show-sql: false
 
 ---
 

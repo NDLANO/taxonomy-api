@@ -188,7 +188,7 @@ public class Builder {
         }
 
         public SubjectBuilder topic(Topic topic) {
-            SubjectTopic subjectTopic = subject.addTopic(topic);
+            SubjectTopic subjectTopic = subject.addTopic(topic, URI.create("urn:subject-topic"+ UUID.randomUUID()));
             entityManager.persist(subjectTopic);
             return this;
         }
@@ -282,16 +282,20 @@ public class Builder {
         }
 
         public TopicBuilder subtopic(Topic subtopic) {
-            entityManager.persist(topic.addSubtopic(subtopic));
+            entityManager.persist(topic.addSubtopic(subtopic, randomTopicSubtopicId()));
             return this;
+        }
+
+        private URI randomTopicSubtopicId() {
+            return URI.create("urn:topic-subtopic:"+UUID.randomUUID());
         }
 
         public TopicBuilder subtopic(Topic subtopic, Boolean isPrimary) {
             if(isPrimary!=null && isPrimary)
             {
-                entityManager.persist(topic.addSubtopic(subtopic));
+                entityManager.persist(topic.addSubtopic(subtopic, randomTopicSubtopicId()));
             }else {
-                entityManager.persist(topic.addSecondarySubtopic(subtopic));
+                entityManager.persist(topic.addSecondarySubtopic(subtopic, randomTopicSubtopicId()));
             }
             return this;
         }
@@ -315,13 +319,13 @@ public class Builder {
         }
 
         public TopicBuilder resource(Resource resource) {
-            TopicResource topicResource = topic.addResource(resource);
+            TopicResource topicResource = topic.addResource(resource, URI.create("urn:topic-resource:"+UUID.randomUUID()));
             entityManager.persist(topicResource);
             return this;
         }
 
         public TopicBuilder resource(Resource resource, boolean isPrimary) {
-            TopicResource topicResource = topic.addResource(resource);
+            TopicResource topicResource = topic.addResource(resource, URI.create("urn:topic-resource:"+UUID.randomUUID()));
             topicResource.setPrimary(isPrimary);
             entityManager.persist(topicResource);
             return this;
@@ -350,7 +354,7 @@ public class Builder {
         }
 
         public TopicBuilder filter(Filter filter, Relevance relevance) {
-            TopicFilter topicFilter = topic.addFilter(filter, relevance);
+            TopicFilter topicFilter = topic.addFilter(filter, relevance, URI.create("urn:topic-filter:"+UUID.randomUUID()));
             entityManager.persist(topicFilter);
             return this;
         }
@@ -388,7 +392,7 @@ public class Builder {
         }
 
         public ResourceBuilder resourceType(ResourceType resourceType) {
-            entityManager.persist(resource.addResourceType(resourceType));
+            entityManager.persist(resource.addResourceType(resourceType, URI.create("urn:resource-resourcetype:"+UUID.randomUUID())));
             return this;
         }
 

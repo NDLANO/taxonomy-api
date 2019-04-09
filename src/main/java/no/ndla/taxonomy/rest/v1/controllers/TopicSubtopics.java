@@ -10,6 +10,7 @@ import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
+import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,10 +28,12 @@ import java.util.List;
 public class TopicSubtopics {
     private TopicRepository topicRepository;
     private TopicSubtopicRepository topicSubtopicRepository;
+    private PublicIdGeneratorService publicIdGeneratorService;
 
-    public TopicSubtopics(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository) {
+    public TopicSubtopics(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository, PublicIdGeneratorService publicIdGeneratorService) {
         this.topicRepository = topicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
+        this.publicIdGeneratorService = publicIdGeneratorService;
     }
 
     @GetMapping
@@ -59,7 +62,8 @@ public class TopicSubtopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Topic subtopic = topicRepository.getByPublicId(command.subtopicid);
 
-        TopicSubtopic topicSubtopic = command.primary == Boolean.FALSE ? topic.addSecondarySubtopic(subtopic) : topic.addSubtopic(subtopic);
+        URI topicSubtopicId = publicIdGeneratorService.getNext("urn:topic-subtopic");
+        TopicSubtopic topicSubtopic = command.primary == Boolean.FALSE ? topic.addSecondarySubtopic(subtopic, topicSubtopicId) : topic.addSubtopic(subtopic, topicSubtopicId);
 
         List<TopicSubtopic> connectionsForTopic = topicSubtopicRepository.findByTopic(topic);
         connectionsForTopic.sort(Comparator.comparingInt(TopicSubtopic::getRank));

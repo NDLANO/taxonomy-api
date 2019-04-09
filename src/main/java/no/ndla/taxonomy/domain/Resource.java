@@ -70,7 +70,7 @@ public class Resource extends DomainObject {
         };
     }
 
-    public ResourceResourceType addResourceType(ResourceType resourceType) {
+    public ResourceResourceType addResourceType(ResourceType resourceType, URI publicId) {
         Iterator<ResourceType> resourceTypes = getResourceTypes();
         while (resourceTypes.hasNext()) {
             ResourceType t = resourceTypes.next();
@@ -79,7 +79,7 @@ public class Resource extends DomainObject {
             }
         }
 
-        ResourceResourceType resourceResourceType = new ResourceResourceType(this, resourceType);
+        ResourceResourceType resourceResourceType = new ResourceResourceType(this, resourceType, publicId);
         resourceResourceTypes.add(resourceResourceType);
         return resourceResourceType;
     }

@@ -25,11 +25,11 @@ public class TopicFilter extends DomainEntity {
     protected TopicFilter() {
     }
 
-    public TopicFilter(Topic topic, Filter filter, Relevance relevance) {
+    public TopicFilter(Topic topic, Filter filter, Relevance relevance, URI publicId) {
         this.filter = filter;
         this.topic = topic;
         this.relevance = relevance;
-        setPublicId(URI.create("urn:topic-filter:" + UUID.randomUUID()));
+        setPublicId(publicId);
     }
 
     public Filter getFilter() {

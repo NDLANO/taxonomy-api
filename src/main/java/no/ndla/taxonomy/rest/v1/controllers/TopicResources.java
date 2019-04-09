@@ -8,6 +8,7 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
+import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,11 +28,15 @@ public class TopicResources {
     private final TopicRepository topicRepository;
     private final ResourceRepository resourceRepository;
     private TopicResourceRepository topicResourceRepository;
+    private PublicIdGeneratorService publicIdGeneratorService;
 
-    public TopicResources(TopicRepository topicRepository, ResourceRepository resourceRepository, TopicResourceRepository topicResourceRepository) {
+    public TopicResources(TopicRepository topicRepository, ResourceRepository resourceRepository,
+                          TopicResourceRepository topicResourceRepository,
+                          PublicIdGeneratorService publicIdGeneratorService) {
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
         this.topicResourceRepository = topicResourceRepository;
+        this.publicIdGeneratorService = publicIdGeneratorService;
     }
 
     @GetMapping
@@ -58,8 +63,9 @@ public class TopicResources {
 
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Resource resource = resourceRepository.getByPublicId(command.resourceId);
-
-        TopicResource topicResource = Boolean.FALSE.equals(command.primary) ? topic.addSecondaryResource(resource) : topic.addResource(resource);
+        URI publicId = publicIdGeneratorService.getNext("urn:topic-resource");
+        TopicResource topicResource = Boolean.FALSE.equals(command.primary) ?
+                topic.addSecondaryResource(resource, publicId) : topic.addResource(resource, publicId);
 
         List<TopicResource> connectionsForTopic = topicResourceRepository.findByTopic(topic);
         connectionsForTopic.sort(Comparator.comparingInt(TopicResource::getRank));

@@ -29,10 +29,10 @@ public class SubjectTopic extends DomainEntity implements Rankable {
 
     }
 
-    public SubjectTopic(Subject subject, Topic topic) {
+    public SubjectTopic(Subject subject, Topic topic, URI publicId) {
         this.subject = subject;
         this.topic = topic;
-        setPublicId(URI.create("urn:subject-topic:" + UUID.randomUUID()));
+        setPublicId(publicId);
     }
 
     public Subject getSubject() {
