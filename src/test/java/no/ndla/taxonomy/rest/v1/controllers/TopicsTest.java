@@ -511,6 +511,28 @@ public class TopicsTest extends RestTest {
 
     }
 
+    @Test
+    public void resources_can_be_filtered_by_filters() throws Exception {
+        executeSqlScript("classpath:resource_with_filters_and_relevances_test_setup.sql", false);
+
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?filter=urn:filter:1");
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
+        assertEquals(5, resources.length);
+
+        MockHttpServletResponse response2 = getResource("/v1/topics/urn:topic:1/resources?filter=urn:filter:1,urn:filter:2");
+        ResourceIndexDocument[] resources2 = getObject(ResourceIndexDocument[].class, response2);
+        assertEquals(10, resources2.length);
+    }
+
+    @Test
+    public void resources_can_be_filtered_by_subject_filters() throws Exception {
+        executeSqlScript("classpath:resource_with_filters_and_relevances_test_setup.sql", false);
+
+        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?subject=urn:subject:1");
+        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
+        assertEquals(10, resources.length);
+    }
+
     private class ConnectionTypeCounter {
         private ConnectionIndexDocument[] connections;
         private int subjectCount;

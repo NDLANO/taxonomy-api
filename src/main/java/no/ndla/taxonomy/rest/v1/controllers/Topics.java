@@ -8,6 +8,7 @@ import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.controllers.CrudController;
 import no.ndla.taxonomy.rest.v1.dtos.topics.*;
+import no.ndla.taxonomy.rest.v1.extractors.subjects.FilterExtractor;
 import no.ndla.taxonomy.rest.v1.extractors.topics.*;
 import no.ndla.taxonomy.services.PublicIdGeneratorService;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,7 @@ public class Topics extends CrudController<Topic> {
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_topic_public_id_recursively");
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_QUERY = getQuery("get_resources_by_topic_public_id");
     private static final String GET_FILTERS_BY_TOPIC_ID_QUERY = getQuery("get_filters_by_topic_public_id");
+    private static final String GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY = getQuery("get_filters_by_subject_public_id");
     private static final String GET_SUBTOPICS_BY_TOPIC_ID_QUERY = getQuery("get_subtopics_by_topic_id_query");
     private static final String GET_SUBTOPICS_BY_TOPIC_ID_AND_FILTERS_QUERY = getQuery("get_subtopics_by_topic_id_and_filters_query");
     private static final String GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_subject_connections_by_topic_id");
@@ -115,6 +117,9 @@ public class Topics extends CrudController<Topic> {
             @ApiParam(value = "Select by resource type id(s). If not specified, resources of all types will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
                     URI[] resourceTypeIds,
+            @RequestParam(value = "subject", required = false, defaultValue = "")
+            @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.")
+                    URI subjectId,
             @RequestParam(value = "filter", required = false, defaultValue = "")
             @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
@@ -127,6 +132,10 @@ public class Topics extends CrudController<Topic> {
         final Map<Integer, TopicNode> nodeMap = jdbcTemplate.query(TOPIC_TREE_BY_TOPIC_ID, new Object[]{topicId.toString()}, this::buildTopicTree);
 
         TopicIndexDocument topicIndexDocument = get(topicId, null);
+
+        if (filterIds == null || filterIds.length == 0) {
+            filterIds = getSubjectFilters(subjectId);
+        }
 
         List<Object> args = new ArrayList<>();
         String query;
@@ -174,6 +183,16 @@ public class Topics extends CrudController<Topic> {
             });
         }
 
+    }
+
+    private URI[] getSubjectFilters(URI subjectId) {
+        if (subjectId != null) {
+            FilterExtractor extractor = new FilterExtractor();
+            return jdbcTemplate
+                    .query(GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY, setQueryParameters(subjectId.toString()), extractor::extractFilters)
+                    .stream().map(filter -> filter.id).toArray(URI[]::new);
+        }
+        return new URI[]{};
     }
 
     private Map<Integer, TopicNode> populateTopicTree(ResourceQueryExtractor extractor, URI relevance, TopicIndexDocument topicIndexDocument, ResultSet resultSet, Map<Integer, TopicNode> nodeMap) throws SQLException {
@@ -231,6 +250,9 @@ public class Topics extends CrudController<Topic> {
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
+            @RequestParam(value = "subject", required = false, defaultValue = "")
+            @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.")
+                    URI subjectId,
             @RequestParam(value = "filter", required = false, defaultValue = "")
             @ApiParam(value = "Select by filter id(s). If not specified, all subtopics connected to this topic will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
@@ -239,9 +261,13 @@ public class Topics extends CrudController<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
+        if (filterIds == null || filterIds.length == 0) {
+            filterIds = getSubjectFilters(subjectId);
+        }
+
         String sql;
         List<Object> args;
-        if (filterIds != null && filterIds.length > 0) {
+        if (filterIds.length > 0) {
             sql = GET_SUBTOPICS_BY_TOPIC_ID_AND_FILTERS_QUERY;
             StringBuffer filtersCombined = new StringBuffer();
             Arrays.stream(filterIds).forEach(filtersCombined::append);
