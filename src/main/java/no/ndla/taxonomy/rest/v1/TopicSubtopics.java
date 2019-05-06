@@ -8,10 +8,12 @@ import no.ndla.taxonomy.domain.PrimaryParentRequiredException;
 import no.ndla.taxonomy.domain.RankableConnectionUpdater;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
+import no.ndla.taxonomy.jdbc.QueryUtils;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,18 +29,27 @@ import java.util.List;
 public class TopicSubtopics {
     private TopicRepository topicRepository;
     private TopicSubtopicRepository topicSubtopicRepository;
+    private JdbcTemplate jdbcTemplate;
 
-    public TopicSubtopics(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository) {
+    public TopicSubtopics(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository, JdbcTemplate jdbcTemplate) {
         this.topicRepository = topicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and subtopics")
     public List<TopicSubtopicIndexDocument> index() {
         List<TopicSubtopicIndexDocument> result = new ArrayList<>();
-
-        topicSubtopicRepository.findAll().forEach(record -> result.add(new TopicSubtopicIndexDocument(record)));
+        jdbcTemplate.query(QueryUtils.getQuery("get_topic_subtopics"), resultSet -> {
+            TopicSubtopicIndexDocument tsDoc = new TopicSubtopicIndexDocument();
+            tsDoc.id = URI.create(resultSet.getString("topic_subtopic_id"));
+            tsDoc.topicid = URI.create(resultSet.getString("topic_id"));
+            tsDoc.subtopicid = URI.create(resultSet.getString("subtopic_id"));
+            tsDoc.primary = resultSet.getBoolean("is_primary");
+            tsDoc.rank = resultSet.getInt("rank");
+            result.add(tsDoc);
+        });
         return result;
     }
 
@@ -68,7 +79,7 @@ public class TopicSubtopics {
             topicSubtopic.setRank(highestRankedConnection.getRank() + 1);
         } else {
             List<TopicSubtopic> rankedConnections = RankableConnectionUpdater.rank(connectionsForTopic, topicSubtopic, command.rank);
-            topicSubtopicRepository.save(rankedConnections);
+            topicSubtopicRepository.saveAll(rankedConnections);
         }
         topicSubtopicRepository.save(topicSubtopic);
 
@@ -108,7 +119,7 @@ public class TopicSubtopics {
         }
         List<TopicSubtopic> existingConnections = topicSubtopicRepository.findByTopic(topic);
         List<TopicSubtopic> rankedConnections = RankableConnectionUpdater.rank(existingConnections, topicSubtopic, command.rank);
-        topicSubtopicRepository.save(rankedConnections);
+        topicSubtopicRepository.saveAll(rankedConnections);
 
     }
 

@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.jdbc.QueryUtils;
 import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.repositories.TopicFilterRepository;
@@ -13,6 +14,7 @@ import no.ndla.taxonomy.repositories.TopicRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,12 +31,14 @@ public class TopicFilters {
     private TopicFilterRepository topicFilterRepository;
     private TopicRepository topicRepository;
     private RelevanceRepository relevanceRepository;
+    private JdbcTemplate jdbcTemplate;
 
-    public TopicFilters(FilterRepository filterRepository, TopicRepository topicRepository, TopicFilterRepository topicFilterRepository, RelevanceRepository relevanceRepository) {
+    public TopicFilters(FilterRepository filterRepository, TopicRepository topicRepository, TopicFilterRepository topicFilterRepository, RelevanceRepository relevanceRepository, JdbcTemplate jdbcTemplate) {
         this.filterRepository = filterRepository;
         this.topicRepository = topicRepository;
         this.topicFilterRepository = topicFilterRepository;
         this.relevanceRepository = relevanceRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @PostMapping
@@ -81,7 +85,14 @@ public class TopicFilters {
     @ApiOperation("Gets all connections between topics and filters")
     public List<TopicFilterIndexDocument> index() throws Exception {
         List<TopicFilterIndexDocument> result = new ArrayList<>();
-        topicFilterRepository.findAll().forEach(record -> result.add(new TopicFilterIndexDocument(record)));
+        jdbcTemplate.query(QueryUtils.getQuery("get_topic_filters"), resultSet -> {
+            TopicFilterIndexDocument tfDoc = new TopicFilterIndexDocument();
+            tfDoc.id = URI.create(resultSet.getString("topic_resource_id"));
+            tfDoc.relevanceId = URI.create(resultSet.getString("relevance_id"));
+            tfDoc.filterId = URI.create(resultSet.getString("filter_id"));
+            tfDoc.topicId = URI.create(resultSet.getString("topic_id"));
+            result.add(tfDoc);
+        });
         return result;
     }
 

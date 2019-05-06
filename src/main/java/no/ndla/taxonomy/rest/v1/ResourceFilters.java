@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.jdbc.QueryUtils;
 import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.repositories.ResourceFilterRepository;
@@ -13,6 +14,7 @@ import no.ndla.taxonomy.repositories.ResourceRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,12 +31,14 @@ public class ResourceFilters {
     private ResourceFilterRepository resourceFilterRepository;
     private ResourceRepository resourceRepository;
     private RelevanceRepository relevanceRepository;
+    private JdbcTemplate jdbcTemplate;
 
-    public ResourceFilters(FilterRepository filterRepository, ResourceRepository resourceRepository, ResourceFilterRepository resourceFilterRepository, RelevanceRepository relevanceRepository) {
+    public ResourceFilters(FilterRepository filterRepository, ResourceRepository resourceRepository, ResourceFilterRepository resourceFilterRepository, RelevanceRepository relevanceRepository, JdbcTemplate jdbcTemplate) {
         this.filterRepository = filterRepository;
         this.resourceRepository = resourceRepository;
         this.resourceFilterRepository = resourceFilterRepository;
         this.relevanceRepository = relevanceRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @PostMapping
@@ -86,7 +90,14 @@ public class ResourceFilters {
     @ApiOperation("Gets all connections between resources and filters")
     public List<ResourceFilterIndexDocument> index() throws Exception {
         List<ResourceFilterIndexDocument> result = new ArrayList<>();
-        resourceFilterRepository.findAll().forEach(record -> result.add(new ResourceFilterIndexDocument(record)));
+        jdbcTemplate.query(QueryUtils.getQuery("get_resource_filters"), resultSet -> {
+            ResourceFilterIndexDocument rfDoc = new ResourceFilterIndexDocument();
+            rfDoc.id = URI.create(resultSet.getString("resource_filter_id"));
+            rfDoc.filterId = URI.create(resultSet.getString("filter_id"));
+            rfDoc.resourceId = URI.create(resultSet.getString("resource_id"));
+            rfDoc.relevanceId = URI.create(resultSet.getString("relevance_id"));
+            result.add(rfDoc);
+        });
         return result;
     }
 

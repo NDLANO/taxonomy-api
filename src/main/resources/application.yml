@@ -14,6 +14,7 @@ spring.datasource:
     test-on-connect: false
     default-auto-commit: false
 
+
 spring.jpa:
   hibernate.ddl-auto: none
   properties.hibernate.temp.use_jdbc_metadata_defaults: false
@@ -23,6 +24,12 @@ logging.graylog.host: ""
 
 springfox.documentation.swagger.v2.path: /api-docs
 
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
 ---
 

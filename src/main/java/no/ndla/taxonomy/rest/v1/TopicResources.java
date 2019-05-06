@@ -5,11 +5,13 @@ import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.jdbc.QueryUtils;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,18 +29,28 @@ public class TopicResources {
     private final TopicRepository topicRepository;
     private final ResourceRepository resourceRepository;
     private TopicResourceRepository topicResourceRepository;
+    private JdbcTemplate jdbcTemplate;
 
-    public TopicResources(TopicRepository topicRepository, ResourceRepository resourceRepository, TopicResourceRepository topicResourceRepository) {
+    public TopicResources(TopicRepository topicRepository, ResourceRepository resourceRepository, TopicResourceRepository topicResourceRepository, JdbcTemplate jdbcTemplate) {
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
         this.topicResourceRepository = topicResourceRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and resources")
     public List<TopicResourceIndexDocument> index() {
         List<TopicResourceIndexDocument> result = new ArrayList<>();
-        topicResourceRepository.findAll().forEach(record -> result.add(new TopicResourceIndexDocument(record)));
+        jdbcTemplate.query(QueryUtils.getQuery("get_topic_resources"), resultSet -> {
+            TopicResourceIndexDocument trDoc = new TopicResourceIndexDocument();
+            trDoc.id = URI.create(resultSet.getString("topic_resource_id"));
+            trDoc.resourceId = URI.create(resultSet.getString("resource_id"));
+            trDoc.topicid= URI.create(resultSet.getString("topic_id"));
+            trDoc.primary = resultSet.getBoolean("is_primary");
+            trDoc.rank = resultSet.getInt("rank");
+            result.add(trDoc);
+        });
         return result;
     }
 
@@ -68,7 +80,7 @@ public class TopicResources {
             topicResource.setRank(highestRankedConnection.getRank() + 1);
         } else {
             List<TopicResource> rankedConnections = RankableConnectionUpdater.rank(connectionsForTopic, topicResource, command.rank);
-            topicResourceRepository.save(rankedConnections);
+            topicResourceRepository.saveAll(rankedConnections);
         }
         topicResourceRepository.save(topicResource);
 
@@ -107,7 +119,7 @@ public class TopicResources {
         if (command.rank > 0) {
             List<TopicResource> existingConnections = topicResourceRepository.findByTopic(topic);
             List<TopicResource> rankedConnections = RankableConnectionUpdater.rank(existingConnections, topicResource, command.rank);
-            topicResourceRepository.save(rankedConnections);
+            topicResourceRepository.saveAll(rankedConnections);
         }
     }
 

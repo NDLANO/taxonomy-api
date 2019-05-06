@@ -8,11 +8,13 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceType;
+import no.ndla.taxonomy.jdbc.QueryUtils;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,11 +31,13 @@ public class ResourceResourceTypes {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private ResourceTypeRepository resourceTypeRepository;
     private final ResourceRepository resourceRepository;
+    private JdbcTemplate jdbcTemplate;
 
-    public ResourceResourceTypes(ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceTypeRepository resourceTypeRepository, ResourceRepository resourceRepository) {
+    public ResourceResourceTypes(ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceTypeRepository resourceTypeRepository, ResourceRepository resourceRepository, JdbcTemplate jdbcTemplate) {
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceTypeRepository = resourceTypeRepository;
         this.resourceRepository = resourceRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @PostMapping
@@ -66,7 +70,13 @@ public class ResourceResourceTypes {
     @ApiOperation("Gets all connections between resources and resource types")
     public List<ResourceResourceTypeIndexDocument> index() throws Exception {
         List<ResourceResourceTypeIndexDocument> result = new ArrayList<>();
-        resourceResourceTypeRepository.findAll().forEach(record -> result.add(new ResourceResourceTypeIndexDocument(record)));
+        jdbcTemplate.query(QueryUtils.getQuery("get_resource_resource_types_ids_only"), resultSet -> {
+            ResourceResourceTypeIndexDocument rrtDoc = new ResourceResourceTypeIndexDocument();
+            rrtDoc.id = URI.create(resultSet.getString("resource_resource_type_id"));
+            rrtDoc.resourceId = URI.create(resultSet.getString("resource_id"));
+            rrtDoc.resourceTypeId = URI.create(resultSet.getString("resource_type_id"));
+            result.add(rrtDoc);
+        });
         return result;
     }
 

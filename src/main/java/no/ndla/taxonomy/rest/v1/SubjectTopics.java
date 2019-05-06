@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.jdbc.QueryUtils;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
@@ -16,6 +17,7 @@ import no.ndla.taxonomy.domain.Topic;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,11 +34,13 @@ public class SubjectTopics {
     private TopicRepository topicRepository;
     private SubjectTopicRepository subjectTopicRepository;
     private SubjectRepository subjectRepository;
+    private JdbcTemplate jdbcTemplate;
 
-    public SubjectTopics(SubjectRepository subjectRepository, TopicRepository topicRepository, SubjectTopicRepository subjectTopicRepository) {
+    public SubjectTopics(SubjectRepository subjectRepository, TopicRepository topicRepository, SubjectTopicRepository subjectTopicRepository, JdbcTemplate jdbcTemplate ){
         this.subjectRepository = subjectRepository;
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicRepository = topicRepository;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
 
@@ -44,10 +48,14 @@ public class SubjectTopics {
     @ApiOperation("Gets all connections between subjects and topics")
     public List<SubjectTopicIndexDocument> index() throws Exception {
         List<SubjectTopicIndexDocument> result = new ArrayList<>();
-
-        subjectTopicRepository.findAll().forEach(record -> {
-            SubjectTopicIndexDocument document = new SubjectTopicIndexDocument(record);
-            result.add(document);
+        jdbcTemplate.query(QueryUtils.getQuery("get_subject-topics"), resultSet -> {
+            SubjectTopicIndexDocument stDoc = new SubjectTopicIndexDocument();
+            stDoc.id = URI.create(resultSet.getString("subject_topic_id"));
+            stDoc.topicid = URI.create(resultSet.getString("topic_id"));
+            stDoc.subjectid = URI.create(resultSet.getString("subject_id"));
+            stDoc.primary = resultSet.getBoolean("is_primary");
+            stDoc.rank = resultSet.getInt("rank");
+            result.add(stDoc);
         });
         return result;
     }
@@ -81,7 +89,7 @@ public class SubjectTopics {
             subjectTopic.setRank(highestRankingConnection.getRank() + 1);
         } else {
             List<SubjectTopic> rankedConnections = RankableConnectionUpdater.rank(connectionsForSubject, subjectTopic, command.rank);
-            subjectTopicRepository.save(rankedConnections);
+            subjectTopicRepository.saveAll(rankedConnections);
         }
 
         subjectTopicRepository.save(subjectTopic);
@@ -112,7 +120,7 @@ public class SubjectTopics {
 
         List<SubjectTopic> existingConnections = subjectTopicRepository.findBySubject(subject);
         List<SubjectTopic> rankedConnections = RankableConnectionUpdater.rank(existingConnections, subjectTopic, command.rank);
-        subjectTopicRepository.save(rankedConnections);
+        subjectTopicRepository.saveAll(rankedConnections);
 
         if (command.primary) {
             topic.setPrimarySubject(subject);
