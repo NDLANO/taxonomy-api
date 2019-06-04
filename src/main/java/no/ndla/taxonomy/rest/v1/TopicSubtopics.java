@@ -79,7 +79,7 @@ public class TopicSubtopics {
             topicSubtopic.setRank(highestRankedConnection.getRank() + 1);
         } else {
             List<TopicSubtopic> rankedConnections = RankableConnectionUpdater.rank(connectionsForTopic, topicSubtopic, command.rank);
-            topicSubtopicRepository.saveAll(rankedConnections);
+            topicSubtopicRepository.save(rankedConnections);
         }
         topicSubtopicRepository.save(topicSubtopic);
 
@@ -119,7 +119,7 @@ public class TopicSubtopics {
         }
         List<TopicSubtopic> existingConnections = topicSubtopicRepository.findByTopic(topic);
         List<TopicSubtopic> rankedConnections = RankableConnectionUpdater.rank(existingConnections, topicSubtopic, command.rank);
-        topicSubtopicRepository.saveAll(rankedConnections);
+        topicSubtopicRepository.save(rankedConnections);
 
     }
 

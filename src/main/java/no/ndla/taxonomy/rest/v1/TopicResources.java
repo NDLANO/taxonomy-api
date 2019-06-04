@@ -80,7 +80,7 @@ public class TopicResources {
             topicResource.setRank(highestRankedConnection.getRank() + 1);
         } else {
             List<TopicResource> rankedConnections = RankableConnectionUpdater.rank(connectionsForTopic, topicResource, command.rank);
-            topicResourceRepository.saveAll(rankedConnections);
+            topicResourceRepository.save(rankedConnections);
         }
         topicResourceRepository.save(topicResource);
 
@@ -119,7 +119,7 @@ public class TopicResources {
         if (command.rank > 0) {
             List<TopicResource> existingConnections = topicResourceRepository.findByTopic(topic);
             List<TopicResource> rankedConnections = RankableConnectionUpdater.rank(existingConnections, topicResource, command.rank);
-            topicResourceRepository.saveAll(rankedConnections);
+            topicResourceRepository.save(rankedConnections);
         }
     }
 
