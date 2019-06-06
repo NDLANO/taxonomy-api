@@ -357,7 +357,7 @@
             installed_on,
             22,
             'EXECUTED',
-            '7:7e56219f26c8f38bfd040de0f5ec2e99'
+            '7:7663a64b92241ee0e55efbc81ea08f35'
             FROM schema_version WHERE version = '22' AND checksum = -512085011;
 
             DELETE FROM schema_version WHERE version = '22' AND checksum = -512085011;

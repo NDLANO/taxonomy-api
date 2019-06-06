@@ -530,6 +530,12 @@
               tree t
             );
         </sql>
+        <sql>
+            CREATE UNIQUE INDEX cached_url_path_idx ON cached_url (path);
+        </sql>
+        <sql>
+            CREATE INDEX cached_url_public_id_idx ON cached_url (public_id);
+        </sql>
     </changeSet>
 
     <changeSet id="20190606 v23 modification triggers" author="Migrated From Flyway">
