@@ -1,0 +1,583 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+
+    <changeSet id="20190605 v1 create subject table" author="Migrated From Flyway">
+        <createTable tableName="subject">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="subject_public_id"/></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+    </changeSet>
+    <changeSet id="20190605 v2 create topic table" author="Migrated From Flyway">
+        <createTable tableName="topic">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="topic_public_id"/></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+    </changeSet>
+    <changeSet id="20190605 v3 create subject_topic_table" author="Migrated From Flyway">
+        <createTable tableName="subject_topic">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="subject_topic_public_id" /></column>
+            <column name="topic_id" type="integer"><constraints referencedTableName="topic" referencedColumnNames="id" foreignKeyName="subject_topic_topic_id_fkey"/></column>
+            <column name="subject_id" type="integer"><constraints referencedTableName="subject" referencedColumnNames="id" foreignKeyName="subject_topic_subject_id_fkey"/></column>
+            <column name="is_primary" type="boolean" />
+        </createTable>
+        <addUniqueConstraint tableName="subject_topic" columnNames="topic_id,subject_id" constraintName="subject_topic_unique" />
+    </changeSet>
+    <changeSet id="20190605 v4 create topic_subtopic table" author="Migrated From Flyway">
+        <createTable tableName="topic_subtopic">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="topic_subtopic_public_id" /></column>
+            <column name="topic_id" type="integer"><constraints referencedTableName="topic" referencedColumnNames="id" foreignKeyName="topic_subtopic_topic_id_fkey"/></column>
+            <column name="subtopic_id" type="integer"><constraints referencedTableName="topic" referencedColumnNames="id" foreignKeyName="topic_subtopic_subtopic_id_fkey"/></column>
+            <column name="is_primary" type="boolean" />
+        </createTable>
+        <addUniqueConstraint tableName="subject_topic" columnNames="topic_id,subject_id" constraintName="topic_subtopic_unique" />
+    </changeSet>
+    <changeSet id="20190605 v5 create resource table" author="Migrated From Flyway">
+        <createTable tableName="resource">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="resource_public_id"/></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+    </changeSet>
+    <changeSet id="20190605 v6 create topic_resource table" author="Migrated From Flyway">
+        <createTable tableName="topic_resource">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="topic_resource_public_id" /></column>
+            <column name="topic_id" type="integer"><constraints referencedTableName="topic" referencedColumnNames="id" foreignKeyName="subject_topic_topic_id_fkey"/></column>
+            <column name="resource_id" type="integer"><constraints referencedTableName="resource" referencedColumnNames="id" foreignKeyName="topic_resource_resource_id_fkey"/></column>
+            <column name="is_primary" type="boolean" />
+        </createTable>
+        <addUniqueConstraint tableName="topic_resource" columnNames="topic_id,resource_id" constraintName="topic_resource_unique" />
+    </changeSet>
+    <changeSet id="20190605 v7 create resource_type table" author="Migrated From Flyway">
+        <createTable tableName="resource_type">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="parent_id" type="integer"><constraints referencedTableName="resource_type" referencedColumnNames="id" foreignKeyName="resource_type_parent_id_fkey" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="resource_type_public_id"/></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+    </changeSet>
+    <changeSet id="20190605 v8 create resource_resource_type table" author="Migrated From Flyway">
+        <createTable tableName="resource_resource_type">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="resource_resource_type_public_id" /></column>
+            <column name="resource_id" type="integer"><constraints referencedTableName="resource" referencedColumnNames="id" foreignKeyName="resource_type_resource_id_fkey"/></column>
+            <column name="resource_type_id" type="integer"><constraints referencedTableName="resource_type" referencedColumnNames="id" foreignKeyName="resource_type_resource_type_id_fkey"/></column>
+        </createTable>
+        <addUniqueConstraint tableName="resource_resource_type" columnNames="resource_id,resource_type_id" constraintName="resource_resource_type_unique" />
+    </changeSet>
+    <changeSet id="20190605 v9 add content_uri" author="Migrated From Flyway">
+        <addColumn tableName="subject">
+            <column name="content_uri" type="varchar(255)"/>
+        </addColumn>
+        <addColumn tableName="topic">
+            <column name="content_uri" type="varchar(255)"/>
+        </addColumn>
+        <addColumn tableName="resource">
+            <column name="content_uri" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="20190605 v10 language" author="Migrated From Flyway">
+        <createTable tableName="subject_translation">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="subject_id" type="integer"><constraints nullable="false" referencedTableName="subject" referencedColumnNames="id" foreignKeyName="subject_translation_subject_id_fkey" /></column>
+            <column name="language_code" type="varchar(3)"><constraints nullable="false" /></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+        <addUniqueConstraint tableName="subject_translation" columnNames="subject_id,language_code" constraintName="subject_language_unique" />
+
+        <createTable tableName="topic_translation">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="topic_id" type="integer"><constraints nullable="false" referencedTableName="topic" referencedColumnNames="id" foreignKeyName="topic_translation_topic_id_fkey" /></column>
+            <column name="language_code" type="varchar(3)"><constraints nullable="false" /></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+        <addUniqueConstraint tableName="topic_translation" columnNames="topic_id,language_code" constraintName="topic_language_unique" />
+
+        <createTable tableName="resource_translation">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="resource_id" type="integer"><constraints nullable="false" referencedTableName="resource" referencedColumnNames="id" foreignKeyName="resource_translation_resource_id_fkey" /></column>
+            <column name="language_code" type="varchar(3)"><constraints nullable="false" /></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+        <addUniqueConstraint tableName="resource_translation" columnNames="resource_id,language_code" constraintName="resource_language_unique" />
+
+        <createTable tableName="resource_type_translation">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="resource_type_id" type="integer"><constraints nullable="false" referencedTableName="resource_type" referencedColumnNames="id" foreignKeyName="resource_type_translation_resource_type_id_fkey" /></column>
+            <column name="language_code" type="varchar(3)"><constraints nullable="false" /></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+        <addUniqueConstraint tableName="resource_type_translation" columnNames="resource_type_id,language_code" constraintName="resource_type_language_unique" />
+    </changeSet>
+
+    <changeSet id="20190605 v11 set primary" author="Migrated From Flyway">
+        <sql>
+            UPDATE subject_topic
+                SET is_primary = TRUE
+                WHERE id IN (
+                    SELECT min(id) AS id
+                        FROM subject_topic
+                        WHERE topic_id NOT IN (
+                            SELECT topic_id
+                                FROM subject_topic
+                                WHERE is_primary = TRUE
+                        )
+                        GROUP BY topic_id
+                );
+
+            UPDATE topic_subtopic
+                SET is_primary = TRUE
+                WHERE id IN (
+                    SELECT min(id) AS id
+                        FROM topic_subtopic
+                        WHERE subtopic_id NOT IN (
+                            SELECT subtopic_id
+                            FROM topic_subtopic
+                            WHERE is_primary = TRUE
+                        )
+                        GROUP BY subtopic_id
+                );
+
+            UPDATE topic_resource
+                SET is_primary = TRUE
+                WHERE id IN (
+                    SELECT min(id) AS id
+                        FROM topic_resource
+                        WHERE resource_id NOT IN (
+                            SELECT resource_id
+                            FROM topic_resource
+                            WHERE is_primary = TRUE
+                        )
+                        GROUP BY resource_id
+                );
+        </sql>
+    </changeSet>
+
+    <changeSet id="20190605 v12 urls" author="Migrated From Flyway">
+        <createTable tableName="cached_url">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)" />
+            <column name="path" type="varchar(255)"><constraints nullable="false" /></column>
+            <column name="is_primary" type="boolean" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20190605 v13 filter" author="Migrated From Flyway">
+        <createTable tableName="filter">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="filter_public_id" /></column>
+            <column name="subject_id" type="integer"><constraints referencedTableName="subject" referencedColumnNames="id" foreignKeyName="filter_subject_id_fkey" /></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+
+        <createTable tableName="filter_translation">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="filter_id" type="integer"><constraints nullable="false" referencedTableName="filter" referencedColumnNames="id" foreignKeyName="filter_translation_filter_id_fkey" /></column>
+            <column name="language_code" type="varchar(3)"><constraints nullable="false" /></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20190605 v14 resource_filter" author="Migrated From Flyway">
+        <createTable tableName="relevance">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="relevance_public_id" /></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+
+        <createTable tableName="relevance_translation">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="relevance_id" type="integer"><constraints nullable="false" /></column>
+            <column name="language_code" type="varchar(3)"><constraints nullable="false" /></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+        <addUniqueConstraint tableName="relevance_translation" columnNames="relevance_id,language_code" constraintName="relevance_language_unique" />
+
+        <createTable tableName="resource_filter">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="resource_filter_public_id" /></column>
+            <column name="resource_id" type="integer"><constraints referencedTableName="resource" referencedColumnNames="id" foreignKeyName="resource_filter_resource_id_fkey" /></column>
+            <column name="filter_id" type="integer"><constraints referencedTableName="filter" referencedColumnNames="id" foreignKeyName="resource_filter_filter_id_fkey" /></column>
+            <column name="relevance_id" type="integer"><constraints referencedTableName="relevance" referencedColumnNames="id" foreignKeyName="resource_filter_relevance_id_fkey" /></column>
+        </createTable>
+        <addUniqueConstraint tableName="resource_filter" columnNames="filter_id,resource_id" constraintName="resource_filter_unique" />
+    </changeSet>
+
+    <changeSet id="20190606 v15 topic_filter" author="Migrated From Flyway">
+        <createTable tableName="topic_filter">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" uniqueConstraintName="topic_filter_public_id" unique="true"/></column>
+            <column name="topic_id" type="integer"><constraints referencedTableName="topic" referencedColumnNames="id" foreignKeyName="topic_filter_topic_id_fkey" /></column>
+            <column name="filter_id" type="integer"><constraints referencedTableName="filter" referencedColumnNames="id" foreignKeyName="topic_filter_filter_id_fkey" /></column>
+            <column name="relevance_id" type="integer"><constraints referencedTableName="relevance" referencedColumnNames="id" foreignKeyName="topic_filter_relevance_id_fkey" /></column>
+        </createTable>
+        <addUniqueConstraint tableName="topic_filter" columnNames="filter_id,topic_id" constraintName="topic_filter_unique" />
+    </changeSet>
+
+    <changeSet id="20190606 v16 rank" author="Migrated From Flyway">
+        <addColumn tableName="topic_resource">
+            <column name="rank" type="integer" defaultValueNumeric="0"><constraints nullable="false" /></column>
+        </addColumn>
+        <addColumn tableName="topic_subtopic">
+            <column name="rank" type="integer" defaultValueNumeric="0"><constraints nullable="false" /></column>
+        </addColumn>
+        <addColumn tableName="subject_topic">
+            <column name="rank" type="integer" defaultValueNumeric="0"><constraints nullable="false" /></column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20190606 v17 add context to topic" author="Migrated From Flyway">
+        <addColumn tableName="topic">
+            <column name="context" type="boolean" defaultValueBoolean="false"><constraints nullable="false" /></column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20190606 v18 cached_url_view" author="Migrated From Flyway">
+        <dropTable tableName="cached_url" />
+        <createView viewName="cached_url">
+            WITH RECURSIVE tree (id, public_id, name, parent_public_id, level, is_primary, path) AS (
+                SELECT
+                  contexts.id,
+                  contexts.public_id,
+                  contexts.name,
+                  cast(NULL AS VARCHAR)                AS parent_public_id,
+                  0                                    AS level,
+                  TRUE                                 AS is_primary,
+                  '/' || substr(contexts.public_id, 5) AS path
+                FROM
+                  (
+                    SELECT
+                      id,
+                      public_id,
+                      name
+                    FROM subject
+
+                    UNION ALL
+
+                    SELECT
+                      id,
+                      public_id,
+                      name
+                    FROM topic
+                    WHERE context = TRUE
+                  ) contexts
+
+                UNION ALL
+
+                SELECT
+                  child.id,
+                  child.public_id,
+                  child.name,
+                  parent.public_id                       AS parent_public_id,
+                  parent.level + 1                       AS level,
+                  child.is_primary AND parent.is_primary AS is_primary,
+                  parent.path || '/' || substr(child.public_id, 5)
+                FROM
+                  (
+                    SELECT
+                      r.id,
+                      r.public_id,
+                      t.public_id   AS parent_public_id,
+                      r.name,
+                      tr.is_primary AS is_primary
+                    FROM
+                      resource r
+                      INNER JOIN topic_resource tr ON tr.resource_id = r.id
+                      INNER JOIN topic t ON tr.topic_id = t.id
+
+                    UNION ALL
+
+                    SELECT
+                      st.id,
+                      st.public_id,
+                      t.public_id    AS parent_public_id,
+                      st.name,
+                      tst.is_primary AS is_primary
+                    FROM topic t
+                      INNER JOIN topic_subtopic tst ON t.id = tst.topic_id
+                      INNER JOIN topic st ON tst.subtopic_id = st.id
+
+                    UNION ALL
+
+                    SELECT
+                      t.id,
+                      t.public_id,
+                      s.public_id   AS parent_public_id,
+                      t.name,
+                      st.is_primary AS is_primary
+                    FROM
+                      subject s
+                      INNER JOIN subject_topic st ON s.id = st.subject_id
+                      INNER JOIN topic t ON st.topic_id = t.id
+                  ) child
+                  INNER JOIN tree AS parent ON parent.public_id = child.parent_public_id
+                WHERE 1 = 1
+              )
+
+              SELECT
+                id,
+                public_id,
+                path,
+                is_primary
+              FROM
+                tree t
+        </createView>
+    </changeSet>
+
+    <changeSet id="20190606 v19 cached_url view with parent" author="Migrated From Flyway">
+        <createView viewName="cached_url" replaceIfExists="true">
+            WITH RECURSIVE tree (id, public_id, name, parent_public_id, level, is_primary, path) AS (
+              SELECT
+              contexts.id,
+              contexts.public_id,
+              contexts.name,
+              cast(NULL AS VARCHAR) AS parent_public_id,
+              0 AS level,
+              TRUE AS is_primary,
+              '/' || substr(contexts.public_id, 5) AS path
+              FROM
+            (
+              SELECT
+              id,
+              public_id,
+              name
+              FROM subject
+
+              UNION ALL
+
+              SELECT
+              id,
+              public_id,
+              name
+              FROM topic
+              WHERE context = TRUE
+            ) contexts
+
+              UNION ALL
+
+              SELECT
+              child.id,
+              child.public_id,
+              child.name,
+              parent.public_id AS parent_public_id,
+              parent.level + 1 AS level,
+              child.is_primary AND parent.is_primary AS is_primary,
+              parent.path || '/' || substr(child.public_id, 5)
+              FROM
+            (
+              SELECT
+              r.id,
+              r.public_id,
+              t.public_id AS parent_public_id,
+              r.name,
+              tr.is_primary AS is_primary
+              FROM
+              resource r
+              INNER JOIN topic_resource tr ON tr.resource_id = r.id
+              INNER JOIN topic t ON tr.topic_id = t.id
+
+              UNION ALL
+
+              SELECT
+              st.id,
+              st.public_id,
+              t.public_id AS parent_public_id,
+              st.name,
+              tst.is_primary AS is_primary
+              FROM topic t
+              INNER JOIN topic_subtopic tst ON t.id = tst.topic_id
+              INNER JOIN topic st ON tst.subtopic_id = st.id
+
+              UNION ALL
+
+              SELECT
+              t.id,
+              t.public_id,
+              s.public_id AS parent_public_id,
+              t.name,
+              st.is_primary AS is_primary
+              FROM
+              subject s
+              INNER JOIN subject_topic st ON s.id = st.subject_id
+              INNER JOIN topic t ON st.topic_id = t.id
+            ) child
+              INNER JOIN tree AS parent ON parent.public_id = child.parent_public_id
+              WHERE 1 = 1
+            )
+
+              SELECT
+              id,
+              public_id,
+              path,
+              is_primary,
+              parent_public_id
+              FROM
+              tree t
+        </createView>
+    </changeSet>
+
+    <changeSet id="20190606 v20 url_map" author="Migrated From Flyway">
+        <createTable tableName="URL_MAP">
+            <column name="OLD_URL" type="varchar(255)"><constraints primaryKey="true" /></column>
+            <column name="PUBLIC_ID" type="varchar(255)"><constraints nullable="false" /></column>
+            <column name="SUBJECT_ID" type="varchar(255)" />
+        </createTable>
+    </changeSet>
+    
+    <changeSet id="20190606 v21 RecanonifyUrlMap" author="Migrated From Flyway">
+        <customChange class="no.ndla.taxonomy.migration.V21__RecanonifyUrlMap" />
+    </changeSet>
+
+    <changeSet id="20190606 v22 cached_url materialized view" author="Migrated From Flyway">
+        <sql>
+            DROP view cached_url;
+
+            CREATE MATERIALIZED VIEW cached_url as (
+              WITH RECURSIVE tree (id, public_id, name, parent_public_id, level, is_primary, path) AS (
+              SELECT
+              contexts.id,
+              contexts.public_id,
+              contexts.name,
+              cast(NULL AS VARCHAR) AS parent_public_id,
+              0 AS level,
+              TRUE AS is_primary,
+              '/' || substr(contexts.public_id, 5) AS path
+              FROM
+            (
+              SELECT
+              id,
+              public_id,
+              name
+              FROM subject
+
+              UNION ALL
+
+              SELECT
+              id,
+              public_id,
+              name
+              FROM topic
+              WHERE context = TRUE
+            ) contexts
+
+              UNION ALL
+
+              SELECT
+              child.id,
+              child.public_id,
+              child.name,
+              parent.public_id AS parent_public_id,
+              parent.level + 1 AS level,
+              child.is_primary AND parent.is_primary AS is_primary,
+              parent.path || '/' || substr(child.public_id, 5)
+              FROM
+            (
+              SELECT
+              r.id,
+              r.public_id,
+              t.public_id AS parent_public_id,
+              r.name,
+              tr.is_primary AS is_primary
+              FROM
+              resource r
+              INNER JOIN topic_resource tr ON tr.resource_id = r.id
+              INNER JOIN topic t ON tr.topic_id = t.id
+
+              UNION ALL
+
+              SELECT
+              st.id,
+              st.public_id,
+              t.public_id AS parent_public_id,
+              st.name,
+              tst.is_primary AS is_primary
+              FROM topic t
+              INNER JOIN topic_subtopic tst ON t.id = tst.topic_id
+              INNER JOIN topic st ON tst.subtopic_id = st.id
+
+              UNION ALL
+
+              SELECT
+              t.id,
+              t.public_id,
+              s.public_id AS parent_public_id,
+              t.name,
+              st.is_primary AS is_primary
+              FROM
+              subject s
+              INNER JOIN subject_topic st ON s.id = st.subject_id
+              INNER JOIN topic t ON st.topic_id = t.id
+            ) child
+              INNER JOIN tree AS parent ON parent.public_id = child.parent_public_id
+              WHERE 1 = 1
+            )
+
+              SELECT
+              id,
+              public_id,
+              path,
+              is_primary,
+              parent_public_id
+              FROM
+              tree t
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="20190606 v23 modification triggers" author="Migrated From Flyway">
+        <sql splitStatements="false" stripComments="false">
+           drop function if exists update_url_cache() cascade;
+        </sql>
+        <sql splitStatements="false" stripComments="false">
+            CREATE OR REPLACE FUNCTION update_url_cache()
+              RETURNS trigger LANGUAGE plpgsql
+            AS
+            $function$
+            begin
+              REFRESH MATERIALIZED VIEW CONCURRENTLY cached_url;
+              RETURN NULL;
+            end;
+            $function$
+        </sql>
+        <sql splitStatements="false" stripComments="false">
+
+            create trigger refresh_paths
+              after insert or update or delete or truncate
+              on subject
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+              after insert or update or delete or truncate
+              on topic
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+              after insert or update or delete or truncate
+              on resource
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+              after insert or update or delete or truncate
+              on subject_topic
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+              after insert or update or delete or truncate
+              on topic_subtopic
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+            after insert or update or delete or truncate
+            on topic_resource
+            execute procedure update_url_cache();
+        </sql>
+    </changeSet>
+</databaseChangeLog>

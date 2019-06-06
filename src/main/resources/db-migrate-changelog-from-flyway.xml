@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+    <changeSet id="20190606 remove schema_version if exists and is empty" author="Jon-Eirik Pettersen">
+        <!--
+            This is intended to run on second pass after "20190606 migrate flyway migration table to liquibase".
+            It will fail the first time, and processing continues on next statement without marking this as done
+
+            If table does not exists OR (table exists AND is empty) the DROP TABLE will run and clear the table if exists
+            and mark this migration as done
+        -->
+        <preConditions onFail="CONTINUE">
+            <or>
+                <and>
+                    <tableExists tableName="schema_version" />
+                    <sqlCheck expectedResult="0">SELECT COUNT(*) FROM schema_version</sqlCheck>
+                </and>
+                <not>
+                    <tableExists tableName="schema_version" />
+                </not>
+            </or>
+        </preConditions>
+        <sql>
+            DROP TABLE IF EXISTS schema_version;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20190606 migrate flyway migration table to liquibase" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="schema_version" />
+        </preConditions>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v1 create subject table',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            1,
+            'EXECUTED',
+            '7:18dd197f61f9b7051fc43548d30cee3e'
+            FROM schema_version WHERE version = '1' AND checksum = -1254755710;
+
+            DELETE FROM schema_version WHERE version = '1' AND checksum = -1254755710;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v2 create topic table',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            2,
+            'EXECUTED',
+            '7:7501a2648a71f23872fa6943fc933ea2'
+            FROM schema_version WHERE version = '2' AND checksum = 262573887;
+
+            DELETE FROM schema_version WHERE version = '2' AND checksum = 262573887;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v3 create subject_topic_table',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            3,
+            'EXECUTED',
+            '7:ef1c2857fb54525a71568e43ce90b017'
+            FROM schema_version WHERE version = '3' AND checksum = 986428638;
+
+            DELETE FROM schema_version WHERE version = '3' AND checksum = 986428638;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v4 create topic_subtopic table',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            4,
+            'EXECUTED',
+            '7:fa6f2c7d85a8a17a338c5497df20064c'
+            FROM schema_version WHERE version = '4' AND checksum = -879320460;
+
+            DELETE FROM schema_version WHERE version = '4' AND checksum = -879320460;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v5 create resource table',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            5,
+            'EXECUTED',
+            '7:a42139432383c231cf8d58ba4aa76ec3'
+            FROM schema_version WHERE version = '5' AND checksum = 966840670;
+
+            DELETE FROM schema_version WHERE version = '5' AND checksum = 966840670;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v6 create topic_resource table',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            6,
+            'EXECUTED',
+            '7:1a51b12bb64f96a059e78aa262afed6b'
+            FROM schema_version WHERE version = '6' AND checksum = -1886826296;
+
+            DELETE FROM schema_version WHERE version = '6' AND checksum = -1886826296;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v7 create resource_type table',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            7,
+            'EXECUTED',
+            '7:6eaed4ea6146debc30cca366b07315c6'
+            FROM schema_version WHERE version = '7' AND checksum = -1451170993;
+
+            DELETE FROM schema_version WHERE version = '7' AND checksum = -1451170993;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v8 create resource_resource_type table',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            8,
+            'EXECUTED',
+            '7:0a4f474587cf9c6f48cef7281c66362f'
+            FROM schema_version WHERE version = '8' AND checksum = 2146669081;
+
+            DELETE FROM schema_version WHERE version = '8' AND checksum = 2146669081;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v9 add content_uri',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            9,
+            'EXECUTED',
+            '7:857771e7120969c80684d91aba9965cd'
+            FROM schema_version WHERE version = '9' AND checksum = 267104399;
+
+            DELETE FROM schema_version WHERE version = '9' AND checksum = 267104399;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v10 language',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            10,
+            'EXECUTED',
+            '7:4895686dbcb423be4cb8b4fce41da696'
+            FROM schema_version WHERE version = '10' AND checksum = 300502384;
+
+            DELETE FROM schema_version WHERE version = '10' AND checksum = 300502384;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v11 set primary',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            11,
+            'EXECUTED',
+            '7:1600adeea938c10a7931b135fa2d6ede'
+            FROM schema_version WHERE version = '11' AND checksum = -1234762081;
+
+            DELETE FROM schema_version WHERE version = '11' AND checksum = -1234762081;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v12 urls',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            12,
+            'EXECUTED',
+            '7:96b4226f5a586071359161dc54a0e817'
+            FROM schema_version WHERE version = '12' AND checksum = 1594894004;
+
+            DELETE FROM schema_version WHERE version = '12' AND checksum = 1594894004;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v13 filter',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            13,
+            'EXECUTED',
+            '7:e9216e15a46c664ad26b73f3b433570d'
+            FROM schema_version WHERE version = '13' AND checksum = 994658217;
+
+            DELETE FROM schema_version WHERE version = '13' AND checksum = 994658217;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190605 v14 resource_filter',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            14,
+            'EXECUTED',
+            '7:efad92309723f6994f519f1e09cde752'
+            FROM schema_version WHERE version = '14' AND checksum = 1498022296;
+
+            DELETE FROM schema_version WHERE version = '14' AND checksum = 1498022296;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190606 v15 topic_filter',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            15,
+            'EXECUTED',
+            '7:9731e261c6f893e5880231cbce0ccbb9'
+            FROM schema_version WHERE version = '15' AND checksum = -627341449;
+
+            DELETE FROM schema_version WHERE version = '15' AND checksum = -627341449;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190606 v16 rank',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            16,
+            'EXECUTED',
+            '7:8b34e2ab55ad02f1efedd7ae9f97fcb5'
+            FROM schema_version WHERE version = '16' AND checksum = -2134338562;
+
+            DELETE FROM schema_version WHERE version = '16' AND checksum = -2134338562;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190606 v17 add context to topic',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            17,
+            'EXECUTED',
+            '7:54193469b315ff05fb727ad6dadd186f'
+            FROM schema_version WHERE version = '17' AND checksum = -1461213327;
+
+            DELETE FROM schema_version WHERE version = '17' AND checksum = -1461213327;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190606 v18 cached_url_view',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            18,
+            'EXECUTED',
+            '7:527dfcd9019b0355e5d6c8f86b3cf13b'
+            FROM schema_version WHERE version = '18' AND checksum = 1694931578;
+
+            DELETE FROM schema_version WHERE version = '18' AND checksum = 1694931578;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190606 v19 cached_url view with parent',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            19,
+            'EXECUTED',
+            '7:50daba593c17d6acf7654217d4fe7f57'
+            FROM schema_version WHERE version = '19' AND checksum = 1411423405;
+
+            DELETE FROM schema_version WHERE version = '19' AND checksum = 1411423405;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190606 v20 url_map',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            20,
+            'EXECUTED',
+            '7:4216fa1853d8db9e38e6ca02a0791b10'
+            FROM schema_version WHERE version = '20' AND checksum = -1514421817;
+
+            DELETE FROM schema_version WHERE version = '20' AND checksum = -1514421817;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190606 v21 RecanonifyUrlMap',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            21,
+            'EXECUTED',
+            '7:e9777d57a95537f6cdcb8045af351e44'
+            FROM schema_version WHERE version = '21';
+
+            DELETE FROM schema_version WHERE version = '21';
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190606 v22 cached_url materialized view',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            22,
+            'EXECUTED',
+            '7:7e56219f26c8f38bfd040de0f5ec2e99'
+            FROM schema_version WHERE version = '22' AND checksum = -512085011;
+
+            DELETE FROM schema_version WHERE version = '22' AND checksum = -512085011;
+        </sql>
+
+        <sql>
+            INSERT INTO databasechangelog (id,author,filename,dateexecuted,orderexecuted,exectype,md5sum)
+            SELECT
+            '20190606 v23 modification triggers',
+            'Migrated From Flyway',
+            'db-migrate-from-flyway.xml',
+            installed_on,
+            23,
+            'EXECUTED',
+            '7:5759f28175cb37d77fffba294ad973ab'
+            FROM schema_version WHERE version = '23' AND checksum = -1364319247;
+
+            DELETE FROM schema_version WHERE version = '23' AND checksum = -1364319247;
+        </sql>
+    </changeSet>
+    <changeSet id="20190606 stop exec if schema_version exists" author="Jon-Eirik Pettersen">
+        <!-- Force application restart to refresh liquibase after previous migration is run -->
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="schema_version" />
+        </preConditions>
+        <stop>Restart application to refresh liquibase after migration flyway migrations</stop>
+    </changeSet>
+</databaseChangeLog>
