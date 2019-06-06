@@ -602,4 +602,326 @@
 
         <addUniqueConstraint tableName="topic_subtopic" columnNames="topic_id,subtopic_id" constraintName="topic_subtopic_unique" />
     </changeSet>
+
+    <changeSet id="20190606 rename foreign keys on table resource_resource_type (1/2 resource_type_resource_id_fkey)" author="Jon-Eirik Pettersen">
+        <!-- Got the wrong name from migration, only applies if running liquibase on clean database -->
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="resource_type_resource_id_fkey" foreignKeyTableName="resource_resource_type"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="resource_resource_type" constraintName="resource_type_resource_id_fkey" />
+        <addForeignKeyConstraint baseTableName="resource_resource_type" baseColumnNames="resource_id" constraintName="resource_resource_type_resource_id_fkey" referencedTableName="resource"
+                                 referencedColumnNames="id" />
+    </changeSet>
+
+    <changeSet id="20190606 rename foreign keys on table resource_resource_type (2/2 resource_type_resource_type_id_fkey)" author="Jon-Eirik Pettersen">
+        <!-- Got the wrong name from migration, only applies if running liquibase on clean database -->
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="resource_type_resource_type_id_fkey" foreignKeyTableName="resource_resource_type"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="resource_resource_type" constraintName="resource_type_resource_type_id_fkey" />
+        <addForeignKeyConstraint baseTableName="resource_resource_type" baseColumnNames="resource_type_id" constraintName="resource_resource_type_resource_type_id_fkey" referencedTableName="resource_type"
+                                 referencedColumnNames="id" />
+    </changeSet>
+
+    <!-- Replace unique indices with unique constraints to sync original created with liquibase created -->
+    <!-- applies only to database created with flyway -->
+
+    <changeSet id="20190606 replace unique index with constraint on filter" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="filter" indexName="filter_public_id" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                    FROM information_schema.table_constraints
+                    WHERE constraint_name ='filter_public_id' AND constraint_type = 'UNIQUE' AND table_name = 'filter'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="filter" indexName="filter_public_id" />
+        <addUniqueConstraint tableName="filter" columnNames="public_id" constraintName="filter_public_id" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on relevance" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="relevance" indexName="relevance_public_id" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='relevance_public_id' AND constraint_type = 'UNIQUE' AND table_name = 'relevance'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="relevance" indexName="relevance_public_id" />
+        <addUniqueConstraint tableName="relevance" columnNames="public_id" constraintName="relevance_public_id" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on relevance_translation" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="relevance_translation" indexName="relevance_language_unique" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='relevance_language_unique' AND constraint_type = 'UNIQUE' AND table_name = 'relevance_translation'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="relevance_translation" indexName="relevance_language_unique" />
+        <addUniqueConstraint tableName="relevance_translation" columnNames="relevance_id,language_code" constraintName="relevance_language_unique" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on resource" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="resource" indexName="resource_public_id" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='resource_public_id' AND constraint_type = 'UNIQUE' AND table_name = 'resource'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="resource" indexName="resource_public_id" />
+        <addUniqueConstraint tableName="resource" columnNames="public_id" constraintName="resource_public_id" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on resource_filter 1/2" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="resource_filter" indexName="resource_filter_public_id" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='resource_filter_public_id' AND constraint_type = 'UNIQUE' AND table_name = 'resource_filter'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="resource_filter" indexName="resource_filter_public_id" />
+        <addUniqueConstraint tableName="resource_filter" columnNames="public_id" constraintName="resource_filter_public_id" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on resource_filter 2/2" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="resource_filter" indexName="resource_filter_unique" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='resource_filter_unique' AND constraint_type = 'UNIQUE' AND table_name = 'resource_filter'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="resource_filter" indexName="resource_filter_unique" />
+        <addUniqueConstraint tableName="resource_filter" columnNames="filter_id,resource_id" constraintName="resource_filter_unique" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on resource_resource_type 1/2" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="resource_resource_type" indexName="resource_resource_type_public_id" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='resource_resource_type_public_id' AND constraint_type = 'UNIQUE' AND table_name = 'resource_resource_type'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="resource_resource_type" indexName="resource_resource_type_public_id" />
+        <addUniqueConstraint tableName="resource_resource_type" columnNames="public_id" constraintName="resource_resource_type_public_id" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on resource_resource_type 2/2" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="resource_resource_type" indexName="resource_resource_type_unique" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='resource_resource_type_unique' AND constraint_type = 'UNIQUE' AND table_name = 'resource_resource_type'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="resource_resource_type" indexName="resource_resource_type_unique" />
+        <addUniqueConstraint tableName="resource_resource_type" columnNames="resource_id,resource_type_id" constraintName="resource_resource_type_unique" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on resource_translation" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="resource_translation" indexName="resource_language_unique" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='resource_language_unique' AND constraint_type = 'UNIQUE' AND table_name = 'resource_translation'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="resource_translation" indexName="resource_language_unique" />
+        <addUniqueConstraint tableName="resource_translation" columnNames="resource_id,language_code" constraintName="resource_language_unique" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on resource_type" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="resource_type" indexName="resource_type_public_id" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='resource_type_public_id' AND constraint_type = 'UNIQUE' AND table_name = 'resource_type'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="resource_type" indexName="resource_type_public_id" />
+        <addUniqueConstraint tableName="resource_type" columnNames="public_id" constraintName="resource_type_public_id" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on resource_type_translation" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="resource_type_translation" indexName="resource_type_language_unique" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='resource_type_language_unique' AND constraint_type = 'UNIQUE' AND table_name = 'resource_type_translation'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="resource_type_translation" indexName="resource_type_language_unique" />
+        <addUniqueConstraint tableName="resource_type_translation" columnNames="resource_type_id,language_code" constraintName="resource_type_language_unique" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on subject" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="subject" indexName="subject_public_id" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='subject_public_id' AND constraint_type = 'UNIQUE' AND table_name = 'subject'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="subject" indexName="subject_public_id" />
+        <addUniqueConstraint tableName="subject" columnNames="public_id" constraintName="subject_public_id" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on subject_topic 1/2" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="subject_topic" indexName="subject_topic_public_id" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='subject_topic_public_id' AND constraint_type = 'UNIQUE' AND table_name = 'subject_topic'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="subject_topic" indexName="subject_topic_public_id" />
+        <addUniqueConstraint tableName="subject_topic" columnNames="public_id" constraintName="subject_topic_public_id" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on subject_topic 2/2" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="subject_topic" indexName="subject_topic_unique" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='subject_topic_unique' AND constraint_type = 'UNIQUE' AND table_name = 'subject_topic'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="subject_topic" indexName="subject_topic_unique" />
+        <addUniqueConstraint tableName="subject_topic" columnNames="topic_id,subject_id" constraintName="subject_topic_unique" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on subject_translation" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="subject_translation" indexName="subject_language_unique" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='subject_language_unique' AND constraint_type = 'UNIQUE' AND table_name = 'subject_translation'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="subject_translation" indexName="subject_language_unique" />
+        <addUniqueConstraint tableName="subject_translation" columnNames="subject_id,language_code" constraintName="subject_language_unique" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on topic" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="topic" indexName="topic_public_id" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='topic_public_id' AND constraint_type = 'UNIQUE' AND table_name = 'topic'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="topic" indexName="topic_public_id" />
+        <addUniqueConstraint tableName="topic" columnNames="public_id" constraintName="topic_public_id" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on topic_filter 1/2" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="topic_filter" indexName="topic_filter_public_id" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='topic_filter_public_id' AND constraint_type = 'UNIQUE' AND table_name = 'topic_filter'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="topic_filter" indexName="topic_filter_public_id" />
+        <addUniqueConstraint tableName="topic_filter" columnNames="public_id" constraintName="topic_filter_public_id" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on topic_filter 2/2" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="topic_filter" indexName="topic_filter_unique" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='topic_filter_unique' AND constraint_type = 'UNIQUE' AND table_name = 'topic_filter'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="topic_filter" indexName="topic_filter_unique" />
+        <addUniqueConstraint tableName="topic_filter" columnNames="filter_id,topic_id" constraintName="topic_filter_unique" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on topic_resource 1/2" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="topic_resource" indexName="topic_resource_public_id" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='topic_resource_public_id' AND constraint_type = 'UNIQUE' AND table_name = 'topic_resource'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="topic_resource" indexName="topic_resource_public_id" />
+        <addUniqueConstraint tableName="topic_resource" columnNames="public_id" constraintName="topic_resource_public_id" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on topic_resource 2/2" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="topic_resource" indexName="topic_resource_unique" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='topic_resource_unique' AND constraint_type = 'UNIQUE' AND table_name = 'topic_resource'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="topic_resource" indexName="topic_resource_unique" />
+        <addUniqueConstraint tableName="topic_resource" columnNames="topic_id,resource_id" constraintName="topic_resource_unique" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on topic_subtopic 1/2" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="topic_subtopic" indexName="topic_subtopic_public_id" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='topic_subtopic_public_id' AND constraint_type = 'UNIQUE' AND table_name = 'topic_subtopic'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="topic_subtopic" indexName="topic_subtopic_public_id" />
+        <addUniqueConstraint tableName="topic_subtopic" columnNames="public_id" constraintName="topic_subtopic_public_id" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on topic_subtopic 2/2" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="topic_subtopic" indexName="topic_subtopic_unique" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='topic_subtopic_unique' AND constraint_type = 'UNIQUE' AND table_name = 'topic_subtopic'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="topic_subtopic" indexName="topic_subtopic_unique" />
+        <addUniqueConstraint tableName="topic_subtopic" columnNames="topic_id,subtopic_id" constraintName="topic_subtopic_unique" />
+    </changeSet>
+
+    <changeSet id="20190606 replace unique index with constraint on topic_translation" author="Jon-Eirik Pettersen">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="topic_translation" indexName="topic_language_unique" />
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*)
+                FROM information_schema.table_constraints
+                WHERE constraint_name ='topic_language_unique' AND constraint_type = 'UNIQUE' AND table_name = 'topic_translation'
+            </sqlCheck>
+        </preConditions>
+        <dropIndex tableName="topic_translation" indexName="topic_language_unique" />
+        <addUniqueConstraint tableName="topic_translation" columnNames="topic_id,language_code" constraintName="topic_language_unique" />
+    </changeSet>
 </databaseChangeLog>
