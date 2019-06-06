@@ -588,7 +588,7 @@
     </changeSet>
     <changeSet id="20190606 fix unique constraint for topic_subtopic set on the wrong table (remove index)" author="Jon-Eirik Pettersen">
         <preConditions onFail="MARK_RAN">
-            <indexExists schemaName="subject_topic" indexName="topic_subtopic_unique"/>
+            <indexExists tableName="subject_topic" indexName="topic_subtopic_unique" />
         </preConditions>
 
         <dropUniqueConstraint tableName="subject_topic" constraintName="topic_subtopic_unique" uniqueColumns="topic_id,subject_id" />
@@ -596,7 +596,7 @@
     <changeSet id="20190606 fix unique constraint for topic_subtopic set on the wrong table (create index)" author="Jon-Eirik Pettersen">
         <preConditions onFail="MARK_RAN">
             <not>
-                <indexExists schemaName="topic_subtopic" indexName="topic_subtopic_unique"/>
+                <indexExists tableName="topic_subtopic" indexName="topic_subtopic_unique"/>
             </not>
         </preConditions>
 
