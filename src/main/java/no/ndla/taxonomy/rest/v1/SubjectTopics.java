@@ -81,7 +81,7 @@ public class SubjectTopics {
             subjectTopic.setRank(highestRankingConnection.getRank() + 1);
         } else {
             List<SubjectTopic> rankedConnections = RankableConnectionUpdater.rank(connectionsForSubject, subjectTopic, command.rank);
-            subjectTopicRepository.save(rankedConnections);
+            subjectTopicRepository.saveAll(rankedConnections);
         }
 
         subjectTopicRepository.save(subjectTopic);
@@ -112,7 +112,7 @@ public class SubjectTopics {
 
         List<SubjectTopic> existingConnections = subjectTopicRepository.findBySubject(subject);
         List<SubjectTopic> rankedConnections = RankableConnectionUpdater.rank(existingConnections, subjectTopic, command.rank);
-        subjectTopicRepository.save(rankedConnections);
+        subjectTopicRepository.saveAll(rankedConnections);
 
         if (command.primary) {
             topic.setPrimarySubject(subject);
