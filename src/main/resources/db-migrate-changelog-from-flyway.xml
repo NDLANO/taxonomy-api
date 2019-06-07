@@ -29,6 +29,9 @@
     </changeSet>
 
     <changeSet id="20190606 migrate flyway migration table to liquibase" author="Jon-Eirik Pettersen">
+        <validCheckSum>7:0d8987d7bed681702f0fa9c76e01cefd</validCheckSum>
+        <validCheckSum>8:699deff96141ec765b41b6b70b795734</validCheckSum>
+
         <preConditions onFail="MARK_RAN">
             <tableExists tableName="schema_version" />
         </preConditions>
@@ -42,7 +45,7 @@
             installed_on,
             1,
             'EXECUTED',
-            '7:18dd197f61f9b7051fc43548d30cee3e'
+            '8:9047af11261042b8ee9d79010108bac1'
             FROM schema_version WHERE version = '1' AND checksum = -1254755710;
 
             DELETE FROM schema_version WHERE version = '1' AND checksum = -1254755710;
@@ -57,7 +60,7 @@
             installed_on,
             2,
             'EXECUTED',
-            '7:7501a2648a71f23872fa6943fc933ea2'
+            '8:e2919501c3e4fce81d2998fcee729d3b'
             FROM schema_version WHERE version = '2' AND checksum = 262573887;
 
             DELETE FROM schema_version WHERE version = '2' AND checksum = 262573887;
@@ -72,7 +75,7 @@
             installed_on,
             3,
             'EXECUTED',
-            '7:ef1c2857fb54525a71568e43ce90b017'
+            '8:827769b486532e3b7e80ea1446a1a4df'
             FROM schema_version WHERE version = '3' AND checksum = 986428638;
 
             DELETE FROM schema_version WHERE version = '3' AND checksum = 986428638;
@@ -87,7 +90,7 @@
             installed_on,
             4,
             'EXECUTED',
-            '7:fa6f2c7d85a8a17a338c5497df20064c'
+            '8:341a81e828b9668530b3ab429bba7c61'
             FROM schema_version WHERE version = '4' AND checksum = -879320460;
 
             DELETE FROM schema_version WHERE version = '4' AND checksum = -879320460;
@@ -102,7 +105,7 @@
             installed_on,
             5,
             'EXECUTED',
-            '7:a42139432383c231cf8d58ba4aa76ec3'
+            '8:2fb6585829c5d9cab4ecbcbb20fdf672'
             FROM schema_version WHERE version = '5' AND checksum = 966840670;
 
             DELETE FROM schema_version WHERE version = '5' AND checksum = 966840670;
@@ -117,7 +120,7 @@
             installed_on,
             6,
             'EXECUTED',
-            '7:1a51b12bb64f96a059e78aa262afed6b'
+            '8:7841f9bb089c1c742715d09a5ece2926'
             FROM schema_version WHERE version = '6' AND checksum = -1886826296;
 
             DELETE FROM schema_version WHERE version = '6' AND checksum = -1886826296;
@@ -132,7 +135,7 @@
             installed_on,
             7,
             'EXECUTED',
-            '7:6eaed4ea6146debc30cca366b07315c6'
+            '8:d30608305a6da4c8bb4741a570417e33'
             FROM schema_version WHERE version = '7' AND checksum = -1451170993;
 
             DELETE FROM schema_version WHERE version = '7' AND checksum = -1451170993;
@@ -147,7 +150,7 @@
             installed_on,
             8,
             'EXECUTED',
-            '7:0a4f474587cf9c6f48cef7281c66362f'
+            '8:9afdec2223719bac72c735dd2dc073a0'
             FROM schema_version WHERE version = '8' AND checksum = 2146669081;
 
             DELETE FROM schema_version WHERE version = '8' AND checksum = 2146669081;
@@ -162,7 +165,7 @@
             installed_on,
             9,
             'EXECUTED',
-            '7:857771e7120969c80684d91aba9965cd'
+            '8:993a05d5192c5789ac054c799c47ba1e'
             FROM schema_version WHERE version = '9' AND checksum = 267104399;
 
             DELETE FROM schema_version WHERE version = '9' AND checksum = 267104399;
@@ -177,7 +180,7 @@
             installed_on,
             10,
             'EXECUTED',
-            '7:4895686dbcb423be4cb8b4fce41da696'
+            '8:bfa1be1fac786e4a73e2b21b075bdb43'
             FROM schema_version WHERE version = '10' AND checksum = 300502384;
 
             DELETE FROM schema_version WHERE version = '10' AND checksum = 300502384;
@@ -192,7 +195,7 @@
             installed_on,
             11,
             'EXECUTED',
-            '7:1600adeea938c10a7931b135fa2d6ede'
+            '8:b97137a5b271410906d28e86af610f9d'
             FROM schema_version WHERE version = '11' AND checksum = -1234762081;
 
             DELETE FROM schema_version WHERE version = '11' AND checksum = -1234762081;
@@ -207,7 +210,7 @@
             installed_on,
             12,
             'EXECUTED',
-            '7:96b4226f5a586071359161dc54a0e817'
+            '8:d2d040c646f360083f0cf4c3f8e2c8ab'
             FROM schema_version WHERE version = '12' AND checksum = 1594894004;
 
             DELETE FROM schema_version WHERE version = '12' AND checksum = 1594894004;
@@ -222,7 +225,7 @@
             installed_on,
             13,
             'EXECUTED',
-            '7:e9216e15a46c664ad26b73f3b433570d'
+            '8:dfbdd8a206448a9c251fa1837a93e71e'
             FROM schema_version WHERE version = '13' AND checksum = 994658217;
 
             DELETE FROM schema_version WHERE version = '13' AND checksum = 994658217;
@@ -237,7 +240,7 @@
             installed_on,
             14,
             'EXECUTED',
-            '7:efad92309723f6994f519f1e09cde752'
+            '8:8443ad1a262444b09395879a5c673232'
             FROM schema_version WHERE version = '14' AND checksum = 1498022296;
 
             DELETE FROM schema_version WHERE version = '14' AND checksum = 1498022296;
@@ -252,7 +255,7 @@
             installed_on,
             15,
             'EXECUTED',
-            '7:9731e261c6f893e5880231cbce0ccbb9'
+            '8:a6a4374cc32d8d60c7c0a6a8401cb00f'
             FROM schema_version WHERE version = '15' AND checksum = -627341449;
 
             DELETE FROM schema_version WHERE version = '15' AND checksum = -627341449;
@@ -267,7 +270,7 @@
             installed_on,
             16,
             'EXECUTED',
-            '7:8b34e2ab55ad02f1efedd7ae9f97fcb5'
+            '8:fd8858c69b4d020a7ba8a1ffc505133e'
             FROM schema_version WHERE version = '16' AND checksum = -2134338562;
 
             DELETE FROM schema_version WHERE version = '16' AND checksum = -2134338562;
@@ -282,7 +285,7 @@
             installed_on,
             17,
             'EXECUTED',
-            '7:54193469b315ff05fb727ad6dadd186f'
+            '8:6a1d9809b5b3211f2f63d2bc613cab7b'
             FROM schema_version WHERE version = '17' AND checksum = -1461213327;
 
             DELETE FROM schema_version WHERE version = '17' AND checksum = -1461213327;
@@ -297,7 +300,7 @@
             installed_on,
             18,
             'EXECUTED',
-            '7:527dfcd9019b0355e5d6c8f86b3cf13b'
+            '8:090d8bf925087d49ec24088aac22382f'
             FROM schema_version WHERE version = '18' AND checksum = 1694931578;
 
             DELETE FROM schema_version WHERE version = '18' AND checksum = 1694931578;
@@ -312,7 +315,7 @@
             installed_on,
             19,
             'EXECUTED',
-            '7:50daba593c17d6acf7654217d4fe7f57'
+            '8:8be41edad70f3be4c1c20c3abce3d023'
             FROM schema_version WHERE version = '19' AND checksum = 1411423405;
 
             DELETE FROM schema_version WHERE version = '19' AND checksum = 1411423405;
@@ -327,7 +330,7 @@
             installed_on,
             20,
             'EXECUTED',
-            '7:4216fa1853d8db9e38e6ca02a0791b10'
+            '8:8fd7be36a43c43dedd62cabf7b3ed07b'
             FROM schema_version WHERE version = '20' AND checksum = -1514421817;
 
             DELETE FROM schema_version WHERE version = '20' AND checksum = -1514421817;
@@ -342,7 +345,7 @@
             installed_on,
             21,
             'EXECUTED',
-            '7:e9777d57a95537f6cdcb8045af351e44'
+            '8:84edc2a2c777e88be9ba666013053a9b'
             FROM schema_version WHERE version = '21';
 
             DELETE FROM schema_version WHERE version = '21';
@@ -357,7 +360,7 @@
             installed_on,
             22,
             'EXECUTED',
-            '7:7663a64b92241ee0e55efbc81ea08f35'
+            '8:ff2718a193b147d628981737bf73ee0a'
             FROM schema_version WHERE version = '22' AND checksum = -512085011;
 
             DELETE FROM schema_version WHERE version = '22' AND checksum = -512085011;
@@ -372,7 +375,7 @@
             installed_on,
             23,
             'EXECUTED',
-            '7:5759f28175cb37d77fffba294ad973ab'
+            '8:d67191cf430ddd20b2a77120bd3f65fb'
             FROM schema_version WHERE version = '23' AND checksum = -1364319247;
 
             DELETE FROM schema_version WHERE version = '23' AND checksum = -1364319247;
