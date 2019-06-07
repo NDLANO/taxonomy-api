@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/topic-resources"})
@@ -37,17 +37,18 @@ public class TopicResources {
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and resources")
     public List<TopicResourceIndexDocument> index() {
-        List<TopicResourceIndexDocument> result = new ArrayList<>();
-        topicResourceRepository.findAll().forEach(record -> result.add(new TopicResourceIndexDocument(record)));
-        return result;
+        return topicResourceRepository
+                .findAllIncludingTopicAndResource()
+                .stream()
+                .map(TopicResourceIndexDocument::new)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a specific connection between a topic and a resource")
     public TopicResourceIndexDocument get(@PathVariable("id") URI id) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
-        TopicResourceIndexDocument result = new TopicResourceIndexDocument(topicResource);
-        return result;
+        return new TopicResourceIndexDocument(topicResource);
     }
 
     @PostMapping

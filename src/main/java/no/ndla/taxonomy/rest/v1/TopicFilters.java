@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/topic-filters"})
@@ -40,7 +40,7 @@ public class TopicFilters {
     @PostMapping
     @ApiOperation(value = "Adds a filter to a topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public ResponseEntity<Void> post(@ApiParam(name = "topic filter", value = "The new topic filter") @RequestBody AddFilterToTopicCommand command) throws Exception {
+    public ResponseEntity<Void> post(@ApiParam(name = "topic filter", value = "The new topic filter") @RequestBody AddFilterToTopicCommand command) {
         try {
             Filter filter = filterRepository.getByPublicId(command.filterId);
             Topic topic = topicRepository.getByPublicId(command.topicId);
@@ -61,7 +61,7 @@ public class TopicFilters {
     @ApiOperation(value = "Updates a topic filter connection")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void put(@PathVariable("id") URI id, @ApiParam(name = "topic filter", value = "The updated topic filter", required = true) @RequestBody UpdateTopicFilterCommand command) throws Exception {
+    public void put(@PathVariable("id") URI id, @ApiParam(name = "topic filter", value = "The updated topic filter", required = true) @RequestBody UpdateTopicFilterCommand command) {
         TopicFilter topicFilter = topicFilterRepository.getByPublicId(id);
         Relevance relevance = relevanceRepository.getByPublicId(command.relevanceId);
         topicFilter.setRelevance(relevance);
@@ -79,10 +79,11 @@ public class TopicFilters {
 
     @GetMapping
     @ApiOperation("Gets all connections between topics and filters")
-    public List<TopicFilterIndexDocument> index() throws Exception {
-        List<TopicFilterIndexDocument> result = new ArrayList<>();
-        topicFilterRepository.findAll().forEach(record -> result.add(new TopicFilterIndexDocument(record)));
-        return result;
+    public List<TopicFilterIndexDocument> index() {
+        return topicFilterRepository.findAllIncludingTopicAndFilterAndRelevance()
+                .stream()
+                .map(TopicFilterIndexDocument::new)
+                .collect(Collectors.toList());
     }
 
 

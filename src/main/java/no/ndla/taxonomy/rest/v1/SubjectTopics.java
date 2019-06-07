@@ -4,16 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
-import no.ndla.taxonomy.domain.RankableConnectionUpdater;
-import no.ndla.taxonomy.domain.PrimaryParentRequiredException;
-import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.domain.SubjectTopic;
-import no.ndla.taxonomy.domain.Topic;
-
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,9 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/subject-topics"})
@@ -42,19 +36,17 @@ public class SubjectTopics {
 
     @GetMapping
     @ApiOperation("Gets all connections between subjects and topics")
-    public List<SubjectTopicIndexDocument> index() throws Exception {
-        List<SubjectTopicIndexDocument> result = new ArrayList<>();
-
-        subjectTopicRepository.findAll().forEach(record -> {
-            SubjectTopicIndexDocument document = new SubjectTopicIndexDocument(record);
-            result.add(document);
-        });
-        return result;
+    public List<SubjectTopicIndexDocument> index() {
+        return subjectTopicRepository
+                .findAllIncludingSubjectAndTopic()
+                .stream()
+                .map(SubjectTopicIndexDocument::new)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     @ApiOperation("Get a specific connection between a subject and a topic")
-    public SubjectTopicIndexDocument get(@PathVariable("id") URI id) throws Exception {
+    public SubjectTopicIndexDocument get(@PathVariable("id") URI id) {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
         return new SubjectTopicIndexDocument(subjectTopic);
     }
@@ -63,7 +55,7 @@ public class SubjectTopics {
     @ApiOperation("Adds a new topic to a subject")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "command", value = "The subject and topic getting connected. Use primary=true if primary connection for this topic.") @RequestBody AddTopicToSubjectCommand command) throws Exception {
+            @ApiParam(name = "command", value = "The subject and topic getting connected. Use primary=true if primary connection for this topic.") @RequestBody AddTopicToSubjectCommand command) {
 
         Subject subject = subjectRepository.getByPublicId(command.subjectid);
         Topic topic = topicRepository.getByPublicId(command.topicid);
@@ -94,7 +86,7 @@ public class SubjectTopics {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation("Removes a topic from a subject")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void delete(@PathVariable("id") URI id) throws Exception {
+    public void delete(@PathVariable("id") URI id) {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
         subjectTopic.getSubject().removeTopic(subjectTopic.getTopic());
         subjectTopicRepository.deleteByPublicId(id);
@@ -105,7 +97,7 @@ public class SubjectTopics {
     @ApiOperation(value = "Updates a connection between subject and topic", notes = "Use to update which subject is primary to a topic or to change sorting order.")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) throws Exception {
+                    @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
         Topic topic = subjectTopic.getTopic();
         Subject subject = subjectTopic.getSubject();

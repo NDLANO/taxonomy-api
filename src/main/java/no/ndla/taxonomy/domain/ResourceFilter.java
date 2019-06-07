@@ -2,6 +2,7 @@ package no.ndla.taxonomy.domain;
 
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import java.net.URI;
@@ -10,15 +11,15 @@ import java.util.UUID;
 @Entity
 public class ResourceFilter extends DomainEntity {
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "filter_id")
     private Filter filter;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resource_id")
     private Resource resource;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 

@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/resource-resourcetypes"})
@@ -40,7 +40,7 @@ public class ResourceResourceTypes {
     @ApiOperation(value = "Adds a resource type to a resource")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "connection", value = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) throws Exception {
+            @ApiParam(name = "connection", value = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) {
 
         Resource resource = resourceRepository.getByPublicId(command.resourceId);
         ResourceType resourceType = resourceTypeRepository.getByPublicId(command.resourceTypeId);
@@ -56,7 +56,7 @@ public class ResourceResourceTypes {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation("Removes a resource type from a resource")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void delete(@PathVariable("id") URI id) throws Exception {
+    public void delete(@PathVariable("id") URI id) {
         ResourceResourceType resourceResourceType = resourceResourceTypeRepository.getByPublicId(id);
         resourceResourceType.getResource().removeResourceType(resourceResourceType.getResourceType());
         resourceResourceTypeRepository.delete(resourceResourceType);
@@ -64,15 +64,17 @@ public class ResourceResourceTypes {
 
     @GetMapping
     @ApiOperation("Gets all connections between resources and resource types")
-    public List<ResourceResourceTypeIndexDocument> index() throws Exception {
-        List<ResourceResourceTypeIndexDocument> result = new ArrayList<>();
-        resourceResourceTypeRepository.findAll().forEach(record -> result.add(new ResourceResourceTypeIndexDocument(record)));
-        return result;
+    public List<ResourceResourceTypeIndexDocument> index() {
+        return resourceResourceTypeRepository
+                .findAllIncludingResourceAndResourceType()
+                .stream()
+                .map(ResourceResourceTypeIndexDocument::new)
+                .collect(Collectors.toList());
     }
 
     @GetMapping({"/{id}"})
     @ApiOperation("Gets a single connection between resource and resource type")
-    public ResourceResourceTypeIndexDocument get(@PathVariable("id") URI id) throws Exception {
+    public ResourceResourceTypeIndexDocument get(@PathVariable("id") URI id) {
         ResourceResourceType result = resourceResourceTypeRepository.getByPublicId(id);
         return new ResourceResourceTypeIndexDocument(result);
     }
