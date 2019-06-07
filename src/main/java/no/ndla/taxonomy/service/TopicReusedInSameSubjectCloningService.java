@@ -168,7 +168,7 @@ public class TopicReusedInSameSubjectCloningService {
             this.topic = topic;
             URI targetUri;
             try {
-                targetUri = new URI(topic.getPublicId()+"-"+(++topicCloningSerial));
+                targetUri = new URI(topic.getPublicId()+":"+(++topicCloningSerial));
             } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
             }
