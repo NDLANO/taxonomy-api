@@ -124,7 +124,7 @@ public class TopicReusedInSameSubjectCloningService {
         private TopicCloning topicCloning;
 
         public TopicCloneFix(Topic parentTopic, Topic topic) {
-            topicCloning = new TopicCloning(topic);
+            topicCloning = new TopicCloning(parentTopic, topic);
             {
                 TopicSubtopic link = parentTopic.subtopics.stream()
                         .filter(l -> l.getSubtopic().getPublicId().equals(topic.getPublicId()))
@@ -155,12 +155,15 @@ public class TopicReusedInSameSubjectCloningService {
     private int topicCloningSerial = 0;
     public class TopicCloning {
         @JsonIgnoreProperties({"subjects", "subtopics", "parentTopics", "resources", "filters", "translations", "primaryParentTopic"})
+        private Topic parentTopic;
+        @JsonIgnoreProperties({"subjects", "subtopics", "parentTopics", "resources", "filters", "translations", "primaryParentTopic"})
         private Topic topic;
         @JsonIgnoreProperties({"subjects", "subtopics", "parentTopics", "resources", "filters", "translations", "primaryParentTopic"})
         private Topic clonedTopic;
         private List<TopicCloning> clonedSubtopics;
 
-        public TopicCloning(Topic topic) {
+        public TopicCloning(Topic parentTopic, Topic topic) {
+            this.parentTopic = parentTopic;
             this.clonedSubtopics = new ArrayList<>();
             this.topic = topic;
             URI targetUri;
@@ -225,7 +228,7 @@ public class TopicReusedInSameSubjectCloningService {
             /* subtopics */
             if (topic.subtopics != null) {
                 for (TopicSubtopic topicSubtopic : topic.subtopics) {
-                    TopicCloning subtopicCloning = new TopicCloning(topicSubtopic.getSubtopic());
+                    TopicCloning subtopicCloning = new TopicCloning(topic, topicSubtopic.getSubtopic());
                     clonedSubtopics.add(subtopicCloning);
                     TopicSubtopic clonedSubtopic = clonedTopic.addSubtopic(subtopicCloning.getClonedTopic());
                     clonedSubtopic.setPrimary(topicSubtopic.isPrimary());
@@ -246,6 +249,10 @@ public class TopicReusedInSameSubjectCloningService {
 
         public List<TopicCloning> getClonedSubtopics() {
             return clonedSubtopics;
+        }
+
+        public Topic getParentTopic() {
+            return parentTopic;
         }
     }
 
