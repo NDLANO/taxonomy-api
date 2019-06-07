@@ -25,13 +25,16 @@ logging.graylog.host: ""
 
 springfox.documentation.swagger.v2.path: /api-docs
 
-
 ---
 
 spring.profiles: junit
 
-spring.jpa:
-  show-sql: true
+logging.level:
+  liquibase: WARN
+  org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: WARN
+  springfox.documentation.spring.web.readers.operation.CachingOperationNameGenerator: WARN
+
+
 
 
 ---
