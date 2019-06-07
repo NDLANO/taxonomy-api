@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/resource-filters"})
@@ -40,7 +40,7 @@ public class ResourceFilters {
     @PostMapping
     @ApiOperation(value = "Adds a filter to a resource")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public ResponseEntity<Void> post(@ApiParam(name = "resource filter", value = "The new resource filter") @RequestBody AddFilterToResourceCommand command) throws Exception {
+    public ResponseEntity<Void> post(@ApiParam(name = "resource filter", value = "The new resource filter") @RequestBody AddFilterToResourceCommand command) {
         try {
             Filter filter = filterRepository.getByPublicId(command.filterId);
             Resource resource = resourceRepository.getByPublicId(command.resourceId);
@@ -61,7 +61,7 @@ public class ResourceFilters {
     @ApiOperation(value = "Updates a resource filter connection")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void put(@PathVariable("id") URI id, @ApiParam(name = "resource filter", value = "The updated resource filter", required = true) @RequestBody UpdateResourceFilterCommand command) throws Exception {
+    public void put(@PathVariable("id") URI id, @ApiParam(name = "resource filter", value = "The updated resource filter", required = true) @RequestBody UpdateResourceFilterCommand command) {
         ResourceFilter resourceFilter = resourceFilterRepository.getByPublicId(id);
         Relevance relevance = relevanceRepository.getByPublicId(command.relevanceId);
         resourceFilter.setRelevance(relevance);
@@ -84,10 +84,12 @@ public class ResourceFilters {
 
     @GetMapping
     @ApiOperation("Gets all connections between resources and filters")
-    public List<ResourceFilterIndexDocument> index() throws Exception {
-        List<ResourceFilterIndexDocument> result = new ArrayList<>();
-        resourceFilterRepository.findAll().forEach(record -> result.add(new ResourceFilterIndexDocument(record)));
-        return result;
+    public List<ResourceFilterIndexDocument> index() {
+        return resourceFilterRepository
+                .findAllIncludingResourceAndFilterAndRelevance()
+                .stream()
+                .map(ResourceFilterIndexDocument::new)
+                .collect(Collectors.toList());
     }
 
 

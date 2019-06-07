@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/topic-subtopics"})
@@ -36,18 +36,18 @@ public class TopicSubtopics {
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and subtopics")
     public List<TopicSubtopicIndexDocument> index() {
-        List<TopicSubtopicIndexDocument> result = new ArrayList<>();
-
-        topicSubtopicRepository.findAll().forEach(record -> result.add(new TopicSubtopicIndexDocument(record)));
-        return result;
+        return topicSubtopicRepository
+                .findAllIncludingTopicAndSubtopic()
+                .stream()
+                .map(TopicSubtopicIndexDocument::new)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single connection between a topic and a subtopic")
     public TopicSubtopicIndexDocument get(@PathVariable("id") URI id) {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
-        TopicSubtopicIndexDocument result = new TopicSubtopicIndexDocument(topicSubtopic);
-        return result;
+        return new TopicSubtopicIndexDocument(topicSubtopic);
     }
 
     @PostMapping

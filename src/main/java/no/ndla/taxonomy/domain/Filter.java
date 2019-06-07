@@ -14,7 +14,7 @@ public class Filter extends DomainObject {
     @OneToMany(mappedBy = "filter", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<FilterTranslation> translations = new HashSet<>();
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
     private Subject subject;
 
