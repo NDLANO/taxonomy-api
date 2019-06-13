@@ -11,6 +11,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -168,7 +169,19 @@ public class TopicReusedInSameSubjectCloningService {
             this.topic = topic;
             URI targetUri;
             try {
-                targetUri = new URI(topic.getPublicId()+":"+(++topicCloningSerial));
+                var splitUrn = topic.getPublicId().toString().split(":");
+                if (splitUrn.length < 2) {
+                    throw new RuntimeException("URN format issue: "+topic.getPublicId().toString());
+                }
+                var part1 = StreamSupport.stream(Arrays.spliterator(splitUrn, 0, splitUrn.length - 1), false);
+                var part2 = Stream.of(Integer.toString(++topicCloningSerial));
+                var part3 = Stream.of(splitUrn[splitUrn.length - 1]);
+                targetUri = new URI(
+                        Stream.of(part1, part2, part3)
+                                .flatMap(stream -> stream)
+                                .reduce((a, b) -> a + ":" +b)
+                                .orElseThrow(() -> new RuntimeException("Not going to happen!"))
+                );
             } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
             }
