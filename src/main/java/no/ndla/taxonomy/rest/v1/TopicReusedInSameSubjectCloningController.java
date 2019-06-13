@@ -22,7 +22,7 @@ public class TopicReusedInSameSubjectCloningController {
     @ApiOperation("Fixes reused topic within the same subject by cloning the topic")
     @RequestMapping(value = "/v1/topic/reusefix/{topic}", method = RequestMethod.POST)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public TopicReusedInSameSubjectCloningService.TopicHierarchyFixReport reusefix(@PathVariable("topic") URI topicUri) throws TopicReusedInSameSubjectCloningService.TopicIsNotInConflictException {
+    public TopicReusedInSameSubjectCloningService.TopicCloningContext.TopicHierarchyFixReport reusefix(@PathVariable("topic") URI topicUri) throws TopicReusedInSameSubjectCloningService.TopicIsNotInConflictException {
         return topicReusedInSameSubjectCloningService.copyConflictingTopic(topicUri);
     }
 
