@@ -2,13 +2,20 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.domain.ResolvedPath;
 import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.domain.TopicTranslation;
+import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
+import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
+import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.dtos.topics.*;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.FilterExtractor;
-import no.ndla.taxonomy.rest.v1.extractors.topics.*;
+import no.ndla.taxonomy.rest.v1.extractors.topics.FilterQueryExtractor;
+import no.ndla.taxonomy.rest.v1.extractors.topics.ResourceQueryExtractor;
+import no.ndla.taxonomy.rest.v1.extractors.topics.SubTopicQueryExtractor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,7 +30,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static no.ndla.taxonomy.jdbc.QueryUtils.*;
+import static no.ndla.taxonomy.jdbc.QueryUtils.getQuery;
+import static no.ndla.taxonomy.jdbc.QueryUtils.setQueryParameters;
 
 @RestController
 @RequestMapping(path = {"/v1/topics"})
@@ -34,35 +42,58 @@ public class Topics extends CrudController<Topic> {
     private JdbcTemplate jdbcTemplate;
 
     private static final String TOPIC_TREE_BY_TOPIC_ID = getQuery("topic_tree_by_topic_id");
-    private static final String GET_TOPICS_QUERY = getQuery("get_topics");
-    private static final String GET_TOPICS_WITH_ALL_PATHS_QUERY = getQuery("get_topics_with_all_paths");
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_topic_public_id_recursively");
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_QUERY = getQuery("get_resources_by_topic_public_id");
     private static final String GET_FILTERS_BY_TOPIC_ID_QUERY = getQuery("get_filters_by_topic_public_id");
     private static final String GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY = getQuery("get_filters_by_subject_public_id");
     private static final String GET_SUBTOPICS_BY_TOPIC_ID_QUERY = getQuery("get_subtopics_by_topic_id_query");
     private static final String GET_SUBTOPICS_BY_TOPIC_ID_AND_FILTERS_QUERY = getQuery("get_subtopics_by_topic_id_and_filters_query");
-    private static final String GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_subject_connections_by_topic_id");
-    private static final String GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_subtopic_connections_by_topic_id");
-    private static final String GET_PARENT_TOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_parent_topic_connections_by_topic_id");
     private static final Comparator<ResourceIndexDocument> RESOURCE_BY_RANK = Comparator.comparing(resourceNode -> resourceNode.rank);
     private static final Comparator<TopicNode> TOPIC_BY_RANK = Comparator.comparing(topicNode -> topicNode.rank);
 
-    public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
+    protected TopicRepository repository;
+    private TopicSubtopicRepository topicSubtopicRepository;
+    private SubjectTopicRepository subjectTopicRepository;
+
+    public Topics(TopicRepository topicRepository,
+                  TopicSubtopicRepository topicSubtopicRepository,
+                  SubjectTopicRepository subjectTopicRepository,
+                  JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
         repository = topicRepository;
+        this.topicSubtopicRepository = topicSubtopicRepository;
+        this.subjectTopicRepository = subjectTopicRepository;
     }
 
+    private TopicIndexDocument createTopicIndexDocument(Topic topic, String language) {
+        return new TopicIndexDocument() {{
+            name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
+            id = topic.getPublicId();
+            contentUri = topic.getContentUri();
+            path = topic.getPrimaryResolvedPath().map(ResolvedPath::getPath).orElse(null);
+        }};
+    }
+
+    private TopicWithPathsIndexDocument createTopicWithPathsIndexDocument(Topic topic, String language) {
+        return new TopicWithPathsIndexDocument() {{
+            name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
+            id = topic.getPublicId();
+            contentUri = topic.getContentUri();
+            path = topic.getPrimaryResolvedPath().map(ResolvedPath::getPath).orElse(null);
+            paths = topic.getResolvedPaths().stream().map(ResolvedPath::getPath).collect(Collectors.toList());
+        }};
+    }
 
     @GetMapping
     @ApiOperation("Gets all topics")
     public List<TopicIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
-    ) throws Exception {
-        TopicQueryExtractor extractor = new TopicQueryExtractor();
-        return jdbcTemplate.query(GET_TOPICS_QUERY, setQueryParameters(language), extractor::extractTopics
-        );
+    ) {
+        return repository.findAllIncludingResolvedPathsAndTranslations()
+                .stream()
+                .map(topic -> this.createTopicIndexDocument(topic, language))
+                .collect(Collectors.toList());
     }
 
 
@@ -72,8 +103,9 @@ public class Topics extends CrudController<Topic> {
                                            @ApiParam(value = "ISO-639-1 language code", example = "nb")
                                            @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) {
-        TopicWithAllPathsQueryExtractor extractor = new TopicWithAllPathsQueryExtractor();
-        return jdbcTemplate.query(GET_TOPICS_WITH_ALL_PATHS_QUERY, setQueryParameters(language, id.toString()), extractor::extractTopic);
+        return repository.findFirstByPublicIdIncludingResolvedPathsAndTranslations(id)
+                .map(topic -> this.createTopicWithPathsIndexDocument(topic, language))
+                .orElseThrow(() -> new NotFoundHttpRequestException("Topic was not found"));
     }
 
 
@@ -279,11 +311,26 @@ public class Topics extends CrudController<Topic> {
     @GetMapping("/{id}/connections")
     @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
     public List<ConnectionIndexDocument> getAllConnections(@PathVariable("id") URI id) {
-        List<ConnectionIndexDocument> results = new ArrayList<>();
-        ConnectionQueryExtractor ConnectionQueryExtractor = new ConnectionQueryExtractor();
-        results.addAll(jdbcTemplate.query(GET_PARENT_TOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()), ConnectionQueryExtractor::extractConnections));
-        results.addAll(jdbcTemplate.query(GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()), ConnectionQueryExtractor::extractConnections));
-        results.addAll(jdbcTemplate.query(GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()), ConnectionQueryExtractor::extractConnections));
+        final var results = new ArrayList<ConnectionIndexDocument>();
+
+        topicSubtopicRepository
+                .findAllBySubtopicPublicIdIncludingTopicAndSubtopicAndResolvedPaths(id)
+                .stream()
+                .map(ConnectionIndexDocument::parentConnection)
+                .forEach(results::add);
+
+        subjectTopicRepository
+                .findAllByTopicPublicIdIncludingSubjectAndTopicAndResolvedPaths(id)
+                .stream()
+                .map(ConnectionIndexDocument::new)
+                .forEach(results::add);
+
+        topicSubtopicRepository
+                .findAllByTopicPublicIdIncludingTopicAndSubtopicAndResolvedPaths(id)
+                .stream()
+                .map(ConnectionIndexDocument::subtopicConnection)
+                .forEach(results::add);
+
         return results;
     }
 
@@ -296,5 +343,6 @@ public class Topics extends CrudController<Topic> {
         List<TopicNode> subTopics = new ArrayList<>();
         List<ResourceIndexDocument> resources = new ArrayList<>();
     }
+
 
 }

@@ -3,10 +3,11 @@ package no.ndla.taxonomy.domain;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.net.URI;
 
 @MappedSuperclass
-public class DomainEntity {
+public class DomainEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

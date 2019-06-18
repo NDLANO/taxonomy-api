@@ -73,7 +73,7 @@ public class TopicTranslationsTest extends RestTest {
             name = "Trigonometri";
         }});
 
-        assertEquals("Trigonometri", trigonometry.getTranslation("nb").getName());
+        assertEquals("Trigonometri", trigonometry.getTranslation("nb").get().getName());
     }
 
     @Test

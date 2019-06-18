@@ -55,9 +55,8 @@ public class FilterTranslations {
             @PathVariable("language") String language
     ) throws Exception {
         Filter filter = filterRepository.getByPublicId(id);
-        FilterTranslation translation = filter.getTranslation(language);
-        if (translation == null)
-            throw new NotFoundException("Translation with language code " + language + " for filter", id);
+        FilterTranslation translation = filter.getTranslation(language).orElseThrow(() -> new NotFoundException("Translation with language code " + language + " for filter", id));
+
         return new FilterTranslations.FilterTranslationIndexDocument() {{
             name = translation.getName();
             language = translation.getLanguageCode();
@@ -91,10 +90,10 @@ public class FilterTranslations {
             @PathVariable("language") String language
     ) throws Exception {
         Filter filter = filterRepository.getByPublicId(id);
-        FilterTranslation translation = filter.getTranslation(language);
-        if (translation == null) return;
-        filter.removeTranslation(language);
-        entityManager.remove(translation);
+        filter.getTranslation(language).ifPresent(translation -> {
+            filter.removeTranslation(language);
+            entityManager.remove(translation);
+        });
     }
 
 

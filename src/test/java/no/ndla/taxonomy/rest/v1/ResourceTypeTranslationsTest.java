@@ -70,7 +70,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
             name = "Artikkel";
         }});
 
-        assertEquals("Artikkel", article.getTranslation("nb").getName());
+        assertEquals("Artikkel", article.getTranslation("nb").get().getName());
     }
 
     @Test

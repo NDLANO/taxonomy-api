@@ -1,21 +1,18 @@
 package no.ndla.taxonomy.domain;
 
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.net.URI;
 import java.util.UUID;
 
 @Entity
 public class SubjectTopic extends DomainEntity implements Rankable {
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "subject_id")
     private Subject subject;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
@@ -57,5 +54,17 @@ public class SubjectTopic extends DomainEntity implements Rankable {
 
     public void setRank(int rank) {
         this.rank = rank;
+    }
+
+    @PreUpdate
+    @PreRemove
+    @PrePersist
+    void updateObjectsUpdatedAt() {
+        if (topic != null) {
+            topic.updateUpdatedAt();
+        }
+        if (subject != null) {
+            subject.updateUpdatedAt();
+        }
     }
 }

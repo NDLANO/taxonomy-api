@@ -2,19 +2,22 @@ package no.ndla.taxonomy.domain;
 
 
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.time.Instant;
+import java.util.*;
 
 @Entity
-public class Subject extends DomainObject {
+public class Subject extends DomainObject implements ResolvablePathEntity {
+    @Id
+    private Integer id;
+
+    @UpdateTimestamp
+    private Instant updatedAt;
+
     @Column
     @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI contentUri;
@@ -28,8 +31,65 @@ public class Subject extends DomainObject {
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<Filter> filters = new HashSet<>();
 
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "publicId", referencedColumnName = "publicId", insertable = false, updatable = false)
+    private Set<ResolvedPath> resolvedPaths;
+
+    public Set<ResolvedPath> getResolvedPaths() {
+        return resolvedPaths;
+    }
+
+    public Optional<ResolvedPath> getPrimaryResolvedPath() {
+        return resolvedPaths.stream().filter(ResolvedPath::isPrimary).findFirst();
+    }
+
     public Subject() {
         setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
+    }
+
+    @Override
+    public Integer getId() {
+        return id;
+    }
+
+    @Override
+    public String getType() {
+        return "subject";
+    }
+
+    @Override
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    void updateUpdatedAt() {
+        this.updatedAt = Instant.now();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<GeneratedPath> generatePaths(int iterations) {
+        return Set.of(
+                GeneratedPath.builder()
+                        .setSubPath(this.getPublicId().getSchemeSpecificPart())
+                        .setIsPrimary(true)
+                        .build()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<GeneratedPath> generatePaths() {
+        return generatePaths(0);
+    }
+
+    @Override
+    public Set<ResolvablePathEntity> getChildren() {
+        final var children = new HashSet<ResolvablePathEntity>();
+
+        getTopics().forEachRemaining(children::add);
+
+        return children;
     }
 
     public SubjectTopic addTopic(Topic topic) {
@@ -73,19 +133,20 @@ public class Subject extends DomainObject {
     }
 
     public SubjectTranslation addTranslation(String languageCode) {
-        SubjectTranslation subjectTranslation = getTranslation(languageCode);
-        if (subjectTranslation != null) return subjectTranslation;
+        final var existingSubjectTranslation = getTranslation(languageCode);
+        if (existingSubjectTranslation.isPresent()) {
+            return existingSubjectTranslation.get();
+        }
 
-        subjectTranslation = new SubjectTranslation(this, languageCode);
+        final var subjectTranslation = new SubjectTranslation(this, languageCode);
         translations.add(subjectTranslation);
         return subjectTranslation;
     }
 
-    public SubjectTranslation getTranslation(String languageCode) {
+    public Optional<SubjectTranslation> getTranslation(String languageCode) {
         return translations.stream()
                 .filter(subjectTranslation -> subjectTranslation.getLanguageCode().equals(languageCode))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     public Iterator<SubjectTranslation> getTranslations() {
@@ -93,9 +154,7 @@ public class Subject extends DomainObject {
     }
 
     public void removeTranslation(String languageCode) {
-        SubjectTranslation translation = getTranslation(languageCode);
-        if (translation == null) return;
-        translations.remove(translation);
+        getTranslation(languageCode).ifPresent(translations::remove);
     }
 
     public Subject name(String name) {

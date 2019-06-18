@@ -1,16 +1,23 @@
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.domain.ResolvablePathEntity;
+import no.ndla.taxonomy.domain.ResolvedPath;
 import no.ndla.taxonomy.domain.UrlMapping;
+import no.ndla.taxonomy.repositories.ResolvedPathRepository;
+import no.ndla.taxonomy.repositories.ResourceRepository;
+import no.ndla.taxonomy.repositories.SubjectRepository;
+import no.ndla.taxonomy.repositories.TopicRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
 import java.net.URI;
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.setQueryParameters;
 
 @Service
@@ -22,8 +29,22 @@ public class UrlResolverService {
     private JdbcTemplate jdbcTemplate;
     private OldUrlCanonifier canonifier = new OldUrlCanonifier();
 
+    private final SubjectRepository subjectRepository;
+    private final TopicRepository topicRepository;
+    private final ResourceRepository resourceRepository;
+    private final ResolvedPathRepository resolvedPathRepository;
+
     @Autowired
-    public UrlResolverService(DataSource dataSource) {
+    public UrlResolverService(DataSource dataSource,
+                              SubjectRepository subjectRepository,
+                              TopicRepository topicRepository,
+                              ResourceRepository resourceRepository,
+                              ResolvedPathRepository resolvedPathRepository) {
+        this.topicRepository = topicRepository;
+        this.subjectRepository = subjectRepository;
+        this.resourceRepository = resourceRepository;
+        this.resolvedPathRepository = resolvedPathRepository;
+
         jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
@@ -58,18 +79,16 @@ public class UrlResolverService {
     }
 
     private List<String> getAllPaths(URI public_id) {
-        List<String> allpaths = jdbcTemplate.query("SELECT PATH, IS_PRIMARY FROM CACHED_URL WHERE PUBLIC_ID=?", setQueryParameters(public_id.toString()),
-                (resultSet, rowNum) -> resultSet.getString("path")
-        );
-        return allpaths;
+        return resolvedPathRepository.getAllByPublicId(public_id)
+                .stream()
+                .map(ResolvedPath::getPath)
+                .collect(Collectors.toList());
     }
 
     private String getPrimaryPath(URI public_id) {
-        List<String> primaryPaths = jdbcTemplate.query("SELECT PATH, IS_PRIMARY FROM CACHED_URL WHERE PUBLIC_ID=? AND IS_PRIMARY=TRUE", setQueryParameters(public_id.toString()),
-                (resultSet, rowNum) -> resultSet.getString("path")
-        );
-        if (primaryPaths.isEmpty()) return null;
-        return primaryPaths.get(0);
+        return resolvedPathRepository.getFirstByPublicIdAndIsPrimary(public_id, true)
+                .map(ResolvedPath::getPath)
+                .orElse(null);
     }
 
     private List<UrlMapping> getCachedUrlOldRig(String oldUrl) {
@@ -131,5 +150,16 @@ public class UrlResolverService {
         public NodeIdNotFoundExeption(String message) {
             super(message);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Set<ResolvablePathEntity> getResolvablePathEntitiesFromPublicId(URI publicId) {
+        final var entries = new HashSet<ResolvablePathEntity>();
+
+        entries.addAll(subjectRepository.findAllByPublicIdIncludingResolvedPaths(publicId));
+        entries.addAll(topicRepository.findAllByPublicIdIncludingResolvedPaths(publicId));
+        entries.addAll(resourceRepository.findAllByPublicIdIncludingResolvedPaths(publicId));
+
+        return entries;
     }
 }

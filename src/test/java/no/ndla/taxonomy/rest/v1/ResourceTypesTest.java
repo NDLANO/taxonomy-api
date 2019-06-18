@@ -132,7 +132,7 @@ public class ResourceTypesTest extends RestTest {
         }}));
 
         ResourceType child = resourceTypeRepository.getByPublicId(childId);
-        assertEquals(parent.getPublicId(), child.getParent().getPublicId());
+        assertEquals(parent.getPublicId(), child.getParent().get().getPublicId());
     }
 
     @Test
@@ -163,7 +163,7 @@ public class ResourceTypesTest extends RestTest {
             name = child.getName();
         }});
 
-        assertEquals("video", child.getParent().getName());
+        assertEquals("video", child.getParent().get().getName());
     }
 
     @Test

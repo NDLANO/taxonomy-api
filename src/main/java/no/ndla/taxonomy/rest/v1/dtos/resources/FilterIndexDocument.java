@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.FilterTranslation;
+import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.ResourceFilter;
 
 import java.net.URI;
 import java.util.Objects;
@@ -42,5 +45,26 @@ public class FilterIndexDocument {
     @Override
     public int hashCode() {
         return id.hashCode();
+    }
+
+    public FilterIndexDocument() {
+
+    }
+
+    public FilterIndexDocument(ResourceFilter resourceFilter, String languageCode) {
+        final var filter = resourceFilter.getFilter();
+
+        this.id = filter.getPublicId();
+
+        this.name = filter
+                .getTranslation(languageCode)
+                .map(FilterTranslation::getName)
+                .orElse(filter.getName());
+
+        this.connectionId = resourceFilter.getPublicId();
+        resourceFilter
+                .getRelevance()
+                .map(Relevance::getPublicId)
+                .ifPresent(publicId -> this.relevanceId = publicId);
     }
 }

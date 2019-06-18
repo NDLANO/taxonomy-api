@@ -10,4 +10,4 @@ FROM topic t
        LEFT OUTER JOIN (SELECT * FROM topic_translation WHERE language_code = ?) tr ON s.id = tr.topic_id
 WHERE t.public_id = ?
   AND tf.filter_id in
-      (select id from filter where public_id in (?))
+      (select id from filter where p ublic_id in (?))

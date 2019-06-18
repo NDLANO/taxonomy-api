@@ -34,6 +34,6 @@ from topic_tree
        left outer join filter f on f.id = rf.filter_id
        LEFT OUTER JOIN (select * from resource_translation where language_code = ?) rtr ON rtr.resource_id = r.id
        LEFT OUTER JOIN (SELECT * FROM resource_type_translation WHERE language_code = ?) rttr ON rttr.resource_type_id = rt.id
-       join cached_url url on url.public_id = r.public_id
+       join resolved_path url on url.public_id = r.public_id
 where 1 = 1
   AND 2 = 2;

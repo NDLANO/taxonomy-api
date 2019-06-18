@@ -3,10 +3,7 @@ package no.ndla.taxonomy.domain;
 
 import javax.persistence.*;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 public class Filter extends DomainObject {
@@ -30,10 +27,12 @@ public class Filter extends DomainObject {
 
 
     public FilterTranslation addTranslation(String languageCode) {
-        FilterTranslation filterTranslation = getTranslation(languageCode);
-        if (filterTranslation != null) return filterTranslation;
+        final var existingFilterTranslation = getTranslation(languageCode);
+        if (existingFilterTranslation.isPresent()) {
+            return existingFilterTranslation.get();
+        }
 
-        filterTranslation = new FilterTranslation(this, languageCode);
+        final var filterTranslation = new FilterTranslation(this, languageCode);
         translations.add(filterTranslation);
         return filterTranslation;
     }
@@ -42,18 +41,14 @@ public class Filter extends DomainObject {
         return translations.iterator();
     }
 
-    public FilterTranslation getTranslation(String languageCode) {
+    public Optional<FilterTranslation> getTranslation(String languageCode) {
         return translations.stream()
                 .filter(filterTranslation -> filterTranslation.getLanguageCode().equals(languageCode))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     public void removeTranslation(String language) {
-        FilterTranslation translation = getTranslation(language);
-        if (translation != null) {
-            translations.remove(translation);
-        }
+        getTranslation(language).ifPresent(translations::remove);
     }
 
     public void setSubject(Subject subject) {

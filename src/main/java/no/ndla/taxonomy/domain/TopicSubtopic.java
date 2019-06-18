@@ -1,10 +1,7 @@
 package no.ndla.taxonomy.domain;
 
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.net.URI;
 import java.util.UUID;
 
@@ -56,5 +53,17 @@ public class TopicSubtopic extends DomainEntity implements Rankable{
 
     public void setRank(int rank) {
         this.rank = rank;
+    }
+
+    @PreUpdate
+    @PreRemove
+    @PrePersist
+    void updateObjectsUpdatedAt() {
+        if (topic != null) {
+            topic.updateUpdatedAt();
+        }
+        if (subtopic != null) {
+            subtopic.updateUpdatedAt();
+        }
     }
 }

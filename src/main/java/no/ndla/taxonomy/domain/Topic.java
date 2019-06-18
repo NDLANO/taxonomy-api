@@ -2,19 +2,22 @@ package no.ndla.taxonomy.domain;
 
 
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.time.Instant;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
-public class Topic extends DomainObject {
+public class Topic extends DomainObject implements ResolvablePathEntity {
+    @Id
+    private Integer id;
+
+    @UpdateTimestamp
+    private Instant updatedAt;
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     public Set<SubjectTopic> subjects = new HashSet<>();
@@ -38,11 +41,104 @@ public class Topic extends DomainObject {
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<TopicTranslation> translations = new HashSet<>();
 
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "publicId", referencedColumnName = "publicId", insertable = false, updatable = false)
+    private Set<ResolvedPath> resolvedPaths;
+
+    public Set<ResolvedPath> getResolvedPaths() {
+        return resolvedPaths;
+    }
+
+    public Optional<ResolvedPath> getPrimaryResolvedPath() {
+        return resolvedPaths.stream().filter(ResolvedPath::isPrimary).findFirst();
+    }
+
     @Column
     private boolean context;
 
     public Topic() {
         setPublicId(URI.create("urn:topic:" + UUID.randomUUID()));
+    }
+
+    @Override
+    public Integer getId() {
+        return id;
+    }
+
+    @Override
+    public String getType() {
+        return "topic";
+    }
+
+    @Override
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    void updateUpdatedAt() {
+        this.updatedAt = Instant.now();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<GeneratedPath> generatePaths(int iterations) {
+        final Set<GeneratedPath> generatedPaths = new HashSet<>();
+
+        final int currentIterations = iterations + 1;
+
+        if (currentIterations > 20) {
+            // Probably a looped topic path, in this case return no URLs since this path it will never resolve to anything
+            return Set.of();
+        }
+
+        generatedPaths.addAll(subjects
+                .stream()
+                .flatMap(subjectTopic -> subjectTopic
+                        .getSubject()
+                        .generatePaths(currentIterations)
+                        .stream()
+                        .map(generatedPath ->
+                                GeneratedPath.builder()
+                                        .setParentPath(generatedPath)
+                                        .setIsPrimary(subjectTopic.isPrimary())
+                                        .setSubPath(this.getPublicId().getSchemeSpecificPart())
+                                        .build()
+                        ))
+                .collect(Collectors.toSet()));
+
+        generatedPaths.addAll(parentTopics
+                .stream()
+                .flatMap(topicSubtopic -> topicSubtopic
+                        .getTopic()
+                        .generatePaths(currentIterations)
+                        .stream()
+                        .map(generatedPath ->
+                                GeneratedPath.builder()
+                                        .setParentPath(generatedPath)
+                                        .setIsPrimary(topicSubtopic.isPrimary())
+                                        .setSubPath(this.getPublicId().getSchemeSpecificPart())
+                                        .setParentId(topicSubtopic.getTopic().getPublicId())
+                                        .build()
+                        ))
+                .collect(Collectors.toSet()));
+
+        return generatedPaths;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<GeneratedPath> generatePaths() {
+        return generatePaths(0);
+    }
+
+    @Override
+    public Set<ResolvablePathEntity> getChildren() {
+        final var children = new HashSet<ResolvablePathEntity>();
+
+        getSubtopics().forEachRemaining(children::add);
+        getResources().forEachRemaining(children::add);
+
+        return children;
     }
 
     public Topic name(String name) {
@@ -215,19 +311,21 @@ public class Topic extends DomainObject {
     }
 
     public TopicTranslation addTranslation(String languageCode) {
-        TopicTranslation topicTranslation = getTranslation(languageCode);
-        if (topicTranslation != null) return topicTranslation;
+        final var existingTranslation = getTranslation(languageCode);
 
-        topicTranslation = new TopicTranslation(this, languageCode);
+        if (existingTranslation.isPresent()) {
+            return existingTranslation.get();
+        }
+
+        final var topicTranslation = new TopicTranslation(this, languageCode);
         translations.add(topicTranslation);
         return topicTranslation;
     }
 
-    public TopicTranslation getTranslation(String languageCode) {
+    public Optional<TopicTranslation> getTranslation(String languageCode) {
         return translations.stream()
                 .filter(translation -> translation.getLanguageCode().equals(languageCode))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     public Iterator<TopicTranslation> getTranslations() {
@@ -235,9 +333,7 @@ public class Topic extends DomainObject {
     }
 
     public void removeTranslation(String languageCode) {
-        TopicTranslation translation = getTranslation(languageCode);
-        if (translation == null) return;
-        translations.remove(translation);
+        getTranslation(languageCode).ifPresent(translations::remove);
     }
 
     public void setPrimarySubject(Subject subject) {

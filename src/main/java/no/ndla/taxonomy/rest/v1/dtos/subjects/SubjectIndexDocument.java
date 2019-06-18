@@ -3,6 +3,9 @@ package no.ndla.taxonomy.rest.v1.dtos.subjects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.ResolvedPath;
+import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.domain.SubjectTranslation;
 
 import java.net.URI;
 
@@ -26,4 +29,21 @@ public class SubjectIndexDocument {
     @JsonProperty
     @ApiModelProperty(value = "The path part of the url to this subject.", example = "/subject:1")
     public String path;
+
+    public SubjectIndexDocument() {
+
+    }
+
+    public SubjectIndexDocument(Subject subject, String languageCode) {
+        this.id = subject.getPublicId();
+        this.contentUri = subject.getContentUri();
+        this.name = subject
+                .getTranslation(languageCode)
+                .map(SubjectTranslation::getName)
+                .orElse(subject.getName());
+        this.path = subject
+                .getPrimaryResolvedPath()
+                .map(ResolvedPath::getPath)
+                .orElse(null);
+    }
 }

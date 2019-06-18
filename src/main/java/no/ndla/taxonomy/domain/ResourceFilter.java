@@ -6,6 +6,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import java.net.URI;
+import java.util.Optional;
 import java.util.UUID;
 
 @Entity
@@ -41,8 +42,8 @@ public class ResourceFilter extends DomainEntity {
         return resource;
     }
 
-    public Relevance getRelevance() {
-        return relevance;
+    public Optional<Relevance> getRelevance() {
+        return Optional.ofNullable(relevance);
     }
 
     public void setRelevance(Relevance relevance) {

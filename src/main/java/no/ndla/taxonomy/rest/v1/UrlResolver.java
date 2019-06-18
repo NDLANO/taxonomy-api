@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.NotFoundException;
+import no.ndla.taxonomy.domain.ResolvedPath;
 import no.ndla.taxonomy.rest.BadHttpRequestException;
 import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.service.UrlResolverService;
@@ -21,16 +22,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.net.URI;
 
-import static no.ndla.taxonomy.jdbc.QueryUtils.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @RestController
 @RequestMapping("/v1/url")
 @Transactional
 public class UrlResolver {
-
-    private static final String RESOLVE_URL_QUERY = getQuery("resolve_url");
-
     private JdbcTemplate jdbcTemplate;
     private UrlResolverService urlResolverService;
 
@@ -57,21 +54,23 @@ public class UrlResolver {
     public ResolvedUrl resolve(@RequestParam String path, HttpServletResponse response) throws Exception {
         URI id = getId(path);
 
-        ResolvedUrl returnedResolvedUrl = jdbcTemplate.query(RESOLVE_URL_QUERY, setQueryParameters(id.toString()),
-                resultSet -> {
-                    ResolvedUrl resolvedUrl = new ResolvedUrl();
-                    while (resultSet.next()) {
-                        resolvedUrl.id = getURI(resultSet, "public_id");
-                        resolvedUrl.contentUri = getURI(resultSet, "content_uri");
-                        resolvedUrl.name = resultSet.getString("name");
-                        resolvedUrl.path = getPathMostCloselyMatchingContext(path, resolvedUrl.path, resultSet.getString("resource_path"));
-                        if (resolvedUrl.path.equals(path)) {
-                            return resolvedUrl;
-                        }
-                    }
-                    return resolvedUrl;
+        final var resolvablePathEntities = urlResolverService.getResolvablePathEntitiesFromPublicId(id);
+
+        ResolvedUrl returnedResolvedUrl = new ResolvedUrl();
+        ResolvedUrl resolvedUrl = new ResolvedUrl();
+        if (resolvablePathEntities.size() > 0) {
+            for (final var entity : resolvablePathEntities) {
+                resolvedUrl.id = entity.getPublicId();
+                resolvedUrl.contentUri = entity.getContentUri();
+                resolvedUrl.name = entity.getName();
+                resolvedUrl.path = getPathMostCloselyMatchingContext(path, resolvedUrl.path, entity.getPrimaryResolvedPath().map(ResolvedPath::getPath).orElse(null));
+                if (resolvedUrl.path.equals(path)) {
+                    break;
                 }
-        );
+            }
+            returnedResolvedUrl = resolvedUrl;
+        }
+
         if (isBlank(returnedResolvedUrl.path)) {
             throw new NotFoundException(path);
         }

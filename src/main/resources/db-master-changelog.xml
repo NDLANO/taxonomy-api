@@ -12,4 +12,292 @@
     <include file="db-migrate-changelog-from-flyway.xml" />
     <include file="db-migrate-from-flyway.xml" />
 
+    <changeSet id="20190613 add updated_at to subject and topic and resource" author="Jon-Eirik Pettersen">
+        <addColumn tableName="subject">
+            <column name="updated_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="topic">
+            <column name="updated_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="resource">
+            <column name="updated_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="20190613 create updated_entity table" author="Jon-Eirik Pettersen">
+        <createTable tableName="updated_entity">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="entity_type" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entity_id" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="url_map_updated_at" type="timestamp"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="20190613 create updateable_entity view" author="Jon-Eirik Pettersen">
+        <createView viewName="updateable_entity" replaceIfExists="true">
+            SELECT
+            subject.id AS entity_id, 'subject' AS entity_type, subject.updated_at AS updated_at,
+            updated_entity.id AS updated_entity_id, updated_entity.url_map_updated_at AS url_map_updated_at
+            FROM subject
+            LEFT JOIN updated_entity ON updated_entity.entity_id = subject.id AND updated_entity.entity_type = 'subject'
+
+            UNION
+            SELECT
+            topic.id AS entity_id, 'topic' AS entity_type, topic.updated_at AS updated_at,
+            updated_entity.id AS updated_entity_id, updated_entity.url_map_updated_at AS url_map_updated_at
+            FROM topic
+            LEFT JOIN updated_entity ON updated_entity.entity_id = topic.id AND updated_entity.entity_type = 'topic'
+
+            UNION
+            SELECT
+            resource.id AS entity_id, 'resource' AS entity_type, resource.updated_at AS updated_at,
+            updated_entity.id AS updated_entity_id, updated_entity.url_map_updated_at AS url_map_updated_at
+            FROM resource
+            LEFT JOIN updated_entity ON updated_entity.entity_id = resource.id AND updated_entity.entity_type =
+            'resource'
+        </createView>
+    </changeSet>
+
+    <changeSet id="20190613 create resolved_path table" author="Jon-Eirik Pettersen">
+        <createTable tableName="resolved_path">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="public_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="path" type="varchar(1000)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="unique_resolved_path_path"/>
+            </column>
+            <column name="is_primary" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parent_public_id" type="varchar(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20190613 add updated_entity_id to resolved_path" author="Jon-Eirik Pettersen">
+        <addColumn tableName="resolved_path">
+            <column name="updated_entity_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="20190614 add update column to updated_entity" author="Jon-Eirik Pettersen">
+        <addColumn tableName="updated_entity">
+            <column name="update" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20190614 add update column to updateable_entity view" author="Jon-Eirik Pettersen">
+        <createView viewName="updateable_entity" replaceIfExists="true">
+            SELECT
+            subject.id AS entity_id, 'subject' AS entity_type, subject.updated_at AS updated_at,
+            updated_entity.id AS updated_entity_id, updated_entity.url_map_updated_at AS url_map_updated_at,
+            updated_entity.update AS update
+            FROM subject
+            LEFT JOIN updated_entity ON updated_entity.entity_id = subject.id AND updated_entity.entity_type = 'subject'
+
+            UNION
+            SELECT
+            topic.id AS entity_id, 'topic' AS entity_type, topic.updated_at AS updated_at,
+            updated_entity.id AS updated_entity_id, updated_entity.url_map_updated_at AS url_map_updated_at,
+            updated_entity.update AS update
+            FROM topic
+            LEFT JOIN updated_entity ON updated_entity.entity_id = topic.id AND updated_entity.entity_type = 'topic'
+
+            UNION
+            SELECT
+            resource.id AS entity_id, 'resource' AS entity_type, resource.updated_at AS updated_at,
+            updated_entity.id AS updated_entity_id, updated_entity.url_map_updated_at AS url_map_updated_at,
+            updated_entity.update AS update
+            FROM resource
+            LEFT JOIN updated_entity ON updated_entity.entity_id = resource.id AND updated_entity.entity_type =
+            'resource'
+        </createView>
+    </changeSet>
+    <changeSet id="20190618 remove update triggers and cached_url view" author="Jon-Eirik Pettersen">
+        <sql splitStatements="false" stripComments="false">
+            drop function if exists update_url_cache() cascade;
+        </sql>
+        <sql splitStatements="false" stripComments="false">
+
+            drop trigger if exists refresh_paths on subject;
+
+            drop trigger if exists refresh_paths on topic;
+
+            drop trigger if exists refresh_paths on resource;
+
+            drop trigger if exists refresh_paths on subject_topic;
+
+            drop trigger if exists refresh_paths on topic_subtopic;
+
+            drop trigger if exists refresh_paths on topic_resource;
+        </sql>
+
+        <sql>
+            DROP MATERIALIZED VIEW IF EXISTS cached_url;
+        </sql>
+
+        <rollback>
+            <sql>
+                CREATE MATERIALIZED VIEW cached_url as (
+                WITH RECURSIVE tree (id, public_id, name, parent_public_id, level, is_primary, path) AS (
+                SELECT
+                contexts.id,
+                contexts.public_id,
+                contexts.name,
+                cast(NULL AS VARCHAR) AS parent_public_id,
+                0 AS level,
+                TRUE AS is_primary,
+                '/' || substr(contexts.public_id, 5) AS path
+                FROM
+                (
+                SELECT
+                id,
+                public_id,
+                name
+                FROM subject
+
+                UNION ALL
+
+                SELECT
+                id,
+                public_id,
+                name
+                FROM topic
+                WHERE context = TRUE
+                ) contexts
+
+                UNION ALL
+
+                SELECT
+                child.id,
+                child.public_id,
+                child.name,
+                parent.public_id AS parent_public_id,
+                parent.level + 1 AS level,
+                child.is_primary AND parent.is_primary AS is_primary,
+                parent.path || '/' || substr(child.public_id, 5)
+                FROM
+                (
+                SELECT
+                r.id,
+                r.public_id,
+                t.public_id AS parent_public_id,
+                r.name,
+                tr.is_primary AS is_primary
+                FROM
+                resource r
+                INNER JOIN topic_resource tr ON tr.resource_id = r.id
+                INNER JOIN topic t ON tr.topic_id = t.id
+
+                UNION ALL
+
+                SELECT
+                st.id,
+                st.public_id,
+                t.public_id AS parent_public_id,
+                st.name,
+                tst.is_primary AS is_primary
+                FROM topic t
+                INNER JOIN topic_subtopic tst ON t.id = tst.topic_id
+                INNER JOIN topic st ON tst.subtopic_id = st.id
+
+                UNION ALL
+
+                SELECT
+                t.id,
+                t.public_id,
+                s.public_id AS parent_public_id,
+                t.name,
+                st.is_primary AS is_primary
+                FROM
+                subject s
+                INNER JOIN subject_topic st ON s.id = st.subject_id
+                INNER JOIN topic t ON st.topic_id = t.id
+                ) child
+                INNER JOIN tree AS parent ON parent.public_id = child.parent_public_id
+                WHERE 1 = 1
+                )
+
+                SELECT
+                id,
+                public_id,
+                path,
+                is_primary,
+                parent_public_id
+                FROM
+                tree t
+                );
+            </sql>
+
+            <sql splitStatements="false" stripComments="false">
+                drop function if exists update_url_cache() cascade;
+            </sql>
+            <sql splitStatements="false" stripComments="false">
+                CREATE OR REPLACE FUNCTION update_url_cache()
+                RETURNS trigger LANGUAGE plpgsql
+                AS
+                $function$
+                begin
+                REFRESH MATERIALIZED VIEW CONCURRENTLY cached_url;
+                RETURN NULL;
+                end;
+                $function$
+            </sql>
+            <sql splitStatements="false" stripComments="false">
+
+                create trigger refresh_paths
+                after insert or update or delete or truncate
+                on subject
+                execute procedure update_url_cache();
+
+                create trigger refresh_paths
+                after insert or update or delete or truncate
+                on topic
+                execute procedure update_url_cache();
+
+                create trigger refresh_paths
+                after insert or update or delete or truncate
+                on resource
+                execute procedure update_url_cache();
+
+                create trigger refresh_paths
+                after insert or update or delete or truncate
+                on subject_topic
+                execute procedure update_url_cache();
+
+                create trigger refresh_paths
+                after insert or update or delete or truncate
+                on topic_subtopic
+                execute procedure update_url_cache();
+
+                create trigger refresh_paths
+                after insert or update or delete or truncate
+                on topic_resource
+                execute procedure update_url_cache();
+            </sql>
+        </rollback>
+    </changeSet>
+    <changeSet id="20190618 rename updated_entity to resolved_path_entity" author="Jon-Eirik Pettersen">
+        <renameTable oldTableName="updated_entity" newTableName="resolved_path_entity"/>
+    </changeSet>
+    <changeSet id="20190618 rename updateable_entity to resolvable_path_entity_view" author="Jon-Eirik Pettersen">
+        <renameView oldViewName="updateable_entity" newViewName="resolvable_path_entity"/>
+    </changeSet>
 </databaseChangeLog>

@@ -82,7 +82,7 @@ public class FilterTranslationsTest extends RestTest {
             name = "Tømrar";
         }});
 
-        assertEquals("Tømrar", filter.getTranslation("nn").getName());
+        assertEquals("Tømrar", filter.getTranslation("nn").get().getName());
     }
 
     @Test

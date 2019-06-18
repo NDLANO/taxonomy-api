@@ -55,9 +55,8 @@ public class ResourceTypeTranslations {
             @PathVariable("language") String language
     ) throws Exception {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
-        ResourceTypeTranslation translation = resourceType.getTranslation(language);
-        if (translation == null)
-            throw new NotFoundException("translation with language code " + language + " for resource type", id);
+        ResourceTypeTranslation translation = resourceType.getTranslation(language).orElseThrow(() -> new NotFoundException("translation with language code " + language + " for resource type", id));
+
         return new ResourceTypeTranslations.ResourceTypeTranslationIndexDocument() {{
             name = translation.getName();
             language = translation.getLanguageCode();
@@ -91,10 +90,10 @@ public class ResourceTypeTranslations {
             @PathVariable("language") String language
     ) throws Exception {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
-        ResourceTypeTranslation translation = resourceType.getTranslation(language);
-        if (translation == null) return;
-        resourceType.removeTranslation(language);
-        entityManager.remove(translation);
+        resourceType.getTranslation(language).ifPresent((translation) -> {
+            resourceType.removeTranslation(language);
+            entityManager.remove(translation);
+        });
     }
 
     public static class ResourceTypeTranslationIndexDocument {

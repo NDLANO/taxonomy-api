@@ -57,7 +57,7 @@ FROM
        LEFT OUTER JOIN topic_filter tf ON tf.topic_id = t.id
        LEFT OUTER JOIN filter f ON tf.filter_id = f.id
        LEFT OUTER JOIN relevance rel ON tf.relevance_id = rel.id
-       LEFT OUTER JOIN cached_url url ON url.public_id = t.public_id
+       LEFT OUTER JOIN resolved_path url ON url.public_id = t.public_id
 WHERE
     1 = 1
 ORDER BY t.level, t.rank

@@ -1,19 +1,22 @@
 package no.ndla.taxonomy.domain;
 
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.time.Instant;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
-public class Resource extends DomainObject {
+public class Resource extends DomainObject implements ResolvablePathEntity {
+    @Id
+    private Integer id;
+
+    @UpdateTimestamp
+    private Instant updatedAt;
 
     @Column
     @Type(type = "no.ndla.taxonomy.hibernate.UriType")
@@ -31,8 +34,70 @@ public class Resource extends DomainObject {
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     public Set<ResourceFilter> filters = new HashSet<>();
 
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "publicId", referencedColumnName = "publicId", insertable = false, updatable = false)
+    private Set<ResolvedPath> resolvedPaths;
+
+    public Set<ResolvedPath> getResolvedPaths() {
+        return resolvedPaths;
+    }
+
+    public Optional<ResolvedPath> getPrimaryResolvedPath() {
+        return resolvedPaths.stream().filter(ResolvedPath::isPrimary).findFirst();
+    }
+
     public Resource() {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
+    }
+
+    @Override
+    public Integer getId() {
+        return id;
+    }
+
+    @Override
+    public String getType() {
+        return "resource";
+    }
+
+    @Override
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    void updateUpdatedAt() {
+        this.updatedAt = Instant.now();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<GeneratedPath> generatePaths(final int iterations) {
+        return topics
+                .stream()
+                .flatMap(topicResource -> topicResource.getTopic()
+                        .generatePaths(iterations + 1)
+                        .stream()
+                        .map(generatedPath ->
+                                GeneratedPath.builder()
+                                        .setParentPath(generatedPath)
+                                        .setIsPrimary(topicResource.isPrimary())
+                                        .setSubPath(this.getPublicId().getSchemeSpecificPart())
+                                        .setParentId(topicResource.getTopic().getPublicId())
+                                        .build()
+                        )
+                )
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<GeneratedPath> generatePaths() {
+        return generatePaths(0);
+    }
+
+    @Override
+    public Set<ResolvablePathEntity> getChildren() {
+        return Set.of();
     }
 
     public Resource name(String name) {
@@ -70,6 +135,18 @@ public class Resource extends DomainObject {
         };
     }
 
+    public Set<ResourceResourceType> getResourceResourceTypes() {
+        return resourceResourceTypes;
+    }
+
+    public Set<ResourceFilter> getResourceFilters() {
+        return this.filters;
+    }
+
+    public Set<TopicResource> getTopicResources() {
+        return this.topics;
+    }
+
     public ResourceResourceType addResourceType(ResourceType resourceType) {
         Iterator<ResourceType> resourceTypes = getResourceTypes();
         while (resourceTypes.hasNext()) {
@@ -94,19 +171,20 @@ public class Resource extends DomainObject {
 
 
     public ResourceTranslation addTranslation(String languageCode) {
-        ResourceTranslation resourceTranslation = getTranslation(languageCode);
-        if (resourceTranslation != null) return resourceTranslation;
+        final var existingTranslation = getTranslation(languageCode);
+        if (existingTranslation.isPresent()) {
+            return existingTranslation.get();
+        }
 
-        resourceTranslation = new ResourceTranslation(this, languageCode);
+        final var resourceTranslation = new ResourceTranslation(this, languageCode);
         resourceTranslations.add(resourceTranslation);
         return resourceTranslation;
     }
 
-    public ResourceTranslation getTranslation(String languageCode) {
+    public Optional<ResourceTranslation> getTranslation(String languageCode) {
         return resourceTranslations.stream()
                 .filter(resourceTranslation -> resourceTranslation.getLanguageCode().equals(languageCode))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     public Iterator<ResourceTranslation> getTranslations() {
@@ -114,9 +192,7 @@ public class Resource extends DomainObject {
     }
 
     public void removeTranslation(String languageCode) {
-        ResourceTranslation translation = getTranslation(languageCode);
-        if (translation == null) return;
-        resourceTranslations.remove(translation);
+        getTranslation(languageCode).ifPresent(resourceTranslations::remove);
     }
 
     public Topic getPrimaryTopic() {

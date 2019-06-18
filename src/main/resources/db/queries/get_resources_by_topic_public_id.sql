@@ -19,16 +19,12 @@ FROM
   INNER JOIN resource r ON r.id = tr.resource_id
   LEFT OUTER JOIN resource_resource_type rrt ON rrt.resource_id = r.id
   LEFT OUTER JOIN resource_type rt ON rrt.resource_type_id = rt.id
-  LEFT OUTER JOIN (SELECT *
-                   FROM resource_translation
-                   WHERE language_code = ?) rtr ON rtr.resource_id = r.id
-  LEFT OUTER JOIN (SELECT *
-                   FROM resource_type_translation
-                   WHERE language_code = ?) rttr ON rttr.resource_type_id = rt.id
+  LEFT OUTER JOIN resource_translation rtr ON rtr.resource_id = r.id AND language_code = ?
+  LEFT OUTER JOIN resource_type_translation rttr ON rttr.resource_type_id = rt.id AND language_code = ?
   LEFT OUTER JOIN resource_filter rf ON rf.resource_id = r.id
   LEFT OUTER JOIN filter f ON rf.filter_id = f.id
   LEFT OUTER JOIN relevance rel ON rf.relevance_id = rel.id
-  LEFT OUTER JOIN cached_url url ON url.public_id = r.public_id
+  LEFT OUTER JOIN resolved_path url ON url.public_id = r.public_id
 WHERE
   t.public_id = ?
   AND 1 = 1
