@@ -29,6 +29,9 @@ public class Topic extends DomainObject {
     public Set<TopicResource> resources = new HashSet<>();
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
+    public Set<TopicResourceType> topicResourceTypes = new HashSet<>();
+
+    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     public Set<TopicFilter> filters = new HashSet<>();
 
     @Column
@@ -312,6 +315,27 @@ public class Topic extends DomainObject {
     private TopicFilter getFilter(Filter filter) {
         for (TopicFilter rf : filters) {
             if (rf.getFilter().equals(filter)) return rf;
+        }
+        return null;
+    }
+
+    public TopicResourceType addResourceType(ResourceType resourceType) {
+        TopicResourceType topicResourceType = new TopicResourceType(this, resourceType);
+        topicResourceTypes.add(topicResourceType);
+        return topicResourceType;
+    }
+
+    public void removeResourceType(ResourceType resourceType) {
+        TopicResourceType topicResourceType = getResourceType(resourceType);
+        if (topicResourceType == null) {
+            throw new ChildNotFoundException("Topic with id " + this.getPublicId() + " is not of type " + resourceType.getPublicId());
+        }
+        topicResourceTypes.remove(topicResourceType);
+    }
+
+    private TopicResourceType getResourceType(ResourceType resourceType) {
+        for (TopicResourceType topicResourceType : topicResourceTypes) {
+            if (topicResourceType.getResourceType().equals(resourceType)) return topicResourceType;
         }
         return null;
     }
