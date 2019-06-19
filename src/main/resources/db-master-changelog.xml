@@ -12,4 +12,13 @@
     <include file="db-migrate-changelog-from-flyway.xml" />
     <include file="db-migrate-from-flyway.xml" />
 
+    <changeSet id="20190614 topic_resource_types" author="janespen">
+        <createTable tableName="topic_resource_type">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="topic_resource_type_public_id" /></column>
+            <column name="topic_id" type="integer"><constraints referencedTableName="topic" referencedColumnNames="id" foreignKeyName="resource_type_topic_id_fkey"/></column>
+            <column name="resource_type_id" type="integer"><constraints referencedTableName="resource_type" referencedColumnNames="id" foreignKeyName="topic_resource_type_id_fkey"/></column>
+        </createTable>
+        <addUniqueConstraint tableName="topic_resource_type" columnNames="topic_id,resource_type_id" constraintName="topic_resource_type_unique" />
+    </changeSet>
 </databaseChangeLog>
