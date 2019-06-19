@@ -2,13 +2,20 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.domain.ResourceType;
+import no.ndla.taxonomy.domain.ResourceTypeTranslation;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.repositories.TopicRepository;
+import no.ndla.taxonomy.rest.BadHttpRequestException;
+import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.dtos.topics.*;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.FilterExtractor;
 import no.ndla.taxonomy.rest.v1.extractors.topics.*;
+import no.ndla.taxonomy.service.TopicResourceTypeService;
+import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
+import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -33,6 +40,8 @@ public class Topics extends CrudController<Topic> {
 
     private JdbcTemplate jdbcTemplate;
 
+    private TopicResourceTypeService topicResourceTypeService;
+
     private static final String TOPIC_TREE_BY_TOPIC_ID = getQuery("topic_tree_by_topic_id");
     private static final String GET_TOPICS_QUERY = getQuery("get_topics");
     private static final String GET_TOPICS_WITH_ALL_PATHS_QUERY = getQuery("get_topics_with_all_paths");
@@ -48,8 +57,9 @@ public class Topics extends CrudController<Topic> {
     private static final Comparator<ResourceIndexDocument> RESOURCE_BY_RANK = Comparator.comparing(resourceNode -> resourceNode.rank);
     private static final Comparator<TopicNode> TOPIC_BY_RANK = Comparator.comparing(topicNode -> topicNode.rank);
 
-    public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate) {
+    public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate, TopicResourceTypeService topicResourceTypeService) {
         this.jdbcTemplate = jdbcTemplate;
+        this.topicResourceTypeService = topicResourceTypeService;
         repository = topicRepository;
     }
 
@@ -221,6 +231,35 @@ public class Topics extends CrudController<Topic> {
         return nodeMap;
     }
 
+
+    @GetMapping("/{id}/resource-types")
+    @ApiOperation(value = "Gets all resource types associated with this resource")
+    public List<no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument> getResourceTypes(
+            @PathVariable("id")
+                    URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language
+    ) {
+        try {
+            return topicResourceTypeService.getTopicResourceTypes(id)
+                    .stream()
+                    .map(topicResourceType -> new no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument() {{
+                        ResourceType resourceType = topicResourceType.getResourceType();
+                        id = resourceType.getPublicId();
+                        ResourceType parent = resourceType.getParent();
+                        parentId = parent != null ? parent.getPublicId() : null;
+                        connectionId = topicResourceType.getPublicId();
+                        ResourceTypeTranslation translation = language != null ? resourceType.getTranslation(language) : null;
+                        name = translation != null ? translation.getName() : resourceType.getName();
+                    }})
+                    .collect(Collectors.toList());
+        } catch (InvalidArgumentServiceException e) {
+            throw new BadHttpRequestException(e.getMessage());
+        } catch (NotFoundServiceException e) {
+            throw new NotFoundHttpRequestException(e.getMessage());
+        }
+    }
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters associated with this topic")
