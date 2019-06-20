@@ -3,10 +3,7 @@ package no.ndla.taxonomy.domain;
 
 import org.hibernate.annotations.Type;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -346,6 +343,22 @@ public class Topic extends DomainObject {
 
     public boolean isContext() {
         return context;
+    }
+
+    @PreRemove
+    void preRemove() {
+        for (TopicSubtopic edge : parentTopics.toArray(new TopicSubtopic[]{})) {
+            edge.getTopic().removeSubtopic(this);
+        }
+        for (TopicSubtopic edge : subtopics.toArray(new TopicSubtopic[]{})) {
+            this.removeSubtopic(edge.getSubtopic());
+        }
+        for (SubjectTopic edge : subjects.toArray(new SubjectTopic[]{})) {
+            edge.getSubject().removeTopic(this);
+        }
+        for (TopicResource edge : resources.toArray(new TopicResource[]{})) {
+            this.removeResource(edge.getResource());
+        }
     }
 
 }

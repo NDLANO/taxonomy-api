@@ -2,10 +2,7 @@ package no.ndla.taxonomy.domain;
 
 import org.hibernate.annotations.Type;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -186,5 +183,12 @@ public class Resource extends DomainObject {
             if (rf.getFilter().equals(filter)) return rf;
         }
         return null;
+    }
+
+    @PreRemove
+    void preRemove() {
+        for (TopicResource edge : topics.toArray(new TopicResource[]{})) {
+            edge.getTopic().removeResource(this);
+        }
     }
 }

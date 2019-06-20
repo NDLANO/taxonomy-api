@@ -63,4 +63,14 @@ public class Filter extends DomainObject {
     public Subject getSubject() {
         return this.subject;
     }
+
+    @PreRemove
+    void preRemove() {
+        for (ResourceFilter edge : resources.toArray(new ResourceFilter[]{})) {
+            edge.getResource().removeFilter(this);
+        }
+        for (TopicFilter edge : topics.toArray(new TopicFilter[]{})) {
+            edge.getTopic().removeFilter(this);
+        }
+    }
 }

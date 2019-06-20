@@ -3,10 +3,7 @@ package no.ndla.taxonomy.domain;
 
 import org.hibernate.annotations.Type;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -126,5 +123,14 @@ public class Subject extends DomainObject {
             if (subjectTopic.getTopic().getPublicId().equals(topic.getPublicId())) return subjectTopic;
         }
         return null;
+    }
+
+    @PreRemove
+    void preRemove() {
+        final SubjectTopic[] topics = this.topics.toArray(new SubjectTopic[]{});
+        for (SubjectTopic topicSubtopic : topics) {
+            Topic topic = topicSubtopic.getTopic();
+            this.removeTopic(topic);
+        }
     }
 }
