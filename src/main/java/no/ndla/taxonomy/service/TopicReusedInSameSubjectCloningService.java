@@ -233,7 +233,7 @@ public class TopicReusedInSameSubjectCloningService {
                 /* translations */
                 topic.getTranslations().forEachRemaining(translation -> clonedTopic.addTranslation(translation.getLanguageCode()).setName(translation.getName()));
                 /* resource types */
-                topic.topicResourceTypes.forEach(topicResourceType -> clonedTopic.addResourceType(topicResourceType.getResourceType()));
+                topic.getTopicResourceTypes().forEach(topicResourceType -> clonedTopic.addResourceType(topicResourceType.getResourceType()));
 
                 clonedTopic = topicRepository.save(clonedTopic);
 
