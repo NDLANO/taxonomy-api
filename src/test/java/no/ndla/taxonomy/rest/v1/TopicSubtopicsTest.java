@@ -37,7 +37,7 @@ public class TopicSubtopicsTest extends RestTest {
         assertEquals(1, count(calculus.getSubtopics()));
         assertAnyTrue(calculus.getSubtopics(), t -> "integration".equals(t.getName()));
         assertNotNull(topicSubtopicRepository.getByPublicId(id));
-        assertTrue(calculus.subtopics.iterator().next().isPrimary());
+        assertTrue(calculus.getChildrenTopicSubtopics().iterator().next().isPrimary());
     }
 
     @Test
@@ -58,7 +58,7 @@ public class TopicSubtopicsTest extends RestTest {
         assertEquals(1, count(calculus.getSubtopics()));
         assertAnyTrue(calculus.getSubtopics(), t -> "integration".equals(t.getName()));
         assertNotNull(topicSubtopicRepository.getByPublicId(id));
-        assertFalse(calculus.subtopics.iterator().next().isPrimary());
+        assertFalse(calculus.getChildrenTopicSubtopics().iterator().next().isPrimary());
     }
 
     @Test
@@ -183,7 +183,7 @@ public class TopicSubtopicsTest extends RestTest {
             primary = true;
         }});
 
-        subtopic.parentTopics.forEach(topicResource -> {
+        subtopic.getParentTopicSubtopics().forEach(topicResource -> {
             Topic topic = topicResource.getTopic();
             if (topic.equals(newPrimary)) assertTrue(topicResource.isPrimary());
             else assertFalse(topicResource.isPrimary());
@@ -210,13 +210,13 @@ public class TopicSubtopicsTest extends RestTest {
             primary = true;
         }});
 
-        TopicSubtopic topicSubtopic = oldprimary.subtopics.iterator().next();
+        TopicSubtopic topicSubtopic = oldprimary.getChildrenTopicSubtopics().iterator().next();
 
         updateResource("/v1/topic-subtopics/" + topicSubtopic.getPublicId().toString(), new TopicSubtopics.AddSubtopicToTopicCommand() {{
             primary = true;
         }});
 
-        subtopic.parentTopics.forEach(topicResource -> {
+        subtopic.getParentTopicSubtopics().forEach(topicResource -> {
             Topic topic = topicResource.getTopic();
             if (topic.equals(oldprimary)) assertTrue(topicResource.isPrimary());
             else assertFalse(topicResource.isPrimary());

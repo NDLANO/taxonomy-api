@@ -13,6 +13,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
+import static junit.framework.TestCase.assertNotNull;
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -42,9 +43,9 @@ public class TopicFiltersTest extends RestTest {
                 }})
         );
 
-        assertEquals(1, topic.filters.size());
-        assertEquals(first(topic.filters).getPublicId(), id);
-        assertEquals("urn:relevance:core", first(topic.filters).getRelevance().getPublicId().toString());
+        assertEquals(1, topic.getTopicFilters().size());
+        assertEquals(first(topic.getTopicFilters()).getPublicId(), id);
+        assertEquals("urn:relevance:core", first(topic.getTopicFilters()).getRelevance().getPublicId().toString());
     }
 
     @Test
@@ -80,11 +81,15 @@ public class TopicFiltersTest extends RestTest {
 
     @Test
     public void can_remove_filter_from_topic() throws Exception {
-        Topic topic = builder.topic(t -> t
-                .publicId("urn:topic:1"));
+        URI id;
+        {
+            Topic topic = builder.topic(t -> t
+                    .publicId("urn:topic:1"));
 
-        URI id = save(topic.addFilter(vg1, core)).getPublicId();
+            id = save(topic.addFilter(vg1, core)).getPublicId();
+        }
 
+        assertNotNull(topicFilterRepository.findByPublicId(id));
         deleteResource("/v1/topic-filters/" + id);
         assertNull(topicFilterRepository.findByPublicId(id));
     }
@@ -98,7 +103,7 @@ public class TopicFiltersTest extends RestTest {
             relevanceId = supplementary.getPublicId();
         }});
 
-        assertEquals("urn:relevance:supplementary", first(topic.filters).getRelevance().getPublicId().toString());
+        assertEquals("urn:relevance:supplementary", first(topic.getTopicFilters()).getRelevance().getPublicId().toString());
     }
 
     @Test

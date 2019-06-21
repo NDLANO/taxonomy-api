@@ -2,14 +2,12 @@ package no.ndla.taxonomy.domain;
 
 import org.hibernate.annotations.Type;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.net.URI;
 
 @Entity
 @Table(name = "cached_url")
+@Cacheable(false)
 public class CachedUrl {
 
     public CachedUrl() {
@@ -21,7 +19,6 @@ public class CachedUrl {
         this.primary = primary;
     }
 
-    @Id
     @Column
     private int id;
 
@@ -29,6 +26,7 @@ public class CachedUrl {
     @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI publicId;
 
+    @Id
     @Column
     private String path;
 

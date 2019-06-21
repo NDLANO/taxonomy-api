@@ -12,8 +12,10 @@ import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.TopicIndexDocument;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 
+import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,6 +26,8 @@ import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TopicsTest extends RestTest {
+    @Autowired
+    EntityManager entityManager;
 
     @Test
     public void can_get_single_topic() throws Exception {
@@ -35,7 +39,6 @@ public class TopicsTest extends RestTest {
                         .publicId("urn:topic:1")
                 ));
 
-
         MockHttpServletResponse response = getResource("/v1/topics/" + "urn:topic:1");
         TopicIndexDocument topic = getObject(TopicIndexDocument.class, response);
 
@@ -46,16 +49,23 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void primary_url_is_returned_when_getting_single_topic() throws Exception {
-        builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .topic("topic", t -> t.publicId("urn:topic:1"))
-        );
+        {
+            builder.subject(s -> s
+                    .publicId("urn:subject:1")
+                    .topic("topic", t -> t.publicId("urn:topic:1"))
+            );
 
-        Subject primary = builder.subject(s -> s
-                .publicId("urn:subject:2")
-                .topic("topic")
-        );
-        builder.topic("topic").setPrimarySubject(primary);
+            Subject primary = builder.subject(s -> s
+                    .publicId("urn:subject:2")
+                    .topic("topic")
+            );
+
+            var topic = builder.topic("topic");
+            topic.setPrimarySubject(primary);
+            entityManager.flush();
+            entityManager.refresh(topic);
+        }
+
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1");
         TopicIndexDocument topic = getObject(TopicIndexDocument.class, response);
@@ -326,7 +336,7 @@ public class TopicsTest extends RestTest {
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources");
         ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
-        assertEquals(first(topic.resources).getPublicId(), result[0].connectionId);
+        assertEquals(first(topic.getTopicResources()).getPublicId(), result[0].connectionId);
     }
 
     @Test
@@ -345,8 +355,8 @@ public class TopicsTest extends RestTest {
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?recursive=true");
         ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
 
-        assertEquals(first(builder.topic("topic").resources).getPublicId(), result[0].connectionId);
-        assertEquals(first(builder.topic("subtopic").resources).getPublicId(), result[1].connectionId);
+        assertEquals(first(builder.topic("topic").getTopicResources()).getPublicId(), result[0].connectionId);
+        assertEquals(first(builder.topic("subtopic").getTopicResources()).getPublicId(), result[1].connectionId);
     }
 
     @Test

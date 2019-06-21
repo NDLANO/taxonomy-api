@@ -4,29 +4,26 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
-public class Resource extends DomainObject {
+public class Resource extends CachedUrlEntity {
 
     @Column
     @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI contentUri;
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
+    private Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceTranslation> resourceTranslations = new HashSet<>();
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<TopicResource> topics = new HashSet<>();
+    private Set<TopicResource> topics = new HashSet<>();
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<ResourceFilter> filters = new HashSet<>();
+    private Set<ResourceFilter> filters = new HashSet<>();
 
     public Resource() {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
@@ -91,7 +88,7 @@ public class Resource extends DomainObject {
 
 
     public ResourceTranslation addTranslation(String languageCode) {
-        ResourceTranslation resourceTranslation = getTranslation(languageCode);
+        ResourceTranslation resourceTranslation = getTranslation(languageCode).orElse(null);
         if (resourceTranslation != null) return resourceTranslation;
 
         resourceTranslation = new ResourceTranslation(this, languageCode);
@@ -99,11 +96,10 @@ public class Resource extends DomainObject {
         return resourceTranslation;
     }
 
-    public ResourceTranslation getTranslation(String languageCode) {
+    public Optional<ResourceTranslation> getTranslation(String languageCode) {
         return resourceTranslations.stream()
                 .filter(resourceTranslation -> resourceTranslation.getLanguageCode().equals(languageCode))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     public Iterator<ResourceTranslation> getTranslations() {
@@ -111,9 +107,7 @@ public class Resource extends DomainObject {
     }
 
     public void removeTranslation(String languageCode) {
-        ResourceTranslation translation = getTranslation(languageCode);
-        if (translation == null) return;
-        resourceTranslations.remove(translation);
+        getTranslation(languageCode).ifPresent(resourceTranslations::remove);
     }
 
     public Topic getPrimaryTopic() {
@@ -165,8 +159,8 @@ public class Resource extends DomainObject {
     }
 
     public ResourceFilter addFilter(Filter filter, Relevance relevance) {
-        ResourceFilter resourceFilter = new ResourceFilter(this, filter, relevance);
-        filters.add(resourceFilter);
+        final var resourceFilter = new ResourceFilter(this, filter, relevance);
+        addResourceFilter(resourceFilter);
         return resourceFilter;
     }
 
@@ -175,7 +169,8 @@ public class Resource extends DomainObject {
         if (filter == null) {
             throw new ChildNotFoundException("Resource with id " + this.getPublicId() + " does not have resource-filter " + resourceFilter.getPublicId());
         }
-        filters.remove(resourceFilter);
+
+        removeResourceFilter(resourceFilter);
     }
 
     private ResourceFilter getFilter(Filter filter) {
@@ -187,8 +182,48 @@ public class Resource extends DomainObject {
 
     @PreRemove
     void preRemove() {
-        for (TopicResource edge : topics.toArray(new TopicResource[]{})) {
-            edge.getTopic().removeResource(this);
+        for (var topicResource : this.getTopicResources().toArray()) {
+            this.removeTopicResource((TopicResource) topicResource);
+        }
+
+        for (var resourceFilter : this.getResourceFilters().toArray()) {
+            this.removeResourceFilter((ResourceFilter) resourceFilter);
+        }
+    }
+
+    public Set<ResourceResourceType> getResourceResourceTypes() {
+        return this.resourceResourceTypes;
+    }
+
+    public Set<ResourceFilter> getResourceFilters() {
+        return this.filters;
+    }
+
+    public Set<TopicResource> getTopicResources() {
+        return this.topics;
+    }
+
+    public void removeTopicResource(TopicResource topicResource) {
+        this.topics.remove(topicResource);
+
+        if (topicResource.getResource() == this) {
+            topicResource.setResource(null);
+        }
+    }
+
+    public void addResourceFilter(ResourceFilter resourceFilter) {
+        this.filters.add(resourceFilter);
+
+        if (resourceFilter.getResource() != this) {
+            resourceFilter.setResource(this);
+        }
+    }
+
+    public void removeResourceFilter(ResourceFilter resourceFilter) {
+        this.filters.remove(resourceFilter);
+
+        if (resourceFilter.getResource() == this) {
+            resourceFilter.setResource(null);
         }
     }
 }

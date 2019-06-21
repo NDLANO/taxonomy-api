@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.ResourceType;
+import no.ndla.taxonomy.domain.ResourceTypeTranslation;
 
 import java.net.URI;
 
@@ -30,5 +32,17 @@ public class ResourceTypeIndexDocument {
     @JsonIgnore
     public int hashCode() {
         return id.hashCode();
+    }
+
+    public ResourceTypeIndexDocument() {
+
+    }
+
+    public ResourceTypeIndexDocument(ResourceType resourceType, String languageCode) {
+        this.id = resourceType.getPublicId();
+        this.name = resourceType
+                .getTranslation(languageCode)
+                .map(ResourceTypeTranslation::getName)
+                .orElse(resourceType.getName());
     }
 }

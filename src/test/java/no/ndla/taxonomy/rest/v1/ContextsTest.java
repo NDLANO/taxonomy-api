@@ -108,6 +108,10 @@ public class ContextsTest extends RestTest {
 
         topic.setPrimarySubject(subject);
         topic.setContext(true);
+        topicRepository.saveAndFlush(topic);
+
+        entityManager.refresh(topic);
+        entityManager.refresh(subject);
 
         MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1");
         TopicWithPathsIndexDocument topicIndexDocument = getObject(TopicWithPathsIndexDocument.class, response);

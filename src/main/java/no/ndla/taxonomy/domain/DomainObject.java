@@ -5,7 +5,6 @@ import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public abstract class DomainObject extends DomainEntity {
-
     @Column
     private String name;
 
@@ -16,5 +15,4 @@ public abstract class DomainObject extends DomainEntity {
     public void setName(String name) {
         this.name = name;
     }
-
 }

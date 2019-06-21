@@ -260,7 +260,7 @@ public class SubjectTopicsTest extends RestTest {
             primary = true;
         }});
 
-        topic.subjects.forEach(subjectTopic -> {
+        topic.getSubjectTopics().forEach(subjectTopic -> {
             if (subjectTopic.getSubject().equals(newPrimary)) assertTrue(subjectTopic.isPrimary());
             else assertFalse(subjectTopic.isPrimary());
         });
@@ -274,7 +274,7 @@ public class SubjectTopicsTest extends RestTest {
 
         deleteResource("/v1/subject-topics/" + primary);
 
-        SubjectTopic subjectTopic = topic.subjects.iterator().next();
+        SubjectTopic subjectTopic = topic.getSubjectTopics().iterator().next();
         assertEquals(other, subjectTopic.getPublicId());
         assertTrue(subjectTopic.isPrimary());
     }

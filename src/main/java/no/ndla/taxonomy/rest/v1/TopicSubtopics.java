@@ -82,7 +82,8 @@ public class TopicSubtopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
-        topicSubtopic.getTopic().removeSubtopic(topicSubtopic.getSubtopic());
+        final var topic = topicSubtopic.getTopic();
+        topic.removeSubtopic(topicSubtopic.getSubtopic());
         topicSubtopicRepository.delete(topicSubtopic);
     }
 
@@ -97,7 +98,7 @@ public class TopicSubtopics {
 
         if (command.primary) {
             Topic subtopic = topicSubtopic.getSubtopic();
-            for (TopicSubtopic otherConnection : subtopic.parentTopics) {
+            for (TopicSubtopic otherConnection : subtopic.getParentTopicSubtopics()) {
                 otherConnection.setPrimary(false);
                 topicSubtopicRepository.save(otherConnection);
             }
@@ -109,7 +110,6 @@ public class TopicSubtopics {
         List<TopicSubtopic> existingConnections = topicSubtopicRepository.findByTopic(topic);
         List<TopicSubtopic> rankedConnections = RankableConnectionUpdater.rank(existingConnections, topicSubtopic, command.rank);
         topicSubtopicRepository.saveAll(rankedConnections);
-
     }
 
     public static class AddSubtopicToTopicCommand {

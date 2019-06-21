@@ -79,28 +79,31 @@ public class FiltersTest extends RestTest {
 
     @Test
     public void can_delete_filter_connected_to_2_resources() throws Exception {
-        final Filter filter = builder.filter(f -> f.publicId("urn:filter:1").name("Vg 1"));
-        builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .topic(t -> t
-                        .publicId("urn:topic:1")
-                        .resource(r -> r
-                                .publicId("urn:resource:1")
-                                .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core1"))))));
-        builder.subject(s -> s
-                .publicId("urn:subject:2")
-                .topic(t -> t
-                        .publicId("urn:topic:2")
-                        .resource(r -> r
-                                .publicId("urn:resource:2")
-                                .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core2"))))));
-        Filter preResultFilter = filterRepository.findByPublicId(filter.getPublicId());
-        entityManager.refresh(preResultFilter); //as filter.resources would otherwise be empty.
+        {
+            final Filter filter = builder.filter(f -> f.publicId("urn:filter:1").name("Vg 1"));
+            builder.subject(s -> s
+                    .publicId("urn:subject:1")
+                    .topic(t -> t
+                            .publicId("urn:topic:1")
+                            .resource(r -> r
+                                    .publicId("urn:resource:1")
+                                    .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core1"))))));
+            builder.subject(s -> s
+                    .publicId("urn:subject:2")
+                    .topic(t -> t
+                            .publicId("urn:topic:2")
+                            .resource(r -> r
+                                    .publicId("urn:resource:2")
+                                    .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core2"))))));
 
-        deleteResource("/v1/filters/" + filter.getPublicId());
+            System.out.println("");
+        }
 
-        Filter resultFilter = filterRepository.findByPublicId(filter.getPublicId());
-        assertNull(resultFilter);
+        assertNotNull(filterRepository.findByPublicId(new URI("urn:filter:1")));
+
+        deleteResource("/v1/filters/urn:filter:1");
+
+        assertNull(filterRepository.findByPublicId(new URI("urn:filter:1")));
     }
 
     @Test

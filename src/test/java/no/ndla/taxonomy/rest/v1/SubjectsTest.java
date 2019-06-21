@@ -1,7 +1,10 @@
 package no.ndla.taxonomy.rest.v1;
 
 
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Filter;
+import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
@@ -172,13 +175,13 @@ public class SubjectsTest extends RestTest {
         assertEquals("/subject:1/topic:a/topic:aa/topic:aaa", topics[2].path);
 
         Subject subject = builder.subject("subject");
-        assertEquals(first(subject.topics).getPublicId(), topics[0].connectionId);
+        assertEquals(first(subject.getSubjectTopics()).getPublicId(), topics[0].connectionId);
 
         Topic parent = builder.topic("parent");
-        assertEquals(first(parent.subtopics).getPublicId(), topics[1].connectionId);
+        assertEquals(first(parent.getChildrenTopicSubtopics()).getPublicId(), topics[1].connectionId);
 
         Topic child = builder.topic("child");
-        assertEquals(first(child.subtopics).getPublicId(), topics[2].connectionId);
+        assertEquals(first(child.getChildrenTopicSubtopics()).getPublicId(), topics[2].connectionId);
     }
 
 
@@ -326,9 +329,9 @@ public class SubjectsTest extends RestTest {
 
         assertEquals(3, resources.length);
 
-        assertAnyTrue(resources, r -> r.connectionId.equals(first(builder.topic("topic a").resources).getPublicId()));
-        assertAnyTrue(resources, r -> r.connectionId.equals(first(builder.topic("topic b").resources).getPublicId()));
-        assertAnyTrue(resources, r -> r.connectionId.equals(first(builder.topic("subtopic").resources).getPublicId()));
+        assertAnyTrue(resources, r -> r.connectionId.equals(first(builder.topic("topic a").getTopicResources()).getPublicId()));
+        assertAnyTrue(resources, r -> r.connectionId.equals(first(builder.topic("topic b").getTopicResources()).getPublicId()));
+        assertAnyTrue(resources, r -> r.connectionId.equals(first(builder.topic("subtopic").getTopicResources()).getPublicId()));
     }
 
     @Test

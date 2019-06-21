@@ -1,21 +1,18 @@
 package no.ndla.taxonomy.domain;
 
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.net.URI;
 import java.util.UUID;
 
 @Entity
 public class TopicResource extends DomainEntity implements Rankable {
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.REFRESH)
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.REFRESH)
     @JoinColumn(name = "resource_id")
     private Resource resource;
 
@@ -29,9 +26,17 @@ public class TopicResource extends DomainEntity implements Rankable {
     }
 
     public TopicResource(Topic topic, Resource resource) {
-        this.topic = topic;
-        this.resource = resource;
+        this.setTopic(topic);
+        this.setResource(resource);
         setPublicId(URI.create("urn:topic-resource:" + UUID.randomUUID()));
+    }
+
+    public void setTopic(Topic topic) {
+        this.topic = topic;
+
+        if (topic != null && !topic.getTopicResources().contains(this)) {
+            topic.addTopicResource(this);
+        }
     }
 
     public boolean isPrimary() {
@@ -60,5 +65,15 @@ public class TopicResource extends DomainEntity implements Rankable {
 
     public int getRank() {
         return rank;
+    }
+
+    public void setResource(Resource resource) {
+        this.resource = resource;
+
+        if (resource != null) {
+            if (resource.getTopicResources().contains(this)) {
+                resource.removeTopicResource(this);
+            }
+        }
     }
 }

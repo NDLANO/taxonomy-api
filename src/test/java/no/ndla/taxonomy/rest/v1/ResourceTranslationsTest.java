@@ -71,7 +71,7 @@ public class ResourceTranslationsTest extends RestTest {
             name = "Introduksjon til algebra";
         }});
 
-        assertEquals("Introduksjon til algebra", resource.getTranslation("nb").getName());
+        assertEquals("Introduksjon til algebra", resource.getTranslation("nb").get().getName());
     }
 
     @Test
@@ -86,7 +86,7 @@ public class ResourceTranslationsTest extends RestTest {
 
         deleteResource("/v1/resources/" + id + "/translations/nb");
 
-        assertNull(resource.getTranslation("nb"));
+        assertNull(resource.getTranslation("nb").orElse(null));
     }
 
     @Test

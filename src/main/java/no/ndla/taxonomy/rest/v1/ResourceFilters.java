@@ -136,7 +136,7 @@ public class ResourceFilters {
             id = resourceFilter.getPublicId();
             resourceId = resourceFilter.getResource().getPublicId();
             filterId = resourceFilter.getFilter().getPublicId();
-            relevanceId = resourceFilter.getRelevance().getPublicId();
+            relevanceId = resourceFilter.getRelevance().map(Relevance::getPublicId).orElse(null);
         }
     }
 }

@@ -34,7 +34,7 @@ public class FilterTranslations {
     }
 
     @GetMapping
-    @ApiOperation("Gets all translations for a single filter")
+    @ApiOperation("Gets all relevanceTranslations for a single filter")
     public List<FilterTranslations.FilterTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
         Filter filter = filterRepository.getByPublicId(id);
         List<FilterTranslations.FilterTranslationIndexDocument> result = new ArrayList<>();
@@ -55,9 +55,8 @@ public class FilterTranslations {
             @PathVariable("language") String language
     ) throws Exception {
         Filter filter = filterRepository.getByPublicId(id);
-        FilterTranslation translation = filter.getTranslation(language);
-        if (translation == null)
-            throw new NotFoundException("Translation with language code " + language + " for filter", id);
+        FilterTranslation translation = filter.getTranslation(language).orElseThrow(() -> new NotFoundException("Translation with language code " + language + " for filter", id));
+
         return new FilterTranslations.FilterTranslationIndexDocument() {{
             name = translation.getName();
             language = translation.getLanguageCode();
@@ -91,10 +90,10 @@ public class FilterTranslations {
             @PathVariable("language") String language
     ) throws Exception {
         Filter filter = filterRepository.getByPublicId(id);
-        FilterTranslation translation = filter.getTranslation(language);
-        if (translation == null) return;
-        filter.removeTranslation(language);
-        entityManager.remove(translation);
+        filter.getTranslation(language).ifPresent(translation -> {
+            filter.removeTranslation(language);
+            entityManager.remove(translation);
+        });
     }
 
 

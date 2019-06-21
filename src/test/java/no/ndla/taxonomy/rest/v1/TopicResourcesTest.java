@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static no.ndla.taxonomy.TestUtils.createResource;
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -38,7 +37,7 @@ public class TopicResourcesTest extends RestTest {
         assertEquals(1, count(calculus.getResources()));
         assertAnyTrue(calculus.getResources(), t -> "Introduction to integration".equals(t.getName()));
         assertNotNull(topicResourceRepository.getByPublicId(id));
-        assertTrue(calculus.resources.iterator().next().isPrimary());
+        assertTrue(calculus.getTopicResources().iterator().next().isPrimary());
     }
 
     @Test
@@ -59,7 +58,7 @@ public class TopicResourcesTest extends RestTest {
         assertEquals(1, count(calculus.getResources()));
         assertAnyTrue(calculus.getResources(), t -> "Introduction to integration".equals(t.getName()));
         assertNotNull(topicResourceRepository.getByPublicId(id));
-        assertFalse(calculus.resources.iterator().next().isPrimary());
+        assertFalse(calculus.getTopicResources().iterator().next().isPrimary());
     }
 
     @Test
@@ -183,7 +182,7 @@ public class TopicResourcesTest extends RestTest {
             primary = true;
         }});
 
-        graphs.topics.forEach(topicResource -> {
+        graphs.getTopicResources().forEach(topicResource -> {
             if (topicResource.getTopic().equals(graphTheory)) assertTrue(topicResource.isPrimary());
             else assertFalse(topicResource.isPrimary());
         });

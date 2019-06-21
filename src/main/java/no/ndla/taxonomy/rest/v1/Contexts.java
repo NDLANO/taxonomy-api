@@ -3,33 +3,35 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.domain.SubjectTranslation;
 import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.domain.TopicTranslation;
+import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-
-import static no.ndla.taxonomy.jdbc.QueryUtils.*;
+import java.util.stream.Collectors;
 
 
 @RestController
 @RequestMapping(path = {"/v1/contexts"})
-@Transactional
+@Transactional(readOnly = true)
 public class Contexts {
-    private static final String GET_CONTEXTS_QUERY = getQuery("get_contexts");
-
-    private JdbcTemplate jdbcTemplate;
     private TopicRepository topicRepository;
+    private SubjectRepository subjectRepository;
 
-    public Contexts(JdbcTemplate jdbcTemplate, TopicRepository topicRepository) {
-        this.jdbcTemplate = jdbcTemplate;
+    public Contexts(TopicRepository topicRepository, SubjectRepository subjectRepository) {
         this.topicRepository = topicRepository;
+        this.subjectRepository = subjectRepository;
+
     }
 
     @GetMapping
@@ -38,23 +40,41 @@ public class Contexts {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return jdbcTemplate.query(GET_CONTEXTS_QUERY, setQueryParameters(language, language),
-                (resultSet, rowNum) -> new ContextIndexDocument() {{
-                    name = resultSet.getString("context_name");
-                    id = getURI(resultSet, "context_public_id");
-                    path = resultSet.getString("context_path");
-                }}
-        );
+
+        final var subjects = subjectRepository.findAllIncludingCachedUrlsAndTranslations();
+        final var topics = topicRepository.findAllByContextIncludingCachedUrlsAndTranslations(true);
+
+        final var contextDocuments = new ArrayList<ContextIndexDocument>();
+
+        contextDocuments.addAll(subjects.stream()
+                .map(subject -> new ContextIndexDocument(
+                        subject.getPublicId(),
+                        subject.getTranslation(language).map(SubjectTranslation::getName).orElse(subject.getName()),
+                        subject.getPrimaryPath().orElse(null)))
+                .collect(Collectors.toList()));
+
+        contextDocuments.addAll(topics.stream()
+                .map(topic -> new ContextIndexDocument(
+                        topic.getPublicId(),
+                        topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName()),
+                        topic.getPrimaryPath().orElse(null)))
+                .collect(Collectors.toList()));
+
+        contextDocuments.sort(Comparator.comparing(ContextIndexDocument::getId));
+
+        return contextDocuments;
     }
 
     @PostMapping
     @ApiOperation(value = "Adds a new context", notes = "All subjects are already contexts and may not be added again. Only topics may be added as a context. The topic must exist already.")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public ResponseEntity<Void> post(
             @ApiParam(name = "context", value = "the new context") @RequestBody CreateContextCommand command) throws Exception {
         Topic topic = topicRepository.getByPublicId(command.id);
         topic.setContext(true);
         URI location = URI.create("/v1/contexts/" + topic.getPublicId());
+
         return ResponseEntity.created(location).build();
     }
 
@@ -62,6 +82,7 @@ public class Contexts {
     @ApiOperation(value = "Removes a context", notes = "Does not remove the underlying resource, only marks it as not being a context")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void delete(@PathVariable("id") URI id) {
         Topic topic = topicRepository.getByPublicId(id);
         topic.setContext(false);
@@ -71,6 +92,24 @@ public class Contexts {
         public URI id;
         public String path;
         public String name;
+
+        private ContextIndexDocument(URI id, String name, String path) {
+            this.id = id;
+            this.name = name;
+            this.path = path;
+        }
+
+        public URI getId() {
+            return id;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public String getName() {
+            return name;
+        }
     }
 
     public static class CreateContextCommand {

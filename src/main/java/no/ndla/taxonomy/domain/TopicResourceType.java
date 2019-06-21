@@ -20,13 +20,30 @@ public class TopicResourceType extends DomainEntity {
     }
 
     public TopicResourceType(Topic topic, ResourceType resourceType) {
-        this.topic = topic;
-        this.resourceType = resourceType;
         setPublicId(URI.create("urn:topic-resourcetype:" + UUID.randomUUID()));
+
+        this.setTopic(topic);
+        this.setResourceType(resourceType);
     }
 
     public Topic getTopic() {
         return topic;
+    }
+
+    public void setTopic(Topic topic) {
+        this.topic = topic;
+
+        if (topic != null && !topic.getTopicResourceTypes().contains(this)) {
+            topic.addTopicResourceType(this);
+        }
+    }
+
+    public void setResourceType(ResourceType resourceType) {
+        this.resourceType = resourceType;
+
+        if (resourceType != null && !resourceType.getTopicResourceTypes().contains(this)) {
+            resourceType.addTopicResourceType(this);
+        }
     }
 
     public ResourceType getResourceType() {

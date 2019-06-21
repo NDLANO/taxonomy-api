@@ -30,9 +30,8 @@ public abstract class CrudController<T extends DomainObject> {
     @ApiOperation(value = "Deletes a single entity by id")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") URI id) throws Exception {
-        T resource = repository.getByPublicId(id);
-        repository.delete(resource);
+    public void delete(@PathVariable("id") URI id) {
+        repository.deleteByPublicId(id);
     }
 
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -62,5 +61,4 @@ public abstract class CrudController<T extends DomainObject> {
     protected String getLocation() {
         return locations.computeIfAbsent(getClass(), aClass -> aClass.getAnnotation(RequestMapping.class).path()[0]);
     }
-
 }

@@ -86,7 +86,7 @@ public class Filters extends CrudController<Filter> {
 
         Filter filter = new Filter();
         Subject subject = subjectRepository.getByPublicId(command.subjectId);
-        filter.setSubject(subject);
+        subject.addFilter(filter);
         return doPost(filter, command);
     }
 
@@ -102,6 +102,8 @@ public class Filters extends CrudController<Filter> {
 
         Filter filter = doPut(id, command);
         filter.setSubject(subjectRepository.getByPublicId(command.subjectId));
+
+        repository.save(filter);
     }
 
     @ApiModel("Filters.FilterIndexDocument")

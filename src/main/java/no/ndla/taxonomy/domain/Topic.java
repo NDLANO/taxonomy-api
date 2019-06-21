@@ -5,38 +5,35 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
-public class Topic extends DomainObject {
+public class Topic extends CachedUrlEntity {
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<SubjectTopic> subjects = new HashSet<>();
+    private Set<SubjectTopic> subjects = new HashSet<>();
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<TopicSubtopic> subtopics = new HashSet<>();
+    private Set<TopicSubtopic> subtopics = new HashSet<>();
 
     @OneToMany(mappedBy = "subtopic", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<TopicSubtopic> parentTopics = new HashSet<>();
+    private Set<TopicSubtopic> parentTopics = new HashSet<>();
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<TopicResource> resources = new HashSet<>();
+    private Set<TopicResource> resources = new HashSet<>();
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<TopicResourceType> topicResourceTypes = new HashSet<>();
+    private Set<TopicResourceType> topicResourceTypes = new HashSet<>();
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<TopicFilter> filters = new HashSet<>();
+    private Set<TopicFilter> filters = new HashSet<>();
 
     @Column
     @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI contentUri;
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<TopicTranslation> translations = new HashSet<>();
+    private Set<TopicTranslation> translations = new HashSet<>();
 
     @Column
     private boolean context;
@@ -50,6 +47,100 @@ public class Topic extends DomainObject {
         return this;
     }
 
+    /*
+
+        In the old code the primary URL for topics was special since it would try to return
+        a context URL (a topic behaving as a subject) rather than a subject URL if that is available.
+        Trying to re-implement it by sorting the context URLs first by the same path comparing as the old code
+
+     */
+    public Optional<String> getPrimaryPath() {
+        return getCachedUrls()
+                .stream()
+                .filter(CachedUrl::isPrimary)
+                .map(CachedUrl::getPath).min((path1, path2) -> {
+                    if (path1.startsWith("/topic") && path2.startsWith("/topic")) {
+                        return 0;
+                    }
+
+                    if (path1.startsWith("/topic")) {
+                        return -1;
+                    }
+
+                    if (path2.startsWith("/topic")) {
+                        return 1;
+                    }
+
+                    return 0;
+                });
+    }
+
+    public Set<SubjectTopic> getSubjectTopics() {
+        return this.subjects;
+    }
+
+    public void addSubjectTopic(SubjectTopic subjectTopic) {
+        this.subjects.add(subjectTopic);
+
+        if (subjectTopic.getTopic() != this) {
+            subjectTopic.setTopic(this);
+        }
+    }
+
+    public void removeSubjectTopic(SubjectTopic subjectTopic) {
+        this.subjects.remove(subjectTopic);
+
+        var topic = subjectTopic.getTopic();
+
+        if (topic == this) {
+            subjectTopic.setTopic(null);
+        }
+
+        if (subjectTopic.isPrimary() && topic != null) {
+            topic.setRandomPrimarySubject();
+        }
+    }
+
+    public Set<TopicSubtopic> getChildrenTopicSubtopics() {
+        return this.subtopics;
+    }
+
+    public Set<TopicSubtopic> getParentTopicSubtopics() {
+        return this.parentTopics;
+    }
+
+    public void addChildTopicSubtopic(TopicSubtopic topicSubtopic) {
+        this.subtopics.add(topicSubtopic);
+
+        if (topicSubtopic.getTopic() != this) {
+            topicSubtopic.setTopic(this);
+        }
+    }
+
+    public void addParentTopicSubtopic(TopicSubtopic topicSubtopic) {
+        this.parentTopics.add(topicSubtopic);
+
+        if (topicSubtopic.getSubtopic() != this) {
+            topicSubtopic.setSubtopic(this);
+        }
+    }
+
+    public Set<TopicResource> getTopicResources() {
+        return this.resources;
+    }
+
+    public void addTopicResource(TopicResource topicResource) {
+        this.resources.add(topicResource);
+
+        if (topicResource.getTopic() != this) {
+            topicResource.setTopic(this);
+        }
+    }
+
+    public Set<TopicResourceType> getTopicResourceTypes() {
+        return this.topicResourceTypes;
+    }
+
     public TopicSubtopic addSubtopic(Topic subtopic) {
         refuseIfDuplicateSubtopic(subtopic);
 
@@ -58,6 +149,14 @@ public class Topic extends DomainObject {
         subtopic.setPrimaryParentTopic(this);
         subtopics.add(topicSubtopic);
         return topicSubtopic;
+    }
+
+    public void addTopicResourceType(TopicResourceType topicResourceType) {
+        this.topicResourceTypes.add(topicResourceType);
+
+        if (topicResourceType.getTopic() != this) {
+            topicResourceType.setTopic(this);
+        }
     }
 
     public TopicSubtopic addSecondarySubtopic(Topic subtopic) {
@@ -118,7 +217,7 @@ public class Topic extends DomainObject {
 
         TopicResource topicResource = new TopicResource(this, resource);
         this.resources.add(topicResource);
-        resource.topics.add(topicResource);
+        resource.getTopicResources().add(topicResource);
         resource.setPrimaryTopic(this);
         return topicResource;
     }
@@ -129,7 +228,7 @@ public class Topic extends DomainObject {
         TopicResource topicResource = new TopicResource(this, resource);
         topicResource.setPrimary(false);
         this.resources.add(topicResource);
-        resource.topics.add(topicResource);
+        resource.getTopicResources().add(topicResource);
         return topicResource;
     }
 
@@ -146,7 +245,7 @@ public class Topic extends DomainObject {
         TopicResource topicResource = getResource(resource);
         if (topicResource == null)
             throw new ChildNotFoundException("Topic with id " + this.getPublicId() + " has no resource with id " + topicResource.getResource());
-        resource.topics.remove(topicResource);
+        resource.getTopicResources().remove(topicResource);
         resources.remove(topicResource);
         if (topicResource.isPrimary()) resource.setRandomPrimaryTopic();
     }
@@ -215,7 +314,7 @@ public class Topic extends DomainObject {
     }
 
     public TopicTranslation addTranslation(String languageCode) {
-        TopicTranslation topicTranslation = getTranslation(languageCode);
+        TopicTranslation topicTranslation = getTranslation(languageCode).orElse(null);
         if (topicTranslation != null) return topicTranslation;
 
         topicTranslation = new TopicTranslation(this, languageCode);
@@ -223,11 +322,10 @@ public class Topic extends DomainObject {
         return topicTranslation;
     }
 
-    public TopicTranslation getTranslation(String languageCode) {
+    public Optional<TopicTranslation> getTranslation(String languageCode) {
         return translations.stream()
                 .filter(translation -> translation.getLanguageCode().equals(languageCode))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     public Iterator<TopicTranslation> getTranslations() {
@@ -235,9 +333,7 @@ public class Topic extends DomainObject {
     }
 
     public void removeTranslation(String languageCode) {
-        TopicTranslation translation = getTranslation(languageCode);
-        if (translation == null) return;
-        translations.remove(translation);
+        getTranslation(languageCode).ifPresent(translations::remove);
     }
 
     public void setPrimarySubject(Subject subject) {
@@ -250,7 +346,12 @@ public class Topic extends DomainObject {
 
     public void setRandomPrimarySubject() {
         if (subjects.size() == 0) return;
-        subjects.iterator().next().setPrimary(true);
+        for (var subjectTopic : subjects) {
+            if (subjectTopic.getSubject() != null && subjectTopic.getTopic() != null) {
+                subjectTopic.setPrimary(true);
+                return;
+            }
+        }
     }
 
     private SubjectTopic getSubject(Subject subject) {
@@ -297,7 +398,7 @@ public class Topic extends DomainObject {
 
     public TopicFilter addFilter(Filter filter, Relevance relevance) {
         TopicFilter topicFilter = new TopicFilter(this, filter, relevance);
-        filters.add(topicFilter);
+        addTopicFilter(topicFilter);
         return topicFilter;
     }
 
@@ -306,7 +407,7 @@ public class Topic extends DomainObject {
         if (filter == null) {
             throw new ChildNotFoundException("Topic with id " + this.getPublicId() + " does not have topic-filter " + topicFilter.getPublicId());
         }
-        filters.remove(topicFilter);
+        removeTopicFilter(topicFilter);
     }
 
     private TopicFilter getFilter(Filter filter) {
@@ -337,6 +438,26 @@ public class Topic extends DomainObject {
         return null;
     }
 
+    public void addTopicFilter(TopicFilter topicFilter) {
+        this.filters.add(topicFilter);
+
+        if (topicFilter.getTopic() != this) {
+            topicFilter.setTopic(this);
+        }
+    }
+
+    public void removeTopicFilter(TopicFilter topicFilter) {
+        this.filters.remove(topicFilter);
+
+        if (topicFilter.getTopic() == this) {
+            topicFilter.setTopic(null);
+        }
+    }
+
+    public Set<TopicFilter> getTopicFilters() {
+        return this.filters;
+    }
+
     public void setContext(boolean context) {
         this.context = context;
     }
@@ -354,10 +475,14 @@ public class Topic extends DomainObject {
             this.removeSubtopic(edge.getSubtopic());
         }
         for (SubjectTopic edge : subjects.toArray(new SubjectTopic[]{})) {
-            edge.getSubject().removeTopic(this);
+            this.removeSubjectTopic(edge);
         }
         for (TopicResource edge : resources.toArray(new TopicResource[]{})) {
             this.removeResource(edge.getResource());
+        }
+
+        for (var topicFilter : filters.toArray()) {
+            this.removeTopicFilter((TopicFilter) topicFilter);
         }
     }
 

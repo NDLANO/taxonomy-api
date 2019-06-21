@@ -5,6 +5,7 @@ import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.SubjectTopic;
 import org.springframework.data.jpa.repository.Query;
 
+import java.net.URI;
 import java.util.List;
 
 public interface SubjectTopicRepository extends TaxonomyRepository<SubjectTopic> {
@@ -15,4 +16,12 @@ public interface SubjectTopicRepository extends TaxonomyRepository<SubjectTopic>
             "   JOIN FETCH st.subject" +
             "   JOIN FETCH st.topic")
     List<SubjectTopic> findAllIncludingSubjectAndTopic();
+
+    @Query("SELECT DISTINCT st" +
+            "   FROM SubjectTopic st" +
+            "   INNER JOIN FETCH st.topic t" +
+            "   INNER JOIN FETCH st.subject s" +
+            "   LEFT OUTER JOIN FETCH s.cachedUrls" +
+            "   WHERE t.publicId = :topicPublicId")
+    List<SubjectTopic> findAllByTopicPublicIdIncludingSubjectAndTopicAndCachedUrls(URI topicPublicId);
 }

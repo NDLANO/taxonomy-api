@@ -73,7 +73,7 @@ public class TopicTranslationsTest extends RestTest {
             name = "Trigonometri";
         }});
 
-        assertEquals("Trigonometri", trigonometry.getTranslation("nb").getName());
+        assertEquals("Trigonometri", trigonometry.getTranslation("nb").get().getName());
     }
 
     @Test
@@ -88,7 +88,7 @@ public class TopicTranslationsTest extends RestTest {
 
         deleteResource("/v1/topics/" + id + "/translations/nb");
 
-        assertNull(topic.getTranslation("nb"));
+        assertNull(topic.getTranslation("nb").orElse(null));
     }
 
     @Test

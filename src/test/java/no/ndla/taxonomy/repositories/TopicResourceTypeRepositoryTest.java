@@ -55,7 +55,7 @@ public class TopicResourceTypeRepositoryTest {
         {
             TopicResourceType topicResourceType;
             {
-                Iterator<TopicResourceType> topicResourceTypes = topic.topicResourceTypes.iterator();
+                Iterator<TopicResourceType> topicResourceTypes = topic.getTopicResourceTypes().iterator();
                 assertTrue(topicResourceTypes.hasNext());
                 topicResourceType = topicResourceTypes.next();
                 assertFalse(topicResourceTypes.hasNext());
@@ -76,7 +76,7 @@ public class TopicResourceTypeRepositoryTest {
         assertNotNull(resourceType);
         topic.removeResourceType(resourceType);
         topic = topicRepository.save(topic);
-        assertFalse(topic.topicResourceTypes.iterator().hasNext());
+        assertFalse(topic.getTopicResourceTypes().iterator().hasNext());
     }
 
     @Test

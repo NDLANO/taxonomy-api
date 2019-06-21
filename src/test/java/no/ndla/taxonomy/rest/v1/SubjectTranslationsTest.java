@@ -73,7 +73,7 @@ public class SubjectTranslationsTest extends RestTest {
             name = "Matematikk";
         }});
 
-        assertEquals("Matematikk", mathematics.getTranslation("nb").getName());
+        assertEquals("Matematikk", mathematics.getTranslation("nb").get().getName());
     }
 
     @Test
@@ -88,7 +88,7 @@ public class SubjectTranslationsTest extends RestTest {
 
         deleteResource("/v1/subjects/" + id + "/translations/nb");
 
-        assertNull(subject.getTranslation("nb"));
+        assertNull(subject.getTranslation("nb").orElse(null));
     }
 
     @Test

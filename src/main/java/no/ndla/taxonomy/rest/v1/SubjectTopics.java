@@ -27,7 +27,9 @@ public class SubjectTopics {
     private SubjectTopicRepository subjectTopicRepository;
     private SubjectRepository subjectRepository;
 
-    public SubjectTopics(SubjectRepository subjectRepository, TopicRepository topicRepository, SubjectTopicRepository subjectTopicRepository) {
+    public SubjectTopics(SubjectRepository subjectRepository,
+                         TopicRepository topicRepository,
+                         SubjectTopicRepository subjectTopicRepository) {
         this.subjectRepository = subjectRepository;
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicRepository = topicRepository;
@@ -78,7 +80,7 @@ public class SubjectTopics {
 
         subjectTopicRepository.save(subjectTopic);
 
-        URI location = URI.create("/subject-topics/" + subjectTopic.getPublicId());
+        URI location = URI.create("/subject-topicFilters/" + subjectTopic.getPublicId());
         return ResponseEntity.created(location).build();
     }
 
@@ -88,7 +90,9 @@ public class SubjectTopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
-        subjectTopic.getSubject().removeTopic(subjectTopic.getTopic());
+        final var subject = subjectTopic.getSubject();
+
+        subject.removeTopic(subjectTopic.getTopic());
         subjectTopicRepository.deleteByPublicId(id);
     }
 

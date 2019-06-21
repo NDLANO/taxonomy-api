@@ -5,10 +5,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 public class ResourceType extends DomainObject {
@@ -25,15 +22,30 @@ public class ResourceType extends DomainObject {
     private Set<ResourceType> subtypes = new HashSet<>();
 
     @OneToMany(mappedBy = "resourceType")
-    Set<ResourceTypeTranslation> resourceTypeTranslations = new HashSet<>();
+    private Set<ResourceTypeTranslation> resourceTypeTranslations = new HashSet<>();
+
+    @OneToMany(mappedBy = "resourceType")
+    private Set<TopicResourceType> topicResourceTypes = new HashSet<>();
+
+    public Set<TopicResourceType> getTopicResourceTypes() {
+        return topicResourceTypes;
+    }
+
+    public void addTopicResourceType(TopicResourceType topicResourceType) {
+        this.topicResourceTypes.add(topicResourceType);
+
+        if (topicResourceType.getResourceType() != this) {
+            topicResourceType.setResourceType(this);
+        }
+    }
 
     public ResourceType name(String name) {
         setName(name);
         return this;
     }
 
-    public ResourceType getParent() {
-        return parent;
+    public Optional<ResourceType> getParent() {
+        return Optional.ofNullable(parent);
     }
 
     public void setParent(ResourceType parent) {
@@ -69,7 +81,7 @@ public class ResourceType extends DomainObject {
     }
 
     public ResourceTypeTranslation addTranslation(String languageCode) {
-        ResourceTypeTranslation resourceTypeTranslation = getTranslation(languageCode);
+        ResourceTypeTranslation resourceTypeTranslation = getTranslation(languageCode).orElse(null);
         if (resourceTypeTranslation != null) return resourceTypeTranslation;
 
         resourceTypeTranslation = new ResourceTypeTranslation(this, languageCode);
@@ -77,11 +89,10 @@ public class ResourceType extends DomainObject {
         return resourceTypeTranslation;
     }
 
-    public ResourceTypeTranslation getTranslation(String languageCode) {
+    public Optional<ResourceTypeTranslation> getTranslation(String languageCode) {
         return resourceTypeTranslations.stream()
                 .filter(resourceTypeTranslation -> resourceTypeTranslation.getLanguageCode().equals(languageCode))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     public Iterator<ResourceTypeTranslation> getTranslations() {
@@ -89,8 +100,6 @@ public class ResourceType extends DomainObject {
     }
 
     public void removeTranslation(String languageCode) {
-        ResourceTypeTranslation translation = getTranslation(languageCode);
-        if (translation == null) return;
-        resourceTypeTranslations.remove(translation);
+        getTranslation(languageCode).ifPresent(resourceTypeTranslations::remove);
     }
 }

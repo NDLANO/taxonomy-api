@@ -70,7 +70,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
             name = "Artikkel";
         }});
 
-        assertEquals("Artikkel", article.getTranslation("nb").getName());
+        assertEquals("Artikkel", article.getTranslation("nb").get().getName());
     }
 
     @Test
@@ -85,7 +85,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
 
         deleteResource("/v1/resource-types/" + id + "/translations/nb");
 
-        assertNull(resourceType.getTranslation("nb"));
+        assertNull(resourceType.getTranslation("nb").orElse(null));
     }
 
     @Test

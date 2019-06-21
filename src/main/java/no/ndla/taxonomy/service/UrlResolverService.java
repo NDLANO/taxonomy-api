@@ -1,16 +1,20 @@
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.domain.CachedUrlEntity;
 import no.ndla.taxonomy.domain.UrlMapping;
+import no.ndla.taxonomy.repositories.ResourceRepository;
+import no.ndla.taxonomy.repositories.SubjectRepository;
+import no.ndla.taxonomy.repositories.TopicRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
 import java.net.URI;
 import java.util.*;
 
-import static java.util.Arrays.asList;
 import static no.ndla.taxonomy.jdbc.QueryUtils.setQueryParameters;
 
 @Service
@@ -22,8 +26,19 @@ public class UrlResolverService {
     private JdbcTemplate jdbcTemplate;
     private OldUrlCanonifier canonifier = new OldUrlCanonifier();
 
+    private final SubjectRepository subjectRepository;
+    private final TopicRepository topicRepository;
+    private final ResourceRepository resourceRepository;
+
     @Autowired
-    public UrlResolverService(DataSource dataSource) {
+    public UrlResolverService(DataSource dataSource,
+                              SubjectRepository subjectRepository,
+                              TopicRepository topicRepository,
+                              ResourceRepository resourceRepository) {
+        this.topicRepository = topicRepository;
+        this.subjectRepository = subjectRepository;
+        this.resourceRepository = resourceRepository;
+
         jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
@@ -131,5 +146,16 @@ public class UrlResolverService {
         public NodeIdNotFoundExeption(String message) {
             super(message);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Set<CachedUrlEntity> getResolvablePathEntitiesFromPublicId(URI publicId) {
+        final var entries = new HashSet<CachedUrlEntity>();
+
+        entries.addAll(subjectRepository.findAllByPublicIdIncludingCachedUrls(publicId));
+        entries.addAll(topicRepository.findAllByPublicIdIncludingCachedUrls(publicId));
+        entries.addAll(resourceRepository.findAllByPublicIdIncludingCachedUrls(publicId));
+
+        return entries;
     }
 }

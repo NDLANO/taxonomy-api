@@ -31,9 +31,9 @@ public class ResourceFiltersTest extends RestTest {
                 }})
         );
 
-        assertEquals(1, resource.filters.size());
-        assertEquals(first(resource.filters).getPublicId(), id);
-        assertEquals("urn:relevance:core", first(resource.filters).getRelevance().getPublicId().toString());
+        assertEquals(1, resource.getResourceFilters().size());
+        assertEquals(first(resource.getResourceFilters()).getPublicId(), id);
+        assertEquals("urn:relevance:core", first(resource.getResourceFilters()).getRelevance().get().getPublicId().toString());
     }
 
     @Test
@@ -103,7 +103,7 @@ public class ResourceFiltersTest extends RestTest {
         updateResource("/v1/resource-filters/" + id, new ResourceFilters.UpdateResourceFilterCommand() {{
             relevanceId = supplementary.getPublicId();
         }});
-        assertEquals("urn:relevance:supplementary", first(resource.filters).getRelevance().getPublicId().toString());
+        assertEquals("urn:relevance:supplementary", first(resource.getResourceFilters()).getRelevance().get().getPublicId().toString());
     }
 
     @Test

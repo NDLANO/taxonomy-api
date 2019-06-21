@@ -28,7 +28,9 @@ public class TopicResources {
     private final ResourceRepository resourceRepository;
     private TopicResourceRepository topicResourceRepository;
 
-    public TopicResources(TopicRepository topicRepository, ResourceRepository resourceRepository, TopicResourceRepository topicResourceRepository) {
+    public TopicResources(TopicRepository topicRepository,
+                          ResourceRepository resourceRepository,
+                          TopicResourceRepository topicResourceRepository) {
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
         this.topicResourceRepository = topicResourceRepository;
@@ -84,7 +86,8 @@ public class TopicResources {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
-        topicResource.getTopic().removeResource(topicResource.getResource());
+        final var topic = topicResource.getTopic();
+        topic.removeResource(topicResource.getResource());
 
         topicResourceRepository.deleteByPublicId(id);
     }

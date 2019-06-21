@@ -2,44 +2,41 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.repositories.ResourceFilterRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
+import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
 import no.ndla.taxonomy.rest.v1.dtos.resources.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-
-import static no.ndla.taxonomy.jdbc.QueryUtils.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/resources"})
 @Transactional
 public class Resources extends CrudController<Resource> {
+    private ResourceRepository resourceRepository;
+    private ResourceResourceTypeRepository resourceResourceTypeRepository;
+    private ResourceFilterRepository resourceFilterRepository;
 
-    private static final String GET_RESOURCES_QUERY = getQuery("get_resources");
-    private static final String GET_RESOURCE_WITH_PATHS_QUERY = getQuery("get_resource_with_all_paths");
-    private static final String GET_RESOURCE_RESOURCE_TYPES_QUERY = getQuery("get_resource_resource_types");
-    private static final String GET_FILTERS_BY_RESOURCE_ID_QUERY = getQuery("get_filters_by_resource_public_id");
-    private static final String GET_TOPICS_FOR_RESOURCE = getQuery("get_topics_for_resource");
-
-    private JdbcTemplate jdbcTemplate;
-
-    public Resources(ResourceRepository resourceRepository, JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-        repository = resourceRepository;
+    public Resources(ResourceRepository resourceRepository,
+                     ResourceResourceTypeRepository resourceResourceTypeRepository,
+                     ResourceFilterRepository resourceFilterRepository) {
+        this.resourceResourceTypeRepository = resourceResourceTypeRepository;
+        this.resourceFilterRepository = resourceFilterRepository;
+        this.resourceRepository = resourceRepository;
+        this.repository = resourceRepository;
     }
 
     @GetMapping
@@ -48,7 +45,16 @@ public class Resources extends CrudController<Resource> {
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) {
-        return getResourceIndexDocuments(GET_RESOURCES_QUERY, language);
+
+        return resourceRepository.findAllIncludingCachedUrlsAndTranslations()
+                .stream()
+                .map(resource -> {
+                    final var resourceIndexDocument = new ResourceIndexDocument(resource, language);
+                    resource.getPrimaryPath().ifPresent(resourceIndexDocument::setPath);
+
+                    return resourceIndexDocument;
+                })
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -57,24 +63,11 @@ public class Resources extends CrudController<Resource> {
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        ResourceWithPathsIndexDocument result = jdbcTemplate.query(GET_RESOURCE_WITH_PATHS_QUERY, setQueryParameters(language, id.toString()),
-                this::extractResourceWithPaths);
-        if (result == null) {
-            throw new NotFoundHttpRequestException("No such resource found");
-        }
-        return result;
 
-    }
+        final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
+                .orElseThrow(() -> new NotFoundHttpRequestException("No such resource found"));
 
-    private List<ResourceIndexDocument> getResourceIndexDocuments(String sql, Object... args) {
-        return jdbcTemplate.query(sql, setQueryParameters(args),
-                (resultSet, rowNum) -> new ResourceIndexDocument() {{
-                    name = resultSet.getString("resource_name");
-                    id = getURI(resultSet, "resource_public_id");
-                    contentUri = getURI(resultSet, "resource_content_uri");
-                    path = resultSet.getString("resource_path");
-                }}
-        );
+        return new ResourceWithPathsIndexDocument(resource, language);
     }
 
     @PutMapping("/{id}")
@@ -91,7 +84,10 @@ public class Resources extends CrudController<Resource> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "resource", value = "the new resource") @RequestBody CreateResourceCommand command) {
-        return doPost(new Resource(), command);
+        final var resource = new Resource();
+        final var result = doPost(resource, command);
+
+        return result;
     }
 
     @GetMapping("/{id}/resource-types")
@@ -103,9 +99,11 @@ public class Resources extends CrudController<Resource> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return jdbcTemplate.query(GET_RESOURCE_RESOURCE_TYPES_QUERY, setQueryParameters(language, id.toString()),
-                this::extractResourceTypes
-        );
+
+        return resourceResourceTypeRepository.findAllByResourcePublicIdIncludingResourceAndResourceTypeAndResourceTypeParent(id)
+                .stream()
+                .map(resourceResourceType -> new ResourceTypeIndexDocument(resourceResourceType, language))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}/filters")
@@ -117,9 +115,10 @@ public class Resources extends CrudController<Resource> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return jdbcTemplate.query(GET_FILTERS_BY_RESOURCE_ID_QUERY, setQueryParameters(id.toString()),
-                this::extractFilters
-        );
+        return resourceFilterRepository.findAllByResourcePublicIdIncludingResourceAndFilterAndRelevance(id)
+                .stream()
+                .map(resourceFilter -> new FilterIndexDocument(resourceFilter, language))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}/full")
@@ -131,103 +130,75 @@ public class Resources extends CrudController<Resource> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        String sql = GET_RESOURCES_QUERY.replace("1 = 1", "r.public_id = ?");
+        final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id).orElseThrow(() -> new NotFoundHttpRequestException("Resource not found"));
 
-        ResourceIndexDocument resource = getFirst(getResourceIndexDocuments(sql, language, id.toString()), "Resource", id);
+        final ResourceIndexDocument resourceIndexDocument;
 
-        List<ResourceTypeIndexDocument> resourceTypes = jdbcTemplate.query(GET_RESOURCE_RESOURCE_TYPES_QUERY, setQueryParameters(language, id.toString()),
-                this::extractResourceTypes
-        );
+        if (language == null || language.equals("")) {
+            resourceIndexDocument = new ResourceIndexDocument(resource);
+        } else {
+            resourceIndexDocument = new ResourceIndexDocument(resource, language);
+        }
 
-        List<FilterIndexDocument> filters = jdbcTemplate.query(GET_FILTERS_BY_RESOURCE_ID_QUERY, setQueryParameters(id.toString()),
-                this::extractFilters
-        );
+        List<ResourceTypeIndexDocument> resourceTypes = new ArrayList<>();
+        List<FilterIndexDocument> filters = new ArrayList<>();
+        List<ParentTopicIndexDocument> topics = new ArrayList<>();
 
-        List<ParentTopicIndexDocument> topics = jdbcTemplate.query(GET_TOPICS_FOR_RESOURCE, setQueryParameters(language, id.toString()),
-                this::extractParentTopics);
+        resource.getResourceResourceTypes().stream()
+                .map(resourceResourceType -> this.createResourceTypeDocument(resourceResourceType, language))
+                .forEach(resourceTypes::add);
 
-        List<String> paths = jdbcTemplate.query("SELECT path FROM cached_url WHERE public_id = ?", setQueryParameters(id.toString()),
-                resultSet -> {
-                    List<String> res = new ArrayList<>();
-                    while (resultSet.next()) {
-                        res.add(resultSet.getString("path"));
-                    }
-                    return res;
-                });
+        resource.getResourceFilters().stream()
+                .map(resourceFilter -> this.createFilterIndexDocument(resourceFilter, language))
+                .forEach(filters::add);
 
+        resource.getTopicResources().stream()
+                .map(topicResource -> this.createParentTopicIndexDocument(topicResource, language))
+                .forEach(topics::add);
 
-        ResourceFullIndexDocument r = ResourceFullIndexDocument.from(resource);
+        ResourceFullIndexDocument r = ResourceFullIndexDocument.from(resourceIndexDocument);
         r.resourceTypes.addAll(resourceTypes);
         r.filters.addAll(filters);
         r.parentTopics.addAll(topics);
-        r.paths.addAll(paths);
+        r.paths.addAll(resource.getAllPaths());
         return r;
     }
 
 
-    private ResourceWithPathsIndexDocument extractResourceWithPaths(ResultSet resultSet) throws SQLException {
-        ResourceWithPathsIndexDocument doc = null;
-        while (resultSet.next()) {
-            String path = resultSet.getString("resource_path");
-            boolean primary = resultSet.getBoolean("path_is_primary");
-            if (doc == null) {
-                doc = new ResourceWithPathsIndexDocument();
-                doc.id = getURI(resultSet, "resource_public_id");
-                doc.contentUri = getURI(resultSet, "resource_content_uri");
-                doc.name = resultSet.getString("resource_name");
-                doc.paths = new ArrayList<>();
+    private ResourceTypeIndexDocument createResourceTypeDocument(ResourceResourceType resourceResourceType, String languageCode) {
+        final var resourceType = resourceResourceType.getResourceType();
+
+        return new ResourceTypeIndexDocument() {{
+            name = resourceType.getTranslation(languageCode).map(ResourceTypeTranslation::getName).orElse(resourceType.getName());
+            id = resourceType.getPublicId();
+            parentId = resourceType.getParent().map(DomainEntity::getPublicId).orElse(null);
+            connectionId = resourceResourceType.getPublicId();
+        }};
+    }
+
+    private FilterIndexDocument createFilterIndexDocument(ResourceFilter resourceFilter, String languageCode) {
+        final var filter = resourceFilter.getFilter();
+        return new FilterIndexDocument() {{
+            name = filter.getTranslation(languageCode).map(FilterTranslation::getName).orElse(filter.getName());
+            id = filter.getPublicId();
+            connectionId = resourceFilter.getPublicId();
+            relevanceId = resourceFilter.getRelevance().map(Relevance::getPublicId).orElse(null);
+        }};
+    }
+
+    private ParentTopicIndexDocument createParentTopicIndexDocument(TopicResource topicResource, String languageCode) {
+        final var topic = topicResource.getTopic();
+
+        return new ParentTopicIndexDocument() {{
+            name = topic.getTranslation(languageCode).map(TopicTranslation::getName).orElse(topic.getName());
+            id = topic.getPublicId();
+            isPrimary = topicResource.isPrimary();
+            try {
+                contentUri = topic.getContentUri() != null ? topic.getContentUri() : new URI("");
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
             }
-            if (primary && (doc.path == null || !doc.path.startsWith("/topic"))) {
-                doc.path = path;
-            }
-            doc.paths.add(path);
-        }
-        if (doc != null) {
-            Collections.sort(doc.paths);
-        }
-        return doc;
+            connectionId = topicResource.getPublicId();
+        }};
     }
-
-    private List<ParentTopicIndexDocument> extractParentTopics(ResultSet resultSet) throws SQLException {
-        List<ParentTopicIndexDocument> result = new ArrayList<>();
-        while (resultSet.next()) {
-            result.add(new ParentTopicIndexDocument() {{
-                name = resultSet.getString("name");
-                id = getURI(resultSet, "id");
-                isPrimary = resultSet.getBoolean("is_primary");
-                contentUri = URI.create(resultSet.getString("content_uri") != null ? resultSet.getString("content_uri") : "");
-                connectionId = URI.create(resultSet.getString("connection_id"));
-            }});
-        }
-        return result;
-    }
-
-
-    private List<ResourceTypeIndexDocument> extractResourceTypes(ResultSet resultSet) throws SQLException {
-        List<ResourceTypeIndexDocument> result = new ArrayList<>();
-        while (resultSet.next()) {
-            result.add(new ResourceTypeIndexDocument() {{
-                name = resultSet.getString("resource_type_name");
-                id = getURI(resultSet, "resource_type_public_id");
-                parentId = getURI(resultSet, "resource_type_parent_public_id");
-                connectionId = getURI(resultSet, "resource_resource_type_public_id");
-            }});
-        }
-        return result;
-    }
-
-
-    private List<FilterIndexDocument> extractFilters(ResultSet resultSet) throws SQLException {
-        List<FilterIndexDocument> result = new ArrayList<>();
-        while (resultSet.next()) {
-            result.add(new FilterIndexDocument() {{
-                name = resultSet.getString("filter_name");
-                id = getURI(resultSet, "filter_public_id");
-                connectionId = getURI(resultSet, "resource_filter_public_id");
-                relevanceId = getURI(resultSet, "relevance_id");
-            }});
-        }
-        return result;
-    }
-
 }

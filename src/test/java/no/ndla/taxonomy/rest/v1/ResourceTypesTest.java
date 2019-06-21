@@ -7,8 +7,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.net.URI;
 
 import static no.ndla.taxonomy.TestUtils.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ResourceTypesTest extends RestTest {
@@ -132,7 +131,7 @@ public class ResourceTypesTest extends RestTest {
         }}));
 
         ResourceType child = resourceTypeRepository.getByPublicId(childId);
-        assertEquals(parent.getPublicId(), child.getParent().getPublicId());
+        assertEquals(parent.getPublicId(), child.getParent().get().getPublicId());
     }
 
     @Test
@@ -148,7 +147,7 @@ public class ResourceTypesTest extends RestTest {
             name = child.getName();
         }});
 
-        assertNull(resourceTypeRepository.getByPublicId(childId).getParent());
+        assertFalse(resourceTypeRepository.getByPublicId(childId).getParent().isPresent());
     }
 
     @Test
@@ -163,7 +162,7 @@ public class ResourceTypesTest extends RestTest {
             name = child.getName();
         }});
 
-        assertEquals("video", child.getParent().getName());
+        assertEquals("video", child.getParent().get().getName());
     }
 
     @Test

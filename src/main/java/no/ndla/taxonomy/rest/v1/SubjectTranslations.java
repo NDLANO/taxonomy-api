@@ -33,7 +33,7 @@ public class SubjectTranslations {
     }
 
     @GetMapping
-    @ApiOperation("Gets all translations for a single subject")
+    @ApiOperation("Gets all relevanceTranslations for a single subject")
     public List<SubjectTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
         Subject subject = subjectRepository.getByPublicId(id);
         List<SubjectTranslationIndexDocument> result = new ArrayList<>();
@@ -52,11 +52,10 @@ public class SubjectTranslations {
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language
-    ) throws Exception {
+    ) {
         Subject subject = subjectRepository.getByPublicId(id);
-        SubjectTranslation translation = subject.getTranslation(language);
-        if (translation == null)
-            throw new NotFoundException("translation with language code " + language + " for subject", id);
+        SubjectTranslation translation = subject.getTranslation(language).orElseThrow(() -> new NotFoundException("translation with language code " + language + " for subject", id));
+
         return new SubjectTranslationIndexDocument() {{
             name = translation.getName();
             language = translation.getLanguageCode();
@@ -73,10 +72,10 @@ public class SubjectTranslations {
             @PathVariable("language") String language
     ) throws Exception {
         Subject subject = subjectRepository.getByPublicId(id);
-        SubjectTranslation translation = subject.getTranslation(language);
-        if (translation == null) return;
-        subject.removeTranslation(language);
-        entityManager.remove(translation);
+        subject.getTranslation(language).ifPresent((translation) -> {
+            subject.removeTranslation(language);
+            entityManager.remove(translation);
+        });
     }
 
     @PutMapping("/{language}")

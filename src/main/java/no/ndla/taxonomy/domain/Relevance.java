@@ -13,13 +13,13 @@ import java.util.UUID;
 public class Relevance extends DomainObject {
 
     @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<RelevanceTranslation> translations = new HashSet<>();
+    private Set<RelevanceTranslation> translations = new HashSet<>();
 
     @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<ResourceFilter> resources = new HashSet<>();
+    private Set<ResourceFilter> resources = new HashSet<>();
 
     @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<TopicFilter> topics = new HashSet<>();
+    private Set<TopicFilter> topics = new HashSet<>();
 
     public Relevance() {
         setPublicId(URI.create("urn:relevance:" + UUID.randomUUID()));
@@ -49,6 +49,25 @@ public class Relevance extends DomainObject {
         RelevanceTranslation translation = getTranslation(language);
         if (translation != null) {
             translations.remove(translation);
+        }
+    }
+
+    public Set<TopicFilter> getTopicFilters() {
+        return this.topics;
+    }
+
+    public void removeTopicFilter(TopicFilter topicFilter) {
+        this.topics.remove(topicFilter);
+        if (topicFilter.getRelevance() == this) {
+            topicFilter.setRelevance(null);
+        }
+    }
+
+    public void addTopicFilter(TopicFilter topicFilter) {
+        this.topics.add(topicFilter);
+
+        if (topicFilter.getRelevance() != this) {
+            topicFilter.setRelevance(this);
         }
     }
 

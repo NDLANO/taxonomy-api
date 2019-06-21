@@ -1,21 +1,18 @@
 package no.ndla.taxonomy.domain;
 
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.net.URI;
 import java.util.UUID;
 
 @Entity
 public class TopicSubtopic extends DomainEntity implements Rankable{
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.REFRESH)
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.REFRESH)
     @JoinColumn(name = "subtopic_id")
     private Topic subtopic;
 
@@ -29,9 +26,10 @@ public class TopicSubtopic extends DomainEntity implements Rankable{
     }
 
     public TopicSubtopic(Topic topic, Topic subtopic) {
-        this.topic = topic;
-        this.subtopic = subtopic;
         setPublicId(URI.create("urn:topic-subtopic:" + UUID.randomUUID()));
+
+        this.setTopic(topic);
+        this.setSubtopic(subtopic);
     }
 
     public boolean isPrimary() {
@@ -48,6 +46,22 @@ public class TopicSubtopic extends DomainEntity implements Rankable{
 
     public Topic getSubtopic() {
         return subtopic;
+    }
+
+    public void setTopic(Topic topic) {
+        this.topic = topic;
+
+        if (topic != null && !topic.getChildrenTopicSubtopics().contains(this)) {
+            topic.addChildTopicSubtopic(this);
+        }
+    }
+
+    public void setSubtopic(Topic subtopic) {
+        this.subtopic = subtopic;
+
+        if (subtopic != null && !subtopic.getParentTopicSubtopics().contains(this)) {
+            subtopic.addParentTopicSubtopic(this);
+        }
     }
 
     public int getRank() {

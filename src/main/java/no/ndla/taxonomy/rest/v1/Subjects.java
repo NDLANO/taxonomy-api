@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.repositories.SubjectRepository;
+import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.FilterIndexDocument;
@@ -12,7 +13,6 @@ import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.FilterExtractor;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.ResourceExctractor;
-import no.ndla.taxonomy.rest.v1.extractors.subjects.SubjectExtractor;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.TopicExtractor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,13 +28,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static no.ndla.taxonomy.jdbc.QueryUtils.*;
+import static no.ndla.taxonomy.jdbc.QueryUtils.getQuery;
+import static no.ndla.taxonomy.jdbc.QueryUtils.setQueryParameters;
 
 @RestController
 @Transactional
 @RequestMapping(path = {"/v1/subjects"})
 public class Subjects extends CrudController<Subject> {
-    private static final String GET_SUBJECTS_QUERY = getQuery("get_subjects");
     private static final String RESOURCES_BY_SUBJECT_ID = getQuery("resources_by_subject_id");
     private static final String TOPIC_TREE_BY_SUBJECT_ID = getQuery("topic_tree_by_subject_id");
 
@@ -59,8 +59,11 @@ public class Subjects extends CrudController<Subject> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        SubjectExtractor extractor = new SubjectExtractor();
-        return jdbcTemplate.query(GET_SUBJECTS_QUERY, setQueryParameters(language), extractor::extractSubjects);
+        return subjectRepository
+                .findAllIncludingCachedUrlsAndTranslations()
+                .stream()
+                .map(subject -> new SubjectIndexDocument(subject, language))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -71,9 +74,9 @@ public class Subjects extends CrudController<Subject> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        String sql = GET_SUBJECTS_QUERY.replace("1 = 1", "s.public_id = ?");
-        SubjectExtractor extractor = new SubjectExtractor();
-        return getFirst(jdbcTemplate.query(sql, setQueryParameters(language, id.toString()), extractor::extractSubjects), "Subject", id);
+        return subjectRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
+                .map(subject -> new SubjectIndexDocument(subject, language))
+                .orElseThrow(() -> new NotFoundHttpRequestException("Subject not found"));
     }
 
     @PutMapping("/{id}")
@@ -84,14 +87,15 @@ public class Subjects extends CrudController<Subject> {
             @PathVariable("id") URI id,
             @ApiParam(name = "subject", value = "The updated subject. Fields not included will be set to null.") @RequestBody UpdateSubjectCommand command
     ) {
-        doPut(id, command);
+        final var subject = doPut(id, command);
     }
 
     @PostMapping
     @ApiOperation(value = "Creates a new subject")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(@ApiParam(name = "subject", value = "The new subject") @RequestBody CreateSubjectCommand command) {
-        return doPost(new Subject(), command);
+        final var subject = new Subject();
+        return doPost(subject, command);
     }
 
     @GetMapping("/{id}/topics")
@@ -125,8 +129,13 @@ public class Subjects extends CrudController<Subject> {
         List<SubTopicIndexDocument> results = jdbcTemplate.query(sql, setQueryParameters(id.toString(), language), resultSet -> {
             return extractor.extractTopics(id, finalFilterIds, relevance, resultSet);
         });
+
+        if (results == null) {
+            return List.of();
+        }
+
         if (!recursive) {
-            results.sort(Comparator.comparing(o -> Integer.valueOf(o.rank)));
+            results.sort(Comparator.comparing(o -> o.rank));
         } else {
             //sort input by path length so parent nodes are processed first (then we can add to them)
             results.sort(Comparator.comparing(o -> o.path.length()));

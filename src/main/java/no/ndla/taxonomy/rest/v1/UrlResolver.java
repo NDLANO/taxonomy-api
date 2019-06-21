@@ -13,7 +13,6 @@ import no.ndla.taxonomy.service.UrlResolverService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,22 +20,16 @@ import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.net.URI;
 
-import static no.ndla.taxonomy.jdbc.QueryUtils.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @RestController
 @RequestMapping("/v1/url")
 @Transactional
 public class UrlResolver {
-
-    private static final String RESOLVE_URL_QUERY = getQuery("resolve_url");
-
-    private JdbcTemplate jdbcTemplate;
     private UrlResolverService urlResolverService;
 
     @Autowired
-    public UrlResolver(JdbcTemplate jdbcTemplate, UrlResolverService urlResolverService) {
-        this.jdbcTemplate = jdbcTemplate;
+    public UrlResolver(UrlResolverService urlResolverService) {
         this.urlResolverService = urlResolverService;
     }
 
@@ -57,21 +50,25 @@ public class UrlResolver {
     public ResolvedUrl resolve(@RequestParam String path, HttpServletResponse response) throws Exception {
         URI id = getId(path);
 
-        ResolvedUrl returnedResolvedUrl = jdbcTemplate.query(RESOLVE_URL_QUERY, setQueryParameters(id.toString()),
-                resultSet -> {
-                    ResolvedUrl resolvedUrl = new ResolvedUrl();
-                    while (resultSet.next()) {
-                        resolvedUrl.id = getURI(resultSet, "public_id");
-                        resolvedUrl.contentUri = getURI(resultSet, "content_uri");
-                        resolvedUrl.name = resultSet.getString("name");
-                        resolvedUrl.path = getPathMostCloselyMatchingContext(path, resolvedUrl.path, resultSet.getString("resource_path"));
-                        if (resolvedUrl.path.equals(path)) {
-                            return resolvedUrl;
-                        }
+        final var resolvablePathEntities = urlResolverService.getResolvablePathEntitiesFromPublicId(id);
+
+        ResolvedUrl returnedResolvedUrl = new ResolvedUrl();
+        ResolvedUrl resolvedUrl = new ResolvedUrl();
+        if (resolvablePathEntities.size() > 0) {
+            for (final var entity : resolvablePathEntities) {
+                resolvedUrl.id = entity.getPublicId();
+                resolvedUrl.contentUri = entity.getContentUri();
+                resolvedUrl.name = entity.getName();
+                for (var foundPath : entity.getAllPaths()) {
+                    resolvedUrl.path = getPathMostCloselyMatchingContext(path, resolvedUrl.path, foundPath);
+                    if (resolvedUrl.path.equals(path)) {
+                        break;
                     }
-                    return resolvedUrl;
                 }
-        );
+            }
+            returnedResolvedUrl = resolvedUrl;
+        }
+
         if (isBlank(returnedResolvedUrl.path)) {
             throw new NotFoundException(path);
         }

@@ -147,7 +147,7 @@ public class ResourcesTest extends RestTest {
         Resource resource = builder.resource(r -> r
                 .translation("nb", tr -> tr.name("ressurs"))
                 .resourceType(rt -> rt.name("Learning path")));
-        ResourceTranslation resourceTranslation = resource.getTranslation("nb");
+        ResourceTranslation resourceTranslation = resource.getTranslation("nb").orElse(null);
 
         builder.topic(t -> t
                 .resource(resource));
