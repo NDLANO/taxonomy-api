@@ -161,11 +161,11 @@ public class TopicReusedInSameSubjectCloningService {
         private int topicCloningSerial = 0;
 
         public class TopicCloning {
-            @JsonIgnoreProperties({"subjects", "subtopics", "parentTopics", "resources", "filters", "translations", "primaryParentTopic"})
+            @JsonIgnoreProperties({"subjects", "subtopics", "parentTopics", "resources", "filters", "translations", "primaryParentTopic", "topicResourceTypes"})
             private Topic parentTopic;
-            @JsonIgnoreProperties({"subjects", "subtopics", "parentTopics", "resources", "filters", "translations", "primaryParentTopic"})
+            @JsonIgnoreProperties({"subjects", "subtopics", "parentTopics", "resources", "filters", "translations", "primaryParentTopic", "topicResourceTypes"})
             private Topic topic;
-            @JsonIgnoreProperties({"subjects", "subtopics", "parentTopics", "resources", "filters", "translations", "primaryParentTopic"})
+            @JsonIgnoreProperties({"subjects", "subtopics", "parentTopics", "resources", "filters", "translations", "primaryParentTopic", "topicResourceTypes"})
             private Topic clonedTopic;
             private List<TopicCloning> clonedSubtopics;
 
@@ -232,6 +232,8 @@ public class TopicReusedInSameSubjectCloningService {
                 }
                 /* translations */
                 topic.getTranslations().forEachRemaining(translation -> clonedTopic.addTranslation(translation.getLanguageCode()).setName(translation.getName()));
+                /* resource types */
+                topic.topicResourceTypes.forEach(topicResourceType -> clonedTopic.addResourceType(topicResourceType.getResourceType()));
 
                 clonedTopic = topicRepository.save(clonedTopic);
 
