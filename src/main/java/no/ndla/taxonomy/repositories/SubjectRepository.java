@@ -29,4 +29,10 @@ public interface SubjectRepository extends TaxonomyRepository<Subject> {
             "   LEFT OUTER JOIN FETCH s.cachedUrls" +
             "   WHERE s.publicId = :publicId")
     List<Subject> findAllByPublicIdIncludingCachedUrls(URI publicId);
+
+    @Query("SELECT DISTINCT s " +
+            "   FROM Subject s" +
+            "   LEFT OUTER JOIN FETCH s.filters" +
+            "   WHERE s.publicId = :publicId")
+    Optional<Subject> findFirstByPublicIdIncludingFilters(URI publicId);
 }

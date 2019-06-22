@@ -441,7 +441,7 @@ public class Topic extends CachedUrlEntity {
     public void addTopicFilter(TopicFilter topicFilter) {
         this.filters.add(topicFilter);
 
-        if (topicFilter.getTopic() != this) {
+        if (topicFilter.getTopic().orElse(null) != this) {
             topicFilter.setTopic(this);
         }
     }
@@ -449,7 +449,7 @@ public class Topic extends CachedUrlEntity {
     public void removeTopicFilter(TopicFilter topicFilter) {
         this.filters.remove(topicFilter);
 
-        if (topicFilter.getTopic() == this) {
+        if (topicFilter.getTopic().orElse(null) == this) {
             topicFilter.setTopic(null);
         }
     }

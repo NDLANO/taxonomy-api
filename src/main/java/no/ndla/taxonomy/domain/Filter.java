@@ -61,8 +61,8 @@ public class Filter extends DomainObject {
         }
     }
 
-    public Subject getSubject() {
-        return this.subject;
+    public Optional<Subject> getSubject() {
+        return Optional.ofNullable(this.subject);
     }
 
     public void removeResourceFilter(ResourceFilter resourceFilter) {
@@ -75,7 +75,7 @@ public class Filter extends DomainObject {
     public void removeTopicFilter(TopicFilter topicFilter) {
         this.topics.remove(topicFilter);
 
-        if (topicFilter.getFilter() == this) {
+        if (topicFilter.getFilter().orElse(null) == this) {
             topicFilter.setFilter(null);
         }
     }
@@ -99,7 +99,7 @@ public class Filter extends DomainObject {
     public void addTopicFilter(TopicFilter topicFilter) {
         this.topics.add(topicFilter);
 
-        if (topicFilter.getFilter() != this) {
+        if (topicFilter.getFilter().orElse(null) != this) {
             topicFilter.setFilter(this);
         }
     }

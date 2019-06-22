@@ -4,10 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.ResourceResourceType;
+import no.ndla.taxonomy.domain.ResourceTranslation;
+import no.ndla.taxonomy.domain.TopicResource;
 
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -59,4 +63,33 @@ public class ResourceIndexDocument {
 
     @JsonIgnore
     public int topicNumericId;
+
+    public ResourceIndexDocument() {
+
+    }
+
+    public ResourceIndexDocument(TopicResource topicResource, String language) {
+        final var resource = topicResource.getResource();
+        final var topic = topicResource.getTopic();
+
+        this.topicId = topic.getPublicId();
+        this.id = resource.getPublicId();
+
+        this.name = resource.getTranslation(language)
+                .map(ResourceTranslation::getName)
+                .orElse(resource.getName());
+
+        this.resourceTypes = resource.getResourceResourceTypes().stream()
+                .map(ResourceResourceType::getResourceType)
+                .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language))
+                .collect(Collectors.toSet());
+
+        this.contentUri = resource.getContentUri();
+        this.path = resource.getPrimaryPath().orElse(null);
+        this.paths = resource.getAllPaths();
+        this.connectionId = topicResource.getPublicId();
+        this.rank = topicResource.getRank();
+        this.isPrimary = topicResource.isPrimary();
+        this.topicNumericId = topic.getId();
+    }
 }

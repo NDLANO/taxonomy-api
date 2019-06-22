@@ -50,7 +50,7 @@ public class Subject extends CachedUrlEntity {
     public void addFilter(Filter filter) {
         this.filters.add(filter);
 
-        if (filter.getSubject() != this) {
+        if (filter.getSubject().orElse(null) != this) {
             filter.setSubject(this);
         }
     }
@@ -75,7 +75,7 @@ public class Subject extends CachedUrlEntity {
         if (this.filters.contains(filter)) {
             this.filters.remove(filter);
 
-            if (filter.getSubject() == this) {
+            if (filter.getSubject().orElse(null) == this) {
                 filter.setSubject(null);
             }
         }

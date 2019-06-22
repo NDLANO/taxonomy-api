@@ -5,25 +5,20 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.Filter;
-import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.domain.SubjectRequiredException;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
-
-import static no.ndla.taxonomy.jdbc.QueryUtils.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/filters"})
@@ -31,13 +26,11 @@ import static no.ndla.taxonomy.jdbc.QueryUtils.*;
 public class Filters extends CrudController<Filter> {
 
     private SubjectRepository subjectRepository;
-    private JdbcTemplate jdbcTemplate;
-    private static final String GET_FILTERS_QUERY = getQuery("get_filters");
+    private FilterRepository filterRepository;
 
-    public Filters(FilterRepository repository, JdbcTemplate jdbcTemplate, SubjectRepository subjectRepository) {
-        this.jdbcTemplate = jdbcTemplate;
+    public Filters(FilterRepository repository, SubjectRepository subjectRepository) {
         this.subjectRepository = subjectRepository;
-        this.repository = repository;
+        this.repository = filterRepository = repository;
     }
 
     @GetMapping
@@ -46,8 +39,11 @@ public class Filters extends CrudController<Filter> {
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
-    ) throws Exception {
-        return getFilterIndexDocuments(GET_FILTERS_QUERY, language);
+    ) {
+        return filterRepository.findAllWithSubjectAndTranslations()
+                .stream()
+                .map((filter) -> new FilterIndexDocument(filter, language))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -57,25 +53,10 @@ public class Filters extends CrudController<Filter> {
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
-    ) throws Exception {
-        String sql = GET_FILTERS_QUERY.replace("1 = 1", "f.public_id = ?");
-        return getFirst(getFilterIndexDocuments(sql, language, id.toString()), "Filter", id);
-    }
-
-    private List<FilterIndexDocument> getFilterIndexDocuments(String sql, Object... args) {
-        return jdbcTemplate.query(sql, setQueryParameters(args),
-                resultSet -> {
-                    List<FilterIndexDocument> result = new ArrayList<>();
-                    while (resultSet.next()) {
-                        result.add(new FilterIndexDocument() {{
-                            name = resultSet.getString("filter_name");
-                            id = getURI(resultSet, "filter_public_id");
-                            subjectId = getURI(resultSet, "subject_id");
-                        }});
-                    }
-                    return result;
-                }
-        );
+    ) {
+        return filterRepository.findFirstByPublicIdWithSubjectAndTranslations(id)
+                .map((filter) -> new FilterIndexDocument(filter, language))
+                .orElseThrow(() -> new NotFoundException("Filter", id));
     }
 
     @PostMapping
@@ -119,6 +100,20 @@ public class Filters extends CrudController<Filter> {
         @JsonProperty
         @ApiModelProperty(value = "The id of the connected subject", example = "urn:subject:1")
         public URI subjectId;
+
+        public FilterIndexDocument() {
+        }
+
+        public FilterIndexDocument(Filter filter, String translation) {
+            name = filter.getTranslation(translation)
+                    .map(FilterTranslation::getName)
+                    .orElse(filter.getName());
+
+            id = filter.getPublicId();
+            subjectId = filter.getSubject()
+                    .map(Subject::getPublicId)
+                    .orElse(null);
+        }
     }
 
     public static class CreateFilterCommand extends CreateCommand<Filter> {

@@ -4,10 +4,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 public class Relevance extends DomainObject {
@@ -26,7 +23,7 @@ public class Relevance extends DomainObject {
     }
 
     public RelevanceTranslation addTranslation(String languageCode) {
-        RelevanceTranslation relevanceTranslation = getTranslation(languageCode);
+        RelevanceTranslation relevanceTranslation = getTranslation(languageCode).orElse(null);
         if (relevanceTranslation != null) return relevanceTranslation;
 
         relevanceTranslation = new RelevanceTranslation(this, languageCode);
@@ -38,18 +35,14 @@ public class Relevance extends DomainObject {
         return translations.iterator();
     }
 
-    public RelevanceTranslation getTranslation(String languageCode) {
+    public Optional<RelevanceTranslation> getTranslation(String languageCode) {
         return translations.stream()
                 .filter(relevanceTranslation -> relevanceTranslation.getLanguageCode().equals(languageCode))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     public void removeTranslation(String language) {
-        RelevanceTranslation translation = getTranslation(language);
-        if (translation != null) {
-            translations.remove(translation);
-        }
+        getTranslation(language).ifPresent(translations::remove);
     }
 
     public Set<TopicFilter> getTopicFilters() {
@@ -58,7 +51,7 @@ public class Relevance extends DomainObject {
 
     public void removeTopicFilter(TopicFilter topicFilter) {
         this.topics.remove(topicFilter);
-        if (topicFilter.getRelevance() == this) {
+        if (topicFilter.getRelevance().orElse(null) == this) {
             topicFilter.setRelevance(null);
         }
     }
@@ -66,7 +59,7 @@ public class Relevance extends DomainObject {
     public void addTopicFilter(TopicFilter topicFilter) {
         this.topics.add(topicFilter);
 
-        if (topicFilter.getRelevance() != this) {
+        if (topicFilter.getRelevance().orElse(null) != this) {
             topicFilter.setRelevance(this);
         }
     }

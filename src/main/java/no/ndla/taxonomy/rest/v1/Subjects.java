@@ -11,7 +11,6 @@ import no.ndla.taxonomy.rest.v1.dtos.subjects.FilterIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
-import no.ndla.taxonomy.rest.v1.extractors.subjects.FilterExtractor;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.ResourceExctractor;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.TopicExtractor;
 import org.springframework.http.HttpStatus;
@@ -39,7 +38,6 @@ public class Subjects extends CrudController<Subject> {
     private static final String TOPIC_TREE_BY_SUBJECT_ID = getQuery("topic_tree_by_subject_id");
 
     private static final String GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_topics_by_subject_public_id_recursively");
-    private static final String GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY = getQuery("get_filters_by_subject_public_id");
 
     private SubjectRepository subjectRepository;
     private JdbcTemplate jdbcTemplate;
@@ -264,8 +262,12 @@ public class Subjects extends CrudController<Subject> {
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters for a subject")
     public List<FilterIndexDocument> getFilters(@PathVariable("id") URI subjectId) {
-        FilterExtractor extractor = new FilterExtractor();
-        return jdbcTemplate.query(GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY, setQueryParameters(subjectId.toString()), extractor::extractFilters);
+        return subjectRepository.findFirstByPublicIdIncludingFilters(subjectId)
+                .stream()
+                .map(Subject::getFilters)
+                .flatMap(Collection::stream)
+                .map(FilterIndexDocument::new)
+                .collect(Collectors.toList());
     }
 
     private String addFiltersToQuery(URI[] filterIds, String sql, List<Object> args) {

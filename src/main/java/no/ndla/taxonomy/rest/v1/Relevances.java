@@ -5,13 +5,14 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.domain.NotFoundException;
 import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.RelevanceTranslation;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,20 +22,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static no.ndla.taxonomy.jdbc.QueryUtils.*;
+import static no.ndla.taxonomy.jdbc.QueryUtils.getURI;
 
 @RestController
 @RequestMapping(path = {"/v1/relevances"})
 @Transactional
 public class Relevances extends CrudController<Relevance> {
 
-    private JdbcTemplate jdbcTemplate;
-    private static final String GET_RELEVANCES_QUERY = getQuery("get_relevances");
+    private RelevanceRepository relevanceRepository;
 
-    public Relevances(RelevanceRepository repository, JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.repository = repository;
+    public Relevances(RelevanceRepository repository) {
+        this.repository = relevanceRepository = repository;
     }
 
     @GetMapping
@@ -43,11 +43,11 @@ public class Relevances extends CrudController<Relevance> {
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
-    ) throws Exception {
-        RelevanceQueryExtractor extractor = new RelevanceQueryExtractor();
-        return jdbcTemplate.query(GET_RELEVANCES_QUERY, setQueryParameters(language),
-                extractor::extractRelevances
-        );
+    ) {
+        return relevanceRepository.findAllIncludingTranslations()
+                .stream()
+                .map(relevance -> new RelevanceIndexDocument(relevance, language))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -57,12 +57,10 @@ public class Relevances extends CrudController<Relevance> {
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
-    ) throws Exception {
-        String sql = GET_RELEVANCES_QUERY.replace("1 = 1", "r.public_id = ?");
-        RelevanceQueryExtractor extractor = new RelevanceQueryExtractor();
-        return getFirst(jdbcTemplate.query(sql, setQueryParameters(language, id.toString()),
-                extractor::extractRelevances
-        ), "Relevance", id);
+    ) {
+        return relevanceRepository.findFirstByPublicIdIncludingTranslations(id)
+                .map(relevance -> new RelevanceIndexDocument(relevance, language))
+                .orElseThrow(() -> new NotFoundException("Relevance", id));
     }
 
     @PostMapping
@@ -93,6 +91,16 @@ public class Relevances extends CrudController<Relevance> {
         @ApiModelProperty(value = "The name of the relevance", example = "Core")
         public String name;
 
+        public RelevanceIndexDocument() {
+
+        }
+
+        public RelevanceIndexDocument(Relevance relevance, String language) {
+            this.id = relevance.getPublicId();
+            this.name = relevance.getTranslation(language)
+                    .map(RelevanceTranslation::getName)
+                    .orElse(relevance.getName());
+        }
     }
 
     public static class CreateRelevanceCommand extends CreateCommand<Relevance> {

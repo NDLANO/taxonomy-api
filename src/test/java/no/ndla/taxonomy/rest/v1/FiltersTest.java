@@ -156,7 +156,7 @@ public class FiltersTest extends RestTest {
         createResource("/v1/filters", command, status().isCreated());
 
         Filter filter = filterRepository.getByPublicId(URI.create("urn:filter:1"));
-        assertEquals("urn:subject:1", filter.getSubject().getPublicId().toString());
+        assertEquals("urn:subject:1", filter.getSubject().get().getPublicId().toString());
     }
 
 

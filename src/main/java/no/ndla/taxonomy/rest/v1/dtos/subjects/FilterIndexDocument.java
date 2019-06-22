@@ -3,6 +3,7 @@ package no.ndla.taxonomy.rest.v1.dtos.subjects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.Filter;
 
 import java.net.URI;
 import java.util.Objects;
@@ -32,5 +33,13 @@ public class FilterIndexDocument {
     @Override
     public int hashCode() {
         return Objects.hash(id, name);
+    }
+
+    public FilterIndexDocument() {
+    }
+
+    public FilterIndexDocument(Filter filter) {
+        this.id = filter.getPublicId();
+        this.name = filter.getName();
     }
 }

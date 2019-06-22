@@ -3,9 +3,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicResourceType;
-import no.ndla.taxonomy.repositories.SubjectTopicRepository;
-import no.ndla.taxonomy.repositories.TopicRepository;
-import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
+import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.TopicResourceTypeService;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.junit.Test;
@@ -36,9 +34,13 @@ public class TopicsWebTest {
     @MockBean
     SubjectTopicRepository subjectTopicRepository;
     @MockBean
+    SubjectRepository subjectRepository;
+    @MockBean
     JdbcTemplate jdbcTemplate;
     @MockBean
     TopicResourceTypeService topicResourceTypeService;
+    @MockBean
+    TopicResourceRepository topicResourceRepository;
 
     @Autowired
     private MockMvc mockMvc;

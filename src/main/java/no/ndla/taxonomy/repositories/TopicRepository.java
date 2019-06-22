@@ -44,4 +44,12 @@ public interface TopicRepository extends TaxonomyRepository<Topic> {
             "   LEFT OUTER JOIN FETCH t.cachedUrls" +
             "   WHERE t.publicId = :publicId")
     List<Topic> findAllByPublicIdIncludingCachedUrls(URI publicId);
+
+    @Query("SELECT DISTINCT t" +
+            "   FROM Topic t" +
+            "   LEFT OUTER JOIN FETCH t.filters tf" +
+            "   LEFT OUTER JOIN FETCH tf.filter")
+    Optional<Topic> findFirstByPublicIdIncludingFilters(URI publicId);
+
+    Optional<Topic> findFirstByPublicId(URI publicId);
 }

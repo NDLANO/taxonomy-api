@@ -45,7 +45,7 @@ public class TopicFiltersTest extends RestTest {
 
         assertEquals(1, topic.getTopicFilters().size());
         assertEquals(first(topic.getTopicFilters()).getPublicId(), id);
-        assertEquals("urn:relevance:core", first(topic.getTopicFilters()).getRelevance().getPublicId().toString());
+        assertEquals("urn:relevance:core", first(topic.getTopicFilters()).getRelevance().get().getPublicId().toString());
     }
 
     @Test
@@ -103,7 +103,7 @@ public class TopicFiltersTest extends RestTest {
             relevanceId = supplementary.getPublicId();
         }});
 
-        assertEquals("urn:relevance:supplementary", first(topic.getTopicFilters()).getRelevance().getPublicId().toString());
+        assertEquals("urn:relevance:supplementary", first(topic.getTopicFilters()).getRelevance().get().getPublicId().toString());
     }
 
     @Test

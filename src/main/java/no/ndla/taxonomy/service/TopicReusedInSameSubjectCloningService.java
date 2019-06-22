@@ -227,7 +227,7 @@ public class TopicReusedInSameSubjectCloningService {
                 /* filters */
                 if (topic.getTopicFilters() != null) {
                     for (TopicFilter topicFilter : topic.getTopicFilters()) {
-                        clonedTopic.addTopicFilter(new TopicFilter(clonedTopic, topicFilter.getFilter(), topicFilter.getRelevance()));
+                        clonedTopic.addTopicFilter(new TopicFilter(clonedTopic, topicFilter.getFilter().orElse(null), topicFilter.getRelevance().orElse(null)));
                     }
                 }
                 /* translations */
