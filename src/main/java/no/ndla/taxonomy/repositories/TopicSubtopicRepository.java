@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Set;
 
 public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopic> {
     List<TopicSubtopic> findByTopic(Topic topic);
@@ -32,4 +33,25 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
             "   LEFT OUTER JOIN FETCH st.cachedUrls" +
             "   WHERE t.publicId = :topicPublicId")
     List<TopicSubtopic> findAllByTopicPublicIdIncludingTopicAndSubtopicAndCachedUrls(URI topicPublicId);
+
+    @Query("SELECT DISTINCT ts" +
+            "   FROM TopicSubtopic ts" +
+            "   INNER JOIN ts.topic parentTopic" +
+            "   INNER JOIN FETCH ts.subtopic subTopicTopic" +
+            "   INNER JOIN subTopicTopic.filters subTopic_filter" +
+            "   INNER JOIN subTopic_filter.filter subTopicFilter_filter" +
+            "   LEFT OUTER JOIN FETCH subTopicTopic.translations" +
+            "   WHERE" +
+            "       parentTopic.publicId = :publicId AND " +
+            "       subTopicFilter_filter.publicId IN :filterPublicIds")
+    List<TopicSubtopic> findAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(URI publicId, Set<URI> filterPublicIds);
+
+    @Query("SELECT DISTINCT ts" +
+            "   FROM TopicSubtopic ts" +
+            "   INNER JOIN FETCH ts.subtopic subTopicTopic" +
+            "   INNER JOIN ts.topic parentTopic" +
+            "   LEFT OUTER JOIN FETCH subTopicTopic.translations" +
+            "   WHERE" +
+            "       parentTopic.publicId = :publicId")
+    List<TopicSubtopic> findAllByTopicPublicIdIncludingSubtopicAndSubtopicTranslations(URI publicId);
 }

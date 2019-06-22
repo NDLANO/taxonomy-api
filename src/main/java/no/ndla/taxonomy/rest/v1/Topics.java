@@ -10,7 +10,6 @@ import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.dtos.topics.*;
 import no.ndla.taxonomy.rest.v1.extractors.topics.ResourceQueryExtractor;
-import no.ndla.taxonomy.rest.v1.extractors.topics.SubTopicQueryExtractor;
 import no.ndla.taxonomy.service.TopicResourceTypeService;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
@@ -43,8 +42,6 @@ public class Topics extends CrudController<Topic> {
 
     private static final String TOPIC_TREE_BY_TOPIC_ID = getQuery("topic_tree_by_topic_id");
     private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_topic_public_id_recursively");
-    private static final String GET_SUBTOPICS_BY_TOPIC_ID_QUERY = getQuery("get_subtopics_by_topic_id_query");
-    private static final String GET_SUBTOPICS_BY_TOPIC_ID_AND_FILTERS_QUERY = getQuery("get_subtopics_by_topic_id_and_filters_query");
     private static final Comparator<ResourceIndexDocument> RESOURCE_BY_RANK = Comparator.comparing(resourceNode -> resourceNode.rank);
     private static final Comparator<TopicNode> TOPIC_BY_RANK = Comparator.comparing(topicNode -> topicNode.rank);
 
@@ -359,18 +356,16 @@ public class Topics extends CrudController<Topic> {
         String sql;
         List<Object> args;
         if (filterIds.length > 0) {
-            sql = GET_SUBTOPICS_BY_TOPIC_ID_AND_FILTERS_QUERY;
-            StringBuffer filtersCombined = new StringBuffer();
-            Arrays.stream(filterIds).forEach(filtersCombined::append);
-            args = Arrays.asList(language, id.toString(), filtersCombined.toString());
+            return topicSubtopicRepository.findAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(id, Set.of(filterIds))
+                    .stream()
+                    .map(topicSubtopic -> new SubTopicIndexDocument(topicSubtopic, language))
+                    .collect(Collectors.toList());
         } else {
-            sql = GET_SUBTOPICS_BY_TOPIC_ID_QUERY.replace("1 = 1", "t.public_id = ?");
-            args = Arrays.asList(language, id.toString());
+            return topicSubtopicRepository.findAllByTopicPublicIdIncludingSubtopicAndSubtopicTranslations(id)
+                    .stream()
+                    .map(topicSubtopic -> new SubTopicIndexDocument(topicSubtopic, language))
+                    .collect(Collectors.toList());
         }
-        SubTopicQueryExtractor extractor = new SubTopicQueryExtractor();
-        return jdbcTemplate.query(sql, setQueryParameters(args.toArray()),
-                extractor::extractSubTopics
-        );
     }
 
     @GetMapping("/{id}/connections")

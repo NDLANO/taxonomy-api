@@ -19,6 +19,4 @@ public interface FilterRepository extends TaxonomyRepository<Filter> {
             "   LEFT OUTER JOIN f.translations" +
             "   WHERE f.publicId = :publicId")
     Optional<Filter> findFirstByPublicIdWithSubjectAndTranslations(URI publicId);
-
-    Optional<Filter> findFirstByPublicId(URI publicId);
 }

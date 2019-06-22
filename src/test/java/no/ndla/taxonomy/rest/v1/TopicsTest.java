@@ -18,8 +18,10 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.Assert.*;
@@ -495,16 +497,24 @@ public class TopicsTest extends RestTest {
         MockHttpServletResponse response = getResource("/v1/topics/" + parentTopicId + "/topics");
         SubTopicIndexDocument[] topics = getObject(SubTopicIndexDocument[].class, response);
 
-        assertEquals(3, topics.length);
-        assertEquals("child topic aa", topics[1].name);
-        assertEquals("urn:topic:aa", topics[1].id.toString());
-        assertTrue(topics[1].isPrimary);
-        assertEquals("child topic ab", topics[2].name);
-        assertEquals("urn:topic:ab", topics[2].id.toString());
-        assertTrue(topics[2].isPrimary);
-        assertEquals("secondary topic", topics[0].name);
-        assertEquals("urn:topic:b", topics[0].id.toString());
-        assertFalse(topics[0].isPrimary);
+        // Result is not sorted, order is not important
+        var topicList = Arrays.stream(topics).sorted(Comparator.comparing(topic -> topic.id)).collect(Collectors.toList());
+
+        assertEquals(3, topicList.size());
+
+        var topic1 = topicList.get(0);
+        var topic2 = topicList.get(1);
+        var topic3 = topicList.get(2);
+
+        assertEquals("child topic aa", topic1.name);
+        assertEquals("urn:topic:aa", topic1.id.toString());
+        assertTrue(topic1.isPrimary);
+        assertEquals("child topic ab", topic2.name);
+        assertEquals("urn:topic:ab", topic2.id.toString());
+        assertTrue(topic2.isPrimary);
+        assertEquals("secondary topic", topic3.name);
+        assertEquals("urn:topic:b", topic3.id.toString());
+        assertFalse(topic3.isPrimary);
     }
 
     @Test
