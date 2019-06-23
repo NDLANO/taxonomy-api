@@ -35,4 +35,6 @@ public interface SubjectRepository extends TaxonomyRepository<Subject> {
             "   LEFT OUTER JOIN FETCH s.filters" +
             "   WHERE s.publicId = :publicId")
     Optional<Subject> findFirstByPublicIdIncludingFilters(URI publicId);
+
+    Optional<Subject> findFirstByPublicId(URI publicId);
 }
