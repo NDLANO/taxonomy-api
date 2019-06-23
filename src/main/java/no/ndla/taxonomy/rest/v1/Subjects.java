@@ -4,11 +4,11 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.NotFoundException;
 import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.domain.SubjectTopicTreeElement;
 import no.ndla.taxonomy.domain.TopicResource;
+import no.ndla.taxonomy.domain.TopicTreeBySubjectElement;
 import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.repositories.SubjectTopicTreeElementRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
+import no.ndla.taxonomy.repositories.TopicTreeBySubjectElementRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
@@ -17,6 +17,7 @@ import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import no.ndla.taxonomy.rest.v1.extractors.subjects.TopicExtractor;
+import no.ndla.taxonomy.service.TopicResourceSortedTopicListAndRankComparator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -39,11 +40,11 @@ public class Subjects extends CrudController<Subject> {
     private static final String GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_topics_by_subject_public_id_recursively");
 
     private SubjectRepository subjectRepository;
-    private SubjectTopicTreeElementRepository subjectTopicTreeElementRepository;
+    private TopicTreeBySubjectElementRepository subjectTopicTreeElementRepository;
     private TopicResourceRepository topicResourceRepository;
     private JdbcTemplate jdbcTemplate;
 
-    public Subjects(SubjectRepository subjectRepository, SubjectTopicTreeElementRepository subjectTopicTreeElementRepository,
+    public Subjects(SubjectRepository subjectRepository, TopicTreeBySubjectElementRepository subjectTopicTreeElementRepository,
                     TopicResourceRepository topicResourceRepository, JdbcTemplate jdbcTemplate) {
         this.subjectRepository = subjectRepository;
         this.jdbcTemplate = jdbcTemplate;
@@ -198,11 +199,11 @@ public class Subjects extends CrudController<Subject> {
 
         final var subjectTopicTree = subjectTopicTreeElementRepository.findAllBySubjectIdOrderBySubjectIdAscParentTopicIdAscTopicRankAsc(subject.getId());
         final var subjectIds = subjectTopicTree.stream()
-                .map(SubjectTopicTreeElement::getTopicId)
+                .map(TopicTreeBySubjectElement::getTopicId)
                 .collect(Collectors.toList());
         final var topicOrderedList = subjectTopicTree.stream()
                 .filter(subjectTopicTreeElement -> subjectTopicTreeElement.getTopicId() > 0)
-                .map(SubjectTopicTreeElement::getTopicId)
+                .map(TopicTreeBySubjectElement::getTopicId)
                 .collect(Collectors.toList());
 
         final Set<URI> filterIdSet = filterIds != null ? Set.of(filterIds) : Set.of();
@@ -213,28 +214,17 @@ public class Subjects extends CrudController<Subject> {
 
         final List<TopicResource> topicResources;
         if (filterIdSet.size() > 0 && resourceTypeIdSet.size() > 0) {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingResourceAndResourceTranslationsAndCachedUrlsAndResourceResourceTypes(subjectIds, filterIdSet, resourceTypeIdSet, relevanceArgument);
+            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(subjectIds, filterIdSet, resourceTypeIdSet, relevanceArgument);
         } else if (filterIdSet.size() > 0) {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingResourceAndResourceTranslationsAndCachedUrlsAndResourceResourceTypes(subjectIds, filterIdSet, relevanceArgument);
+            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(subjectIds, filterIdSet, relevanceArgument);
         } else if (resourceTypeIdSet.size() > 0) {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingResourceAndResourceTranslationsAndCachedUrlsAndResourceResourceTypes(subjectIds, resourceTypeIdSet, relevanceArgument);
+            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(subjectIds, resourceTypeIdSet, relevanceArgument);
         } else {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingResourceAndResourceTranslationsAndCachedUrlsAndResourceResourceTypes(subjectIds, relevanceArgument);
+            topicResources = topicResourceRepository.findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(subjectIds, relevanceArgument);
         }
 
         return topicResources.stream()
-                .sorted((topicResource1, topicResource2) -> {
-                    // Re-order the resources in the same order as the subjectTopicTreeElement query result
-                    final var listPos1 = topicOrderedList.indexOf(topicResource1.getTopic().getId());
-                    final var listPos2 = topicOrderedList.indexOf(topicResource2.getTopic().getId());
-
-                    // Order by topic-resource rank (not part of tree query) if at same topic and topic level
-                    if (listPos1 == listPos2) {
-                        return Integer.compare(topicResource1.getRank(), topicResource2.getRank());
-                    }
-
-                    return Integer.compare(listPos1, listPos2);
-                })
+                .sorted(new TopicResourceSortedTopicListAndRankComparator(topicOrderedList))
                 .map(topicResource -> new ResourceIndexDocument(topicResource, language))
                 .collect(Collectors.toList());
     }

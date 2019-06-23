@@ -21,122 +21,78 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
 
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
-            "   INNER JOIN tr.topic tFilter" +
-            "   INNER JOIN FETCH tr.resource r" +
-            "   LEFT OUTER JOIN r.resourceResourceTypes rrtFilter" +
-            "   LEFT OUTER JOIN rrtFilter.resourceType rtFilter" +
-            "   LEFT OUTER JOIN r.filters rfFilter" +
-            "   LEFT OUTER JOIN rfFilter.filter fFilter" +
-            "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
-            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes rrt" +
-            "   LEFT OUTER JOIN FETCH rrt.resourceType" +
-            "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-            "   WHERE tFilter = :topic AND" +
-            "       rtFilter.publicId IN :resourceTypePublicIds AND" +
-            "       fFilter.publicId IN :filterPublicIds" +
-            "   ORDER BY tr.rank")
-    List<TopicResource> findAllByTopicAndFilterPublicIdsAndResourceTypePublicIdsIncludingResourceAndResourceTranslationsAndResourceTypesAndResourceTypeTranslationsAndCachedUrls(Topic topic, Set<URI> filterPublicIds, Set<URI> resourceTypePublicIds);
-
-    @Query("SELECT DISTINCT tr" +
-            "   FROM TopicResource tr" +
-            "   INNER JOIN tr.topic tFilter" +
-            "   INNER JOIN FETCH tr.resource r" +
-            "   LEFT OUTER JOIN r.filters rfFilter" +
-            "   LEFT OUTER JOIN rfFilter.filter fFilter" +
-            "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
-            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes rrt" +
-            "   LEFT OUTER JOIN FETCH rrt.resourceType" +
-            "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-            "   WHERE tFilter = :topic AND" +
-            "       fFilter.publicId IN :filterPublicIds" +
-            "   ORDER BY tr.rank")
-    List<TopicResource> findAllByTopicAndFilterPublicIdsIncludingResourceAndResourceTranslationsAndResourceTypesAndResourceTypeTranslationsAndCachedUrls(Topic topic, Set<URI> filterPublicIds);
-
-    @Query("SELECT DISTINCT tr" +
-            "   FROM TopicResource tr" +
-            "   INNER JOIN tr.topic tFilter" +
-            "   INNER JOIN FETCH tr.resource r" +
-            "   LEFT OUTER JOIN r.resourceResourceTypes rrtFilter" +
-            "   LEFT OUTER JOIN rrtFilter.resourceType rtFilter" +
-            "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
-            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes rrt" +
-            "   LEFT OUTER JOIN FETCH rrt.resourceType" +
-            "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-            "   WHERE tFilter = :topic AND" +
-            "       rtFilter.publicId IN :resourceTypePublicIds" +
-            "   ORDER BY tr.rank")
-    List<TopicResource> findAllByTopicAndResourceTypePublicIdsIncludingResourceAndResourceTranslationsAndResourceTypesAndResourceTypeTranslationsAndCachedUrls(Topic topic, Set<URI> resourceTypePublicIds);
-
-    @Query("SELECT DISTINCT tr" +
-            "   FROM TopicResource tr" +
-            "   INNER JOIN tr.topic tFilter" +
-            "   LEFT OUTER JOIN FETCH tr.resource r" +
-            "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
-            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes rrt" +
-            "   LEFT OUTER JOIN FETCH rrt.resourceType" +
-            "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-            "   WHERE tFilter = :topic" +
-            "   ORDER BY tr.rank")
-    List<TopicResource> findAllByTopicIncludingResourceAndResourceTranslationsAndResourceTypesAndResourceTypeTranslationsAndCachedUrls(Topic topic);
-
-    @Query("SELECT DISTINCT tr" +
-            "   FROM TopicResource tr" +
-            "   LEFT OUTER JOIN tr.topic t" +
+            "   LEFT OUTER JOIN FETCH tr.topic t" +
             "   LEFT JOIN FETCH tr.resource r" +
-            "   LEFT JOIN r.filters rf" +
+            "   LEFT OUTER JOIN FETCH r.filters rf" +
+            "   LEFT OUTER JOIN FETCH rf.filter" +
             "   LEFT JOIN rf.relevance rel" +
             "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
             "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes" +
+            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes rrtFetch" +
+            "   LEFT OUTER JOIN FETCH rf.relevance" +
+            "   LEFT OUTER JOIN FETCH rrtFetch.resourceType rtFetch" +
+            "   LEFT OUTER JOIN FETCH rtFetch.resourceTypeTranslations" +
             "   WHERE " +
             "       t.id IN :topicIds AND" +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
-    List<TopicResource> findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingResourceAndResourceTranslationsAndCachedUrlsAndResourceResourceTypes(Collection<Integer> topicIds, URI relevancePublicId);
+    List<TopicResource> findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, URI relevancePublicId);
 
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
             "   INNER JOIN FETCH tr.resource r" +
-            "   LEFT JOIN r.filters rf" +
+            "   LEFT OUTER JOIN FETCH r.filters rf" +
+            "   LEFT OUTER JOIN FETCH rf.filter" +
             "   INNER JOIN rf.filter f" +
-            "   LEFT OUTER JOIN tr.topic t" +
+            "   LEFT OUTER JOIN FETCH tr.topic t" +
             "   LEFT JOIN rf.relevance rel" +
             "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
             "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes" +
+            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes rrtFetch" +
+            "   LEFT OUTER JOIN FETCH rf.relevance" +
+            "   LEFT OUTER JOIN FETCH rrtFetch.resourceType rtFetch" +
+            "   LEFT OUTER JOIN FETCH rtFetch.resourceTypeTranslations" +
             "   WHERE t.id IN :topicIds AND f.publicId IN :filterPublicIds AND " +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
-    List<TopicResource> findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingResourceAndResourceTranslationsAndCachedUrlsAndResourceResourceTypes(Collection<Integer> topicIds, Set<URI> filterPublicIds, URI relevancePublicId);
+    List<TopicResource> findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Set<URI> filterPublicIds, URI relevancePublicId);
 
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
             "   INNER JOIN FETCH tr.resource r" +
-            "   INNER JOIN r.filters rf" +
+            "   LEFT OUTER JOIN FETCH r.filters rf" +
+            "   LEFT OUTER JOIN FETCH rf.filter" +
             "   LEFT JOIN rf.filter f" +
-            "   LEFT OUTER JOIN tr.topic t" +
+            "   LEFT OUTER JOIN FETCH tr.topic t" +
             "   LEFT JOIN rf.relevance rel" +
             "   LEFT JOIN r.resourceResourceTypes rrt " +
             "   LEFT JOIN rrt.resourceType rt" +
             "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
             "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes" +
+            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes rrtFetch" +
+            "   LEFT OUTER JOIN FETCH rf.relevance" +
+            "   LEFT OUTER JOIN FETCH rrtFetch.resourceType rtFetch" +
+            "   LEFT OUTER JOIN FETCH rtFetch.resourceTypeTranslations" +
             "   WHERE t.id IN :topicIds AND f.publicId IN :filterPublicIds AND" +
             "       (rt.publicId IN :resourceTypePublicIds) AND" +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
-    List<TopicResource> findAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingResourceAndResourceTranslationsAndCachedUrlsAndResourceResourceTypes(Collection<Integer> topicIds, Set<URI> filterPublicIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
+    List<TopicResource> findAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Set<URI> filterPublicIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
 
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
             "   INNER JOIN FETCH tr.resource r" +
-            "   LEFT JOIN r.filters rf" +
-            "   LEFT OUTER JOIN tr.topic t" +
+            "   LEFT OUTER JOIN FETCH r.filters rf" +
+            "   LEFT OUTER JOIN FETCH rf.filter" +
+            "   LEFT OUTER JOIN FETCH tr.topic t" +
             "   LEFT JOIN rf.relevance rel" +
             "   LEFT OUTER JOIN r.resourceResourceTypes rrt " +
             "   LEFT JOIN rrt.resourceType rt" +
             "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
             "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes" +
+            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes rrtFetch" +
+            "   LEFT OUTER JOIN FETCH rf.relevance" +
+            "   LEFT OUTER JOIN FETCH rrtFetch.resourceType rtFetch" +
+            "   LEFT OUTER JOIN FETCH rtFetch.resourceTypeTranslations" +
             "   WHERE t.id IN :topicIds AND" +
             "       (rt.publicId IN :resourceTypePublicIds) AND" +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
-    List<TopicResource> findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingResourceAndResourceTranslationsAndCachedUrlsAndResourceResourceTypes(Collection<Integer> topicIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
+    List<TopicResource> findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
 }

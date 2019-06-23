@@ -41,6 +41,8 @@ public class TopicsWebTest {
     TopicResourceTypeService topicResourceTypeService;
     @MockBean
     TopicResourceRepository topicResourceRepository;
+    @MockBean
+    TopicTreeByTopicElementRepository topicTreeByTopicElementRepository;
 
     @Autowired
     private MockMvc mockMvc;

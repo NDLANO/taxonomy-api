@@ -6,7 +6,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "topic_tree_by_subject_id_view")
-public class SubjectTopicTreeElement {
+public class TopicTreeBySubjectElement {
     @Id
     private int topicId;
 
