@@ -217,7 +217,7 @@ public class Subjects extends CrudController<Subject> {
         } else if (filterIdSet.size() > 0) {
             topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingResourceAndResourceTranslationsAndCachedUrlsAndResourceResourceTypes(subjectIds, filterIdSet, relevanceArgument);
         } else if (resourceTypeIdSet.size() > 0) {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingResourceAndResourceTranslationsAndCachedUrlsAndResourceResourceTypes(subjectIds, filterIdSet, relevanceArgument);
+            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingResourceAndResourceTranslationsAndCachedUrlsAndResourceResourceTypes(subjectIds, resourceTypeIdSet, relevanceArgument);
         } else {
             topicResources = topicResourceRepository.findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingResourceAndResourceTranslationsAndCachedUrlsAndResourceResourceTypes(subjectIds, relevanceArgument);
         }
