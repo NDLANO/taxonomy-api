@@ -9,8 +9,9 @@ import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.dtos.topics.*;
-import no.ndla.taxonomy.service.TopicResourceSortedTopicListAndRankComparator;
+import no.ndla.taxonomy.service.TopicResourceTreeSortable;
 import no.ndla.taxonomy.service.TopicResourceTypeService;
+import no.ndla.taxonomy.service.TopicTreeSorter;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
@@ -20,10 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -33,13 +31,13 @@ public class Topics extends CrudController<Topic> {
 
 
     private TopicResourceTypeService topicResourceTypeService;
-
     private TopicRepository topicRepository;
     private TopicSubtopicRepository topicSubtopicRepository;
     private SubjectTopicRepository subjectTopicRepository;
     private SubjectRepository subjectRepository;
     private TopicResourceRepository topicResourceRepository;
     private TopicTreeByTopicElementRepository topicTreeRepository;
+    private TopicTreeSorter topicTreeSorter;
 
     public Topics(TopicRepository topicRepository,
                   TopicSubtopicRepository topicSubtopicRepository,
@@ -47,7 +45,8 @@ public class Topics extends CrudController<Topic> {
                   TopicResourceTypeService topicResourceTypeService,
                   SubjectRepository subjectRepository,
                   TopicResourceRepository topicResourceRepository,
-                  TopicTreeByTopicElementRepository topicTreeRepository) {
+                  TopicTreeByTopicElementRepository topicTreeRepository,
+                  TopicTreeSorter topicTreeSorter) {
         this.topicRepository = topicRepository;
         this.repository = topicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
@@ -56,6 +55,7 @@ public class Topics extends CrudController<Topic> {
         this.topicResourceRepository = topicResourceRepository;
         this.subjectRepository = subjectRepository;
         this.topicTreeRepository = topicTreeRepository;
+        this.topicTreeSorter = topicTreeSorter;
     }
 
     private TopicIndexDocument createTopicIndexDocument(Topic topic, String language) {
@@ -152,15 +152,15 @@ public class Topics extends CrudController<Topic> {
         final List<TopicResource> topicResources;
         final Set<Integer> topicIdsToSearchFor;
 
-        final List<Integer> topicOrderedList;
+        // Add both topics and resourceTopics to a common list that will be sorted in a tree-structure based on rank at each level
+        final Set<TopicResourceTreeSortable> resourcesToSort = new HashSet<>();
 
         if (recursive) {
             final var topicList = topicTreeRepository.findAllByRootTopicIdOrTopicIdOrderByParentTopicIdAscParentTopicIdAscTopicRankAsc(topic.getId(), topic.getId());
 
-            topicOrderedList = topicList.stream()
-                    .filter(subjectTopicTreeElement -> subjectTopicTreeElement.getTopicId() > 0)
-                    .map(TopicTreeByTopicElement::getTopicId)
-                    .collect(Collectors.toList());
+            topicList.forEach(topicTreeElement -> {
+                resourcesToSort.add(new TopicResourceTreeSortable("topic", "topic", topicTreeElement.getTopicId(), topicTreeElement.getParentTopicId(), topicTreeElement.getTopicRank()));
+            });
 
             topicIdsToSearchFor = topicList.stream()
                     .map(TopicTreeByTopicElement::getTopicId)
@@ -171,7 +171,6 @@ public class Topics extends CrudController<Topic> {
             }
         } else {
             topicIdsToSearchFor = Set.of(topic.getId());
-            topicOrderedList = List.of();
         }
 
 
@@ -188,8 +187,18 @@ public class Topics extends CrudController<Topic> {
             topicResources = topicResourceRepository.findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIdsToSearchFor, relevanceArgument);
         }
 
-        return topicResources.stream()
-                .sorted(new TopicResourceSortedTopicListAndRankComparator(topicOrderedList))
+        topicResources.forEach(topicResource -> {
+            resourcesToSort.add(new TopicResourceTreeSortable(topicResource));
+        });
+
+        // Sort the list, extract all the topicResource objects in between topics and return list of documents
+
+        return topicTreeSorter
+                .sortList(resourcesToSort)
+                .stream()
+                .map(TopicResourceTreeSortable::getTopicResource)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .map(topicResource -> new ResourceIndexDocument(topicResource, language))
                 .collect(Collectors.toList());
     }
@@ -313,4 +322,5 @@ public class Topics extends CrudController<Topic> {
 
         return results;
     }
+
 }

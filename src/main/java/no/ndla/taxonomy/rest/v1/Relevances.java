@@ -18,13 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static no.ndla.taxonomy.jdbc.QueryUtils.getURI;
 
 @RestController
 @RequestMapping(path = {"/v1/relevances"})
@@ -131,19 +126,6 @@ public class Relevances extends CrudController<Relevance> {
         @Override
         public void apply(Relevance entity) {
             entity.setName(name);
-        }
-    }
-
-    private class RelevanceQueryExtractor {
-        private List<RelevanceIndexDocument> extractRelevances(ResultSet resultSet) throws SQLException {
-            List<RelevanceIndexDocument> result = new ArrayList<>();
-            while (resultSet.next()) {
-                result.add(new RelevanceIndexDocument() {{
-                    name = resultSet.getString("relevance_name");
-                    id = getURI(resultSet, "relevance_public_id");
-                }});
-            }
-            return result;
         }
     }
 }

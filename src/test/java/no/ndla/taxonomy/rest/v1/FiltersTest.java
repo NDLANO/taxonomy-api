@@ -95,8 +95,6 @@ public class FiltersTest extends RestTest {
                             .resource(r -> r
                                     .publicId("urn:resource:2")
                                     .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core2"))))));
-
-            System.out.println("");
         }
 
         assertNotNull(filterRepository.findByPublicId(new URI("urn:filter:1")));

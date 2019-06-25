@@ -5,6 +5,7 @@ import no.ndla.taxonomy.domain.Topic;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,4 +53,6 @@ public interface TopicRepository extends TaxonomyRepository<Topic> {
     Optional<Topic> findFirstByPublicIdIncludingFilters(URI publicId);
 
     Optional<Topic> findFirstByPublicId(URI publicId);
+
+    List<Topic> findAllById(Collection<Integer> ids);
 }

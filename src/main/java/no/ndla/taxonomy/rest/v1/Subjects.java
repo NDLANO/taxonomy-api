@@ -2,13 +2,8 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.NotFoundException;
-import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.domain.TopicResource;
-import no.ndla.taxonomy.domain.TopicTreeBySubjectElement;
-import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.repositories.TopicResourceRepository;
-import no.ndla.taxonomy.repositories.TopicTreeBySubjectElementRepository;
+import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
@@ -16,41 +11,42 @@ import no.ndla.taxonomy.rest.v1.dtos.subjects.FilterIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
-import no.ndla.taxonomy.rest.v1.extractors.subjects.TopicExtractor;
-import no.ndla.taxonomy.service.TopicResourceSortedTopicListAndRankComparator;
+import no.ndla.taxonomy.service.TopicResourceTreeSortable;
+import no.ndla.taxonomy.service.TopicTreeSorter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static no.ndla.taxonomy.jdbc.QueryUtils.getQuery;
-import static no.ndla.taxonomy.jdbc.QueryUtils.setQueryParameters;
 
 @RestController
 @Transactional
 @RequestMapping(path = {"/v1/subjects"})
 public class Subjects extends CrudController<Subject> {
-    private static final String GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_topics_by_subject_public_id_recursively");
-
     private SubjectRepository subjectRepository;
     private TopicTreeBySubjectElementRepository subjectTopicTreeElementRepository;
     private TopicResourceRepository topicResourceRepository;
-    private JdbcTemplate jdbcTemplate;
+    private SubjectTopicRepository subjectTopicRepository;
+    private TopicSubtopicRepository topicSubtopicRepository;
+    private TopicTreeSorter topicTreeSorter;
 
     public Subjects(SubjectRepository subjectRepository, TopicTreeBySubjectElementRepository subjectTopicTreeElementRepository,
-                    TopicResourceRepository topicResourceRepository, JdbcTemplate jdbcTemplate) {
+                    TopicResourceRepository topicResourceRepository,
+                    SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository,
+                    TopicTreeSorter topicTreeSorter) {
         this.subjectRepository = subjectRepository;
-        this.jdbcTemplate = jdbcTemplate;
         repository = subjectRepository;
         this.subjectTopicTreeElementRepository = subjectTopicTreeElementRepository;
         this.topicResourceRepository = topicResourceRepository;
+        this.subjectTopicRepository = subjectTopicRepository;
+        this.topicSubtopicRepository = topicSubtopicRepository;
+        this.topicTreeSorter = topicTreeSorter;
     }
 
     @GetMapping
@@ -118,60 +114,165 @@ public class Subjects extends CrudController<Subject> {
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
                     URI relevance
     ) {
-        String sql = GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY;
-        if (!recursive) sql = sql.replace("1 = 1", "t.level = 0");
+        final var subject = subjectRepository.findFirstByPublicId(id)
+                .orElseThrow(() -> new NotFoundException("Subject", id));
 
-        if (filterIds == null || filterIds.length == 0) {
-            filterIds = getFilters(id).stream().map(filterIndexDocument -> filterIndexDocument.id).toArray(URI[]::new);
-        }
+        final var subjectTopicTree = subjectTopicTreeElementRepository.findAllBySubjectIdOrderBySubjectIdAscParentTopicIdAscTopicRankAsc(subject.getId());
+        final List<Integer> topicIds;
 
-        TopicExtractor extractor = new TopicExtractor();
-        URI[] finalFilterIds = filterIds;
-        List<SubTopicIndexDocument> results = jdbcTemplate.query(sql, setQueryParameters(id.toString(), language), resultSet -> {
-            return extractor.extractTopics(id, finalFilterIds, relevance, resultSet);
-        });
-
-        if (results == null) {
-            return List.of();
-        }
-
-        if (!recursive) {
-            results.sort(Comparator.comparing(o -> o.rank));
+        if (recursive) {
+            topicIds = subjectTopicTree.stream()
+                    .map(TopicTreeBySubjectElement::getTopicId)
+                    .collect(Collectors.toList());
         } else {
-            //sort input by path length so parent nodes are processed first (then we can add to them)
-            results.sort(Comparator.comparing(o -> o.path.length()));
-
-            //temp structures for creating a sorted tree
-            ArrayList<SubTopicIndexDocument> levelOneItems = new ArrayList<>();
-            Map<String, List<SubTopicIndexDocument>> mappedChildren = new HashMap<>();
-
-            results.forEach(
-                    subTopicIndexDocument -> {
-                        String idInPathFormat = id.toString().substring(4);
-                        String pathWithoutSubject = subTopicIndexDocument.path.replace("/" + idInPathFormat + "/", "");
-                        String[] pathElements = pathWithoutSubject.split("/");
-                        if (pathElements.length == 1) {
-                            levelOneItems.add(subTopicIndexDocument);
-                        } else {
-                            int parentIndex = pathElements.length - 2;
-                            mappedChildren.get(pathElements[parentIndex]).add(subTopicIndexDocument);
-                        }
-                        mappedChildren.putIfAbsent(subTopicIndexDocument.id.toString().substring(4), subTopicIndexDocument.children);
-                    }
-            );
-            //sort all child lists members by their rank relative to the parent
-            mappedChildren.values().forEach(childList -> childList.sort(Comparator.comparing(child -> Integer.valueOf(child.rank))));
-            //sort the top level list
-            levelOneItems.sort(Comparator.comparing(o -> o.rank));
-            //flatten tree with (potentially) 3 levels to one
-            return levelOneItems.stream()
-                    .flatMap(levelOneItem ->
-                            Stream.concat(Stream.of(levelOneItem), levelOneItem.children.stream()
-                                    .flatMap(levelTwoItem ->
-                                            Stream.concat(Stream.of(levelTwoItem), levelTwoItem.children.stream()))))
+            topicIds = subject.getSubjectTopics().stream()
+                    .map(SubjectTopic::getTopic)
+                    .map(Topic::getId)
                     .collect(Collectors.toList());
         }
-        return results;
+
+        final Set<URI> filterIdSet = filterIds != null ? Set.of(filterIds) : Set.of();
+
+        final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
+
+        final var subjectTopics = subjectTopicRepository.findAllBySubjectAndTopicId(subject, topicIds);
+        final var topicSubtopics = topicSubtopicRepository.findAllBySubtopicIdIncludeTranslationsAndCachedUrlsAndFilters(topicIds);
+
+        final var returnList = new ArrayList<SubTopicIndexDocument>();
+
+        subjectTopics.stream()
+                .filter(subjectTopic -> searchForFilterOrRelevance(subjectTopic, filterIdSet, relevanceArgument, topicSubtopics))
+                .map(subjectTopic -> createSubTopicIndexDocument(subject, subjectTopic, language, topicSubtopics))
+                .forEach(returnList::add);
+
+        topicSubtopics.stream()
+                .filter(topicSubtopic -> searchForFilterOrRelevance(topicSubtopic, filterIdSet, relevanceArgument, topicSubtopics))
+                .map(topicSubtopic -> createSubTopicIndexDocument(subject, topicSubtopic, language, topicSubtopics))
+                .forEach(returnList::add);
+
+        return topicTreeSorter.sortList(returnList);
+    }
+
+    private SubTopicIndexDocument createSubTopicIndexDocument(Subject subject, Object connection, String language, Collection<TopicSubtopic> topicSubtopics) {
+        if (connection instanceof SubjectTopic) {
+            final var subjectTopic = (SubjectTopic) connection;
+            final var document = new SubTopicIndexDocument(subject, subjectTopic, language);
+
+            final var topicsToAddFiltersFrom = new HashSet<>(this.findParentTopics(subjectTopic.getTopic(), topicSubtopics));
+            topicsToAddFiltersFrom.add(subjectTopic.getTopic());
+
+            document.populateFiltersFromTopics(topicsToAddFiltersFrom);
+            return document;
+        } else if (connection instanceof TopicSubtopic) {
+            final var topicSubtopic = (TopicSubtopic) connection;
+
+            final var document = new SubTopicIndexDocument(subject, topicSubtopic, language);
+
+            final var topicsToAddFiltersFrom = new HashSet<>(this.findParentTopics(topicSubtopic.getTopic(), topicSubtopics));
+            topicsToAddFiltersFrom.add(topicSubtopic.getTopic());
+
+            document.populateFiltersFromTopics(topicsToAddFiltersFrom);
+            return document;
+        } else {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    private boolean hasFilterAndRelevanceOrJustFilterIfRelevanceIsNotSet(Topic topic, Collection<URI> filterPublicId, URI relevancePublicId) {
+        final var returnValue = new AtomicBoolean(false);
+
+        topic.getTopicFilters().forEach(topicFilter -> {
+            topicFilter.getFilter().ifPresent(filter -> {
+                if (filterPublicId.contains(filter.getPublicId())) {
+                    if (relevancePublicId != null) {
+                        topicFilter.getRelevance().ifPresent(relevance -> {
+                            if (relevance.getPublicId().equals(relevancePublicId)) {
+                                returnValue.set(true);
+                            }
+                        });
+                    } else {
+                        returnValue.set(true);
+                    }
+                }
+            });
+        });
+
+        return returnValue.get();
+    }
+
+    private boolean searchForFilterOrRelevance(Object connection, Collection<URI> filterPublicId, URI relevancePublicId, Collection<TopicSubtopic> topicSubtopics) {
+        if (filterPublicId.size() == 0 && relevancePublicId == null) {
+            return true;
+        }
+
+        final var foundFilter = new AtomicBoolean(false);
+        if (connection instanceof TopicSubtopic) {
+            final var topicSubtopic = (TopicSubtopic) connection;
+
+            if (hasFilterAndRelevanceOrJustFilterIfRelevanceIsNotSet(topicSubtopic.getSubtopic(), filterPublicId, relevancePublicId)) {
+                foundFilter.set(true);
+            }
+
+            topicSubtopics.forEach(topicSubtopicI -> {
+                if (topicSubtopicI.getTopic().getId().equals(topicSubtopic.getSubtopic().getId())) {
+                    if (searchForFilterOrRelevance(topicSubtopicI, filterPublicId, relevancePublicId, topicSubtopics)) {
+                        foundFilter.set(true);
+                    }
+                }
+            });
+        } else if (connection instanceof SubjectTopic) {
+            Topic topic = ((SubjectTopic) connection).getTopic();
+
+            if (hasFilterAndRelevanceOrJustFilterIfRelevanceIsNotSet(topic, filterPublicId, relevancePublicId)) {
+                foundFilter.set(true);
+            }
+
+            topicSubtopics.forEach(topicSubtopic -> {
+                if (topicSubtopic.getTopic().getId().equals(topic.getId())) {
+                    if (searchForFilterOrRelevance(topicSubtopic, filterPublicId, relevancePublicId, topicSubtopics)) {
+                        foundFilter.set(true);
+                    }
+                }
+            });
+        } else {
+            throw new IllegalArgumentException();
+        }
+
+        return foundFilter.get();
+    }
+
+    /**
+     * Returns list of topics from TopicSubtopic collection that is upwards related to provided topic
+     *
+     * @param topic          Topic to search for parent of
+     * @param topicSubtopics Collection to search in
+     * @return parent topics
+     */
+    private Collection<Topic> findParentTopics(Topic topic, Collection<TopicSubtopic> topicSubtopics) {
+        final var returnedSet = new HashSet<Topic>();
+
+        topicSubtopics.forEach(topicSubtopic -> {
+            if (topicSubtopic.getSubtopic() == topic) {
+                returnedSet.add(topic);
+            }
+        });
+
+        final var addedCount = new AtomicInteger();
+        do {
+            addedCount.set(0);
+
+            returnedSet.forEach(topicFromSet -> {
+                topicSubtopics.forEach(topicSubtopic -> {
+                    if (topicSubtopic.getSubtopic() == topicFromSet && !returnedSet.contains(topicSubtopic.getTopic())) {
+                        returnedSet.add(topicSubtopic.getTopic());
+
+                        addedCount.getAndUpdate(counter -> counter + 1);
+                    }
+                });
+            });
+        } while (addedCount.get() > 0);
+
+        return returnedSet;
     }
 
     @GetMapping("/{id}/resources")
@@ -201,10 +302,21 @@ public class Subjects extends CrudController<Subject> {
         final var subjectIds = subjectTopicTree.stream()
                 .map(TopicTreeBySubjectElement::getTopicId)
                 .collect(Collectors.toList());
-        final var topicOrderedList = subjectTopicTree.stream()
-                .filter(subjectTopicTreeElement -> subjectTopicTreeElement.getTopicId() > 0)
-                .map(TopicTreeBySubjectElement::getTopicId)
-                .collect(Collectors.toList());
+
+        // Populate a tree of subject->topic relations, add the resources to the list and then run sort on the list so all
+        // levels are sorted on rank and relation type
+
+        final Set<TopicResourceTreeSortable> resourcesToSort = new HashSet<>();
+
+        subjectTopicTree.forEach(treeElement -> {
+            if (treeElement.getParentTopicId() == 0) {
+                // This is a subjectTopic connection
+                resourcesToSort.add(new TopicResourceTreeSortable("topic", "subject", treeElement.getTopicId(), treeElement.getSubjectId(), treeElement.getTopicRank()));
+            } else {
+                // This is a topicSubtopic connection
+                resourcesToSort.add(new TopicResourceTreeSortable("topic", "topic", treeElement.getTopicId(), treeElement.getParentTopicId(), treeElement.getTopicRank()));
+            }
+        });
 
         final Set<URI> filterIdSet = filterIds != null ? Set.of(filterIds) : Set.of();
         final Set<URI> resourceTypeIdSet = resourceTypeIds != null ? Set.of(resourceTypeIds) : Set.of();
@@ -223,8 +335,14 @@ public class Subjects extends CrudController<Subject> {
             topicResources = topicResourceRepository.findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(subjectIds, relevanceArgument);
         }
 
-        return topicResources.stream()
-                .sorted(new TopicResourceSortedTopicListAndRankComparator(topicOrderedList))
+        topicResources.forEach(topicResource -> resourcesToSort.add(new TopicResourceTreeSortable(topicResource)));
+
+        return topicTreeSorter
+                .sortList(resourcesToSort)
+                .stream()
+                .map(TopicResourceTreeSortable::getTopicResource)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .map(topicResource -> new ResourceIndexDocument(topicResource, language))
                 .collect(Collectors.toList());
     }

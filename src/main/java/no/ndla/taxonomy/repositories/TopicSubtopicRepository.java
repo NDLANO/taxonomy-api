@@ -6,6 +6,7 @@ import no.ndla.taxonomy.domain.TopicSubtopic;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -54,4 +55,17 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
             "   WHERE" +
             "       parentTopic.publicId = :publicId")
     List<TopicSubtopic> findAllByTopicPublicIdIncludingSubtopicAndSubtopicTranslations(URI publicId);
+
+    @Query("SELECT DISTINCT ts" +
+            "   FROM TopicSubtopic ts" +
+            "   LEFT JOIN FETCH ts.topic t" +
+            "   LEFT JOIN FETCH ts.subtopic st" +
+            "   LEFT OUTER JOIN FETCH t.translations" +
+            "   LEFT OUTER JOIN FETCH st.translations" +
+            "   LEFT OUTER JOIN FETCH st.cachedUrls" +
+            "   LEFT OUTER JOIN FETCH st.filters tf" +
+            "   LEFT OUTER JOIN FETCH tf.filter f" +
+            "   LEFT OUTER JOIN FETCH f.translations" +
+            "  WHERE ts.subtopic.id IN :subTopicId")
+    List<TopicSubtopic> findAllBySubtopicIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<Integer> subTopicId);
 }

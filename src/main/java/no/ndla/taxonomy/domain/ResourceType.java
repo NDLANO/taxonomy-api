@@ -64,20 +64,8 @@ public class ResourceType extends DomainObject {
         subtypes.add(subtype);
     }
 
-    public Iterator<ResourceType> getSubtypes() {
-        Iterator<ResourceType> iterator = subtypes.iterator();
-
-        return new Iterator<ResourceType>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public ResourceType next() {
-                return iterator.next();
-            }
-        };
+    public Set<ResourceType> getSubtypes() {
+        return this.subtypes;
     }
 
     public ResourceTypeTranslation addTranslation(String languageCode) {

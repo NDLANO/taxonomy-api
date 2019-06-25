@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceTranslation;
 import no.ndla.taxonomy.domain.TopicResource;
+import no.ndla.taxonomy.service.TopicTreeSorter;
 
 import java.net.URI;
 import java.util.HashSet;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
  *
  */
 @ApiModel("TopicResourceIndexDocument")
-public class ResourceIndexDocument {
+public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     @JsonProperty
     @ApiModelProperty(value = "Topic id", example = "urn:topic:123")
     public URI topicId;
@@ -91,5 +92,20 @@ public class ResourceIndexDocument {
         this.rank = topicResource.getRank();
         this.isPrimary = topicResource.isPrimary();
         this.topicNumericId = topic.getId();
+    }
+
+    @Override
+    public int getSortableRank() {
+        return rank;
+    }
+
+    @Override
+    public URI getSortableId() {
+        return id;
+    }
+
+    @Override
+    public URI getSortableParentId() {
+        return topicId;
     }
 }

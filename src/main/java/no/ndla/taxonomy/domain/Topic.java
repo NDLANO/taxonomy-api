@@ -412,7 +412,9 @@ public class Topic extends CachedUrlEntity {
 
     private TopicFilter getFilter(Filter filter) {
         for (TopicFilter rf : filters) {
-            if (rf.getFilter().equals(filter)) return rf;
+            if (rf.getFilter().isPresent() && rf.getFilter().get().equals(filter)) {
+                return rf;
+            }
         }
         return null;
     }

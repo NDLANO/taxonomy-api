@@ -4,18 +4,18 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.service.TopicTreeSorter;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
  */
 @ApiModel("SubTopicIndexDocument")
-public class SubTopicIndexDocument {
+public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
     @JsonProperty
     public URI id;
 
@@ -56,6 +56,8 @@ public class SubTopicIndexDocument {
     @JsonIgnore
     public List<SubTopicIndexDocument> children = new ArrayList<>();
 
+    private String language;
+
     @Override
     @JsonIgnore
     public boolean equals(Object o) {
@@ -71,5 +73,79 @@ public class SubTopicIndexDocument {
     @JsonIgnore
     public int hashCode() {
         return id.hashCode();
+    }
+
+    public SubTopicIndexDocument() {
+
+    }
+
+    public SubTopicIndexDocument(Subject subject, SubjectTopic subjectTopic, String language) {
+        this.language = language;
+
+        this.populateFromTopic(subjectTopic.getTopic());
+
+        this.parent = subjectTopic.getSubject().getPublicId();
+        this.connectionId = subjectTopic.getPublicId();
+        this.isPrimary = subjectTopic.isPrimary();
+        this.rank = subjectTopic.getRank();
+
+        this.path = subjectTopic.getTopic().getPathByContext(subject).orElse(null);
+    }
+
+
+    public SubTopicIndexDocument(Subject subject, TopicSubtopic topicSubtopic, String language) {
+        this.language = language;
+
+        this.populateFromTopic(topicSubtopic.getSubtopic());
+
+        this.parent = topicSubtopic.getTopic().getPublicId();
+        this.connectionId = topicSubtopic.getPublicId();
+        this.isPrimary = topicSubtopic.isPrimary();
+        this.rank = topicSubtopic.getRank();
+
+        this.path = topicSubtopic.getSubtopic().getPathByContext(subject).orElse(null);
+    }
+
+    private void populateFromTopic(Topic topic) {
+        this.id = topic.getPublicId();
+        this.name = topic.getTranslation(this.language)
+                .map(TopicTranslation::getName)
+                .orElse(topic.getName());
+        this.contentUri = topic.getContentUri();
+    }
+
+    public void populateFiltersFromTopics(Collection<Topic> topics) {
+        topics.stream()
+                .map(Topic::getTopicFilters)
+                .flatMap(Collection::stream)
+                .filter(topicFilter -> topicFilter.getFilter().isPresent() && topicFilter.getRelevance().isPresent())
+                .forEach(topicFilter -> {
+                    var found = new AtomicBoolean(false);
+                    this.filters.forEach(filterDocument -> {
+                        //noinspection OptionalGetWithoutIsPresent
+                        if (filterDocument.id.equals(topicFilter.getFilter().get().getPublicId())) {
+                            found.set(true);
+                        }
+                    });
+
+                    if (!found.get()) {
+                        filters.add(new TopicFilterIndexDocument(topicFilter, this.language));
+                    }
+                });
+    }
+
+    @Override
+    public int getSortableRank() {
+        return rank;
+    }
+
+    @Override
+    public URI getSortableId() {
+        return id;
+    }
+
+    @Override
+    public URI getSortableParentId() {
+        return parent;
     }
 }
