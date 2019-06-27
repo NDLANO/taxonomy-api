@@ -116,8 +116,8 @@ public class Subjects extends CrudController<Subject> {
         String sql = GET_TOPICS_BY_SUBJECT_PUBLIC_ID_RECURSIVELY_QUERY;
         if (!recursive) sql = sql.replace("1 = 1", "t.level = 0");
 
-        if (filterIds == null || filterIds.length == 0) {
-            filterIds = getFilters(id).stream().map(filterIndexDocument -> filterIndexDocument.id).toArray(URI[]::new);
+        if (filterIds == null) {
+            filterIds = new URI[0];
         }
 
         TopicExtractor extractor = new TopicExtractor();
