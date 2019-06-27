@@ -120,6 +120,8 @@ public class Subjects extends CrudController<Subject> {
         final var subjectTopicTree = subjectTopicTreeElementRepository.findAllBySubjectIdOrderBySubjectIdAscParentTopicIdAscTopicRankAsc(subject.getId());
         final List<Integer> topicIds;
 
+        if (filterIds == null) {
+            filterIds = new URI[0];
         if (recursive) {
             topicIds = subjectTopicTree.stream()
                     .map(TopicTreeBySubjectElement::getTopicId)
