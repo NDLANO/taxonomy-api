@@ -231,7 +231,7 @@ public class TopicReusedInSameSubjectCloningService {
                     }
                 }
                 /* translations */
-                topic.getTranslations().forEachRemaining(translation -> clonedTopic.addTranslation(translation.getLanguageCode()).setName(translation.getName()));
+                topic.getTranslations().forEach(translation -> clonedTopic.addTranslation(translation.getLanguageCode()).setName(translation.getName()));
                 /* resource types */
                 topic.getTopicResourceTypes().forEach(topicResourceType -> clonedTopic.addResourceType(topicResourceType.getResourceType()));
 

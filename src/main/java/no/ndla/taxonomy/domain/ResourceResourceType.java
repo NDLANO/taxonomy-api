@@ -21,8 +21,8 @@ public class ResourceResourceType extends DomainEntity {
     }
 
     public ResourceResourceType(Resource resource, ResourceType resourceType) {
-        this.resource = resource;
-        this.resourceType = resourceType;
+        setResource(resource);
+        setResourceType(resourceType);
         setPublicId(URI.create("urn:resource-resourcetype:" + UUID.randomUUID()));
     }
 
@@ -32,5 +32,29 @@ public class ResourceResourceType extends DomainEntity {
 
     public ResourceType getResourceType() {
         return resourceType;
+    }
+
+    void setResource(Resource resource) {
+        if (this.resource != null && resource != this.resource) {
+            this.resource.removeResourceResourceType(this);
+        }
+
+        this.resource = resource;
+
+        if (resource != null && !resource.getResourceResourceTypes().contains(this)) {
+            resource.addResourceResourceType(this);
+        }
+    }
+
+    void setResourceType(ResourceType resourceType) {
+        if (this.resourceType != null && resourceType != this.resourceType) {
+            this.resourceType.removeResourceResourceType(this);
+        }
+
+        this.resourceType = resourceType;
+
+        if (resourceType != null && !resourceType.getResourceResourceTypes().contains(this)) {
+            resourceType.addResourceResourceType(this);
+        }
     }
 }

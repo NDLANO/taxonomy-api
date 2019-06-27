@@ -19,16 +19,27 @@ public class ResourceTypeTranslation {
     @Column
     private String languageCode;
 
-    private ResourceTypeTranslation() {
+    ResourceTypeTranslation() {
     }
 
     public ResourceTypeTranslation(ResourceType resourceType, String languageCode) {
-        this.resourceType = resourceType;
+        setResourceType(resourceType);
         this.languageCode = languageCode;
     }
 
     public ResourceType getResourceType() {
         return resourceType;
+    }
+
+    public void setResourceType(ResourceType resourceType) {
+        if (resourceType != this.resourceType && this.resourceType != null && this.resourceType.getTranslations().contains(this)) {
+            this.resourceType.removeTranslation(this);
+        }
+        this.resourceType = resourceType;
+
+        if (resourceType != null && !resourceType.getTranslations().contains(this)) {
+            resourceType.addTranslation(this);
+        }
     }
 
     public String getName() {

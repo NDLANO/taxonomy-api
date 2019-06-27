@@ -18,16 +18,27 @@ public class ResourceTranslation {
     @Column
     private String languageCode;
 
-    private ResourceTranslation() {
+    ResourceTranslation() {
     }
 
     public ResourceTranslation(Resource resource, String languageCode) {
-        this.resource = resource;
+        setResource(resource);
         this.languageCode = languageCode;
     }
 
     public Resource getResource() {
         return resource;
+    }
+
+    public void setResource(Resource resource) {
+        if (resource != this.resource && this.resource != null && this.resource.getTranslations().contains(this)) {
+            this.resource.removeTranslation(this);
+        }
+        this.resource = resource;
+
+        if (resource != null && !resource.getTranslations().contains(this)) {
+            resource.addTranslation(this);
+        }
     }
 
     public String getName() {

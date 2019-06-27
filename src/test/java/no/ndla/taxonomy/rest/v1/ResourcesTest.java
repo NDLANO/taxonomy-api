@@ -170,7 +170,9 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_resource_by_id() throws Exception {
-        URI id = newResource().name("The inner planets").getPublicId();
+        var resource = newResource();
+        resource.setName("The inner planets");
+        URI id = resource.getPublicId();
 
         MockHttpServletResponse response = getResource("/v1/resources/" + id);
         ResourceIndexDocument result = getObject(ResourceIndexDocument.class, response);

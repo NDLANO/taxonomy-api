@@ -24,7 +24,9 @@ public class TopicResourcesTest extends RestTest {
     public void can_add_resource_to_topic() throws Exception {
         URI integrationId, calculusId;
         calculusId = newTopic().name("calculus").getPublicId();
-        integrationId = newResource().name("Introduction to integration").getPublicId();
+        var resource = newResource();
+        resource.setName("Introduction to integration");
+        integrationId = resource.getPublicId();
 
         URI id = getId(
                 createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
@@ -44,7 +46,9 @@ public class TopicResourcesTest extends RestTest {
     public void can_add_secondary_resource_to_topic() throws Exception {
         URI integrationId, calculusId;
         calculusId = newTopic().name("calculus").getPublicId();
-        integrationId = newResource().name("Introduction to integration").getPublicId();
+        var resource = newResource();
+        resource.setName("Introduction to integration");
+        integrationId = resource.getPublicId();
 
         URI id = getId(
                 createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
@@ -65,8 +69,8 @@ public class TopicResourcesTest extends RestTest {
     public void cannot_add_existing_resource_to_topic() throws Exception {
         URI integrationId, calculusId;
         Topic calculus = newTopic().name("calculus");
-        Resource integration = newResource().name("Introduction to integration");
-        calculus.addResource(integration);
+        var integration = newResource();
+        integration.setName("Introduction to integration");
 
         calculusId = calculus.getPublicId();
         integrationId = integration.getPublicId();
@@ -125,11 +129,13 @@ public class TopicResourcesTest extends RestTest {
     @Test
     public void can_get_resources() throws Exception {
         Topic electricity = newTopic().name("electricity");
-        Resource alternatingCurrent = newResource().name("How alternating current works");
+        Resource alternatingCurrent = newResource();
+        alternatingCurrent.setName("How alternating current works");
         save(electricity.addResource(alternatingCurrent));
 
         Topic calculus = newTopic().name("calculus");
-        Resource integration = newResource().name("Introduction to integration");
+        Resource integration = newResource();
+        integration.setName("Introduction to integration");
         save(calculus.addResource(integration));
 
         MockHttpServletResponse response = getResource("/v1/topic-resources");
@@ -144,7 +150,8 @@ public class TopicResourcesTest extends RestTest {
     @Test
     public void can_get_topic_resource() throws Exception {
         Topic electricity = newTopic().name("electricity");
-        Resource alternatingCurrent = newResource().name("How alternating current works");
+        Resource alternatingCurrent = newResource();
+        alternatingCurrent.setName("How alternating current works");
         TopicResource topicResource = save(electricity.addResource(alternatingCurrent));
 
         MockHttpServletResponse resource = getResource("/v1/topic-resources/" + topicResource.getPublicId());
@@ -156,7 +163,8 @@ public class TopicResourcesTest extends RestTest {
     @Test
     public void first_topic_connected_to_resource_is_primary() throws Exception {
         Topic electricity = newTopic().name("electricity");
-        Resource alternatingCurrent = newResource().name("How alternating current works");
+        Resource alternatingCurrent = newResource();
+        alternatingCurrent.setName("How alternating current works");
         TopicResource topicResource = save(electricity.addResource(alternatingCurrent));
 
         MockHttpServletResponse resource = getResource("/v1/topic-resources/" + topicResource.getPublicId());

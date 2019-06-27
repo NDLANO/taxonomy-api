@@ -16,6 +16,7 @@ import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
@@ -162,5 +163,9 @@ public class TestUtils {
             count++;
         }
         return count;
+    }
+
+    public static int count(Collection collection) {
+        return collection.size();
     }
 }

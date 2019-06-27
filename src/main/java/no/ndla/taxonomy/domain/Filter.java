@@ -3,7 +3,10 @@ package no.ndla.taxonomy.domain;
 
 import javax.persistence.*;
 import java.net.URI;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 @Entity
 public class Filter extends DomainObject {
@@ -35,8 +38,24 @@ public class Filter extends DomainObject {
         return filterTranslation;
     }
 
-    public Iterator<FilterTranslation> getTranslations() {
-        return translations.iterator();
+    public void addTranslation(FilterTranslation filterTranslation) {
+        this.translations.add(filterTranslation);
+        if (filterTranslation.getFilter() != this) {
+            filterTranslation.setFilter(this);
+        }
+    }
+
+    public void removeTranslation(FilterTranslation translation) {
+        if (translation.getFilter() == this) {
+            translations.remove(translation);
+            if (translation.getFilter() == this) {
+                translation.setFilter(null);
+            }
+        }
+    }
+
+    public Set<FilterTranslation> getTranslations() {
+        return translations;
     }
 
     public Optional<FilterTranslation> getTranslation(String languageCode) {
@@ -46,18 +65,18 @@ public class Filter extends DomainObject {
     }
 
     public void removeTranslation(String language) {
-        getTranslation(language).ifPresent(translations::remove);
+        getTranslation(language).ifPresent(this::removeTranslation);
     }
 
     public void setSubject(Subject subject) {
-        if (subject == null && this.subject != null) {
+        if (this.subject != null && subject != this.subject) {
             this.subject.removeFilter(this);
         }
 
         this.subject = subject;
 
         if (subject != null && !subject.getFilters().contains(this)) {
-            subject.removeFilter(this);
+            subject.addFilter(this);
         }
     }
 

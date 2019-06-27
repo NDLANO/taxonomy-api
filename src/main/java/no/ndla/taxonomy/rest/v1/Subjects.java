@@ -109,7 +109,7 @@ public class Subjects extends CrudController<Subject> {
             @RequestParam(value = "filter", required = false, defaultValue = "")
             @ApiParam(value = "Select by filter id(s). If not specified, all topics will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
-                    URI[] filterIds,
+                    Set<URI> filterIds,
             @RequestParam(value = "relevance", required = false, defaultValue = "")
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
                     URI relevance
@@ -120,8 +120,6 @@ public class Subjects extends CrudController<Subject> {
         final var subjectTopicTree = subjectTopicTreeElementRepository.findAllBySubjectIdOrderBySubjectIdAscParentTopicIdAscTopicRankAsc(subject.getId());
         final List<Integer> topicIds;
 
-        if (filterIds == null) {
-            filterIds = new URI[0];
         if (recursive) {
             topicIds = subjectTopicTree.stream()
                     .map(TopicTreeBySubjectElement::getTopicId)
@@ -133,16 +131,7 @@ public class Subjects extends CrudController<Subject> {
                     .collect(Collectors.toList());
         }
 
-        final Set<URI> filterIdSet = new HashSet<>();
-
-        if (filterIds != null && filterIds.length > 0) {
-            filterIdSet.addAll(Set.of(filterIds));
-        } else {
-            // If no filters are set in query, all filters created on subjects apply
-            subject.getFilters().stream()
-                    .map(Filter::getPublicId)
-                    .forEach(filterIdSet::add);
-        }
+        final Set<URI> filterIdSet = new HashSet<>(filterIds);
 
         final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
 

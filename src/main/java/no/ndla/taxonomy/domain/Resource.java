@@ -5,6 +5,7 @@ import org.hibernate.annotations.Type;
 import javax.persistence.*;
 import java.net.URI;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 public class Resource extends CachedUrlEntity {
@@ -29,53 +30,47 @@ public class Resource extends CachedUrlEntity {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
     }
 
-    public Resource name(String name) {
-        setName(name);
-        return this;
+    public Collection<Topic> getTopics() {
+        return getTopicResources()
+                .stream()
+                .map(TopicResource::getTopic)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
-    public Iterator<Topic> getTopics() {
-        Iterator<TopicResource> iterator = topics.iterator();
-        return new Iterator<Topic>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public Topic next() {
-                return iterator.next().getTopic();
-            }
-        };
-    }
-
-    public Iterator<ResourceType> getResourceTypes() {
-        Iterator<ResourceResourceType> iterator = resourceResourceTypes.iterator();
-        return new Iterator<ResourceType>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public ResourceType next() {
-                return iterator.next().getResourceType();
-            }
-        };
+    public Collection<ResourceType> getResourceTypes() {
+        return getResourceResourceTypes()
+                .stream()
+                .map(ResourceResourceType::getResourceType)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     public ResourceResourceType addResourceType(ResourceType resourceType) {
-        Iterator<ResourceType> resourceTypes = getResourceTypes();
-        while (resourceTypes.hasNext()) {
-            ResourceType t = resourceTypes.next();
+        for (var t : getResourceTypes()) {
             if (t.getId().equals(resourceType.getId())) {
                 throw new DuplicateIdException("Resource with id " + getPublicId() + " is already marked with resource type with id " + resourceType.getPublicId());
             }
         }
 
+
         ResourceResourceType resourceResourceType = new ResourceResourceType(this, resourceType);
-        resourceResourceTypes.add(resourceResourceType);
+        addResourceResourceType(resourceResourceType);
         return resourceResourceType;
+    }
+
+    public void addResourceResourceType(ResourceResourceType resourceResourceType) {
+        this.resourceResourceTypes.add(resourceResourceType);
+
+        if (resourceResourceType.getResource() != this) {
+            resourceResourceType.setResource(this);
+        }
+    }
+
+    public void removeResourceResourceType(ResourceResourceType resourceResourceType) {
+        this.resourceResourceTypes.remove(resourceResourceType);
+
+        if (resourceResourceType.getResource() == this) {
+            resourceResourceType.setResource(null);
+        }
     }
 
     public URI getContentUri() {
@@ -102,12 +97,28 @@ public class Resource extends CachedUrlEntity {
                 .findFirst();
     }
 
-    public Iterator<ResourceTranslation> getTranslations() {
-        return resourceTranslations.iterator();
+    public Set<ResourceTranslation> getTranslations() {
+        return resourceTranslations;
     }
 
     public void removeTranslation(String languageCode) {
-        getTranslation(languageCode).ifPresent(resourceTranslations::remove);
+        getTranslation(languageCode).ifPresent(this::removeTranslation);
+    }
+
+    public void addTranslation(ResourceTranslation resourceTranslation) {
+        this.resourceTranslations.add(resourceTranslation);
+        if (resourceTranslation.getResource() != this) {
+            resourceTranslation.setResource(this);
+        }
+    }
+
+    public void removeTranslation(ResourceTranslation translation) {
+        if (translation.getResource() == this) {
+            resourceTranslations.remove(translation);
+            if (translation.getResource() == this) {
+                translation.setResource(null);
+            }
+        }
     }
 
     public Topic getPrimaryTopic() {
@@ -128,10 +139,6 @@ public class Resource extends CachedUrlEntity {
     public void setRandomPrimaryTopic() {
         if (topics.size() == 0) return;
         setPrimaryTopic(topics.iterator().next().getTopic());
-    }
-
-    public boolean hasSingleParentTopic() {
-        return topics.size() == 1;
     }
 
     private TopicResource getTopic(Topic topic) {

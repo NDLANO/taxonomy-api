@@ -4,7 +4,10 @@ import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import java.net.URI;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 @Entity
 public class Relevance extends DomainObject {
@@ -31,8 +34,8 @@ public class Relevance extends DomainObject {
         return relevanceTranslation;
     }
 
-    public Iterator<RelevanceTranslation> getTranslations() {
-        return translations.iterator();
+    public Set<RelevanceTranslation> getTranslations() {
+        return translations;
     }
 
     public Optional<RelevanceTranslation> getTranslation(String languageCode) {
@@ -41,8 +44,24 @@ public class Relevance extends DomainObject {
                 .findFirst();
     }
 
+    public void addTranslation(RelevanceTranslation relevanceTranslation) {
+        this.translations.add(relevanceTranslation);
+        if (relevanceTranslation.getRelevance() != this) {
+            relevanceTranslation.setRelevance(this);
+        }
+    }
+
+    public void removeTranslation(RelevanceTranslation translation) {
+        if (translation.getRelevance() == this) {
+            translations.remove(translation);
+            if (translation.getRelevance() == this) {
+                translation.setRelevance(null);
+            }
+        }
+    }
+
     public void removeTranslation(String language) {
-        getTranslation(language).ifPresent(translations::remove);
+        getTranslation(language).ifPresent(this::removeTranslation);
     }
 
     public Set<TopicFilter> getTopicFilters() {
@@ -61,6 +80,26 @@ public class Relevance extends DomainObject {
 
         if (topicFilter.getRelevance().orElse(null) != this) {
             topicFilter.setRelevance(this);
+        }
+    }
+
+    public Set<ResourceFilter> getResourceFilters() {
+        return resources;
+    }
+
+    public void addResourceFilter(ResourceFilter resourceFilter) {
+        this.resources.add(resourceFilter);
+
+        if (resourceFilter.getRelevance().isEmpty() || resourceFilter.getRelevance().get() != this) {
+            resourceFilter.setRelevance(this);
+        }
+    }
+
+    public void removeResourceFilter(ResourceFilter resourceFilter) {
+        this.resources.remove(resourceFilter);
+
+        if (resourceFilter.getRelevance().isPresent() && resourceFilter.getRelevance().get() == this) {
+            resourceFilter.setRelevance(null);
         }
     }
 

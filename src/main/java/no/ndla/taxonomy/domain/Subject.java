@@ -121,13 +121,30 @@ public class Subject extends CachedUrlEntity {
                 .findFirst();
     }
 
-    public Iterator<SubjectTranslation> getTranslations() {
-        return translations.iterator();
+    public Set<SubjectTranslation> getTranslations() {
+        return translations;
     }
 
     public void removeTranslation(String languageCode) {
         getTranslation(languageCode).ifPresent(translations::remove);
     }
+
+    public void addTranslation(SubjectTranslation subjectTranslation) {
+        this.translations.add(subjectTranslation);
+        if (subjectTranslation.getSubject() != this) {
+            subjectTranslation.setSubject(this);
+        }
+    }
+
+    public void removeTranslation(SubjectTranslation translation) {
+        if (translation.getSubject() == this) {
+            translations.remove(translation);
+            if (translation.getSubject() == this) {
+                translation.setSubject(null);
+            }
+        }
+    }
+        
 
     public Subject name(String name) {
         setName(name);

@@ -46,6 +46,14 @@ public abstract class CachedUrlEntity extends DomainObject {
                         return 0;
                     }
 
+                    if (path1MatchesContext && path2MatchesContext && path1IsPrimary) {
+                        return -1;
+                    }
+
+                    if (path1MatchesContext && path2MatchesContext && path2IsPrimary) {
+                        return 1;
+                    }
+
                     if (path1MatchesContext && !path2MatchesContext) {
                         return -1;
                     }

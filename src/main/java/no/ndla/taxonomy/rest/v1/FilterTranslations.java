@@ -38,7 +38,7 @@ public class FilterTranslations {
     public List<FilterTranslations.FilterTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
         Filter filter = filterRepository.getByPublicId(id);
         List<FilterTranslations.FilterTranslationIndexDocument> result = new ArrayList<>();
-        filter.getTranslations().forEachRemaining(t -> result.add(
+        filter.getTranslations().forEach(t -> result.add(
                 new FilterTranslations.FilterTranslationIndexDocument() {{
                     name = t.getName();
                     language = t.getLanguageCode();

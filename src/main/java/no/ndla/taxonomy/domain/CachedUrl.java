@@ -56,13 +56,4 @@ public class CachedUrl {
     public void setPrimary(boolean primary) {
         this.primary = primary;
     }
-
-    @Override
-    public String toString() {
-        return "CachedUrl{" +
-                "publicId=" + publicId +
-                ", path='" + path + '\'' +
-                ", primary=" + primary +
-                '}';
-    }
 }

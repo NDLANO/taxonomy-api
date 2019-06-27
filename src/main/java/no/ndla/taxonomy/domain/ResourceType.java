@@ -5,7 +5,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import java.net.URI;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 @Entity
 public class ResourceType extends DomainObject {
@@ -26,6 +29,9 @@ public class ResourceType extends DomainObject {
 
     @OneToMany(mappedBy = "resourceType")
     private Set<TopicResourceType> topicResourceTypes = new HashSet<>();
+
+    @OneToMany(mappedBy = "resourceResourceType")
+    private Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
 
     public Set<TopicResourceType> getTopicResourceTypes() {
         return topicResourceTypes;
@@ -83,11 +89,47 @@ public class ResourceType extends DomainObject {
                 .findFirst();
     }
 
-    public Iterator<ResourceTypeTranslation> getTranslations() {
-        return resourceTypeTranslations.iterator();
+    public Set<ResourceTypeTranslation> getTranslations() {
+        return resourceTypeTranslations;
     }
 
     public void removeTranslation(String languageCode) {
-        getTranslation(languageCode).ifPresent(resourceTypeTranslations::remove);
+        getTranslation(languageCode).ifPresent(this::removeTranslation);
+    }
+
+    public void addTranslation(ResourceTypeTranslation resourceTypeTranslation) {
+        this.resourceTypeTranslations.add(resourceTypeTranslation);
+        if (resourceTypeTranslation.getResourceType() != this) {
+            resourceTypeTranslation.setResourceType(this);
+        }
+    }
+
+    public void removeTranslation(ResourceTypeTranslation resourceTypeTranslation) {
+        if (resourceTypeTranslation.getResourceType() == this) {
+            resourceTypeTranslations.remove(resourceTypeTranslation);
+            if (resourceTypeTranslation.getResourceType() == this) {
+                resourceTypeTranslation.setResourceType(null);
+            }
+        }
+    }
+
+    public Set<ResourceResourceType> getResourceResourceTypes() {
+        return this.resourceResourceTypes;
+    }
+
+    public void addResourceResourceType(ResourceResourceType resourceResourceType) {
+        this.resourceResourceTypes.add(resourceResourceType);
+
+        if (resourceResourceType.getResourceType() != this) {
+            resourceResourceType.setResourceType(this);
+        }
+    }
+
+    public void removeResourceResourceType(ResourceResourceType resourceResourceType) {
+        this.resourceResourceTypes.remove(resourceResourceType);
+
+        if (resourceResourceType.getResourceType() == this) {
+            resourceResourceType.setResourceType(null);
+        }
     }
 }

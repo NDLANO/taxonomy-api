@@ -608,7 +608,7 @@ public class Builder {
         }
 
         public ResourceBuilder name(String name) {
-            resource.name(name);
+            resource.setName(name);
             return this;
         }
 

@@ -37,7 +37,7 @@ public class SubjectTranslations {
     public List<SubjectTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
         Subject subject = subjectRepository.getByPublicId(id);
         List<SubjectTranslationIndexDocument> result = new ArrayList<>();
-        subject.getTranslations().forEachRemaining(t -> result.add(
+        subject.getTranslations().forEach(t -> result.add(
                 new SubjectTranslationIndexDocument() {{
                     name = t.getName();
                     language = t.getLanguageCode();

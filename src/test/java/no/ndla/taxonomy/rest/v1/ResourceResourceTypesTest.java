@@ -18,7 +18,10 @@ public class ResourceResourceTypesTest extends RestTest {
 
     @Test
     public void can_add_resourcetype_to_resource() throws Exception {
-        URI integrationResourceId = newResource().name("Introduction to integration").getPublicId();
+        var createdResource = newResource();
+        createdResource.setName("Introduction to integration");
+        var integrationResourceId = createdResource.getPublicId();
+
         URI textTypeId = newResourceType().name("text").getPublicId();
 
         URI id = getId(createResource("/v1/resource-resourcetypes", new ResourceResourceTypes.CreateResourceResourceTypeCommand() {{
@@ -34,7 +37,9 @@ public class ResourceResourceTypesTest extends RestTest {
 
     @Test
     public void cannot_have_duplicate_resourcetypes_for_resource() throws Exception {
-        Resource integrationResource = newResource().name("Introduction to integration");
+        Resource integrationResource = newResource();
+        integrationResource.setName("Introduction to integration");
+
         ResourceType resourceType = newResourceType().name("text");
         save(integrationResource.addResourceType(resourceType));
 
@@ -56,11 +61,13 @@ public class ResourceResourceTypesTest extends RestTest {
 
     @Test
     public void can_list_all_resource_resourcetypes() throws Exception {
-        Resource trigonometry = newResource().name("Advanced trigonometry");
+        Resource trigonometry = newResource();
+        trigonometry.setName("Advanced trigonometry");
         ResourceType article = newResourceType().name("article");
         save(trigonometry.addResourceType(article));
 
-        Resource integration = newResource().name("Introduction to integration");
+        Resource integration = newResource();
+        integration.setName("Introduction to integration");
         ResourceType text = newResourceType().name("text");
         save(integration.addResourceType(text));
 
@@ -73,7 +80,8 @@ public class ResourceResourceTypesTest extends RestTest {
 
     @Test
     public void can_get_a_resource_resourcetype() throws Exception {
-        Resource resource = newResource().name("Advanced trigonometry");
+        Resource resource = newResource();
+        resource.setName("Advanced trigonometry");
         ResourceType resourceType = newResourceType().name("article");
         ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);
         URI id = save(resourceResourceType).getPublicId();
@@ -87,7 +95,8 @@ public class ResourceResourceTypesTest extends RestTest {
 
     @Test
     public void can_change_id_of_resource_type() throws Exception {
-        Resource resource = newResource().name("Advanced trigonometry");
+        Resource resource = newResource();
+        resource.setName("Advanced trigonometry");
         ResourceType resourceType = newResourceType().name("article");
         ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);
         URI id = save(resourceResourceType).getPublicId();

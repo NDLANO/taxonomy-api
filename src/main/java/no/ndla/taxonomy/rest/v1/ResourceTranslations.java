@@ -38,7 +38,7 @@ public class ResourceTranslations {
     public List<ResourceTranslations.ResourceTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
         Resource resource = resourceRepository.getByPublicId(id);
         List<ResourceTranslations.ResourceTranslationIndexDocument> result = new ArrayList<>();
-        resource.getTranslations().forEachRemaining(t -> result.add(
+        resource.getTranslations().forEach(t -> result.add(
                 new ResourceTranslations.ResourceTranslationIndexDocument() {{
                     name = t.getName();
                     language = t.getLanguageCode();

@@ -328,12 +328,28 @@ public class Topic extends CachedUrlEntity {
                 .findFirst();
     }
 
-    public Iterator<TopicTranslation> getTranslations() {
-        return translations.iterator();
+    public Set<TopicTranslation> getTranslations() {
+        return translations;
+    }
+
+    public void addTranslation(TopicTranslation topicTranslation) {
+        this.translations.add(topicTranslation);
+        if (topicTranslation.getTopic() != this) {
+            topicTranslation.setTopic(this);
+        }
+    }
+
+    public void removeTranslation(TopicTranslation translation) {
+        if (translation.getTopic() == this) {
+            translations.remove(translation);
+            if (translation.getTopic() == this) {
+                translation.setTopic(null);
+            }
+        }
     }
 
     public void removeTranslation(String languageCode) {
-        getTranslation(languageCode).ifPresent(translations::remove);
+        getTranslation(languageCode).ifPresent(this::removeTranslation);
     }
 
     public void setPrimarySubject(Subject subject) {
