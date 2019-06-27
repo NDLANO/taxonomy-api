@@ -8,8 +8,10 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.TopicTreeSorter;
 
 import java.net.URI;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -112,26 +114,11 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
                 .map(TopicTranslation::getName)
                 .orElse(topic.getName());
         this.contentUri = topic.getContentUri();
-    }
 
-    public void populateFiltersFromTopics(Collection<Topic> topics) {
-        topics.stream()
-                .map(Topic::getTopicFilters)
-                .flatMap(Collection::stream)
-                .filter(topicFilter -> topicFilter.getFilter().isPresent() && topicFilter.getRelevance().isPresent())
-                .forEach(topicFilter -> {
-                    var found = new AtomicBoolean(false);
-                    this.filters.forEach(filterDocument -> {
-                        //noinspection OptionalGetWithoutIsPresent
-                        if (filterDocument.id.equals(topicFilter.getFilter().get().getPublicId())) {
-                            found.set(true);
-                        }
-                    });
-
-                    if (!found.get()) {
-                        filters.add(new TopicFilterIndexDocument(topicFilter, this.language));
-                    }
-                });
+        topic.getTopicFilters().stream()
+                .filter(topicFilter -> topicFilter.getFilter().isPresent())
+                .filter(topicFilter -> topicFilter.getRelevance().isPresent())
+                .forEach(topicFilter -> filters.add(new TopicFilterIndexDocument(topicFilter, this.language)));
     }
 
     @Override

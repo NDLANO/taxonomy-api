@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.service;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -49,10 +50,13 @@ public class TopicTreeSorter {
     }
 
     public interface Sortable {
+        @JsonIgnore
         int getSortableRank();
 
+        @JsonIgnore
         URI getSortableId();
 
+        @JsonIgnore
         URI getSortableParentId();
     }
 }

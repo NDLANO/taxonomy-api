@@ -131,7 +131,16 @@ public class Subjects extends CrudController<Subject> {
                     .collect(Collectors.toList());
         }
 
-        final Set<URI> filterIdSet = filterIds != null ? Set.of(filterIds) : Set.of();
+        final Set<URI> filterIdSet = new HashSet<>();
+
+        if (filterIds != null && filterIds.length > 0) {
+            filterIdSet.addAll(Set.of(filterIds));
+        } else {
+            // If no filters are set in query, all filters created on subjects apply
+            subject.getFilters().stream()
+                    .map(Filter::getPublicId)
+                    .forEach(filterIdSet::add);
+        }
 
         final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
 
@@ -155,24 +164,9 @@ public class Subjects extends CrudController<Subject> {
 
     private SubTopicIndexDocument createSubTopicIndexDocument(Subject subject, Object connection, String language, Collection<TopicSubtopic> topicSubtopics) {
         if (connection instanceof SubjectTopic) {
-            final var subjectTopic = (SubjectTopic) connection;
-            final var document = new SubTopicIndexDocument(subject, subjectTopic, language);
-
-            final var topicsToAddFiltersFrom = new HashSet<>(this.findParentTopics(subjectTopic.getTopic(), topicSubtopics));
-            topicsToAddFiltersFrom.add(subjectTopic.getTopic());
-
-            document.populateFiltersFromTopics(topicsToAddFiltersFrom);
-            return document;
+            return new SubTopicIndexDocument(subject, (SubjectTopic) connection, language);
         } else if (connection instanceof TopicSubtopic) {
-            final var topicSubtopic = (TopicSubtopic) connection;
-
-            final var document = new SubTopicIndexDocument(subject, topicSubtopic, language);
-
-            final var topicsToAddFiltersFrom = new HashSet<>(this.findParentTopics(topicSubtopic.getTopic(), topicSubtopics));
-            topicsToAddFiltersFrom.add(topicSubtopic.getTopic());
-
-            document.populateFiltersFromTopics(topicsToAddFiltersFrom);
-            return document;
+            return new SubTopicIndexDocument(subject, (TopicSubtopic) connection, language);
         } else {
             throw new IllegalArgumentException();
         }
