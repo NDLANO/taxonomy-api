@@ -30,7 +30,7 @@ public class ResourceType extends DomainObject {
     @OneToMany(mappedBy = "resourceType")
     private Set<TopicResourceType> topicResourceTypes = new HashSet<>();
 
-    @OneToMany(mappedBy = "resourceResourceType")
+    @OneToMany(mappedBy = "resourceType")
     private Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
 
     public Set<TopicResourceType> getTopicResourceTypes() {
