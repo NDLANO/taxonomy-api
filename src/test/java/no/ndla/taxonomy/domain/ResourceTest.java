@@ -3,11 +3,13 @@ package no.ndla.taxonomy.domain;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 public class ResourceTest {
@@ -106,76 +108,336 @@ public class ResourceTest {
         resource.removeResourceType(resourceType2);
         assertEquals(0, resource.getResourceTypes().size());
     }
-/*
+
     @Test
     public void addRemoveAndGetResourceResourceType() {
+        final var resourceResourceType1 = mock(ResourceResourceType.class);
+        final var resourceResourceType2 = mock(ResourceResourceType.class);
+
+        assertEquals(0, resource.getResourceResourceTypes().size());
+
+        resource.addResourceResourceType(resourceResourceType1);
+        assertEquals(1, resource.getResourceResourceTypes().size());
+        assertTrue(resource.getResourceResourceTypes().contains(resourceResourceType1));
+        verify(resourceResourceType1).setResource(resource);
+
+        resource.addResourceResourceType(resourceResourceType2);
+        assertEquals(2, resource.getResourceResourceTypes().size());
+        assertTrue(resource
+                .getResourceResourceTypes()
+                .containsAll(Set.of(resourceResourceType1, resourceResourceType2))
+        );
+        verify(resourceResourceType2).setResource(resource);
+
+        reset(resourceResourceType1);
+        reset(resourceResourceType2);
+
+        when(resourceResourceType1.getResource()).thenReturn(resource);
+        when(resourceResourceType2.getResource()).thenReturn(resource);
+
+        resource.removeResourceResourceType(resourceResourceType1);
+        assertEquals(1, resource.getResourceResourceTypes().size());
+        assertTrue(resource.getResourceResourceTypes().contains(resourceResourceType2));
+        verify(resourceResourceType1).setResource(null);
+
+        resource.removeResourceResourceType(resourceResourceType2);
+        assertEquals(0, resource.getResourceResourceTypes().size());
+        verify(resourceResourceType2).setResource(null);
     }
 
     @Test
-    public void removeResourceResourceType() {
+    public void setAndGetContentUri() throws URISyntaxException {
+        assertNull(resource.getContentUri());
+
+        final var uri1 = new URI("urn:test1");
+        final var uri2 = new URI("urn:test2");
+
+        resource.setContentUri(uri1);
+        assertEquals("urn:test1", resource.getContentUri().toString());
+
+        resource.setContentUri(uri2);
+        assertEquals("urn:test2", resource.getContentUri().toString());
     }
 
     @Test
-    public void getContentUri() {
-    }
+    public void setAndGetPrimaryTopic() {
+        // Resource is not assigned to any topics
+        assertNull(resource.getPrimaryTopic());
 
-    @Test
-    public void setContentUri() {
-    }
+        final var topic1 = mock(Topic.class);
+        final var topic2 = mock(Topic.class);
+        final var topic3 = mock(Topic.class);
 
-    @Test
-    public void getPrimaryTopic() {
-    }
+        final var topicResource1 = mock(TopicResource.class);
+        final var topicResource2 = mock(TopicResource.class);
+        final var topicResource3 = mock(TopicResource.class);
 
-    @Test
-    public void setPrimaryTopic() {
+        when(topicResource1.getTopic()).thenReturn(topic1);
+        when(topicResource2.getTopic()).thenReturn(topic2);
+        when(topicResource3.getTopic()).thenReturn(topic3);
+
+        Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> {
+            when(topicResource.getResource()).thenReturn(resource);
+            resource.addTopicResource(topicResource);
+        });
+
+        when(topicResource1.isPrimary()).thenReturn(false);
+        when(topicResource2.isPrimary()).thenReturn(false);
+        when(topicResource3.isPrimary()).thenReturn(false);
+
+        // None of the TopicResource objects is set as primary
+        // It is possible, but it is not supposed to happen outside test
+        assertNull(resource.getPrimaryTopic());
+
+        when(topicResource2.isPrimary()).thenReturn(true);
+        assertEquals(topic2, resource.getPrimaryTopic());
+
+        when(topicResource1.isPrimary()).thenReturn(true);
+        when(topicResource2.isPrimary()).thenReturn(false);
+        assertEquals(topic1, resource.getPrimaryTopic());
+
+        // Replicates the setPrimary method as it does in the real objects
+        Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> {
+            doAnswer(invocationOnMock -> {
+                final var setPrimary = (boolean) invocationOnMock.getArgument(0);
+                when(topicResource.isPrimary()).thenReturn(setPrimary);
+
+                return null;
+            }).when(topicResource).setPrimary(anyBoolean());
+        });
+
+        resource.setPrimaryTopic(topic2);
+        assertEquals(topic2, resource.getPrimaryTopic());
+
+        resource.setPrimaryTopic(topic3);
+        assertEquals(topic3, resource.getPrimaryTopic());
     }
 
     @Test
     public void setRandomPrimaryTopic() {
+        final var topic1 = mock(Topic.class);
+        final var topic2 = mock(Topic.class);
+        final var topic3 = mock(Topic.class);
+
+        final var topicResource1 = mock(TopicResource.class);
+        final var topicResource2 = mock(TopicResource.class);
+        final var topicResource3 = mock(TopicResource.class);
+
+        when(topicResource1.getTopic()).thenReturn(topic1);
+        when(topicResource2.getTopic()).thenReturn(topic2);
+        when(topicResource3.getTopic()).thenReturn(topic3);
+
+        Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> {
+            when(topicResource.getResource()).thenReturn(resource);
+            resource.addTopicResource(topicResource);
+        });
+
+        when(topicResource1.isPrimary()).thenReturn(false);
+        when(topicResource2.isPrimary()).thenReturn(false);
+        when(topicResource3.isPrimary()).thenReturn(false);
+
+        // Replicates the setPrimary method as it does in the real objects
+        Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> {
+            doAnswer(invocationOnMock -> {
+                final var setPrimary = (boolean) invocationOnMock.getArgument(0);
+                when(topicResource.isPrimary()).thenReturn(setPrimary);
+
+                return null;
+            }).when(topicResource).setPrimary(anyBoolean());
+        });
+
+        assertNull(resource.getPrimaryTopic());
+
+        resource.setRandomPrimaryTopic();
+
+        // Any of the three topics could become primary
+        assertNotNull(resource.getPrimaryTopic());
+        assertTrue(Set.of(topic1, topic2, topic3).contains(resource.getPrimaryTopic()));
     }
 
     @Test
-    public void hasSingleParentTopic() {
+    public void addAndRemoveResourceType() {
+        assertEquals(0, resource.getResourceTypes().size());
+
+        final var resourceType1 = mock(ResourceType.class);
+        resource.addResourceType(resourceType1);
+
+        assertEquals(1, resource.getResourceTypes().size());
+        assertTrue(resource.getResourceTypes().contains(resourceType1));
+
+        final var resourceType2 = mock(ResourceType.class);
+        resource.addResourceType(resourceType2);
+
+        assertEquals(2, resource.getResourceTypes().size());
+        assertTrue(resource.getResourceTypes().containsAll(Set.of(resourceType1, resourceType2)));
+
+        resource.removeResourceType(resourceType1);
+        assertEquals(1, resource.getResourceTypes().size());
+        assertTrue(resource.getResourceTypes().contains(resourceType2));
+
+        resource.removeResourceType(resourceType2);
+        assertEquals(0, resource.getResourceTypes().size());
     }
 
     @Test
-    public void removeResourceType() {
+    public void addAndRemoveFilter() {
+        final var filter1 = mock(Filter.class);
+        final var filter2 = mock(Filter.class);
+
+        final var relevance1 = mock(Relevance.class);
+        final var relevance2 = mock(Relevance.class);
+
+        assertEquals(0, resource.getResourceFilters().size());
+
+        doAnswer(invocationOnMock -> {
+            assertEquals(filter1, ((ResourceFilter) invocationOnMock.getArgument(0)).getFilter());
+
+            return null;
+        }).when(filter1).addResourceFilter(any(ResourceFilter.class));
+
+        doAnswer(invocationOnMock -> {
+            assertEquals(filter1, ((ResourceFilter) invocationOnMock.getArgument(0)).getFilter());
+
+            return null;
+        }).when(relevance1).addResourceFilter(any(ResourceFilter.class));
+
+        resource.addFilter(filter1, relevance1);
+
+        assertEquals(1, resource.getResourceFilters().size());
+        assertTrue(resource.getResourceFilters().stream().map(ResourceFilter::getFilter).collect(Collectors.toSet()).contains(filter1));
+
+        resource.addFilter(filter2, relevance2);
+
+        assertEquals(2, resource.getResourceFilters().size());
+        assertTrue(resource.getResourceFilters().stream().map(ResourceFilter::getFilter).collect(Collectors.toSet()).containsAll(Set.of(filter1, filter2)));
+
+        verify(filter1, times(1)).addResourceFilter(any(ResourceFilter.class));
+        verify(relevance1, times(1)).addResourceFilter(any(ResourceFilter.class));
+
+        verify(filter2, times(1)).addResourceFilter(any(ResourceFilter.class));
+        verify(relevance2, times(1)).addResourceFilter(any(ResourceFilter.class));
+
+        final var resourceFilter1 = resource
+                .getResourceFilters()
+                .stream()
+                .filter(resourceFilter -> resourceFilter.getFilter().equals(filter1))
+                .findFirst()
+                .orElse(null);
+
+        final var resourceFilter2 = resource
+                .getResourceFilters()
+                .stream()
+                .filter(resourceFilter -> resourceFilter.getFilter().equals(filter2))
+                .findFirst()
+                .orElse(null);
+
+        resource.removeFilter(filter1);
+
+        assertEquals(1, resource.getResourceFilters().size());
+        assertTrue(resource.getResourceFilters().stream().map(ResourceFilter::getFilter).collect(Collectors.toSet()).contains(filter2));
+
+        verify(filter1).removeResourceFilter(resourceFilter1);
+        verify(relevance1).removeResourceFilter(resourceFilter1);
+
+        resource.removeFilter(filter2);
+
+        assertEquals(0, resource.getResourceFilters().size());
+        verify(filter2).removeResourceFilter(resourceFilter2);
+        verify(relevance2).removeResourceFilter(resourceFilter2);
     }
 
     @Test
-    public void addFilter() {
+    public void addGetAndRemoveResourceFilters() {
+        final var resourceFilter1 = mock(ResourceFilter.class);
+        final var resourceFilter2 = mock(ResourceFilter.class);
+
+        assertEquals(0, resource.getResourceFilters().size());
+
+        resource.addResourceFilter(resourceFilter1);
+
+        assertEquals(1, resource.getResourceFilters().size());
+        assertTrue(resource.getResourceFilters().contains(resourceFilter1));
+
+        verify(resourceFilter1).setResource(resource);
+
+        resource.addResourceFilter(resourceFilter2);
+
+        assertEquals(2, resource.getResourceFilters().size());
+        assertTrue(resource.getResourceFilters().containsAll(Set.of(resourceFilter1, resourceFilter2)));
+
+        verify(resourceFilter2).setResource(resource);
+
+        when(resourceFilter1.getResource()).thenReturn(resource);
+        when(resourceFilter2.getResource()).thenReturn(resource);
+
+        resource.removeResourceFilter(resourceFilter1);
+
+        verify(resourceFilter1).setResource(null);
+
+        assertEquals(1, resource.getResourceFilters().size());
+        assertTrue(resource.getResourceFilters().contains(resourceFilter2));
+
+        resource.removeResourceFilter(resourceFilter2);
+
+        verify(resourceFilter2).setResource(null);
+        assertEquals(0, resource.getResourceFilters().size());
     }
 
     @Test
-    public void removeFilter() {
+    public void addGetAndRemoveTopicResources() {
+        final var topicResource1 = mock(TopicResource.class);
+        final var topicResource2 = mock(TopicResource.class);
+
+        assertEquals(0, resource.getTopicResources().size());
+
+        resource.addTopicResource(topicResource1);
+
+        assertEquals(1, resource.getTopicResources().size());
+        assertTrue(resource.getTopicResources().contains(topicResource1));
+
+        verify(topicResource1).setResource(resource);
+
+        resource.addTopicResource(topicResource2);
+
+        assertEquals(2, resource.getTopicResources().size());
+        assertTrue(resource.getTopicResources().containsAll(Set.of(topicResource1, topicResource2)));
+
+        verify(topicResource2).setResource(resource);
+
+        when(topicResource1.getResource()).thenReturn(resource);
+        when(topicResource2.getResource()).thenReturn(resource);
+
+        resource.removeTopicResource(topicResource1);
+
+        verify(topicResource1).setResource(null);
+
+        assertEquals(1, resource.getTopicResources().size());
+        assertTrue(resource.getTopicResources().contains(topicResource2));
+
+        resource.removeTopicResource(topicResource2);
+
+        verify(topicResource2).setResource(null);
+        assertEquals(0, resource.getTopicResources().size());
     }
 
     @Test
     public void preRemove() {
-    }
+        final var resourceSpy = spy(resource);
 
-    @Test
-    public void getResourceResourceTypes() {
-    }
+        final var topicResource1 = mock(TopicResource.class);
+        final var topicResource2 = mock(TopicResource.class);
+        final var resourceFilter1 = mock(ResourceFilter.class);
+        final var resourceFilter2 = mock(ResourceFilter.class);
 
-    @Test
-    public void getResourceFilters() {
-    }
+        Set.of(topicResource1, topicResource2).forEach(resourceSpy::addTopicResource);
+        Set.of(resourceFilter1, resourceFilter2).forEach(resourceSpy::addResourceFilter);
 
-    @Test
-    public void getTopicResources() {
-    }
+        doAnswer(invocationOnMock -> null).when(resourceSpy).removeTopicResource(any(TopicResource.class));
+        doAnswer(invocationOnMock -> null).when(resourceSpy).removeResourceFilter(any(ResourceFilter.class));
 
-    @Test
-    public void removeTopicResource() {
-    }
+        resourceSpy.preRemove();
 
-    @Test
-    public void addResourceFilter() {
+        Set.of(topicResource1, topicResource2).forEach(topicResource -> verify(resourceSpy).removeTopicResource(topicResource));
+        Set.of(resourceFilter1, resourceFilter2).forEach(resourceFilter -> verify(resourceSpy).removeResourceFilter(resourceFilter));
     }
-
-    @Test
-    public void removeResourceFilter() {
-    } */
 }

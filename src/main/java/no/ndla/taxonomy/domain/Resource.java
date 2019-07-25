@@ -45,10 +45,8 @@ public class Resource extends CachedUrlEntity {
     }
 
     public ResourceResourceType addResourceType(ResourceType resourceType) {
-        for (var t : getResourceTypes()) {
-            if (t.getId().equals(resourceType.getId())) {
-                throw new DuplicateIdException("Resource with id " + getPublicId() + " is already marked with resource type with id " + resourceType.getPublicId());
-            }
+        if (getResourceTypes().contains(resourceType)) {
+            throw new DuplicateIdException("Resource with id " + getPublicId() + " is already marked with resource type with id " + resourceType.getPublicId());
         }
 
 
@@ -129,7 +127,7 @@ public class Resource extends CachedUrlEntity {
     }
 
     public void setPrimaryTopic(Topic topic) {
-        TopicResource topicResource = getTopic(topic);
+        TopicResource topicResource = getTopicResource(topic);
         if (null == topicResource) throw new ParentNotFoundException(this, topic);
 
         topics.forEach(t -> t.setPrimary(false));
@@ -141,7 +139,7 @@ public class Resource extends CachedUrlEntity {
         setPrimaryTopic(topics.iterator().next().getTopic());
     }
 
-    private TopicResource getTopic(Topic topic) {
+    private TopicResource getTopicResource(Topic topic) {
         for (TopicResource topicResource : topics) {
             if (topicResource.getTopic().equals(topic)) {
                 return topicResource;
@@ -172,15 +170,15 @@ public class Resource extends CachedUrlEntity {
     }
 
     public void removeFilter(Filter filter) {
-        ResourceFilter resourceFilter = getFilter(filter);
-        if (filter == null) {
+        ResourceFilter resourceFilter = getResourceFilter(filter);
+        if (resourceFilter == null) {
             throw new ChildNotFoundException("Resource with id " + this.getPublicId() + " does not have resource-filter " + resourceFilter.getPublicId());
         }
 
         removeResourceFilter(resourceFilter);
     }
 
-    private ResourceFilter getFilter(Filter filter) {
+    private ResourceFilter getResourceFilter(Filter filter) {
         for (ResourceFilter rf : filters) {
             if (rf.getFilter().equals(filter)) return rf;
         }
@@ -231,6 +229,16 @@ public class Resource extends CachedUrlEntity {
 
         if (resourceFilter.getResource() == this) {
             resourceFilter.setResource(null);
+            resourceFilter.setFilter(null);
+            resourceFilter.setRelevance(null);
+        }
+    }
+
+    public void addTopicResource(TopicResource topicResource) {
+        this.topics.add(topicResource);
+
+        if (topicResource.getResource() != this) {
+            topicResource.setResource(this);
         }
     }
 }

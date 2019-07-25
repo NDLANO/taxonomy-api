@@ -137,6 +137,14 @@ public class Topic extends CachedUrlEntity {
         }
     }
 
+    public void removeTopicResource(TopicResource topicResource) {
+        this.resources.remove(topicResource);
+
+        if (topicResource.getTopic() == this) {
+            topicResource.setTopic(null);
+        }
+    }
+
     public Set<TopicResourceType> getTopicResourceTypes() {
         return this.topicResourceTypes;
     }

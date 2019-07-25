@@ -67,13 +67,13 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void cannot_add_existing_resource_to_topic() throws Exception {
-        URI integrationId, calculusId;
-        Topic calculus = newTopic().name("calculus");
-        var integration = newResource();
+        final var calculus = newTopic().name("calculus");
+        final var integration = newResource();
         integration.setName("Introduction to integration");
+        calculus.addResource(integration);
 
-        calculusId = calculus.getPublicId();
-        integrationId = integration.getPublicId();
+        final var calculusId = calculus.getPublicId();
+        final var integrationId = integration.getPublicId();
 
         createResource("/v1/topic-resources",
                 new TopicResources.AddResourceToTopicCommand() {

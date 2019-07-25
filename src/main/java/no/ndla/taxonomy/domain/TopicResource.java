@@ -32,6 +32,10 @@ public class TopicResource extends DomainEntity implements Rankable {
     }
 
     public void setTopic(Topic topic) {
+        if (this.topic != null && this.topic != topic) {
+            this.topic.removeTopicResource(this);
+        }
+
         this.topic = topic;
 
         if (topic != null && !topic.getTopicResources().contains(this)) {
@@ -68,6 +72,10 @@ public class TopicResource extends DomainEntity implements Rankable {
     }
 
     public void setResource(Resource resource) {
+        if (this.resource != null && this.resource != resource) {
+            this.resource.removeTopicResource(this);
+        }
+
         this.resource = resource;
 
         if (resource != null) {
