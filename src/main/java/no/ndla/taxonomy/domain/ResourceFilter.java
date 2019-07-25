@@ -47,11 +47,13 @@ public class ResourceFilter extends DomainEntity {
     }
 
     public void setRelevance(Relevance relevance) {
-        if (relevance == null && this.relevance != null) {
-            this.relevance.removeResourceFilter(this);
-        }
+        final var previousRelevance = this.relevance;
 
         this.relevance = relevance;
+
+        if (relevance != previousRelevance && previousRelevance != null) {
+            previousRelevance.removeResourceFilter(this);
+        }
 
         if (relevance != null && !relevance.getResourceFilters().contains(this)) {
             relevance.addResourceFilter(this);
@@ -59,11 +61,13 @@ public class ResourceFilter extends DomainEntity {
     }
 
     public void setResource(Resource resource) {
-        if (resource != null && this.resource != null) {
-            this.resource.removeResourceFilter(this);
-        }
+        final var previousResource = this.resource;
 
         this.resource = resource;
+
+        if (previousResource != null && previousResource != resource) {
+            previousResource.removeResourceFilter(this);
+        }
 
         if (resource != null) {
             if (!resource.getResourceFilters().contains(this)) {
@@ -73,11 +77,13 @@ public class ResourceFilter extends DomainEntity {
     }
 
     public void setFilter(Filter filter) {
-        if (this.filter != null && this.filter != filter) {
-            this.filter.removeResourceFilter(this);
-        }
+        final var previousFilter = this.filter;
 
         this.filter = filter;
+
+        if (previousFilter != null && previousFilter != filter) {
+            previousFilter.removeResourceFilter(this);
+        }
 
         if (filter != null) {
             if (!filter.getResourceFilters().contains(this)) {
