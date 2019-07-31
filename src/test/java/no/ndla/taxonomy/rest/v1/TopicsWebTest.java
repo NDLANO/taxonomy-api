@@ -71,7 +71,9 @@ public class TopicsWebTest {
     public void testItemWithoutLanguageWithoutParent() throws Exception {
         Topic topic = new Topic();
         ResourceType resourceType = new ResourceType().name("Test");
-        TopicResourceType topicResourceType = new TopicResourceType(topic, resourceType);
+        TopicResourceType topicResourceType = new TopicResourceType();
+        topicResourceType.setTopic(topic);
+        topicResourceType.setResourceType(resourceType);
         given(topicResourceTypeService.getTopicResourceTypes(new URI("urn:topic:1"))).willReturn(List.of(topicResourceType));
         String json = "{" +
                 "\"id\": \""+resourceType.getPublicId().toString()+"\"," +
@@ -91,7 +93,9 @@ public class TopicsWebTest {
         ResourceType parentResourceType = new ResourceType();
         ResourceType resourceType = new ResourceType().name("Test");
         resourceType.setParent(parentResourceType);
-        TopicResourceType topicResourceType = new TopicResourceType(topic, resourceType);
+        TopicResourceType topicResourceType = new TopicResourceType();
+        topicResourceType.setTopic(topic);
+        topicResourceType.setResourceType(resourceType);
         given(topicResourceTypeService.getTopicResourceTypes(new URI("urn:topic:1"))).willReturn(List.of(topicResourceType));
         String json = "{" +
                 "\"id\": \""+resourceType.getPublicId().toString()+"\"," +
@@ -108,7 +112,9 @@ public class TopicsWebTest {
     public void testItemWithoutTranslations() throws Exception {
         Topic topic = new Topic();
         ResourceType resourceType = spy(new ResourceType().name("Test"));
-        TopicResourceType topicResourceType = new TopicResourceType(topic, resourceType);
+        TopicResourceType topicResourceType = new TopicResourceType();
+        topicResourceType.setTopic(topic);
+        topicResourceType.setResourceType(resourceType);
         given(topicResourceTypeService.getTopicResourceTypes(new URI("urn:topic:1"))).willReturn(List.of(topicResourceType));
         String json = "{" +
                 "\"id\": \""+resourceType.getPublicId().toString()+"\"," +
@@ -127,7 +133,9 @@ public class TopicsWebTest {
         Topic topic = new Topic();
         ResourceType resourceType = new ResourceType().name("Test");
         resourceType.addTranslation("nb").setName("Test nb");
-        TopicResourceType topicResourceType = new TopicResourceType(topic, resourceType);
+        TopicResourceType topicResourceType = new TopicResourceType();
+        topicResourceType.setTopic(topic);
+        topicResourceType.setResourceType(resourceType);
         given(topicResourceTypeService.getTopicResourceTypes(new URI("urn:topic:1"))).willReturn(List.of(topicResourceType));
         String json = "{" +
                 "\"id\": \""+resourceType.getPublicId().toString()+"\"," +
@@ -146,7 +154,9 @@ public class TopicsWebTest {
         ResourceType resourceType = new ResourceType().name("Test");
         resourceType.addTranslation("nb").setName("Test nb");
         resourceType.addTranslation("en").setName("Test en");
-        TopicResourceType topicResourceType = new TopicResourceType(topic, resourceType);
+        TopicResourceType topicResourceType = new TopicResourceType();
+        topicResourceType.setTopic(topic);
+        topicResourceType.setResourceType(resourceType);
         given(topicResourceTypeService.getTopicResourceTypes(new URI("urn:topic:1"))).willReturn(List.of(topicResourceType));
         String json = "{" +
                 "\"id\": \""+resourceType.getPublicId().toString()+"\"," +

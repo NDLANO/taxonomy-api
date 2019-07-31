@@ -393,7 +393,8 @@ public class Topic extends CachedUrlEntity {
     }
 
     public TopicResourceType addResourceType(ResourceType resourceType) {
-        TopicResourceType topicResourceType = new TopicResourceType(this, resourceType);
+        TopicResourceType topicResourceType = new TopicResourceType();
+        topicResourceType.setResourceType(resourceType);
         addTopicResourceType(topicResourceType);
         return topicResourceType;
     }

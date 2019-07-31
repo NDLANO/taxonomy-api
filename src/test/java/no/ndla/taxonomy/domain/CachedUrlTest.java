@@ -17,6 +17,14 @@ public class CachedUrlTest {
     }
 
     @Test
+    public void testConstructor() throws URISyntaxException {
+        final var cachedUrl = new CachedUrl(new URI("urn:test1"), "/test/path", true);
+        assertEquals("urn:test1", cachedUrl.getPublicId().toString());
+        assertEquals("/test/path", cachedUrl.getPath());
+        assertTrue(cachedUrl.isPrimary());
+    }
+
+    @Test
     public void setAndGetPublicId() throws URISyntaxException {
         assertNull(cachedUrl.getPublicId());
 

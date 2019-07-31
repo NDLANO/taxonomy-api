@@ -1,4 +1,7 @@
-package no.ndla.taxonomy.domain;
+package no.ndla.taxonomy.service;
+
+import no.ndla.taxonomy.domain.DomainEntity;
+import no.ndla.taxonomy.domain.IdFormatException;
 
 import java.net.URI;
 

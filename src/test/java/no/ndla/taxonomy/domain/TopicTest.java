@@ -585,6 +585,42 @@ public class TopicTest {
     }
 
     @Test
+    public void setRandomPrimaryTopic() {
+        final var topic1 = mock(Topic.class);
+        final var topic2 = mock(Topic.class);
+
+        final var topicSubtopic1 = mock(TopicSubtopic.class);
+        final var topicSubtopic2 = mock(TopicSubtopic.class);
+
+        when(topicSubtopic1.getSubtopic()).thenReturn(Optional.of(topic));
+        when(topicSubtopic2.getSubtopic()).thenReturn(Optional.of(topic));
+
+        when(topicSubtopic1.getTopic()).thenReturn(Optional.of(topic1));
+        when(topicSubtopic2.getTopic()).thenReturn(Optional.of(topic2));
+
+        topic.addParentTopicSubtopic(topicSubtopic1);
+        topic.addParentTopicSubtopic(topicSubtopic2);
+
+        clearInvocations(topicSubtopic1, topicSubtopic2);
+
+        final var setPrimaryInvoked = new AtomicBoolean(false);
+
+        doAnswer(invocationOnMock -> {
+            setPrimaryInvoked.set(true);
+            return null;
+        }).when(topicSubtopic1).setPrimary(true);
+
+        doAnswer(invocationOnMock -> {
+            setPrimaryInvoked.set(true);
+            return null;
+        }).when(topicSubtopic2).setPrimary(true);
+
+        topic.setRandomPrimaryTopic();
+
+        assertTrue(setPrimaryInvoked.get());
+    }
+
+    @Test
     public void addFilter() {
         final var filter1 = mock(Filter.class);
         final var filter2 = mock(Filter.class);

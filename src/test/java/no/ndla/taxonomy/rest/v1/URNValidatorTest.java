@@ -1,6 +1,10 @@
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.IdFormatException;
+import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.ResourceType;
+import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.service.URNValidator;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

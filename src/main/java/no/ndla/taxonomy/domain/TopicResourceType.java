@@ -17,14 +17,8 @@ public class TopicResourceType extends DomainEntity {
     @JoinColumn(name = "resource_type_id")
     private ResourceType resourceType;
 
-    protected TopicResourceType() {
-    }
-
-    public TopicResourceType(Topic topic, ResourceType resourceType) {
+    public TopicResourceType() {
         setPublicId(URI.create("urn:topic-resourcetype:" + UUID.randomUUID()));
-
-        this.setTopic(topic);
-        this.setResourceType(resourceType);
     }
 
     public Optional<Topic> getTopic() {
