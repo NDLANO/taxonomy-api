@@ -30,14 +30,14 @@ import java.util.stream.Collectors;
 public class Topics extends CrudController<Topic> {
 
 
-    private TopicResourceTypeService topicResourceTypeService;
-    private TopicRepository topicRepository;
-    private TopicSubtopicRepository topicSubtopicRepository;
-    private SubjectTopicRepository subjectTopicRepository;
-    private SubjectRepository subjectRepository;
-    private TopicResourceRepository topicResourceRepository;
-    private TopicTreeByTopicElementRepository topicTreeRepository;
-    private TopicTreeSorter topicTreeSorter;
+    private final TopicResourceTypeService topicResourceTypeService;
+    private final TopicRepository topicRepository;
+    private final TopicSubtopicRepository topicSubtopicRepository;
+    private final SubjectTopicRepository subjectTopicRepository;
+    private final SubjectRepository subjectRepository;
+    private final TopicResourceRepository topicResourceRepository;
+    private final TopicTreeByTopicElementRepository topicTreeRepository;
+    private final TopicTreeSorter topicTreeSorter;
 
     public Topics(TopicRepository topicRepository,
                   TopicSubtopicRepository topicSubtopicRepository,
@@ -158,9 +158,7 @@ public class Topics extends CrudController<Topic> {
         if (recursive) {
             final var topicList = topicTreeRepository.findAllByRootTopicIdOrTopicIdOrderByParentTopicIdAscParentTopicIdAscTopicRankAsc(topic.getId(), topic.getId());
 
-            topicList.forEach(topicTreeElement -> {
-                resourcesToSort.add(new TopicResourceTreeSortable("topic", "topic", topicTreeElement.getTopicId(), topicTreeElement.getParentTopicId(), topicTreeElement.getTopicRank()));
-            });
+            topicList.forEach(topicTreeElement -> resourcesToSort.add(new TopicResourceTreeSortable("topic", "topic", topicTreeElement.getTopicId(), topicTreeElement.getParentTopicId(), topicTreeElement.getTopicRank())));
 
             topicIdsToSearchFor = topicList.stream()
                     .map(TopicTreeByTopicElement::getTopicId)
@@ -187,9 +185,7 @@ public class Topics extends CrudController<Topic> {
             topicResources = topicResourceRepository.findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIdsToSearchFor, relevanceArgument);
         }
 
-        topicResources.forEach(topicResource -> {
-            resourcesToSort.add(new TopicResourceTreeSortable(topicResource));
-        });
+        topicResources.forEach(topicResource -> resourcesToSort.add(new TopicResourceTreeSortable(topicResource)));
 
         // Sort the list, extract all the topicResource objects in between topics and return list of documents
 
@@ -227,8 +223,9 @@ public class Topics extends CrudController<Topic> {
         try {
             return topicResourceTypeService.getTopicResourceTypes(id)
                     .stream()
+                    .filter(topicResourceType -> topicResourceType.getResourceType().isPresent())
                     .map(topicResourceType -> new no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument() {{
-                        ResourceType resourceType = topicResourceType.getResourceType();
+                        ResourceType resourceType = topicResourceType.getResourceType().get();
                         id = resourceType.getPublicId();
                         ResourceType parent = resourceType.getParent().orElse(null);
                         parentId = parent != null ? parent.getPublicId() : null;

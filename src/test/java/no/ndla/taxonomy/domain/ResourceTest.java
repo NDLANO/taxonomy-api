@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -69,8 +70,8 @@ public class ResourceTest {
         final var topicResource1 = mock(TopicResource.class);
         final var topicResource2 = mock(TopicResource.class);
 
-        when(topicResource1.getTopic()).thenReturn(topic1);
-        when(topicResource2.getTopic()).thenReturn(topic2);
+        when(topicResource1.getTopic()).thenReturn(Optional.of(topic1));
+        when(topicResource2.getTopic()).thenReturn(Optional.of(topic2));
 
         setField(resource, "topics", Set.of(topicResource1, topicResource2));
 
@@ -162,7 +163,7 @@ public class ResourceTest {
     @Test
     public void setAndGetPrimaryTopic() {
         // Resource is not assigned to any topics
-        assertNull(resource.getPrimaryTopic());
+        assertFalse(resource.getPrimaryTopic().isPresent());
 
         final var topic1 = mock(Topic.class);
         final var topic2 = mock(Topic.class);
@@ -172,12 +173,12 @@ public class ResourceTest {
         final var topicResource2 = mock(TopicResource.class);
         final var topicResource3 = mock(TopicResource.class);
 
-        when(topicResource1.getTopic()).thenReturn(topic1);
-        when(topicResource2.getTopic()).thenReturn(topic2);
-        when(topicResource3.getTopic()).thenReturn(topic3);
+        when(topicResource1.getTopic()).thenReturn(Optional.of(topic1));
+        when(topicResource2.getTopic()).thenReturn(Optional.of(topic2));
+        when(topicResource3.getTopic()).thenReturn(Optional.of(topic3));
 
         Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> {
-            when(topicResource.getResource()).thenReturn(resource);
+            when(topicResource.getResource()).thenReturn(Optional.of(resource));
             resource.addTopicResource(topicResource);
         });
 
@@ -187,30 +188,28 @@ public class ResourceTest {
 
         // None of the TopicResource objects is set as primary
         // It is possible, but it is not supposed to happen outside test
-        assertNull(resource.getPrimaryTopic());
+        assertFalse(resource.getPrimaryTopic().isPresent());
 
         when(topicResource2.isPrimary()).thenReturn(true);
-        assertEquals(topic2, resource.getPrimaryTopic());
+        assertEquals(topic2, resource.getPrimaryTopic().orElse(null));
 
         when(topicResource1.isPrimary()).thenReturn(true);
         when(topicResource2.isPrimary()).thenReturn(false);
-        assertEquals(topic1, resource.getPrimaryTopic());
+        assertEquals(topic1, resource.getPrimaryTopic().orElse(null));
 
         // Replicates the setPrimary method as it does in the real objects
-        Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> {
-            doAnswer(invocationOnMock -> {
-                final var setPrimary = (boolean) invocationOnMock.getArgument(0);
-                when(topicResource.isPrimary()).thenReturn(setPrimary);
+        Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> doAnswer(invocationOnMock -> {
+            final var setPrimary = (boolean) invocationOnMock.getArgument(0);
+            when(topicResource.isPrimary()).thenReturn(setPrimary);
 
-                return null;
-            }).when(topicResource).setPrimary(anyBoolean());
-        });
+            return null;
+        }).when(topicResource).setPrimary(anyBoolean()));
 
         resource.setPrimaryTopic(topic2);
-        assertEquals(topic2, resource.getPrimaryTopic());
+        assertEquals(topic2, resource.getPrimaryTopic().orElse(null));
 
         resource.setPrimaryTopic(topic3);
-        assertEquals(topic3, resource.getPrimaryTopic());
+        assertEquals(topic3, resource.getPrimaryTopic().orElse(null));
     }
 
     @Test
@@ -223,12 +222,12 @@ public class ResourceTest {
         final var topicResource2 = mock(TopicResource.class);
         final var topicResource3 = mock(TopicResource.class);
 
-        when(topicResource1.getTopic()).thenReturn(topic1);
-        when(topicResource2.getTopic()).thenReturn(topic2);
-        when(topicResource3.getTopic()).thenReturn(topic3);
+        when(topicResource1.getTopic()).thenReturn(Optional.of(topic1));
+        when(topicResource2.getTopic()).thenReturn(Optional.of(topic2));
+        when(topicResource3.getTopic()).thenReturn(Optional.of(topic3));
 
         Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> {
-            when(topicResource.getResource()).thenReturn(resource);
+            when(topicResource.getResource()).thenReturn(Optional.of(resource));
             resource.addTopicResource(topicResource);
         });
 
@@ -237,22 +236,20 @@ public class ResourceTest {
         when(topicResource3.isPrimary()).thenReturn(false);
 
         // Replicates the setPrimary method as it does in the real objects
-        Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> {
-            doAnswer(invocationOnMock -> {
-                final var setPrimary = (boolean) invocationOnMock.getArgument(0);
-                when(topicResource.isPrimary()).thenReturn(setPrimary);
+        Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> doAnswer(invocationOnMock -> {
+            final var setPrimary = (boolean) invocationOnMock.getArgument(0);
+            when(topicResource.isPrimary()).thenReturn(setPrimary);
 
-                return null;
-            }).when(topicResource).setPrimary(anyBoolean());
-        });
+            return null;
+        }).when(topicResource).setPrimary(anyBoolean()));
 
-        assertNull(resource.getPrimaryTopic());
+        assertFalse(resource.getPrimaryTopic().isPresent());
 
         resource.setRandomPrimaryTopic();
 
         // Any of the three topics could become primary
-        assertNotNull(resource.getPrimaryTopic());
-        assertTrue(Set.of(topic1, topic2, topic3).contains(resource.getPrimaryTopic()));
+        assertTrue(resource.getPrimaryTopic().isPresent());
+        assertTrue(Set.of(topic1, topic2, topic3).contains(resource.getPrimaryTopic().get()));
     }
 
     @Test
@@ -404,8 +401,8 @@ public class ResourceTest {
 
         verify(topicResource2).setResource(resource);
 
-        when(topicResource1.getResource()).thenReturn(resource);
-        when(topicResource2.getResource()).thenReturn(resource);
+        when(topicResource1.getResource()).thenReturn(Optional.of(resource));
+        when(topicResource2.getResource()).thenReturn(Optional.of(resource));
 
         resource.removeTopicResource(topicResource1);
 

@@ -2,7 +2,6 @@ package no.ndla.taxonomy.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import org.springframework.stereotype.Service;
@@ -16,12 +15,10 @@ import java.util.stream.StreamSupport;
 
 @Service
 public class TopicReusedInSameSubjectCloningService {
-    private SubjectTopicRepository subjectTopicRepository;
-    private TopicSubtopicRepository topicSubtopicRepository;
-    private TopicRepository topicRepository;
+    private final TopicSubtopicRepository topicSubtopicRepository;
+    private final TopicRepository topicRepository;
 
-    public TopicReusedInSameSubjectCloningService(SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository, TopicRepository topicRepository) {
-        this.subjectTopicRepository = subjectTopicRepository;
+    public TopicReusedInSameSubjectCloningService(TopicSubtopicRepository topicSubtopicRepository, TopicRepository topicRepository) {
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicRepository = topicRepository;
     }
@@ -43,6 +40,7 @@ public class TopicReusedInSameSubjectCloningService {
                     expand = expand
                             .stream()
                             .map(Topic::getParentTopics)
+                            .map(Collection::iterator)
                             .map(iterator -> Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED))
                             .flatMap(spliterator -> StreamSupport.stream(spliterator, false))
                             .collect(Collectors.toList());
@@ -58,7 +56,7 @@ public class TopicReusedInSameSubjectCloningService {
                 Spliterators.spliteratorUnknownSize(topicIterator, Spliterator.ORDERED),
                 false
         )
-                .map(t -> t.getSubjectTopics())
+                .map(Topic::getSubjectTopics)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
@@ -72,9 +70,9 @@ public class TopicReusedInSameSubjectCloningService {
             Topic topic = topicRepository.findByPublicId(contentUri);
             Map<URI, Topic> topicObjects = new HashMap<>();
             topicObjects.put(topic.getPublicId(), topic);
-            List<Topic> parentLinks = StreamSupport.stream(Spliterators.spliteratorUnknownSize(topic.getParentTopics(), Spliterator.ORDERED), false)
+            List<Topic> parentLinks = StreamSupport.stream(Spliterators.spliteratorUnknownSize(topic.getParentTopics().iterator(), Spliterator.ORDERED), false)
                     .collect(Collectors.toList());
-            parentLinks.stream().forEach(t -> topicObjects.put(t.getPublicId(), t));
+            parentLinks.forEach(t -> topicObjects.put(t.getPublicId(), t));
 
             List<URI> parents = parentLinks
                     .stream()
@@ -88,7 +86,8 @@ public class TopicReusedInSameSubjectCloningService {
                         List<SubjectTopic> subjectLinks = findSubjectTopics(parent);
                         return subjectLinks
                                 .stream()
-                                .map(subjectLink -> new AbstractMap.SimpleEntry<>(subjectLink.getSubject().getPublicId(), parentId));
+                                .filter(subjectLink -> subjectLink.getSubject().isPresent())
+                                .map(subjectLink -> new AbstractMap.SimpleEntry<>(subjectLink.getSubject().get().getPublicId(), parentId));
                     })
                     .forEach(entry -> {
                         List<URI> parentList = subjectToParentsMap.computeIfAbsent(entry.getKey(), k -> new ArrayList<>());
@@ -133,7 +132,8 @@ public class TopicReusedInSameSubjectCloningService {
                 topicCloning = new TopicCloning(parentTopic, topic);
                 {
                     TopicSubtopic link = parentTopic.getChildrenTopicSubtopics().stream()
-                            .filter(l -> l.getSubtopic().getPublicId().equals(topic.getPublicId()))
+                            .filter(l -> l.getSubtopic().isPresent())
+                            .filter(l -> l.getSubtopic().get().getPublicId().equals(topic.getPublicId()))
                             .findFirst()
                             .orElseThrow(() -> new RuntimeException("Link object not found"));
                     parentTopic.getChildrenTopicSubtopics().remove(link);
@@ -148,7 +148,9 @@ public class TopicReusedInSameSubjectCloningService {
                     if (parentTopic == null || clonedTopic == null) {
                         throw new RuntimeException("The parent and/or cloned topic objects are gone (race?)");
                     }
-                    TopicSubtopic link = new TopicSubtopic(parentTopic, clonedTopic);
+                    TopicSubtopic link = new TopicSubtopic();
+                    link.setSubtopic(clonedTopic);
+                    link.setTopic(parentTopic);
                     topicSubtopicRepository.save(link);
                 }
             }
@@ -203,10 +205,10 @@ public class TopicReusedInSameSubjectCloningService {
                 if (topic.getSubjectTopics() != null) {
                     Subject primarySubject = null;
                     for (SubjectTopic subjectTopic : topic.getSubjectTopics()) {
-                        SubjectTopic clonedSubjectTopic = new SubjectTopic(subjectTopic.getSubject(), clonedTopic);
+                        SubjectTopic clonedSubjectTopic = new SubjectTopic(subjectTopic.getSubject().orElse(null), clonedTopic);
                         clonedSubjectTopic.setRank(subjectTopic.getRank());
                         if (subjectTopic.isPrimary()) {
-                            primarySubject = subjectTopic.getSubject();
+                            primarySubject = subjectTopic.getSubject().orElse(null);
                         }
                         clonedTopic.addSubjectTopic(clonedSubjectTopic);
                     }
@@ -218,35 +220,38 @@ public class TopicReusedInSameSubjectCloningService {
                 /* resources */
                 if (topic.getTopicResources() != null) {
                     for (TopicResource topicResource : topic.getTopicResources()) {
-                        TopicResource clonedTopicResource = new TopicResource(clonedTopic, topicResource.getResource());
+                        TopicResource clonedTopicResource = new TopicResource();
+                        clonedTopicResource.setTopic(clonedTopic);
+                        clonedTopicResource.setResource(topicResource.getResource().orElse(null));
                         clonedTopicResource.setPrimary(topicResource.isPrimary());
                         clonedTopicResource.setRank(topicResource.getRank());
                         clonedTopic.addTopicResource(clonedTopicResource);
                     }
                 }
                 /* filters */
-                if (topic.getTopicFilters() != null) {
-                    for (TopicFilter topicFilter : topic.getTopicFilters()) {
-                        clonedTopic.addTopicFilter(new TopicFilter(clonedTopic, topicFilter.getFilter().orElse(null), topicFilter.getRelevance().orElse(null)));
-                    }
-                }
+                topic.getTopicFilters().stream()
+                        .filter(topicFilter -> topicFilter.getFilter().isPresent() && topicFilter.getRelevance().isPresent())
+                        .forEach(topicFilter -> clonedTopic.addFilter(topicFilter.getFilter().get(), topicFilter.getRelevance().get()));
+
                 /* translations */
                 topic.getTranslations().forEach(translation -> clonedTopic.addTranslation(translation.getLanguageCode()).setName(translation.getName()));
                 /* resource types */
-                topic.getTopicResourceTypes().forEach(topicResourceType -> clonedTopic.addResourceType(topicResourceType.getResourceType()));
+                topic.getTopicResourceTypes().stream()
+                        .filter(topicResourceType -> topicResourceType.getResourceType().isPresent())
+                        .forEach(topicResourceType -> clonedTopic.addResourceType(topicResourceType.getResourceType().get()));
 
                 clonedTopic = topicRepository.save(clonedTopic);
 
                 /* subtopics */
-                if (topic.getChildrenTopicSubtopics() != null) {
-                    for (TopicSubtopic topicSubtopic : topic.getChildrenTopicSubtopics()) {
-                        TopicCloning subtopicCloning = new TopicCloning(topic, topicSubtopic.getSubtopic());
-                        clonedSubtopics.add(subtopicCloning);
-                        TopicSubtopic clonedSubtopic = clonedTopic.addSubtopic(subtopicCloning.getClonedTopic());
-                        clonedSubtopic.setPrimary(topicSubtopic.isPrimary());
-                        clonedSubtopic.setRank(topicSubtopic.getRank());
-                    }
-                }
+                topic.getChildrenTopicSubtopics().stream()
+                        .filter(topicSubtopic -> topicSubtopic.getSubtopic().isPresent())
+                        .forEach(topicSubtopic -> {
+                            TopicCloning subtopicCloning = new TopicCloning(topic, topicSubtopic.getSubtopic().get());
+                            clonedSubtopics.add(subtopicCloning);
+                            TopicSubtopic clonedSubtopic = clonedTopic.addSubtopic(subtopicCloning.getClonedTopic());
+                            clonedSubtopic.setPrimary(topicSubtopic.isPrimary());
+                            clonedSubtopic.setRank(topicSubtopic.getRank());
+                        });
 
                 clonedTopic = topicRepository.save(clonedTopic);
             }

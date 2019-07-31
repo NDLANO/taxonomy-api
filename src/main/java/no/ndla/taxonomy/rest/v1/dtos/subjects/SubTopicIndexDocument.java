@@ -84,28 +84,33 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
     public SubTopicIndexDocument(Subject subject, SubjectTopic subjectTopic, String language) {
         this.language = language;
 
-        this.populateFromTopic(subjectTopic.getTopic());
+        subjectTopic.getTopic().ifPresent(topic -> {
+            this.populateFromTopic(topic);
+            this.path = topic.getPathByContext(subject).orElse(null);
+        });
 
-        this.parent = subjectTopic.getSubject().getPublicId();
+        subjectTopic.getSubject().ifPresent(s -> this.parent = s.getPublicId());
+
         this.connectionId = subjectTopic.getPublicId();
         this.isPrimary = subjectTopic.isPrimary();
         this.rank = subjectTopic.getRank();
-
-        this.path = subjectTopic.getTopic().getPathByContext(subject).orElse(null);
     }
 
 
     public SubTopicIndexDocument(Subject subject, TopicSubtopic topicSubtopic, String language) {
         this.language = language;
 
-        this.populateFromTopic(topicSubtopic.getSubtopic());
+        topicSubtopic.getSubtopic().ifPresent(subtopic -> {
+            this.populateFromTopic(subtopic);
+            this.path = subtopic.getPathByContext(subject).orElse(null);
+        });
 
-        this.parent = topicSubtopic.getTopic().getPublicId();
+        topicSubtopic.getTopic().ifPresent(topic -> this.parent = topic.getPublicId());
+
         this.connectionId = topicSubtopic.getPublicId();
         this.isPrimary = topicSubtopic.isPrimary();
         this.rank = topicSubtopic.getRank();
 
-        this.path = topicSubtopic.getSubtopic().getPathByContext(subject).orElse(null);
     }
 
     private void populateFromTopic(Topic topic) {

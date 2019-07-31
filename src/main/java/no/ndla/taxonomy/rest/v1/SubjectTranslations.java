@@ -23,9 +23,9 @@ import java.util.List;
 @RequestMapping(path = {"/v1/subjects/{id}/translations"})
 @Transactional
 public class SubjectTranslations {
-    private SubjectRepository subjectRepository;
+    private final SubjectRepository subjectRepository;
 
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
     public SubjectTranslations(SubjectRepository subjectRepository, EntityManager entityManager) {
         this.subjectRepository = subjectRepository;
@@ -34,7 +34,7 @@ public class SubjectTranslations {
 
     @GetMapping
     @ApiOperation("Gets all relevanceTranslations for a single subject")
-    public List<SubjectTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
+    public List<SubjectTranslationIndexDocument> index(@PathVariable("id") URI id) {
         Subject subject = subjectRepository.getByPublicId(id);
         List<SubjectTranslationIndexDocument> result = new ArrayList<>();
         subject.getTranslations().forEach(t -> result.add(
@@ -70,7 +70,7 @@ public class SubjectTranslations {
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language
-    ) throws Exception {
+    ) {
         Subject subject = subjectRepository.getByPublicId(id);
         subject.getTranslation(language).ifPresent((translation) -> {
             subject.removeTranslation(language);
@@ -88,7 +88,7 @@ public class SubjectTranslations {
             @PathVariable("language") String language,
             @ApiParam(name = "subject", value = "The new or updated translation")
             @RequestBody UpdateSubjectTranslationCommand command
-    ) throws Exception {
+    ) {
         Subject subject = subjectRepository.getByPublicId(id);
         SubjectTranslation translation = subject.addTranslation(language);
         entityManager.persist(translation);

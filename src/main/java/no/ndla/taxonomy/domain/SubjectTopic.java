@@ -3,6 +3,7 @@ package no.ndla.taxonomy.domain;
 
 import javax.persistence.*;
 import java.net.URI;
+import java.util.Optional;
 import java.util.UUID;
 
 @Entity
@@ -33,32 +34,40 @@ public class SubjectTopic extends DomainEntity implements Rankable {
         this.setTopic(topic);
     }
 
+    public Optional<Subject> getSubject() {
+        return Optional.ofNullable(subject);
+    }
+
     public void setSubject(Subject subject) {
-        if (subject != this.getSubject() && this.getSubject() != null && this.getSubject().getSubjectTopics().contains(this)) {
-            this.getSubject().removeSubjectTopic(this);
-        }
+        final var previousSubject = this.subject;
 
         this.subject = subject;
+
+        if (subject != previousSubject && previousSubject != null) {
+            previousSubject.removeSubjectTopic(this);
+        }
 
         if (subject != null && !subject.getSubjectTopics().contains(this)) {
             subject.addSubjectTopic(this);
         }
     }
 
-    public Subject getSubject() {
-        return subject;
-    }
-
-    public Topic getTopic() {
-        return topic;
+    public Optional<Topic> getTopic() {
+        return Optional.ofNullable(topic);
     }
 
     public void setTopic(Topic topic) {
-        if (topic != this.getTopic() && this.getTopic() != null && this.getTopic().getSubjectTopics().contains(this)) {
-            this.getTopic().removeSubjectTopic(this);
-        }
+        final var previousTopic = this.topic;
 
         this.topic = topic;
+
+        if (topic != previousTopic && previousTopic != null) {
+            previousTopic.removeSubjectTopic(this);
+
+            if (isPrimary()) {
+                previousTopic.setRandomPrimarySubject();
+            }
+        }
 
         if (topic != null && !topic.getSubjectTopics().contains(this)) {
             topic.addSubjectTopic(this);

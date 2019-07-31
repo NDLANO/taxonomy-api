@@ -26,9 +26,9 @@ import java.util.stream.Collectors;
 @RequestMapping(path = {"/v1/resources"})
 @Transactional
 public class Resources extends CrudController<Resource> {
-    private ResourceRepository resourceRepository;
-    private ResourceResourceTypeRepository resourceResourceTypeRepository;
-    private ResourceFilterRepository resourceFilterRepository;
+    private final ResourceRepository resourceRepository;
+    private final ResourceResourceTypeRepository resourceResourceTypeRepository;
+    private final ResourceFilterRepository resourceFilterRepository;
 
     public Resources(ResourceRepository resourceRepository,
                      ResourceResourceTypeRepository resourceResourceTypeRepository,
@@ -84,10 +84,7 @@ public class Resources extends CrudController<Resource> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "resource", value = "the new resource") @RequestBody CreateResourceCommand command) {
-        final var resource = new Resource();
-        final var result = doPost(resource, command);
-
-        return result;
+        return doPost(new Resource(), command);
     }
 
     @GetMapping("/{id}/resource-types")
@@ -187,7 +184,7 @@ public class Resources extends CrudController<Resource> {
     }
 
     private ParentTopicIndexDocument createParentTopicIndexDocument(TopicResource topicResource, String languageCode) {
-        final var topic = topicResource.getTopic();
+        final var topic = topicResource.getTopic().orElseThrow(() -> new IllegalArgumentException("Topic is not set"));
 
         return new ParentTopicIndexDocument() {{
             name = topic.getTranslation(languageCode).map(TopicTranslation::getName).orElse(topic.getName());

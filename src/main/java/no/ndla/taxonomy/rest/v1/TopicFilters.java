@@ -25,10 +25,10 @@ import java.util.stream.Collectors;
 @RequestMapping(path = {"/v1/topic-filters"})
 @Transactional
 public class TopicFilters {
-    private FilterRepository filterRepository;
-    private TopicFilterRepository topicFilterRepository;
-    private TopicRepository topicRepository;
-    private RelevanceRepository relevanceRepository;
+    private final FilterRepository filterRepository;
+    private final TopicFilterRepository topicFilterRepository;
+    private final TopicRepository topicRepository;
+    private final RelevanceRepository relevanceRepository;
 
     public TopicFilters(FilterRepository filterRepository, TopicRepository topicRepository, TopicFilterRepository topicFilterRepository, RelevanceRepository relevanceRepository) {
         this.filterRepository = filterRepository;

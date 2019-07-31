@@ -14,7 +14,7 @@ import java.net.URI;
 @RestController
 @Transactional
 public class TopicReusedInSameSubjectCloningController {
-    private TopicReusedInSameSubjectCloningService topicReusedInSameSubjectCloningService;
+    private final TopicReusedInSameSubjectCloningService topicReusedInSameSubjectCloningService;
 
     public TopicReusedInSameSubjectCloningController(TopicReusedInSameSubjectCloningService topicReusedInSameSubjectCloningService) {
         this.topicReusedInSameSubjectCloningService = topicReusedInSameSubjectCloningService;

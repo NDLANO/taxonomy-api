@@ -13,7 +13,7 @@ public class ResourceFilterTest {
     private ResourceFilter resourceFilter;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         resourceFilter = new ResourceFilter();
     }
 

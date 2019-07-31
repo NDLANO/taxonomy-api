@@ -8,6 +8,7 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
+import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,7 +27,7 @@ public class TopicResources {
 
     private final TopicRepository topicRepository;
     private final ResourceRepository resourceRepository;
-    private TopicResourceRepository topicResourceRepository;
+    private final TopicResourceRepository topicResourceRepository;
 
     public TopicResources(TopicRepository topicRepository,
                           ResourceRepository resourceRepository,
@@ -62,7 +63,7 @@ public class TopicResources {
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Resource resource = resourceRepository.getByPublicId(command.resourceId);
 
-        TopicResource topicResource = Boolean.FALSE.equals(command.primary) ? topic.addSecondaryResource(resource) : topic.addResource(resource);
+        TopicResource topicResource = topic.addResource(resource, command.primary);
 
         List<TopicResource> connectionsForTopic = topicResourceRepository.findByTopic(topic);
         connectionsForTopic.sort(Comparator.comparingInt(TopicResource::getRank));
@@ -86,10 +87,9 @@ public class TopicResources {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
-        final var topic = topicResource.getTopic();
-        topic.removeResource(topicResource.getResource());
+        topicResource.getTopic().ifPresent(topic -> topicResource.getResource().ifPresent(topic::removeResource));
 
-        topicResourceRepository.deleteByPublicId(id);
+        topicResourceRepository.delete(topicResource);
     }
 
     @PutMapping("/{id}")
@@ -100,8 +100,8 @@ public class TopicResources {
                     @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand
                             command) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
-        Topic topic = topicResource.getTopic();
-        Resource resource = topicResource.getResource();
+        Topic topic = topicResource.getTopic().orElseThrow(() -> new NotFoundHttpRequestException("Topic not found"));
+        Resource resource = topicResource.getResource().orElseThrow(() -> new NotFoundHttpRequestException("Resource not found"));
 
         if (command.primary) {
             resource.setPrimaryTopic(topic);
@@ -126,7 +126,7 @@ public class TopicResources {
 
         @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
-        public Boolean primary;
+        public boolean primary = true;
 
         @JsonProperty
         @ApiModelProperty(value = "Order in which resource is sorted for the topic", example = "1")
@@ -174,8 +174,8 @@ public class TopicResources {
 
         TopicResourceIndexDocument(TopicResource topicResource) {
             id = topicResource.getPublicId();
-            topicid = topicResource.getTopic().getPublicId();
-            resourceId = topicResource.getResource().getPublicId();
+            topicResource.getTopic().ifPresent(topic -> topicid = topic.getPublicId());
+            topicResource.getResource().ifPresent(resource -> resourceId = resource.getPublicId());
             primary = topicResource.isPrimary();
             rank = topicResource.getRank();
         }

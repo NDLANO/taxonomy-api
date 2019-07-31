@@ -22,19 +22,18 @@ import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @RestController
 @Transactional
 @RequestMapping(path = {"/v1/subjects"})
 public class Subjects extends CrudController<Subject> {
-    private SubjectRepository subjectRepository;
-    private TopicTreeBySubjectElementRepository subjectTopicTreeElementRepository;
-    private TopicResourceRepository topicResourceRepository;
-    private SubjectTopicRepository subjectTopicRepository;
-    private TopicSubtopicRepository topicSubtopicRepository;
-    private TopicTreeSorter topicTreeSorter;
+    private final SubjectRepository subjectRepository;
+    private final TopicTreeBySubjectElementRepository subjectTopicTreeElementRepository;
+    private final TopicResourceRepository topicResourceRepository;
+    private final SubjectTopicRepository subjectTopicRepository;
+    private final TopicSubtopicRepository topicSubtopicRepository;
+    private final TopicTreeSorter topicTreeSorter;
 
     public Subjects(SubjectRepository subjectRepository, TopicTreeBySubjectElementRepository subjectTopicTreeElementRepository,
                     TopicResourceRepository topicResourceRepository,
@@ -127,6 +126,8 @@ public class Subjects extends CrudController<Subject> {
         } else {
             topicIds = subject.getSubjectTopics().stream()
                     .map(SubjectTopic::getTopic)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
                     .map(Topic::getId)
                     .collect(Collectors.toList());
         }
@@ -142,18 +143,18 @@ public class Subjects extends CrudController<Subject> {
 
         subjectTopics.stream()
                 .filter(subjectTopic -> searchForFilterOrRelevance(subjectTopic, filterIdSet, relevanceArgument, topicSubtopics))
-                .map(subjectTopic -> createSubTopicIndexDocument(subject, subjectTopic, language, topicSubtopics))
+                .map(subjectTopic -> createSubTopicIndexDocument(subject, subjectTopic, language))
                 .forEach(returnList::add);
 
         topicSubtopics.stream()
                 .filter(topicSubtopic -> searchForFilterOrRelevance(topicSubtopic, filterIdSet, relevanceArgument, topicSubtopics))
-                .map(topicSubtopic -> createSubTopicIndexDocument(subject, topicSubtopic, language, topicSubtopics))
+                .map(topicSubtopic -> createSubTopicIndexDocument(subject, topicSubtopic, language))
                 .forEach(returnList::add);
 
         return topicTreeSorter.sortList(returnList);
     }
 
-    private SubTopicIndexDocument createSubTopicIndexDocument(Subject subject, Object connection, String language, Collection<TopicSubtopic> topicSubtopics) {
+    private SubTopicIndexDocument createSubTopicIndexDocument(Subject subject, Object connection, String language) {
         if (connection instanceof SubjectTopic) {
             return new SubTopicIndexDocument(subject, (SubjectTopic) connection, language);
         } else if (connection instanceof TopicSubtopic) {
@@ -166,21 +167,19 @@ public class Subjects extends CrudController<Subject> {
     private boolean hasFilterAndRelevanceOrJustFilterIfRelevanceIsNotSet(Topic topic, Collection<URI> filterPublicId, URI relevancePublicId) {
         final var returnValue = new AtomicBoolean(false);
 
-        topic.getTopicFilters().forEach(topicFilter -> {
-            topicFilter.getFilter().ifPresent(filter -> {
-                if (filterPublicId.contains(filter.getPublicId())) {
-                    if (relevancePublicId != null) {
-                        topicFilter.getRelevance().ifPresent(relevance -> {
-                            if (relevance.getPublicId().equals(relevancePublicId)) {
-                                returnValue.set(true);
-                            }
-                        });
-                    } else {
-                        returnValue.set(true);
-                    }
+        topic.getTopicFilters().forEach(topicFilter -> topicFilter.getFilter().ifPresent(filter -> {
+            if (filterPublicId.contains(filter.getPublicId())) {
+                if (relevancePublicId != null) {
+                    topicFilter.getRelevance().ifPresent(relevance -> {
+                        if (relevance.getPublicId().equals(relevancePublicId)) {
+                            returnValue.set(true);
+                        }
+                    });
+                } else {
+                    returnValue.set(true);
                 }
-            });
-        });
+            }
+        }));
 
         return returnValue.get();
     }
@@ -194,70 +193,44 @@ public class Subjects extends CrudController<Subject> {
         if (connection instanceof TopicSubtopic) {
             final var topicSubtopic = (TopicSubtopic) connection;
 
-            if (hasFilterAndRelevanceOrJustFilterIfRelevanceIsNotSet(topicSubtopic.getSubtopic(), filterPublicId, relevancePublicId)) {
-                foundFilter.set(true);
-            }
+            topicSubtopic.getSubtopic().ifPresent(subtopic -> {
+                if (hasFilterAndRelevanceOrJustFilterIfRelevanceIsNotSet(subtopic, filterPublicId, relevancePublicId)) {
+                    foundFilter.set(true);
+                }
+            });
 
-            topicSubtopics.forEach(topicSubtopicI -> {
-                if (topicSubtopicI.getTopic().getId().equals(topicSubtopic.getSubtopic().getId())) {
+            topicSubtopics.stream()
+                    .filter(ts -> ts.getTopic().isPresent() && ts.getSubtopic().isPresent())
+                    .forEach(topicSubtopicI -> {
+                        if (topicSubtopicI.getTopic().get().getId().equals(topicSubtopic.getSubtopic().get().getId())) {
                     if (searchForFilterOrRelevance(topicSubtopicI, filterPublicId, relevancePublicId, topicSubtopics)) {
                         foundFilter.set(true);
                     }
                 }
             });
         } else if (connection instanceof SubjectTopic) {
-            Topic topic = ((SubjectTopic) connection).getTopic();
+            Topic topic = ((SubjectTopic) connection).getTopic().orElse(null);
 
-            if (hasFilterAndRelevanceOrJustFilterIfRelevanceIsNotSet(topic, filterPublicId, relevancePublicId)) {
-                foundFilter.set(true);
-            }
-
-            topicSubtopics.forEach(topicSubtopic -> {
-                if (topicSubtopic.getTopic().getId().equals(topic.getId())) {
-                    if (searchForFilterOrRelevance(topicSubtopic, filterPublicId, relevancePublicId, topicSubtopics)) {
-                        foundFilter.set(true);
-                    }
+            if (topic != null) {
+                if (hasFilterAndRelevanceOrJustFilterIfRelevanceIsNotSet(topic, filterPublicId, relevancePublicId)) {
+                    foundFilter.set(true);
                 }
-            });
+
+                topicSubtopics.stream()
+                        .filter(st -> st.getTopic().isPresent())
+                        .forEach(topicSubtopic -> {
+                            if (topicSubtopic.getTopic().get().getId().equals(topic.getId())) {
+                                if (searchForFilterOrRelevance(topicSubtopic, filterPublicId, relevancePublicId, topicSubtopics)) {
+                                    foundFilter.set(true);
+                                }
+                            }
+                        });
+            }
         } else {
             throw new IllegalArgumentException();
         }
 
         return foundFilter.get();
-    }
-
-    /**
-     * Returns list of topics from TopicSubtopic collection that is upwards related to provided topic
-     *
-     * @param topic          Topic to search for parent of
-     * @param topicSubtopics Collection to search in
-     * @return parent topics
-     */
-    private Collection<Topic> findParentTopics(Topic topic, Collection<TopicSubtopic> topicSubtopics) {
-        final var returnedSet = new HashSet<Topic>();
-
-        topicSubtopics.forEach(topicSubtopic -> {
-            if (topicSubtopic.getSubtopic() == topic) {
-                returnedSet.add(topic);
-            }
-        });
-
-        final var addedCount = new AtomicInteger();
-        do {
-            addedCount.set(0);
-
-            returnedSet.forEach(topicFromSet -> {
-                topicSubtopics.forEach(topicSubtopic -> {
-                    if (topicSubtopic.getSubtopic() == topicFromSet && !returnedSet.contains(topicSubtopic.getTopic())) {
-                        returnedSet.add(topicSubtopic.getTopic());
-
-                        addedCount.getAndUpdate(counter -> counter + 1);
-                    }
-                });
-            });
-        } while (addedCount.get() > 0);
-
-        return returnedSet;
     }
 
     @GetMapping("/{id}/resources")

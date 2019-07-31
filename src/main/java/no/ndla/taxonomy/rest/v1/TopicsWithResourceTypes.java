@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @RequestMapping(path = {"/v1/topic-resourcetypes"})
 @Transactional
 public class TopicsWithResourceTypes {
-    private TopicResourceTypeService topicResourceTypeService;
+    private final TopicResourceTypeService topicResourceTypeService;
 
     public TopicsWithResourceTypes(TopicResourceTypeService topicResourceTypeService) {
         this.topicResourceTypeService = topicResourceTypeService;
@@ -122,8 +122,8 @@ public class TopicsWithResourceTypes {
 
         public TopicResourceTypeIndexDocument(TopicResourceType resourceResourceType) {
             id = resourceResourceType.getPublicId();
-            topicId = resourceResourceType.getTopic().getPublicId();
-            resourceTypeId = resourceResourceType.getResourceType().getPublicId();
+            resourceResourceType.getResourceType().ifPresent(resourceType -> resourceTypeId = resourceType.getPublicId());
+            resourceResourceType.getTopic().ifPresent(topic -> topicId = topic.getPublicId());
         }
     }
 }

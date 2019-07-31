@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 @Transactional
 public class Filters extends CrudController<Filter> {
 
-    private SubjectRepository subjectRepository;
-    private FilterRepository filterRepository;
+    private final SubjectRepository subjectRepository;
+    private final FilterRepository filterRepository;
 
     public Filters(FilterRepository repository, SubjectRepository subjectRepository) {
         this.subjectRepository = subjectRepository;
@@ -62,7 +62,7 @@ public class Filters extends CrudController<Filter> {
     @PostMapping
     @ApiOperation(value = "Creates a new filter")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public ResponseEntity<Void> post(@ApiParam(name = "filter", value = "The new filter") @RequestBody CreateFilterCommand command) throws Exception {
+    public ResponseEntity<Void> post(@ApiParam(name = "filter", value = "The new filter") @RequestBody CreateFilterCommand command) {
         if (command.subjectId == null) throw new SubjectRequiredException();
 
         Filter filter = new Filter();
@@ -78,7 +78,7 @@ public class Filters extends CrudController<Filter> {
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(name = "filter", value = "The updated filter") @RequestBody UpdateFilterCommand command
-    ) throws Exception {
+    ) {
         if (command.subjectId == null) throw new SubjectRequiredException();
 
         Filter filter = doPut(id, command);

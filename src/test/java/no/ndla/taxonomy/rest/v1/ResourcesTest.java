@@ -1,7 +1,10 @@
 package no.ndla.taxonomy.rest.v1;
 
 
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Filter;
+import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.ResourceType;
+import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
 import no.ndla.taxonomy.rest.v1.dtos.resources.ParentTopicIndexDocument;
@@ -31,8 +34,8 @@ public class ResourcesTest extends RestTest {
                                 .publicId("urn:resource:1")
                         )));
 
-        MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1");
-        ResourceIndexDocument resource = getObject(ResourceIndexDocument.class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
+        ResourceIndexDocument resource = testUtils.getObject(ResourceIndexDocument.class, response);
 
         assertEquals("introduction to trigonometry", resource.name);
         assertEquals("urn:article:1", resource.contentUri.toString());
@@ -58,8 +61,8 @@ public class ResourcesTest extends RestTest {
 
         builder.resource("resource").setPrimaryTopic(builder.topic("primary"));
 
-        MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1");
-        ResourceIndexDocument resource = getObject(ResourceIndexDocument.class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
+        ResourceIndexDocument resource = testUtils.getObject(ResourceIndexDocument.class, response);
 
         assertEquals("/subject:2/topic:2/resource:1", resource.path);
     }
@@ -70,8 +73,8 @@ public class ResourcesTest extends RestTest {
                 .publicId("urn:resource:1")
         );
 
-        MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1");
-        ResourceIndexDocument resource = getObject(ResourceIndexDocument.class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
+        ResourceIndexDocument resource = testUtils.getObject(ResourceIndexDocument.class, response);
 
         assertNull(resource.path);
     }
@@ -81,8 +84,8 @@ public class ResourcesTest extends RestTest {
         builder.subject(s -> s.topic(t -> t.resource(r -> r.name("The inner planets"))));
         builder.subject(s -> s.topic(t -> t.resource(r -> r.name("Gas giants"))));
 
-        MockHttpServletResponse response = getResource("/v1/resources");
-        ResourceIndexDocument[] resources = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/resources");
+        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, resources.length);
         assertAnyTrue(resources, s -> "The inner planets".equals(s.name));
@@ -93,7 +96,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_create_resource() throws Exception {
-        URI id = getId(createResource("/v1/resources", new CreateResourceCommand() {{
+        URI id = getId(testUtils.createResource("/v1/resources", new CreateResourceCommand() {{
             name = "testresource";
             contentUri = URI.create("urn:article:1");
         }}));
@@ -112,7 +115,7 @@ public class ResourcesTest extends RestTest {
             contentUri = URI.create("urn:article:1");
         }};
 
-        updateResource("/v1/resources/" + id, command);
+        testUtils.updateResource("/v1/resources/" + id, command);
 
         Resource resource = resourceRepository.getByPublicId(id);
         assertEquals(command.name, resource.getName());
@@ -126,7 +129,7 @@ public class ResourcesTest extends RestTest {
             name = "name";
         }};
 
-        createResource("/v1/resources", command);
+        testUtils.createResource("/v1/resources", command);
 
         assertNotNull(resourceRepository.getByPublicId(command.id));
     }
@@ -138,8 +141,8 @@ public class ResourcesTest extends RestTest {
             name = "name";
         }};
 
-        createResource("/v1/resources", command, status().isCreated());
-        createResource("/v1/resources", command, status().isConflict());
+        testUtils.createResource("/v1/resources", command, status().isCreated());
+        testUtils.createResource("/v1/resources", command, status().isConflict());
     }
 
     @Test
@@ -147,13 +150,13 @@ public class ResourcesTest extends RestTest {
         Resource resource = builder.resource(r -> r
                 .translation("nb", tr -> tr.name("ressurs"))
                 .resourceType(rt -> rt.name("Learning path")));
-        ResourceTranslation resourceTranslation = resource.getTranslation("nb").orElse(null);
+        resource.getTranslation("nb").orElse(null);
 
         builder.topic(t -> t
                 .resource(resource));
 
         URI id = builder.resource("resource").getPublicId();
-        deleteResource("/v1/resources/" + id);
+        testUtils.deleteResource("/v1/resources/" + id);
         assertNull(resourceRepository.findByPublicId(id));
     }
 
@@ -164,7 +167,7 @@ public class ResourcesTest extends RestTest {
         builder.topic(child -> child.resource(resource)).name("DELETE EDGE TO ME");
         builder.topic(child -> child.resource(resource)).name("DELETE EDGE TO ME ALSO");
 
-        deleteResource("/v1/resources/" + resource.getPublicId());
+        testUtils.deleteResource("/v1/resources/" + resource.getPublicId());
         assertNull(resourceRepository.findByPublicId(resource.getPublicId()));
     }
 
@@ -174,15 +177,15 @@ public class ResourcesTest extends RestTest {
         resource.setName("The inner planets");
         URI id = resource.getPublicId();
 
-        MockHttpServletResponse response = getResource("/v1/resources/" + id);
-        ResourceIndexDocument result = getObject(ResourceIndexDocument.class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/resources/" + id);
+        ResourceIndexDocument result = testUtils.getObject(ResourceIndexDocument.class, response);
 
         assertEquals(id, result.id);
     }
 
     @Test
     public void get_unknown_resource_fails_gracefully() throws Exception {
-        getResource("/v1/resources/nonexistantid", status().isNotFound());
+        testUtils.getResource("/v1/resources/nonexistantid", status().isNotFound());
     }
 
     @Test
@@ -200,8 +203,8 @@ public class ResourcesTest extends RestTest {
                 .resourceType("video")
         );
 
-        MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1/resource-types");
-        ResourceTypeIndexDocument[] result = getObject(ResourceTypeIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1/resource-types");
+        ResourceTypeIndexDocument[] result = testUtils.getObject(ResourceTypeIndexDocument[].class, response);
         assertEquals(2, result.length);
         assertAnyTrue(result, rt -> rt.name.equals("Article") && rt.id.toString().equals("urn:resourcetype:2") && rt.parentId.toString().equals("urn:resourcetype:1") && rt.connectionId.toString().contains("urn:resource-resourcetype"));
         assertAnyTrue(result, rt -> rt.name.equals("Video") && rt.id.toString().equals("urn:resourcetype:3") && rt.parentId.toString().equals("urn:resourcetype:1"));
@@ -218,7 +221,7 @@ public class ResourcesTest extends RestTest {
             name = "What is maths?";
         }};
 
-        createResource("/v1/resources", command, status().isCreated());
+        testUtils.createResource("/v1/resources", command, status().isCreated());
     }
 
     @Test
@@ -235,8 +238,8 @@ public class ResourcesTest extends RestTest {
                 .contentUri(URI.create("urn:article:6662"))
                 .resource(resource));
 
-        MockHttpServletResponse response = getResource("/v1/resources/" + resource.getPublicId() + "/full");
-        ResourceFullIndexDocument result = getObject(ResourceFullIndexDocument.class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/resources/" + resource.getPublicId() + "/full");
+        ResourceFullIndexDocument result = testUtils.getObject(ResourceFullIndexDocument.class, response);
 
         assertEquals(resource.getPublicId(), result.id);
         assertEquals(resource.getName(), result.name);
@@ -247,15 +250,15 @@ public class ResourcesTest extends RestTest {
         assertEquals(1, result.parentTopics.size());
         ParentTopicIndexDocument t = result.parentTopics.iterator().next();
         assertEquals(topic.getName(), t.name);
-        assertEquals(true, t.isPrimary);
+        assertTrue(t.isPrimary);
         assertEquals(URI.create("urn:article:6662"), t.contentUri);
     }
 
     @Test
     public void full_resource_has_all_paths() throws Exception {
         executeSqlScript("classpath:resource_in_dual_subjects_test_setup.sql", false);
-        MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1/full");
-        ResourceFullIndexDocument result = getObject(ResourceFullIndexDocument.class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1/full");
+        ResourceFullIndexDocument result = testUtils.getObject(ResourceFullIndexDocument.class, response);
         assertNotNull(result.paths);
         assertEquals(2, result.paths.size());
     }

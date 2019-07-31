@@ -17,17 +17,17 @@ public class URNValidatorTest {
     @Rule
     public ExpectedException exception = ExpectedException.none();
 
-    URNValidator validator;
-    ResourceType entity;
+    private URNValidator validator;
+    private ResourceType entity;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         validator = new URNValidator();
         entity = new ResourceType();
     }
 
     @Test
-    public void urnWithOutURNIsRejected() throws Exception {
+    public void urnWithOutURNIsRejected() {
         URI id = URI.create("resourcetype:1");
 
         exception.expect(IdFormatException.class);
@@ -36,7 +36,7 @@ public class URNValidatorTest {
     }
 
     @Test
-    public void urnWithoutEntityIsRejected() throws Exception {
+    public void urnWithoutEntityIsRejected() {
         URI id = URI.create("urn:wrong:1");
 
         exception.expect(IdFormatException.class);
@@ -45,7 +45,7 @@ public class URNValidatorTest {
     }
 
     @Test
-    public void urnMustHaveID() throws Exception {
+    public void urnMustHaveID() {
         URI id = URI.create("urn:resourcetype");
 
         exception.expect(IdFormatException.class);
@@ -54,14 +54,14 @@ public class URNValidatorTest {
     }
 
     @Test
-    public void validURIPasses() throws Exception {
+    public void validURIPasses() {
         URI id = URI.create("urn:resourcetype:2");
 
         validator.validate(id, entity);
     }
 
     @Test
-    public void uriCanHaveVersionField() throws Exception {
+    public void uriCanHaveVersionField() {
         URI id = URI.create("urn:resourcetype:1:134");
 
         validator.validate(id, entity);
@@ -74,7 +74,7 @@ public class URNValidatorTest {
     }
 
     @Test
-    public void differentEntityClassesAreAccepted() throws Exception {
+    public void differentEntityClassesAreAccepted() {
         URI id = URI.create("urn:subject:134");
         validator.validate(id, new Subject());
     }

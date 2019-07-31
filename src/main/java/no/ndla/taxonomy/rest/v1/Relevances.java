@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class Relevances extends CrudController<Relevance> {
 
-    private RelevanceRepository relevanceRepository;
+    private final RelevanceRepository relevanceRepository;
 
     public Relevances(RelevanceRepository repository) {
         this.repository = relevanceRepository = repository;
@@ -61,7 +61,7 @@ public class Relevances extends CrudController<Relevance> {
     @PostMapping
     @ApiOperation(value = "Creates a new relevance")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public ResponseEntity<Void> post(@ApiParam(name = "relevance", value = "The new relevance") @RequestBody CreateRelevanceCommand command) throws Exception {
+    public ResponseEntity<Void> post(@ApiParam(name = "relevance", value = "The new relevance") @RequestBody CreateRelevanceCommand command) {
         return doPost(new Relevance(), command);
     }
 
@@ -72,7 +72,7 @@ public class Relevances extends CrudController<Relevance> {
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(name = "relevance", value = "The updated relevance. Fields not included will be set to null.") @RequestBody UpdateRelevanceCommand command
-    ) throws Exception {
+    ) {
         doPut(id, command);
     }
 

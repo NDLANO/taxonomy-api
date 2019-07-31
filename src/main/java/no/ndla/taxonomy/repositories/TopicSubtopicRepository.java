@@ -39,7 +39,7 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
             "   FROM TopicSubtopic ts" +
             "   INNER JOIN ts.topic parentTopic" +
             "   INNER JOIN FETCH ts.subtopic subTopicTopic" +
-            "   INNER JOIN subTopicTopic.filters subTopic_filter" +
+            "   INNER JOIN subTopicTopic.topicFilters subTopic_filter" +
             "   INNER JOIN subTopic_filter.filter subTopicFilter_filter" +
             "   LEFT OUTER JOIN FETCH subTopicTopic.translations" +
             "   WHERE" +
@@ -63,7 +63,7 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
             "   LEFT OUTER JOIN FETCH t.translations" +
             "   LEFT OUTER JOIN FETCH st.translations" +
             "   LEFT OUTER JOIN FETCH st.cachedUrls" +
-            "   LEFT OUTER JOIN FETCH st.filters tf" +
+            "   LEFT OUTER JOIN FETCH st.topicFilters tf" +
             "   LEFT OUTER JOIN FETCH tf.filter f" +
             "   LEFT OUTER JOIN FETCH f.translations" +
             "  WHERE ts.subtopic.id IN :subTopicId")

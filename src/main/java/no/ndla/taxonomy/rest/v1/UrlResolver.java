@@ -26,7 +26,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @RequestMapping("/v1/url")
 @Transactional
 public class UrlResolver {
-    private UrlResolverService urlResolverService;
+    private final UrlResolverService urlResolverService;
 
     @Autowired
     public UrlResolver(UrlResolverService urlResolverService) {

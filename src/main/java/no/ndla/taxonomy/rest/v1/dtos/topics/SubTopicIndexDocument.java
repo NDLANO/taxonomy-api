@@ -34,15 +34,16 @@ public class SubTopicIndexDocument {
     }
 
     public SubTopicIndexDocument(TopicSubtopic topicSubtopic, String language) {
-        final var topic = topicSubtopic.getSubtopic();
+        topicSubtopic.getSubtopic().ifPresent(topic -> {
+            this.id = topic.getPublicId();
 
-        this.id = topic.getPublicId();
+            this.name = topic.getTranslation(language)
+                    .map(TopicTranslation::getName)
+                    .orElse(topic.getName());
 
-        this.name = topic.getTranslation(language)
-                .map(TopicTranslation::getName)
-                .orElse(topic.getName());
+            this.contentUri = topic.getContentUri();
+        });
 
-        this.contentUri = topic.getContentUri();
         this.isPrimary = topicSubtopic.isPrimary();
     }
 }

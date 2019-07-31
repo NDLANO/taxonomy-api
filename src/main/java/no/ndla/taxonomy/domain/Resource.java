@@ -34,6 +34,7 @@ public class Resource extends CachedUrlEntity {
         return getTopicResources()
                 .stream()
                 .map(TopicResource::getTopic)
+                .map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -119,33 +120,25 @@ public class Resource extends CachedUrlEntity {
         }
     }
 
-    public Topic getPrimaryTopic() {
+    public Optional<Topic> getPrimaryTopic() {
         for (TopicResource topic : topics) {
             if (topic.isPrimary()) return topic.getTopic();
         }
-        return null;
+        return Optional.empty();
     }
 
     public void setPrimaryTopic(Topic topic) {
-        TopicResource topicResource = getTopicResource(topic);
-        if (null == topicResource) throw new ParentNotFoundException(this, topic);
-
-        topics.forEach(t -> t.setPrimary(false));
-        topicResource.setPrimary(true);
+        // Set all isPrimary to false except requested topic that is set to true
+        topics.forEach(t -> t.setPrimary(t.getTopic().isPresent() && t.getTopic().get().equals(topic)));
     }
 
     public void setRandomPrimaryTopic() {
-        if (topics.size() == 0) return;
-        setPrimaryTopic(topics.iterator().next().getTopic());
-    }
-
-    private TopicResource getTopicResource(Topic topic) {
-        for (TopicResource topicResource : topics) {
-            if (topicResource.getTopic().equals(topic)) {
-                return topicResource;
-            }
-        }
-        return null;
+        topics.stream()
+                .map(TopicResource::getTopic)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst()
+                .ifPresent(this::setPrimaryTopic);
     }
 
     public void removeResourceType(ResourceType resourceType) {
@@ -172,7 +165,7 @@ public class Resource extends CachedUrlEntity {
     public void removeFilter(Filter filter) {
         ResourceFilter resourceFilter = getResourceFilter(filter);
         if (resourceFilter == null) {
-            throw new ChildNotFoundException("Resource with id " + this.getPublicId() + " does not have resource-filter " + resourceFilter.getPublicId());
+            throw new ChildNotFoundException("Resource with id " + this.getPublicId() + " does not have filter " + filter.getPublicId());
         }
 
         removeResourceFilter(resourceFilter);
@@ -211,7 +204,7 @@ public class Resource extends CachedUrlEntity {
     public void removeTopicResource(TopicResource topicResource) {
         this.topics.remove(topicResource);
 
-        if (topicResource.getResource() == this) {
+        if (topicResource.getResource().orElse(null) == this) {
             topicResource.setResource(null);
         }
     }
@@ -237,7 +230,7 @@ public class Resource extends CachedUrlEntity {
     public void addTopicResource(TopicResource topicResource) {
         this.topics.add(topicResource);
 
-        if (topicResource.getResource() != this) {
+        if (topicResource.getResource().orElse(null) != this) {
             topicResource.setResource(this);
         }
     }

@@ -24,7 +24,7 @@ public class TopicFiltersTest extends RestTest {
     private Relevance core, supplementary;
 
     @Before
-    public void before() throws Exception {
+    public void before() {
         core = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
         vg1 = builder.filter(f -> f.publicId("urn:filter:vg1"));
         vg2 = builder.filter(f -> f.publicId("urn:filter:vg2"));
@@ -36,7 +36,7 @@ public class TopicFiltersTest extends RestTest {
         Topic topic = builder.topic(t -> t.publicId("urn:topic:1"));
 
         URI id = getId(
-                createResource("/v1/topic-filters", new TopicFilters.AddFilterToTopicCommand() {{
+                testUtils.createResource("/v1/topic-filters", new TopicFilters.AddFilterToTopicCommand() {{
                     topicId = URI.create("urn:topic:1");
                     filterId = URI.create("urn:filter:vg1");
                     relevanceId = URI.create("urn:relevance:core");
@@ -56,8 +56,8 @@ public class TopicFiltersTest extends RestTest {
                 .filter(vg2, core)
         );
 
-        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/filters");
-        FilterIndexDocument[] filters = getObject(FilterIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/filters");
+        FilterIndexDocument[] filters = testUtils.getObject(FilterIndexDocument[].class, response);
 
         assertEquals(2, filters.length);
         assertAnyTrue(filters, f -> f.id.equals(vg1.getPublicId()));
@@ -72,7 +72,7 @@ public class TopicFiltersTest extends RestTest {
                 .filter(vg1, core)
         );
 
-        createResource("/v1/topic-filters", new TopicFilters.AddFilterToTopicCommand() {{
+        testUtils.createResource("/v1/topic-filters", new TopicFilters.AddFilterToTopicCommand() {{
             topicId = URI.create("urn:topic:1");
             filterId = URI.create("urn:filter:vg1");
             relevanceId = URI.create("urn:relevance:core");
@@ -90,7 +90,7 @@ public class TopicFiltersTest extends RestTest {
         }
 
         assertNotNull(topicFilterRepository.findByPublicId(id));
-        deleteResource("/v1/topic-filters/" + id);
+        testUtils.deleteResource("/v1/topic-filters/" + id);
         assertNull(topicFilterRepository.findByPublicId(id));
     }
 
@@ -99,7 +99,7 @@ public class TopicFiltersTest extends RestTest {
         Topic topic = builder.topic(t -> t.publicId("urn:topic:1"));
         URI id = save(topic.addFilter(vg1, core)).getPublicId();
 
-        updateResource("/v1/topic-filters/" + id, new TopicFilters.UpdateTopicFilterCommand() {{
+        testUtils.updateResource("/v1/topic-filters/" + id, new TopicFilters.UpdateTopicFilterCommand() {{
             relevanceId = supplementary.getPublicId();
         }});
 
@@ -117,8 +117,8 @@ public class TopicFiltersTest extends RestTest {
                 .publicId("urn:topic:2")
                 .filter(vg1, core));
 
-        MockHttpServletResponse response = getResource("/v1/topic-filters");
-        TopicFilters.TopicFilterIndexDocument[] topicFilters = getObject(TopicFilters.TopicFilterIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/topic-filters");
+        TopicFilters.TopicFilterIndexDocument[] topicFilters = testUtils.getObject(TopicFilters.TopicFilterIndexDocument[].class, response);
         assertEquals(2, topicFilters.length);
         assertAnyTrue(topicFilters, rf -> URI.create("urn:topic:1").equals(rf.topicId) && vg1.getPublicId().equals(rf.filterId) && core.getPublicId().equals(rf.relevanceId));
         assertAnyTrue(topicFilters, rf -> URI.create("urn:topic:2").equals(rf.topicId) && vg1.getPublicId().equals(rf.filterId) && core.getPublicId().equals(rf.relevanceId));
@@ -137,8 +137,8 @@ public class TopicFiltersTest extends RestTest {
                 )
         );
 
-        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?filter=" + vg1.getPublicId());
-        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?filter=" + vg1.getPublicId());
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, result.length);
         assertEquals("urn:resource:1", result[0].id.toString());
@@ -166,8 +166,8 @@ public class TopicFiltersTest extends RestTest {
                         )
                 ));
 
-        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true&filter=" + vg1.getPublicId());
-        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:a/resources?recursive=true&filter=" + vg1.getPublicId());
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(3, result.length);
         assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));
@@ -191,8 +191,8 @@ public class TopicFiltersTest extends RestTest {
                 )
         );
 
-        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?type=" + type.getPublicId() + "&filter=" + vg1.getPublicId());
-        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?type=" + type.getPublicId() + "&filter=" + vg1.getPublicId());
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, result.length);
         assertEquals("urn:resource:1", result[0].id.toString());
@@ -222,8 +222,8 @@ public class TopicFiltersTest extends RestTest {
                         )
                 ));
 
-        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true&filter=" + vg1.getPublicId() + "&type=" + type.getPublicId());
-        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:a/resources?recursive=true&filter=" + vg1.getPublicId() + "&type=" + type.getPublicId());
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));
@@ -244,8 +244,8 @@ public class TopicFiltersTest extends RestTest {
                 )
         );
 
-        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?filter=" + vg1.getPublicId() + "&relevance=" + core.getPublicId());
-        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?filter=" + vg1.getPublicId() + "&relevance=" + core.getPublicId());
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, result.length);
         assertEquals("urn:resource:1", result[0].id.toString());
@@ -273,8 +273,8 @@ public class TopicFiltersTest extends RestTest {
                         )
                 ));
 
-        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:a/resources?recursive=true&filter=" + vg1.getPublicId() + "&relevance=" + core.getPublicId());
-        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:a/resources?recursive=true&filter=" + vg1.getPublicId() + "&relevance=" + core.getPublicId());
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(3, result.length);
         assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));

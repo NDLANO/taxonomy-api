@@ -24,14 +24,15 @@ public abstract class CrudController<T extends DomainObject> {
     protected TaxonomyRepository<T> repository;
 
     private static final Map<Class<?>, String> locations = new HashMap<>();
-    private URNValidator validator = new URNValidator();
+    private final URNValidator validator = new URNValidator();
 
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Deletes a single entity by id")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
-        repository.deleteByPublicId(id);
+
+        repository.delete(repository.getByPublicId(id));
     }
 
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -54,7 +55,11 @@ public abstract class CrudController<T extends DomainObject> {
             repository.save(entity);
             return ResponseEntity.created(location).build();
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateIdException(command.getId().toString());
+            if (command.getId() != null) {
+                throw new DuplicateIdException(command.getId().toString());
+            }
+
+            throw new DuplicateIdException();
         }
     }
 

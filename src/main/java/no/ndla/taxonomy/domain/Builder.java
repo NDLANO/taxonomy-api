@@ -7,17 +7,15 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class Builder {
-    int keyCounter = 0;
-
-    private EntityManager entityManager;
-
-    private Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();
-    private Map<String, SubjectBuilder> subjects = new HashMap<>();
-    private Map<String, TopicBuilder> topics = new HashMap<>();
-    private Map<String, ResourceBuilder> resources = new HashMap<>();
-    private Map<String, FilterBuilder> filters = new HashMap<>();
-    private Map<String, RelevanceBuilder> relevances = new HashMap<>();
-    private Map<String, UrlMappingBuilder> cachedUrlOldRigBuilders = new HashMap<>();
+    private final EntityManager entityManager;
+    private final Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();
+    private final Map<String, SubjectBuilder> subjects = new HashMap<>();
+    private final Map<String, TopicBuilder> topics = new HashMap<>();
+    private final Map<String, ResourceBuilder> resources = new HashMap<>();
+    private final Map<String, FilterBuilder> filters = new HashMap<>();
+    private final Map<String, RelevanceBuilder> relevances = new HashMap<>();
+    private final Map<String, UrlMappingBuilder> cachedUrlOldRigBuilders = new HashMap<>();
+    private int keyCounter = 0;
 
     public Builder(EntityManager entityManager) {
         this.entityManager = entityManager;
@@ -32,18 +30,12 @@ public class Builder {
         database. It needs to be told to force update of the CachedUrl entries after each save that changes the
         table.
      */
-    public void refreshAllCachedUrls() {
+    private void refreshAllCachedUrls() {
         entityManager.flush();
 
-        subjects.forEach((key, builder) -> {
-            entityManager.refresh(builder.subject);
-        });
-        topics.forEach((key, builder) -> {
-            entityManager.refresh(builder.topic);
-        });
-        resources.forEach((key, builder) -> {
-            entityManager.refresh(builder.resource);
-        });
+        subjects.forEach((key, builder) -> entityManager.refresh(builder.subject));
+        topics.forEach((key, builder) -> entityManager.refresh(builder.topic));
+        resources.forEach((key, builder) -> entityManager.refresh(builder.resource));
     }
 
     public Topic topic(String key) {
@@ -92,10 +84,6 @@ public class Builder {
         return resourceType.resourceType;
     }
 
-    public Filter filter(String key) {
-        return filter(key, null);
-    }
-
     public Filter filter(Consumer<FilterBuilder> consumer) {
         return filter(null, consumer);
     }
@@ -116,10 +104,6 @@ public class Builder {
         }
         filters.putIfAbsent(key, new FilterBuilder());
         return filters.get(key);
-    }
-
-    public Relevance relevance(String key) {
-        return relevance(key, null);
     }
 
     public Relevance relevance(Consumer<RelevanceBuilder> consumer) {
@@ -148,7 +132,7 @@ public class Builder {
         if (key == null) {
             key = createKey();
         }
-        ;
+
         subjects.putIfAbsent(key, new SubjectBuilder());
         return subjects.get(key);
     }
@@ -262,10 +246,6 @@ public class Builder {
             return this;
         }
 
-        public SubjectBuilder filter(String key) {
-            return filter(key, null);
-        }
-
         public SubjectBuilder filter(String key, Consumer<FilterBuilder> consumer) {
             FilterBuilder filterBuilder = getFilterBuilder(key);
             if (null != consumer) consumer.accept(filterBuilder);
@@ -334,10 +314,6 @@ public class Builder {
             return this;
         }
 
-        public TopicBuilder subtopic() {
-            return subtopic((Topic) null, null);
-        }
-
         public TopicBuilder subtopic(String topicKey) {
             return subtopic(topicKey, null);
         }
@@ -358,13 +334,8 @@ public class Builder {
             return this;
         }
 
-        public TopicBuilder subtopic(Topic subtopic, Boolean isPrimary) {
-            if(isPrimary!=null && isPrimary)
-            {
-                entityManager.persist(topic.addSubtopic(subtopic));
-            }else {
-                entityManager.persist(topic.addSecondarySubtopic(subtopic));
-            }
+        public TopicBuilder subtopic(Topic subtopic, boolean isPrimary) {
+            entityManager.persist(topic.addSubtopic(subtopic, isPrimary));
 
             refreshAllCachedUrls();
 
@@ -396,15 +367,6 @@ public class Builder {
 
             refreshAllCachedUrls();
 
-            return this;
-        }
-
-        public TopicBuilder resource(Resource resource, boolean isPrimary) {
-            TopicResource topicResource = topic.addResource(resource);
-            topicResource.setPrimary(isPrimary);
-            entityManager.persist(topicResource);
-
-            refreshAllCachedUrls();
             return this;
         }
 
@@ -510,27 +472,6 @@ public class Builder {
             relevance.setPublicId(URI.create(id));
             return this;
         }
-
-        public RelevanceBuilder translation(String languageCode, Consumer<RelevanceTranslationBuilder> consumer) {
-            RelevanceTranslation relevanceTranslation = relevance.addTranslation(languageCode);
-            entityManager.persist(relevanceTranslation);
-            RelevanceTranslationBuilder builder = new RelevanceTranslationBuilder(relevanceTranslation);
-            consumer.accept(builder);
-            return this;
-        }
-    }
-
-    public class RelevanceTranslationBuilder {
-        private RelevanceTranslation relevanceTranslation;
-
-        public RelevanceTranslationBuilder(RelevanceTranslation relevanceTranslation) {
-            this.relevanceTranslation = relevanceTranslation;
-        }
-
-        public RelevanceTranslationBuilder name(String name) {
-            relevanceTranslation.setName(name);
-            return this;
-        }
     }
 
     public class ResourceTranslationBuilder {
@@ -565,14 +506,6 @@ public class Builder {
             ResourceTypeTranslationBuilder builder = new ResourceTypeTranslationBuilder(resourceTypeTranslation);
             consumer.accept(builder);
             return this;
-        }
-
-        public ResourceTypeBuilder subtype() {
-            return subtype(null, null);
-        }
-
-        public ResourceTypeBuilder subtype(String resourceTypeKey) {
-            return subtype(resourceTypeKey, null);
         }
 
         public ResourceTypeBuilder subtype(Consumer<ResourceTypeBuilder> consumer) {
@@ -661,10 +594,6 @@ public class Builder {
             entityManager.persist(resourceFilter);
             return this;
         }
-    }
-
-    public UrlMapping urlMapping(String key) {
-        return urlMapping(key, null);
     }
 
     public UrlMapping urlMapping(Consumer<UrlMappingBuilder> consumer) {

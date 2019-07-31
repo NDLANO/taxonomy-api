@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 @RequestMapping(path = {"/v1/contexts"})
 @Transactional(readOnly = true)
 public class Contexts {
-    private TopicRepository topicRepository;
-    private SubjectRepository subjectRepository;
+    private final TopicRepository topicRepository;
+    private final SubjectRepository subjectRepository;
 
     public Contexts(TopicRepository topicRepository, SubjectRepository subjectRepository) {
         this.topicRepository = topicRepository;
@@ -70,7 +70,7 @@ public class Contexts {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @ApiParam(name = "context", value = "the new context") @RequestBody CreateContextCommand command) throws Exception {
+            @ApiParam(name = "context", value = "the new context") @RequestBody CreateContextCommand command) {
         Topic topic = topicRepository.getByPublicId(command.id);
         topic.setContext(true);
         URI location = URI.create("/v1/contexts/" + topic.getPublicId());

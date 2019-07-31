@@ -8,6 +8,7 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
+import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,9 +24,9 @@ import java.util.stream.Collectors;
 @RequestMapping(path = {"/v1/subject-topics"})
 @Transactional
 public class SubjectTopics {
-    private TopicRepository topicRepository;
-    private SubjectTopicRepository subjectTopicRepository;
-    private SubjectRepository subjectRepository;
+    private final TopicRepository topicRepository;
+    private final SubjectTopicRepository subjectTopicRepository;
+    private final SubjectRepository subjectRepository;
 
     public SubjectTopics(SubjectRepository subjectRepository,
                          TopicRepository topicRepository,
@@ -90,10 +91,8 @@ public class SubjectTopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
-        final var subject = subjectTopic.getSubject();
 
-        subject.removeTopic(subjectTopic.getTopic());
-        subjectTopicRepository.deleteByPublicId(id);
+        subjectTopicRepository.delete(subjectTopic);
     }
 
     @PutMapping("/{id}")
@@ -103,8 +102,8 @@ public class SubjectTopics {
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
-        Topic topic = subjectTopic.getTopic();
-        Subject subject = subjectTopic.getSubject();
+        Topic topic = subjectTopic.getTopic().orElseThrow(() -> new NotFoundHttpRequestException("Topic not found"));
+        Subject subject = subjectTopic.getSubject().orElseThrow(() -> new NotFoundHttpRequestException("Subject not found"));
 
         List<SubjectTopic> existingConnections = subjectTopicRepository.findBySubject(subject);
         List<SubjectTopic> rankedConnections = RankableConnectionUpdater.rank(existingConnections, subjectTopic, command.rank);
@@ -178,8 +177,15 @@ public class SubjectTopics {
 
         SubjectTopicIndexDocument(SubjectTopic subjectTopic) {
             id = subjectTopic.getPublicId();
-            subjectid = subjectTopic.getSubject().getPublicId();
-            topicid = subjectTopic.getTopic().getPublicId();
+
+            subjectid = subjectTopic.getSubject()
+                    .map(Subject::getPublicId)
+                    .orElse(null);
+
+            topicid = subjectTopic.getTopic()
+                    .map(Topic::getPublicId)
+                    .orElse(null);
+
             primary = subjectTopic.isPrimary();
             rank = subjectTopic.getRank();
         }

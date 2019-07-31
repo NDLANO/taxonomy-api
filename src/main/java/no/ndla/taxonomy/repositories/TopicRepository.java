@@ -5,7 +5,6 @@ import no.ndla.taxonomy.domain.Topic;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,11 +47,9 @@ public interface TopicRepository extends TaxonomyRepository<Topic> {
 
     @Query("SELECT DISTINCT t" +
             "   FROM Topic t" +
-            "   LEFT OUTER JOIN FETCH t.filters tf" +
+            "   LEFT OUTER JOIN FETCH t.topicFilters tf" +
             "   LEFT OUTER JOIN FETCH tf.filter")
     Optional<Topic> findFirstByPublicIdIncludingFilters(URI publicId);
 
     Optional<Topic> findFirstByPublicId(URI publicId);
-
-    List<Topic> findAllById(Collection<Integer> ids);
 }

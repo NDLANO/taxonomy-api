@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 @RequestMapping(path = {"/v1/topic-subtopics"})
 @Transactional
 public class TopicSubtopics {
-    private TopicRepository topicRepository;
-    private TopicSubtopicRepository topicSubtopicRepository;
+    private final TopicRepository topicRepository;
+    private final TopicSubtopicRepository topicSubtopicRepository;
 
     public TopicSubtopics(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository) {
         this.topicRepository = topicRepository;
@@ -59,7 +59,7 @@ public class TopicSubtopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Topic subtopic = topicRepository.getByPublicId(command.subtopicid);
 
-        TopicSubtopic topicSubtopic = command.primary == Boolean.FALSE ? topic.addSecondarySubtopic(subtopic) : topic.addSubtopic(subtopic);
+        TopicSubtopic topicSubtopic = topic.addSubtopic(subtopic, command.primary);
 
         List<TopicSubtopic> connectionsForTopic = topicSubtopicRepository.findByTopic(topic);
         connectionsForTopic.sort(Comparator.comparingInt(TopicSubtopic::getRank));
@@ -82,9 +82,8 @@ public class TopicSubtopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
-        final var topic = topicSubtopic.getTopic();
-        topic.removeSubtopic(topicSubtopic.getSubtopic());
         topicSubtopicRepository.delete(topicSubtopic);
+        topicSubtopicRepository.flush();
     }
 
     @PutMapping("/{id}")
@@ -94,14 +93,15 @@ public class TopicSubtopics {
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
-        Topic topic = topicSubtopic.getTopic();
+        Topic topic = topicSubtopic.getTopic().orElse(null);
 
         if (command.primary) {
-            Topic subtopic = topicSubtopic.getSubtopic();
-            for (TopicSubtopic otherConnection : subtopic.getParentTopicSubtopics()) {
-                otherConnection.setPrimary(false);
-                topicSubtopicRepository.save(otherConnection);
-            }
+            topicSubtopic.getSubtopic().ifPresent(subtopic -> {
+                for (TopicSubtopic otherConnection : subtopic.getParentTopicSubtopics()) {
+                    otherConnection.setPrimary(false);
+                    topicSubtopicRepository.save(otherConnection);
+                }
+            });
             topicSubtopic.setPrimary(true);
             topicSubtopicRepository.save(topicSubtopic);
         } else if (topicSubtopic.isPrimary() && !command.primary) {
@@ -123,7 +123,7 @@ public class TopicSubtopics {
 
         @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
-        public Boolean primary;
+        public boolean primary = true;
 
         @JsonProperty
         @ApiModelProperty(value = "Order in which to sort the subtopic for the topic", example = "1")
@@ -170,8 +170,8 @@ public class TopicSubtopics {
 
         TopicSubtopicIndexDocument(TopicSubtopic topicSubtopic) {
             id = topicSubtopic.getPublicId();
-            topicid = topicSubtopic.getTopic().getPublicId();
-            subtopicid = topicSubtopic.getSubtopic().getPublicId();
+            topicSubtopic.getTopic().ifPresent(topic -> topicid = topic.getPublicId());
+            topicSubtopic.getSubtopic().ifPresent(subtopic -> subtopicid = subtopic.getPublicId());
             primary = topicSubtopic.isPrimary();
             rank = topicSubtopic.getRank();
         }

@@ -4,7 +4,6 @@ import liquibase.change.custom.CustomSqlChange;
 import liquibase.database.Database;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.DatabaseException;
-import liquibase.exception.SetupException;
 import liquibase.exception.ValidationErrors;
 import liquibase.resource.ResourceAccessor;
 import liquibase.statement.SqlStatement;
@@ -24,7 +23,7 @@ public class V21__RecanonifyUrlMap implements CustomSqlChange {
     }
 
     @Override
-    public void setUp() throws SetupException {
+    public void setUp() {
 
     }
 

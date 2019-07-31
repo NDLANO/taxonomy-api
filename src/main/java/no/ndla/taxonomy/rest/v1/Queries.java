@@ -19,8 +19,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping(path = {"/v1/queries"})
 public class Queries {
-    private ResourceRepository resourceRepository;
-    private TopicRepository topicRepository;
+    private final ResourceRepository resourceRepository;
+    private final TopicRepository topicRepository;
 
     public Queries(ResourceRepository resourceRepository, TopicRepository topicRepository) {
         this.resourceRepository = resourceRepository;

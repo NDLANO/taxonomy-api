@@ -3,12 +3,13 @@ package no.ndla.taxonomy.rest.v1.dtos.topics;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
@@ -24,7 +25,7 @@ public class ConnectionIndexDocument {
     public URI targetId;
     @JsonProperty
     @ApiModelProperty(value = "The path part of the url for the subject or subtopic connected to this topic", example = "/subject:1/topic:1")
-    public List<String> paths = new ArrayList<>();
+    public Set<String> paths = new HashSet<>();
     @JsonProperty
     @ApiModelProperty(value = "The type of connection (parent subject, parent topic or subtopic")
     public String type;
@@ -38,14 +39,22 @@ public class ConnectionIndexDocument {
     private ConnectionIndexDocument(TopicSubtopic topicSubtopic, boolean parentTopicConnection) {
         if (parentTopicConnection) {
             this.connectionId = topicSubtopic.getPublicId();
-            this.targetId = topicSubtopic.getTopic().getPublicId();
-            this.paths = new ArrayList<>(topicSubtopic.getTopic().getAllPaths());
+
+            topicSubtopic.getTopic().ifPresent(topic -> {
+                this.targetId = topic.getPublicId();
+                this.paths = Set.copyOf(topic.getAllPaths());
+            });
+
             this.type = "parent-topic";
             this.isPrimary = topicSubtopic.isPrimary();
         } else {
             this.connectionId = topicSubtopic.getPublicId();
-            this.targetId = topicSubtopic.getSubtopic().getPublicId();
-            this.paths = new ArrayList<>(topicSubtopic.getSubtopic().getAllPaths());
+
+            topicSubtopic.getSubtopic().ifPresent(subtopic -> {
+                this.targetId = subtopic.getPublicId();
+                this.paths = Set.copyOf(subtopic.getAllPaths());
+            });
+
             this.type = "subtopic";
             this.isPrimary = topicSubtopic.isPrimary();
         }
@@ -53,8 +62,15 @@ public class ConnectionIndexDocument {
 
     public ConnectionIndexDocument(SubjectTopic subjectTopic) {
         this.connectionId = subjectTopic.getPublicId();
-        this.targetId = subjectTopic.getSubject().getPublicId();
-        this.paths = new ArrayList<>(subjectTopic.getSubject().getAllPaths());
+
+        this.targetId = subjectTopic.getSubject()
+                .map(Subject::getPublicId)
+                .orElse(null);
+
+        subjectTopic.getSubject().ifPresent(subject -> {
+            this.paths = Set.copyOf(subject.getAllPaths());
+        });
+
         this.type = "parent-subject";
         this.isPrimary = subjectTopic.isPrimary();
     }

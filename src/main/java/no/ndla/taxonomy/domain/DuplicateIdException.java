@@ -8,4 +8,8 @@ public class DuplicateIdException extends RuntimeException {
     public DuplicateIdException(String id) {
         super("Object with id " + id + " already exists");
     }
+
+    public DuplicateIdException() {
+        super("Object already exists");
+    }
 }

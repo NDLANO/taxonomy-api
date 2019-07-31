@@ -145,7 +145,7 @@ public class TopicResourceTypeServiceTest {
         List<TopicResourceType> list = mock(List.class);
         given(list.stream()).willReturn(stream);
         given(topicResourceTypeRepository.findAll()).willReturn(list);
-        assertTrue(stream == topicResourceTypeService.findAll());
+        assertSame(stream, topicResourceTypeService.findAll());
     }
 
     @Test

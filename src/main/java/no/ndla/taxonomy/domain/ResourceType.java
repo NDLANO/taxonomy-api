@@ -40,8 +40,16 @@ public class ResourceType extends DomainObject {
     public void addTopicResourceType(TopicResourceType topicResourceType) {
         this.topicResourceTypes.add(topicResourceType);
 
-        if (topicResourceType.getResourceType() != this) {
+        if (topicResourceType.getResourceType().orElse(null) != this) {
             topicResourceType.setResourceType(this);
+        }
+    }
+
+    public void removeTopicResourceType(TopicResourceType topicResourceType) {
+        this.topicResourceTypes.remove(topicResourceType);
+
+        if (topicResourceType.getResourceType().orElse(null) == this) {
+            topicResourceType.setResourceType(null);
         }
     }
 
@@ -55,20 +63,35 @@ public class ResourceType extends DomainObject {
     }
 
     public void setParent(ResourceType parent) {
+        final var previousParent = this.parent;
+
         this.parent = parent;
-        if (parent != null) {
+
+        if (previousParent != null && previousParent != parent) {
+            previousParent.removeSubType(this);
+        }
+
+        if (parent != null && !parent.getSubtypes().contains(this)) {
             parent.addSubtype(this);
         }
     }
 
-    public ResourceType parent(ResourceType parent) {
-        setParent(parent);
-        return this;
-    }
-
     public void addSubtype(ResourceType subtype) {
         subtypes.add(subtype);
+
+        if (subtype.getParent().orElse(null) != this) {
+            subtype.setParent(this);
+        }
     }
+
+    public void removeSubType(ResourceType resourceType) {
+        this.subtypes.remove(resourceType);
+
+        if (resourceType.getParent().orElse(null) == this) {
+            resourceType.setParent(null);
+        }
+    }
+
 
     public Set<ResourceType> getSubtypes() {
         return this.subtypes;

@@ -3,6 +3,7 @@ package no.ndla.taxonomy.domain;
 
 import javax.persistence.*;
 import java.net.URI;
+import java.util.Optional;
 import java.util.UUID;
 
 @Entity
@@ -22,14 +23,8 @@ public class TopicSubtopic extends DomainEntity implements Rankable{
     @Column(name = "rank")
     private int rank;
 
-    protected TopicSubtopic() {
-    }
-
-    public TopicSubtopic(Topic topic, Topic subtopic) {
+    public TopicSubtopic() {
         setPublicId(URI.create("urn:topic-subtopic:" + UUID.randomUUID()));
-
-        this.setTopic(topic);
-        this.setSubtopic(subtopic);
     }
 
     public boolean isPrimary() {
@@ -40,24 +35,39 @@ public class TopicSubtopic extends DomainEntity implements Rankable{
         this.primary = primary;
     }
 
-    public Topic getTopic() {
-        return topic;
-    }
-
-    public Topic getSubtopic() {
-        return subtopic;
+    public Optional<Topic> getTopic() {
+        return Optional.ofNullable(topic);
     }
 
     public void setTopic(Topic topic) {
+        final var previousTopic = this.topic;
+
         this.topic = topic;
+
+        if (this.topic != previousTopic && previousTopic != null) {
+            previousTopic.removeChildTopicSubTopic(this);
+        }
 
         if (topic != null && !topic.getChildrenTopicSubtopics().contains(this)) {
             topic.addChildTopicSubtopic(this);
         }
     }
 
+    public Optional<Topic> getSubtopic() {
+        return Optional.ofNullable(subtopic);
+    }
+
     public void setSubtopic(Topic subtopic) {
+        final var previousSubtopic = this.subtopic;
+
         this.subtopic = subtopic;
+
+        if (this.subtopic != previousSubtopic && previousSubtopic != null) {
+            previousSubtopic.removeParentTopicSubtopic(this);
+            if (isPrimary()) {
+                previousSubtopic.setRandomPrimaryTopic();
+            }
+        }
 
         if (subtopic != null && !subtopic.getParentTopicSubtopics().contains(this)) {
             subtopic.addParentTopicSubtopic(this);
@@ -70,5 +80,11 @@ public class TopicSubtopic extends DomainEntity implements Rankable{
 
     public void setRank(int rank) {
         this.rank = rank;
+    }
+
+    @PreRemove
+    public void preRemove() {
+        this.setTopic(null);
+        this.setSubtopic(null);
     }
 }

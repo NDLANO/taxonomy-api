@@ -24,7 +24,7 @@ public class ResourceFiltersTest extends RestTest {
         builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
 
         URI id = getId(
-                createResource("/v1/resource-filters", new ResourceFilters.AddFilterToResourceCommand() {{
+                testUtils.createResource("/v1/resource-filters", new ResourceFilters.AddFilterToResourceCommand() {{
                     resourceId = URI.create("urn:resource:1");
                     filterId = URI.create("urn:filter:1");
                     relevanceId = URI.create("urn:relevance:core");
@@ -48,8 +48,8 @@ public class ResourceFiltersTest extends RestTest {
                 .filter(filter2, relevance)
         );
 
-        MockHttpServletResponse response = getResource("/v1/resources/urn:resource:1/filters");
-        FilterIndexDocument[] filters = getObject(FilterIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1/filters");
+        FilterIndexDocument[] filters = testUtils.getObject(FilterIndexDocument[].class, response);
 
         assertEquals(2, filters.length);
         assertAnyTrue(filters, f -> f.id.equals(filter1.getPublicId()));
@@ -67,7 +67,7 @@ public class ResourceFiltersTest extends RestTest {
                 .filter(filter, relevance)
         );
 
-        createResource("/v1/resource-filters", new ResourceFilters.AddFilterToResourceCommand() {{
+        testUtils.createResource("/v1/resource-filters", new ResourceFilters.AddFilterToResourceCommand() {{
             resourceId = URI.create("urn:resource:1");
             filterId = URI.create("urn:filter:1");
             relevanceId = URI.create("urn:relevance:core");
@@ -84,7 +84,7 @@ public class ResourceFiltersTest extends RestTest {
 
         URI id = save(resource.addFilter(filter, relevance)).getPublicId();
 
-        deleteResource("/v1/resource-filters/" + id);
+        testUtils.deleteResource("/v1/resource-filters/" + id);
         assertNull(resourceFilterRepository.findByPublicId(id));
     }
 
@@ -100,7 +100,7 @@ public class ResourceFiltersTest extends RestTest {
 
         URI id = save(resource.addFilter(filter, core)).getPublicId();
 
-        updateResource("/v1/resource-filters/" + id, new ResourceFilters.UpdateResourceFilterCommand() {{
+        testUtils.updateResource("/v1/resource-filters/" + id, new ResourceFilters.UpdateResourceFilterCommand() {{
             relevanceId = supplementary.getPublicId();
         }});
         assertEquals("urn:relevance:supplementary", first(resource.getResourceFilters()).getRelevance().get().getPublicId().toString());
@@ -119,8 +119,8 @@ public class ResourceFiltersTest extends RestTest {
                 .publicId("urn:resource:2")
                 .filter(filter, relevance));
 
-        MockHttpServletResponse response = getResource("/v1/resource-filters");
-        ResourceFilters.ResourceFilterIndexDocument[] resourceFilters = getObject(ResourceFilters.ResourceFilterIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/resource-filters");
+        ResourceFilters.ResourceFilterIndexDocument[] resourceFilters = testUtils.getObject(ResourceFilters.ResourceFilterIndexDocument[].class, response);
         assertEquals(2, resourceFilters.length);
         assertAnyTrue(resourceFilters, rf -> URI.create("urn:resource:1").equals(rf.resourceId) && filter.getPublicId().equals(rf.filterId) && relevance.getPublicId().equals(rf.relevanceId));
         assertAnyTrue(resourceFilters, rf -> URI.create("urn:resource:2").equals(rf.resourceId) && filter.getPublicId().equals(rf.filterId) && relevance.getPublicId().equals(rf.relevanceId));

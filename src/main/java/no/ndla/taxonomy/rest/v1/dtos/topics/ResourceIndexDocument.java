@@ -70,28 +70,31 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     }
 
     public ResourceIndexDocument(TopicResource topicResource, String language) {
-        final var resource = topicResource.getResource();
-        final var topic = topicResource.getTopic();
+        topicResource.getTopic().ifPresent(topic -> {
+            this.topicId = topic.getPublicId();
+            this.topicNumericId = topic.getId();
+        });
 
-        this.topicId = topic.getPublicId();
-        this.id = resource.getPublicId();
+        topicResource.getResource().ifPresent(resource -> {
+            this.id = resource.getPublicId();
 
-        this.name = resource.getTranslation(language)
-                .map(ResourceTranslation::getName)
-                .orElse(resource.getName());
+            this.name = resource.getTranslation(language)
+                    .map(ResourceTranslation::getName)
+                    .orElse(resource.getName());
 
-        this.resourceTypes = resource.getResourceResourceTypes().stream()
-                .map(ResourceResourceType::getResourceType)
-                .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language))
-                .collect(Collectors.toSet());
+            this.resourceTypes = resource.getResourceResourceTypes().stream()
+                    .map(ResourceResourceType::getResourceType)
+                    .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language))
+                    .collect(Collectors.toSet());
 
-        this.contentUri = resource.getContentUri();
-        this.path = resource.getPrimaryPath().orElse(null);
-        this.paths = resource.getAllPaths();
+            this.contentUri = resource.getContentUri();
+            this.path = resource.getPrimaryPath().orElse(null);
+            this.paths = resource.getAllPaths();
+        });
+
         this.connectionId = topicResource.getPublicId();
         this.rank = topicResource.getRank();
         this.isPrimary = topicResource.isPrimary();
-        this.topicNumericId = topic.getId();
     }
 
     @Override

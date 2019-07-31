@@ -24,9 +24,9 @@ import java.util.List;
 @Transactional
 public class ResourceTranslations {
 
-    private ResourceRepository resourceRepository;
+    private final ResourceRepository resourceRepository;
 
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
     public ResourceTranslations(ResourceRepository resourceRepository, EntityManager entityManager) {
         this.resourceRepository = resourceRepository;
@@ -35,7 +35,7 @@ public class ResourceTranslations {
 
     @GetMapping
     @ApiOperation("Gets all relevanceTranslations for a single resource")
-    public List<ResourceTranslations.ResourceTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
+    public List<ResourceTranslations.ResourceTranslationIndexDocument> index(@PathVariable("id") URI id) {
         Resource resource = resourceRepository.getByPublicId(id);
         List<ResourceTranslations.ResourceTranslationIndexDocument> result = new ArrayList<>();
         resource.getTranslations().forEach(t -> result.add(
@@ -53,7 +53,7 @@ public class ResourceTranslations {
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language
-    ) throws Exception {
+    ) {
         Resource resource = resourceRepository.getByPublicId(id);
         ResourceTranslation translation = resource.getTranslation(language).orElseThrow(() -> new NotFoundException("translation with language code " + language + " for resource", id));
         return new ResourceTranslations.ResourceTranslationIndexDocument() {{
@@ -72,7 +72,7 @@ public class ResourceTranslations {
             @PathVariable("language") String language,
             @ApiParam(name = "resource", value = "The new or updated translation")
             @RequestBody ResourceTranslations.UpdateResourceTranslationCommand command
-    ) throws Exception {
+    ) {
         Resource resource = resourceRepository.getByPublicId(id);
         ResourceTranslation translation = resource.addTranslation(language);
         entityManager.persist(translation);

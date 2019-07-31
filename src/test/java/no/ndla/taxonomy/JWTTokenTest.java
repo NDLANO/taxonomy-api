@@ -38,7 +38,7 @@ public class JWTTokenTest {
 
     @Test
     public void write_gives_write_permission() {
-        DecodedJWT jwt = JWT.decode(authorizationHeader.substring(6).trim());
+        JWT.decode(authorizationHeader.substring(6).trim());
 
         final DecodedJWT mockDecodedJWT = Mockito.mock(DecodedJWT.class);
         Claim claim = Mockito.mock(Claim.class);
@@ -52,7 +52,7 @@ public class JWTTokenTest {
     @Test
     public void no_scope_gives_readonly() {
 
-        DecodedJWT jwt = JWT.decode(authorizationHeader.substring(6).trim());
+        JWT.decode(authorizationHeader.substring(6).trim());
 
         final DecodedJWT mockDecodedJWT = Mockito.mock(DecodedJWT.class);
         Claim claim = Mockito.mock(Claim.class);

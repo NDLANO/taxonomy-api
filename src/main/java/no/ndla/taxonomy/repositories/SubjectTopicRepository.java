@@ -30,7 +30,7 @@ public interface SubjectTopicRepository extends TaxonomyRepository<SubjectTopic>
             "   FROM SubjectTopic st" +
             "   LEFT JOIN FETCH st.topic t" +
             "   LEFT JOIN FETCH st.subject" +
-            "   LEFT OUTER JOIN FETCH t.filters tf" +
+            "   LEFT OUTER JOIN FETCH t.topicFilters tf" +
             "   LEFT OUTER JOIN FETCH tf.filter f" +
             "   LEFT OUTER JOIN FETCH tf.relevance" +
             "   LEFT OUTER JOIN FETCH t.cachedUrls" +

@@ -22,13 +22,13 @@ import java.util.stream.Collectors;
  */
 public class UrlResolverService {
 
-    private OldUrlCanonifier canonifier = new OldUrlCanonifier();
+    private final OldUrlCanonifier canonifier = new OldUrlCanonifier();
 
     private final SubjectRepository subjectRepository;
     private final TopicRepository topicRepository;
     private final ResourceRepository resourceRepository;
     private final CachedUrlRepository cachedUrlRepository;
-    private UrlMappingRepository urlMappingRepository;
+    private final UrlMappingRepository urlMappingRepository;
 
     @Autowired
     public UrlResolverService(SubjectRepository subjectRepository,

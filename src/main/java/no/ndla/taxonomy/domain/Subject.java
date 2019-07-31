@@ -6,6 +6,7 @@ import org.hibernate.annotations.Type;
 import javax.persistence.*;
 import java.net.URI;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 public class Subject extends CachedUrlEntity {
@@ -14,7 +15,7 @@ public class Subject extends CachedUrlEntity {
     private URI contentUri;
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<SubjectTopic> topics = new HashSet<>();
+    private Set<SubjectTopic> subjectTopics = new HashSet<>();
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SubjectTranslation> translations = new HashSet<>();
@@ -27,9 +28,9 @@ public class Subject extends CachedUrlEntity {
     }
 
     public void addSubjectTopic(SubjectTopic subjectTopic) {
-        this.topics.add(subjectTopic);
+        this.subjectTopics.add(subjectTopic);
 
-        if (subjectTopic.getSubject() != this) {
+        if (subjectTopic.getSubject().orElse(null) != this) {
             subjectTopic.setSubject(this);
         }
     }
@@ -44,7 +45,7 @@ public class Subject extends CachedUrlEntity {
     }
 
     public Set<SubjectTopic> getSubjectTopics() {
-        return this.topics;
+        return this.subjectTopics;
     }
 
     public void addFilter(Filter filter) {
@@ -56,14 +57,12 @@ public class Subject extends CachedUrlEntity {
     }
 
     public void removeSubjectTopic(SubjectTopic subjectTopic) {
-        this.topics.remove(subjectTopic);
+        final var topicToRemove = subjectTopic.getTopic().orElse(null);
 
-        if (subjectTopic.getSubject() == this) {
+        this.subjectTopics.remove(subjectTopic);
+
+        if (subjectTopic.getSubject().orElse(null) == this) {
             subjectTopic.setSubject(null);
-        }
-
-        if (subjectTopic.isPrimary() && subjectTopic.getTopic() != null) {
-            subjectTopic.getTopic().setRandomPrimarySubject();
         }
     }
 
@@ -82,28 +81,17 @@ public class Subject extends CachedUrlEntity {
     }
 
     private void refuseIfDuplicate(Topic topic) {
-        Iterator<Topic> topics = getTopics();
-        while (topics.hasNext()) {
-            Topic t = topics.next();
-            if (t.getId().equals(topic.getId()))
-                throw new DuplicateIdException("Subject with id " + getPublicId() + " already contains topic with id " + topic.getPublicId());
+        if (getTopics().contains(topic)) {
+            throw new DuplicateIdException("Subject with id " + getPublicId() + " already contains topic with id " + topic.getPublicId());
         }
     }
 
-    public Iterator<Topic> getTopics() {
-        Iterator<SubjectTopic> iterator = topics.iterator();
-
-        return new Iterator<Topic>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public Topic next() {
-                return iterator.next().getTopic();
-            }
-        };
+    public Collection<Topic> getTopics() {
+        return subjectTopics.stream()
+                .map(SubjectTopic::getTopic)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
     }
 
     public SubjectTranslation addTranslation(String languageCode) {
@@ -126,7 +114,7 @@ public class Subject extends CachedUrlEntity {
     }
 
     public void removeTranslation(String languageCode) {
-        getTranslation(languageCode).ifPresent(translations::remove);
+        getTranslation(languageCode).ifPresent(this::removeTranslation);
     }
 
     public void addTranslation(SubjectTranslation subjectTranslation) {
@@ -144,7 +132,7 @@ public class Subject extends CachedUrlEntity {
             }
         }
     }
-        
+
 
     public Subject name(String name) {
         setName(name);
@@ -160,27 +148,22 @@ public class Subject extends CachedUrlEntity {
     }
 
     public void removeTopic(Topic topic) {
-        SubjectTopic subjectTopic = getTopic(topic);
-        if (subjectTopic == null) {
-            throw new ChildNotFoundException("Subject " + this.getPublicId() + " has no topic with id " + topic.getPublicId());
-        }
-
-        this.removeSubjectTopic(subjectTopic);
-    }
-
-    private SubjectTopic getTopic(Topic topic) {
-        for (SubjectTopic subjectTopic : topics) {
-            if (subjectTopic.getTopic().getPublicId().equals(topic.getPublicId())) return subjectTopic;
-        }
-        return null;
+        // Removes SubjectTopic that references requested Topic if exists, otherwise throws exception
+        subjectTopics.stream()
+                .filter(subjectTopic -> topic.equals(subjectTopic.getTopic().orElse(null)))
+                .findFirst()
+                .ifPresentOrElse(
+                        this::removeSubjectTopic,
+                        () -> {
+                            throw new ChildNotFoundException("Subject " + this.getPublicId() + " has no topic with id " + topic.getPublicId());
+                        }
+                );
     }
 
     @PreRemove
     void preRemove() {
-        final SubjectTopic[] topics = this.topics.toArray(new SubjectTopic[]{});
-        for (SubjectTopic topicSubtopic : topics) {
-            Topic topic = topicSubtopic.getTopic();
-            this.removeTopic(topic);
+        for (var subjectTopic : subjectTopics.toArray()) {
+            removeSubjectTopic((SubjectTopic) subjectTopic);
         }
     }
 }

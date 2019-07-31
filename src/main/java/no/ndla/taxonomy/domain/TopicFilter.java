@@ -24,15 +24,8 @@ public class TopicFilter extends DomainEntity {
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 
-    protected TopicFilter() {
-    }
-
-    public TopicFilter(Topic topic, Filter filter, Relevance relevance) {
+    public TopicFilter() {
         setPublicId(URI.create("urn:topic-filter:" + UUID.randomUUID()));
-
-        this.setFilter(filter);
-        this.setTopic(topic);
-        this.setRelevance(relevance);
     }
 
     public Optional<Filter> getFilter() {

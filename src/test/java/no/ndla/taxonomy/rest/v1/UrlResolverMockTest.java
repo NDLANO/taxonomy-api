@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.service.UrlResolverService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,7 +17,6 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.net.URI;
 
-import static no.ndla.taxonomy.TestUtils.getObject;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -44,6 +44,9 @@ public class UrlResolverMockTest {
     @Autowired
     private MockMvc mvc;
 
+    @Autowired
+    private TestUtils testUtils;
+
     @Test
     public void resolveOldUrl404WhenNotImported() throws Exception {
         String oldUrl = "no/such/path";
@@ -67,7 +70,7 @@ public class UrlResolverMockTest {
                         .accept(APPLICATION_JSON_UTF8));
 
         result.andExpect(status().isOk());
-        UrlResolver.ResolvedOldUrl resolvedOldUrl = getObject(UrlResolver.ResolvedOldUrl.class, result.andReturn().getResponse());
+        UrlResolver.ResolvedOldUrl resolvedOldUrl = testUtils.getObject(UrlResolver.ResolvedOldUrl.class, result.andReturn().getResponse());
         assertEquals(newPath, resolvedOldUrl.path);
     }
 

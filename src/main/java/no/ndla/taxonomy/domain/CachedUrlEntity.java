@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public abstract class CachedUrlEntity extends DomainObject {
     @OneToMany
     @JoinColumn(name = "publicId", referencedColumnName = "publicId", updatable = false, insertable = false)
-    private Set<CachedUrl> cachedUrls = new HashSet<>();
+    private final Set<CachedUrl> cachedUrls = new HashSet<>();
 
     public Set<CachedUrl> getCachedUrls() {
         return this.cachedUrls;

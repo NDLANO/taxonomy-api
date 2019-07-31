@@ -46,7 +46,7 @@ public class TopicTreeSorter {
             elementsByParent.get(parentId).add(element);
         }
 
-        return new ArrayList<T>(this.addElements(elementsByParent, null));
+        return new ArrayList<>(this.addElements(elementsByParent, null));
     }
 
     public interface Sortable {

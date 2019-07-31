@@ -42,8 +42,8 @@ public class TopicResourceTypeRepositoryTest {
         assertNotNull(testTopicResourceType);
         TopicResourceType topicResourceType = topicResourceTypeRepository.findByPublicId(testTopicResourceType);
         assertNotNull(testTopicResourceType);
-        assertEquals(getClass().getCanonicalName()+" test topic", topicResourceType.getTopic().getName());
-        assertEquals(getClass().getCanonicalName() + " test resource type", topicResourceType.getResourceType().getName());
+        assertEquals(getClass().getCanonicalName() + " test topic", topicResourceType.getTopic().map(Topic::getName).orElse(""));
+        assertEquals(getClass().getCanonicalName() + " test resource type", topicResourceType.getResourceType().map(ResourceType::getName).orElse(""));
     }
 
     @Test
@@ -61,7 +61,7 @@ public class TopicResourceTypeRepositoryTest {
                 assertFalse(topicResourceTypes.hasNext());
             }
             assertEquals(testTopicResourceType, topicResourceType.getPublicId());
-            resourceType = topicResourceType.getResourceType();
+            resourceType = topicResourceType.getResourceType().orElse(null);
         }
         assertEquals(testResourceType, resourceType.getPublicId());
     }
@@ -89,7 +89,7 @@ public class TopicResourceTypeRepositoryTest {
         TopicResourceType topicResourceType = topicResourceTypes.next();
         assertFalse(topicResourceTypes.hasNext());
         assertEquals(testTopicResourceType, topicResourceType.getPublicId());
-        assertEquals(testResourceType, topicResourceType.getResourceType().getPublicId());
+        assertEquals(testResourceType, topicResourceType.getResourceType().map(ResourceType::getPublicId).orElse(null));
     }
 
     @After

@@ -6,7 +6,7 @@ import no.ndla.taxonomy.rest.v1.dtos.topics.TopicWithPathsIndexDocument;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import static no.ndla.taxonomy.TestUtils.*;
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.junit.Assert.*;
 
 public class ContextsTest extends RestTest {
@@ -18,8 +18,8 @@ public class ContextsTest extends RestTest {
                 .name("Subject 1")
         );
 
-        MockHttpServletResponse response = getResource("/v1/contexts");
-        Contexts.ContextIndexDocument[] contexts = getObject(Contexts.ContextIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/contexts");
+        Contexts.ContextIndexDocument[] contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
 
         assertEquals(1, contexts.length);
         assertEquals("urn:subject:1", contexts[0].id.toString());
@@ -36,8 +36,8 @@ public class ContextsTest extends RestTest {
                 .isContext(true)
         );
 
-        MockHttpServletResponse response = getResource("/v1/contexts");
-        Contexts.ContextIndexDocument[] contexts = getObject(Contexts.ContextIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/contexts");
+        Contexts.ContextIndexDocument[] contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
 
         assertEquals(1, contexts.length);
         assertEquals("urn:topic:1", contexts[0].id.toString());
@@ -51,7 +51,7 @@ public class ContextsTest extends RestTest {
                 .publicId("urn:topic:1")
         );
 
-        MockHttpServletResponse response = createResource("/v1/contexts", new Contexts.CreateContextCommand() {{
+        testUtils.createResource("/v1/contexts", new Contexts.CreateContextCommand() {{
             id = topic.getPublicId();
         }});
 
@@ -66,7 +66,7 @@ public class ContextsTest extends RestTest {
                 .isContext(true)
         );
 
-        MockHttpServletResponse response = deleteResource("/v1/contexts/urn:topic:1");
+        testUtils.deleteResource("/v1/contexts/urn:topic:1");
         assertFalse(topic.isContext());
     }
 
@@ -86,8 +86,8 @@ public class ContextsTest extends RestTest {
                 .isContext(true)
         );
 
-        MockHttpServletResponse response = getResource("/v1/contexts?language=nb");
-        Contexts.ContextIndexDocument[] contexts = getObject(Contexts.ContextIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/contexts?language=nb");
+        Contexts.ContextIndexDocument[] contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
 
         assertEquals(2, contexts.length);
 
@@ -113,8 +113,8 @@ public class ContextsTest extends RestTest {
         entityManager.refresh(topic);
         entityManager.refresh(subject);
 
-        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1");
-        TopicWithPathsIndexDocument topicIndexDocument = getObject(TopicWithPathsIndexDocument.class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
+        TopicWithPathsIndexDocument topicIndexDocument = testUtils.getObject(TopicWithPathsIndexDocument.class, response);
         assertEquals("/topic:1", topicIndexDocument.path);
     }
 }

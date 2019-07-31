@@ -15,8 +15,8 @@ public class TopicResourceTreeSortable implements TopicTreeSorter.Sortable {
     private String type;
 
     public TopicResourceTreeSortable(TopicResource topicResource) {
-        this.id = topicResource.getResource().getId();
-        this.parentId = topicResource.getTopic().getId();
+        this.id = topicResource.getResource().orElseThrow(() -> new IllegalArgumentException("Resource not set")).getId();
+        this.parentId = topicResource.getTopic().orElseThrow(() -> new IllegalArgumentException("Topic not set")).getId();
         this.rank = topicResource.getRank();
         this.topicResource = topicResource;
         this.type = "resource";

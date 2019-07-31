@@ -35,7 +35,7 @@ public class FilterTranslations {
 
     @GetMapping
     @ApiOperation("Gets all relevanceTranslations for a single filter")
-    public List<FilterTranslations.FilterTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
+    public List<FilterTranslations.FilterTranslationIndexDocument> index(@PathVariable("id") URI id) {
         Filter filter = filterRepository.getByPublicId(id);
         List<FilterTranslations.FilterTranslationIndexDocument> result = new ArrayList<>();
         filter.getTranslations().forEach(t -> result.add(
@@ -53,7 +53,7 @@ public class FilterTranslations {
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language
-    ) throws Exception {
+    ) {
         Filter filter = filterRepository.getByPublicId(id);
         FilterTranslation translation = filter.getTranslation(language).orElseThrow(() -> new NotFoundException("Translation with language code " + language + " for filter", id));
 
@@ -73,7 +73,7 @@ public class FilterTranslations {
             @PathVariable("language") String language,
             @ApiParam(name = "filter", value = "The new or updated translation")
             @RequestBody FilterTranslations.UpdateFilterTranslationCommand command
-    ) throws Exception {
+    ) {
         Filter filter = filterRepository.getByPublicId(id);
         FilterTranslation translation = filter.addTranslation(language);
         entityManager.persist(translation);
@@ -88,7 +88,7 @@ public class FilterTranslations {
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language
-    ) throws Exception {
+    ) {
         Filter filter = filterRepository.getByPublicId(id);
         filter.getTranslation(language).ifPresent(translation -> {
             filter.removeTranslation(language);

@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class ResourceTypes extends CrudController<ResourceType> {
 
-    private ResourceTypeRepository resourceTypeRepository;
+    private final ResourceTypeRepository resourceTypeRepository;
 
     public ResourceTypes(ResourceTypeRepository resourceTypeRepository) {
         this.resourceTypeRepository = resourceTypeRepository;
