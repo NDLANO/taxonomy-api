@@ -21,17 +21,17 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
 
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
-            "   LEFT OUTER JOIN FETCH tr.topic t" +
+            "   LEFT JOIN FETCH tr.topic t" +
             "   LEFT JOIN FETCH tr.resource r" +
-            "   LEFT OUTER JOIN FETCH r.filters rf" +
-            "   LEFT OUTER JOIN FETCH rf.filter" +
+            "   LEFT JOIN FETCH r.filters rf" +
+            "   LEFT JOIN FETCH rf.filter" +
             "   LEFT JOIN rf.relevance rel" +
-            "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
-            "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes rrtFetch" +
-            "   LEFT OUTER JOIN FETCH rf.relevance" +
-            "   LEFT OUTER JOIN FETCH rrtFetch.resourceType rtFetch" +
-            "   LEFT OUTER JOIN FETCH rtFetch.resourceTypeTranslations" +
+            "   LEFT JOIN FETCH r.resourceTranslations" +
+            "   LEFT JOIN FETCH r.cachedUrls" +
+            "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
+            "   LEFT JOIN FETCH rf.relevance" +
+            "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
+            "   LEFT JOIN FETCH rtFetch.resourceTypeTranslations" +
             "   WHERE " +
             "       t.id IN :topicIds AND" +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
@@ -39,18 +39,18 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
 
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
-            "   INNER JOIN FETCH tr.resource r" +
-            "   LEFT OUTER JOIN FETCH r.filters rf" +
-            "   LEFT OUTER JOIN FETCH rf.filter" +
-            "   INNER JOIN rf.filter f" +
-            "   LEFT OUTER JOIN FETCH tr.topic t" +
+            "   JOIN FETCH tr.resource r" +
+            "   LEFT JOIN FETCH r.filters rf" +
+            "   LEFT JOIN FETCH rf.filter" +
+            "   JOIN rf.filter f" +
+            "   LEFT JOIN FETCH tr.topic t" +
             "   LEFT JOIN rf.relevance rel" +
-            "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
-            "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes rrtFetch" +
-            "   LEFT OUTER JOIN FETCH rf.relevance" +
-            "   LEFT OUTER JOIN FETCH rrtFetch.resourceType rtFetch" +
-            "   LEFT OUTER JOIN FETCH rtFetch.resourceTypeTranslations" +
+            "   LEFT JOIN FETCH r.resourceTranslations" +
+            "   LEFT JOIN FETCH r.cachedUrls" +
+            "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
+            "   LEFT JOIN FETCH rf.relevance" +
+            "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
+            "   LEFT JOIN FETCH rtFetch.resourceTypeTranslations" +
             "   WHERE t.id IN :topicIds AND f.publicId IN :filterPublicIds AND " +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
     List<TopicResource> findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Set<URI> filterPublicIds, URI relevancePublicId);
@@ -58,19 +58,19 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
             "   INNER JOIN FETCH tr.resource r" +
-            "   LEFT OUTER JOIN FETCH r.filters rf" +
-            "   LEFT OUTER JOIN FETCH rf.filter" +
+            "   LEFT JOIN FETCH r.filters rf" +
+            "   LEFT JOIN FETCH rf.filter" +
             "   LEFT JOIN rf.filter f" +
-            "   LEFT OUTER JOIN FETCH tr.topic t" +
+            "   LEFT JOIN FETCH tr.topic t" +
             "   LEFT JOIN rf.relevance rel" +
             "   LEFT JOIN r.resourceResourceTypes rrt " +
             "   LEFT JOIN rrt.resourceType rt" +
-            "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
-            "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes rrtFetch" +
-            "   LEFT OUTER JOIN FETCH rf.relevance" +
-            "   LEFT OUTER JOIN FETCH rrtFetch.resourceType rtFetch" +
-            "   LEFT OUTER JOIN FETCH rtFetch.resourceTypeTranslations" +
+            "   LEFT JOIN FETCH r.resourceTranslations" +
+            "   LEFT JOIN FETCH r.cachedUrls" +
+            "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
+            "   LEFT JOIN FETCH rf.relevance" +
+            "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
+            "   LEFT JOIN FETCH rtFetch.resourceTypeTranslations" +
             "   WHERE t.id IN :topicIds AND f.publicId IN :filterPublicIds AND" +
             "       (rt.publicId IN :resourceTypePublicIds) AND" +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
@@ -78,19 +78,19 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
 
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
-            "   INNER JOIN FETCH tr.resource r" +
-            "   LEFT OUTER JOIN FETCH r.filters rf" +
-            "   LEFT OUTER JOIN FETCH rf.filter" +
-            "   LEFT OUTER JOIN FETCH tr.topic t" +
+            "   JOIN FETCH tr.resource r" +
+            "   LEFT JOIN FETCH r.filters rf" +
+            "   LEFT JOIN FETCH rf.filter" +
+            "   LEFT JOIN FETCH tr.topic t" +
             "   LEFT JOIN rf.relevance rel" +
-            "   LEFT OUTER JOIN r.resourceResourceTypes rrt " +
+            "   LEFT JOIN r.resourceResourceTypes rrt " +
             "   LEFT JOIN rrt.resourceType rt" +
-            "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
-            "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-            "   LEFT OUTER JOIN FETCH r.resourceResourceTypes rrtFetch" +
-            "   LEFT OUTER JOIN FETCH rf.relevance" +
-            "   LEFT OUTER JOIN FETCH rrtFetch.resourceType rtFetch" +
-            "   LEFT OUTER JOIN FETCH rtFetch.resourceTypeTranslations" +
+            "   LEFT JOIN FETCH r.resourceTranslations" +
+            "   LEFT JOIN FETCH r.cachedUrls" +
+            "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
+            "   LEFT JOIN FETCH rf.relevance" +
+            "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
+            "   LEFT JOIN FETCH rtFetch.resourceTypeTranslations" +
             "   WHERE t.id IN :topicIds AND" +
             "       (rt.publicId IN :resourceTypePublicIds) AND" +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")

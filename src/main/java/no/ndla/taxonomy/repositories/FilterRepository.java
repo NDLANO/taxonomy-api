@@ -11,12 +11,12 @@ import java.util.Optional;
 public interface FilterRepository extends TaxonomyRepository<Filter> {
     @Query("SELECT DISTINCT f FROM Filter f" +
             "   LEFT JOIN FETCH f.subject" +
-            "   LEFT OUTER JOIN f.translations")
+            "   LEFT JOIN f.translations")
     List<Filter> findAllWithSubjectAndTranslations();
 
     @Query("SELECT DISTINCT f FROM Filter f" +
             "   LEFT JOIN FETCH f.subject" +
-            "   LEFT OUTER JOIN f.translations" +
+            "   LEFT JOIN f.translations" +
             "   WHERE f.publicId = :publicId")
     Optional<Filter> findFirstByPublicIdWithSubjectAndTranslations(URI publicId);
 }

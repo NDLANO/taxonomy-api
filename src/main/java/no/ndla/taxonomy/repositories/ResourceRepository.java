@@ -12,33 +12,33 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
     @Query(
             "SELECT DISTINCT r" +
                     "   FROM Resource r" +
-                    "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-                    "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
+                    "   LEFT JOIN FETCH r.cachedUrls" +
+                    "   LEFT JOIN FETCH r.resourceTranslations" +
                     "   WHERE r.publicId = :publicId")
     Optional<Resource> findFirstByPublicIdIncludingCachedUrlsAndTranslations(URI publicId);
 
     @Query(
             "SELECT DISTINCT r" +
                     "   FROM Resource r" +
-                    "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-                    "   LEFT OUTER JOIN FETCH r.resourceTranslations")
+                    "   LEFT JOIN FETCH r.cachedUrls" +
+                    "   LEFT JOIN FETCH r.resourceTranslations")
     List<Resource> findAllIncludingCachedUrlsAndTranslations();
 
     @Query(
             "SELECT distinct r" +
                     "   FROM Resource r" +
-                    "   LEFT OUTER JOIN FETCH r.cachedUrls" +
-                    "   LEFT OUTER JOIN FETCH r.resourceResourceTypes rrt" +
-                    "   LEFT OUTER JOIN FETCH rrt.resourceType rt" +
-                    "   LEFT OUTER JOIN FETCH rt.resourceTypeTranslations" +
-                    "   LEFT OUTER JOIN FETCH r.resourceTranslations" +
+                    "   LEFT JOIN FETCH r.cachedUrls" +
+                    "   LEFT JOIN FETCH r.resourceResourceTypes rrt" +
+                    "   LEFT JOIN FETCH rrt.resourceType rt" +
+                    "   LEFT JOIN FETCH rt.resourceTypeTranslations" +
+                    "   LEFT JOIN FETCH r.resourceTranslations" +
                     "   WHERE r.contentUri = :contentUri"
     )
     List<Resource> findAllByContentUriIncludingCachedUrlsAndResourceTypesAndTranslations(URI contentUri);
 
     @Query("SELECT DISTINCT r" +
             "   FROM Resource r" +
-            "   LEFT OUTER JOIN FETCH r.cachedUrls" +
+            "   LEFT JOIN FETCH r.cachedUrls" +
             "   WHERE r.publicId = :publicId")
     List<Resource> findAllByPublicIdIncludingCachedUrls(URI publicId);
 }

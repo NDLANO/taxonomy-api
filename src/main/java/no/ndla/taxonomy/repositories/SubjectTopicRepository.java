@@ -20,9 +20,9 @@ public interface SubjectTopicRepository extends TaxonomyRepository<SubjectTopic>
 
     @Query("SELECT DISTINCT st" +
             "   FROM SubjectTopic st" +
-            "   INNER JOIN FETCH st.topic t" +
-            "   INNER JOIN FETCH st.subject s" +
-            "   LEFT OUTER JOIN FETCH s.cachedUrls" +
+            "   JOIN FETCH st.topic t" +
+            "   JOIN FETCH st.subject s" +
+            "   LEFT JOIN FETCH s.cachedUrls" +
             "   WHERE t.publicId = :topicPublicId")
     List<SubjectTopic> findAllByTopicPublicIdIncludingSubjectAndTopicAndCachedUrls(URI topicPublicId);
 
@@ -30,12 +30,12 @@ public interface SubjectTopicRepository extends TaxonomyRepository<SubjectTopic>
             "   FROM SubjectTopic st" +
             "   LEFT JOIN FETCH st.topic t" +
             "   LEFT JOIN FETCH st.subject" +
-            "   LEFT OUTER JOIN FETCH t.topicFilters tf" +
-            "   LEFT OUTER JOIN FETCH tf.filter f" +
-            "   LEFT OUTER JOIN FETCH tf.relevance" +
-            "   LEFT OUTER JOIN FETCH t.cachedUrls" +
-            "   LEFT OUTER JOIN FETCH t.translations" +
-            "   LEFT OUTER JOIN FETCH f.translations" +
+            "   LEFT JOIN FETCH t.topicFilters tf" +
+            "   LEFT JOIN FETCH tf.filter f" +
+            "   LEFT JOIN FETCH tf.relevance" +
+            "   LEFT JOIN FETCH t.cachedUrls" +
+            "   LEFT JOIN FETCH t.translations" +
+            "   LEFT JOIN FETCH f.translations" +
             "   WHERE st.subject = :subject AND st.topic.id IN :topicId")
     List<SubjectTopic> findAllBySubjectAndTopicId(Subject subject, Collection<Integer> topicId);
 

@@ -11,12 +11,12 @@ import java.util.Set;
 public interface RelevanceRepository extends TaxonomyRepository<Relevance> {
     @Query("SELECT r" +
             "   FROM Relevance r" +
-            "   LEFT OUTER JOIN FETCH r.translations")
+            "   LEFT JOIN FETCH r.translations")
     Set<Relevance> findAllIncludingTranslations();
 
     @Query("SELECT r" +
             "   FROM Relevance r" +
-            "   LEFT OUTER JOIN FETCH r.translations" +
+            "   LEFT JOIN FETCH r.translations" +
             "   WHERE r.publicId = :publicId")
     Optional<Relevance> findFirstByPublicIdIncludingTranslations(URI publicId);
 }

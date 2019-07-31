@@ -12,24 +12,24 @@ public interface ResourceTypeRepository extends TaxonomyRepository<ResourceType>
     @Query(
             "SELECT DISTINCT rt" +
                     "   FROM ResourceType rt" +
-                    "   LEFT OUTER JOIN FETCH rt.subtypes" +
-                    "   LEFT OUTER JOIN FETCH rt.resourceTypeTranslations" +
+                    "   LEFT JOIN FETCH rt.subtypes" +
+                    "   LEFT JOIN FETCH rt.resourceTypeTranslations" +
                     "   WHERE (:parent IS NULL AND rt.parent IS NULL) OR rt.parent = :parent")
     List<ResourceType> findAllByParentIncludingTranslationsAndFirstLevelSubtypes(ResourceType parent);
 
     @Query(
             "SELECT DISTINCT rt" +
                     "   FROM ResourceType rt" +
-                    "   LEFT OUTER JOIN FETCH rt.resourceTypeTranslations" +
+                    "   LEFT JOIN FETCH rt.resourceTypeTranslations" +
                     "   WHERE rt.publicId = :publicId")
     Optional<ResourceType> findFirstByPublicIdIncludingTranslations(URI publicId);
 
     @Query(
             "SELECT DISTINCT rt" +
                     "   FROM ResourceType rt" +
-                    "   INNER JOIN rt.parent prt" +
-                    "   LEFT OUTER JOIN FETCH rt.resourceTypeTranslations" +
-                    "   LEFT OUTER JOIN FETCH rt.subtypes" +
+                    "   JOIN rt.parent prt" +
+                    "   LEFT JOIN FETCH rt.resourceTypeTranslations" +
+                    "   LEFT JOIN FETCH rt.subtypes" +
                     "   WHERE prt.publicId = :publicId")
     List<ResourceType> findAllByParentPublicIdIncludingTranslationsAndFirstLevelSubtypes(URI publicId);
 }
