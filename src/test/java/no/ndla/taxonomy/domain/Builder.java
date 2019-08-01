@@ -1,11 +1,16 @@
 package no.ndla.taxonomy.domain;
 
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
 import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+@Component
+@Transactional
 public class Builder {
     private final EntityManager entityManager;
     private final Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();
@@ -192,6 +197,7 @@ public class Builder {
         return cachedUrlOldRigBuilders.get(key);
     }
 
+    @Transactional
     public class SubjectTranslationBuilder {
         private SubjectTranslation subjectTranslation;
 
@@ -205,6 +211,7 @@ public class Builder {
         }
     }
 
+    @Transactional
     public class SubjectBuilder {
         private final Subject subject;
 
@@ -288,6 +295,7 @@ public class Builder {
         }
     }
 
+    @Transactional
     public class TopicTranslationBuilder {
         private TopicTranslation topicTranslation;
 
@@ -301,6 +309,7 @@ public class Builder {
         }
     }
 
+    @Transactional
     public class TopicBuilder {
         private final Topic topic;
 
@@ -410,6 +419,7 @@ public class Builder {
 
     }
 
+    @Transactional
     public class FilterBuilder {
         private final Filter filter;
 
@@ -442,6 +452,7 @@ public class Builder {
         }
     }
 
+    @Transactional
     public class FilterTranslationBuilder {
         private FilterTranslation filterTranslation;
 
@@ -455,6 +466,7 @@ public class Builder {
         }
     }
 
+    @Transactional
     public class RelevanceBuilder {
         private final Relevance relevance;
 
@@ -474,6 +486,7 @@ public class Builder {
         }
     }
 
+    @Transactional
     public class ResourceTranslationBuilder {
         private ResourceTranslation resourceTranslation;
 
@@ -487,6 +500,7 @@ public class Builder {
         }
     }
 
+    @Transactional
     public class ResourceTypeBuilder {
         private final ResourceType resourceType;
 
@@ -530,6 +544,7 @@ public class Builder {
         }
     }
 
+    @Transactional
     public class ResourceBuilder {
         private final Resource resource;
 
@@ -606,6 +621,7 @@ public class Builder {
         return urlMapping.urlMapping;
     }
 
+    @Transactional
     public class ResourceTypeTranslationBuilder {
         private ResourceTypeTranslation resourceTypeTranslation;
 
@@ -619,6 +635,7 @@ public class Builder {
         }
     }
 
+    @Transactional
     public class UrlMappingBuilder {
         private UrlMapping urlMapping;
 

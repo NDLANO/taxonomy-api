@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  */
 public class UrlResolverService {
 
-    private final OldUrlCanonifier canonifier = new OldUrlCanonifier();
+    private final OldUrlCanonifier canonifier;
 
     private final SubjectRepository subjectRepository;
     private final TopicRepository topicRepository;
@@ -35,12 +35,14 @@ public class UrlResolverService {
                               TopicRepository topicRepository,
                               ResourceRepository resourceRepository,
                               CachedUrlRepository cachedUrlRepository,
-                              UrlMappingRepository urlMappingRepository) {
+                              UrlMappingRepository urlMappingRepository,
+                              OldUrlCanonifier oldUrlCanonifier) {
         this.topicRepository = topicRepository;
         this.subjectRepository = subjectRepository;
         this.resourceRepository = resourceRepository;
         this.cachedUrlRepository = cachedUrlRepository;
         this.urlMappingRepository = urlMappingRepository;
+        this.canonifier = oldUrlCanonifier;
     }
 
     /**

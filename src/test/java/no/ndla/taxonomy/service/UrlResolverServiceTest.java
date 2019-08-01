@@ -12,9 +12,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -232,6 +233,28 @@ public class UrlResolverServiceTest {
 
     @Test
     @Transactional
+    public void putOldUrlWithNoPaths() throws Exception {
+        final String subjectId = "urn:subject:12";
+        final String nodeId = "urn:topic:1:183926";
+        builder.subject(s -> s
+                .publicId(subjectId)
+                .topic(t -> t
+                        .publicId(nodeId)
+                )
+        );
+        entityManager.flush();
+
+        final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
+        try {
+            urlResolverService.putUrlMapping(oldUrl, URI.create("urn:topic:1:283926"), URI.create(subjectId));
+            fail("Expected NodeIdNotFoundExeption");
+        } catch (UrlResolverService.NodeIdNotFoundExeption ignored) {
+
+        }
+    }
+
+    @Test
+    @Transactional
     public void putOldUrlWithSubjectQueryWithoutSubject() throws Exception {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
@@ -253,4 +276,32 @@ public class UrlResolverServiceTest {
     }
 
 
+    @Test
+    @Transactional
+    public void getResolvablePathEntitiesFromPublicId() throws URISyntaxException {
+        // Pretty sure this should be illegal; adding different objects with the same publicId, but still supported
+
+        final var subject = builder.subject();
+        subject.setPublicId(new URI("urn:test:1"));
+
+        final var topic = builder.topic();
+        topic.setPublicId(new URI("urn:test:1"));
+
+        final var resource = builder.resource();
+        resource.setPublicId(new URI("urn:test:1"));
+
+        final var resource2 = builder.resource();
+        resource2.setPublicId(new URI("urn:test:2"));
+
+        entityManager.flush();
+
+        final var urn1Set = urlResolverService.getResolvablePathEntitiesFromPublicId(new URI("urn:test:1"));
+        final var urn2Set = urlResolverService.getResolvablePathEntitiesFromPublicId(new URI("urn:test:2"));
+
+        assertEquals(3, urn1Set.size());
+        assertEquals(1, urn2Set.size());
+
+        assertTrue(urn1Set.containsAll(Set.of(subject, topic, resource)));
+        assertTrue(urn2Set.contains(resource2));
+    }
 }
