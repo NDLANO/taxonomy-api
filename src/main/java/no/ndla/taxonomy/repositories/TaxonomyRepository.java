@@ -1,13 +1,13 @@
 package no.ndla.taxonomy.repositories;
 
 import no.ndla.taxonomy.domain.NotFoundException;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 
 import java.net.URI;
 
 @NoRepositoryBean
-public interface TaxonomyRepository<T> extends CrudRepository<T, Integer> {
+public interface TaxonomyRepository<T> extends JpaRepository<T, Integer> {
     T findByPublicId(URI id);
 
     default T getByPublicId(URI id) {
