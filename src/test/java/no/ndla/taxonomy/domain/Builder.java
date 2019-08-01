@@ -61,6 +61,10 @@ public class Builder {
         return topic.topic;
     }
 
+    public Resource resource() {
+        return resource(null, null);
+    }
+
     public Resource resource(String key) {
         return resource(key, null);
     }
