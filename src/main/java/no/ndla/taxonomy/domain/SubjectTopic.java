@@ -9,11 +9,11 @@ import java.util.UUID;
 @Entity
 public class SubjectTopic extends DomainEntity implements Rankable {
 
-    @ManyToOne(cascade = CascadeType.REFRESH)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "subject_id")
     private Subject subject;
 
-    @ManyToOne(cascade = CascadeType.REFRESH)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "topic_id")
     private Topic topic;
 

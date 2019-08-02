@@ -1,10 +1,7 @@
 package no.ndla.taxonomy.domain;
 
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.PreRemove;
+import javax.persistence.*;
 import java.net.URI;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,15 +9,15 @@ import java.util.UUID;
 @Entity
 public class TopicFilter extends DomainEntity {
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "filter_id")
     private Filter filter;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 

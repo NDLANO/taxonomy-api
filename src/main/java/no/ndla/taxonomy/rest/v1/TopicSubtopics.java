@@ -92,18 +92,14 @@ public class TopicSubtopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
-        TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
-        Topic topic = topicSubtopic.getTopic().orElse(null);
+        final var topicSubtopic = topicSubtopicRepository.getByPublicId(id);
+
+        // Just for the record, it should not be possible for there to be a non-existing topic or subtopic because of database constraints
+        final var topic = topicSubtopic.getTopic().orElseThrow(RuntimeException::new);
+        final var subtopic = topicSubtopic.getSubtopic().orElseThrow(RuntimeException::new);
 
         if (command.primary) {
-            topicSubtopic.getSubtopic().ifPresent(subtopic -> {
-                for (TopicSubtopic otherConnection : subtopic.getParentTopicSubtopics()) {
-                    otherConnection.setPrimary(false);
-                    topicSubtopicRepository.save(otherConnection);
-                }
-            });
-            topicSubtopic.setPrimary(true);
-            topicSubtopicRepository.save(topicSubtopic);
+            subtopic.setPrimaryParentTopic(topic);
         } else if (topicSubtopic.isPrimary() && !command.primary) {
             throw new PrimaryParentRequiredException();
         }

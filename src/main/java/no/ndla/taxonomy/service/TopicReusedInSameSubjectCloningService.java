@@ -155,7 +155,6 @@ public class TopicReusedInSameSubjectCloningService {
                     TopicSubtopic link = new TopicSubtopic();
                     link.setSubtopic(clonedTopic);
                     link.setTopic(parentTopic);
-                    topicSubtopicRepository.save(link);
                 }
             }
 
@@ -206,19 +205,17 @@ public class TopicReusedInSameSubjectCloningService {
                 clonedTopic = topicRepository.save(clonedTopic);
 
                 /* subjects */
-                if (topic.getSubjectTopics() != null) {
-                    Subject primarySubject = null;
-                    for (SubjectTopic subjectTopic : topic.getSubjectTopics()) {
-                        SubjectTopic clonedSubjectTopic = new SubjectTopic(subjectTopic.getSubject().orElse(null), clonedTopic);
-                        clonedSubjectTopic.setRank(subjectTopic.getRank());
-                        if (subjectTopic.isPrimary()) {
-                            primarySubject = subjectTopic.getSubject().orElse(null);
-                        }
-                        clonedTopic.addSubjectTopic(clonedSubjectTopic);
+                Subject primarySubject = null;
+                for (SubjectTopic subjectTopic : topic.getSubjectTopics()) {
+                    SubjectTopic clonedSubjectTopic = new SubjectTopic(subjectTopic.getSubject().orElse(null), clonedTopic);
+                    clonedSubjectTopic.setRank(subjectTopic.getRank());
+                    if (subjectTopic.isPrimary() && subjectTopic.getSubject().isPresent()) {
+                        primarySubject = subjectTopic.getSubject().get();
                     }
-                    if (primarySubject != null) {
-                        clonedTopic.setPrimarySubject(primarySubject);
-                    }
+                    clonedTopic.addSubjectTopic(subjectTopic);
+                }
+                if (primarySubject != null) {
+                    clonedTopic.setPrimarySubject(primarySubject);
                 }
 
                 /* resources */
@@ -247,19 +244,6 @@ public class TopicReusedInSameSubjectCloningService {
                 clonedTopic = topicRepository.save(clonedTopic);
 
                 /* subtopics */
-                if (topic.subtopics != null) {
-                    for (TopicSubtopic topicSubtopic : topic.subtopics) {
-                        TopicCloning subtopicCloning = new TopicCloning(topic, topicSubtopic.getSubtopic());
-                        clonedSubtopics.add(subtopicCloning);
-                        TopicSubtopic clonedSubtopic = clonedTopic.addSubtopic(subtopicCloning.getClonedTopic());
-                        clonedSubtopic.setPrimary(topicSubtopic.isPrimary());
-                        clonedSubtopic.setRank(topicSubtopic.getRank());
-
-                        // Not saving and flushing at this point produces a Constraint Violation by some reason because it tries
-                        // to insert this record twice later. This could be because of inconsistency in relations in the objects created
-                        topicSubtopicRepository.saveAndFlush(topicSubtopic);
-                    }
-                } fix <>
                 topic.getChildrenTopicSubtopics().stream()
                         .filter(topicSubtopic -> topicSubtopic.getSubtopic().isPresent())
                         .forEach(topicSubtopic -> {

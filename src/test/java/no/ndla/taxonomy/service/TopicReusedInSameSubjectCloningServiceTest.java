@@ -1,7 +1,6 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
-import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import org.junit.Before;
@@ -26,9 +25,6 @@ public class TopicReusedInSameSubjectCloningServiceTest {
     private TopicRepository topicRepository;
 
     @Autowired
-    private SubjectTopicRepository subjectTopicRepository;
-
-    @Autowired
     private EntityManager entityManager;
 
     private Builder builder;
@@ -44,7 +40,7 @@ public class TopicReusedInSameSubjectCloningServiceTest {
     @Test
     @Transactional
     public void copyConflictingTopic() throws TopicReusedInSameSubjectCloningService.TopicIsNotInConflictException {
-        final var service = new TopicReusedInSameSubjectCloningService(subjectTopicRepository, topicSubtopicRepository, topicRepository);
+        final var service = new TopicReusedInSameSubjectCloningService(topicSubtopicRepository, topicRepository);
 
         final var subject1 = builder.subject(builder -> builder.publicId("urn:subject:1"));
         final var subject2 = builder.subject();
@@ -84,12 +80,12 @@ public class TopicReusedInSameSubjectCloningServiceTest {
             assertEquals(1, result.getClonedTopics().size());
             final var clonedTopic = result.getClonedTopics().get(0).getClonedTopic();
 
-            assertEquals(2, clonedTopic.resources.size());
+            assertEquals(2, clonedTopic.getResources().size());
             assertEquals("urn:topic:1:subtopic2", clonedTopic.getPublicId().toString());
 
-            assertEquals(1, clonedTopic.filters.size());
+            assertEquals(1, clonedTopic.getTopicFilters().size());
 
-            assertEquals(1, clonedTopic.subjects.size());
+            assertEquals(1, clonedTopic.getSubjectTopics().size());
         }
     }
 }
