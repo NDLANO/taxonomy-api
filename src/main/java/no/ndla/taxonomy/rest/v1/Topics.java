@@ -155,6 +155,11 @@ public class Topics extends CrudController<Topic> {
         // Add both topics and resourceTopics to a common list that will be sorted in a tree-structure based on rank at each level
         final Set<TopicResourceTreeSortable> resourcesToSort = new HashSet<>();
 
+        // If subject ID is specified and no filter IDs is specified, the filters are replaced with all filters directly assosiated with requested subject
+        if (filterIds == null || filterIds.length == 0) {
+            filterIds = getSubjectFilters(subjectId);
+        }
+
         if (recursive) {
             final var topicList = topicTreeRepository.findAllByRootTopicIdOrTopicIdOrderByParentTopicIdAscParentTopicIdAscTopicRankAsc(topic.getId(), topic.getId());
 
@@ -163,10 +168,6 @@ public class Topics extends CrudController<Topic> {
             topicIdsToSearchFor = topicList.stream()
                     .map(TopicTreeByTopicElement::getTopicId)
                     .collect(Collectors.toSet());
-
-            if (filterIds == null || filterIds.length == 0) {
-                filterIds = getSubjectFilters(subjectId);
-            }
         } else {
             topicIdsToSearchFor = Set.of(topic.getId());
         }
