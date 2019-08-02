@@ -140,21 +140,18 @@ public class TopicReusedInSameSubjectCloningService {
                             .filter(l -> l.getSubtopic().get().getPublicId().equals(topic.getPublicId()))
                             .findFirst()
                             .orElseThrow(() -> new RuntimeException("Link object not found"));
-                    parentTopic.getChildrenTopicSubtopics().remove(link);
-                    topicRepository.save(parentTopic); // Cascading&orphan is on
-                }
-                {
-                    /*
-                     * Make sure we don't restore the old link by refreshing the Topic objects
-                     */
-                    parentTopic = topicRepository.findByPublicId(parentTopic.getPublicId());
+                    parentTopic.removeChildTopicSubTopic(link);
+                    topicRepository.saveAndFlush(parentTopic); // Cascading&orphan is on
+
                     Topic clonedTopic = topicRepository.findByPublicId(topicCloning.getClonedTopic().getPublicId());
-                    if (parentTopic == null || clonedTopic == null) {
-                        throw new RuntimeException("The parent and/or cloned topic objects are gone (race?)");
+                    if (clonedTopic == null) {
+                        throw new RuntimeException("The cloned topic object is gone (race?)");
                     }
-                    TopicSubtopic link = new TopicSubtopic();
-                    link.setSubtopic(clonedTopic);
-                    link.setTopic(parentTopic);
+                    TopicSubtopic newLink = new TopicSubtopic();
+                    newLink.setSubtopic(clonedTopic);
+                    newLink.setTopic(parentTopic);
+
+                    topicRepository.saveAndFlush(parentTopic);
                 }
             }
 
