@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.rest.v1;
 
+import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
 import org.junit.Before;
@@ -58,10 +59,13 @@ public abstract class RestTest extends AbstractTransactionalJUnit4SpringContextT
     @Autowired
     TopicFilterRepository topicFilterRepository;
 
+    @Autowired
+    protected TestUtils testUtils;
+
     Builder builder;
 
     @Before
-    public void restTestSetUp() throws Exception {
+    public void restTestSetUp() {
         builder = new Builder(entityManager);
     }
 

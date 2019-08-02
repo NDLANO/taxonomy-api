@@ -1,7 +1,11 @@
 package no.ndla.taxonomy.rest.v1;
 
 
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.domain.SubjectTopic;
+import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.domain.TopicSubtopic;
+import no.ndla.taxonomy.service.RankableConnectionUpdater;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -24,14 +28,14 @@ public class SubjectTopicsTest extends RestTest {
         topicId = newTopic().name("trigonometry").getPublicId();
 
         URI id = getId(
-                createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
+                testUtils.createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
                     this.subjectid = subjectId;
                     this.topicid = topicId;
                 }})
         );
 
         Subject physics = subjectRepository.getByPublicId(subjectId);
-        assertEquals(1, count(physics.getTopics()));
+        assertEquals(1, physics.getTopics().size());
         assertAnyTrue(physics.getTopics(), t -> "trigonometry".equals(t.getName()));
         assertNotNull(subjectTopicRepository.getByPublicId(id));
     }
@@ -45,7 +49,7 @@ public class SubjectTopicsTest extends RestTest {
         URI subjectId = physics.getPublicId();
         URI topicId = trigonometry.getPublicId();
 
-        createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
+        testUtils.createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
                     this.subjectid = subjectId;
                     this.topicid = topicId;
                 }},
@@ -56,7 +60,7 @@ public class SubjectTopicsTest extends RestTest {
     @Test
     public void can_delete_subject_topic() throws Exception {
         URI id = save(newSubject().addTopic(newTopic())).getPublicId();
-        deleteResource("/v1/subject-topics/" + id);
+        testUtils.deleteResource("/v1/subject-topics/" + id);
         assertNull(subjectRepository.findByPublicId(id));
     }
 
@@ -64,7 +68,7 @@ public class SubjectTopicsTest extends RestTest {
     public void can_update_subject_topic() throws Exception {
         URI id = save(newSubject().addTopic(newTopic())).getPublicId();
 
-        updateResource("/v1/subject-topics/" + id, new SubjectTopics.UpdateSubjectTopicCommand() {{
+        testUtils.updateResource("/v1/subject-topics/" + id, new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
         }});
 
@@ -75,17 +79,17 @@ public class SubjectTopicsTest extends RestTest {
     public void can_update_subject_rank() throws Exception {
         URI id = save(newSubject().addTopic(newTopic())).getPublicId();
 
-        MockHttpServletResponse responseBefore = getResource("/v1/subject-topics/" + id.toString());
-        SubjectTopics.SubjectTopicIndexDocument connection = getObject(SubjectTopics.SubjectTopicIndexDocument.class, responseBefore);
+        MockHttpServletResponse responseBefore = testUtils.getResource("/v1/subject-topics/" + id.toString());
+        SubjectTopics.SubjectTopicIndexDocument connection = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument.class, responseBefore);
         assertEquals(0, connection.rank);
 
-        updateResource("/v1/subject-topics/" + id, new SubjectTopics.UpdateSubjectTopicCommand() {{
+        testUtils.updateResource("/v1/subject-topics/" + id, new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
             rank = 12;
         }});
 
-        MockHttpServletResponse responseAfter = getResource("/v1/subject-topics/" + id.toString());
-        SubjectTopics.SubjectTopicIndexDocument connectionAfter = getObject(SubjectTopics.SubjectTopicIndexDocument.class, responseAfter);
+        MockHttpServletResponse responseAfter = testUtils.getResource("/v1/subject-topics/" + id.toString());
+        SubjectTopics.SubjectTopicIndexDocument connectionAfter = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument.class, responseAfter);
 
         assertEquals(12, connectionAfter.rank);
     }
@@ -98,7 +102,7 @@ public class SubjectTopicsTest extends RestTest {
         //make the last object the first
         SubjectTopic updatedConnection = subjectTopics.get(subjectTopics.size() - 1);
         assertEquals(10, updatedConnection.getRank());
-        updateResource("/v1/subject-topics/" + updatedConnection.getPublicId().toString(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+        testUtils.updateResource("/v1/subject-topics/" + updatedConnection.getPublicId().toString(), new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
             rank = 1;
         }});
@@ -106,8 +110,8 @@ public class SubjectTopicsTest extends RestTest {
 
         //verify that the other connections have been updated
         for (SubjectTopic subjectTopic : subjectTopics) {
-            MockHttpServletResponse response = getResource("/v1/subject-topics/" + subjectTopic.getPublicId().toString());
-            SubjectTopics.SubjectTopicIndexDocument connectionFromDb = getObject(SubjectTopics.SubjectTopicIndexDocument.class, response);
+            MockHttpServletResponse response = testUtils.getResource("/v1/subject-topics/" + subjectTopic.getPublicId().toString());
+            SubjectTopics.SubjectTopicIndexDocument connectionFromDb = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument.class, response);
             //verify that the other connections have had their rank bumped up 1
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
@@ -125,7 +129,7 @@ public class SubjectTopicsTest extends RestTest {
         //make the last object the first
         SubjectTopic updatedConnection = subjectTopics.get(subjectTopics.size() - 1);
         assertEquals(100, updatedConnection.getRank());
-        updateResource("/v1/subject-topics/" + updatedConnection.getPublicId().toString(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+        testUtils.updateResource("/v1/subject-topics/" + updatedConnection.getPublicId().toString(), new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
             rank = 1;
         }});
@@ -133,8 +137,8 @@ public class SubjectTopicsTest extends RestTest {
 
         //verify that the other connections have been updated
         for (SubjectTopic subjectTopic : subjectTopics) {
-            MockHttpServletResponse response = getResource("/v1/subject-topics/" + subjectTopic.getPublicId().toString());
-            SubjectTopics.SubjectTopicIndexDocument connectionFromDb = getObject(SubjectTopics.SubjectTopicIndexDocument.class, response);
+            MockHttpServletResponse response = testUtils.getResource("/v1/subject-topics/" + subjectTopic.getPublicId().toString());
+            SubjectTopics.SubjectTopicIndexDocument connectionFromDb = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument.class, response);
             //verify that only the contiguous connections are updated
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
@@ -156,7 +160,7 @@ public class SubjectTopicsTest extends RestTest {
         //set rank for last object to higher than any existing
         SubjectTopic updatedConnection = subjectTopics.get(subjectTopics.size() - 1);
         assertEquals(10, updatedConnection.getRank());
-        updateResource("/v1/subject-topics/" + subjectTopics.get(9).getPublicId().toString(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+        testUtils.updateResource("/v1/subject-topics/" + subjectTopics.get(9).getPublicId().toString(), new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
             rank = 99;
         }});
@@ -164,8 +168,8 @@ public class SubjectTopicsTest extends RestTest {
 
         //verify that the other connections are unchanged
         for (SubjectTopic subjectTopic : subjectTopics) {
-            MockHttpServletResponse response = getResource("/v1/subject-topics/" + subjectTopic.getPublicId().toString());
-            SubjectTopics.SubjectTopicIndexDocument connection = getObject(SubjectTopics.SubjectTopicIndexDocument.class, response);
+            MockHttpServletResponse response = testUtils.getResource("/v1/subject-topics/" + subjectTopic.getPublicId().toString());
+            SubjectTopics.SubjectTopicIndexDocument connection = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument.class, response);
             if (!connection.id.equals(updatedConnection.getPublicId())) {
                 assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);
             }
@@ -173,7 +177,7 @@ public class SubjectTopicsTest extends RestTest {
     }
 
     @Test
-    public void update_subject_rank_no_existing_connections_returns_single_connection() throws Exception {
+    public void update_subject_rank_no_existing_connections_returns_single_connection() {
         Subject s = new Subject();
         Topic t = new Topic();
 
@@ -187,7 +191,7 @@ public class SubjectTopicsTest extends RestTest {
     public void cannot_unset_primary_subject() throws Exception {
         URI id = save(newSubject().addTopic(newTopic())).getPublicId();
 
-        updateResource("/v1/subject-topics/" + id, new SubjectTopics.UpdateSubjectTopicCommand() {{
+        testUtils.updateResource("/v1/subject-topics/" + id, new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = false;
         }}, status().is4xxClientError());
     }
@@ -207,8 +211,8 @@ public class SubjectTopicsTest extends RestTest {
         URI mathematicsId = mathematics.getPublicId();
         URI trigonometryId = trigonometry.getPublicId();
 
-        MockHttpServletResponse response = getResource("/v1/subject-topics");
-        SubjectTopics.SubjectTopicIndexDocument[] subjectTopics = getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/subject-topics");
+        SubjectTopics.SubjectTopicIndexDocument[] subjectTopics = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
 
         assertEquals(2, subjectTopics.length);
         assertAnyTrue(subjectTopics, t -> physicsId.equals(t.subjectid) && electricityId.equals(t.topicid));
@@ -226,8 +230,8 @@ public class SubjectTopicsTest extends RestTest {
         URI topicid = electricity.getPublicId();
         URI id = subjectTopic.getPublicId();
 
-        MockHttpServletResponse resource = getResource("/v1/subject-topics/" + id);
-        SubjectTopics.SubjectTopicIndexDocument subjectTopicIndexDocument = getObject(SubjectTopics.SubjectTopicIndexDocument.class, resource);
+        MockHttpServletResponse resource = testUtils.getResource("/v1/subject-topics/" + id);
+        SubjectTopics.SubjectTopicIndexDocument subjectTopicIndexDocument = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument.class, resource);
         assertEquals(subjectid, subjectTopicIndexDocument.subjectid);
         assertEquals(topicid, subjectTopicIndexDocument.topicid);
     }
@@ -238,8 +242,8 @@ public class SubjectTopicsTest extends RestTest {
         Topic alternatingCurrent = newTopic().name("electricity");
         SubjectTopic subjectTopic = save(electricity.addTopic(alternatingCurrent));
 
-        MockHttpServletResponse resource = getResource("/v1/subject-topics/" + subjectTopic.getPublicId());
-        SubjectTopics.SubjectTopicIndexDocument subjectTopicIndexDocument = getObject(SubjectTopics.SubjectTopicIndexDocument.class, resource);
+        MockHttpServletResponse resource = testUtils.getResource("/v1/subject-topics/" + subjectTopic.getPublicId());
+        SubjectTopics.SubjectTopicIndexDocument subjectTopicIndexDocument = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument.class, resource);
         assertTrue(subjectTopicIndexDocument.primary);
     }
 
@@ -254,15 +258,18 @@ public class SubjectTopicsTest extends RestTest {
         Subject newPrimary = builder.subject("graph theory", t -> t
                 .name("graph theory"));
 
-        createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
+        testUtils.createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
             subjectid = newPrimary.getPublicId();
             topicid = topic.getPublicId();
             primary = true;
         }});
 
-        topic.subjects.forEach(subjectTopic -> {
-            if (subjectTopic.getSubject().equals(newPrimary)) assertTrue(subjectTopic.isPrimary());
-            else assertFalse(subjectTopic.isPrimary());
+        topic.getSubjectTopics().forEach(subjectTopic -> {
+            if (newPrimary.equals(subjectTopic.getSubject().orElse(null))) {
+                assertTrue(subjectTopic.isPrimary());
+            } else {
+                assertFalse(subjectTopic.isPrimary());
+            }
         });
     }
 
@@ -272,9 +279,13 @@ public class SubjectTopicsTest extends RestTest {
         URI primary = save(newSubject().addTopic(topic)).getPublicId();
         URI other = save(newSubject().addTopic(topic)).getPublicId();
 
-        deleteResource("/v1/subject-topics/" + primary);
+        assertEquals(2, topic.getSubjectTopics().size());
 
-        SubjectTopic subjectTopic = topic.subjects.iterator().next();
+        testUtils.deleteResource("/v1/subject-topics/" + primary);
+
+        assertEquals(1, topic.getSubjectTopics().size());
+
+        SubjectTopic subjectTopic = topic.getSubjectTopics().iterator().next();
         assertEquals(other, subjectTopic.getPublicId());
         assertTrue(subjectTopic.isPrimary());
     }
@@ -286,8 +297,8 @@ public class SubjectTopicsTest extends RestTest {
                 .topic(t -> t
                         .name("Geometry")));
 
-        MockHttpServletResponse response = getResource("/v1/subject-topics");
-        SubjectTopics.SubjectTopicIndexDocument[] topics = getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/subject-topics");
+        SubjectTopics.SubjectTopicIndexDocument[] topics = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
 
         assertAllTrue(topics, t -> t.rank == 0);
     }
@@ -306,20 +317,20 @@ public class SubjectTopicsTest extends RestTest {
         SubjectTopic geometryMaths = save(mathematics.addTopic(geometry));
         SubjectTopic statisticsMaths = save(mathematics.addTopic(statistics));
 
-        updateResource("/v1/subject-topics/" + geometryMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+        testUtils.updateResource("/v1/subject-topics/" + geometryMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
             id = geometryMaths.getPublicId();
             rank = 2;
         }});
 
-        updateResource("/v1/subject-topics/" + statisticsMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+        testUtils.updateResource("/v1/subject-topics/" + statisticsMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
             id = statisticsMaths.getPublicId();
             rank = 1;
         }});
 
-        MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/topics");
-        SubjectTopics.SubjectTopicIndexDocument[] topics = getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/topics");
+        SubjectTopics.SubjectTopicIndexDocument[] topics = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
 
         assertEquals(statistics.getPublicId(), topics[0].id);
         assertEquals(geometry.getPublicId(), topics[1].id);
@@ -347,29 +358,29 @@ public class SubjectTopicsTest extends RestTest {
         TopicSubtopic tst1 = save(geometry.addSubtopic(subtopic1));
         TopicSubtopic tst2 = save(geometry.addSubtopic(subtopic2));
 
-        updateResource("/v1/subject-topics/" + geometryMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+        testUtils.updateResource("/v1/subject-topics/" + geometryMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
             id = geometryMaths.getPublicId();
             rank = 2;
         }});
 
-        updateResource("/v1/subject-topics/" + statisticsMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+        testUtils.updateResource("/v1/subject-topics/" + statisticsMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
             id = statisticsMaths.getPublicId();
             rank = 1;
         }});
 
-        updateResource("/v1/topic-subtopics/" + tst1.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+        testUtils.updateResource("/v1/topic-subtopics/" + tst1.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
             rank = 2;
         }});
 
-        updateResource("/v1/topic-subtopics/" + tst2.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+        testUtils.updateResource("/v1/topic-subtopics/" + tst2.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
             rank = 1;
         }});
-        MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/topics?recursive=true");
-        SubjectTopics.SubjectTopicIndexDocument[] topics = getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/topics?recursive=true");
+        SubjectTopics.SubjectTopicIndexDocument[] topics = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
 
         assertEquals(statistics.getPublicId(), topics[0].id);
         assertEquals(geometry.getPublicId(), topics[1].id);
@@ -389,19 +400,19 @@ public class SubjectTopicsTest extends RestTest {
                 .name("Statistics")
                 .publicId("urn:topic:2"));
 
-        createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
+        testUtils.createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
             subjectid = mathematics.getPublicId();
             topicid = geometry.getPublicId();
             rank = 2;
         }});
-        createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
+        testUtils.createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
             subjectid = mathematics.getPublicId();
             topicid = statistics.getPublicId();
             rank = 1;
         }});
 
-        MockHttpServletResponse response = getResource("/v1/subjects/urn:subject:1/topics");
-        SubjectTopics.SubjectTopicIndexDocument[] topics = getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/topics");
+        SubjectTopics.SubjectTopicIndexDocument[] topics = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
 
         assertEquals(statistics.getPublicId(), topics[0].id);
         assertEquals(geometry.getPublicId(), topics[1].id);

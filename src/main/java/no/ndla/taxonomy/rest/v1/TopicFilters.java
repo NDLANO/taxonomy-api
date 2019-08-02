@@ -25,10 +25,10 @@ import java.util.stream.Collectors;
 @RequestMapping(path = {"/v1/topic-filters"})
 @Transactional
 public class TopicFilters {
-    private FilterRepository filterRepository;
-    private TopicFilterRepository topicFilterRepository;
-    private TopicRepository topicRepository;
-    private RelevanceRepository relevanceRepository;
+    private final FilterRepository filterRepository;
+    private final TopicFilterRepository topicFilterRepository;
+    private final TopicRepository topicRepository;
+    private final RelevanceRepository relevanceRepository;
 
     public TopicFilters(FilterRepository filterRepository, TopicRepository topicRepository, TopicFilterRepository topicFilterRepository, RelevanceRepository relevanceRepository) {
         this.filterRepository = filterRepository;
@@ -72,8 +72,6 @@ public class TopicFilters {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@ApiParam(name = "id", value = "The id of the connection to delete", required = true) @PathVariable String id) {
-        TopicFilter topicFilter = topicFilterRepository.getByPublicId(URI.create(id));
-        topicFilter.getTopic().removeFilter(topicFilter.getFilter());
         topicFilterRepository.deleteByPublicId(URI.create(id));
     }
 
@@ -128,9 +126,9 @@ public class TopicFilters {
 
         public TopicFilterIndexDocument(TopicFilter topicFilter) {
             id = topicFilter.getPublicId();
-            topicId = topicFilter.getTopic().getPublicId();
-            filterId = topicFilter.getFilter().getPublicId();
-            relevanceId = topicFilter.getRelevance().getPublicId();
+            topicId = topicFilter.getTopic().map(Topic::getPublicId).orElse(null);
+            filterId = topicFilter.getFilter().map(Filter::getPublicId).orElse(null);
+            relevanceId = topicFilter.getRelevance().map(Relevance::getPublicId).orElse(null);
         }
     }
 }

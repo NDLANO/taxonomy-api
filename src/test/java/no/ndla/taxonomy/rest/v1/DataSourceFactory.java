@@ -13,7 +13,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Configuration
 public class DataSourceFactory {
-    Logger logger = LoggerFactory.getLogger(DataSourceFactory.class);
+    private final Logger logger = LoggerFactory.getLogger(DataSourceFactory.class);
 
     @Bean
     @Conditional(UseEmbeddedPostgres.class)

@@ -6,40 +6,32 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.domain.NotFoundException;
 import no.ndla.taxonomy.domain.ResourceType;
+import no.ndla.taxonomy.domain.ResourceTypeTranslation;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import static no.ndla.taxonomy.jdbc.QueryUtils.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/resource-types"})
 @Transactional
 public class ResourceTypes extends CrudController<ResourceType> {
 
-    private ResourceTypeRepository resourceTypeRepository;
-    private JdbcTemplate jdbcTemplate;
+    private final ResourceTypeRepository resourceTypeRepository;
 
-    private static final String GET_RESOURCE_TYPES_RECURSIVELY_QUERY = getQuery("get_resource_types_recursively");
-
-    public ResourceTypes(ResourceTypeRepository resourceTypeRepository, JdbcTemplate jdbcTemplate) {
+    public ResourceTypes(ResourceTypeRepository resourceTypeRepository) {
         this.resourceTypeRepository = resourceTypeRepository;
-        this.jdbcTemplate = jdbcTemplate;
         repository = resourceTypeRepository;
     }
 
@@ -49,13 +41,12 @@ public class ResourceTypes extends CrudController<ResourceType> {
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
-    ) throws Exception {
-        String sql = GET_RESOURCE_TYPES_RECURSIVELY_QUERY;
-        sql = sql.replace("1 = 1", "rt.parent_id is null");
-        ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
-        return jdbcTemplate.query(sql, setQueryParameters(language),
-                extractor::extractResourceTypes
-        );
+    ) {
+        // Returns all resource types that is NOT a subtype
+        return resourceTypeRepository.findAllByParentIncludingTranslationsAndFirstLevelSubtypes(null)
+                .stream()
+                .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language, 100))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -65,15 +56,10 @@ public class ResourceTypes extends CrudController<ResourceType> {
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
-    ) throws Exception {
-        String sql = GET_RESOURCE_TYPES_RECURSIVELY_QUERY;
-
-        sql = sql.replace("1 = 1", "rt.public_id = ?").replace("2 = 2", "t.level = 0");
-
-        ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
-        return getFirst(jdbcTemplate.query(sql, setQueryParameters(id.toString(), language),
-                extractor::extractResourceTypes
-        ), "Subject", id);
+    ) {
+        return resourceTypeRepository.findFirstByPublicIdIncludingTranslations(id)
+                .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language, 0))
+                .orElseThrow(() -> new NotFoundException("ResourceType", id));
     }
 
     @PostMapping
@@ -82,7 +68,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     public ResponseEntity<Void> post(
             @ApiParam(name = "resourceType", value = "The new resource type")
             @RequestBody CreateResourceTypeCommand command
-    ) throws Exception {
+    ) {
         ResourceType resourceType = new ResourceType();
         if (null != command.parentId) {
             ResourceType parent = resourceTypeRepository.getByPublicId(command.parentId);
@@ -100,7 +86,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
             @ApiParam(name = "resourceType", value = "The updated resource type. Fields not included will be set to null.")
             @RequestBody UpdateResourceTypeCommand
                     command
-    ) throws Exception {
+    ) {
         ResourceType resourceType = doPut(id, command);
 
         ResourceType parent = null;
@@ -124,21 +110,11 @@ public class ResourceTypes extends CrudController<ResourceType> {
             @RequestParam(value = "recursive", required = false, defaultValue = "false")
             @ApiParam("If true, sub resource types are fetched recursively")
                     boolean recursive
-    ) throws Exception {
-
-        String sql = GET_RESOURCE_TYPES_RECURSIVELY_QUERY;
-
-        sql = sql.replace("1 = 1", "rt.public_id = ?");
-        if (recursive) {
-            sql = sql.replace("2 = 2", "t.level >= 1");
-        } else {
-            sql = sql.replace("2 = 2", "t.level = 1");
-        }
-
-        ResourceTypeQueryExtractor extractor = new ResourceTypeQueryExtractor();
-        return jdbcTemplate.query(sql, setQueryParameters(id.toString(), language),
-                extractor::extractResourceTypes
-        );
+    ) {
+        return resourceTypeRepository.findAllByParentPublicIdIncludingTranslationsAndFirstLevelSubtypes(id)
+                .stream()
+                .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language, 100))
+                .collect(Collectors.toList());
     }
 
     @ApiModel("ResourceTypeIndexDocument")
@@ -155,6 +131,24 @@ public class ResourceTypes extends CrudController<ResourceType> {
         @ApiModelProperty("Sub resource types")
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public List<ResourceTypeIndexDocument> subtypes = new ArrayList<>();
+
+        public ResourceTypeIndexDocument() {
+
+        }
+
+        public ResourceTypeIndexDocument(ResourceType resourceType, String language, int recursionLevels) {
+            this.id = resourceType.getPublicId();
+            this.name = resourceType.getTranslation(language)
+                    .map(ResourceTypeTranslation::getName)
+                    .orElse(resourceType.getName());
+
+            if (recursionLevels > 0) {
+                this.subtypes = resourceType.getSubtypes()
+                        .stream()
+                        .map(resourceType1 -> new ResourceTypeIndexDocument(resourceType1, language, recursionLevels - 1))
+                        .collect(Collectors.toList());
+            }
+        }
     }
 
     public static class CreateResourceTypeCommand extends CreateCommand<ResourceType> {
@@ -197,31 +191,6 @@ public class ResourceTypes extends CrudController<ResourceType> {
         @Override
         public void apply(ResourceType resourceType) {
             resourceType.setName(name);
-        }
-    }
-
-    private class ResourceTypeQueryExtractor {
-
-        private List<ResourceTypeIndexDocument> extractResourceTypes(ResultSet resultSet) throws SQLException {
-            List<ResourceTypeIndexDocument> result = new ArrayList<>();
-            Map<Integer, ResourceTypeIndexDocument> parents = new HashMap<>();
-
-            while (resultSet.next()) {
-                int id = resultSet.getInt("id");
-                int parentId = resultSet.getInt("parent_id");
-
-                ResourceTypeIndexDocument resourceType = new ResourceTypeIndexDocument() {{
-                    name = resultSet.getString("name");
-                    id = getURI(resultSet, "public_id");
-                }};
-                parents.put(id, resourceType);
-                if (parents.containsKey(parentId)) {
-                    parents.get(parentId).subtypes.add(resourceType);
-                } else {
-                    result.add(resourceType);
-                }
-            }
-            return result;
         }
     }
 }

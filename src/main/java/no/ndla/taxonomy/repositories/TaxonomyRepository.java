@@ -2,6 +2,8 @@ package no.ndla.taxonomy.repositories;
 
 import no.ndla.taxonomy.domain.NotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 
 import java.net.URI;
@@ -16,5 +18,6 @@ public interface TaxonomyRepository<T> extends JpaRepository<T, Integer> {
         return entity;
     }
 
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     void deleteByPublicId(URI id);
 }

@@ -3,10 +3,10 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.annotations.ApiOperation;
 import no.ndla.taxonomy.domain.DomainObject;
 import no.ndla.taxonomy.domain.DuplicateIdException;
-import no.ndla.taxonomy.domain.URNValidator;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
+import no.ndla.taxonomy.service.URNValidator;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,15 +24,15 @@ public abstract class CrudController<T extends DomainObject> {
     protected TaxonomyRepository<T> repository;
 
     private static final Map<Class<?>, String> locations = new HashMap<>();
-    private URNValidator validator = new URNValidator();
+    private final URNValidator validator = new URNValidator();
 
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Deletes a single entity by id")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") URI id) throws Exception {
-        T resource = repository.getByPublicId(id);
-        repository.delete(resource);
+    public void delete(@PathVariable("id") URI id) {
+
+        repository.delete(repository.getByPublicId(id));
     }
 
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -55,12 +55,15 @@ public abstract class CrudController<T extends DomainObject> {
             repository.save(entity);
             return ResponseEntity.created(location).build();
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateIdException(command.getId().toString());
+            if (command.getId() != null) {
+                throw new DuplicateIdException(command.getId().toString());
+            }
+
+            throw new DuplicateIdException();
         }
     }
 
     protected String getLocation() {
         return locations.computeIfAbsent(getClass(), aClass -> aClass.getAnnotation(RequestMapping.class).path()[0]);
     }
-
 }

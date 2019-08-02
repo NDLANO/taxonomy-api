@@ -3,6 +3,8 @@ package no.ndla.taxonomy.rest.v1.dtos.topics;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.TopicSubtopic;
+import no.ndla.taxonomy.domain.TopicTranslation;
 
 import java.net.URI;
 
@@ -27,4 +29,21 @@ public class SubTopicIndexDocument {
     @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
     public Boolean isPrimary;
 
+    public SubTopicIndexDocument() {
+
+    }
+
+    public SubTopicIndexDocument(TopicSubtopic topicSubtopic, String language) {
+        topicSubtopic.getSubtopic().ifPresent(topic -> {
+            this.id = topic.getPublicId();
+
+            this.name = topic.getTranslation(language)
+                    .map(TopicTranslation::getName)
+                    .orElse(topic.getName());
+
+            this.contentUri = topic.getContentUri();
+        });
+
+        this.isPrimary = topicSubtopic.isPrimary();
+    }
 }

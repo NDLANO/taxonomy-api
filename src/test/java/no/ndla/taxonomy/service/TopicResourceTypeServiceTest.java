@@ -60,7 +60,9 @@ public class TopicResourceTypeServiceTest {
     public void testResourceTypes() throws URISyntaxException, NotFoundServiceException, InvalidArgumentServiceException {
         Topic topic = new Topic();
         ResourceType resourceType = new ResourceType();
-        TopicResourceType topicResourceType = new TopicResourceType(topic, resourceType);
+        var topicResourceType = new TopicResourceType();
+        topicResourceType.setTopic(topic);
+        topicResourceType.setResourceType(resourceType);
         given(topicRepository.findByPublicId(new URI("urn:topic:1"))).willReturn(topic);
         given(topicResourceTypeRepository.findAllByTopic(topic)).willReturn(List.of(topicResourceType));
         assertEquals(
@@ -133,7 +135,9 @@ public class TopicResourceTypeServiceTest {
 
     @Test
     public void testDeleteTopicResourceType() throws URISyntaxException, NotFoundServiceException, InvalidArgumentServiceException {
-        TopicResourceType topicResourceType = new TopicResourceType(new Topic(), new ResourceType());
+        TopicResourceType topicResourceType = new TopicResourceType();
+        topicResourceType.setTopic(new Topic());
+        topicResourceType.setResourceType(new ResourceType());
         given(topicResourceTypeRepository.findByPublicId(new URI("urn:topicresourcetype:1"))).willReturn(topicResourceType);
         topicResourceTypeService.deleteTopicResourceType(new URI("urn:topicresourcetype:1"));
         verify(topicResourceTypeRepository, times(1)).delete(topicResourceType);
@@ -145,12 +149,14 @@ public class TopicResourceTypeServiceTest {
         List<TopicResourceType> list = mock(List.class);
         given(list.stream()).willReturn(stream);
         given(topicResourceTypeRepository.findAll()).willReturn(list);
-        assertTrue(stream == topicResourceTypeService.findAll());
+        assertSame(stream, topicResourceTypeService.findAll());
     }
 
     @Test
     public void testFindById() throws URISyntaxException {
-        TopicResourceType topicResourceType = new TopicResourceType(new Topic(), new ResourceType());
+        TopicResourceType topicResourceType = new TopicResourceType();
+        topicResourceType.setTopic(new Topic());
+        topicResourceType.setResourceType(new ResourceType());
         given(topicResourceTypeRepository.findByPublicId(new URI("urn:topicresourcetype:1"))).willReturn(topicResourceType);
         assertEquals(topicResourceType, topicResourceTypeService.findById(new URI("urn:topicresourcetype:1")).orElse(null));
     }

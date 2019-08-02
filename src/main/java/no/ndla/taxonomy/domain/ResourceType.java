@@ -6,7 +6,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import java.net.URI;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -25,51 +25,80 @@ public class ResourceType extends DomainObject {
     private Set<ResourceType> subtypes = new HashSet<>();
 
     @OneToMany(mappedBy = "resourceType")
-    Set<ResourceTypeTranslation> resourceTypeTranslations = new HashSet<>();
+    private Set<ResourceTypeTranslation> resourceTypeTranslations = new HashSet<>();
+
+    @OneToMany(mappedBy = "resourceType")
+    private Set<TopicResourceType> topicResourceTypes = new HashSet<>();
+
+    @OneToMany(mappedBy = "resourceType")
+    private Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
+
+    public Set<TopicResourceType> getTopicResourceTypes() {
+        return topicResourceTypes;
+    }
+
+    public void addTopicResourceType(TopicResourceType topicResourceType) {
+        this.topicResourceTypes.add(topicResourceType);
+
+        if (topicResourceType.getResourceType().orElse(null) != this) {
+            topicResourceType.setResourceType(this);
+        }
+    }
+
+    public void removeTopicResourceType(TopicResourceType topicResourceType) {
+        this.topicResourceTypes.remove(topicResourceType);
+
+        if (topicResourceType.getResourceType().orElse(null) == this) {
+            topicResourceType.setResourceType(null);
+        }
+    }
 
     public ResourceType name(String name) {
         setName(name);
         return this;
     }
 
-    public ResourceType getParent() {
-        return parent;
+    public Optional<ResourceType> getParent() {
+        return Optional.ofNullable(parent);
     }
 
     public void setParent(ResourceType parent) {
+        final var previousParent = this.parent;
+
         this.parent = parent;
-        if (parent != null) {
+
+        if (previousParent != null && previousParent != parent) {
+            previousParent.removeSubType(this);
+        }
+
+        if (parent != null && !parent.getSubtypes().contains(this)) {
             parent.addSubtype(this);
         }
     }
 
-    public ResourceType parent(ResourceType parent) {
-        setParent(parent);
-        return this;
-    }
-
     public void addSubtype(ResourceType subtype) {
         subtypes.add(subtype);
+
+        if (subtype.getParent().orElse(null) != this) {
+            subtype.setParent(this);
+        }
     }
 
-    public Iterator<ResourceType> getSubtypes() {
-        Iterator<ResourceType> iterator = subtypes.iterator();
+    public void removeSubType(ResourceType resourceType) {
+        this.subtypes.remove(resourceType);
 
-        return new Iterator<ResourceType>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
+        if (resourceType.getParent().orElse(null) == this) {
+            resourceType.setParent(null);
+        }
+    }
 
-            @Override
-            public ResourceType next() {
-                return iterator.next();
-            }
-        };
+
+    public Set<ResourceType> getSubtypes() {
+        return this.subtypes;
     }
 
     public ResourceTypeTranslation addTranslation(String languageCode) {
-        ResourceTypeTranslation resourceTypeTranslation = getTranslation(languageCode);
+        ResourceTypeTranslation resourceTypeTranslation = getTranslation(languageCode).orElse(null);
         if (resourceTypeTranslation != null) return resourceTypeTranslation;
 
         resourceTypeTranslation = new ResourceTypeTranslation(this, languageCode);
@@ -77,20 +106,53 @@ public class ResourceType extends DomainObject {
         return resourceTypeTranslation;
     }
 
-    public ResourceTypeTranslation getTranslation(String languageCode) {
+    public Optional<ResourceTypeTranslation> getTranslation(String languageCode) {
         return resourceTypeTranslations.stream()
                 .filter(resourceTypeTranslation -> resourceTypeTranslation.getLanguageCode().equals(languageCode))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
-    public Iterator<ResourceTypeTranslation> getTranslations() {
-        return resourceTypeTranslations.iterator();
+    public Set<ResourceTypeTranslation> getTranslations() {
+        return resourceTypeTranslations;
     }
 
     public void removeTranslation(String languageCode) {
-        ResourceTypeTranslation translation = getTranslation(languageCode);
-        if (translation == null) return;
-        resourceTypeTranslations.remove(translation);
+        getTranslation(languageCode).ifPresent(this::removeTranslation);
+    }
+
+    public void addTranslation(ResourceTypeTranslation resourceTypeTranslation) {
+        this.resourceTypeTranslations.add(resourceTypeTranslation);
+        if (resourceTypeTranslation.getResourceType() != this) {
+            resourceTypeTranslation.setResourceType(this);
+        }
+    }
+
+    public void removeTranslation(ResourceTypeTranslation resourceTypeTranslation) {
+        if (resourceTypeTranslation.getResourceType() == this) {
+            resourceTypeTranslations.remove(resourceTypeTranslation);
+            if (resourceTypeTranslation.getResourceType() == this) {
+                resourceTypeTranslation.setResourceType(null);
+            }
+        }
+    }
+
+    public Set<ResourceResourceType> getResourceResourceTypes() {
+        return this.resourceResourceTypes;
+    }
+
+    public void addResourceResourceType(ResourceResourceType resourceResourceType) {
+        this.resourceResourceTypes.add(resourceResourceType);
+
+        if (resourceResourceType.getResourceType() != this) {
+            resourceResourceType.setResourceType(this);
+        }
+    }
+
+    public void removeResourceResourceType(ResourceResourceType resourceResourceType) {
+        this.resourceResourceTypes.remove(resourceResourceType);
+
+        if (resourceResourceType.getResourceType() == this) {
+            resourceResourceType.setResourceType(null);
+        }
     }
 }

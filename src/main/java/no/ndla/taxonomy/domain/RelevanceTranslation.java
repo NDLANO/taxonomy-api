@@ -18,16 +18,27 @@ public class RelevanceTranslation {
     @Column
     private String languageCode;
 
-    private RelevanceTranslation() {
+    RelevanceTranslation() {
     }
 
     public RelevanceTranslation(Relevance relevance, String languageCode) {
-        this.relevance = relevance;
+        setRelevance(relevance);
         this.languageCode = languageCode;
     }
 
     public Relevance getRelevance() {
         return relevance;
+    }
+
+    public void setRelevance(Relevance relevance) {
+        if (relevance != this.relevance && this.relevance != null && this.relevance.getTranslations().contains(this)) {
+            this.relevance.removeTranslation(this);
+        }
+        this.relevance = relevance;
+
+        if (relevance != null && !relevance.getTranslations().contains(this)) {
+            relevance.addTranslation(this);
+        }
     }
 
     public String getName() {

@@ -5,11 +5,11 @@ import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.PrimaryParentRequiredException;
-import no.ndla.taxonomy.domain.RankableConnectionUpdater;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
+import no.ndla.taxonomy.service.RankableConnectionUpdater;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 @RequestMapping(path = {"/v1/topic-subtopics"})
 @Transactional
 public class TopicSubtopics {
-    private TopicRepository topicRepository;
-    private TopicSubtopicRepository topicSubtopicRepository;
+    private final TopicRepository topicRepository;
+    private final TopicSubtopicRepository topicSubtopicRepository;
 
     public TopicSubtopics(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository) {
         this.topicRepository = topicRepository;
@@ -59,7 +59,7 @@ public class TopicSubtopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Topic subtopic = topicRepository.getByPublicId(command.subtopicid);
 
-        TopicSubtopic topicSubtopic = command.primary == Boolean.FALSE ? topic.addSecondarySubtopic(subtopic) : topic.addSubtopic(subtopic);
+        TopicSubtopic topicSubtopic = topic.addSubtopic(subtopic, command.primary);
 
         List<TopicSubtopic> connectionsForTopic = topicSubtopicRepository.findByTopic(topic);
         connectionsForTopic.sort(Comparator.comparingInt(TopicSubtopic::getRank));
@@ -82,8 +82,8 @@ public class TopicSubtopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
         TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
-        topicSubtopic.getTopic().removeSubtopic(topicSubtopic.getSubtopic());
         topicSubtopicRepository.delete(topicSubtopic);
+        topicSubtopicRepository.flush();
     }
 
     @PutMapping("/{id}")
@@ -92,24 +92,20 @@ public class TopicSubtopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
-        TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
-        Topic topic = topicSubtopic.getTopic();
+        final var topicSubtopic = topicSubtopicRepository.getByPublicId(id);
+
+        // Just for the record, it should not be possible for there to be a non-existing topic or subtopic because of database constraints
+        final var topic = topicSubtopic.getTopic().orElseThrow(RuntimeException::new);
+        final var subtopic = topicSubtopic.getSubtopic().orElseThrow(RuntimeException::new);
 
         if (command.primary) {
-            Topic subtopic = topicSubtopic.getSubtopic();
-            for (TopicSubtopic otherConnection : subtopic.parentTopics) {
-                otherConnection.setPrimary(false);
-                topicSubtopicRepository.save(otherConnection);
-            }
-            topicSubtopic.setPrimary(true);
-            topicSubtopicRepository.save(topicSubtopic);
+            subtopic.setPrimaryParentTopic(topic);
         } else if (topicSubtopic.isPrimary() && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
         List<TopicSubtopic> existingConnections = topicSubtopicRepository.findByTopic(topic);
         List<TopicSubtopic> rankedConnections = RankableConnectionUpdater.rank(existingConnections, topicSubtopic, command.rank);
         topicSubtopicRepository.saveAll(rankedConnections);
-
     }
 
     public static class AddSubtopicToTopicCommand {
@@ -123,7 +119,7 @@ public class TopicSubtopics {
 
         @JsonProperty
         @ApiModelProperty(value = "Primary connection", example = "true")
-        public Boolean primary;
+        public boolean primary = true;
 
         @JsonProperty
         @ApiModelProperty(value = "Order in which to sort the subtopic for the topic", example = "1")
@@ -170,8 +166,8 @@ public class TopicSubtopics {
 
         TopicSubtopicIndexDocument(TopicSubtopic topicSubtopic) {
             id = topicSubtopic.getPublicId();
-            topicid = topicSubtopic.getTopic().getPublicId();
-            subtopicid = topicSubtopic.getSubtopic().getPublicId();
+            topicSubtopic.getTopic().ifPresent(topic -> topicid = topic.getPublicId());
+            topicSubtopic.getSubtopic().ifPresent(subtopic -> subtopicid = subtopic.getPublicId());
             primary = topicSubtopic.isPrimary();
             rank = topicSubtopic.getRank();
         }

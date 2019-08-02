@@ -18,9 +18,9 @@ import java.util.stream.Stream;
 
 @Service
 public class TopicResourceTypeService {
-    private TopicRepository topicRepository;
-    private ResourceTypeRepository resourceTypeRepository;
-    private TopicResourceTypeRepository topicResourceTypeRepository;
+    private final TopicRepository topicRepository;
+    private final ResourceTypeRepository resourceTypeRepository;
+    private final TopicResourceTypeRepository topicResourceTypeRepository;
 
     public TopicResourceTypeService(TopicRepository topicRepository, ResourceTypeRepository resourceTypeRepository, TopicResourceTypeRepository topicResourceTypeRepository) {
         this.topicRepository = topicRepository;

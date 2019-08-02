@@ -3,6 +3,9 @@ package no.ndla.taxonomy.rest.v1.dtos.topics;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.FilterTranslation;
+import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.TopicFilter;
 
 import java.net.URI;
 import java.util.Objects;
@@ -40,5 +43,21 @@ public class FilterIndexDocument {
     @Override
     public int hashCode() {
         return Objects.hash(id, relevanceId);
+    }
+
+    FilterIndexDocument() {
+
+    }
+
+    public FilterIndexDocument(TopicFilter topicFilter, String language) {
+        final var filter = topicFilter.getFilter().orElseThrow(() -> new RuntimeException("Filter is not present in TopicFilter"));
+
+        name = filter.getTranslation(language)
+                .map(FilterTranslation::getName)
+                .orElse(filter.getName());
+
+        id = filter.getPublicId();
+        connectionId = topicFilter.getPublicId();
+        relevanceId = topicFilter.getRelevance().map(Relevance::getPublicId).orElse(null);
     }
 }

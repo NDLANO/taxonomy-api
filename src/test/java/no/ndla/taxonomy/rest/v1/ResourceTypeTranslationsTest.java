@@ -6,7 +6,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
-import static no.ndla.taxonomy.TestUtils.*;
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -18,8 +18,8 @@ public class ResourceTypeTranslationsTest extends RestTest {
         builder.resourceType(t -> t.name("Article").translation("nb", l -> l.name("Artikkel")));
         builder.resourceType(t -> t.name("Lecture").translation("nb", l -> l.name("Forelesning")));
 
-        MockHttpServletResponse response = getResource("/v1/resource-types?language=nb");
-        ResourceTypes.ResourceTypeIndexDocument[] resourceTypes = getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/resource-types?language=nb");
+        ResourceTypes.ResourceTypeIndexDocument[] resourceTypes = testUtils.getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
 
         assertEquals(2, resourceTypes.length);
         assertAnyTrue(resourceTypes, s -> s.name.equals("Artikkel"));
@@ -66,11 +66,11 @@ public class ResourceTypeTranslationsTest extends RestTest {
         ResourceType article = builder.resourceType(t -> t.name("Article"));
         URI id = article.getPublicId();
 
-        updateResource("/v1/resource-types/" + id + "/translations/nb", new ResourceTypeTranslations.UpdateResourceTypeTranslationCommand() {{
+        testUtils.updateResource("/v1/resource-types/" + id + "/translations/nb", new ResourceTypeTranslations.UpdateResourceTypeTranslationCommand() {{
             name = "Artikkel";
         }});
 
-        assertEquals("Artikkel", article.getTranslation("nb").getName());
+        assertEquals("Artikkel", article.getTranslation("nb").get().getName());
     }
 
     @Test
@@ -83,9 +83,9 @@ public class ResourceTypeTranslationsTest extends RestTest {
         );
         URI id = resourceType.getPublicId();
 
-        deleteResource("/v1/resource-types/" + id + "/translations/nb");
+        testUtils.deleteResource("/v1/resource-types/" + id + "/translations/nb");
 
-        assertNull(resourceType.getTranslation("nb"));
+        assertNull(resourceType.getTranslation("nb").orElse(null));
     }
 
     @Test
@@ -99,8 +99,8 @@ public class ResourceTypeTranslationsTest extends RestTest {
         URI id = resourceType.getPublicId();
 
         ResourceTypeTranslations.ResourceTypeTranslationIndexDocument[] translations =
-                getObject(ResourceTypeTranslations.ResourceTypeTranslationIndexDocument[].class,
-                        getResource("/v1/resource-types/" + id + "/translations")
+                testUtils.getObject(ResourceTypeTranslations.ResourceTypeTranslationIndexDocument[].class,
+                        testUtils.getResource("/v1/resource-types/" + id + "/translations")
                 );
 
         assertEquals(3, translations.length);
@@ -117,8 +117,8 @@ public class ResourceTypeTranslationsTest extends RestTest {
         );
         URI id = resourceType.getPublicId();
 
-        ResourceTypeTranslations.ResourceTypeTranslationIndexDocument translation = getObject(ResourceTypeTranslations.ResourceTypeTranslationIndexDocument.class,
-                getResource("/v1/resource-types/" + id + "/translations/nb"));
+        ResourceTypeTranslations.ResourceTypeTranslationIndexDocument translation = testUtils.getObject(ResourceTypeTranslations.ResourceTypeTranslationIndexDocument.class,
+                testUtils.getResource("/v1/resource-types/" + id + "/translations/nb"));
         assertEquals("Artikkel", translation.name);
         assertEquals("nb", translation.language);
     }
@@ -126,7 +126,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
     private ResourceTypes.ResourceTypeIndexDocument getResourceTypeIndexDocument(URI id, String language) throws Exception {
         String path = "/v1/resource-types/" + id;
         if (isNotEmpty(language)) path = path + "?language=" + language;
-        return getObject(ResourceTypes.ResourceTypeIndexDocument.class, getResource(path));
+        return testUtils.getObject(ResourceTypes.ResourceTypeIndexDocument.class, testUtils.getResource(path));
     }
 
 }

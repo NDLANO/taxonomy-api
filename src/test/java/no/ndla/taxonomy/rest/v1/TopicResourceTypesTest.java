@@ -7,7 +7,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
-import static no.ndla.taxonomy.TestUtils.*;
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.junit.Assert.assertEquals;
 
 public class TopicResourceTypesTest extends RestTest {
@@ -25,8 +25,8 @@ public class TopicResourceTypesTest extends RestTest {
                 .resource(r -> r.name("a lecture").resourceType("lecture"))
         ));
 
-        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources?type=" + assignment + "," + lecture);
-        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?type=" + assignment + "," + lecture);
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "a lecture".equals(r.name));
@@ -49,8 +49,8 @@ public class TopicResourceTypesTest extends RestTest {
                 )
         ));
 
-        MockHttpServletResponse response = getResource("/v1/topics/urn:topic:1/resources");
-        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources");
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, result.length);
         assertEquals(2, result[0].resourceTypes.size());
@@ -79,8 +79,8 @@ public class TopicResourceTypesTest extends RestTest {
                 )
         ).getPublicId();
 
-        MockHttpServletResponse response = getResource("/v1/topics/" + topic + "/resources?recursive=true");
-        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/" + topic + "/resources?recursive=true");
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertEquals(2, result[0].resourceTypes.size());
@@ -102,8 +102,8 @@ public class TopicResourceTypesTest extends RestTest {
                 )
         ).getPublicId();
 
-        MockHttpServletResponse response = getResource("/v1/topics/" + topic + "/resources?recursive=true");
-        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/" + topic + "/resources?recursive=true");
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, result.length);
         assertEquals(0, result[0].resourceTypes.size());

@@ -1,30 +1,48 @@
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.domain.CachedUrl;
+import no.ndla.taxonomy.domain.CachedUrlEntity;
 import no.ndla.taxonomy.domain.UrlMapping;
+import no.ndla.taxonomy.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.sql.DataSource;
 import java.net.URI;
-import java.util.*;
-
-import static java.util.Arrays.asList;
-import static no.ndla.taxonomy.jdbc.QueryUtils.setQueryParameters;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 /*
  This class is both a service and a database repository class
  */
 public class UrlResolverService {
 
-    private JdbcTemplate jdbcTemplate;
-    private OldUrlCanonifier canonifier = new OldUrlCanonifier();
+    private final OldUrlCanonifier canonifier;
+
+    private final SubjectRepository subjectRepository;
+    private final TopicRepository topicRepository;
+    private final ResourceRepository resourceRepository;
+    private final CachedUrlRepository cachedUrlRepository;
+    private final UrlMappingRepository urlMappingRepository;
 
     @Autowired
-    public UrlResolverService(DataSource dataSource) {
-        jdbcTemplate = new JdbcTemplate(dataSource);
+    public UrlResolverService(SubjectRepository subjectRepository,
+                              TopicRepository topicRepository,
+                              ResourceRepository resourceRepository,
+                              CachedUrlRepository cachedUrlRepository,
+                              UrlMappingRepository urlMappingRepository,
+                              OldUrlCanonifier oldUrlCanonifier) {
+        this.topicRepository = topicRepository;
+        this.subjectRepository = subjectRepository;
+        this.resourceRepository = resourceRepository;
+        this.cachedUrlRepository = cachedUrlRepository;
+        this.urlMappingRepository = urlMappingRepository;
+        this.canonifier = oldUrlCanonifier;
     }
 
     /**
@@ -58,39 +76,29 @@ public class UrlResolverService {
     }
 
     private List<String> getAllPaths(URI public_id) {
-        List<String> allpaths = jdbcTemplate.query("SELECT PATH, IS_PRIMARY FROM CACHED_URL WHERE PUBLIC_ID=?", setQueryParameters(public_id.toString()),
-                (resultSet, rowNum) -> resultSet.getString("path")
-        );
-        return allpaths;
+        return cachedUrlRepository.findAllByPublicId(public_id)
+                .stream()
+                .map(CachedUrl::getPath)
+                .collect(Collectors.toList());
     }
 
     private String getPrimaryPath(URI public_id) {
-        List<String> primaryPaths = jdbcTemplate.query("SELECT PATH, IS_PRIMARY FROM CACHED_URL WHERE PUBLIC_ID=? AND IS_PRIMARY=TRUE", setQueryParameters(public_id.toString()),
-                (resultSet, rowNum) -> resultSet.getString("path")
-        );
-        if (primaryPaths.isEmpty()) return null;
-        return primaryPaths.get(0);
+        return cachedUrlRepository.findFirstByPublicIdAndPrimary(public_id, true)
+                .map(CachedUrl::getPath)
+                .orElse(null);
     }
 
     private List<UrlMapping> getCachedUrlOldRig(String oldUrl) {
         String canonicalUrl = canonifier.canonify(oldUrl);
         String queryUrl = canonicalUrl + "%";
-        final String sql = "SELECT old_url, public_id, subject_id FROM URL_MAP WHERE old_url LIKE ?";
-        List<UrlMapping> result = new ArrayList<>();
-        jdbcTemplate.query(sql, setQueryParameters(queryUrl), (RowCallbackHandler) resultSet -> {
-            String matchedUrl = resultSet.getString("old_url");
-            //the LIKE query may match node IDs that __start with__ the same node ID as in old url
-            //e.g. oldUrl /node/54 should not match /node/54321 - therefore we add only if IDs match
-            if (getNodeId(canonicalUrl).equals(getNodeId(matchedUrl))) {
-                result.add(new UrlMapping() {{
-                    setPublic_id(resultSet.getString("public_id"));
-                    if (resultSet.getString("subject_id") != null) {
-                        setSubject_id(resultSet.getString("subject_id"));
-                    }
-                }});
-            }
-        });
-        return result;
+
+        return urlMappingRepository.findAllByOldUrlLike(queryUrl)
+                .stream()
+                //the LIKE query may match node IDs that __start with__ the same node ID as in old url
+                //e.g. oldUrl /node/54 should not match /node/54321 - therefore we add only if IDs match
+                .filter(urlMapping -> urlMapping.getOldUrl() != null)
+                .filter(mapping -> getNodeId(canonicalUrl).equals(getNodeId(mapping.getOldUrl())))
+                .collect(Collectors.toList());
     }
 
     private String getNodeId(String url) {
@@ -113,16 +121,24 @@ public class UrlResolverService {
      * @return true in order to be mockable "given" ugh!
      * @throws NodeIdNotFoundExeption if node ide not found in taxonomy
      */
+    @Transactional
     public Boolean putUrlMapping(String oldUrl, URI nodeId, URI subjectId) throws NodeIdNotFoundExeption {
         oldUrl = canonifier.canonify(oldUrl);
         if (getAllPaths(nodeId).isEmpty())
             throw new NodeIdNotFoundExeption("Node id not found in taxonomy for " + oldUrl);
         if (getCachedUrlOldRig(oldUrl).isEmpty()) {
-            String sql = "INSERT INTO URL_MAP (OLD_URL, PUBLIC_ID, SUBJECT_ID) VALUES (?, ?, ?)";
-            jdbcTemplate.update(sql, oldUrl, nodeId.toString(), subjectId.toString());
+            final var urlMapping = new UrlMapping();
+            urlMapping.setOldUrl(oldUrl);
+            urlMapping.setPublic_id(nodeId.toString());
+            urlMapping.setSubject_id(subjectId);
+            urlMappingRepository.save(urlMapping);
         } else {
-            String sql = "UPDATE URL_MAP SET PUBLIC_ID=?, SUBJECT_ID=? WHERE OLD_URL=?";
-            jdbcTemplate.update(sql, nodeId.toString(), subjectId.toString(), oldUrl);
+            urlMappingRepository.findAllByOldUrl(oldUrl)
+                    .forEach(urlMapping -> {
+                        urlMapping.setPublic_id(nodeId.toString());
+                        urlMapping.setSubject_id(subjectId.toString());
+                        urlMappingRepository.save(urlMapping);
+                    });
         }
         return true;
     }
@@ -131,5 +147,15 @@ public class UrlResolverService {
         public NodeIdNotFoundExeption(String message) {
             super(message);
         }
+    }
+
+    public Set<CachedUrlEntity> getResolvablePathEntitiesFromPublicId(URI publicId) {
+        final var entries = new HashSet<CachedUrlEntity>();
+
+        entries.addAll(subjectRepository.findAllByPublicIdIncludingCachedUrls(publicId));
+        entries.addAll(topicRepository.findAllByPublicIdIncludingCachedUrls(publicId));
+        entries.addAll(resourceRepository.findAllByPublicIdIncludingCachedUrls(publicId));
+
+        return entries;
     }
 }

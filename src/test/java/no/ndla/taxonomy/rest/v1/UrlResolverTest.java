@@ -5,8 +5,6 @@ import no.ndla.taxonomy.domain.Resource;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import static no.ndla.taxonomy.TestUtils.getObject;
-import static no.ndla.taxonomy.TestUtils.getResource;
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -111,7 +109,7 @@ public class UrlResolverTest extends RestTest {
     @Test
     public void sends_404_when_not_found() throws Exception {
         String path = "/no/such/element";
-        getResource("/v1/url/resolve?path=" + path, status().isNotFound());
+        testUtils.getResource("/v1/url/resolve?path=" + path, status().isNotFound());
     }
 
     private void assertParents(UrlResolver.ResolvedUrl path, String... expected) {
@@ -122,11 +120,11 @@ public class UrlResolverTest extends RestTest {
     }
 
     private String resolveUrlAndExpectRedirect(String path) throws Exception {
-        MockHttpServletResponse response = getResource("/v1/url/resolve?path=" + path, status().is3xxRedirection());
+        MockHttpServletResponse response = testUtils.getResource("/v1/url/resolve?path=" + path, status().is3xxRedirection());
         return response.getHeader("Location");
     }
 
     private UrlResolver.ResolvedUrl resolveUrl(String url) throws Exception {
-        return getObject(UrlResolver.ResolvedUrl.class, getResource("/v1/url/resolve?path=" + url));
+        return testUtils.getObject(UrlResolver.ResolvedUrl.class, testUtils.getResource("/v1/url/resolve?path=" + url));
     }
 }

@@ -3,77 +3,99 @@ package no.ndla.taxonomy.domain;
 
 import org.hibernate.annotations.Type;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
-public class Subject extends DomainObject {
+public class Subject extends CachedUrlEntity {
     @Column
     @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI contentUri;
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<SubjectTopic> topics = new HashSet<>();
+    private Set<SubjectTopic> subjectTopics = new HashSet<>();
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<SubjectTranslation> translations = new HashSet<>();
+    private Set<SubjectTranslation> translations = new HashSet<>();
 
-    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<Filter> filters = new HashSet<>();
+    @OneToMany(mappedBy = "subject", orphanRemoval = true)
+    private Set<Filter> filters = new HashSet<>();
 
     public Subject() {
         setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
+    }
+
+    public void addSubjectTopic(SubjectTopic subjectTopic) {
+        this.subjectTopics.add(subjectTopic);
+
+        if (subjectTopic.getSubject().orElse(null) != this) {
+            subjectTopic.setSubject(this);
+        }
     }
 
     public SubjectTopic addTopic(Topic topic) {
         refuseIfDuplicate(topic);
 
         SubjectTopic subjectTopic = new SubjectTopic(this, topic);
-        this.topics.add(subjectTopic);
-        topic.subjects.add(subjectTopic);
+        this.addSubjectTopic(subjectTopic);
         if (topic.hasSingleSubject()) topic.setPrimarySubject(this);
         return subjectTopic;
     }
 
-    public void addFilter(Filter filter) {
-        this.filters.add(filter);
-        filter.setSubject(this);
+    public Set<SubjectTopic> getSubjectTopics() {
+        return this.subjectTopics;
     }
 
-    private void refuseIfDuplicate(Topic topic) {
-        Iterator<Topic> topics = getTopics();
-        while (topics.hasNext()) {
-            Topic t = topics.next();
-            if (t.getId().equals(topic.getId()))
-                throw new DuplicateIdException("Subject with id " + getPublicId() + " already contains topic with id " + topic.getPublicId());
+    public void addFilter(Filter filter) {
+        this.filters.add(filter);
+
+        if (filter.getSubject().orElse(null) != this) {
+            filter.setSubject(this);
         }
     }
 
-    public Iterator<Topic> getTopics() {
-        Iterator<SubjectTopic> iterator = topics.iterator();
+    public void removeSubjectTopic(SubjectTopic subjectTopic) {
+        final var topicToRemove = subjectTopic.getTopic().orElse(null);
 
-        return new Iterator<Topic>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
+        this.subjectTopics.remove(subjectTopic);
 
-            @Override
-            public Topic next() {
-                return iterator.next().getTopic();
+        if (subjectTopic.getSubject().orElse(null) == this) {
+            subjectTopic.setSubject(null);
+        }
+    }
+
+    public Set<Filter> getFilters() {
+        return filters;
+    }
+
+    public void removeFilter(Filter filter) {
+        if (this.filters.contains(filter)) {
+            this.filters.remove(filter);
+
+            if (filter.getSubject().orElse(null) == this) {
+                filter.setSubject(null);
             }
-        };
+        }
+    }
+
+    private void refuseIfDuplicate(Topic topic) {
+        if (getTopics().contains(topic)) {
+            throw new DuplicateIdException("Subject with id " + getPublicId() + " already contains topic with id " + topic.getPublicId());
+        }
+    }
+
+    public Collection<Topic> getTopics() {
+        return subjectTopics.stream()
+                .map(SubjectTopic::getTopic)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
     }
 
     public SubjectTranslation addTranslation(String languageCode) {
-        SubjectTranslation subjectTranslation = getTranslation(languageCode);
+        SubjectTranslation subjectTranslation = getTranslation(languageCode).orElse(null);
         if (subjectTranslation != null) return subjectTranslation;
 
         subjectTranslation = new SubjectTranslation(this, languageCode);
@@ -81,22 +103,36 @@ public class Subject extends DomainObject {
         return subjectTranslation;
     }
 
-    public SubjectTranslation getTranslation(String languageCode) {
+    public Optional<SubjectTranslation> getTranslation(String languageCode) {
         return translations.stream()
                 .filter(subjectTranslation -> subjectTranslation.getLanguageCode().equals(languageCode))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
-    public Iterator<SubjectTranslation> getTranslations() {
-        return translations.iterator();
+    public Set<SubjectTranslation> getTranslations() {
+        return translations;
     }
 
     public void removeTranslation(String languageCode) {
-        SubjectTranslation translation = getTranslation(languageCode);
-        if (translation == null) return;
-        translations.remove(translation);
+        getTranslation(languageCode).ifPresent(this::removeTranslation);
     }
+
+    public void addTranslation(SubjectTranslation subjectTranslation) {
+        this.translations.add(subjectTranslation);
+        if (subjectTranslation.getSubject() != this) {
+            subjectTranslation.setSubject(this);
+        }
+    }
+
+    public void removeTranslation(SubjectTranslation translation) {
+        if (translation.getSubject() == this) {
+            translations.remove(translation);
+            if (translation.getSubject() == this) {
+                translation.setSubject(null);
+            }
+        }
+    }
+
 
     public Subject name(String name) {
         setName(name);
@@ -112,19 +148,22 @@ public class Subject extends DomainObject {
     }
 
     public void removeTopic(Topic topic) {
-        SubjectTopic subjectTopic = getTopic(topic);
-        if (subjectTopic == null) {
-            throw new ChildNotFoundException("Subject " + this.getPublicId() + " has no topic with id " + topic.getPublicId());
-        }
-        topic.subjects.remove(subjectTopic);
-        topics.remove(subjectTopic);
-        if (subjectTopic.isPrimary()) topic.setRandomPrimarySubject();
+        // Removes SubjectTopic that references requested Topic if exists, otherwise throws exception
+        subjectTopics.stream()
+                .filter(subjectTopic -> topic.equals(subjectTopic.getTopic().orElse(null)))
+                .findFirst()
+                .ifPresentOrElse(
+                        this::removeSubjectTopic,
+                        () -> {
+                            throw new ChildNotFoundException("Subject " + this.getPublicId() + " has no topic with id " + topic.getPublicId());
+                        }
+                );
     }
 
-    private SubjectTopic getTopic(Topic topic) {
-        for (SubjectTopic subjectTopic : topics) {
-            if (subjectTopic.getTopic().getPublicId().equals(topic.getPublicId())) return subjectTopic;
+    @PreRemove
+    void preRemove() {
+        for (var subjectTopic : subjectTopics.toArray()) {
+            removeSubjectTopic((SubjectTopic) subjectTopic);
         }
-        return null;
     }
 }

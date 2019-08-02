@@ -3,43 +3,41 @@ package no.ndla.taxonomy.domain;
 
 import org.hibernate.annotations.Type;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.net.URI;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
-public class Topic extends DomainObject {
+public class Topic extends CachedUrlEntity {
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<SubjectTopic> subjects = new HashSet<>();
+    private Set<SubjectTopic> subjectTopics = new HashSet<>();
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<TopicSubtopic> subtopics = new HashSet<>();
+    private Set<TopicSubtopic> childTopicSubtopics = new HashSet<>();
 
     @OneToMany(mappedBy = "subtopic", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<TopicSubtopic> parentTopics = new HashSet<>();
+    private Set<TopicSubtopic> parentTopicSubtopics = new HashSet<>();
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<TopicResource> resources = new HashSet<>();
+    private Set<TopicResource> topicResources = new HashSet<>();
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<TopicResourceType> topicResourceTypes = new HashSet<>();
+    private Set<TopicResourceType> topicResourceTypes = new HashSet<>();
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    public Set<TopicFilter> filters = new HashSet<>();
+    private Set<TopicFilter> topicFilters = new HashSet<>();
 
     @Column
     @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI contentUri;
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<TopicTranslation> translations = new HashSet<>();
+    private Set<TopicTranslation> translations = new HashSet<>();
 
     @Column
     private boolean context;
@@ -53,160 +51,255 @@ public class Topic extends DomainObject {
         return this;
     }
 
+    /*
+
+        In the old code the primary URL for topics was special since it would try to return
+        a context URL (a topic behaving as a subject) rather than a subject URL if that is available.
+        Trying to re-implement it by sorting the context URLs first by the same path comparing as the old code
+
+     */
+    public Optional<String> getPrimaryPath() {
+        return getCachedUrls()
+                .stream()
+                .filter(CachedUrl::isPrimary)
+                .map(CachedUrl::getPath).min((path1, path2) -> {
+                    if (path1.startsWith("/topic") && path2.startsWith("/topic")) {
+                        return 0;
+                    }
+
+                    if (path1.startsWith("/topic")) {
+                        return -1;
+                    }
+
+                    if (path2.startsWith("/topic")) {
+                        return 1;
+                    }
+
+                    return 0;
+                });
+    }
+
+    public Set<SubjectTopic> getSubjectTopics() {
+        return this.subjectTopics;
+    }
+
+    public void addSubjectTopic(SubjectTopic subjectTopic) {
+        this.subjectTopics.add(subjectTopic);
+
+        if (subjectTopic.getTopic().orElse(null) != this) {
+            subjectTopic.setTopic(this);
+        }
+    }
+
+    public void removeSubjectTopic(SubjectTopic subjectTopic) {
+        this.subjectTopics.remove(subjectTopic);
+
+        var topic = subjectTopic.getTopic().orElse(null);
+
+        if (topic == this) {
+            subjectTopic.setTopic(null);
+        }
+    }
+
+    public Set<TopicSubtopic> getChildrenTopicSubtopics() {
+        return this.childTopicSubtopics;
+    }
+
+    public Set<TopicSubtopic> getParentTopicSubtopics() {
+        return this.parentTopicSubtopics;
+    }
+
+    public void addChildTopicSubtopic(TopicSubtopic topicSubtopic) {
+        this.childTopicSubtopics.add(topicSubtopic);
+
+        if (topicSubtopic.getTopic().orElse(null) != this) {
+            topicSubtopic.setTopic(this);
+            topicSubtopic.setSubtopic(this);
+        }
+    }
+
+    public void removeChildTopicSubTopic(TopicSubtopic topicSubtopic) {
+        this.childTopicSubtopics.remove(topicSubtopic);
+
+        if (topicSubtopic.getTopic().orElse(null) == this) {
+            topicSubtopic.setTopic(null);
+            topicSubtopic.setSubtopic(null);
+        }
+    }
+
+    public void addParentTopicSubtopic(TopicSubtopic topicSubtopic) {
+        this.parentTopicSubtopics.add(topicSubtopic);
+
+        if (topicSubtopic.getSubtopic().orElse(null) != this) {
+            topicSubtopic.setSubtopic(this);
+        }
+    }
+
+    public void removeParentTopicSubtopic(TopicSubtopic topicSubtopic) {
+        this.parentTopicSubtopics.remove(topicSubtopic);
+
+        if (topicSubtopic.getSubtopic().orElse(null) == this) {
+            topicSubtopic.setSubtopic(null);
+            topicSubtopic.setTopic(null);
+        }
+    }
+
+    public Set<TopicResource> getTopicResources() {
+        return this.topicResources;
+    }
+
+    public void addTopicResource(TopicResource topicResource) {
+        this.topicResources.add(topicResource);
+
+        if (topicResource.getTopic().orElse(null) != this) {
+            topicResource.setTopic(this);
+        }
+    }
+
+    public void removeTopicResource(TopicResource topicResource) {
+        this.topicResources.remove(topicResource);
+
+        if (topicResource.getTopic().orElse(null) == this) {
+            topicResource.setTopic(null);
+        }
+    }
+
+    public Set<TopicResourceType> getTopicResourceTypes() {
+        return this.topicResourceTypes;
+    }
+
     public TopicSubtopic addSubtopic(Topic subtopic) {
+        return addSubtopic(subtopic, true);
+    }
+
+    public TopicSubtopic addSubtopic(Topic subtopic, boolean primaryConnection) {
         refuseIfDuplicateSubtopic(subtopic);
 
-        TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic);
-        subtopic.parentTopics.add(topicSubtopic);
-        subtopic.setPrimaryParentTopic(this);
-        subtopics.add(topicSubtopic);
+        final var topicSubtopic = new TopicSubtopic();
+        topicSubtopic.setPrimary(false);
+        topicSubtopic.setTopic(this);
+        topicSubtopic.setSubtopic(subtopic);
+
+        if (primaryConnection) {
+            subtopic.setPrimaryParentTopic(this);
+        }
+
         return topicSubtopic;
     }
 
-    public TopicSubtopic addSecondarySubtopic(Topic subtopic) {
-        refuseIfDuplicateSubtopic(subtopic);
+    public void addTopicResourceType(TopicResourceType topicResourceType) {
+        this.topicResourceTypes.add(topicResourceType);
 
-        TopicSubtopic topicSubtopic = new TopicSubtopic(this, subtopic);
-        topicSubtopic.setPrimary(false);
-        subtopic.parentTopics.add(topicSubtopic);
-        subtopics.add(topicSubtopic);
-        return topicSubtopic;
+        if (topicResourceType.getTopic().orElse(null) != this) {
+            topicResourceType.setTopic(this);
+        }
+    }
+
+    public void removeTopicResourceType(TopicResourceType topicResourceType) {
+        this.topicResourceTypes.remove(topicResourceType);
+
+        if (topicResourceType.getTopic().orElse(null) == this) {
+            topicResourceType.setTopic(null);
+            topicResourceType.setResourceType(null);
+        }
     }
 
     public boolean hasSingleSubject() {
-        return subjects.size() == 1;
+        return subjectTopics.size() == 1;
     }
 
     private void refuseIfDuplicateSubtopic(Topic subtopic) {
-        Iterator<Topic> topics = getSubtopics();
-        while (topics.hasNext()) {
-            Topic t = topics.next();
-            if (t.getId().equals(subtopic.getId())) {
-                throw new DuplicateIdException("Topic with id " + getPublicId() + " already contains topic with id " + subtopic.getPublicId());
-            }
+        if (getSubtopics().contains(subtopic)) {
+            throw new DuplicateIdException("Topic with id " + getPublicId() + " already contains topic with id " + subtopic.getPublicId());
         }
     }
 
-    public Topic getPrimaryParentTopic() {
-        for (TopicSubtopic parentTopic : parentTopics) {
+    public Optional<Topic> getPrimaryParentTopic() {
+        for (TopicSubtopic parentTopic : parentTopicSubtopics) {
             if (parentTopic.isPrimary()) return parentTopic.getTopic();
         }
-        return null;
+        return Optional.empty();
     }
 
     public void setPrimaryParentTopic(Topic topic) {
-        TopicSubtopic topicSubtopic = getParentTopic(topic);
-        if (null == topicSubtopic) throw new ParentNotFoundException(this, topic);
-
-        parentTopics.forEach(st -> st.setPrimary(false));
-        topicSubtopic.setPrimary(true);
+        // Set requested TopicSubtopic object isPrimary to true and all other to false
+        parentTopicSubtopics.stream()
+                .filter(ts -> ts.getTopic().isPresent())
+                .forEach(st -> st.setPrimary(st.getTopic().get().equals(topic)));
     }
 
-    private void setRandomPrimaryTopic(Topic subtopic) {
-        if (subtopic.parentTopics.size() == 0) return;
-        setPrimaryParentTopic(subtopic.parentTopics.iterator().next().getTopic());
-    }
-
-    private TopicSubtopic getParentTopic(Topic parentTopic) {
-        for (TopicSubtopic topicSubtopic : parentTopics) {
-            if (topicSubtopic.getTopic().equals(parentTopic)) {
-                return topicSubtopic;
-            }
-        }
-        return null;
+    void setRandomPrimaryTopic() {
+        parentTopicSubtopics.stream()
+                .map(TopicSubtopic::getTopic)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst()
+                .ifPresent(this::setPrimaryParentTopic);
     }
 
     public TopicResource addResource(Resource resource) {
-        refuseIfDuplicateResource(resource);
-
-        TopicResource topicResource = new TopicResource(this, resource);
-        this.resources.add(topicResource);
-        resource.topics.add(topicResource);
-        resource.setPrimaryTopic(this);
-        return topicResource;
+        return addResource(resource, true);
     }
 
-    public TopicResource addSecondaryResource(Resource resource) {
+    public TopicResource addResource(Resource resource, boolean primaryConnection) {
         refuseIfDuplicateResource(resource);
 
-        TopicResource topicResource = new TopicResource(this, resource);
-        topicResource.setPrimary(false);
-        this.resources.add(topicResource);
-        resource.topics.add(topicResource);
+        TopicResource topicResource = new TopicResource();
+        topicResource.setResource(resource);
+        addTopicResource(topicResource);
+
+        if (primaryConnection) {
+            resource.setPrimaryTopic(this);
+        } else {
+            topicResource.setPrimary(false);
+        }
+
         return topicResource;
     }
 
     private void refuseIfDuplicateResource(Resource resource) {
-        Iterator<Resource> resources = getResources();
-        while (resources.hasNext()) {
-            Resource r = resources.next();
-            if (r.getId().equals(resource.getId()))
-                throw new DuplicateIdException("Topic with id " + getPublicId() + " already contains resource with id " + resource.getPublicId());
+        if (getResources().contains(resource)) {
+            throw new DuplicateIdException("Topic with id " + getPublicId() + " already contains resource with id " + resource.getPublicId());
         }
     }
 
     public void removeResource(Resource resource) {
-        TopicResource topicResource = getResource(resource);
-        if (topicResource == null)
-            throw new ChildNotFoundException("Topic with id " + this.getPublicId() + " has no resource with id " + topicResource.getResource());
-        resource.topics.remove(topicResource);
-        resources.remove(topicResource);
+        final var topicResource = getTopicResource(resource)
+                .orElseThrow(() -> new ChildNotFoundException("Topic with id " + this.getPublicId() + " has no resource with id " + resource.getPublicId()));
+
+        removeTopicResource(topicResource);
+
         if (topicResource.isPrimary()) resource.setRandomPrimaryTopic();
     }
 
-    private TopicResource getResource(Resource resource) {
-        for (TopicResource topicResource : resources) {
-            if (topicResource.getResource().equals(resource)) {
-                return topicResource;
-            }
-        }
-        return null;
+    private Optional<TopicResource> getTopicResource(Resource resource) {
+        return topicResources.stream()
+                .filter(topicResource -> topicResource.getResource().isPresent())
+                .filter(topicResource -> topicResource.getResource().get().equals(resource))
+                .findFirst();
     }
 
-    public Iterator<Topic> getSubtopics() {
-        Iterator<TopicSubtopic> iterator = subtopics.iterator();
-
-        return new Iterator<Topic>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public Topic next() {
-                return iterator.next().getSubtopic();
-            }
-        };
+    public Set<Topic> getSubtopics() {
+        return childTopicSubtopics.stream()
+                .map(TopicSubtopic::getSubtopic)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
     }
 
-    public Iterator<Topic> getParentTopics() {
-        Iterator<TopicSubtopic> iterator = parentTopics.iterator();
-        return new Iterator<Topic>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public Topic next() {
-                return iterator.next().getTopic();
-            }
-        };
+    public Set<Topic> getParentTopics() {
+        return parentTopicSubtopics.stream()
+                .map(TopicSubtopic::getTopic)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
     }
 
-    public Iterator<Resource> getResources() {
-        Iterator<TopicResource> iterator = resources.iterator();
-        return new Iterator<Resource>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public Resource next() {
-                return iterator.next().getResource();
-            }
-        };
+    public Set<Resource> getResources() {
+        return topicResources.stream()
+                .map(TopicResource::getResource)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
     }
 
     public void setContentUri(URI contentUri) {
@@ -218,7 +311,7 @@ public class Topic extends DomainObject {
     }
 
     public TopicTranslation addTranslation(String languageCode) {
-        TopicTranslation topicTranslation = getTranslation(languageCode);
+        TopicTranslation topicTranslation = getTranslation(languageCode).orElse(null);
         if (topicTranslation != null) return topicTranslation;
 
         topicTranslation = new TopicTranslation(this, languageCode);
@@ -226,118 +319,119 @@ public class Topic extends DomainObject {
         return topicTranslation;
     }
 
-    public TopicTranslation getTranslation(String languageCode) {
+    public Optional<TopicTranslation> getTranslation(String languageCode) {
         return translations.stream()
                 .filter(translation -> translation.getLanguageCode().equals(languageCode))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
-    public Iterator<TopicTranslation> getTranslations() {
-        return translations.iterator();
+    public Set<TopicTranslation> getTranslations() {
+        return translations;
+    }
+
+    public void addTranslation(TopicTranslation topicTranslation) {
+        this.translations.add(topicTranslation);
+        if (topicTranslation.getTopic() != this) {
+            topicTranslation.setTopic(this);
+        }
+    }
+
+    public void removeTranslation(TopicTranslation translation) {
+        if (translation.getTopic() == this) {
+            translations.remove(translation);
+            if (translation.getTopic() == this) {
+                translation.setTopic(null);
+            }
+        }
     }
 
     public void removeTranslation(String languageCode) {
-        TopicTranslation translation = getTranslation(languageCode);
-        if (translation == null) return;
-        translations.remove(translation);
+        getTranslation(languageCode).ifPresent(this::removeTranslation);
     }
 
     public void setPrimarySubject(Subject subject) {
-        SubjectTopic subjectTopic = getSubject(subject);
-        if (null == subjectTopic) throw new ParentNotFoundException(this, subject);
-
-        subjects.forEach(st -> st.setPrimary(false));
-        subjectTopic.setPrimary(true);
+        // All other connections than to the provided subject is set to false, and provided connection set to true
+        subjectTopics.forEach(st -> st.setPrimary(st.getSubject().filter(s -> s.equals(subject)).isPresent()));
     }
 
     public void setRandomPrimarySubject() {
-        if (subjects.size() == 0) return;
-        subjects.iterator().next().setPrimary(true);
-    }
-
-    private SubjectTopic getSubject(Subject subject) {
-        for (SubjectTopic subjectTopic : subjects) {
-            if (subjectTopic.getSubject().equals(subject)) {
-                return subjectTopic;
-            }
-        }
-        return null;
-    }
-
-    public Iterator<Subject> getSubjects() {
-        Iterator<SubjectTopic> iterator = subjects.iterator();
-        return new Iterator<Subject>() {
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public Subject next() {
-                return iterator.next().getSubject();
-            }
-        };
+        subjectTopics.stream()
+                .map(SubjectTopic::getSubject)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst()
+                .ifPresent(this::setPrimarySubject);
     }
 
     public void removeSubtopic(Topic subtopic) {
-        TopicSubtopic topicSubtopic = getSubtopic(subtopic);
-        if (topicSubtopic == null)
-            throw new ChildNotFoundException("Topic " + this.getPublicId() + " has not subtopic with id " + subtopic.getPublicId());
-        subtopic.parentTopics.remove(topicSubtopic);
-        subtopics.remove(topicSubtopic);
-        if (topicSubtopic.isPrimary()) subtopic.setRandomPrimaryTopic(subtopic);
+        final var topicSubtopic = getTopicSubtopic(subtopic)
+                .orElseThrow(() -> new ChildNotFoundException("Topic " + this.getPublicId() + " has not subtopic with id " + subtopic.getPublicId()));
+
+        removeChildTopicSubTopic(topicSubtopic);
+
+        if (topicSubtopic.isPrimary()) {
+            subtopic.setRandomPrimaryTopic();
+        }
     }
 
-    private TopicSubtopic getSubtopic(Topic subtopic) {
-        for (TopicSubtopic topicSubtopic : subtopics) {
-            if (topicSubtopic.getSubtopic().equals(subtopic)) {
-                return topicSubtopic;
-            }
-        }
-        return null;
+    private Optional<TopicSubtopic> getTopicSubtopic(Topic subtopic) {
+        return childTopicSubtopics.stream()
+                .filter(topicSubtopic -> topicSubtopic.getSubtopic().isPresent())
+                .filter(topicSubtopic -> topicSubtopic.getSubtopic().get().equals(subtopic))
+                .findFirst();
     }
 
     public TopicFilter addFilter(Filter filter, Relevance relevance) {
-        TopicFilter topicFilter = new TopicFilter(this, filter, relevance);
-        filters.add(topicFilter);
+        TopicFilter topicFilter = new TopicFilter();
+        topicFilter.setTopic(this);
+        topicFilter.setRelevance(relevance);
+        topicFilter.setFilter(filter);
+
+        addTopicFilter(topicFilter);
+
         return topicFilter;
     }
 
-    public void removeFilter(Filter filter) {
-        TopicFilter topicFilter = getFilter(filter);
-        if (filter == null) {
-            throw new ChildNotFoundException("Topic with id " + this.getPublicId() + " does not have topic-filter " + topicFilter.getPublicId());
-        }
-        filters.remove(topicFilter);
-    }
-
-    private TopicFilter getFilter(Filter filter) {
-        for (TopicFilter rf : filters) {
-            if (rf.getFilter().equals(filter)) return rf;
-        }
-        return null;
-    }
-
     public TopicResourceType addResourceType(ResourceType resourceType) {
-        TopicResourceType topicResourceType = new TopicResourceType(this, resourceType);
-        topicResourceTypes.add(topicResourceType);
+        TopicResourceType topicResourceType = new TopicResourceType();
+        topicResourceType.setResourceType(resourceType);
+        addTopicResourceType(topicResourceType);
         return topicResourceType;
     }
 
     public void removeResourceType(ResourceType resourceType) {
-        TopicResourceType topicResourceType = getResourceType(resourceType);
-        if (topicResourceType == null) {
-            throw new ChildNotFoundException("Topic with id " + this.getPublicId() + " is not of type " + resourceType.getPublicId());
-        }
-        topicResourceTypes.remove(topicResourceType);
+        TopicResourceType topicResourceType = getTopicResourceType(resourceType)
+                .orElseThrow(() -> new ChildNotFoundException("Topic with id " + this.getPublicId() + " is not of type " + resourceType.getPublicId()));
+        removeTopicResourceType(topicResourceType);
     }
 
-    private TopicResourceType getResourceType(ResourceType resourceType) {
+    private Optional<TopicResourceType> getTopicResourceType(ResourceType resourceType) {
         for (TopicResourceType topicResourceType : topicResourceTypes) {
-            if (topicResourceType.getResourceType().equals(resourceType)) return topicResourceType;
+            if (resourceType.equals(topicResourceType.getResourceType().orElse(null))) {
+                return Optional.of(topicResourceType);
+            }
         }
-        return null;
+        return Optional.empty();
+    }
+
+    public void addTopicFilter(TopicFilter topicFilter) {
+        this.topicFilters.add(topicFilter);
+
+        if (topicFilter.getTopic().orElse(null) != this) {
+            topicFilter.setTopic(this);
+        }
+    }
+
+    public void removeTopicFilter(TopicFilter topicFilter) {
+        this.topicFilters.remove(topicFilter);
+
+        if (topicFilter.getTopic().orElse(null) == this) {
+            topicFilter.setTopic(null);
+        }
+    }
+
+    public Set<TopicFilter> getTopicFilters() {
+        return this.topicFilters;
     }
 
     public void setContext(boolean context) {
@@ -346,6 +440,29 @@ public class Topic extends DomainObject {
 
     public boolean isContext() {
         return context;
+    }
+
+    @PreRemove
+    void preRemove() {
+        for (var topicSubtopic : parentTopicSubtopics.toArray(new TopicSubtopic[]{})) {
+            removeParentTopicSubtopic(topicSubtopic);
+        }
+
+        for (var topicSubtopic : childTopicSubtopics.toArray(new TopicSubtopic[]{})) {
+            removeChildTopicSubTopic(topicSubtopic);
+        }
+
+        for (var subjectTopic : subjectTopics.toArray(new SubjectTopic[]{})) {
+            removeSubjectTopic(subjectTopic);
+        }
+
+        for (var topicResource : topicResources.toArray(new TopicResource[]{})) {
+            removeTopicResource(topicResource);
+        }
+
+        for (var topicFilter : topicFilters.toArray(new TopicFilter[]{})) {
+            removeTopicFilter(topicFilter);
+        }
     }
 
 }

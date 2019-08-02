@@ -33,7 +33,7 @@ public class UriType extends AbstractSingleColumnStandardBasicType<URI> implemen
         return StringType.INSTANCE.objectToSQLString(toString(value), dialect);
     }
 
-    public URI stringToObject(String xml) throws Exception {
+    public URI stringToObject(String xml) {
         return UriTypeDescriptor.INSTANCE.fromString(xml);
     }
 }

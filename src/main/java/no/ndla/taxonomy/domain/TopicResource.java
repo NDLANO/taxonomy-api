@@ -1,21 +1,19 @@
 package no.ndla.taxonomy.domain;
 
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.net.URI;
+import java.util.Optional;
 import java.util.UUID;
 
 @Entity
 public class TopicResource extends DomainEntity implements Rankable {
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "resource_id")
     private Resource resource;
 
@@ -25,13 +23,12 @@ public class TopicResource extends DomainEntity implements Rankable {
     @Column(name = "rank")
     private int rank;
 
-    protected TopicResource() {
+    public TopicResource() {
+        setPublicId(URI.create("urn:topic-resource:" + UUID.randomUUID()));
     }
 
-    public TopicResource(Topic topic, Resource resource) {
-        this.topic = topic;
-        this.resource = resource;
-        setPublicId(URI.create("urn:topic-resource:" + UUID.randomUUID()));
+    public Optional<Topic> getTopic() {
+        return Optional.ofNullable(topic);
     }
 
     public boolean isPrimary() {
@@ -42,12 +39,22 @@ public class TopicResource extends DomainEntity implements Rankable {
         this.primary = primary;
     }
 
-    public Topic getTopic() {
-        return topic;
+    public void setTopic(Topic topic) {
+        final var previousTopic = this.topic;
+
+        this.topic = topic;
+
+        if (previousTopic != null && previousTopic != topic) {
+            previousTopic.removeTopicResource(this);
+        }
+
+        if (topic != null && !topic.getTopicResources().contains(this)) {
+            topic.addTopicResource(this);
+        }
     }
 
-    public Resource getResource() {
-        return resource;
+    public Optional<Resource> getResource() {
+        return Optional.ofNullable(resource);
     }
 
     public String toString() {
@@ -60,5 +67,31 @@ public class TopicResource extends DomainEntity implements Rankable {
 
     public int getRank() {
         return rank;
+    }
+
+    public void setResource(Resource resource) {
+        final var previousResource = this.resource;
+
+        this.resource = resource;
+
+        if (previousResource != null && previousResource != resource) {
+            previousResource.removeTopicResource(this);
+
+            if (isPrimary()) {
+                previousResource.setRandomPrimaryTopic();
+            }
+        }
+
+        if (resource != null) {
+            if (!resource.getTopicResources().contains(this)) {
+                resource.addTopicResource(this);
+            }
+        }
+    }
+
+    @PreRemove
+    public void preRemove() {
+        this.setTopic(null);
+        this.setResource(null);
     }
 }

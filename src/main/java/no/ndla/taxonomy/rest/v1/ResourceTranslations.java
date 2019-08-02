@@ -24,9 +24,9 @@ import java.util.List;
 @Transactional
 public class ResourceTranslations {
 
-    private ResourceRepository resourceRepository;
+    private final ResourceRepository resourceRepository;
 
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
     public ResourceTranslations(ResourceRepository resourceRepository, EntityManager entityManager) {
         this.resourceRepository = resourceRepository;
@@ -34,11 +34,11 @@ public class ResourceTranslations {
     }
 
     @GetMapping
-    @ApiOperation("Gets all translations for a single resource")
-    public List<ResourceTranslations.ResourceTranslationIndexDocument> index(@PathVariable("id") URI id) throws Exception {
+    @ApiOperation("Gets all relevanceTranslations for a single resource")
+    public List<ResourceTranslations.ResourceTranslationIndexDocument> index(@PathVariable("id") URI id) {
         Resource resource = resourceRepository.getByPublicId(id);
         List<ResourceTranslations.ResourceTranslationIndexDocument> result = new ArrayList<>();
-        resource.getTranslations().forEachRemaining(t -> result.add(
+        resource.getTranslations().forEach(t -> result.add(
                 new ResourceTranslations.ResourceTranslationIndexDocument() {{
                     name = t.getName();
                     language = t.getLanguageCode();
@@ -53,11 +53,9 @@ public class ResourceTranslations {
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language
-    ) throws Exception {
+    ) {
         Resource resource = resourceRepository.getByPublicId(id);
-        ResourceTranslation translation = resource.getTranslation(language);
-        if (translation == null)
-            throw new NotFoundException("translation with language code " + language + " for resource", id);
+        ResourceTranslation translation = resource.getTranslation(language).orElseThrow(() -> new NotFoundException("translation with language code " + language + " for resource", id));
         return new ResourceTranslations.ResourceTranslationIndexDocument() {{
             name = translation.getName();
             language = translation.getLanguageCode();
@@ -74,7 +72,7 @@ public class ResourceTranslations {
             @PathVariable("language") String language,
             @ApiParam(name = "resource", value = "The new or updated translation")
             @RequestBody ResourceTranslations.UpdateResourceTranslationCommand command
-    ) throws Exception {
+    ) {
         Resource resource = resourceRepository.getByPublicId(id);
         ResourceTranslation translation = resource.addTranslation(language);
         entityManager.persist(translation);
@@ -89,12 +87,12 @@ public class ResourceTranslations {
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language
-    ) throws Exception {
-        Resource resource = resourceRepository.getByPublicId(id);
-        ResourceTranslation translation = resource.getTranslation(language);
-        if (translation == null) return;
-        resource.removeTranslation(language);
-        entityManager.remove(translation);
+    ) {
+        final var resource = resourceRepository.getByPublicId(id);
+        resource.getTranslation(language).ifPresent((translation) -> {
+            resource.removeTranslation(language);
+            resourceRepository.save(resource);
+        });
     }
 
     public static class ResourceTranslationIndexDocument {

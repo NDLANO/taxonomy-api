@@ -4,16 +4,21 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.ResourceResourceType;
+import no.ndla.taxonomy.domain.ResourceTranslation;
+import no.ndla.taxonomy.domain.TopicResource;
+import no.ndla.taxonomy.service.TopicTreeSorter;
 
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  *
  */
 @ApiModel("TopicResourceIndexDocument")
-public class ResourceIndexDocument {
+public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     @JsonProperty
     @ApiModelProperty(value = "Topic id", example = "urn:topic:123")
     public URI topicId;
@@ -59,4 +64,51 @@ public class ResourceIndexDocument {
 
     @JsonIgnore
     public int topicNumericId;
+
+    public ResourceIndexDocument() {
+
+    }
+
+    public ResourceIndexDocument(TopicResource topicResource, String language) {
+        topicResource.getTopic().ifPresent(topic -> {
+            this.topicId = topic.getPublicId();
+            this.topicNumericId = topic.getId();
+        });
+
+        topicResource.getResource().ifPresent(resource -> {
+            this.id = resource.getPublicId();
+
+            this.name = resource.getTranslation(language)
+                    .map(ResourceTranslation::getName)
+                    .orElse(resource.getName());
+
+            this.resourceTypes = resource.getResourceResourceTypes().stream()
+                    .map(ResourceResourceType::getResourceType)
+                    .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language))
+                    .collect(Collectors.toSet());
+
+            this.contentUri = resource.getContentUri();
+            this.path = resource.getPrimaryPath().orElse(null);
+            this.paths = resource.getAllPaths();
+        });
+
+        this.connectionId = topicResource.getPublicId();
+        this.rank = topicResource.getRank();
+        this.isPrimary = topicResource.isPrimary();
+    }
+
+    @Override
+    public int getSortableRank() {
+        return rank;
+    }
+
+    @Override
+    public URI getSortableId() {
+        return id;
+    }
+
+    @Override
+    public URI getSortableParentId() {
+        return topicId;
+    }
 }

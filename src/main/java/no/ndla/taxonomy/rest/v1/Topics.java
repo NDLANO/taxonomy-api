@@ -2,35 +2,27 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.ResourceType;
-import no.ndla.taxonomy.domain.ResourceTypeTranslation;
-import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.repositories.TopicRepository;
+import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.rest.BadHttpRequestException;
 import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.dtos.topics.*;
-import no.ndla.taxonomy.rest.v1.extractors.subjects.FilterExtractor;
-import no.ndla.taxonomy.rest.v1.extractors.topics.*;
+import no.ndla.taxonomy.service.TopicResourceTreeSortable;
 import no.ndla.taxonomy.service.TopicResourceTypeService;
+import no.ndla.taxonomy.service.TopicTreeSorter;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static no.ndla.taxonomy.jdbc.QueryUtils.*;
 
 @RestController
 @RequestMapping(path = {"/v1/topics"})
@@ -38,41 +30,63 @@ import static no.ndla.taxonomy.jdbc.QueryUtils.*;
 public class Topics extends CrudController<Topic> {
 
 
-    private JdbcTemplate jdbcTemplate;
+    private final TopicResourceTypeService topicResourceTypeService;
+    private final TopicRepository topicRepository;
+    private final TopicSubtopicRepository topicSubtopicRepository;
+    private final SubjectTopicRepository subjectTopicRepository;
+    private final SubjectRepository subjectRepository;
+    private final TopicResourceRepository topicResourceRepository;
+    private final TopicTreeByTopicElementRepository topicTreeRepository;
+    private final TopicTreeSorter topicTreeSorter;
 
-    private TopicResourceTypeService topicResourceTypeService;
-
-    private static final String TOPIC_TREE_BY_TOPIC_ID = getQuery("topic_tree_by_topic_id");
-    private static final String GET_TOPICS_QUERY = getQuery("get_topics");
-    private static final String GET_TOPICS_WITH_ALL_PATHS_QUERY = getQuery("get_topics_with_all_paths");
-    private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_RECURSIVELY_QUERY = getQuery("get_resources_by_topic_public_id_recursively");
-    private static final String GET_RESOURCES_BY_TOPIC_PUBLIC_ID_QUERY = getQuery("get_resources_by_topic_public_id");
-    private static final String GET_FILTERS_BY_TOPIC_ID_QUERY = getQuery("get_filters_by_topic_public_id");
-    private static final String GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY = getQuery("get_filters_by_subject_public_id");
-    private static final String GET_SUBTOPICS_BY_TOPIC_ID_QUERY = getQuery("get_subtopics_by_topic_id_query");
-    private static final String GET_SUBTOPICS_BY_TOPIC_ID_AND_FILTERS_QUERY = getQuery("get_subtopics_by_topic_id_and_filters_query");
-    private static final String GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_subject_connections_by_topic_id");
-    private static final String GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_subtopic_connections_by_topic_id");
-    private static final String GET_PARENT_TOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY = getQuery("get_parent_topic_connections_by_topic_id");
-    private static final Comparator<ResourceIndexDocument> RESOURCE_BY_RANK = Comparator.comparing(resourceNode -> resourceNode.rank);
-    private static final Comparator<TopicNode> TOPIC_BY_RANK = Comparator.comparing(topicNode -> topicNode.rank);
-
-    public Topics(TopicRepository topicRepository, JdbcTemplate jdbcTemplate, TopicResourceTypeService topicResourceTypeService) {
-        this.jdbcTemplate = jdbcTemplate;
+    public Topics(TopicRepository topicRepository,
+                  TopicSubtopicRepository topicSubtopicRepository,
+                  SubjectTopicRepository subjectTopicRepository,
+                  TopicResourceTypeService topicResourceTypeService,
+                  SubjectRepository subjectRepository,
+                  TopicResourceRepository topicResourceRepository,
+                  TopicTreeByTopicElementRepository topicTreeRepository,
+                  TopicTreeSorter topicTreeSorter) {
+        this.topicRepository = topicRepository;
+        this.repository = topicRepository;
+        this.topicSubtopicRepository = topicSubtopicRepository;
+        this.subjectTopicRepository = subjectTopicRepository;
         this.topicResourceTypeService = topicResourceTypeService;
-        repository = topicRepository;
+        this.topicResourceRepository = topicResourceRepository;
+        this.subjectRepository = subjectRepository;
+        this.topicTreeRepository = topicTreeRepository;
+        this.topicTreeSorter = topicTreeSorter;
     }
 
+    private TopicIndexDocument createTopicIndexDocument(Topic topic, String language) {
+        return new TopicIndexDocument() {{
+            name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
+            id = topic.getPublicId();
+            contentUri = topic.getContentUri();
+            path = topic.getPrimaryPath().orElse(null);
+        }};
+    }
+
+    private TopicWithPathsIndexDocument createTopicWithPathsIndexDocument(Topic topic, String language) {
+        return new TopicWithPathsIndexDocument() {{
+            name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
+            id = topic.getPublicId();
+            contentUri = topic.getContentUri();
+            path = topic.getPrimaryPath().orElse(null);
+            paths = new ArrayList<>(topic.getAllPaths());
+        }};
+    }
 
     @GetMapping
     @ApiOperation("Gets all topics")
     public List<TopicIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
-    ) throws Exception {
-        TopicQueryExtractor extractor = new TopicQueryExtractor();
-        return jdbcTemplate.query(GET_TOPICS_QUERY, setQueryParameters(language), extractor::extractTopics
-        );
+    ) {
+        return topicRepository.findAllIncludingCachedUrlsAndTranslations()
+                .stream()
+                .map(topic -> this.createTopicIndexDocument(topic, language))
+                .collect(Collectors.toList());
     }
 
 
@@ -82,8 +96,9 @@ public class Topics extends CrudController<Topic> {
                                            @ApiParam(value = "ISO-639-1 language code", example = "nb")
                                            @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) {
-        TopicWithAllPathsQueryExtractor extractor = new TopicWithAllPathsQueryExtractor();
-        return jdbcTemplate.query(GET_TOPICS_WITH_ALL_PATHS_QUERY, setQueryParameters(language, id.toString()), extractor::extractTopic);
+        return topicRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
+                .map(topic -> this.createTopicWithPathsIndexDocument(topic, language))
+                .orElseThrow(() -> new NotFoundHttpRequestException("Topic was not found"));
     }
 
 
@@ -131,106 +146,70 @@ public class Topics extends CrudController<Topic> {
             @RequestParam(value = "relevance", required = false, defaultValue = "")
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
                     URI relevance
-    ) throws Exception {
+    ) {
+        final var topic = topicRepository.findFirstByPublicId(topicId).orElseThrow(() -> new NotFoundException("Topic", topicId));
 
-        final Map<Integer, TopicNode> nodeMap = jdbcTemplate.query(TOPIC_TREE_BY_TOPIC_ID, new Object[]{topicId.toString()}, this::buildTopicTree);
+        final List<TopicResource> topicResources;
+        final Set<Integer> topicIdsToSearchFor;
 
-        TopicIndexDocument topicIndexDocument = get(topicId, null);
+        // Add both topics and resourceTopics to a common list that will be sorted in a tree-structure based on rank at each level
+        final Set<TopicResourceTreeSortable> resourcesToSort = new HashSet<>();
 
-        if (filterIds == null || filterIds.length == 0) {
-            filterIds = getSubjectFilters(subjectId);
-        }
-
-        List<Object> args = new ArrayList<>();
-        String query;
         if (recursive) {
-            query = GET_RESOURCES_BY_TOPIC_PUBLIC_ID_RECURSIVELY_QUERY;
-            args.add(topicId.toString());
-            args.add(language);
-            args.add(language);
-            ResourceQueryExtractor extractor = new ResourceQueryExtractor();
-            query = extractor.addResourceTypesToQuery(resourceTypeIds, args, query);
-            query = extractor.addFiltersToQuery(filterIds, args, query);
+            final var topicList = topicTreeRepository.findAllByRootTopicIdOrTopicIdOrderByParentTopicIdAscParentTopicIdAscTopicRankAsc(topic.getId(), topic.getId());
 
-            Map<Integer, TopicNode> resourceMap = jdbcTemplate.query(query, setQueryParameters(args.toArray()), resultSet -> {
-                return populateTopicTree(extractor, relevance, topicIndexDocument, resultSet, nodeMap);
-            });
-            return resourceMap
-                    .values()
-                    .stream()
-                    .filter(topicNode -> topicNode.level == 0)
-                    .flatMap(subtopic ->
-                            Stream.concat(
-                                    subtopic.resources.stream().sorted(RESOURCE_BY_RANK), //resources on level 1
-                                    subtopic.subTopics.stream().sorted(TOPIC_BY_RANK).flatMap(subtopic2 -> //level 2 is topic-subtopic
-                                            Stream.concat(
-                                                    subtopic2.resources.stream().sorted(RESOURCE_BY_RANK), //resources on level 2
-                                                    subtopic2.subTopics.stream().sorted(TOPIC_BY_RANK).flatMap(sub3 -> //level 3 is topic-subtopic
-                                                            sub3.resources.stream().sorted(RESOURCE_BY_RANK)) //resources on level 3
-                                            )
-                                    )
-                            )
-                    )
-                    .collect(Collectors.toList());
+            topicList.forEach(topicTreeElement -> resourcesToSort.add(new TopicResourceTreeSortable("topic", "topic", topicTreeElement.getTopicId(), topicTreeElement.getParentTopicId(), topicTreeElement.getTopicRank())));
 
+            topicIdsToSearchFor = topicList.stream()
+                    .map(TopicTreeByTopicElement::getTopicId)
+                    .collect(Collectors.toSet());
+
+            if (filterIds == null || filterIds.length == 0) {
+                filterIds = getSubjectFilters(subjectId);
+            }
         } else {
-            query = GET_RESOURCES_BY_TOPIC_PUBLIC_ID_QUERY;
-            args.add(language);
-            args.add(language);
-            args.add(topicId.toString());
-            ResourceQueryExtractor extractor = new ResourceQueryExtractor();
-            query = extractor.addResourceTypesToQuery(resourceTypeIds, args, query);
-            query = extractor.addFiltersToQuery(filterIds, args, query);
-
-            return jdbcTemplate.query(query, setQueryParameters(args.toArray()), resultSet -> {
-                return extractor.extractResources(relevance, topicIndexDocument, resultSet);
-            });
+            topicIdsToSearchFor = Set.of(topic.getId());
         }
 
+
+        // If null is sent to query it will be ignored, otherwise it will filter by relevance
+        final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
+
+        if (resourceTypeIds.length > 0 && filterIds.length > 0) {
+            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIdsToSearchFor, Set.of(filterIds), Set.of(resourceTypeIds), relevanceArgument);
+        } else if (resourceTypeIds.length > 0) {
+            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIdsToSearchFor, Set.of(resourceTypeIds), relevanceArgument);
+        } else if (filterIds.length > 0) {
+            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIdsToSearchFor, Set.of(filterIds), relevanceArgument);
+        } else {
+            topicResources = topicResourceRepository.findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIdsToSearchFor, relevanceArgument);
+        }
+
+        topicResources.forEach(topicResource -> resourcesToSort.add(new TopicResourceTreeSortable(topicResource)));
+
+        // Sort the list, extract all the topicResource objects in between topics and return list of documents
+
+        return topicTreeSorter
+                .sortList(resourcesToSort)
+                .stream()
+                .map(TopicResourceTreeSortable::getTopicResource)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(topicResource -> new ResourceIndexDocument(topicResource, language))
+                .collect(Collectors.toList());
     }
 
     private URI[] getSubjectFilters(URI subjectId) {
         if (subjectId != null) {
-            FilterExtractor extractor = new FilterExtractor();
-            return jdbcTemplate
-                    .query(GET_FILTERS_BY_SUBJECT_PUBLIC_ID_QUERY, setQueryParameters(subjectId.toString()), extractor::extractFilters)
-                    .stream().map(filter -> filter.id).toArray(URI[]::new);
+            return subjectRepository.findFirstByPublicIdIncludingFilters(subjectId)
+                    .stream()
+                    .map(Subject::getFilters)
+                    .flatMap(Collection::stream)
+                    .map(Filter::getPublicId)
+                    .toArray(URI[]::new);
         }
-        return new URI[]{};
+        return new URI[0];
     }
-
-    private Map<Integer, TopicNode> populateTopicTree(ResourceQueryExtractor extractor, URI relevance, TopicIndexDocument topicIndexDocument, ResultSet resultSet, Map<Integer, TopicNode> nodeMap) throws SQLException {
-        List<ResourceIndexDocument> resources = extractor.extractResources(relevance, topicIndexDocument, resultSet);
-
-        resources.forEach(resourceIndexDocument -> {
-            Integer topicId = resourceIndexDocument.topicNumericId;
-            nodeMap.get(topicId).resources.add(resourceIndexDocument);
-        });
-        return nodeMap;
-    }
-
-
-    private Map<Integer, TopicNode> buildTopicTree(ResultSet resultSet) throws SQLException {
-        Map<Integer, TopicNode> nodeMap = new HashMap<>();
-
-        while (resultSet.next()) {
-            int parentTopicId = resultSet.getInt("parent_topic_id");
-
-            TopicNode t = new TopicNode();
-            t.topicId = resultSet.getInt("topic_id");
-            t.rank = resultSet.getInt("topic_rank");
-            t.publicId = resultSet.getString("public_id");
-            t.level = resultSet.getInt("topic_level");
-            if (t.level == 0) {
-                nodeMap.put(t.topicId, t);
-            } else {
-                nodeMap.get(parentTopicId).subTopics.add(t);
-                nodeMap.put(t.topicId, t);
-            }
-        }
-        return nodeMap;
-    }
-
 
     @GetMapping("/{id}/resource-types")
     @ApiOperation(value = "Gets all resource types associated with this resource")
@@ -244,13 +223,14 @@ public class Topics extends CrudController<Topic> {
         try {
             return topicResourceTypeService.getTopicResourceTypes(id)
                     .stream()
+                    .filter(topicResourceType -> topicResourceType.getResourceType().isPresent())
                     .map(topicResourceType -> new no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument() {{
-                        ResourceType resourceType = topicResourceType.getResourceType();
+                        ResourceType resourceType = topicResourceType.getResourceType().get();
                         id = resourceType.getPublicId();
-                        ResourceType parent = resourceType.getParent();
+                        ResourceType parent = resourceType.getParent().orElse(null);
                         parentId = parent != null ? parent.getPublicId() : null;
                         connectionId = topicResourceType.getPublicId();
-                        ResourceTypeTranslation translation = language != null ? resourceType.getTranslation(language) : null;
+                        ResourceTypeTranslation translation = language != null ? resourceType.getTranslation(language).orElse(null) : null;
                         name = translation != null ? translation.getName() : resourceType.getName();
                     }})
                     .collect(Collectors.toList());
@@ -271,10 +251,13 @@ public class Topics extends CrudController<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        FilterQueryExtractor extractor = new FilterQueryExtractor();
-        return jdbcTemplate.query(GET_FILTERS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()),
-                extractor::extractFilters
-        );
+        return topicRepository.findFirstByPublicIdIncludingFilters(id)
+                .stream()
+                .map(Topic::getTopicFilters)
+                .flatMap(Collection::stream)
+                .filter(topicFilter -> topicFilter.getFilter().isPresent())
+                .map(topicFilter -> new FilterIndexDocument(topicFilter, language))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}/topics")
@@ -298,42 +281,43 @@ public class Topics extends CrudController<Topic> {
             filterIds = getSubjectFilters(subjectId);
         }
 
-        String sql;
-        List<Object> args;
         if (filterIds.length > 0) {
-            sql = GET_SUBTOPICS_BY_TOPIC_ID_AND_FILTERS_QUERY;
-            StringBuffer filtersCombined = new StringBuffer();
-            Arrays.stream(filterIds).forEach(filtersCombined::append);
-            args = Arrays.asList(language, id.toString(), filtersCombined.toString());
+            return topicSubtopicRepository.findAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(id, Set.of(filterIds))
+                    .stream()
+                    .map(topicSubtopic -> new SubTopicIndexDocument(topicSubtopic, language))
+                    .collect(Collectors.toList());
         } else {
-            sql = GET_SUBTOPICS_BY_TOPIC_ID_QUERY.replace("1 = 1", "t.public_id = ?");
-            args = Arrays.asList(language, id.toString());
+            return topicSubtopicRepository.findAllByTopicPublicIdIncludingSubtopicAndSubtopicTranslations(id)
+                    .stream()
+                    .map(topicSubtopic -> new SubTopicIndexDocument(topicSubtopic, language))
+                    .collect(Collectors.toList());
         }
-        SubTopicQueryExtractor extractor = new SubTopicQueryExtractor();
-        return jdbcTemplate.query(sql, setQueryParameters(args.toArray()),
-                extractor::extractSubTopics
-        );
     }
 
     @GetMapping("/{id}/connections")
     @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
     public List<ConnectionIndexDocument> getAllConnections(@PathVariable("id") URI id) {
-        List<ConnectionIndexDocument> results = new ArrayList<>();
-        ConnectionQueryExtractor ConnectionQueryExtractor = new ConnectionQueryExtractor();
-        results.addAll(jdbcTemplate.query(GET_PARENT_TOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()), ConnectionQueryExtractor::extractConnections));
-        results.addAll(jdbcTemplate.query(GET_SUBJECT_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()), ConnectionQueryExtractor::extractConnections));
-        results.addAll(jdbcTemplate.query(GET_SUBTOPIC_CONNECTIONS_BY_TOPIC_ID_QUERY, setQueryParameters(id.toString()), ConnectionQueryExtractor::extractConnections));
+        final var results = new ArrayList<ConnectionIndexDocument>();
+
+        topicSubtopicRepository
+                .findAllBySubtopicPublicIdIncludingTopicAndSubtopicAndCachedUrls(id)
+                .stream()
+                .map(ConnectionIndexDocument::parentConnection)
+                .forEach(results::add);
+
+        subjectTopicRepository
+                .findAllByTopicPublicIdIncludingSubjectAndTopicAndCachedUrls(id)
+                .stream()
+                .map(ConnectionIndexDocument::new)
+                .forEach(results::add);
+
+        topicSubtopicRepository
+                .findAllByTopicPublicIdIncludingTopicAndSubtopicAndCachedUrls(id)
+                .stream()
+                .map(ConnectionIndexDocument::subtopicConnection)
+                .forEach(results::add);
+
         return results;
-    }
-
-    public static class TopicNode {
-
-        int topicId;
-        int rank;
-        int level;
-        String publicId;
-        List<TopicNode> subTopics = new ArrayList<>();
-        List<ResourceIndexDocument> resources = new ArrayList<>();
     }
 
 }

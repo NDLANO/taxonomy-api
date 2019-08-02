@@ -19,16 +19,28 @@ public class TopicTranslation {
     @Column
     private String languageCode;
 
-    private TopicTranslation() {
+    TopicTranslation() {
     }
 
     public TopicTranslation(Topic topic, String languageCode) {
-        this.topic = topic;
+        setTopic(topic);
         this.languageCode = languageCode;
     }
 
+
     public Topic getTopic() {
         return topic;
+    }
+
+    public void setTopic(Topic topic) {
+        if (topic != this.topic && this.topic != null && this.topic.getTranslations().contains(this)) {
+            this.topic.removeTranslation(this);
+        }
+        this.topic = topic;
+
+        if (topic != null && !topic.getTranslations().contains(this)) {
+            topic.addTranslation(this);
+        }
     }
 
     public String getName() {

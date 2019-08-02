@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 public class ResourceResourceTypes {
 
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
-    private ResourceTypeRepository resourceTypeRepository;
+    private final ResourceTypeRepository resourceTypeRepository;
     private final ResourceRepository resourceRepository;
 
     public ResourceResourceTypes(ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceTypeRepository resourceTypeRepository, ResourceRepository resourceRepository) {

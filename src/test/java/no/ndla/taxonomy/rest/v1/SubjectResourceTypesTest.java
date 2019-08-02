@@ -6,7 +6,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
-import static no.ndla.taxonomy.TestUtils.*;
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.junit.Assert.assertEquals;
 
 public class SubjectResourceTypesTest extends RestTest {
@@ -32,8 +32,8 @@ public class SubjectResourceTypesTest extends RestTest {
                 )
         ).getPublicId();
 
-        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources");
-        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subjectId + "/resources");
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertEquals(2, result[0].resourceTypes.size());
@@ -54,8 +54,8 @@ public class SubjectResourceTypesTest extends RestTest {
                 )
         ).getPublicId();
 
-        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources");
-        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subjectId + "/resources");
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(1, result.length);
         assertEquals(0, result[0].resourceTypes.size());
@@ -76,8 +76,8 @@ public class SubjectResourceTypesTest extends RestTest {
                 )
         ).getPublicId();
 
-        MockHttpServletResponse response = getResource("/v1/subjects/" + subjectId + "/resources?type=" + lecture);
-        ResourceIndexDocument[] result = getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subjectId + "/resources?type=" + lecture);
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "a lecture".equals(r.name));

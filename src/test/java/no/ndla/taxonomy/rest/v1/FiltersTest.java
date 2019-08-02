@@ -7,7 +7,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
-import static no.ndla.taxonomy.TestUtils.*;
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -20,8 +20,8 @@ public class FiltersTest extends RestTest {
                 .name("1T-YF")
         );
 
-        MockHttpServletResponse response = getResource("/v1/filters/" + "urn:filter:1");
-        Filters.FilterIndexDocument filter = getObject(Filters.FilterIndexDocument.class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/filters/" + "urn:filter:1");
+        Filters.FilterIndexDocument filter = testUtils.getObject(Filters.FilterIndexDocument.class, response);
 
         assertEquals("1T-YF", filter.name);
     }
@@ -38,8 +38,8 @@ public class FiltersTest extends RestTest {
                 .name("1T-ST")
         );
 
-        MockHttpServletResponse response = getResource("/v1/filters");
-        Filters.FilterIndexDocument[] filters = getObject(Filters.FilterIndexDocument[].class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/filters");
+        Filters.FilterIndexDocument[] filters = testUtils.getObject(Filters.FilterIndexDocument[].class, response);
 
         assertEquals(2, filters.length);
         assertAnyTrue(filters, f -> f.name.equals("1T-YF"));
@@ -51,7 +51,7 @@ public class FiltersTest extends RestTest {
         Filter filter = builder.filter(f -> f.publicId("urn:filter:1").name("1T-YF"));
 
         assertNotNull(filterRepository.findByPublicId(filter.getPublicId()));
-        deleteResource("/v1/filters/" + filter.getPublicId());
+        testUtils.deleteResource("/v1/filters/" + filter.getPublicId());
         assertNull(filterRepository.findByPublicId(filter.getPublicId()));
     }
 
@@ -71,7 +71,7 @@ public class FiltersTest extends RestTest {
         Filter preResultFilter = filterRepository.findByPublicId(filter.getPublicId());
         entityManager.refresh(preResultFilter); //as filter.resources would otherwise be empty.
 
-        deleteResource("/v1/filters/" + filter.getPublicId());
+        testUtils.deleteResource("/v1/filters/" + filter.getPublicId());
 
         Filter resultFilter = filterRepository.findByPublicId(filter.getPublicId());
         assertNull(resultFilter);
@@ -79,28 +79,29 @@ public class FiltersTest extends RestTest {
 
     @Test
     public void can_delete_filter_connected_to_2_resources() throws Exception {
-        final Filter filter = builder.filter(f -> f.publicId("urn:filter:1").name("Vg 1"));
-        builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .topic(t -> t
-                        .publicId("urn:topic:1")
-                        .resource(r -> r
-                                .publicId("urn:resource:1")
-                                .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core1"))))));
-        builder.subject(s -> s
-                .publicId("urn:subject:2")
-                .topic(t -> t
-                        .publicId("urn:topic:2")
-                        .resource(r -> r
-                                .publicId("urn:resource:2")
-                                .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core2"))))));
-        Filter preResultFilter = filterRepository.findByPublicId(filter.getPublicId());
-        entityManager.refresh(preResultFilter); //as filter.resources would otherwise be empty.
+        {
+            final Filter filter = builder.filter(f -> f.publicId("urn:filter:1").name("Vg 1"));
+            builder.subject(s -> s
+                    .publicId("urn:subject:1")
+                    .topic(t -> t
+                            .publicId("urn:topic:1")
+                            .resource(r -> r
+                                    .publicId("urn:resource:1")
+                                    .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core1"))))));
+            builder.subject(s -> s
+                    .publicId("urn:subject:2")
+                    .topic(t -> t
+                            .publicId("urn:topic:2")
+                            .resource(r -> r
+                                    .publicId("urn:resource:2")
+                                    .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core2"))))));
+        }
 
-        deleteResource("/v1/filters/" + filter.getPublicId());
+        assertNotNull(filterRepository.findByPublicId(new URI("urn:filter:1")));
 
-        Filter resultFilter = filterRepository.findByPublicId(filter.getPublicId());
-        assertNull(resultFilter);
+        testUtils.deleteResource("/v1/filters/urn:filter:1");
+
+        assertNull(filterRepository.findByPublicId(new URI("urn:filter:1")));
     }
 
     @Test
@@ -111,11 +112,11 @@ public class FiltersTest extends RestTest {
             name = "name";
             subjectId = URI.create("urn:subject:1");
         }};
-        createResource("/v1/filters", command, status().isCreated());
+        testUtils.createResource("/v1/filters", command, status().isCreated());
         Filter preResultFilter = filterRepository.findByPublicId(URI.create("urn:filter:1"));
         assertNotNull(preResultFilter);
 
-        deleteResource("/v1/filters/" + URI.create("urn:filter:1"));
+        testUtils.deleteResource("/v1/filters/" + URI.create("urn:filter:1"));
 
         Filter resultFilter = filterRepository.findByPublicId(URI.create("urn:filter:1"));
         assertNull(resultFilter);
@@ -129,13 +130,13 @@ public class FiltersTest extends RestTest {
             name = "name";
             subjectId = URI.create("urn:subject:1");
         }};
-        createResource("/v1/filters", command, status().isCreated());
+        testUtils.createResource("/v1/filters", command, status().isCreated());
         Filter filter = filterRepository.findByPublicId(URI.create("urn:filter:1"));
         builder.topic(t -> t.publicId("urn:topic:1").filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core1"))));
         builder.topic(t -> t.publicId("urn:topic:2").filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core2"))));
         entityManager.refresh(filter);
 
-        deleteResource("/v1/filters/" + URI.create("urn:filter:1"));
+        testUtils.deleteResource("/v1/filters/" + URI.create("urn:filter:1"));
 
         Filter resultFilter = filterRepository.findByPublicId(URI.create("urn:filter:1"));
         assertNull(resultFilter);
@@ -150,10 +151,10 @@ public class FiltersTest extends RestTest {
             name = "name";
             subjectId = URI.create("urn:subject:1");
         }};
-        createResource("/v1/filters", command, status().isCreated());
+        testUtils.createResource("/v1/filters", command, status().isCreated());
 
         Filter filter = filterRepository.getByPublicId(URI.create("urn:filter:1"));
-        assertEquals("urn:subject:1", filter.getSubject().getPublicId().toString());
+        assertEquals("urn:subject:1", filter.getSubject().get().getPublicId().toString());
     }
 
 
@@ -164,7 +165,7 @@ public class FiltersTest extends RestTest {
             name = "name";
         }};
 
-        createResource("/v1/filters", command, status().isBadRequest());
+        testUtils.createResource("/v1/filters", command, status().isBadRequest());
     }
 
 
@@ -177,8 +178,8 @@ public class FiltersTest extends RestTest {
             subjectId = URI.create("urn:subject:1");
         }};
 
-        createResource("/v1/filters", command, status().isCreated());
-        createResource("/v1/filters", command, status().isConflict());
+        testUtils.createResource("/v1/filters", command, status().isCreated());
+        testUtils.createResource("/v1/filters", command, status().isConflict());
     }
 
     @Test
@@ -192,7 +193,7 @@ public class FiltersTest extends RestTest {
             subjectId = URI.create("urn:subject:1");
         }};
 
-        updateResource("/v1/filters/" + id, command);
+        testUtils.updateResource("/v1/filters/" + id, command);
 
         Filter filter = filterRepository.getByPublicId(id);
         assertEquals(command.name, filter.getName());
@@ -200,7 +201,7 @@ public class FiltersTest extends RestTest {
 
     @Test
     public void get_unknown_filter_fails_gracefully() throws Exception {
-        getResource("/v1/filters/nonexistantid", status().isNotFound());
+        testUtils.getResource("/v1/filters/nonexistantid", status().isNotFound());
     }
 
     @Test
@@ -213,12 +214,12 @@ public class FiltersTest extends RestTest {
                 .name("Tømrer")
                 .publicId("urn:filter:2"));
 
-        updateResource("/v1/filters/urn:filter:2", new Filters.UpdateFilterCommand() {{
+        testUtils.updateResource("/v1/filters/urn:filter:2", new Filters.UpdateFilterCommand() {{
             subjectId = URI.create("urn:subject:1");
         }});
 
-        MockHttpServletResponse response = getResource("/v1/filters/urn:filter:2");
-        Filters.FilterIndexDocument filter = getObject(Filters.FilterIndexDocument.class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/filters/urn:filter:2");
+        Filters.FilterIndexDocument filter = testUtils.getObject(Filters.FilterIndexDocument.class, response);
 
         assertEquals("urn:subject:1", filter.subjectId.toString());
     }
@@ -236,12 +237,12 @@ public class FiltersTest extends RestTest {
                 .publicId("urn:filter:2")
                 .subject(first));
 
-        updateResource("/v1/filters/urn:filter:2", new Filters.UpdateFilterCommand() {{
+        testUtils.updateResource("/v1/filters/urn:filter:2", new Filters.UpdateFilterCommand() {{
             subjectId = URI.create("urn:subject:3");
         }});
 
-        MockHttpServletResponse response = getResource("/v1/filters/urn:filter:2");
-        Filters.FilterIndexDocument filter = getObject(Filters.FilterIndexDocument.class, response);
+        MockHttpServletResponse response = testUtils.getResource("/v1/filters/urn:filter:2");
+        Filters.FilterIndexDocument filter = testUtils.getObject(Filters.FilterIndexDocument.class, response);
 
         assertEquals("urn:subject:3", filter.subjectId.toString());
     }

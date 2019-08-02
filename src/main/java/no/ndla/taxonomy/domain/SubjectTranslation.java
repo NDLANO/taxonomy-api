@@ -19,16 +19,27 @@ public class SubjectTranslation {
     @Column
     private String languageCode;
 
-    private SubjectTranslation() {
+    SubjectTranslation() {
     }
 
     public SubjectTranslation(Subject subject, String languageCode) {
-        this.subject = subject;
+        setSubject(subject);
         this.languageCode = languageCode;
     }
 
     public Subject getSubject() {
         return subject;
+    }
+
+    public void setSubject(Subject subject) {
+        if (subject != this.subject && this.subject != null && this.subject.getTranslations().contains(this)) {
+            this.subject.removeTranslation(this);
+        }
+        this.subject = subject;
+
+        if (subject != null && !subject.getTranslations().contains(this)) {
+            subject.addTranslation(this);
+        }
     }
 
     public String getName() {
