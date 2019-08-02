@@ -6,6 +6,7 @@ import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -15,6 +16,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @Service
+@Transactional
 public class TopicReusedInSameSubjectCloningService {
     private SubjectTopicRepository subjectTopicRepository;
     private TopicSubtopicRepository topicSubtopicRepository;
@@ -26,7 +28,7 @@ public class TopicReusedInSameSubjectCloningService {
         this.topicRepository = topicRepository;
     }
 
-    public List<SubjectTopic> findSubjectTopics(Topic topic) {
+    private List<SubjectTopic> findSubjectTopics(Topic topic) {
         Iterator<Topic> topicIterator = new Iterator<Topic>() {
             private List<Topic> expand = Collections.singletonList(topic);
             private Iterator<Topic> nextTopic = expand.iterator();
@@ -68,6 +70,7 @@ public class TopicReusedInSameSubjectCloningService {
     }
 
     public class TopicCloningContext {
+        @Transactional
         public TopicHierarchyFixReport copyConflictingTopic(URI contentUri) throws TopicIsNotInConflictException {
             Topic topic = topicRepository.findByPublicId(contentUri);
             Map<URI, Topic> topicObjects = new HashMap<>();
@@ -126,6 +129,7 @@ public class TopicReusedInSameSubjectCloningService {
             );
         }
 
+        @Transactional
         public class TopicCloneFix {
             private TopicCloning topicCloning;
 
@@ -169,7 +173,7 @@ public class TopicReusedInSameSubjectCloningService {
             private Topic clonedTopic;
             private List<TopicCloning> clonedSubtopics;
 
-            public TopicCloning(Topic parentTopic, Topic topic) {
+            private TopicCloning(Topic parentTopic, Topic topic) {
                 this.parentTopic = parentTopic;
                 this.clonedSubtopics = new ArrayList<>();
                 this.topic = topic;
@@ -254,6 +258,10 @@ public class TopicReusedInSameSubjectCloningService {
                         TopicSubtopic clonedSubtopic = clonedTopic.addSubtopic(subtopicCloning.getClonedTopic());
                         clonedSubtopic.setPrimary(topicSubtopic.isPrimary());
                         clonedSubtopic.setRank(topicSubtopic.getRank());
+
+                        // Not saving and flushing at this point produces a Constraint Violation by some reason because it tries
+                        // to insert this record twice later. This could be because of inconsistency in relations in the objects created
+                        topicSubtopicRepository.saveAndFlush(topicSubtopic);
                     }
                 }
 
@@ -277,12 +285,13 @@ public class TopicReusedInSameSubjectCloningService {
             }
         }
 
+        @Transactional
         public class TopicHierarchyFixReport {
             private Map<URI, List<URI>> fullSubjectParentsMap;
             private List<URI> cloningTopicRoots;
             private List<TopicCloning> clonedTopics;
 
-            public TopicHierarchyFixReport(Map<URI, List<URI>> fullSubjectParentsMap, List<URI> cloningTopicRoots, List<TopicCloning> clonedTopics) {
+            private TopicHierarchyFixReport(Map<URI, List<URI>> fullSubjectParentsMap, List<URI> cloningTopicRoots, List<TopicCloning> clonedTopics) {
                 this.fullSubjectParentsMap = fullSubjectParentsMap;
                 this.cloningTopicRoots = cloningTopicRoots;
                 this.clonedTopics = clonedTopics;
@@ -305,7 +314,7 @@ public class TopicReusedInSameSubjectCloningService {
     public class TopicIsNotInConflictException extends Exception {
         private Topic topic;
 
-        public TopicIsNotInConflictException(Topic topic) {
+        private TopicIsNotInConflictException(Topic topic) {
             super("Topic is not reused in the same subject: "+topic.getPublicId().toString());
             this.topic = topic;
         }
