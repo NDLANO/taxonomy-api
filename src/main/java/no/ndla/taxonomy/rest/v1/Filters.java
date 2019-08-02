@@ -114,6 +114,10 @@ public class Filters extends CrudController<Filter> {
                     .map(Subject::getPublicId)
                     .orElse(null);
         }
+
+        public URI getId() {
+            return id;
+        }
     }
 
     public static class CreateFilterCommand extends CreateCommand<Filter> {
