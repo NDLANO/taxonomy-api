@@ -151,7 +151,12 @@ public class Subjects extends CrudController<Subject> {
                 .map(topicSubtopic -> createSubTopicIndexDocument(subject, topicSubtopic, language))
                 .forEach(returnList::add);
 
-        return topicTreeSorter.sortList(returnList);
+        // Remove duplicates from the list
+        // List is sorted by parent, so we assume that any subtree that has a duplicate parent also are repeated with the same subtree
+        // on the duplicates, so starting to remove duplicates should not leave any parent-less
+
+        // (Don't know how much it makes sense to sort the list by parent and rank when duplicates are removed, but old code did)
+        return topicTreeSorter.sortList(returnList).stream().distinct().collect(Collectors.toList());
     }
 
     private SubTopicIndexDocument createSubTopicIndexDocument(Subject subject, Object connection, String language) {
