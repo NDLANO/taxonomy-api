@@ -58,13 +58,28 @@ public class Topics extends CrudController<Topic> {
         this.topicTreeSorter = topicTreeSorter;
     }
 
-    private TopicIndexDocument createTopicIndexDocument(Topic topic, String language) {
-        return new TopicIndexDocument() {{
-            name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
-            id = topic.getPublicId();
-            contentUri = topic.getContentUri();
-            path = topic.getPrimaryPath().orElse(null);
-        }};
+    private List<TopicIndexDocument> createTopicIndexDocumentsByPrimaryPath(Topic topic, String language) {
+        if (topic.getCachedUrls().stream().anyMatch(CachedUrl::isPrimary)) {
+            // Return one full object for each of the different primary paths the object has (cachedUrls)
+            return topic.getCachedUrls().stream()
+                    .filter(CachedUrl::isPrimary)
+                    .map(cachedUrl -> new TopicIndexDocument() {{
+                        name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
+                        id = topic.getPublicId();
+                        contentUri = topic.getContentUri();
+                        path = cachedUrl.getPath();
+                    }})
+                    .collect(Collectors.toList());
+        } else {
+            // Object has no primary paths, but we still needs to return it. It will have the "path" field set to null
+            return List.of(new TopicIndexDocument() {{
+                name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
+                id = topic.getPublicId();
+                contentUri = topic.getContentUri();
+                path = null;
+            }});
+
+        }
     }
 
     private TopicWithPathsIndexDocument createTopicWithPathsIndexDocument(Topic topic, String language) {
@@ -85,7 +100,8 @@ public class Topics extends CrudController<Topic> {
     ) {
         return topicRepository.findAllIncludingCachedUrlsAndTranslations()
                 .stream()
-                .map(topic -> this.createTopicIndexDocument(topic, language))
+                .map(topic -> this.createTopicIndexDocumentsByPrimaryPath(topic, language))
+                .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
 
@@ -155,6 +171,11 @@ public class Topics extends CrudController<Topic> {
         // Add both topics and resourceTopics to a common list that will be sorted in a tree-structure based on rank at each level
         final Set<TopicResourceTreeSortable> resourcesToSort = new HashSet<>();
 
+        // If subject ID is specified and no filter IDs is specified, the filters are replaced with all filters directly assosiated with requested subject
+        if (filterIds == null || filterIds.length == 0) {
+            filterIds = getSubjectFilters(subjectId);
+        }
+
         if (recursive) {
             final var topicList = topicTreeRepository.findAllByRootTopicIdOrTopicIdOrderByParentTopicIdAscParentTopicIdAscTopicRankAsc(topic.getId(), topic.getId());
 
@@ -163,10 +184,6 @@ public class Topics extends CrudController<Topic> {
             topicIdsToSearchFor = topicList.stream()
                     .map(TopicTreeByTopicElement::getTopicId)
                     .collect(Collectors.toSet());
-
-            if (filterIds == null || filterIds.length == 0) {
-                filterIds = getSubjectFilters(subjectId);
-            }
         } else {
             topicIdsToSearchFor = Set.of(topic.getId());
         }

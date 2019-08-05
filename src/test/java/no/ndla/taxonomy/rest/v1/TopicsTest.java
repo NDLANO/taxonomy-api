@@ -14,13 +14,11 @@ import no.ndla.taxonomy.rest.v1.dtos.topics.TopicIndexDocument;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
@@ -518,6 +516,56 @@ public class TopicsTest extends RestTest {
     }
 
     @Test
+    @Transactional
+    public void can_get_filters_for_topic() throws Exception {
+        final var topic1 = builder.topic(builder -> builder.publicId("urn:topic:1"));
+        final var topic2 = builder.topic(builder -> builder.publicId("urn:topic:2"));
+        builder.topic(builder -> builder.publicId("urn:topic:3"));
+
+        final var filter1 = builder.filter(builder -> builder.publicId("urn:filter:1"));
+        final var filter2 = builder.filter(builder -> builder.publicId("urn:filter:2"));
+        final var filter3 = builder.filter(builder -> builder.publicId("urn:filter:3"));
+
+        final var relevance1 = builder.relevance();
+        final var relevance2 = builder.relevance();
+        final var relevance3 = builder.relevance();
+
+        topic1.addFilter(filter1, relevance1);
+        topic2.addFilter(filter1, relevance1);
+        topic2.addFilter(filter2, relevance2);
+
+        final var resource1 = builder.resource();
+        resource1.addFilter(filter3, relevance3);
+        topic1.addResource(resource1);
+
+        {
+            final var returnedFilters = Arrays.asList(testUtils.getObject(Filters.FilterIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:1/filters")));
+
+            assertEquals(1, returnedFilters.size());
+            assertTrue(returnedFilters
+                    .stream()
+                    .map(Filters.FilterIndexDocument::getId)
+                    .collect(Collectors.toList()).contains(new URI("urn:filter:1")));
+        }
+
+        {
+            final var returnedFilters = Arrays.asList(testUtils.getObject(Filters.FilterIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:2/filters")));
+
+            assertEquals(2, returnedFilters.size());
+            assertTrue(returnedFilters
+                    .stream()
+                    .map(Filters.FilterIndexDocument::getId)
+                    .collect(Collectors.toList()).containsAll(Set.of(new URI("urn:filter:1"), new URI("urn:filter:2"))));
+        }
+
+        {
+            final var returnedFilters = Arrays.asList(testUtils.getObject(Filters.FilterIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:3/filters")));
+
+            assertEquals(0, returnedFilters.size());
+        }
+    }
+
+    @Test
     public void resources_can_be_filtered_by_relevance() throws Exception {
         executeSqlScript("classpath:resource_with_filters_and_relevances_test_setup.sql", false);
 
@@ -546,14 +594,91 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void resources_can_be_filtered_by_subject_filters() throws Exception {
-        executeSqlScript("classpath:resource_with_filters_and_relevances_test_setup.sql", false);
+        final var subject1 = builder.subject(builder -> builder.publicId("urn:subject:1"));
+        final var subject2 = builder.subject(builder -> builder.publicId("urn:subject:2"));
+        final var subject3 = builder.subject(builder -> builder.publicId("urn:subject:3"));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?subject=urn:subject:1");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
-        assertEquals(10, resources.length);
+        final var relevance1 = builder.relevance(builder -> builder.publicId("urn:relevance:1"));
+        final var filter1 = builder.filter(builder -> builder.publicId("urn:filter:1"));
+        final var filter2 = builder.filter(builder -> builder.publicId("urn:filter:2"));
+
+        final var topic1 = builder.topic(builder -> builder.publicId("urn:topic:1"));
+        final var topic2 = builder.topic(builder -> builder.publicId("urn:topic:2"));
+        final var topic3 = builder.topic(builder -> builder.publicId("urn:topic:3"));
+
+        subject1.addTopic(topic1);
+        subject1.addTopic(topic2);
+        subject1.addTopic(topic3);
+
+        final var resource1 = builder.resource(builder -> builder.publicId("urn:resource:1"));
+        final var resource2 = builder.resource(builder -> builder.publicId("urn:resource:2"));
+        final var resource3 = builder.resource(builder -> builder.publicId("urn:resource:3"));
+
+        resource1.addFilter(filter1, relevance1);
+        resource2.addFilter(filter2, relevance1);
+
+        subject1.addFilter(filter1);
+        subject2.addFilter(filter2);
+
+        topic1.addResource(resource1);
+        topic1.addResource(resource2);
+        topic1.addResource(resource3);
+
+        topic2.addResource(resource1);
+        topic2.addResource(resource2);
+        topic2.addResource(resource3);
+
+        topic3.addResource(resource1);
+        topic3.addResource(resource2);
+        topic3.addResource(resource3);
+
+        {
+            final var resources = Arrays.asList(testUtils.getObject(ResourceIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:1/resources")));
+            assertEquals(3, resources.size());
+            assertTrue(
+                    resources.stream()
+                            .map(ResourceIndexDocument::getId)
+                            .collect(Collectors.toSet())
+                            .containsAll(Set.of(new URI("urn:resource:1"), new URI("urn:resource:2"), new URI("urn:resource:3")))
+            );
+        }
+
+        {
+            final var resources = Arrays.asList(testUtils.getObject(ResourceIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:1/resources?subject=urn:subject:1")));
+            assertEquals(1, resources.size());
+            assertTrue(
+                    resources.stream()
+                            .map(ResourceIndexDocument::getId)
+                            .collect(Collectors.toSet())
+                            .contains(new URI("urn:resource:1"))
+            );
+        }
+
+        {
+            final var resources = Arrays.asList(testUtils.getObject(ResourceIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:1/resources?subject=urn:subject:2")));
+            assertTrue(
+                    resources.stream()
+                            .map(ResourceIndexDocument::getId)
+                            .collect(Collectors.toSet())
+                            .contains(new URI("urn:resource:2"))
+            );
+        }
+
+        // subject:3 has no filters assigned, resulting in no filters, and then returning all topics
+        {
+            final var resources = Arrays.asList(testUtils.getObject(ResourceIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:1/resources?subject=urn:subject:3")));
+            assertEquals(3, resources.size());
+            assertTrue(
+                    resources.stream()
+                            .map(ResourceIndexDocument::getId)
+                            .collect(Collectors.toSet())
+                            .containsAll(Set.of(new URI("urn:resource:1"), new URI("urn:resource:2"), new URI("urn:resource:3"))
+                            )
+            );
+        }
     }
 
-    private class ConnectionTypeCounter {
+    private static class ConnectionTypeCounter {
         private ConnectionIndexDocument[] connections;
         private int subjectCount;
         private int parentCount;

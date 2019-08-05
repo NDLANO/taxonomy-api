@@ -65,6 +65,10 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     @JsonIgnore
     public int topicNumericId;
 
+    public URI getId() {
+        return id;
+    }
+
     public ResourceIndexDocument() {
 
     }

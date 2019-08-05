@@ -20,6 +20,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -48,11 +49,23 @@ public class Resources extends CrudController<Resource> {
 
         return resourceRepository.findAllIncludingCachedUrlsAndTranslations()
                 .stream()
-                .map(resource -> {
-                    final var resourceIndexDocument = new ResourceIndexDocument(resource, language);
-                    resource.getPrimaryPath().ifPresent(resourceIndexDocument::setPath);
+                .flatMap(resource -> {
+                    // Return single object with null path if there is no primary paths
+                    // If primary paths exists, return one object for each primary path found
 
-                    return resourceIndexDocument;
+                    if (resource.getPrimaryPath().isEmpty()) {
+                        return Set.of(new ResourceIndexDocument(resource, language)).stream();
+                    }
+
+                    return resource.getCachedUrls()
+                            .stream()
+                            .filter(CachedUrl::isPrimary)
+                            .map(cachedUrl -> {
+                                final var resourceIndexDocument = new ResourceIndexDocument(resource, language);
+                                resource.getPrimaryPath().ifPresent(resourceIndexDocument::setPath);
+
+                                return resourceIndexDocument;
+                            });
                 })
                 .collect(Collectors.toList());
     }
