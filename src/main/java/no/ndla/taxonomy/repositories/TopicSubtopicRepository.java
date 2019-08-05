@@ -45,7 +45,15 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
             "   WHERE" +
             "       parentTopic.publicId = :publicId AND " +
             "       subTopicFilter_filter.publicId IN :filterPublicIds")
-    List<TopicSubtopic> findAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(URI publicId, Set<URI> filterPublicIds);
+    List<TopicSubtopic> doFindAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(URI publicId, Set<URI> filterPublicIds);
+
+    default List<TopicSubtopic> findAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(URI publicId, Set<URI> filterPublicIds) {
+        if (filterPublicIds.size() == 0) {
+            return doFindAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(publicId, null);
+        }
+
+        return doFindAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(publicId, filterPublicIds);
+    }
 
     @Query("SELECT DISTINCT ts" +
             "   FROM TopicSubtopic ts" +
@@ -67,5 +75,13 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
             "   LEFT JOIN FETCH tf.filter f" +
             "   LEFT JOIN FETCH f.translations" +
             "  WHERE ts.subtopic.id IN :subTopicId")
-    List<TopicSubtopic> findAllBySubtopicIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<Integer> subTopicId);
+    List<TopicSubtopic> doFindAllBySubtopicIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<Integer> subTopicId);
+
+    default List<TopicSubtopic> findAllBySubtopicIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<Integer> subTopicId) {
+        if (subTopicId.size() == 0) {
+            return List.of();
+        }
+
+        return doFindAllBySubtopicIdIncludeTranslationsAndCachedUrlsAndFilters(subTopicId);
+    }
 }
