@@ -37,7 +37,15 @@ public interface SubjectTopicRepository extends TaxonomyRepository<SubjectTopic>
             "   LEFT JOIN FETCH t.translations" +
             "   LEFT JOIN FETCH f.translations" +
             "   WHERE st.subject = :subject AND st.topic.id IN :topicId")
-    List<SubjectTopic> findAllBySubjectAndTopicId(Subject subject, Collection<Integer> topicId);
+    List<SubjectTopic> doFindAllBySubjectAndTopicId(Subject subject, Collection<Integer> topicId);
+
+    default List<SubjectTopic> findAllBySubjectAndTopicId(Subject subject, Collection<Integer> topicId) {
+        if (topicId.size() == 0) {
+            return doFindAllBySubjectAndTopicId(subject, null);
+        }
+
+        return doFindAllBySubjectAndTopicId(subject, topicId);
+    }
 
 
 }

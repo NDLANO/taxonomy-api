@@ -35,7 +35,15 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   WHERE " +
             "       t.id IN :topicIds AND" +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
-    List<TopicResource> findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, URI relevancePublicId);
+    List<TopicResource> doFindAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, URI relevancePublicId);
+
+    default List<TopicResource> findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, URI relevancePublicId) {
+        if (topicIds.size() == 0) {
+            return doFindAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(null, relevancePublicId);
+        }
+
+        return doFindAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, relevancePublicId);
+    }
 
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
@@ -53,7 +61,20 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   LEFT JOIN FETCH rtFetch.resourceTypeTranslations" +
             "   WHERE t.id IN :topicIds AND f.publicId IN :filterPublicIds AND " +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
-    List<TopicResource> findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Set<URI> filterPublicIds, URI relevancePublicId);
+    List<TopicResource> doFindAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Collection<URI> filterPublicIds, URI relevancePublicId);
+
+    default List<TopicResource> findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Collection<URI> filterPublicIds, URI relevancePublicId) {
+        if (topicIds.size() == 0) {
+            topicIds = null;
+        }
+
+        if (filterPublicIds.size() == 0) {
+            filterPublicIds = null;
+        }
+
+        return doFindAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, filterPublicIds, relevancePublicId);
+    }
+
 
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
@@ -74,7 +95,23 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   WHERE t.id IN :topicIds AND f.publicId IN :filterPublicIds AND" +
             "       (rt.publicId IN :resourceTypePublicIds) AND" +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
-    List<TopicResource> findAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Set<URI> filterPublicIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
+    List<TopicResource> doFindAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Collection<URI> filterPublicIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
+
+    default List<TopicResource> findAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Collection<URI> filterPublicIds, Set<URI> resourceTypePublicIds, URI relevancePublicId) {
+        if (topicIds.size() == 0) {
+            topicIds = null;
+        }
+
+        if (filterPublicIds.size() == 0) {
+            filterPublicIds = null;
+        }
+
+        if (resourceTypePublicIds.size() == 0) {
+            resourceTypePublicIds = null;
+        }
+
+        return doFindAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, filterPublicIds, resourceTypePublicIds, relevancePublicId);
+    }
 
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
@@ -94,5 +131,17 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   WHERE t.id IN :topicIds AND" +
             "       (rt.publicId IN :resourceTypePublicIds) AND" +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
-    List<TopicResource> findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
+    List<TopicResource> doFindAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Collection<URI> resourceTypePublicIds, URI relevancePublicId);
+
+    default List<TopicResource> findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Collection<URI> resourceTypePublicIds, URI relevancePublicId) {
+        if (topicIds.size() == 0) {
+            topicIds = null;
+        }
+
+        if (resourceTypePublicIds.size() == 0) {
+            resourceTypePublicIds = null;
+        }
+
+        return doFindAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, resourceTypePublicIds, relevancePublicId);
+    }
 }
