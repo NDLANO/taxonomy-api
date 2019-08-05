@@ -58,13 +58,28 @@ public class Topics extends CrudController<Topic> {
         this.topicTreeSorter = topicTreeSorter;
     }
 
-    private TopicIndexDocument createTopicIndexDocument(Topic topic, String language) {
-        return new TopicIndexDocument() {{
-            name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
-            id = topic.getPublicId();
-            contentUri = topic.getContentUri();
-            path = topic.getPrimaryPath().orElse(null);
-        }};
+    private List<TopicIndexDocument> createTopicIndexDocumentsByPrimaryPath(Topic topic, String language) {
+        if (topic.getCachedUrls().stream().anyMatch(CachedUrl::isPrimary)) {
+            // Return one full object for each of the different primary paths the object has (cachedUrls)
+            return topic.getCachedUrls().stream()
+                    .filter(CachedUrl::isPrimary)
+                    .map(cachedUrl -> new TopicIndexDocument() {{
+                        name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
+                        id = topic.getPublicId();
+                        contentUri = topic.getContentUri();
+                        path = cachedUrl.getPath();
+                    }})
+                    .collect(Collectors.toList());
+        } else {
+            // Object has no primary paths, but we still needs to return it. It will have the "path" field set to null
+            return List.of(new TopicIndexDocument() {{
+                name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
+                id = topic.getPublicId();
+                contentUri = topic.getContentUri();
+                path = null;
+            }});
+
+        }
     }
 
     private TopicWithPathsIndexDocument createTopicWithPathsIndexDocument(Topic topic, String language) {
@@ -85,7 +100,8 @@ public class Topics extends CrudController<Topic> {
     ) {
         return topicRepository.findAllIncludingCachedUrlsAndTranslations()
                 .stream()
-                .map(topic -> this.createTopicIndexDocument(topic, language))
+                .map(topic -> this.createTopicIndexDocumentsByPrimaryPath(topic, language))
+                .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
 
