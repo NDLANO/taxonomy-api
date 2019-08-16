@@ -7,21 +7,22 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 public class Filter extends DomainObject {
 
-    @OneToMany(mappedBy = "filter", orphanRemoval = true)
+    @OneToMany(orphanRemoval = true, cascade = CascadeType.ALL, mappedBy = "filter")
     private Set<FilterTranslation> translations = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
     private Subject subject;
 
-    @OneToMany(orphanRemoval = true, mappedBy = "filter")
+    @OneToMany(mappedBy = "filter", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceFilter> resources = new HashSet<>();
 
-    @OneToMany(orphanRemoval = true, mappedBy = "filter")
+    @OneToMany(mappedBy = "filter", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TopicFilter> topics = new HashSet<>();
 
     public Filter() {
@@ -55,7 +56,7 @@ public class Filter extends DomainObject {
     }
 
     public Set<FilterTranslation> getTranslations() {
-        return translations;
+        return translations.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public Optional<FilterTranslation> getTranslation(String languageCode) {
@@ -69,11 +70,13 @@ public class Filter extends DomainObject {
     }
 
     public void setSubject(Subject subject) {
-        if (this.subject != null && subject != this.subject) {
-            this.subject.removeFilter(this);
-        }
+        final var previousSubject = this.subject;
 
         this.subject = subject;
+
+        if (previousSubject != null && previousSubject.getFilters().contains(this)) {
+            previousSubject.removeFilter(this);
+        }
 
         if (subject != null && !subject.getFilters().contains(this)) {
             subject.addFilter(this);
@@ -86,8 +89,9 @@ public class Filter extends DomainObject {
 
     public void removeResourceFilter(ResourceFilter resourceFilter) {
         this.resources.remove(resourceFilter);
+
         if (resourceFilter.getFilter() == this) {
-            resourceFilter.setFilter(null);
+            resourceFilter.disassociate();
         }
     }
 
@@ -95,41 +99,38 @@ public class Filter extends DomainObject {
         this.topics.remove(topicFilter);
 
         if (topicFilter.getFilter().orElse(null) == this) {
-            topicFilter.setFilter(null);
+            topicFilter.disassociate();
         }
     }
 
     public Set<ResourceFilter> getResourceFilters() {
-        return this.resources;
+        return this.resources.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void addResourceFilter(ResourceFilter resourceFilter) {
-        this.resources.add(resourceFilter);
-
         if (resourceFilter.getFilter() != this) {
-            resourceFilter.setFilter(this);
+            throw new IllegalArgumentException("Filter must be set on ResourceFilter before associating with ResourceFilter");
         }
+
+        this.resources.add(resourceFilter);
     }
 
     public Set<TopicFilter> getTopicFilters() {
-        return this.topics;
+        return this.topics.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void addTopicFilter(TopicFilter topicFilter) {
-        this.topics.add(topicFilter);
-
         if (topicFilter.getFilter().orElse(null) != this) {
-            topicFilter.setFilter(this);
+            throw new IllegalArgumentException("TopicFilter must have Filter set before associating with Filter");
         }
+
+        this.topics.add(topicFilter);
     }
 
     @PreRemove
     void preRemove() {
-        for (var resourceFilter : this.resources.toArray()) {
-            removeResourceFilter((ResourceFilter) resourceFilter);
-        }
-        for (var topicFilter : this.topics.toArray()) {
-            removeTopicFilter((TopicFilter) topicFilter);
-        }
+        new HashSet<>(resources).forEach(this::removeResourceFilter);
+        new HashSet<>(topics).forEach(this::removeTopicFilter);
+        setSubject(null);
     }
 }

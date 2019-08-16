@@ -34,6 +34,9 @@ public class SubjectTopicsTest extends RestTest {
                 }})
         );
 
+        final var connection = subjectTopicRepository.findByPublicId(id);
+        assertTrue(connection.isPrimary());
+
         Subject physics = subjectRepository.getByPublicId(subjectId);
         assertEquals(1, physics.getTopics().size());
         assertAnyTrue(physics.getTopics(), t -> "trigonometry".equals(t.getName()));
@@ -44,7 +47,7 @@ public class SubjectTopicsTest extends RestTest {
     public void cannot_add_existing_topic_to_subject() throws Exception {
         Subject physics = newSubject().name("physics");
         Topic trigonometry = newTopic().name("trigonometry");
-        physics.addTopic(trigonometry);
+        SubjectTopic.create(physics, trigonometry);
 
         URI subjectId = physics.getPublicId();
         URI topicId = trigonometry.getPublicId();
@@ -59,14 +62,14 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_delete_subject_topic() throws Exception {
-        URI id = save(newSubject().addTopic(newTopic())).getPublicId();
+        URI id = save(SubjectTopic.create(newSubject(), newTopic())).getPublicId();
         testUtils.deleteResource("/v1/subject-topics/" + id);
         assertNull(subjectRepository.findByPublicId(id));
     }
 
     @Test
     public void can_update_subject_topic() throws Exception {
-        URI id = save(newSubject().addTopic(newTopic())).getPublicId();
+        URI id = save(SubjectTopic.create(newSubject(), newTopic())).getPublicId();
 
         testUtils.updateResource("/v1/subject-topics/" + id, new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
@@ -77,7 +80,7 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_update_subject_rank() throws Exception {
-        URI id = save(newSubject().addTopic(newTopic())).getPublicId();
+        URI id = save(SubjectTopic.create(newSubject(), newTopic())).getPublicId();
 
         MockHttpServletResponse responseBefore = testUtils.getResource("/v1/subject-topics/" + id.toString());
         SubjectTopics.SubjectTopicIndexDocument connection = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument.class, responseBefore);
@@ -181,7 +184,7 @@ public class SubjectTopicsTest extends RestTest {
         Subject s = new Subject();
         Topic t = new Topic();
 
-        SubjectTopic st = new SubjectTopic(s,t);
+        SubjectTopic st = SubjectTopic.create(s, t);
         List<SubjectTopic> rankedList = RankableConnectionUpdater.rank(new ArrayList<>(), st, 99);
         assertEquals(1, rankedList.size());
 
@@ -189,7 +192,7 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void cannot_unset_primary_subject() throws Exception {
-        URI id = save(newSubject().addTopic(newTopic())).getPublicId();
+        URI id = save(SubjectTopic.create(newSubject(), newTopic(), true)).getPublicId();
 
         testUtils.updateResource("/v1/subject-topics/" + id, new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = false;
@@ -200,11 +203,11 @@ public class SubjectTopicsTest extends RestTest {
     public void can_get_topics() throws Exception {
         Subject physics = newSubject().name("physics");
         Topic electricity = newTopic().name("electricity");
-        save(physics.addTopic(electricity));
+        save(SubjectTopic.create(physics, electricity));
 
         Subject mathematics = newSubject().name("mathematics");
         Topic trigonometry = newTopic().name("trigonometry");
-        save(mathematics.addTopic(trigonometry));
+        save(SubjectTopic.create(mathematics, trigonometry));
 
         URI physicsId = physics.getPublicId();
         URI electricityId = electricity.getPublicId();
@@ -224,7 +227,7 @@ public class SubjectTopicsTest extends RestTest {
     public void can_get_subject_topic() throws Exception {
         Subject physics = newSubject().name("physics");
         Topic electricity = newTopic().name("electricity");
-        SubjectTopic subjectTopic = save(physics.addTopic(electricity));
+        SubjectTopic subjectTopic = save(SubjectTopic.create(physics, electricity));
 
         URI subjectid = physics.getPublicId();
         URI topicid = electricity.getPublicId();
@@ -237,23 +240,12 @@ public class SubjectTopicsTest extends RestTest {
     }
 
     @Test
-    public void first_subject_connected_to_topic_is_primary() throws Exception {
-        Subject electricity = newSubject().name("physics");
-        Topic alternatingCurrent = newTopic().name("electricity");
-        SubjectTopic subjectTopic = save(electricity.addTopic(alternatingCurrent));
-
-        MockHttpServletResponse resource = testUtils.getResource("/v1/subject-topics/" + subjectTopic.getPublicId());
-        SubjectTopics.SubjectTopicIndexDocument subjectTopicIndexDocument = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument.class, resource);
-        assertTrue(subjectTopicIndexDocument.primary);
-    }
-
-    @Test
     public void topic_can_only_have_one_primary_subject() throws Exception {
         Topic topic = builder.topic("graphs", r -> r.name("graphs"));
 
         builder.subject("elementary maths", t -> t
                 .name("elementary maths")
-                .topic(topic));
+                .topic(topic, true));
 
         Subject newPrimary = builder.subject("graph theory", t -> t
                 .name("graph theory"));
@@ -276,8 +268,8 @@ public class SubjectTopicsTest extends RestTest {
     @Test
     public void deleted_primary_subject_is_replaced() throws Exception {
         Topic topic = newTopic();
-        URI primary = save(newSubject().addTopic(topic)).getPublicId();
-        URI other = save(newSubject().addTopic(topic)).getPublicId();
+        URI primary = save(SubjectTopic.create(newSubject(), topic, true)).getPublicId();
+        URI other = save(SubjectTopic.create(newSubject(), topic, false)).getPublicId();
 
         assertEquals(2, topic.getSubjectTopics().size());
 
@@ -314,8 +306,8 @@ public class SubjectTopicsTest extends RestTest {
         Topic statistics = builder.topic(t -> t
                 .name("Statistics")
                 .publicId("urn:topic:2"));
-        SubjectTopic geometryMaths = save(mathematics.addTopic(geometry));
-        SubjectTopic statisticsMaths = save(mathematics.addTopic(statistics));
+        SubjectTopic geometryMaths = save(SubjectTopic.create(mathematics, geometry));
+        SubjectTopic statisticsMaths = save(SubjectTopic.create(mathematics, statistics));
 
         testUtils.updateResource("/v1/subject-topics/" + geometryMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
@@ -353,10 +345,10 @@ public class SubjectTopicsTest extends RestTest {
         Topic subtopic2 = builder.topic(t -> t
                 .name("Subtopic 2")
                 .publicId("urn:topic:ab"));
-        SubjectTopic geometryMaths = save(mathematics.addTopic(geometry));
-        SubjectTopic statisticsMaths = save(mathematics.addTopic(statistics));
-        TopicSubtopic tst1 = save(geometry.addSubtopic(subtopic1));
-        TopicSubtopic tst2 = save(geometry.addSubtopic(subtopic2));
+        SubjectTopic geometryMaths = save(SubjectTopic.create(mathematics, geometry));
+        SubjectTopic statisticsMaths = save(SubjectTopic.create(mathematics, statistics));
+        TopicSubtopic tst1 = save(TopicSubtopic.create(geometry, subtopic1));
+        TopicSubtopic tst2 = save(TopicSubtopic.create(geometry, subtopic2));
 
         testUtils.updateResource("/v1/subject-topics/" + geometryMaths.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
@@ -432,7 +424,7 @@ public class SubjectTopicsTest extends RestTest {
         Subject s = newSubject();
         for (int i = 1; i < 11; i++) {
             Topic t = newTopic();
-            SubjectTopic subjectTopic = s.addTopic(t);
+            SubjectTopic subjectTopic = SubjectTopic.create(s, t);
             subjectTopic.setRank(i);
             connections.add(subjectTopic);
             save(subjectTopic);
@@ -445,7 +437,7 @@ public class SubjectTopicsTest extends RestTest {
         Subject s = newSubject();
         for (int i = 1; i < 11; i++) {
             Topic t = newTopic();
-            SubjectTopic subjectTopic = s.addTopic(t);
+            SubjectTopic subjectTopic = SubjectTopic.create(s, t);
             if (i <= 5) {
                 subjectTopic.setRank(i);
             } else {

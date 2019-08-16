@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 public class Relevance extends DomainObject {
@@ -16,10 +17,10 @@ public class Relevance extends DomainObject {
     private Set<RelevanceTranslation> translations = new HashSet<>();
 
     @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ResourceFilter> resources = new HashSet<>();
+    private Set<ResourceFilter> resourceFilters = new HashSet<>();
 
     @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TopicFilter> topics = new HashSet<>();
+    private Set<TopicFilter> topicFilters = new HashSet<>();
 
     public Relevance() {
         setPublicId(URI.create("urn:relevance:" + UUID.randomUUID()));
@@ -35,7 +36,7 @@ public class Relevance extends DomainObject {
     }
 
     public Set<RelevanceTranslation> getTranslations() {
-        return translations;
+        return translations.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public Optional<RelevanceTranslation> getTranslation(String languageCode) {
@@ -65,41 +66,41 @@ public class Relevance extends DomainObject {
     }
 
     public Set<TopicFilter> getTopicFilters() {
-        return this.topics;
+        return this.topicFilters.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void removeTopicFilter(TopicFilter topicFilter) {
-        this.topics.remove(topicFilter);
+        this.topicFilters.remove(topicFilter);
         if (topicFilter.getRelevance().orElse(null) == this) {
-            topicFilter.setRelevance(null);
+            topicFilter.disassociate();
         }
     }
 
     public void addTopicFilter(TopicFilter topicFilter) {
-        this.topics.add(topicFilter);
-
         if (topicFilter.getRelevance().orElse(null) != this) {
-            topicFilter.setRelevance(this);
+            throw new IllegalArgumentException("TopicFilter must have Relevance set before associating with Relevance");
         }
+
+        this.topicFilters.add(topicFilter);
     }
 
     public Set<ResourceFilter> getResourceFilters() {
-        return resources;
+        return resourceFilters.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void addResourceFilter(ResourceFilter resourceFilter) {
-        this.resources.add(resourceFilter);
-
-        if (resourceFilter.getRelevance().isEmpty() || resourceFilter.getRelevance().get() != this) {
-            resourceFilter.setRelevance(this);
+        if (resourceFilter.getRelevance().orElse(null) != this) {
+            throw new IllegalArgumentException("ResourceFilter must have Relevance set before associating with Relevance");
         }
+
+        this.resourceFilters.add(resourceFilter);
     }
 
     public void removeResourceFilter(ResourceFilter resourceFilter) {
-        this.resources.remove(resourceFilter);
+        this.resourceFilters.remove(resourceFilter);
 
-        if (resourceFilter.getRelevance().isPresent() && resourceFilter.getRelevance().get() == this) {
-            resourceFilter.setRelevance(null);
+        if (resourceFilter.getRelevance().orElse(null) == this) {
+            resourceFilter.disassociate();
         }
     }
 

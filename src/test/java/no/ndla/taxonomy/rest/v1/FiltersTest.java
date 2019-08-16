@@ -134,7 +134,6 @@ public class FiltersTest extends RestTest {
         Filter filter = filterRepository.findByPublicId(URI.create("urn:filter:1"));
         builder.topic(t -> t.publicId("urn:topic:1").filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core1"))));
         builder.topic(t -> t.publicId("urn:topic:2").filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core2"))));
-        entityManager.refresh(filter);
 
         testUtils.deleteResource("/v1/filters/" + URI.create("urn:filter:1"));
 

@@ -1,18 +1,18 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.CachedUrl;
-import no.ndla.taxonomy.domain.CachedUrlEntity;
+import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.UrlMapping;
-import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.repositories.ResourceRepository;
+import no.ndla.taxonomy.repositories.SubjectRepository;
+import no.ndla.taxonomy.repositories.TopicRepository;
+import no.ndla.taxonomy.repositories.UrlMappingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,20 +27,17 @@ public class UrlResolverService {
     private final SubjectRepository subjectRepository;
     private final TopicRepository topicRepository;
     private final ResourceRepository resourceRepository;
-    private final CachedUrlRepository cachedUrlRepository;
     private final UrlMappingRepository urlMappingRepository;
 
     @Autowired
     public UrlResolverService(SubjectRepository subjectRepository,
                               TopicRepository topicRepository,
                               ResourceRepository resourceRepository,
-                              CachedUrlRepository cachedUrlRepository,
                               UrlMappingRepository urlMappingRepository,
                               OldUrlCanonifier oldUrlCanonifier) {
         this.topicRepository = topicRepository;
         this.subjectRepository = subjectRepository;
         this.resourceRepository = resourceRepository;
-        this.cachedUrlRepository = cachedUrlRepository;
         this.urlMappingRepository = urlMappingRepository;
         this.canonifier = oldUrlCanonifier;
     }
@@ -76,15 +73,21 @@ public class UrlResolverService {
     }
 
     private List<String> getAllPaths(URI public_id) {
-        return cachedUrlRepository.findAllByPublicId(public_id)
+        return getResolvablePathEntitiesFromPublicId(public_id)
                 .stream()
+                .map(EntityWithPath::getCachedUrls)
+                .flatMap(Set::stream)
                 .map(CachedUrl::getPath)
                 .collect(Collectors.toList());
     }
 
     private String getPrimaryPath(URI public_id) {
-        return cachedUrlRepository.findFirstByPublicIdAndPrimary(public_id, true)
-                .map(CachedUrl::getPath)
+        return getResolvablePathEntitiesFromPublicId(public_id)
+                .stream()
+                .map(EntityWithPath::getPrimaryPath)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst()
                 .orElse(null);
     }
 
@@ -149,8 +152,8 @@ public class UrlResolverService {
         }
     }
 
-    public Set<CachedUrlEntity> getResolvablePathEntitiesFromPublicId(URI publicId) {
-        final var entries = new HashSet<CachedUrlEntity>();
+    public Set<EntityWithPath> getResolvablePathEntitiesFromPublicId(URI publicId) {
+        final var entries = new HashSet<EntityWithPath>();
 
         entries.addAll(subjectRepository.findAllByPublicIdIncludingCachedUrls(publicId));
         entries.addAll(topicRepository.findAllByPublicIdIncludingCachedUrls(publicId));

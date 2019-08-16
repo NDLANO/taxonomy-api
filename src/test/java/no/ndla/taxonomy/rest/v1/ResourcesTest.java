@@ -26,9 +26,9 @@ public class ResourcesTest extends RestTest {
     public void can_get_single_resource() throws Exception {
         builder.subject(s -> s
                 .publicId("urn:subject:1")
-                .topic(t -> t
+                .topic(true, t -> t
                         .publicId("urn:topic:1")
-                        .resource(r -> r
+                        .resource(true, r -> r
                                 .name("introduction to trigonometry")
                                 .contentUri("urn:article:1")
                                 .publicId("urn:resource:1")
@@ -53,13 +53,11 @@ public class ResourcesTest extends RestTest {
                         )));
         builder.subject(s -> s
                 .publicId("urn:subject:2")
-                .topic("primary", t -> t
+                .topic("primary", true, t -> t
                         .publicId("urn:topic:2")
-                        .resource("resource")
+                        .resource("resource", true)
                 )
         );
-
-        builder.resource("resource").setPrimaryTopic(builder.topic("primary"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
         ResourceIndexDocument resource = testUtils.getObject(ResourceIndexDocument.class, response);
@@ -81,8 +79,8 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_all_resources() throws Exception {
-        builder.subject(s -> s.topic(t -> t.resource(r -> r.name("The inner planets"))));
-        builder.subject(s -> s.topic(t -> t.resource(r -> r.name("Gas giants"))));
+        builder.subject(s -> s.topic(true, t -> t.resource(true, r -> r.name("The inner planets"))));
+        builder.subject(s -> s.topic(true, t -> t.resource(true, r -> r.name("Gas giants"))));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources");
         ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
@@ -236,7 +234,7 @@ public class ResourcesTest extends RestTest {
                 .name("Philosophy and Mind")
                 .publicId("urn:topic:1")
                 .contentUri(URI.create("urn:article:6662"))
-                .resource(resource));
+                .resource(resource, true));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/" + resource.getPublicId() + "/full");
         ResourceFullIndexDocument result = testUtils.getObject(ResourceFullIndexDocument.class, response);

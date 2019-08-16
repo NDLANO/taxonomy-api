@@ -2,6 +2,7 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import org.junit.Test;
@@ -33,6 +34,9 @@ public class TopicSubtopicsTest extends RestTest {
 
         );
 
+        final var connection = topicSubtopicRepository.findByPublicId(id);
+        assertTrue(connection.isPrimary());
+
         Topic calculus = topicRepository.getByPublicId(calculusId);
         assertEquals(1, calculus.getSubtopics().size());
         assertAnyTrue(calculus.getSubtopics(), t -> "integration".equals(t.getName()));
@@ -46,6 +50,12 @@ public class TopicSubtopicsTest extends RestTest {
         calculusId = builder.topic(t -> t.name("calculus")).getPublicId();
         integrationId = builder.topic(t -> t.name("integration")).getPublicId();
 
+        final var parentTopic2PublicId = builder.topic().getPublicId();
+
+        // 20190819 JEP@Cerpus: Behavior change: It was possible to create a non-primary subtopic when no topic existed
+        // before, but it has changed. The first connection to a topic will ignore the primary parameter and will be
+        // forced to become primary (subject-topics already did this)
+
         URI id = getId(
                 testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
                     topicid = calculusId;
@@ -58,7 +68,22 @@ public class TopicSubtopicsTest extends RestTest {
         assertEquals(1, calculus.getSubtopics().size());
         assertAnyTrue(calculus.getSubtopics(), t -> "integration".equals(t.getName()));
         assertNotNull(topicSubtopicRepository.getByPublicId(id));
-        assertFalse(calculus.getChildrenTopicSubtopics().iterator().next().isPrimary());
+        assertTrue(calculus.getChildrenTopicSubtopics().iterator().next().isPrimary());
+
+        URI connection2Id = getId(
+                testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
+                    topicid = parentTopic2PublicId;
+                    subtopicid = integrationId;
+                    primary = false;
+                }})
+        );
+
+        final var connection2 = topicSubtopicRepository.findFirstByPublicId(connection2Id).orElse(null);
+        assertNotNull(connection2);
+
+        assertEquals(parentTopic2PublicId, connection2.getTopic().map(Topic::getPublicId).orElse(null));
+        assertEquals(integrationId, connection2.getSubtopic().map(Topic::getPublicId).orElse(null));
+        assertFalse(connection2.isPrimary());
     }
 
     @Test
@@ -81,14 +106,14 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void can_delete_topic_subtopic() throws Exception {
-        URI id = save(newTopic().addSubtopic(newTopic())).getPublicId();
+        URI id = save(TopicSubtopic.create(newTopic(), newTopic())).getPublicId();
         testUtils.deleteResource("/v1/topic-subtopics/" + id);
         assertNull(topicRepository.findByPublicId(id));
     }
 
     @Test
     public void can_update_topic_subtopic() throws Exception {
-        URI id = save(newTopic().addSubtopic(newTopic())).getPublicId();
+        URI id = save(TopicSubtopic.create(newTopic(), newTopic(), true)).getPublicId();
 
         testUtils.updateResource("/v1/topic-subtopics/" + id, new TopicSubtopics.UpdateTopicSubtopicCommand() {{
             primary = true;
@@ -99,7 +124,7 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void cannot_unset_primary_topic() throws Exception {
-        URI id = save(newTopic().addSubtopic(newTopic())).getPublicId();
+        URI id = save(TopicSubtopic.create(newTopic(), newTopic(), true)).getPublicId();
 
         testUtils.updateResource("/v1/topic-subtopics/" + id, new TopicSubtopics.UpdateTopicSubtopicCommand() {{
             primary = false;
@@ -127,7 +152,7 @@ public class TopicSubtopicsTest extends RestTest {
         URI topicid, subtopicid, id;
         Topic electricity = newTopic().name("electricity");
         Topic alternatingCurrent = newTopic().name("alternating current");
-        TopicSubtopic topicSubtopic = save(electricity.addSubtopic(alternatingCurrent));
+        TopicSubtopic topicSubtopic = save(TopicSubtopic.create(electricity, alternatingCurrent));
 
         topicid = electricity.getPublicId();
         subtopicid = alternatingCurrent.getPublicId();
@@ -142,22 +167,10 @@ public class TopicSubtopicsTest extends RestTest {
     }
 
     @Test
-    public void first_topic_connected_to_subtopic_is_primary() throws Exception {
-        Topic electricity = newTopic().name("electricity");
-        Topic alternatingCurrent = newTopic().name("How alternating current works");
-        TopicSubtopic topicSubtopic = save(electricity.addSubtopic(alternatingCurrent));
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/topic-subtopics/" + topicSubtopic.getPublicId());
-        TopicSubtopics.TopicSubtopicIndexDocument topicSubtopicIndexDocument = testUtils.getObject(TopicSubtopics.TopicSubtopicIndexDocument.class, response);
-        assertTrue(topicSubtopicIndexDocument.primary);
-    }
-
-    @Test
     public void deleted_primary_parent_topic_is_replaced() throws Exception {
         Topic subtopic = builder.topic();
-        Topic primary = builder.topic(t -> t.name("primary").subtopic(subtopic));
+        Topic primary = builder.topic(t -> t.name("primary").subtopic(subtopic, true));
         builder.topic(t -> t.name("other").subtopic(subtopic));
-        subtopic.setPrimaryParentTopic(primary);
 
         testUtils.deleteResource("/v1/topics/" + primary.getPublicId());
 
@@ -170,7 +183,7 @@ public class TopicSubtopicsTest extends RestTest {
 
         builder.topic("electricity", t -> t
                 .name("electricity")
-                .subtopic(subtopic)
+                .subtopic(subtopic, true)
         );
 
         Topic newPrimary = builder.topic("wiring", t -> t
@@ -197,7 +210,7 @@ public class TopicSubtopicsTest extends RestTest {
 
         Topic oldprimary = builder.topic("electricity", t -> t
                 .name("electricity")
-                .subtopic(subtopic)
+                .subtopic(subtopic, true)
         );
 
         Topic newPrimary = builder.topic("wiring", t -> t
@@ -243,7 +256,7 @@ public class TopicSubtopicsTest extends RestTest {
         Topic electricity = builder.topic(s -> s
                 .name("Electricity")
                 .publicId("urn:topic:1"));
-        save(subject.addTopic(electricity));
+        save(SubjectTopic.create(subject, electricity));
         Topic alternatingCurrents = builder.topic(t -> t
                 .name("Alternating currents")
                 .publicId("urn:topic:11"));
@@ -273,7 +286,7 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void can_update_subtopic_rank() throws Exception {
-        URI id = save(newTopic().addSubtopic(newTopic())).getPublicId();
+        URI id = save(TopicSubtopic.create(newTopic(), newTopic())).getPublicId();
 
         testUtils.updateResource("/v1/topic-subtopics/" + id, new TopicSubtopics.UpdateTopicSubtopicCommand() {{
             primary = true;
@@ -379,7 +392,7 @@ public class TopicSubtopicsTest extends RestTest {
         Topic parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Topic sub = newTopic();
-            TopicSubtopic topicSubtopic = parent.addSubtopic(sub);
+            TopicSubtopic topicSubtopic = TopicSubtopic.create(parent, sub);
             topicSubtopic.setRank(i);
             connections.add(topicSubtopic);
             save(topicSubtopic);
@@ -392,7 +405,7 @@ public class TopicSubtopicsTest extends RestTest {
         Topic parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Topic sub = newTopic();
-            TopicSubtopic topicSubtopic = parent.addSubtopic(sub);
+            TopicSubtopic topicSubtopic = TopicSubtopic.create(parent, sub);
             if (i <= 5) {
                 topicSubtopic.setRank(i);
             } else {

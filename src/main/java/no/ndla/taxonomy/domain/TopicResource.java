@@ -7,13 +7,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Entity
-public class TopicResource extends DomainEntity implements Rankable {
+public class TopicResource extends DomainEntity implements EntityWithPathConnection {
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "resource_id")
     private Resource resource;
 
@@ -23,8 +23,43 @@ public class TopicResource extends DomainEntity implements Rankable {
     @Column(name = "rank")
     private int rank;
 
-    public TopicResource() {
+    private TopicResource() {
         setPublicId(URI.create("urn:topic-resource:" + UUID.randomUUID()));
+    }
+
+    public static TopicResource create(Topic topic, Resource resource) {
+        return create(topic, resource, false);
+    }
+
+    public static TopicResource create(Topic topic, Resource resource, boolean primary) {
+        final var topicResource = new TopicResource();
+
+        topicResource.topic = topic;
+        topicResource.resource = resource;
+        topicResource.setPrimary(primary);
+
+        topic.addTopicResource(topicResource);
+        resource.addTopicResource(topicResource);
+
+        return topicResource;
+    }
+
+    public void disassociate() {
+        final var topic = this.topic;
+        final var resource = this.resource;
+
+        final var wasPrimary = isPrimary();
+
+        this.topic = null;
+        this.resource = null;
+
+        if (topic != null) {
+            topic.removeTopicResource(this);
+        }
+
+        if (resource != null) {
+            resource.removeTopicResource(this);
+        }
     }
 
     public Optional<Topic> getTopic() {
@@ -39,26 +74,8 @@ public class TopicResource extends DomainEntity implements Rankable {
         this.primary = primary;
     }
 
-    public void setTopic(Topic topic) {
-        final var previousTopic = this.topic;
-
-        this.topic = topic;
-
-        if (previousTopic != null && previousTopic != topic) {
-            previousTopic.removeTopicResource(this);
-        }
-
-        if (topic != null && !topic.getTopicResources().contains(this)) {
-            topic.addTopicResource(this);
-        }
-    }
-
     public Optional<Resource> getResource() {
         return Optional.ofNullable(resource);
-    }
-
-    public String toString() {
-        return "TopicResource: { " + topic.getName() + " " + topic.getPublicId() + " -> " + resource.getName() + " " + resource.getPublicId() + " " + (isPrimary() ? "P" : "") + " " + rank + "}";
     }
 
     public void setRank(int rank) {
@@ -69,29 +86,18 @@ public class TopicResource extends DomainEntity implements Rankable {
         return rank;
     }
 
-    public void setResource(Resource resource) {
-        final var previousResource = this.resource;
+    @Override
+    public Optional<EntityWithPath> getConnectedParent() {
+        return Optional.ofNullable(topic);
+    }
 
-        this.resource = resource;
-
-        if (previousResource != null && previousResource != resource) {
-            previousResource.removeTopicResource(this);
-
-            if (isPrimary()) {
-                previousResource.setRandomPrimaryTopic();
-            }
-        }
-
-        if (resource != null) {
-            if (!resource.getTopicResources().contains(this)) {
-                resource.addTopicResource(this);
-            }
-        }
+    @Override
+    public Optional<EntityWithPath> getConnectedChild() {
+        return Optional.ofNullable(resource);
     }
 
     @PreRemove
     public void preRemove() {
-        this.setTopic(null);
-        this.setResource(null);
+        disassociate();
     }
 }

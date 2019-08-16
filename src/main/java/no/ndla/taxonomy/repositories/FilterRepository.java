@@ -5,6 +5,7 @@ import no.ndla.taxonomy.domain.Filter;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,4 +20,7 @@ public interface FilterRepository extends TaxonomyRepository<Filter> {
             "   LEFT JOIN f.translations" +
             "   WHERE f.publicId = :publicId")
     Optional<Filter> findFirstByPublicIdWithSubjectAndTranslations(URI publicId);
+
+    @Query("SELECT f FROM Filter f WHERE f.subject.publicId = :subjectPublicId")
+    Collection<Filter> findAllBySubjectPublicId(URI subjectPublicId);
 }

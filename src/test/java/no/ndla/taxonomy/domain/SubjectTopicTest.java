@@ -8,62 +8,26 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 public class SubjectTopicTest {
+    private Subject subject;
+    private Topic topic;
     private SubjectTopic subjectTopic;
 
     @Before
     public void setUp() {
-        subjectTopic = new SubjectTopic();
+        topic = mock(Topic.class);
+        subject = mock(Subject.class);
+
+        subjectTopic = SubjectTopic.create(subject, topic);
     }
 
     @Test
-    public void testConstructor() {
-        final var subject = mock(Subject.class);
-        final var topic = mock(Topic.class);
-
-        final var createdSubjectTopic = new SubjectTopic(subject, topic);
-
-        verify(subject).addSubjectTopic(createdSubjectTopic);
-        verify(topic).addSubjectTopic(createdSubjectTopic);
-
-        assertEquals(subject, createdSubjectTopic.getSubject().orElse(null));
-        assertEquals(topic, createdSubjectTopic.getTopic().orElse(null));
-
-        assertNotNull(createdSubjectTopic.getPublicId());
-        assertTrue(createdSubjectTopic.getPublicId().toString().length() > 4);
+    public void getSubject() {
+        assertSame(subject, subjectTopic.getSubject().orElse(null));
     }
 
     @Test
-    public void getAndSetSubject() {
-        final var subject1 = mock(Subject.class);
-        final var subject2 = mock(Subject.class);
-
-        assertFalse(subjectTopic.getSubject().isPresent());
-
-        subjectTopic.setSubject(subject1);
-        verify(subject1).addSubjectTopic(subjectTopic);
-        assertEquals(subject1, subjectTopic.getSubject().orElse(null));
-
-        subjectTopic.setSubject(subject2);
-        verify(subject1).removeSubjectTopic(subjectTopic);
-        verify(subject2).addSubjectTopic(subjectTopic);
-        assertEquals(subject2, subjectTopic.getSubject().orElse(null));
-    }
-
-    @Test
-    public void getAndSetTopic() {
-        final var topic1 = mock(Topic.class);
-        final var topic2 = mock(Topic.class);
-
-        assertFalse(subjectTopic.getTopic().isPresent());
-
-        subjectTopic.setTopic(topic1);
-        verify(topic1).addSubjectTopic(subjectTopic);
-        assertEquals(topic1, subjectTopic.getTopic().orElse(null));
-
-        subjectTopic.setTopic(topic2);
-        verify(topic1).removeSubjectTopic(subjectTopic);
-        verify(topic2).addSubjectTopic(subjectTopic);
-        assertEquals(topic2, subjectTopic.getTopic().orElse(null));
+    public void getTopic() {
+        assertSame(topic, subjectTopic.getTopic().orElse(null));
     }
 
     @Test
@@ -84,15 +48,6 @@ public class SubjectTopicTest {
 
     @Test
     public void preRemove() {
-        final var topic = mock(Topic.class);
-        final var subject = mock(Subject.class);
-
-        subjectTopic.setTopic(topic);
-        subjectTopic.setSubject(subject);
-
-        assertEquals(topic, subjectTopic.getTopic().orElse(null));
-        assertEquals(subject, subjectTopic.getSubject().orElse(null));
-
         subjectTopic.preRemove();
 
         assertFalse(subjectTopic.getSubject().isPresent());

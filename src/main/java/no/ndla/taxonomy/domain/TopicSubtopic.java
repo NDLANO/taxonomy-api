@@ -7,13 +7,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Entity
-public class TopicSubtopic extends DomainEntity implements Rankable{
+public class TopicSubtopic extends DomainEntity implements EntityWithPathConnection {
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "subtopic_id")
     private Topic subtopic;
 
@@ -23,8 +23,45 @@ public class TopicSubtopic extends DomainEntity implements Rankable{
     @Column(name = "rank")
     private int rank;
 
-    public TopicSubtopic() {
+    private TopicSubtopic() {
         setPublicId(URI.create("urn:topic-subtopic:" + UUID.randomUUID()));
+    }
+
+    public static TopicSubtopic create(Topic parentTopic, Topic subTopic) {
+        return create(parentTopic, subTopic, false);
+    }
+
+    public static TopicSubtopic create(Topic parentTopic, Topic subTopic, boolean primary) {
+        if (parentTopic == null || subTopic == null) {
+            throw new NullPointerException();
+        }
+
+        final var topicSubtopic = new TopicSubtopic();
+
+        topicSubtopic.topic = parentTopic;
+        topicSubtopic.subtopic = subTopic;
+        topicSubtopic.setPrimary(primary);
+
+        parentTopic.addChildTopicSubtopic(topicSubtopic);
+        subTopic.addParentTopicSubtopic(topicSubtopic);
+
+        return topicSubtopic;
+    }
+
+    public void disassociate() {
+        final var subTopic = this.subtopic;
+        final var topic = this.topic;
+
+        this.subtopic = null;
+        this.topic = null;
+
+        if (topic != null) {
+            topic.removeChildTopicSubTopic(this);
+        }
+
+        if (subTopic != null) {
+            subTopic.removeParentTopicSubtopic(this);
+        }
     }
 
     public boolean isPrimary() {
@@ -39,39 +76,8 @@ public class TopicSubtopic extends DomainEntity implements Rankable{
         return Optional.ofNullable(topic);
     }
 
-    public void setTopic(Topic topic) {
-        final var previousTopic = this.topic;
-
-        this.topic = topic;
-
-        if (this.topic != previousTopic && previousTopic != null) {
-            previousTopic.removeChildTopicSubTopic(this);
-        }
-
-        if (topic != null && !topic.getChildrenTopicSubtopics().contains(this)) {
-            topic.addChildTopicSubtopic(this);
-        }
-    }
-
     public Optional<Topic> getSubtopic() {
         return Optional.ofNullable(subtopic);
-    }
-
-    public void setSubtopic(Topic subtopic) {
-        final var previousSubtopic = this.subtopic;
-
-        this.subtopic = subtopic;
-
-        if (this.subtopic != previousSubtopic && previousSubtopic != null) {
-            previousSubtopic.removeParentTopicSubtopic(this);
-            if (isPrimary()) {
-                previousSubtopic.setRandomPrimaryTopic();
-            }
-        }
-
-        if (subtopic != null && !subtopic.getParentTopicSubtopics().contains(this)) {
-            subtopic.addParentTopicSubtopic(this);
-        }
     }
 
     public int getRank() {
@@ -82,9 +88,18 @@ public class TopicSubtopic extends DomainEntity implements Rankable{
         this.rank = rank;
     }
 
+    @Override
+    public Optional<EntityWithPath> getConnectedParent() {
+        return Optional.ofNullable(topic);
+    }
+
+    @Override
+    public Optional<EntityWithPath> getConnectedChild() {
+        return Optional.ofNullable(subtopic);
+    }
+
     @PreRemove
     public void preRemove() {
-        this.setTopic(null);
-        this.setSubtopic(null);
+        disassociate();
     }
 }

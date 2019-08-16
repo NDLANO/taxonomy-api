@@ -11,6 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+@Transactional
 public abstract class CrudController<T extends DomainObject> {
     protected TaxonomyRepository<T> repository;
 
@@ -31,8 +33,8 @@ public abstract class CrudController<T extends DomainObject> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
-
         repository.delete(repository.getByPublicId(id));
+        repository.flush();
     }
 
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -52,7 +54,7 @@ public abstract class CrudController<T extends DomainObject> {
             }
             command.apply(entity);
             URI location = URI.create(getLocation() + "/" + entity.getPublicId());
-            repository.save(entity);
+            repository.saveAndFlush(entity);
             return ResponseEntity.created(location).build();
         } catch (DataIntegrityViolationException e) {
             if (command.getId() != null) {

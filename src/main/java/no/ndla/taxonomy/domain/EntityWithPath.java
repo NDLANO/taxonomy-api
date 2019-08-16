@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @MappedSuperclass
-public abstract class CachedUrlEntity extends DomainObject {
+public abstract class EntityWithPath extends DomainObject {
     @OneToMany
     @JoinColumn(name = "publicId", referencedColumnName = "publicId", updatable = false, insertable = false)
     private final Set<CachedUrl> cachedUrls = new HashSet<>();
@@ -26,6 +26,10 @@ public abstract class CachedUrlEntity extends DomainObject {
                 .map(CachedUrl::getPath)
                 .findFirst();
     }
+
+    public abstract Set<EntityWithPathConnection> getParentConnections();
+
+    public abstract Set<EntityWithPathConnection> getChildConnections();
 
     public Optional<String> getPathByContext(DomainEntity context) {
         final var contextPublicId = context.getPublicId();

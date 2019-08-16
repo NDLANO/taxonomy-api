@@ -35,6 +35,9 @@ public class TopicResourcesTest extends RestTest {
                 }})
         );
 
+        final var connection = topicResourceRepository.findByPublicId(id);
+        assertTrue(connection.isPrimary());
+
         Topic calculus = topicRepository.getByPublicId(calculusId);
         assertEquals(1, calculus.getResources().size());
         assertAnyTrue(calculus.getResources(), t -> "Introduction to integration".equals(t.getName()));
@@ -44,13 +47,19 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void can_add_secondary_resource_to_topic() throws Exception {
-        URI integrationId, calculusId;
-        calculusId = newTopic().name("calculus").getPublicId();
+        final var calculusId = newTopic().name("calculus").getPublicId();
         var resource = newResource();
         resource.setName("Introduction to integration");
-        integrationId = resource.getPublicId();
+        final var integrationId = resource.getPublicId();
 
-        URI id = getId(
+        final var topic2 = newTopic();
+        final var topic2Id = topic2.getPublicId();
+
+        // 20190819 JEP@Cerpus: Behavior change: It was possible to create a non-primary resource when no resource existed
+        // before, but it has changed. The first connection to a resource will ignore the primary parameter and will be
+        // forced to become primary (subject-topics already did this)
+
+        final var id = getId(
                 testUtils.createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
                     topicid = calculusId;
                     resourceId = integrationId;
@@ -58,11 +67,31 @@ public class TopicResourcesTest extends RestTest {
                 }})
         );
 
-        Topic calculus = topicRepository.getByPublicId(calculusId);
+        final var calculus = topicRepository.getByPublicId(calculusId);
         assertEquals(1, calculus.getResources().size());
         assertAnyTrue(calculus.getResources(), t -> "Introduction to integration".equals(t.getName()));
         assertNotNull(topicResourceRepository.getByPublicId(id));
-        assertFalse(calculus.getTopicResources().iterator().next().isPrimary());
+        // First topic connection will always be primary
+        assertTrue(calculus.getTopicResources().iterator().next().isPrimary());
+
+        // After behavior change: Add the resource again to another topic with primary = false should create a non-primary resource connection
+        final var resource2ConnectionPublicId = getId(
+                testUtils.createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
+                    topicid = topic2Id;
+                    resourceId = integrationId;
+                    primary = false;
+                }})
+        );
+
+        final var resource2Connection = topicResourceRepository.findFirstByPublicId(resource2ConnectionPublicId).orElse(null);
+
+        assertNotNull(resource2Connection);
+        assertSame(topic2, resource2Connection.getTopic().orElse(null));
+        assertSame(resource, resource2Connection.getResource().orElse(null));
+        assertFalse(resource2Connection.isPrimary());
+
+        assertEquals(1, topic2.getResources().size());
+        assertEquals(2, resource.getTopicResources().size());
     }
 
     @Test
@@ -70,7 +99,7 @@ public class TopicResourcesTest extends RestTest {
         final var calculus = newTopic().name("calculus");
         final var integration = newResource();
         integration.setName("Introduction to integration");
-        calculus.addResource(integration);
+        TopicResource.create(calculus, integration);
 
         final var calculusId = calculus.getPublicId();
         final var integrationId = integration.getPublicId();
@@ -89,14 +118,14 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void can_delete_topic_resource() throws Exception {
-        URI id = save(newTopic().addResource(newResource())).getPublicId();
+        URI id = save(TopicResource.create(newTopic(), newResource())).getPublicId();
         testUtils.deleteResource("/v1/topic-resources/" + id);
         assertNull(topicRepository.findByPublicId(id));
     }
 
     @Test
     public void can_update_topic_resource() throws Exception {
-        URI id = save(newTopic().addResource(newResource())).getPublicId();
+        URI id = save(TopicResource.create(newTopic(), newResource())).getPublicId();
 
         testUtils.updateResource("/v1/topic-resources/" + id, new TopicResources.UpdateTopicResourceCommand() {{
             primary = true;
@@ -107,7 +136,7 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void cannot_unset_primary_topic() throws Exception {
-        URI id = save(newTopic().addResource(newResource())).getPublicId();
+        URI id = save(TopicResource.create(newTopic(), newResource(), true)).getPublicId();
 
         testUtils.updateResource("/v1/topic-resources/" + id, new TopicResources.UpdateTopicResourceCommand() {{
             primary = false;
@@ -118,8 +147,7 @@ public class TopicResourcesTest extends RestTest {
     public void deleted_primary_topic_is_replaced() throws Exception {
         Resource resource = builder.resource(r -> r.name("resource"));
         Topic primary = builder.topic(t -> t.name("primary").resource(resource));
-        builder.topic(t -> t.name("other").resource(resource));
-        resource.setPrimaryTopic(primary);
+        builder.topic(t -> t.name("other").resource(resource, true));
 
         testUtils.deleteResource("/v1/topics/" + primary.getPublicId());
 
@@ -131,12 +159,12 @@ public class TopicResourcesTest extends RestTest {
         Topic electricity = newTopic().name("electricity");
         Resource alternatingCurrent = newResource();
         alternatingCurrent.setName("How alternating current works");
-        save(electricity.addResource(alternatingCurrent));
+        save(TopicResource.create(electricity, alternatingCurrent));
 
         Topic calculus = newTopic().name("calculus");
         Resource integration = newResource();
         integration.setName("Introduction to integration");
-        save(calculus.addResource(integration));
+        save(TopicResource.create(calculus, integration));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topic-resources");
         TopicResources.TopicResourceIndexDocument[] topicResources = testUtils.getObject(TopicResources.TopicResourceIndexDocument[].class, response);
@@ -152,24 +180,12 @@ public class TopicResourcesTest extends RestTest {
         Topic electricity = newTopic().name("electricity");
         Resource alternatingCurrent = newResource();
         alternatingCurrent.setName("How alternating current works");
-        TopicResource topicResource = save(electricity.addResource(alternatingCurrent));
+        TopicResource topicResource = save(TopicResource.create(electricity, alternatingCurrent));
 
         MockHttpServletResponse resource = testUtils.getResource("/v1/topic-resources/" + topicResource.getPublicId());
         TopicResources.TopicResourceIndexDocument topicResourceIndexDocument = testUtils.getObject(TopicResources.TopicResourceIndexDocument.class, resource);
         assertEquals(electricity.getPublicId(), topicResourceIndexDocument.topicid);
         assertEquals(alternatingCurrent.getPublicId(), topicResourceIndexDocument.resourceId);
-    }
-
-    @Test
-    public void first_topic_connected_to_resource_is_primary() throws Exception {
-        Topic electricity = newTopic().name("electricity");
-        Resource alternatingCurrent = newResource();
-        alternatingCurrent.setName("How alternating current works");
-        TopicResource topicResource = save(electricity.addResource(alternatingCurrent));
-
-        MockHttpServletResponse resource = testUtils.getResource("/v1/topic-resources/" + topicResource.getPublicId());
-        TopicResources.TopicResourceIndexDocument topicResourceIndexDocument = testUtils.getObject(TopicResources.TopicResourceIndexDocument.class, resource);
-        assertTrue(topicResourceIndexDocument.primary);
     }
 
     @Test
@@ -212,8 +228,8 @@ public class TopicResourcesTest extends RestTest {
                 .publicId("urn:resource:2"));
 
 
-        URI geometrySquares = save(geometry.addResource(squares)).getPublicId();
-        URI geometryCircles = save(geometry.addResource(circles)).getPublicId();
+        URI geometrySquares = save(TopicResource.create(geometry, squares)).getPublicId();
+        URI geometryCircles = save(TopicResource.create(geometry, circles)).getPublicId();
         testUtils.updateResource("/v1/topic-resources/" + geometryCircles, new TopicResources.UpdateTopicResourceCommand() {{
             primary = true;
             id = geometryCircles;
@@ -372,7 +388,7 @@ public class TopicResourcesTest extends RestTest {
         Topic parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Resource sub = newResource();
-            TopicResource topicResource = parent.addResource(sub);
+            TopicResource topicResource = TopicResource.create(parent, sub);
             topicResource.setRank(i);
             connections.add(topicResource);
             save(topicResource);
@@ -385,7 +401,7 @@ public class TopicResourcesTest extends RestTest {
         Topic parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Resource sub = newResource();
-            TopicResource topicSubtopic = parent.addResource(sub);
+            TopicResource topicSubtopic = TopicResource.create(parent, sub);
             if (i <= 5) {
                 topicSubtopic.setRank(i);
             } else {

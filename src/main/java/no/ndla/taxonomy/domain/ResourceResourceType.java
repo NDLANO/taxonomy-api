@@ -1,29 +1,50 @@
 package no.ndla.taxonomy.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.net.URI;
 import java.util.UUID;
 
 @Entity
 public class ResourceResourceType extends DomainEntity {
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.MERGE})
     @JoinColumn(name = "resource_id")
     private Resource resource;
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.MERGE})
     @JoinColumn(name = "resource_type_id")
     private ResourceType resourceType;
 
-    protected ResourceResourceType() {
+    private ResourceResourceType() {
+        setPublicId(URI.create("urn:resource-resourcetype:" + UUID.randomUUID()));
     }
 
-    public ResourceResourceType(Resource resource, ResourceType resourceType) {
-        setResource(resource);
-        setResourceType(resourceType);
-        setPublicId(URI.create("urn:resource-resourcetype:" + UUID.randomUUID()));
+    public static ResourceResourceType create(Resource resource, ResourceType resourceType) {
+        final var resourceResourceType = new ResourceResourceType();
+
+        resourceResourceType.resource = resource;
+        resourceResourceType.resourceType = resourceType;
+
+        resource.addResourceResourceType(resourceResourceType);
+        resourceType.addResourceResourceType(resourceResourceType);
+
+        return resourceResourceType;
+    }
+
+    public void disassociate() {
+        final var resource = this.resource;
+        final var resourceType = this.resourceType;
+
+        this.resourceType = null;
+        this.resource = null;
+
+        if (resource != null) {
+            resource.removeResourceResourceType(this);
+        }
+
+        if (resourceType != null) {
+            resourceType.removeResourceResourceType(this);
+        }
     }
 
     public Resource getResource() {
@@ -34,27 +55,8 @@ public class ResourceResourceType extends DomainEntity {
         return resourceType;
     }
 
-    void setResource(Resource resource) {
-        if (this.resource != null && resource != this.resource) {
-            this.resource.removeResourceResourceType(this);
-        }
-
-        this.resource = resource;
-
-        if (resource != null && !resource.getResourceResourceTypes().contains(this)) {
-            resource.addResourceResourceType(this);
-        }
-    }
-
-    void setResourceType(ResourceType resourceType) {
-        if (this.resourceType != null && resourceType != this.resourceType) {
-            this.resourceType.removeResourceResourceType(this);
-        }
-
-        this.resourceType = resourceType;
-
-        if (resourceType != null && !resourceType.getResourceResourceTypes().contains(this)) {
-            resourceType.addResourceResourceType(this);
-        }
+    @PreRemove
+    void preRemove() {
+        this.disassociate();
     }
 }

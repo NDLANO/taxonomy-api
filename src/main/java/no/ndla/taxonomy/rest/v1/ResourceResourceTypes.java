@@ -57,9 +57,8 @@ public class ResourceResourceTypes {
     @ApiOperation("Removes a resource type from a resource")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
-        ResourceResourceType resourceResourceType = resourceResourceTypeRepository.getByPublicId(id);
-        resourceResourceType.getResource().removeResourceType(resourceResourceType.getResourceType());
-        resourceResourceTypeRepository.delete(resourceResourceType);
+        resourceResourceTypeRepository.delete(resourceResourceTypeRepository.getByPublicId(id));
+        resourceResourceTypeRepository.flush();
     }
 
     @GetMapping
