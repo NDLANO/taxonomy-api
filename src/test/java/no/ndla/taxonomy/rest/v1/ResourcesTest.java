@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 
+import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceType;
@@ -12,6 +13,7 @@ import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceFullIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
@@ -21,6 +23,8 @@ import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ResourcesTest extends RestTest {
+    @Autowired
+    private TestSeeder testSeeder;
 
     @Test
     public void can_get_single_resource() throws Exception {
@@ -256,7 +260,8 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void full_resource_has_all_paths() throws Exception {
-        executeSqlScript("classpath:resource_in_dual_subjects_test_setup.sql", false);
+        testSeeder.resourceInDualSubjectsTestSetup();
+
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1/full");
         ResourceFullIndexDocument result = testUtils.getObject(ResourceFullIndexDocument.class, response);
         assertNotNull(result.paths);

@@ -78,7 +78,7 @@ public class SubjectTopic extends DomainEntity implements Rankable {
         return primary;
     }
 
-    void setPrimary(boolean primary) {
+    public void setPrimary(boolean primary) {
         this.primary = primary;
     }
 

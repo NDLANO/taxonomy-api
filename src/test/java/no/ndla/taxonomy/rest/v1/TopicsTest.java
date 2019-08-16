@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 
+import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.Subject;
@@ -28,6 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TopicsTest extends RestTest {
     @Autowired
     EntityManager entityManager;
+
+    @Autowired
+    private TestSeeder testSeeder;
 
     @Test
     public void can_get_single_topic() throws Exception {
@@ -130,8 +134,8 @@ public class TopicsTest extends RestTest {
      */
     @Test
     public void can_get_all_connections() throws Exception {
+        testSeeder.topicConnectionsTestSetup();
 
-        executeSqlScript("classpath:topic_connections_test_setup.sql", false);
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:2000/connections");
         ConnectionIndexDocument[] connections = testUtils.getObject(ConnectionIndexDocument[].class, response);
 
@@ -144,7 +148,8 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_unfiltered_subtopics() throws Exception {
-        executeSqlScript("classpath:subtopics_by_topic_id_and_filters_test_setup.sql", false);
+        testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
+
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
         TopicIndexDocument[] subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
         assertEquals("Unfiltered subtopics", 7, subtopics.length);
@@ -152,7 +157,8 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_filtered_subtopics() throws Exception {
-        executeSqlScript("classpath:subtopics_by_topic_id_and_filters_test_setup.sql", false);
+        testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
+
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:1");
         TopicIndexDocument[] subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
         assertEquals("Filter 1 subtopics", 3, subtopics.length);
@@ -400,7 +406,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void resources_by_topic_id_recursively_are_ordered_by_rank_in_parent() throws Exception {
-        executeSqlScript("classpath:resources_by_topic_id_test_setup.sql", false);
+        testSeeder.resourcesBySubjectIdTestSetup();
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:5/resources?recursive=true");
         ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
         assertEquals(6, result.length);
@@ -567,7 +573,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void resources_can_be_filtered_by_relevance() throws Exception {
-        executeSqlScript("classpath:resource_with_filters_and_relevances_test_setup.sql", false);
+        testSeeder.resourceWithFiltersAndRelevancesTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?relevance=urn:relevance:core");
         ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
@@ -581,7 +587,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void resources_can_be_filtered_by_filters() throws Exception {
-        executeSqlScript("classpath:resource_with_filters_and_relevances_test_setup.sql", false);
+        testSeeder.resourceWithFiltersAndRelevancesTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?filter=urn:filter:1");
         ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);

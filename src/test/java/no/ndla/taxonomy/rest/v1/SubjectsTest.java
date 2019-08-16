@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 
+import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Subject;
@@ -11,6 +12,7 @@ import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
@@ -21,6 +23,8 @@ import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class SubjectsTest extends RestTest {
+    @Autowired
+    private TestSeeder testSeeder;
 
     @Test
     public void can_get_single_subject() throws Exception {
@@ -187,7 +191,8 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void recursive_topics_are_ordered_by_rank_relative_to_parent() throws Exception {
-        executeSqlScript("classpath:recursive_topics_by_subject_id_test_setup.sql", false);
+        testSeeder.recursiveTopicsBySubjectIdTestSetup();
+
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/topics?recursive=true");
         SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
         assertEquals(8, topics.length);
@@ -204,7 +209,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void recursive_topics_with_filter_are_ordered_relative_to_parent() throws Exception {
-        executeSqlScript("classpath:recursive_topics_by_subject_id_and_filters_test_setup.sql", false);
+        testSeeder.recursiveTopicsBySubjectIdAndFiltersTestSetup();
         //test filter 1
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/topics?recursive=true&filter=urn:filter:1");
         SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
@@ -227,7 +232,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void resources_are_ordered_relative_to_parent() throws Exception {
-        executeSqlScript("classpath:resources_by_subject_id_test_setup.sql", false);
+        testSeeder.resourcesBySubjectIdTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/resources");
         ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
@@ -247,7 +252,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void filtered_resources_are_ordered_relative_to_parent() throws Exception {
-        executeSqlScript("classpath:resources_by_subject_id_test_setup.sql", false);
+        testSeeder.resourcesBySubjectIdTestSetup();
 
         //filter 1
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/resources?filter=urn:filter:1");
