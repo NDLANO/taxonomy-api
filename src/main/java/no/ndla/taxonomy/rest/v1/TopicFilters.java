@@ -46,7 +46,7 @@ public class TopicFilters {
             Topic topic = topicRepository.getByPublicId(command.topicId);
             Relevance relevance = relevanceRepository.getByPublicId(command.relevanceId);
 
-            TopicFilter topicFilter = topic.addFilter(filter, relevance);
+            TopicFilter topicFilter = TopicFilter.create(topic, filter, relevance);
             topicFilterRepository.save(topicFilter);
 
             URI location = URI.create("/v1/topic-filters/" + topicFilter.getPublicId());
@@ -62,9 +62,22 @@ public class TopicFilters {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id, @ApiParam(name = "topic filter", value = "The updated topic filter", required = true) @RequestBody UpdateTopicFilterCommand command) {
-        TopicFilter topicFilter = topicFilterRepository.getByPublicId(id);
-        Relevance relevance = relevanceRepository.getByPublicId(command.relevanceId);
-        topicFilter.setRelevance(relevance);
+        final var topicFilter = topicFilterRepository.getByPublicId(id);
+        final var relevance = relevanceRepository.getByPublicId(command.relevanceId);
+
+        final var topic = topicFilter.getTopic().orElse(null);
+        final var filter = topicFilter.getFilter().orElse(null);
+
+        final var connectionId = topicFilter.getPublicId();
+
+        // Delete old object and create new as it is not possible to change the old connection object
+        topicFilterRepository.delete(topicFilter);
+        topicFilterRepository.flush();
+
+        final var newTopicFilter = TopicFilter.create(topic, filter, relevance);
+        newTopicFilter.setPublicId(connectionId);
+
+        topicFilterRepository.saveAndFlush(newTopicFilter);
     }
 
     @DeleteMapping("/{id}")

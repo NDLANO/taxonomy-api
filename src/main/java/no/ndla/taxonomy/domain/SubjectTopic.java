@@ -7,13 +7,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Entity
-public class SubjectTopic extends DomainEntity implements Rankable {
+public class SubjectTopic extends DomainEntity implements EntityWithPathConnection {
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "subject_id")
     private Subject subject;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
@@ -23,62 +23,59 @@ public class SubjectTopic extends DomainEntity implements Rankable {
     @Column(name = "rank")
     private int rank;
 
-    protected SubjectTopic() {
-
+    private SubjectTopic() {
+        setPublicId(URI.create("urn:subject-topic:" + UUID.randomUUID()));
     }
 
-    public SubjectTopic(Subject subject, Topic topic) {
-        setPublicId(URI.create("urn:subject-topic:" + UUID.randomUUID()));
+    public static SubjectTopic create(Subject subject, Topic topic) {
+        return create(subject, topic, false);
+    }
 
-        this.setSubject(subject);
-        this.setTopic(topic);
+    public static SubjectTopic create(Subject subject, Topic topic, boolean primary) {
+        if (topic == null || subject == null) {
+            throw new NullPointerException();
+        }
+
+        final var subjectTopic = new SubjectTopic();
+        subjectTopic.subject = subject;
+        subjectTopic.topic = topic;
+        subjectTopic.setPrimary(primary);
+
+        subject.addSubjectTopic(subjectTopic);
+        topic.addSubjectTopic(subjectTopic);
+
+        return subjectTopic;
+    }
+
+    public void disassociate() {
+        final var subject = this.subject;
+        final var topic = this.topic;
+
+        this.subject = null;
+        this.topic = null;
+
+        if (subject != null) {
+            subject.removeSubjectTopic(this);
+        }
+
+        if (topic != null) {
+            topic.removeSubjectTopic(this);
+        }
     }
 
     public Optional<Subject> getSubject() {
         return Optional.ofNullable(subject);
     }
 
-    public void setSubject(Subject subject) {
-        final var previousSubject = this.subject;
-
-        this.subject = subject;
-
-        if (subject != previousSubject && previousSubject != null) {
-            previousSubject.removeSubjectTopic(this);
-        }
-
-        if (subject != null && !subject.getSubjectTopics().contains(this)) {
-            subject.addSubjectTopic(this);
-        }
-    }
-
     public Optional<Topic> getTopic() {
         return Optional.ofNullable(topic);
-    }
-
-    public void setTopic(Topic topic) {
-        final var previousTopic = this.topic;
-
-        this.topic = topic;
-
-        if (topic != previousTopic && previousTopic != null) {
-            previousTopic.removeSubjectTopic(this);
-
-            if (isPrimary()) {
-                previousTopic.setRandomPrimarySubject();
-            }
-        }
-
-        if (topic != null && !topic.getSubjectTopics().contains(this)) {
-            topic.addSubjectTopic(this);
-        }
     }
 
     public boolean isPrimary() {
         return primary;
     }
 
-    void setPrimary(boolean primary) {
+    public void setPrimary(boolean primary) {
         this.primary = primary;
     }
 
@@ -92,7 +89,16 @@ public class SubjectTopic extends DomainEntity implements Rankable {
 
     @PreRemove
     void preRemove() {
-        this.setTopic(null);
-        this.setSubject(null);
+        disassociate();
+    }
+
+    @Override
+    public Optional<EntityWithPath> getConnectedParent() {
+        return Optional.ofNullable(subject);
+    }
+
+    @Override
+    public Optional<EntityWithPath> getConnectedChild() {
+        return Optional.ofNullable(topic);
     }
 }

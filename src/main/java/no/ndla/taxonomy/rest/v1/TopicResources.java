@@ -11,8 +11,13 @@ import no.ndla.taxonomy.domain.TopicResource;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
+import no.ndla.taxonomy.rest.BadHttpRequestException;
+import no.ndla.taxonomy.rest.ConflictHttpResponseException;
 import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
-import no.ndla.taxonomy.service.RankableConnectionUpdater;
+import no.ndla.taxonomy.service.EntityConnectionService;
+import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
+import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
+import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +25,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,13 +36,16 @@ public class TopicResources {
     private final TopicRepository topicRepository;
     private final ResourceRepository resourceRepository;
     private final TopicResourceRepository topicResourceRepository;
+    private final EntityConnectionService connectionService;
 
     public TopicResources(TopicRepository topicRepository,
                           ResourceRepository resourceRepository,
-                          TopicResourceRepository topicResourceRepository) {
+                          TopicResourceRepository topicResourceRepository,
+                          EntityConnectionService connectionService) {
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
         this.topicResourceRepository = topicResourceRepository;
+        this.connectionService = connectionService;
     }
 
     @GetMapping
@@ -67,18 +74,14 @@ public class TopicResources {
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Resource resource = resourceRepository.getByPublicId(command.resourceId);
 
-        TopicResource topicResource = topic.addResource(resource, command.primary);
-
-        List<TopicResource> connectionsForTopic = topicResourceRepository.findByTopic(topic);
-        connectionsForTopic.sort(Comparator.comparingInt(TopicResource::getRank));
-        if (command.rank == 0) {
-            TopicResource highestRankedConnection = connectionsForTopic.get(connectionsForTopic.size() - 1);
-            topicResource.setRank(highestRankedConnection.getRank() + 1);
-        } else {
-            List<TopicResource> rankedConnections = RankableConnectionUpdater.rank(connectionsForTopic, topicResource, command.rank);
-            topicResourceRepository.saveAll(rankedConnections);
+        final TopicResource topicResource;
+        try {
+            topicResource = connectionService.connectTopicResource(topic, resource, command.primary, command.rank == 0 ? null : command.rank);
+        } catch (DuplicateConnectionException e) {
+            throw new ConflictHttpResponseException(e);
+        } catch (InvalidArgumentServiceException e) {
+            throw new BadHttpRequestException(e);
         }
-        topicResourceRepository.save(topicResource);
 
         URI location = URI.create("/topic-resources/" + topicResource.getPublicId());
         return ResponseEntity.created(location).build();
@@ -90,10 +93,7 @@ public class TopicResources {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
-        TopicResource topicResource = topicResourceRepository.getByPublicId(id);
-        topicResource.getTopic().ifPresent(topic -> topicResource.getResource().ifPresent(topic::removeResource));
-
-        topicResourceRepository.delete(topicResource);
+        connectionService.disconnectTopicResource(topicResourceRepository.getByPublicId(id));
     }
 
     @PutMapping("/{id}")
@@ -104,18 +104,17 @@ public class TopicResources {
                     @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand
                             command) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
-        Topic topic = topicResource.getTopic().orElseThrow(() -> new NotFoundHttpRequestException("Topic not found"));
-        Resource resource = topicResource.getResource().orElseThrow(() -> new NotFoundHttpRequestException("Resource not found"));
 
-        if (command.primary) {
-            resource.setPrimaryTopic(topic);
-        } else if (topicResource.isPrimary() && !command.primary) {
+        if (topicResource.isPrimary() && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
-        if (command.rank > 0) {
-            List<TopicResource> existingConnections = topicResourceRepository.findByTopic(topic);
-            List<TopicResource> rankedConnections = RankableConnectionUpdater.rank(existingConnections, topicResource, command.rank);
-            topicResourceRepository.saveAll(rankedConnections);
+
+        try {
+            connectionService.updateTopicResource(topicResource, command.primary, command.rank > 0 ? command.rank : null);
+        } catch (InvalidArgumentServiceException e) {
+            throw new BadHttpRequestException(e);
+        } catch (NotFoundServiceException e) {
+            throw new NotFoundHttpRequestException(e);
         }
     }
 

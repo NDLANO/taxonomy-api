@@ -8,6 +8,8 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @Transactional
@@ -38,9 +40,16 @@ public class Builder {
     private void refreshAllCachedUrls() {
         entityManager.flush();
 
-        subjects.forEach((key, builder) -> entityManager.refresh(builder.subject));
-        topics.forEach((key, builder) -> entityManager.refresh(builder.topic));
-        resources.forEach((key, builder) -> entityManager.refresh(builder.resource));
+        Stream.concat(subjects.values().stream().map(builder -> builder.subject), Stream.concat(topics.values().stream().map(builder -> builder.topic), resources.values().stream().map(builder -> builder.resource))
+                .filter(entity -> entity.getId() != null))
+                .forEach(entity -> {
+                    // IllegalArgumentException is thrown on deleted objects, just ignore them
+                    try {
+                        entityManager.refresh(entity);
+                    } catch (IllegalArgumentException ignored) {
+
+                    }
+                });
     }
 
     public Topic topic(String key) {
@@ -202,7 +211,7 @@ public class Builder {
     }
 
     @Transactional
-    public class SubjectTranslationBuilder {
+    public static class SubjectTranslationBuilder {
         private SubjectTranslation subjectTranslation;
 
         public SubjectTranslationBuilder(SubjectTranslation subjectTranslation) {
@@ -216,91 +225,7 @@ public class Builder {
     }
 
     @Transactional
-    public class SubjectBuilder {
-        private final Subject subject;
-
-        public SubjectBuilder() {
-            subject = new Subject();
-            entityManager.persist(subject);
-        }
-
-        public SubjectBuilder name(String name) {
-            subject.name(name);
-            return this;
-        }
-
-        public SubjectBuilder topic(String key) {
-            return topic(key, null);
-        }
-
-        public SubjectBuilder topic(String key, Consumer<TopicBuilder> consumer) {
-            TopicBuilder topicBuilder = getTopicBuilder(key);
-            if (null != consumer) consumer.accept(topicBuilder);
-            topic(topicBuilder.topic);
-
-            refreshAllCachedUrls();
-
-            return this;
-        }
-
-
-        public SubjectBuilder topic(Consumer<TopicBuilder> consumer) {
-            return topic(null, consumer);
-        }
-
-        public SubjectBuilder topic(Topic topic) {
-            SubjectTopic subjectTopic = subject.addTopic(topic);
-            entityManager.persist(subjectTopic);
-
-            refreshAllCachedUrls();
-
-            return this;
-        }
-
-        public SubjectBuilder filter(String key, Consumer<FilterBuilder> consumer) {
-            FilterBuilder filterBuilder = getFilterBuilder(key);
-            if (null != consumer) consumer.accept(filterBuilder);
-            filter(filterBuilder.filter);
-            return this;
-        }
-
-        public SubjectBuilder filter(Consumer<FilterBuilder> consumer) {
-            return filter(null, consumer);
-        }
-
-        public SubjectBuilder filter(Filter filter) {
-            subject.addFilter(filter);
-            return this;
-        }
-
-        public SubjectBuilder contentUri(String contentUri) {
-            return contentUri(URI.create(contentUri));
-        }
-
-        public SubjectBuilder contentUri(URI contentUri) {
-            subject.setContentUri(contentUri);
-            return this;
-        }
-
-        public SubjectBuilder translation(String languageCode, Consumer<SubjectTranslationBuilder> consumer) {
-            SubjectTranslation subjectTranslation = subject.addTranslation(languageCode);
-            entityManager.persist(subjectTranslation);
-            SubjectTranslationBuilder builder = new SubjectTranslationBuilder(subjectTranslation);
-            consumer.accept(builder);
-            return this;
-        }
-
-        public SubjectBuilder publicId(String id) {
-            subject.setPublicId(URI.create(id));
-
-            refreshAllCachedUrls();
-
-            return this;
-        }
-    }
-
-    @Transactional
-    public class TopicTranslationBuilder {
+    public static class TopicTranslationBuilder {
         private TopicTranslation topicTranslation;
 
         public TopicTranslationBuilder(TopicTranslation topicTranslation) {
@@ -314,113 +239,31 @@ public class Builder {
     }
 
     @Transactional
-    public class TopicBuilder {
-        private final Topic topic;
+    public static class FilterTranslationBuilder {
+        private FilterTranslation filterTranslation;
 
-        public TopicBuilder() {
-            topic = new Topic();
-            entityManager.persist(topic);
+        public FilterTranslationBuilder(FilterTranslation filterTranslation) {
+            this.filterTranslation = filterTranslation;
         }
 
-        public TopicBuilder name(String name) {
-            topic.name(name);
+        public FilterTranslationBuilder name(String name) {
+            filterTranslation.setName(name);
             return this;
         }
+    }
 
-        public TopicBuilder subtopic(String topicKey) {
-            return subtopic(topicKey, null);
+    @Transactional
+    public static class ResourceTranslationBuilder {
+        private ResourceTranslation resourceTranslation;
+
+        public ResourceTranslationBuilder(ResourceTranslation resourceTranslation) {
+            this.resourceTranslation = resourceTranslation;
         }
 
-        public TopicBuilder subtopic(Consumer<TopicBuilder> consumer) {
-            return subtopic(null, consumer);
-        }
-
-        public TopicBuilder subtopic(String key, Consumer<TopicBuilder> consumer) {
-            TopicBuilder topicBuilder = getTopicBuilder(key);
-            if (null != consumer) consumer.accept(topicBuilder);
-            subtopic(topicBuilder.topic);
+        public ResourceTranslationBuilder name(String name) {
+            resourceTranslation.setName(name);
             return this;
         }
-
-        public TopicBuilder subtopic(Topic subtopic) {
-            entityManager.persist(topic.addSubtopic(subtopic));
-            return this;
-        }
-
-        public TopicBuilder subtopic(Topic subtopic, boolean isPrimary) {
-            entityManager.persist(topic.addSubtopic(subtopic, isPrimary));
-
-            refreshAllCachedUrls();
-
-            return this;
-        }
-
-        public TopicBuilder resource() {
-            return resource(null, null);
-        }
-
-        public TopicBuilder resource(String resourceKey) {
-            return resource(resourceKey, null);
-        }
-
-        public TopicBuilder resource(Consumer<ResourceBuilder> consumer) {
-            return resource(null, consumer);
-        }
-
-        public TopicBuilder resource(String resourceKey, Consumer<ResourceBuilder> consumer) {
-            ResourceBuilder resource = getResourceBuilder(resourceKey);
-            if (null != consumer) consumer.accept(resource);
-
-            return resource(resource.resource);
-        }
-
-        public TopicBuilder resource(Resource resource) {
-            TopicResource topicResource = topic.addResource(resource);
-            entityManager.persist(topicResource);
-
-            refreshAllCachedUrls();
-
-            return this;
-        }
-
-        public TopicBuilder contentUri(String contentUri) {
-            return contentUri(URI.create(contentUri));
-        }
-
-        public TopicBuilder contentUri(URI contentUri) {
-            topic.setContentUri(contentUri);
-            return this;
-        }
-
-        public TopicBuilder translation(String languageCode, Consumer<TopicTranslationBuilder> consumer) {
-            TopicTranslation topicTranslation = topic.addTranslation(languageCode);
-            entityManager.persist(topicTranslation);
-            TopicTranslationBuilder builder = new TopicTranslationBuilder(topicTranslation);
-            consumer.accept(builder);
-
-            return this;
-        }
-
-        public TopicBuilder publicId(String id) {
-            topic.setPublicId(URI.create(id));
-
-            refreshAllCachedUrls();
-
-            return this;
-        }
-
-        public TopicBuilder filter(Filter filter, Relevance relevance) {
-            TopicFilter topicFilter = topic.addFilter(filter, relevance);
-            entityManager.persist(topicFilter);
-            return this;
-        }
-
-        public void isContext(boolean b) {
-            topic.setContext(b);
-
-            refreshAllCachedUrls();
-        }
-
     }
 
     @Transactional
@@ -457,15 +300,15 @@ public class Builder {
     }
 
     @Transactional
-    public class FilterTranslationBuilder {
-        private FilterTranslation filterTranslation;
+    public static class ResourceTypeTranslationBuilder {
+        private ResourceTypeTranslation resourceTypeTranslation;
 
-        public FilterTranslationBuilder(FilterTranslation filterTranslation) {
-            this.filterTranslation = filterTranslation;
+        public ResourceTypeTranslationBuilder(ResourceTypeTranslation resourceTypeTranslation) {
+            this.resourceTypeTranslation = resourceTypeTranslation;
         }
 
-        public FilterTranslationBuilder name(String name) {
-            filterTranslation.setName(name);
+        public ResourceTypeTranslationBuilder name(String name) {
+            resourceTypeTranslation.setName(name);
             return this;
         }
     }
@@ -491,17 +334,28 @@ public class Builder {
     }
 
     @Transactional
-    public class ResourceTranslationBuilder {
-        private ResourceTranslation resourceTranslation;
+    public static class UrlMappingBuilder {
+        private UrlMapping urlMapping;
 
-        public ResourceTranslationBuilder(ResourceTranslation resourceTranslation) {
-            this.resourceTranslation = resourceTranslation;
+        public UrlMappingBuilder() {
+            urlMapping = new UrlMapping();
         }
 
-        public ResourceTranslationBuilder name(String name) {
-            resourceTranslation.setName(name);
+        public UrlMappingBuilder oldUrl(String p) {
+            urlMapping.setOldUrl(p);
             return this;
         }
+
+        public UrlMappingBuilder public_id(String p) {
+            urlMapping.setPublic_id(p);
+            return this;
+        }
+
+        public UrlMappingBuilder subject_id(String s) {
+            urlMapping.setSubject_id(s);
+            return this;
+        }
+
     }
 
     @Transactional
@@ -626,40 +480,253 @@ public class Builder {
     }
 
     @Transactional
-    public class ResourceTypeTranslationBuilder {
-        private ResourceTypeTranslation resourceTypeTranslation;
+    public class SubjectBuilder {
+        private final Subject subject;
 
-        public ResourceTypeTranslationBuilder(ResourceTypeTranslation resourceTypeTranslation) {
-            this.resourceTypeTranslation = resourceTypeTranslation;
+        public SubjectBuilder() {
+            subject = new Subject();
+            entityManager.persist(subject);
         }
 
-        public ResourceTypeTranslationBuilder name(String name) {
-            resourceTypeTranslation.setName(name);
+        public SubjectBuilder name(String name) {
+            subject.name(name);
+            return this;
+        }
+
+        public SubjectBuilder topic(String key) {
+            return topic(key, false, null);
+        }
+
+        public SubjectBuilder topic(String key, boolean primary) {
+            return topic(key, primary, null);
+        }
+
+        public SubjectBuilder topic(String key, boolean primary, Consumer<TopicBuilder> consumer) {
+            TopicBuilder topicBuilder = getTopicBuilder(key);
+            if (null != consumer) consumer.accept(topicBuilder);
+            topic(topicBuilder.topic, primary);
+
+            refreshAllCachedUrls();
+
+            return this;
+        }
+
+
+        public SubjectBuilder topic(Consumer<TopicBuilder> consumer) {
+            return topic(null, false, consumer);
+        }
+
+        public SubjectBuilder topic(boolean primary, Consumer<TopicBuilder> consumer) {
+            return topic(null, primary, consumer);
+        }
+
+        public SubjectBuilder topic(Topic topic) {
+            return topic(topic, false);
+        }
+
+        public SubjectBuilder topic(Topic topic, boolean primary) {
+            SubjectTopic subjectTopic = SubjectTopic.create(subject, topic, primary);
+            entityManager.persist(subjectTopic);
+
+            refreshAllCachedUrls();
+
+            return this;
+        }
+
+        public SubjectBuilder filter(String key, Consumer<FilterBuilder> consumer) {
+            FilterBuilder filterBuilder = getFilterBuilder(key);
+            if (null != consumer) consumer.accept(filterBuilder);
+            filter(filterBuilder.filter);
+            return this;
+        }
+
+        public SubjectBuilder filter(Consumer<FilterBuilder> consumer) {
+            return filter(null, consumer);
+        }
+
+        public SubjectBuilder filter(Filter filter) {
+            subject.addFilter(filter);
+            return this;
+        }
+
+        public SubjectBuilder contentUri(String contentUri) {
+            return contentUri(URI.create(contentUri));
+        }
+
+        public SubjectBuilder contentUri(URI contentUri) {
+            subject.setContentUri(contentUri);
+            return this;
+        }
+
+        public SubjectBuilder translation(String languageCode, Consumer<SubjectTranslationBuilder> consumer) {
+            SubjectTranslation subjectTranslation = subject.addTranslation(languageCode);
+            entityManager.persist(subjectTranslation);
+            SubjectTranslationBuilder builder = new SubjectTranslationBuilder(subjectTranslation);
+            consumer.accept(builder);
+            return this;
+        }
+
+        public SubjectBuilder publicId(String id) {
+            subject.setPublicId(URI.create(id));
+
+            refreshAllCachedUrls();
+
             return this;
         }
     }
 
     @Transactional
-    public class UrlMappingBuilder {
-        private UrlMapping urlMapping;
+    public class TopicBuilder {
+        private final Topic topic;
 
-        public UrlMappingBuilder() {
-            urlMapping = new UrlMapping();
+        public TopicBuilder() {
+            topic = new Topic();
+            entityManager.persist(topic);
         }
 
-        public UrlMappingBuilder oldUrl(String p) {
-            urlMapping.setOldUrl(p);
+        public TopicBuilder name(String name) {
+            topic.name(name);
             return this;
         }
 
-        public UrlMappingBuilder public_id(String p) {
-            urlMapping.setPublic_id(p);
+        public TopicBuilder subtopic(String topicKey) {
+            return subtopic(topicKey, false);
+        }
+
+        public TopicBuilder subtopic(String topicKey, boolean primary) {
+            return subtopic(topicKey, primary, null);
+        }
+
+        public TopicBuilder subtopic(Consumer<TopicBuilder> consumer, boolean primary) {
+            return subtopic(null, primary, consumer);
+        }
+
+        public TopicBuilder subtopic(Consumer<TopicBuilder> consumer) {
+            return subtopic(null, false, consumer);
+        }
+
+        public TopicBuilder subtopic(String key, Consumer<TopicBuilder> consumer) {
+            return subtopic(key, false, consumer);
+        }
+
+        public TopicBuilder subtopic(boolean primary, Consumer<TopicBuilder> consumer) {
+            return subtopic(null, primary, consumer);
+        }
+
+        public TopicBuilder subtopic(String key, boolean primary, Consumer<TopicBuilder> consumer) {
+            TopicBuilder topicBuilder = getTopicBuilder(key);
+            if (null != consumer) consumer.accept(topicBuilder);
+            subtopic(topicBuilder.topic, primary);
             return this;
         }
 
-        public UrlMappingBuilder subject_id(String s) {
-            urlMapping.setSubject_id(s);
+        public TopicBuilder subtopic(Topic subtopic) {
+            entityManager.persist(TopicSubtopic.create(topic, subtopic));
             return this;
+        }
+
+        public TopicBuilder subtopic(Topic subtopic, boolean isPrimary) {
+            if (isPrimary) {
+                final var toUpdate = subtopic.getParentTopicSubtopics().stream()
+                        .filter(TopicSubtopic::isPrimary)
+                        .collect(Collectors.toSet());
+
+                toUpdate.forEach(topicSubtopic1 -> topicSubtopic1.setPrimary(false));
+            }
+
+            final var topicSubtopic = TopicSubtopic.create(topic, subtopic);
+            if (isPrimary) {
+                topicSubtopic.setPrimary(true);
+            }
+
+            refreshAllCachedUrls();
+
+            return this;
+        }
+
+        public TopicBuilder resource() {
+            return resource(null, null);
+        }
+
+        public TopicBuilder resource(String resourceKey) {
+            return resource(resourceKey, null);
+        }
+
+        public TopicBuilder resource(boolean primary, Consumer<ResourceBuilder> consumer) {
+            return resource(null, primary, consumer);
+        }
+
+        public TopicBuilder resource(Consumer<ResourceBuilder> consumer) {
+            return resource(null, consumer);
+        }
+
+        public TopicBuilder resource(String resourceKey, Consumer<ResourceBuilder> consumer) {
+            return resource(resourceKey, false, consumer);
+        }
+
+        public TopicBuilder resource(String resourceKey, boolean primary, Consumer<ResourceBuilder> consumer) {
+            ResourceBuilder resource = getResourceBuilder(resourceKey);
+            if (null != consumer) consumer.accept(resource);
+
+            return resource(resource.resource, primary);
+        }
+
+        public TopicBuilder resource(String resourceKey, boolean primary) {
+            return resource(resourceKey, primary, null);
+        }
+
+        public TopicBuilder resource(Resource resource) {
+            entityManager.persist(TopicResource.create(topic, resource));
+
+            refreshAllCachedUrls();
+
+            return this;
+        }
+
+        public TopicBuilder resource(Resource resource, boolean primary) {
+            entityManager.persist(TopicResource.create(topic, resource, primary));
+
+            refreshAllCachedUrls();
+
+            return this;
+        }
+
+        public TopicBuilder contentUri(String contentUri) {
+            return contentUri(URI.create(contentUri));
+        }
+
+        public TopicBuilder contentUri(URI contentUri) {
+            topic.setContentUri(contentUri);
+            return this;
+        }
+
+        public TopicBuilder translation(String languageCode, Consumer<TopicTranslationBuilder> consumer) {
+            TopicTranslation topicTranslation = topic.addTranslation(languageCode);
+            entityManager.persist(topicTranslation);
+            TopicTranslationBuilder builder = new TopicTranslationBuilder(topicTranslation);
+            consumer.accept(builder);
+
+            return this;
+        }
+
+        public TopicBuilder publicId(String id) {
+            topic.setPublicId(URI.create(id));
+
+            refreshAllCachedUrls();
+
+            return this;
+        }
+
+        public TopicBuilder filter(Filter filter, Relevance relevance) {
+            TopicFilter topicFilter = topic.addFilter(filter, relevance);
+            entityManager.persist(topicFilter);
+            return this;
+        }
+
+        public void isContext(boolean b) {
+            topic.setContext(b);
+
+            refreshAllCachedUrls();
         }
 
     }

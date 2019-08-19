@@ -114,7 +114,7 @@ public class SubjectFiltersTest extends RestTest {
         URI subjectid = builder.subject("subject", s -> s
                 .name("subject")
                 .publicId("urn:subject:1")
-                .topic("parent", parent -> parent
+                .topic("parent", true, parent -> parent
                         .name("parent topic")
                         .publicId("urn:topic:a")
                         .subtopic("child", child -> child
@@ -181,15 +181,15 @@ public class SubjectFiltersTest extends RestTest {
         URI subjectid = builder.subject("subject", s -> s
                 .name("subject")
                 .publicId("urn:subject:1")
-                .topic("parent", parent -> parent
+                .topic("parent", true, parent -> parent
                         .name("parent topic")
                         .publicId("urn:topic:a")
-                        .subtopic("child", child -> child
+                        .subtopic("child", true, child -> child
                                 .name("child topic")
                                 .publicId("urn:topic:aa")
                                 .filter(vg1, core)
                         )
-                        .subtopic("child2", child -> child
+                        .subtopic("child2", true, child -> child
                                 .name("child 2")
                                 .publicId("urn:topic:ab")
                                 .filter(vg1, supplementary))

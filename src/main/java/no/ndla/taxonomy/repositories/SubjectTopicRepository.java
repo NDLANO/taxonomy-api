@@ -3,11 +3,13 @@ package no.ndla.taxonomy.repositories;
 
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.SubjectTopic;
+import no.ndla.taxonomy.domain.Topic;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface SubjectTopicRepository extends TaxonomyRepository<SubjectTopic> {
     List<SubjectTopic> findBySubject(Subject s);
@@ -47,5 +49,5 @@ public interface SubjectTopicRepository extends TaxonomyRepository<SubjectTopic>
         return doFindAllBySubjectAndTopicId(subject, topicId);
     }
 
-
+    Optional<SubjectTopic> findFirstBySubjectAndTopic(Subject subject, Topic topic);
 }

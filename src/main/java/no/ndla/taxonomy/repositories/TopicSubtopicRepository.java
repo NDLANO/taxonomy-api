@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 
 public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopic> {
     List<TopicSubtopic> findByTopic(Topic topic);
@@ -45,9 +45,9 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
             "   WHERE" +
             "       parentTopic.publicId = :publicId AND " +
             "       subTopicFilter_filter.publicId IN :filterPublicIds")
-    List<TopicSubtopic> doFindAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(URI publicId, Set<URI> filterPublicIds);
+    List<TopicSubtopic> doFindAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(URI publicId, Collection<URI> filterPublicIds);
 
-    default List<TopicSubtopic> findAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(URI publicId, Set<URI> filterPublicIds) {
+    default List<TopicSubtopic> findAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(URI publicId, Collection<URI> filterPublicIds) {
         if (filterPublicIds.size() == 0) {
             return doFindAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(publicId, null);
         }
@@ -84,4 +84,6 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
 
         return doFindAllBySubtopicIdIncludeTranslationsAndCachedUrlsAndFilters(subTopicId);
     }
+
+    Optional<TopicSubtopic> findFirstByPublicId(URI publicId);
 }

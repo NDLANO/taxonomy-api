@@ -91,7 +91,7 @@ public class UrlResolverTest extends RestTest {
         Resource resource = builder.resource(r -> r.publicId("urn:resource:1"));
         builder.subject(s -> s
                 .publicId("urn:subject:1")
-                .topic("topic1", t -> t
+                .topic("topic1", true, t -> t
                         .publicId("urn:topic:1")
                         .resource(resource)
                 )

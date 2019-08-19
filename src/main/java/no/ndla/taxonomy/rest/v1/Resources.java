@@ -10,12 +10,14 @@ import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
 import no.ndla.taxonomy.rest.v1.dtos.resources.*;
+import no.ndla.taxonomy.service.ResourceService;
+import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -25,23 +27,26 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/resources"})
-@Transactional
 public class Resources extends CrudController<Resource> {
     private final ResourceRepository resourceRepository;
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ResourceFilterRepository resourceFilterRepository;
+    private final ResourceService resourceService;
 
     public Resources(ResourceRepository resourceRepository,
                      ResourceResourceTypeRepository resourceResourceTypeRepository,
-                     ResourceFilterRepository resourceFilterRepository) {
+                     ResourceFilterRepository resourceFilterRepository,
+                     ResourceService resourceService) {
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceFilterRepository = resourceFilterRepository;
         this.resourceRepository = resourceRepository;
         this.repository = resourceRepository;
+        this.resourceService = resourceService;
     }
 
     @GetMapping
     @ApiOperation(value = "Lists all resources")
+    @Transactional(readOnly = true)
     public List<ResourceIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
@@ -72,6 +77,7 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single resource")
+    @Transactional(readOnly = true)
     public ResourceIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
@@ -87,6 +93,7 @@ public class Resources extends CrudController<Resource> {
     @ApiOperation(value = "Updates a resource")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(@PathVariable("id") URI id, @ApiParam(name = "resource", value = "the updated resource. Fields not included will be set to null.")
     @RequestBody UpdateResourceCommand command) {
         doPut(id, command);
@@ -95,6 +102,7 @@ public class Resources extends CrudController<Resource> {
     @PostMapping
     @ApiOperation(value = "Adds a new resource")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public ResponseEntity<Void> post(
             @ApiParam(name = "resource", value = "the new resource") @RequestBody CreateResourceCommand command) {
         return doPost(new Resource(), command);
@@ -102,6 +110,7 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}/resource-types")
     @ApiOperation(value = "Gets all resource types associated with this resource")
+    @Transactional(readOnly = true)
     public List<ResourceTypeIndexDocument> getResourceTypes(
             @PathVariable("id")
                     URI id,
@@ -118,6 +127,7 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters associated with this resource")
+    @Transactional(readOnly = true)
     public List<FilterIndexDocument> getFilters(
             @PathVariable("id")
                     URI id,
@@ -133,6 +143,7 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/{id}/full")
     @ApiOperation(value = "Gets all parent topics, all filters and resourceTypes for this resource")
+    @Transactional(readOnly = true)
     public ResourceFullIndexDocument getResourceFull(
             @PathVariable("id")
                     URI id,
@@ -210,5 +221,17 @@ public class Resources extends CrudController<Resource> {
             }
             connectionId = topicResource.getPublicId();
         }};
+    }
+
+    @DeleteMapping("/{id}")
+    @ApiOperation(value = "Deletes a single entity by id")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable("id") URI id) {
+        try {
+            resourceService.delete(id);
+        } catch (NotFoundServiceException e) {
+            throw new NotFoundHttpRequestException(e);
+        }
     }
 }

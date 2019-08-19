@@ -62,25 +62,31 @@ public class RelevanceTest {
         when(resourceFilter1.getRelevance()).thenReturn(Optional.empty());
         when(resourceFilter2.getRelevance()).thenReturn(Optional.ofNullable(relevance2));
 
+        try {
+            relevance.addResourceFilter(resourceFilter1);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+        when(resourceFilter1.getRelevance()).thenReturn(Optional.ofNullable(relevance));
         relevance.addResourceFilter(resourceFilter1);
 
         assertEquals(1, relevance.getResourceFilters().size());
         assertTrue(relevance.getResourceFilters().contains(resourceFilter1));
 
-        verify(resourceFilter1).setRelevance(relevance);
-
+        try {
+            relevance.addResourceFilter(resourceFilter2);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+        when(resourceFilter2.getRelevance()).thenReturn(Optional.ofNullable(relevance));
         relevance.addResourceFilter(resourceFilter2);
-
-        verify(resourceFilter2).setRelevance(relevance);
 
         assertEquals(2, relevance.getResourceFilters().size());
         assertTrue(relevance.getResourceFilters().containsAll(Set.of(resourceFilter1, resourceFilter2)));
 
-        when(resourceFilter1.getRelevance()).thenReturn(Optional.ofNullable(relevance));
-
         relevance.removeResourceFilter(resourceFilter1);
 
-        verify(resourceFilter1).setRelevance(null);
+        verify(resourceFilter1).disassociate();
 
         assertEquals(1, relevance.getResourceFilters().size());
         assertTrue(relevance.getResourceFilters().contains(resourceFilter2));
@@ -98,25 +104,31 @@ public class RelevanceTest {
         when(topicFilter1.getRelevance()).thenReturn(Optional.empty());
         when(topicFilter2.getRelevance()).thenReturn(Optional.ofNullable(relevance2));
 
+        try {
+            relevance.addTopicFilter(topicFilter1);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+        when(topicFilter1.getRelevance()).thenReturn(Optional.ofNullable(relevance));
         relevance.addTopicFilter(topicFilter1);
 
         assertEquals(1, relevance.getTopicFilters().size());
         assertTrue(relevance.getTopicFilters().contains(topicFilter1));
 
-        verify(topicFilter1).setRelevance(relevance);
-
+        try {
+            relevance.addTopicFilter(topicFilter2);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+        when(topicFilter2.getRelevance()).thenReturn(Optional.ofNullable(relevance));
         relevance.addTopicFilter(topicFilter2);
-
-        verify(topicFilter2).setRelevance(relevance);
 
         assertEquals(2, relevance.getTopicFilters().size());
         assertTrue(relevance.getTopicFilters().containsAll(Set.of(topicFilter1, topicFilter2)));
 
-        when(topicFilter1.getRelevance()).thenReturn(Optional.ofNullable(relevance));
-
         relevance.removeTopicFilter(topicFilter1);
 
-        verify(topicFilter1).setRelevance(null);
+        verify(topicFilter1).disassociate();
 
         assertEquals(1, relevance.getTopicFilters().size());
         assertTrue(relevance.getTopicFilters().contains(topicFilter2));

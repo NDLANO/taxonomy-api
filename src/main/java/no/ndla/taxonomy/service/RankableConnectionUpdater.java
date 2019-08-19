@@ -1,17 +1,17 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.Rankable;
+import no.ndla.taxonomy.domain.EntityWithPathConnection;
 
 import java.util.Comparator;
 import java.util.List;
 
 public class RankableConnectionUpdater {
 
-    public static <T extends Rankable> List<T> rank(List<T> existingConnections, T updatedConnection, int desiredRank) {
+    public static <T extends EntityWithPathConnection> List<T> rank(List<T> existingConnections, T updatedConnection, int desiredRank) {
         updatedConnection.setRank(desiredRank);
         if (!existingConnections.isEmpty()) {
             existingConnections.removeIf(subjectTopic -> subjectTopic.getPublicId().equals(updatedConnection.getPublicId()));
-            existingConnections.sort(Comparator.comparingInt(Rankable::getRank));
+            existingConnections.sort(Comparator.comparingInt(EntityWithPathConnection::getRank));
             int newIndex = insertInRankOrder(existingConnections, updatedConnection);
             if (!connectionWasInsertedAtEnd(newIndex)) {
                 updateAdjacentRankedConnections(existingConnections, updatedConnection, newIndex + 1);
@@ -26,10 +26,10 @@ public class RankableConnectionUpdater {
         return insertedAtIndex == -1;
     }
 
-    private static <T extends Rankable> void updateAdjacentRankedConnections(List<T> existingConnections, Rankable updatedConnection, int startFromIndex) {
+    private static <T extends EntityWithPathConnection> void updateAdjacentRankedConnections(List<T> existingConnections, EntityWithPathConnection updatedConnection, int startFromIndex) {
         int lastUpdatedConnectionRank = updatedConnection.getRank();
         for (int i = startFromIndex; i < existingConnections.size(); i++) {
-            Rankable currentItem = existingConnections.get(i);
+            EntityWithPathConnection currentItem = existingConnections.get(i);
             int currentRank = currentItem.getRank();
             if (currentRank == lastUpdatedConnectionRank) {
                 currentItem.setRank(currentRank + 1);
@@ -41,7 +41,7 @@ public class RankableConnectionUpdater {
     /**
      * @return the index the connectionToRank was inserted at, or -1 if it was inserted at the end
      */
-    private static <T extends Rankable> int insertInRankOrder(List<T> existingConnections, T connectionToRank) {
+    private static <T extends EntityWithPathConnection> int insertInRankOrder(List<T> existingConnections, T connectionToRank) {
         for (int i = 0; i < existingConnections.size(); i++) {
             if (existingConnections.get(i).getRank() >= connectionToRank.getRank()) {
                 existingConnections.add(i, connectionToRank);

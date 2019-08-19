@@ -1,6 +1,5 @@
 package no.ndla.taxonomy.rest.v1.dtos.topics;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -62,9 +61,6 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
     public Boolean isPrimary;
 
-    @JsonIgnore
-    public int topicNumericId;
-
     public URI getId() {
         return id;
     }
@@ -74,10 +70,7 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     }
 
     public ResourceIndexDocument(TopicResource topicResource, String language) {
-        topicResource.getTopic().ifPresent(topic -> {
-            this.topicId = topic.getPublicId();
-            this.topicNumericId = topic.getId();
-        });
+        topicResource.getTopic().ifPresent(topic -> this.topicId = topic.getPublicId());
 
         topicResource.getResource().ifPresent(resource -> {
             this.id = resource.getPublicId();

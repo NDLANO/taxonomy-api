@@ -75,7 +75,7 @@ public class TopicResourceTypeRepositoryTest {
         ResourceType resourceType = resourceTypeRepository.findByPublicId(testResourceType);
         assertNotNull(resourceType);
         topic.removeResourceType(resourceType);
-        topic = topicRepository.save(topic);
+        topic = topicRepository.saveAndFlush(topic);
         assertFalse(topic.getTopicResourceTypes().iterator().hasNext());
     }
 
@@ -108,13 +108,13 @@ public class TopicResourceTypeRepositoryTest {
         this.testTopic = null;
         this.testResourceType = null;
         this.testTopicResourceType = null;
-        Topic testTopic = topicRepository.save(new Topic().name(getClass().getCanonicalName()+" test topic"));
+        Topic testTopic = topicRepository.saveAndFlush(new Topic().name(getClass().getCanonicalName() + " test topic"));
         ResourceType testResourceType = null;
         TopicResourceType testTopicResourceType = null;
         try {
-            testResourceType = resourceTypeRepository.save(new ResourceType().name(getClass().getCanonicalName() + " test resource type"));
+            testResourceType = resourceTypeRepository.saveAndFlush(new ResourceType().name(getClass().getCanonicalName() + " test resource type"));
             testTopicResourceType = testTopic.addResourceType(testResourceType);
-            testTopic = topicRepository.save(testTopic);
+            testTopic = topicRepository.saveAndFlush(testTopic);
             this.testTopic = testTopic.getPublicId();
             this.testResourceType = testResourceType.getPublicId();
             this.testTopicResourceType = testTopicResourceType.getPublicId();

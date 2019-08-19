@@ -71,6 +71,8 @@ public class FilterTest {
         final var subject2 = mock(Subject.class);
         when(subject2.getFilters()).thenReturn(new HashSet<>());
 
+        when(subject.getFilters()).thenReturn(Set.of(filter));
+
         filter.setSubject(subject2);
 
         verify(subject).removeFilter(filter);
@@ -78,6 +80,8 @@ public class FilterTest {
         verify(subject2).addFilter(filter);
 
         verify(subject2, times(0)).removeFilter(filter);
+
+        when(subject2.getFilters()).thenReturn(Set.of(filter));
 
         filter.setSubject(null);
 
@@ -96,25 +100,29 @@ public class FilterTest {
         when(resourceFilter1.getFilter()).thenReturn(null);
         when(resourceFilter2.getFilter()).thenReturn(filter2);
 
+        try {
+            filter.addResourceFilter(resourceFilter1);
+        } catch (IllegalArgumentException ignored) {
+        }
+        when(resourceFilter1.getFilter()).thenReturn(filter);
         filter.addResourceFilter(resourceFilter1);
 
         assertEquals(1, filter.getResourceFilters().size());
         assertTrue(filter.getResourceFilters().contains(resourceFilter1));
 
-        verify(resourceFilter1).setFilter(filter);
-
+        try {
+            filter.addResourceFilter(resourceFilter2);
+        } catch (IllegalArgumentException ignored) {
+        }
+        when(resourceFilter2.getFilter()).thenReturn(filter);
         filter.addResourceFilter(resourceFilter2);
-
-        verify(resourceFilter2).setFilter(filter);
 
         assertEquals(2, filter.getResourceFilters().size());
         assertTrue(filter.getResourceFilters().containsAll(Set.of(resourceFilter1, resourceFilter2)));
 
-        when(resourceFilter1.getFilter()).thenReturn(filter);
-
         filter.removeResourceFilter(resourceFilter1);
 
-        verify(resourceFilter1).setFilter(null);
+        verify(resourceFilter1).disassociate();
 
         assertEquals(1, filter.getResourceFilters().size());
         assertTrue(filter.getResourceFilters().contains(resourceFilter2));
@@ -132,25 +140,31 @@ public class FilterTest {
         when(topicFilter1.getFilter()).thenReturn(Optional.empty());
         when(topicFilter2.getFilter()).thenReturn(Optional.of(filter2));
 
+        try {
+            filter.addTopicFilter(topicFilter1);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+        when(topicFilter1.getFilter()).thenReturn(Optional.of(filter));
         filter.addTopicFilter(topicFilter1);
 
         assertEquals(1, filter.getTopicFilters().size());
         assertTrue(filter.getTopicFilters().contains(topicFilter1));
 
-        verify(topicFilter1).setFilter(filter);
-
+        try {
+            filter.addTopicFilter(topicFilter2);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+        when(topicFilter2.getFilter()).thenReturn(Optional.of(filter));
         filter.addTopicFilter(topicFilter2);
-
-        verify(topicFilter2).setFilter(filter);
 
         assertEquals(2, filter.getTopicFilters().size());
         assertTrue(filter.getTopicFilters().containsAll(Set.of(topicFilter1, topicFilter2)));
 
-        when(topicFilter1.getFilter()).thenReturn(Optional.of(filter));
-
         filter.removeTopicFilter(topicFilter1);
 
-        verify(topicFilter1).setFilter(null);
+        verify(topicFilter1).disassociate();
 
         assertEquals(1, filter.getTopicFilters().size());
         assertTrue(filter.getTopicFilters().contains(topicFilter2));

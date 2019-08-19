@@ -1,14 +1,12 @@
 package no.ndla.taxonomy.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 public class ResourceType extends DomainObject {
@@ -21,16 +19,16 @@ public class ResourceType extends DomainObject {
     @JoinColumn(name = "parent_id")
     private ResourceType parent;
 
-    @OneToMany(mappedBy = "parent")
+    @OneToMany(mappedBy = "parent", cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST})
     private Set<ResourceType> subtypes = new HashSet<>();
 
-    @OneToMany(mappedBy = "resourceType")
+    @OneToMany(mappedBy = "resourceType", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceTypeTranslation> resourceTypeTranslations = new HashSet<>();
 
-    @OneToMany(mappedBy = "resourceType")
+    @OneToMany(mappedBy = "resourceType", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TopicResourceType> topicResourceTypes = new HashSet<>();
 
-    @OneToMany(mappedBy = "resourceType")
+    @OneToMany(mappedBy = "resourceType", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
 
     public Set<TopicResourceType> getTopicResourceTypes() {
@@ -38,18 +36,18 @@ public class ResourceType extends DomainObject {
     }
 
     public void addTopicResourceType(TopicResourceType topicResourceType) {
-        this.topicResourceTypes.add(topicResourceType);
-
         if (topicResourceType.getResourceType().orElse(null) != this) {
-            topicResourceType.setResourceType(this);
+            throw new IllegalArgumentException("TopicResourceType must have ResourceType set before associating with ResourceType");
         }
+
+        this.topicResourceTypes.add(topicResourceType);
     }
 
     public void removeTopicResourceType(TopicResourceType topicResourceType) {
         this.topicResourceTypes.remove(topicResourceType);
 
         if (topicResourceType.getResourceType().orElse(null) == this) {
-            topicResourceType.setResourceType(null);
+            topicResourceType.disassociate();
         }
     }
 
@@ -94,7 +92,7 @@ public class ResourceType extends DomainObject {
 
 
     public Set<ResourceType> getSubtypes() {
-        return this.subtypes;
+        return this.subtypes.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public ResourceTypeTranslation addTranslation(String languageCode) {
@@ -113,7 +111,7 @@ public class ResourceType extends DomainObject {
     }
 
     public Set<ResourceTypeTranslation> getTranslations() {
-        return resourceTypeTranslations;
+        return resourceTypeTranslations.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void removeTranslation(String languageCode) {
@@ -137,22 +135,30 @@ public class ResourceType extends DomainObject {
     }
 
     public Set<ResourceResourceType> getResourceResourceTypes() {
-        return this.resourceResourceTypes;
+        return this.resourceResourceTypes.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void addResourceResourceType(ResourceResourceType resourceResourceType) {
-        this.resourceResourceTypes.add(resourceResourceType);
-
         if (resourceResourceType.getResourceType() != this) {
-            resourceResourceType.setResourceType(this);
+            throw new IllegalArgumentException("ResourceResourceType must have ResourceType set before associating with ResourceType");
         }
+
+        this.resourceResourceTypes.add(resourceResourceType);
     }
 
     public void removeResourceResourceType(ResourceResourceType resourceResourceType) {
         this.resourceResourceTypes.remove(resourceResourceType);
 
         if (resourceResourceType.getResourceType() == this) {
-            resourceResourceType.setResourceType(null);
+            resourceResourceType.disassociate();
         }
+    }
+
+    @PreRemove
+    void preRemove() {
+        setParent(null);
+        new HashSet<>(subtypes).forEach(resourceType -> resourceType.setParent(null));
+        new HashSet<>(topicResourceTypes).forEach(TopicResourceType::disassociate);
+        new HashSet<>(resourceResourceTypes).forEach(ResourceResourceType::disassociate);
     }
 }
