@@ -10,9 +10,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Entity
-public class Topic extends CachedUrlEntity {
+public class Topic extends EntityWithPath {
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SubjectTopic> subjectTopics = new HashSet<>();
@@ -46,6 +47,18 @@ public class Topic extends CachedUrlEntity {
         setPublicId(URI.create("urn:topic:" + UUID.randomUUID()));
     }
 
+    @Override
+    public Set<EntityWithPathConnection> getParentConnections() {
+        return Stream.concat(parentTopicSubtopics.stream(), subjectTopics.stream())
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    @Override
+    public Set<EntityWithPathConnection> getChildConnections() {
+        return Stream.concat(childTopicSubtopics.stream(), topicResources.stream())
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
     public Topic name(String name) {
         setName(name);
         return this;
@@ -53,11 +66,11 @@ public class Topic extends CachedUrlEntity {
 
     /*
 
-        In the old code the primary URL for topics was special since it would try to return
-        a context URL (a topic behaving as a subject) rather than a subject URL if that is available.
-        Trying to re-implement it by sorting the context URLs first by the same path comparing as the old code
+            In the old code the primary URL for topics was special since it would try to return
+            a context URL (a topic behaving as a subject) rather than a subject URL if that is available.
+            Trying to re-implement it by sorting the context URLs first by the same path comparing as the old code
 
-     */
+         */
     public Optional<String> getPrimaryPath() {
         return getCachedUrls()
                 .stream()
@@ -84,11 +97,11 @@ public class Topic extends CachedUrlEntity {
     }
 
     public void addSubjectTopic(SubjectTopic subjectTopic) {
-        this.subjectTopics.add(subjectTopic);
-
         if (subjectTopic.getTopic().orElse(null) != this) {
-            subjectTopic.setTopic(this);
+            throw new IllegalArgumentException("Topic must be set on SubjectTopic before associating with Topic");
         }
+
+        this.subjectTopics.add(subjectTopic);
     }
 
     public void removeSubjectTopic(SubjectTopic subjectTopic) {
@@ -97,121 +110,90 @@ public class Topic extends CachedUrlEntity {
         var topic = subjectTopic.getTopic().orElse(null);
 
         if (topic == this) {
-            subjectTopic.setTopic(null);
+            subjectTopic.disassociate();
         }
     }
 
     public Set<TopicSubtopic> getChildrenTopicSubtopics() {
-        return this.childTopicSubtopics;
+        return this.childTopicSubtopics.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public Set<TopicSubtopic> getParentTopicSubtopics() {
-        return this.parentTopicSubtopics;
+        return this.parentTopicSubtopics.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void addChildTopicSubtopic(TopicSubtopic topicSubtopic) {
-        this.childTopicSubtopics.add(topicSubtopic);
-
         if (topicSubtopic.getTopic().orElse(null) != this) {
-            topicSubtopic.setTopic(this);
-            topicSubtopic.setSubtopic(this);
+            throw new IllegalArgumentException("Parent topic must be set on TopicSubtopic before associating with Topic");
         }
+
+        this.childTopicSubtopics.add(topicSubtopic);
     }
 
     public void removeChildTopicSubTopic(TopicSubtopic topicSubtopic) {
         this.childTopicSubtopics.remove(topicSubtopic);
 
-        if (topicSubtopic.getTopic().orElse(null) == this) {
-            topicSubtopic.setTopic(null);
-            topicSubtopic.setSubtopic(null);
-        }
+        topicSubtopic.disassociate();
     }
 
     public void addParentTopicSubtopic(TopicSubtopic topicSubtopic) {
-        this.parentTopicSubtopics.add(topicSubtopic);
-
         if (topicSubtopic.getSubtopic().orElse(null) != this) {
-            topicSubtopic.setSubtopic(this);
+            throw new IllegalArgumentException("Subtopic must be set on TopicSubtopic before associating with Topic");
         }
+
+        this.parentTopicSubtopics.add(topicSubtopic);
     }
 
     public void removeParentTopicSubtopic(TopicSubtopic topicSubtopic) {
         this.parentTopicSubtopics.remove(topicSubtopic);
 
-        if (topicSubtopic.getSubtopic().orElse(null) == this) {
-            topicSubtopic.setSubtopic(null);
-            topicSubtopic.setTopic(null);
-        }
+        topicSubtopic.disassociate();
     }
 
     public Set<TopicResource> getTopicResources() {
-        return this.topicResources;
+        return this.topicResources.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void addTopicResource(TopicResource topicResource) {
-        this.topicResources.add(topicResource);
-
         if (topicResource.getTopic().orElse(null) != this) {
-            topicResource.setTopic(this);
+            throw new IllegalArgumentException("TopicResource must have Topic set before it can be associated with Topic");
         }
+
+        this.topicResources.add(topicResource);
     }
 
     public void removeTopicResource(TopicResource topicResource) {
         this.topicResources.remove(topicResource);
 
+        final var resource = topicResource.getResource();
+
         if (topicResource.getTopic().orElse(null) == this) {
-            topicResource.setTopic(null);
+            topicResource.disassociate();
         }
     }
 
     public Set<TopicResourceType> getTopicResourceTypes() {
-        return this.topicResourceTypes;
-    }
-
-    public TopicSubtopic addSubtopic(Topic subtopic) {
-        return addSubtopic(subtopic, true);
-    }
-
-    public TopicSubtopic addSubtopic(Topic subtopic, boolean primaryConnection) {
-        refuseIfDuplicateSubtopic(subtopic);
-
-        final var topicSubtopic = new TopicSubtopic();
-        topicSubtopic.setPrimary(false);
-        topicSubtopic.setTopic(this);
-        topicSubtopic.setSubtopic(subtopic);
-
-        if (primaryConnection) {
-            subtopic.setPrimaryParentTopic(this);
-        }
-
-        return topicSubtopic;
+        return this.topicResourceTypes.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void addTopicResourceType(TopicResourceType topicResourceType) {
-        this.topicResourceTypes.add(topicResourceType);
-
         if (topicResourceType.getTopic().orElse(null) != this) {
-            topicResourceType.setTopic(this);
+            throw new IllegalArgumentException("TopicResourceType must have Topic set before associating with Topic");
         }
+
+        this.topicResourceTypes.add(topicResourceType);
     }
 
     public void removeTopicResourceType(TopicResourceType topicResourceType) {
         this.topicResourceTypes.remove(topicResourceType);
 
         if (topicResourceType.getTopic().orElse(null) == this) {
-            topicResourceType.setTopic(null);
-            topicResourceType.setResourceType(null);
+            topicResourceType.disassociate();
         }
     }
 
     public boolean hasSingleSubject() {
         return subjectTopics.size() == 1;
-    }
-
-    private void refuseIfDuplicateSubtopic(Topic subtopic) {
-        if (getSubtopics().contains(subtopic)) {
-            throw new DuplicateIdException("Topic with id " + getPublicId() + " already contains topic with id " + subtopic.getPublicId());
-        }
     }
 
     public Optional<Topic> getPrimaryParentTopic() {
@@ -221,69 +203,11 @@ public class Topic extends CachedUrlEntity {
         return Optional.empty();
     }
 
-    public void setPrimaryParentTopic(Topic topic) {
-        // Set requested TopicSubtopic object isPrimary to true and all other to false
-        parentTopicSubtopics.stream()
-                .filter(ts -> ts.getTopic().isPresent())
-                .forEach(st -> st.setPrimary(st.getTopic().get().equals(topic)));
-    }
-
-    void setRandomPrimaryTopic() {
-        parentTopicSubtopics.stream()
-                .map(TopicSubtopic::getTopic)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .findFirst()
-                .ifPresent(this::setPrimaryParentTopic);
-    }
-
-    public TopicResource addResource(Resource resource) {
-        return addResource(resource, true);
-    }
-
-    public TopicResource addResource(Resource resource, boolean primaryConnection) {
-        refuseIfDuplicateResource(resource);
-
-        TopicResource topicResource = new TopicResource();
-        topicResource.setResource(resource);
-        addTopicResource(topicResource);
-
-        if (primaryConnection) {
-            resource.setPrimaryTopic(this);
-        } else {
-            topicResource.setPrimary(false);
-        }
-
-        return topicResource;
-    }
-
-    private void refuseIfDuplicateResource(Resource resource) {
-        if (getResources().contains(resource)) {
-            throw new DuplicateIdException("Topic with id " + getPublicId() + " already contains resource with id " + resource.getPublicId());
-        }
-    }
-
-    public void removeResource(Resource resource) {
-        final var topicResource = getTopicResource(resource)
-                .orElseThrow(() -> new ChildNotFoundException("Topic with id " + this.getPublicId() + " has no resource with id " + resource.getPublicId()));
-
-        removeTopicResource(topicResource);
-
-        if (topicResource.isPrimary()) resource.setRandomPrimaryTopic();
-    }
-
-    private Optional<TopicResource> getTopicResource(Resource resource) {
-        return topicResources.stream()
-                .filter(topicResource -> topicResource.getResource().isPresent())
-                .filter(topicResource -> topicResource.getResource().get().equals(resource))
-                .findFirst();
-    }
-
     public Set<Topic> getSubtopics() {
         return childTopicSubtopics.stream()
                 .map(TopicSubtopic::getSubtopic)
                 .map(Optional::get)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     public Set<Topic> getParentTopics() {
@@ -291,7 +215,7 @@ public class Topic extends CachedUrlEntity {
                 .map(TopicSubtopic::getTopic)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     public Set<Resource> getResources() {
@@ -299,7 +223,7 @@ public class Topic extends CachedUrlEntity {
                 .map(TopicResource::getResource)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     public void setContentUri(URI contentUri) {
@@ -326,7 +250,7 @@ public class Topic extends CachedUrlEntity {
     }
 
     public Set<TopicTranslation> getTranslations() {
-        return translations;
+        return translations.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void addTranslation(TopicTranslation topicTranslation) {
@@ -349,54 +273,12 @@ public class Topic extends CachedUrlEntity {
         getTranslation(languageCode).ifPresent(this::removeTranslation);
     }
 
-    public void setPrimarySubject(Subject subject) {
-        // All other connections than to the provided subject is set to false, and provided connection set to true
-        subjectTopics.forEach(st -> st.setPrimary(st.getSubject().filter(s -> s.equals(subject)).isPresent()));
-    }
-
-    public void setRandomPrimarySubject() {
-        subjectTopics.stream()
-                .map(SubjectTopic::getSubject)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .findFirst()
-                .ifPresent(this::setPrimarySubject);
-    }
-
-    public void removeSubtopic(Topic subtopic) {
-        final var topicSubtopic = getTopicSubtopic(subtopic)
-                .orElseThrow(() -> new ChildNotFoundException("Topic " + this.getPublicId() + " has not subtopic with id " + subtopic.getPublicId()));
-
-        removeChildTopicSubTopic(topicSubtopic);
-
-        if (topicSubtopic.isPrimary()) {
-            subtopic.setRandomPrimaryTopic();
-        }
-    }
-
-    private Optional<TopicSubtopic> getTopicSubtopic(Topic subtopic) {
-        return childTopicSubtopics.stream()
-                .filter(topicSubtopic -> topicSubtopic.getSubtopic().isPresent())
-                .filter(topicSubtopic -> topicSubtopic.getSubtopic().get().equals(subtopic))
-                .findFirst();
-    }
-
     public TopicFilter addFilter(Filter filter, Relevance relevance) {
-        TopicFilter topicFilter = new TopicFilter();
-        topicFilter.setTopic(this);
-        topicFilter.setRelevance(relevance);
-        topicFilter.setFilter(filter);
-
-        addTopicFilter(topicFilter);
-
-        return topicFilter;
+        return TopicFilter.create(this, filter, relevance);
     }
 
     public TopicResourceType addResourceType(ResourceType resourceType) {
-        TopicResourceType topicResourceType = new TopicResourceType();
-        topicResourceType.setResourceType(resourceType);
-        addTopicResourceType(topicResourceType);
-        return topicResourceType;
+        return TopicResourceType.create(this, resourceType);
     }
 
     public void removeResourceType(ResourceType resourceType) {
@@ -415,23 +297,23 @@ public class Topic extends CachedUrlEntity {
     }
 
     public void addTopicFilter(TopicFilter topicFilter) {
-        this.topicFilters.add(topicFilter);
-
         if (topicFilter.getTopic().orElse(null) != this) {
-            topicFilter.setTopic(this);
+            throw new IllegalArgumentException("TopicFilter must have Topic set before associating with Topic");
         }
+
+        this.topicFilters.add(topicFilter);
     }
 
     public void removeTopicFilter(TopicFilter topicFilter) {
         this.topicFilters.remove(topicFilter);
 
         if (topicFilter.getTopic().orElse(null) == this) {
-            topicFilter.setTopic(null);
+            topicFilter.disassociate();
         }
     }
 
     public Set<TopicFilter> getTopicFilters() {
-        return this.topicFilters;
+        return this.topicFilters.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void setContext(boolean context) {
@@ -444,25 +326,11 @@ public class Topic extends CachedUrlEntity {
 
     @PreRemove
     void preRemove() {
-        for (var topicSubtopic : parentTopicSubtopics.toArray(new TopicSubtopic[]{})) {
-            removeParentTopicSubtopic(topicSubtopic);
-        }
-
-        for (var topicSubtopic : childTopicSubtopics.toArray(new TopicSubtopic[]{})) {
-            removeChildTopicSubTopic(topicSubtopic);
-        }
-
-        for (var subjectTopic : subjectTopics.toArray(new SubjectTopic[]{})) {
-            removeSubjectTopic(subjectTopic);
-        }
-
-        for (var topicResource : topicResources.toArray(new TopicResource[]{})) {
-            removeTopicResource(topicResource);
-        }
-
-        for (var topicFilter : topicFilters.toArray(new TopicFilter[]{})) {
-            removeTopicFilter(topicFilter);
-        }
+        new HashSet<>(subjectTopics).forEach(SubjectTopic::disassociate);
+        new HashSet<>(childTopicSubtopics).forEach(TopicSubtopic::disassociate);
+        new HashSet<>(parentTopicSubtopics).forEach(TopicSubtopic::disassociate);
+        new HashSet<>(topicResources).forEach(TopicResource::disassociate);
+        new HashSet<>(topicResourceTypes).forEach(TopicResourceType::disassociate);
+        new HashSet<>(topicFilters).forEach(TopicFilter::disassociate);
     }
-
 }

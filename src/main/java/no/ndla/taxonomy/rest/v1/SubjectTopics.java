@@ -11,8 +11,13 @@ import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
+import no.ndla.taxonomy.rest.BadHttpRequestException;
+import no.ndla.taxonomy.rest.ConflictHttpResponseException;
 import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
-import no.ndla.taxonomy.service.RankableConnectionUpdater;
+import no.ndla.taxonomy.service.EntityConnectionService;
+import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
+import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
+import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +25,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,13 +35,16 @@ public class SubjectTopics {
     private final TopicRepository topicRepository;
     private final SubjectTopicRepository subjectTopicRepository;
     private final SubjectRepository subjectRepository;
+    private final EntityConnectionService connectionService;
 
     public SubjectTopics(SubjectRepository subjectRepository,
                          TopicRepository topicRepository,
-                         SubjectTopicRepository subjectTopicRepository) {
+                         SubjectTopicRepository subjectTopicRepository,
+                         EntityConnectionService connectionService) {
         this.subjectRepository = subjectRepository;
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicRepository = topicRepository;
+        this.connectionService = connectionService;
     }
 
 
@@ -67,25 +74,16 @@ public class SubjectTopics {
         Subject subject = subjectRepository.getByPublicId(command.subjectid);
         Topic topic = topicRepository.getByPublicId(command.topicid);
 
-        SubjectTopic subjectTopic = subject.addTopic(topic);
-
-        if (command.primary) {
-            topic.setPrimarySubject(subject);
+        final SubjectTopic subjectTopic;
+        try {
+            subjectTopic = connectionService.connectSubjectTopic(subject, topic, command.primary, command.rank == 0 ? null : command.rank);
+        } catch (DuplicateConnectionException e) {
+            throw new ConflictHttpResponseException(e);
+        } catch (InvalidArgumentServiceException e) {
+            throw new BadHttpRequestException(e);
         }
 
-        List<SubjectTopic> connectionsForSubject = subjectTopicRepository.findBySubject(subject);
-        connectionsForSubject.sort(Comparator.comparingInt(SubjectTopic::getRank));
-        if (command.rank == 0) {
-            SubjectTopic highestRankingConnection = connectionsForSubject.get(connectionsForSubject.size() - 1);
-            subjectTopic.setRank(highestRankingConnection.getRank() + 1);
-        } else {
-            List<SubjectTopic> rankedConnections = RankableConnectionUpdater.rank(connectionsForSubject, subjectTopic, command.rank);
-            subjectTopicRepository.saveAll(rankedConnections);
-        }
-
-        subjectTopicRepository.save(subjectTopic);
-
-        URI location = URI.create("/subject-topicFilters/" + subjectTopic.getPublicId());
+        URI location = URI.create("/subject-topics/" + subjectTopic.getPublicId());
         return ResponseEntity.created(location).build();
     }
 
@@ -94,9 +92,7 @@ public class SubjectTopics {
     @ApiOperation("Removes a topic from a subject")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
-        SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
-
-        subjectTopicRepository.delete(subjectTopic);
+        connectionService.disconnectSubjectTopic(subjectTopicRepository.getByPublicId(id));
     }
 
     @PutMapping("/{id}")
@@ -106,17 +102,17 @@ public class SubjectTopics {
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
-        Topic topic = subjectTopic.getTopic().orElseThrow(() -> new NotFoundHttpRequestException("Topic not found"));
-        Subject subject = subjectTopic.getSubject().orElseThrow(() -> new NotFoundHttpRequestException("Subject not found"));
 
-        List<SubjectTopic> existingConnections = subjectTopicRepository.findBySubject(subject);
-        List<SubjectTopic> rankedConnections = RankableConnectionUpdater.rank(existingConnections, subjectTopic, command.rank);
-        subjectTopicRepository.saveAll(rankedConnections);
-
-        if (command.primary) {
-            topic.setPrimarySubject(subject);
-        } else if (subjectTopic.isPrimary() && !command.primary) {
+        if (subjectTopic.isPrimary() && !command.primary) {
             throw new PrimaryParentRequiredException();
+        }
+
+        try {
+            connectionService.updateSubjectTopic(subjectTopic, command.primary, command.rank > 0 ? command.rank : null);
+        } catch (InvalidArgumentServiceException e) {
+            throw new BadHttpRequestException(e);
+        } catch (NotFoundServiceException e) {
+            throw new NotFoundHttpRequestException(e);
         }
     }
 

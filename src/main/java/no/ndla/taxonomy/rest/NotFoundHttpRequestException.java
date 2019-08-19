@@ -8,4 +8,8 @@ public class NotFoundHttpRequestException extends RuntimeException {
     public NotFoundHttpRequestException(String message) {
         super(message);
     }
+
+    public NotFoundHttpRequestException(Throwable cause) {
+        super(cause.getMessage(), cause);
+    }
 }

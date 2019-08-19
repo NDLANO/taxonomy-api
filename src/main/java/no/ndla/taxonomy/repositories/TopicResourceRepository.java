@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public interface TopicResourceRepository extends TaxonomyRepository<TopicResource> {
@@ -144,4 +145,6 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
 
         return doFindAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, resourceTypePublicIds, relevancePublicId);
     }
+
+    Optional<TopicResource> findFirstByPublicId(URI publicId);
 }

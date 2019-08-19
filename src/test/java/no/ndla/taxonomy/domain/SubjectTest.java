@@ -32,107 +32,44 @@ public class SubjectTest {
 
         assertEquals(0, subject.getSubjectTopics().size());
 
-        subject.addSubjectTopic(subjectTopic1);
-        assertEquals(1, subject.getSubjectTopics().size());
-        assertTrue(subject.getSubjectTopics().contains(subjectTopic1));
-        verify(subjectTopic1).setSubject(subject);
+        try {
+            subject.addSubjectTopic(subjectTopic1);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+
+        }
 
         when(subjectTopic1.getSubject()).thenReturn(Optional.of(subject));
 
+        subject.addSubjectTopic(subjectTopic1);
+
+        assertEquals(1, subject.getSubjectTopics().size());
+        assertTrue(subject.getSubjectTopics().contains(subjectTopic1));
+
+        when(subjectTopic1.getSubject()).thenReturn(Optional.of(subject));
+
+        try {
+            subject.addSubjectTopic(subjectTopic2);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        when(subjectTopic2.getSubject()).thenReturn(Optional.of(subject));
         subject.addSubjectTopic(subjectTopic2);
+
         assertEquals(2, subject.getSubjectTopics().size());
         assertTrue(subject.getSubjectTopics().containsAll(Set.of(subjectTopic1, subjectTopic2)));
-        verify(subjectTopic2).setSubject(subject);
 
         when(subjectTopic2.getSubject()).thenReturn(Optional.of(subject));
 
         subject.removeSubjectTopic(subjectTopic1);
         assertEquals(1, subject.getSubjectTopics().size());
         assertTrue(subject.getSubjectTopics().contains(subjectTopic2));
-        verify(subjectTopic1).setSubject(null);
+        verify(subjectTopic1).disassociate();
 
         subject.removeSubjectTopic(subjectTopic2);
-        verify(subjectTopic2).setSubject(null);
+        verify(subjectTopic2).disassociate();
         assertEquals(0, subject.getSubjectTopics().size());
-    }
-
-    @Test
-    public void getAddAndRemoveTopic() {
-        // This test is leaking to SubjectTopic causing some issues with relation management
-        // Some of the whens and answers are only to replicate some behaviour that SubjectTopic require
-
-        // Has "single subject"
-        final var topic1 = mock(Topic.class);
-        when(topic1.hasSingleSubject()).thenReturn(true);
-
-        // Has "multiple subjects" (actually none, but returns false on hasSingleSubject)
-        final var topic2 = mock(Topic.class);
-        when(topic2.hasSingleSubject()).thenReturn(false);
-
-        assertEquals(0, subject.getTopics().size());
-        doAnswer(invocationOnMock -> {
-            final var subjectTopic = (SubjectTopic) invocationOnMock.getArgument(0);
-            assertEquals(topic1, subjectTopic.getTopic().orElse(null));
-            assertEquals(subject, subjectTopic.getSubject().orElse(null));
-
-            return null;
-        }).when(topic1).addSubjectTopic(any(SubjectTopic.class));
-
-        doAnswer(invocationOnMock -> {
-            subject.getSubjectTopics().stream()
-                    .filter(subjectTopic -> topic1.equals(subjectTopic.getTopic().orElse(null)))
-                    .forEach(subjectTopic -> subjectTopic.setPrimary(true));
-
-            return null;
-        }).when(topic1).setPrimarySubject(subject);
-
-        subject.addTopic(topic1);
-
-        verify(topic1, times(1)).addSubjectTopic(any(SubjectTopic.class));
-        verify(topic1, times(1)).setPrimarySubject(subject);
-
-        assertEquals(1, subject.getTopics().size());
-        assertTrue(subject.getTopics().contains(topic1));
-
-        doAnswer(invocationOnMock -> {
-            final var subjectTopic = (SubjectTopic) invocationOnMock.getArgument(0);
-            assertEquals(topic2, subjectTopic.getTopic().orElse(null));
-            assertEquals(subject, subjectTopic.getSubject().orElse(null));
-
-            return null;
-        }).when(topic2).addSubjectTopic(any(SubjectTopic.class));
-
-        subject.addTopic(topic2);
-        verify(topic2, times(0)).setRandomPrimarySubject();
-
-        assertEquals(2, subject.getTopics().size());
-        assertTrue(subject.getTopics().containsAll(Set.of(topic1, topic2)));
-
-        // Trying to add again triggers exception
-        try {
-            subject.addTopic(topic2);
-            fail("Expected DuplicateIdException");
-        } catch (DuplicateIdException ignored) {
-
-        }
-
-        verify(topic1, times(0)).setRandomPrimarySubject();
-        subject.removeTopic(topic1);
-
-        assertEquals(1, subject.getTopics().size());
-        assertTrue(subject.getTopics().contains(topic2));
-
-        subject.removeTopic(topic2);
-
-        assertEquals(0, subject.getTopics().size());
-
-        // trying to delete again triggers exception
-        try {
-            subject.removeTopic(topic1);
-            fail("Expected ChildNotFoundException");
-        } catch (ChildNotFoundException ignored) {
-
-        }
     }
 
     @Test
@@ -214,6 +151,7 @@ public class SubjectTest {
         final var subjectTopic2 = mock(SubjectTopic.class);
 
         Set.of(subjectTopic1, subjectTopic2).forEach(subjectTopic -> {
+            when(subjectTopic.getSubject()).thenReturn(Optional.of(subject));
             subject.addSubjectTopic(subjectTopic);
             when(subjectTopic.getSubject()).thenReturn(Optional.of(subject));
         });
@@ -222,8 +160,6 @@ public class SubjectTest {
 
         subject.preRemove();
 
-        assertEquals(0, subject.getSubjectTopics().size());
-
-        Set.of(subjectTopic1, subjectTopic2).forEach(subjectTopic -> verify(subjectTopic).setSubject(null));
+        Set.of(subjectTopic1, subjectTopic2).forEach(subjectTopic -> verify(subjectTopic).disassociate());
     }
 }

@@ -31,28 +31,36 @@ public class ResourceTypeTest {
 
         assertEquals(0, resourceType.getTopicResourceTypes().size());
 
+        try {
+            resourceType.addTopicResourceType(topicResourceType1);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+        when(topicResourceType1.getResourceType()).thenReturn(Optional.of(resourceType));
         resourceType.addTopicResourceType(topicResourceType1);
+
         assertEquals(1, resourceType.getTopicResourceTypes().size());
         assertTrue(resourceType.getTopicResourceTypes().contains(topicResourceType1));
-        verify(topicResourceType1).setResourceType(resourceType);
 
-        when(topicResourceType1.getResourceType()).thenReturn(Optional.of(resourceType));
-
+        try {
+            resourceType.addTopicResourceType(topicResourceType2);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+        when(topicResourceType2.getResourceType()).thenReturn(Optional.of(resourceType));
         resourceType.addTopicResourceType(topicResourceType2);
+
         assertEquals(2, resourceType.getTopicResourceTypes().size());
         assertTrue(resourceType.getTopicResourceTypes().containsAll(Set.of(topicResourceType1, topicResourceType2)));
-        verify(topicResourceType2).setResourceType(resourceType);
-
-        when(topicResourceType2.getResourceType()).thenReturn(Optional.of(resourceType));
 
         resourceType.removeTopicResourceType(topicResourceType1);
         assertEquals(1, resourceType.getTopicResourceTypes().size());
         assertTrue(resourceType.getTopicResourceTypes().contains(topicResourceType2));
-        verify(topicResourceType1).setResourceType(null);
+        verify(topicResourceType1).disassociate();
 
         resourceType.removeTopicResourceType(topicResourceType2);
         assertEquals(0, resourceType.getTopicResourceTypes().size());
-        verify(topicResourceType2).setResourceType(null);
+        verify(topicResourceType2).disassociate();
     }
 
     @Test
@@ -156,25 +164,35 @@ public class ResourceTypeTest {
 
         assertEquals(0, resourceType.getResourceResourceTypes().size());
 
+        try {
+            resourceType.addResourceResourceType(resourceResourceType1);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+        when(resourceResourceType1.getResourceType()).thenReturn(resourceType);
         resourceType.addResourceResourceType(resourceResourceType1);
+
         assertEquals(1, resourceType.getResourceResourceTypes().size());
         assertTrue(resourceType.getResourceResourceTypes().contains(resourceResourceType1));
-        verify(resourceResourceType1).setResourceType(resourceType);
-        when(resourceResourceType1.getResourceType()).thenReturn(resourceType);
 
+        try {
+            resourceType.addResourceResourceType(resourceResourceType2);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+        when(resourceResourceType2.getResourceType()).thenReturn(resourceType);
         resourceType.addResourceResourceType(resourceResourceType2);
+
         assertEquals(2, resourceType.getResourceResourceTypes().size());
         assertTrue(resourceType.getResourceResourceTypes().containsAll(Set.of(resourceResourceType1, resourceResourceType2)));
-        verify(resourceResourceType2).setResourceType(resourceType);
-        when(resourceResourceType2.getResourceType()).thenReturn(resourceType);
 
         resourceType.removeResourceResourceType(resourceResourceType1);
         assertEquals(1, resourceType.getResourceResourceTypes().size());
         assertTrue(resourceType.getResourceResourceTypes().contains(resourceResourceType2));
-        verify(resourceResourceType1).setResourceType(null);
+        verify(resourceResourceType1).disassociate();
 
         resourceType.removeResourceResourceType(resourceResourceType2);
         assertEquals(0, resourceType.getResourceResourceTypes().size());
-        verify(resourceResourceType2).setResourceType(null);
+        verify(resourceResourceType2).disassociate();
     }
 }

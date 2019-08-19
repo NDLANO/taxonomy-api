@@ -1,12 +1,14 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.Rankable;
+import no.ndla.taxonomy.domain.EntityWithPath;
+import no.ndla.taxonomy.domain.EntityWithPathConnection;
 import org.junit.Test;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 
@@ -101,7 +103,7 @@ public class RankableConnectionUpdaterTest {
         assertEquals(11, rankable8.getRank());
     }
 
-    private static class TestRankable implements Rankable {
+    private static class TestRankable implements EntityWithPathConnection {
         private final URI publicId;
         private int rank;
 
@@ -123,6 +125,26 @@ public class RankableConnectionUpdaterTest {
         @Override
         public void setRank(int rank) {
             this.rank = rank;
+        }
+
+        @Override
+        public boolean isPrimary() {
+            return false;
+        }
+
+        @Override
+        public void setPrimary(boolean isPrimary) {
+
+        }
+
+        @Override
+        public Optional<EntityWithPath> getConnectedParent() {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<EntityWithPath> getConnectedChild() {
+            return Optional.empty();
         }
     }
 }

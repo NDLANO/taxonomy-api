@@ -128,9 +128,9 @@ public class SubjectsTest extends RestTest {
     public void can_get_topics() throws Exception {
         Subject subject = builder.subject(s -> s
                 .name("physics")
-                .topic(t -> t.name("statics").contentUri("urn:article:1"))
-                .topic(t -> t.name("electricity").contentUri("urn:article:2"))
-                .topic(t -> t.name("optics").contentUri("urn:article:3"))
+                .topic(false, t -> t.name("statics").contentUri("urn:article:1"))
+                .topic(false, t -> t.name("electricity").contentUri("urn:article:2"))
+                .topic(true, t -> t.name("optics").contentUri("urn:article:3"))
         );
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
@@ -153,13 +153,13 @@ public class SubjectsTest extends RestTest {
         URI subjectid = builder.subject("subject", s -> s
                 .name("subject")
                 .publicId("urn:subject:1")
-                .topic("parent", parent -> parent
+                .topic("parent", true, parent -> parent
                         .name("parent topic")
                         .publicId("urn:topic:a")
-                        .subtopic("child", child -> child
+                        .subtopic("child", true, child -> child
                                 .name("child topic")
                                 .publicId("urn:topic:aa")
-                                .subtopic("grandchild", grandchild -> grandchild
+                                .subtopic("grandchild", true, grandchild -> grandchild
                                         .name("grandchild topic")
                                         .publicId("urn:topic:aaa")
                                 )
@@ -320,10 +320,10 @@ public class SubjectsTest extends RestTest {
         URI id = builder.subject(s -> s
                 .publicId("urn:subject:1")
                 .name("subject")
-                .topic("topic a", t -> t
+                .topic("topic a", false, t -> t
                         .name("topic a")
                         .resource(r -> r.name("resource a").resourceType(rt -> rt.name("assignment"))))
-                .topic("topic b", t -> t
+                .topic("topic b", true, t -> t
                         .name("topic b")
                         .resource(r -> r.name("resource b").resourceType(rt -> rt.name("lecture")))
                         .subtopic("subtopic", st -> st.name("subtopic").resource(r -> r.name("sub resource"))))
@@ -343,16 +343,16 @@ public class SubjectsTest extends RestTest {
     public void can_get_urls_for_all_resources() throws Exception {
         builder.subject(s -> s
                 .publicId("urn:subject:1")
-                .topic(t -> t
+                .topic(true, t -> t
                         .publicId("urn:topic:1")
-                        .resource(r -> r.publicId("urn:resource:1"))
+                        .resource(true, r -> r.publicId("urn:resource:1"))
                 )
-                .topic(t -> t
+                .topic(true, t -> t
                         .publicId("urn:topic:2")
-                        .resource(r -> r.publicId("urn:resource:2"))
-                        .subtopic(st -> st
+                        .resource(true, r -> r.publicId("urn:resource:2"))
+                        .subtopic(true, st -> st
                                 .publicId("urn:topic:21")
-                                .resource(r -> r.publicId("urn:resource:3"))
+                                .resource(true, r -> r.publicId("urn:resource:3"))
                         )
                 )
         );

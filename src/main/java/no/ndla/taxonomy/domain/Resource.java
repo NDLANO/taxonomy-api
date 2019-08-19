@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
-public class Resource extends CachedUrlEntity {
+public class Resource extends EntityWithPath {
 
     @Column
     @Type(type = "no.ndla.taxonomy.hibernate.UriType")
@@ -25,6 +25,16 @@ public class Resource extends CachedUrlEntity {
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceFilter> filters = new HashSet<>();
+
+    @Override
+    public Set<EntityWithPathConnection> getParentConnections() {
+        return topics.stream().collect(Collectors.toUnmodifiableSet());
+    }
+
+    @Override
+    public Set<EntityWithPathConnection> getChildConnections() {
+        return Set.of();
+    }
 
     public Resource() {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
@@ -51,7 +61,7 @@ public class Resource extends CachedUrlEntity {
         }
 
 
-        ResourceResourceType resourceResourceType = new ResourceResourceType(this, resourceType);
+        ResourceResourceType resourceResourceType = ResourceResourceType.create(this, resourceType);
         addResourceResourceType(resourceResourceType);
         return resourceResourceType;
     }
@@ -60,7 +70,7 @@ public class Resource extends CachedUrlEntity {
         this.resourceResourceTypes.add(resourceResourceType);
 
         if (resourceResourceType.getResource() != this) {
-            resourceResourceType.setResource(this);
+            throw new IllegalArgumentException("ResourceResourceType must have Resource set before being associated with Resource");
         }
     }
 
@@ -68,7 +78,7 @@ public class Resource extends CachedUrlEntity {
         this.resourceResourceTypes.remove(resourceResourceType);
 
         if (resourceResourceType.getResource() == this) {
-            resourceResourceType.setResource(null);
+            resourceResourceType.disassociate();
         }
     }
 
@@ -97,7 +107,7 @@ public class Resource extends CachedUrlEntity {
     }
 
     public Set<ResourceTranslation> getTranslations() {
-        return resourceTranslations;
+        return resourceTranslations.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void removeTranslation(String languageCode) {
@@ -127,20 +137,6 @@ public class Resource extends CachedUrlEntity {
         return Optional.empty();
     }
 
-    public void setPrimaryTopic(Topic topic) {
-        // Set all isPrimary to false except requested topic that is set to true
-        topics.forEach(t -> t.setPrimary(t.getTopic().isPresent() && t.getTopic().get().equals(topic)));
-    }
-
-    public void setRandomPrimaryTopic() {
-        topics.stream()
-                .map(TopicResource::getTopic)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .findFirst()
-                .ifPresent(this::setPrimaryTopic);
-    }
-
     public void removeResourceType(ResourceType resourceType) {
         ResourceResourceType resourceResourceType = getResourceType(resourceType);
         if (resourceResourceType == null)
@@ -157,9 +153,7 @@ public class Resource extends CachedUrlEntity {
     }
 
     public ResourceFilter addFilter(Filter filter, Relevance relevance) {
-        final var resourceFilter = new ResourceFilter(this, filter, relevance);
-        addResourceFilter(resourceFilter);
-        return resourceFilter;
+        return ResourceFilter.create(this, filter, relevance);
     }
 
     public void removeFilter(Filter filter) {
@@ -178,34 +172,23 @@ public class Resource extends CachedUrlEntity {
         return null;
     }
 
-    @PreRemove
-    void preRemove() {
-        for (var topicResource : this.getTopicResources().toArray()) {
-            this.removeTopicResource((TopicResource) topicResource);
-        }
-
-        for (var resourceFilter : this.getResourceFilters().toArray()) {
-            this.removeResourceFilter((ResourceFilter) resourceFilter);
-        }
-    }
-
     public Set<ResourceResourceType> getResourceResourceTypes() {
-        return this.resourceResourceTypes;
+        return this.resourceResourceTypes.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public Set<ResourceFilter> getResourceFilters() {
-        return this.filters;
+        return this.filters.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public Set<TopicResource> getTopicResources() {
-        return this.topics;
+        return this.topics.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void removeTopicResource(TopicResource topicResource) {
         this.topics.remove(topicResource);
 
         if (topicResource.getResource().orElse(null) == this) {
-            topicResource.setResource(null);
+            topicResource.disassociate();
         }
     }
 
@@ -213,7 +196,7 @@ public class Resource extends CachedUrlEntity {
         this.filters.add(resourceFilter);
 
         if (resourceFilter.getResource() != this) {
-            resourceFilter.setResource(this);
+            throw new IllegalArgumentException("ResourceFilter must have Resource relation set before adding");
         }
     }
 
@@ -221,9 +204,7 @@ public class Resource extends CachedUrlEntity {
         this.filters.remove(resourceFilter);
 
         if (resourceFilter.getResource() == this) {
-            resourceFilter.setResource(null);
-            resourceFilter.setFilter(null);
-            resourceFilter.setRelevance(null);
+            resourceFilter.disassociate();
         }
     }
 
@@ -231,7 +212,14 @@ public class Resource extends CachedUrlEntity {
         this.topics.add(topicResource);
 
         if (topicResource.getResource().orElse(null) != this) {
-            topicResource.setResource(this);
+            throw new IllegalArgumentException("TopicResource must have Resource relation set before adding");
         }
+    }
+
+    @PreRemove
+    void preRemove() {
+        new HashSet<>(resourceResourceTypes).forEach(ResourceResourceType::disassociate);
+        new HashSet<>(topics).forEach(TopicResource::disassociate);
+        new HashSet<>(filters).forEach(ResourceFilter::disassociate);
     }
 }

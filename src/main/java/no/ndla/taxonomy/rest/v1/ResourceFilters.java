@@ -64,7 +64,20 @@ public class ResourceFilters {
     public void put(@PathVariable("id") URI id, @ApiParam(name = "resource filter", value = "The updated resource filter", required = true) @RequestBody UpdateResourceFilterCommand command) {
         ResourceFilter resourceFilter = resourceFilterRepository.getByPublicId(id);
         Relevance relevance = relevanceRepository.getByPublicId(command.relevanceId);
-        resourceFilter.setRelevance(relevance);
+
+        final var resource = resourceFilter.getResource();
+        final var filter = resourceFilter.getFilter();
+
+        final var connectionId = resourceFilter.getPublicId();
+
+        // Delete old object and create new as it is not possible to change the old connection object
+        resourceFilterRepository.delete(resourceFilter);
+        resourceFilterRepository.flush();
+
+        final var newResourceFilter = ResourceFilter.create(resource, filter, relevance);
+        newResourceFilter.setPublicId(connectionId);
+
+        resourceFilterRepository.saveAndFlush(newResourceFilter);
     }
 
     @DeleteMapping("/{id}")

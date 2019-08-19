@@ -1,8 +1,6 @@
 package no.ndla.taxonomy.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.net.URI;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,47 +11,56 @@ public class TopicResourceType extends DomainEntity {
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE})
     @JoinColumn(name = "resource_type_id")
     private ResourceType resourceType;
 
-    public TopicResourceType() {
+    private TopicResourceType() {
         setPublicId(URI.create("urn:topic-resourcetype:" + UUID.randomUUID()));
+    }
+
+    public static TopicResourceType create(Topic topic, ResourceType resourceType) {
+        if (topic == null || resourceType == null) {
+            throw new NullPointerException();
+        }
+
+        final var topicResourceType = new TopicResourceType();
+
+        topicResourceType.topic = topic;
+        topicResourceType.resourceType = resourceType;
+
+        resourceType.addTopicResourceType(topicResourceType);
+        topic.addTopicResourceType(topicResourceType);
+
+        return topicResourceType;
+    }
+
+    public void disassociate() {
+        final var topic = this.topic;
+        final var resourceType = this.resourceType;
+
+        this.topic = null;
+        this.resourceType = null;
+
+        if (topic != null) {
+            topic.removeTopicResourceType(this);
+        }
+
+        if (resourceType != null) {
+            resourceType.removeTopicResourceType(this);
+        }
     }
 
     public Optional<Topic> getTopic() {
         return Optional.ofNullable(topic);
     }
 
-    public void setTopic(Topic topic) {
-        final var previousTopic = this.topic;
-
-        this.topic = topic;
-
-        if (previousTopic != null && previousTopic != topic) {
-            previousTopic.removeTopicResourceType(this);
-        }
-
-        if (topic != null && !topic.getTopicResourceTypes().contains(this)) {
-            topic.addTopicResourceType(this);
-        }
-    }
-
     public Optional<ResourceType> getResourceType() {
         return Optional.ofNullable(resourceType);
     }
 
-    public void setResourceType(ResourceType resourceType) {
-        final var previousResourceType = this.resourceType;
-
-        this.resourceType = resourceType;
-
-        if (previousResourceType != null && previousResourceType != resourceType) {
-            previousResourceType.removeTopicResourceType(this);
-        }
-
-        if (resourceType != null && !resourceType.getTopicResourceTypes().contains(this)) {
-            resourceType.addTopicResourceType(this);
-        }
+    @PreRemove
+    void preRemove() {
+        disassociate();
     }
 }

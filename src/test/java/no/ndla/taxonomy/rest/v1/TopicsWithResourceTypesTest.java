@@ -102,9 +102,7 @@ public class TopicsWithResourceTypesTest {
     public void testListAllTopicResourceTypes() throws Exception {
         var topic = new Topic();
         var resourceType = new ResourceType();
-        var topicResourceType = new TopicResourceType();
-        topicResourceType.setTopic(topic);
-        topicResourceType.setResourceType(resourceType);
+        var topicResourceType = TopicResourceType.create(topic, resourceType);
         var expectedJson = "{" +
                 "\"topicId\": \""+topic.getPublicId().toString()+"\"," +
                 "\"resourceTypeId\":\""+resourceType.getPublicId().toString()+"\"," +
@@ -127,9 +125,7 @@ public class TopicsWithResourceTypesTest {
     public void testFindOneTopicResourceType() throws Exception {
         var topic = new Topic();
         var resourceType = new ResourceType();
-        var topicResourceType = new TopicResourceType();
-        topicResourceType.setTopic(topic);
-        topicResourceType.setResourceType(resourceType);
+        var topicResourceType = TopicResourceType.create(topic, resourceType);
         var expectedJson = "{" +
                 "\"topicId\": \""+topic.getPublicId().toString()+"\"," +
                 "\"resourceTypeId\":\""+resourceType.getPublicId().toString()+"\"," +

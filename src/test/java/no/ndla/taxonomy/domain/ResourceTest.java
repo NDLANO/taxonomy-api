@@ -117,18 +117,33 @@ public class ResourceTest {
 
         assertEquals(0, resource.getResourceResourceTypes().size());
 
+        try {
+            resource.addResourceResourceType(resourceResourceType1);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+
+        }
+
+        when(resourceResourceType1.getResource()).thenReturn(resource);
         resource.addResourceResourceType(resourceResourceType1);
+
         assertEquals(1, resource.getResourceResourceTypes().size());
         assertTrue(resource.getResourceResourceTypes().contains(resourceResourceType1));
-        verify(resourceResourceType1).setResource(resource);
 
+        try {
+            resource.addResourceResourceType(resourceResourceType2);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        when(resourceResourceType2.getResource()).thenReturn(resource);
         resource.addResourceResourceType(resourceResourceType2);
+
         assertEquals(2, resource.getResourceResourceTypes().size());
         assertTrue(resource
                 .getResourceResourceTypes()
                 .containsAll(Set.of(resourceResourceType1, resourceResourceType2))
         );
-        verify(resourceResourceType2).setResource(resource);
 
         reset(resourceResourceType1);
         reset(resourceResourceType2);
@@ -139,11 +154,11 @@ public class ResourceTest {
         resource.removeResourceResourceType(resourceResourceType1);
         assertEquals(1, resource.getResourceResourceTypes().size());
         assertTrue(resource.getResourceResourceTypes().contains(resourceResourceType2));
-        verify(resourceResourceType1).setResource(null);
+        verify(resourceResourceType1).disassociate();
 
         resource.removeResourceResourceType(resourceResourceType2);
         assertEquals(0, resource.getResourceResourceTypes().size());
-        verify(resourceResourceType2).setResource(null);
+        verify(resourceResourceType2).disassociate();
     }
 
     @Test
@@ -158,98 +173,6 @@ public class ResourceTest {
 
         resource.setContentUri(uri2);
         assertEquals("urn:test2", resource.getContentUri().toString());
-    }
-
-    @Test
-    public void setAndGetPrimaryTopic() {
-        // Resource is not assigned to any topics
-        assertFalse(resource.getPrimaryTopic().isPresent());
-
-        final var topic1 = mock(Topic.class);
-        final var topic2 = mock(Topic.class);
-        final var topic3 = mock(Topic.class);
-
-        final var topicResource1 = mock(TopicResource.class);
-        final var topicResource2 = mock(TopicResource.class);
-        final var topicResource3 = mock(TopicResource.class);
-
-        when(topicResource1.getTopic()).thenReturn(Optional.of(topic1));
-        when(topicResource2.getTopic()).thenReturn(Optional.of(topic2));
-        when(topicResource3.getTopic()).thenReturn(Optional.of(topic3));
-
-        Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> {
-            when(topicResource.getResource()).thenReturn(Optional.of(resource));
-            resource.addTopicResource(topicResource);
-        });
-
-        when(topicResource1.isPrimary()).thenReturn(false);
-        when(topicResource2.isPrimary()).thenReturn(false);
-        when(topicResource3.isPrimary()).thenReturn(false);
-
-        // None of the TopicResource objects is set as primary
-        // It is possible, but it is not supposed to happen outside test
-        assertFalse(resource.getPrimaryTopic().isPresent());
-
-        when(topicResource2.isPrimary()).thenReturn(true);
-        assertEquals(topic2, resource.getPrimaryTopic().orElse(null));
-
-        when(topicResource1.isPrimary()).thenReturn(true);
-        when(topicResource2.isPrimary()).thenReturn(false);
-        assertEquals(topic1, resource.getPrimaryTopic().orElse(null));
-
-        // Replicates the setPrimary method as it does in the real objects
-        Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> doAnswer(invocationOnMock -> {
-            final var setPrimary = (boolean) invocationOnMock.getArgument(0);
-            when(topicResource.isPrimary()).thenReturn(setPrimary);
-
-            return null;
-        }).when(topicResource).setPrimary(anyBoolean()));
-
-        resource.setPrimaryTopic(topic2);
-        assertEquals(topic2, resource.getPrimaryTopic().orElse(null));
-
-        resource.setPrimaryTopic(topic3);
-        assertEquals(topic3, resource.getPrimaryTopic().orElse(null));
-    }
-
-    @Test
-    public void setRandomPrimaryTopic() {
-        final var topic1 = mock(Topic.class);
-        final var topic2 = mock(Topic.class);
-        final var topic3 = mock(Topic.class);
-
-        final var topicResource1 = mock(TopicResource.class);
-        final var topicResource2 = mock(TopicResource.class);
-        final var topicResource3 = mock(TopicResource.class);
-
-        when(topicResource1.getTopic()).thenReturn(Optional.of(topic1));
-        when(topicResource2.getTopic()).thenReturn(Optional.of(topic2));
-        when(topicResource3.getTopic()).thenReturn(Optional.of(topic3));
-
-        Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> {
-            when(topicResource.getResource()).thenReturn(Optional.of(resource));
-            resource.addTopicResource(topicResource);
-        });
-
-        when(topicResource1.isPrimary()).thenReturn(false);
-        when(topicResource2.isPrimary()).thenReturn(false);
-        when(topicResource3.isPrimary()).thenReturn(false);
-
-        // Replicates the setPrimary method as it does in the real objects
-        Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> doAnswer(invocationOnMock -> {
-            final var setPrimary = (boolean) invocationOnMock.getArgument(0);
-            when(topicResource.isPrimary()).thenReturn(setPrimary);
-
-            return null;
-        }).when(topicResource).setPrimary(anyBoolean()));
-
-        assertFalse(resource.getPrimaryTopic().isPresent());
-
-        resource.setRandomPrimaryTopic();
-
-        // Any of the three topics could become primary
-        assertTrue(resource.getPrimaryTopic().isPresent());
-        assertTrue(Set.of(topic1, topic2, topic3).contains(resource.getPrimaryTopic().get()));
     }
 
     @Test
@@ -350,33 +273,43 @@ public class ResourceTest {
 
         assertEquals(0, resource.getResourceFilters().size());
 
+        try {
+            resource.addResourceFilter(resourceFilter1);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        when(resourceFilter1.getResource()).thenReturn(resource);
         resource.addResourceFilter(resourceFilter1);
 
         assertEquals(1, resource.getResourceFilters().size());
         assertTrue(resource.getResourceFilters().contains(resourceFilter1));
 
-        verify(resourceFilter1).setResource(resource);
+        try {
+            resource.addResourceFilter(resourceFilter2);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
 
+        }
+        when(resourceFilter2.getResource()).thenReturn(resource);
         resource.addResourceFilter(resourceFilter2);
 
         assertEquals(2, resource.getResourceFilters().size());
         assertTrue(resource.getResourceFilters().containsAll(Set.of(resourceFilter1, resourceFilter2)));
-
-        verify(resourceFilter2).setResource(resource);
 
         when(resourceFilter1.getResource()).thenReturn(resource);
         when(resourceFilter2.getResource()).thenReturn(resource);
 
         resource.removeResourceFilter(resourceFilter1);
 
-        verify(resourceFilter1).setResource(null);
+        verify(resourceFilter1).disassociate();
 
         assertEquals(1, resource.getResourceFilters().size());
         assertTrue(resource.getResourceFilters().contains(resourceFilter2));
 
         resource.removeResourceFilter(resourceFilter2);
 
-        verify(resourceFilter2).setResource(null);
+        verify(resourceFilter2).disassociate();
         assertEquals(0, resource.getResourceFilters().size());
     }
 
@@ -387,54 +320,69 @@ public class ResourceTest {
 
         assertEquals(0, resource.getTopicResources().size());
 
+        try {
+            resource.addTopicResource(topicResource1);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        when(topicResource1.getResource()).thenReturn(Optional.of(resource));
         resource.addTopicResource(topicResource1);
 
         assertEquals(1, resource.getTopicResources().size());
         assertTrue(resource.getTopicResources().contains(topicResource1));
 
-        verify(topicResource1).setResource(resource);
+        try {
+            resource.addTopicResource(topicResource2);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ignored) {
+        }
 
+        when(topicResource2.getResource()).thenReturn(Optional.of(resource));
         resource.addTopicResource(topicResource2);
 
         assertEquals(2, resource.getTopicResources().size());
         assertTrue(resource.getTopicResources().containsAll(Set.of(topicResource1, topicResource2)));
-
-        verify(topicResource2).setResource(resource);
 
         when(topicResource1.getResource()).thenReturn(Optional.of(resource));
         when(topicResource2.getResource()).thenReturn(Optional.of(resource));
 
         resource.removeTopicResource(topicResource1);
 
-        verify(topicResource1).setResource(null);
+        verify(topicResource1).disassociate();
 
         assertEquals(1, resource.getTopicResources().size());
         assertTrue(resource.getTopicResources().contains(topicResource2));
 
         resource.removeTopicResource(topicResource2);
 
-        verify(topicResource2).setResource(null);
+        verify(topicResource2).disassociate();
         assertEquals(0, resource.getTopicResources().size());
     }
 
     @Test
     public void preRemove() {
-        final var resourceSpy = spy(resource);
-
         final var topicResource1 = mock(TopicResource.class);
         final var topicResource2 = mock(TopicResource.class);
         final var resourceFilter1 = mock(ResourceFilter.class);
         final var resourceFilter2 = mock(ResourceFilter.class);
 
-        Set.of(topicResource1, topicResource2).forEach(resourceSpy::addTopicResource);
-        Set.of(resourceFilter1, resourceFilter2).forEach(resourceSpy::addResourceFilter);
 
-        doAnswer(invocationOnMock -> null).when(resourceSpy).removeTopicResource(any(TopicResource.class));
-        doAnswer(invocationOnMock -> null).when(resourceSpy).removeResourceFilter(any(ResourceFilter.class));
+        Set.of(topicResource1, topicResource2).forEach(topicResource -> {
+            when(topicResource.getResource()).thenReturn(Optional.of(resource));
+            resource.addTopicResource(topicResource);
+        });
 
-        resourceSpy.preRemove();
+        Set.of(resourceFilter1, resourceFilter2).forEach(resourceFilter -> {
+            when(resourceFilter.getResource()).thenReturn(resource);
+            resource.addResourceFilter(resourceFilter);
+        });
 
-        Set.of(topicResource1, topicResource2).forEach(topicResource -> verify(resourceSpy).removeTopicResource(topicResource));
-        Set.of(resourceFilter1, resourceFilter2).forEach(resourceFilter -> verify(resourceSpy).removeResourceFilter(resourceFilter));
+        resource.preRemove();
+
+        verify(topicResource1).disassociate();
+        verify(topicResource2).disassociate();
+        verify(resourceFilter1).disassociate();
+        verify(resourceFilter2).disassociate();
     }
 }

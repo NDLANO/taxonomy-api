@@ -1,9 +1,15 @@
 package no.ndla.taxonomy.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.SubjectTopic;
+import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.domain.TopicFilter;
+import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
+import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
+import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
+import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,11 +24,19 @@ import java.util.stream.StreamSupport;
 @Transactional
 public class TopicReusedInSameSubjectCloningService {
     private final TopicSubtopicRepository topicSubtopicRepository;
+    private final SubjectTopicRepository subjectTopicRepository;
     private final TopicRepository topicRepository;
+    private final TopicResourceRepository topicResourceRepository;
 
-    public TopicReusedInSameSubjectCloningService(TopicSubtopicRepository topicSubtopicRepository, TopicRepository topicRepository) {
+    private final EntityConnectionService connectionService;
+
+    public TopicReusedInSameSubjectCloningService(TopicSubtopicRepository topicSubtopicRepository, TopicRepository topicRepository, SubjectTopicRepository subjectTopicRepository,
+                                                  TopicResourceRepository topicResourceRepository, EntityConnectionService connectionService) {
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicRepository = topicRepository;
+        this.subjectTopicRepository = subjectTopicRepository;
+        this.topicResourceRepository = topicResourceRepository;
+        this.connectionService = connectionService;
     }
 
     private List<SubjectTopic> findSubjectTopics(Topic topic) {
@@ -73,11 +87,9 @@ public class TopicReusedInSameSubjectCloningService {
             Topic topic = topicRepository.findByPublicId(contentUri);
             Map<URI, Topic> topicObjects = new HashMap<>();
             topicObjects.put(topic.getPublicId(), topic);
-            List<Topic> parentLinks = StreamSupport.stream(Spliterators.spliteratorUnknownSize(topic.getParentTopics().iterator(), Spliterator.ORDERED), false)
-                    .collect(Collectors.toList());
-            parentLinks.forEach(t -> topicObjects.put(t.getPublicId(), t));
+            topic.getParentTopics().forEach(t -> topicObjects.put(t.getPublicId(), t));
 
-            List<URI> parents = parentLinks
+            List<URI> parents = topic.getParentTopics()
                     .stream()
                     .map(Topic::getPublicId)
                     .collect(Collectors.toList());
@@ -128,34 +140,22 @@ public class TopicReusedInSameSubjectCloningService {
             );
         }
 
-        @Transactional
-        public class TopicCloneFix {
+        class TopicCloneFix {
             private TopicCloning topicCloning;
 
-            public TopicCloneFix(Topic parentTopic, Topic topic) {
+            TopicCloneFix(Topic parentTopic, Topic topic) {
                 topicCloning = new TopicCloning(parentTopic, topic);
                 {
-                    TopicSubtopic link = parentTopic.getChildrenTopicSubtopics().stream()
-                            .filter(l -> l.getSubtopic().isPresent())
-                            .filter(l -> l.getSubtopic().get().getPublicId().equals(topic.getPublicId()))
-                            .findFirst()
-                            .orElseThrow(() -> new RuntimeException("Link object not found"));
-                    parentTopic.removeChildTopicSubTopic(link);
-                    topicRepository.saveAndFlush(parentTopic); // Cascading&orphan is on
-
-                    Topic clonedTopic = topicRepository.findByPublicId(topicCloning.getClonedTopic().getPublicId());
-                    if (clonedTopic == null) {
-                        throw new RuntimeException("The cloned topic object is gone (race?)");
+                    connectionService.disconnectTopicSubtopic(parentTopic, topic);
+                    try {
+                        connectionService.connectTopicSubtopic(parentTopic, topicCloning.getClonedTopic());
+                    } catch (DuplicateConnectionException | InvalidArgumentServiceException e) {
+                        throw new RuntimeException(e);
                     }
-                    TopicSubtopic newLink = new TopicSubtopic();
-                    newLink.setSubtopic(clonedTopic);
-                    newLink.setTopic(parentTopic);
-
-                    topicRepository.saveAndFlush(parentTopic);
                 }
             }
 
-            public TopicCloning getTopicCloning() {
+            TopicCloning getTopicCloning() {
                 return topicCloning;
             }
         }
@@ -201,35 +201,35 @@ public class TopicReusedInSameSubjectCloningService {
 
                 clonedTopic = topicRepository.save(clonedTopic);
 
-                /* subjects */
-                Subject primarySubject = null;
-                for (SubjectTopic subjectTopic : topic.getSubjectTopics()) {
-                    SubjectTopic clonedSubjectTopic = new SubjectTopic(subjectTopic.getSubject().orElse(null), clonedTopic);
-                    clonedSubjectTopic.setRank(subjectTopic.getRank());
-                    if (subjectTopic.isPrimary() && subjectTopic.getSubject().isPresent()) {
-                        primarySubject = subjectTopic.getSubject().get();
-                    }
-                    clonedTopic.addSubjectTopic(subjectTopic);
-                }
-                if (primarySubject != null) {
-                    clonedTopic.setPrimarySubject(primarySubject);
-                }
+                /*
+                    DuplicateConnectionExceptions are ignored since they should not happen. If they do, it would
+                    not make a difference ignoring it since the resources would already be connected anyway.
+                 */
 
+                /* subjects */
+                topic.getSubjectTopics()
+                        .stream()
+                        .filter(subjectTopic -> subjectTopic.getSubject().isPresent())
+                        .forEach(subjectTopic -> {
+                            try {
+                                connectionService.connectSubjectTopic(subjectTopic.getSubject().get(), clonedTopic, subjectTopic.isPrimary(), subjectTopic.getRank());
+                            } catch (DuplicateConnectionException | InvalidArgumentServiceException ignored) {
+                            }
+                        });
                 /* resources */
-                if (topic.getTopicResources() != null) {
-                    for (TopicResource topicResource : topic.getTopicResources()) {
-                        TopicResource clonedTopicResource = new TopicResource();
-                        clonedTopicResource.setTopic(clonedTopic);
-                        clonedTopicResource.setResource(topicResource.getResource().orElse(null));
-                        clonedTopicResource.setPrimary(topicResource.isPrimary());
-                        clonedTopicResource.setRank(topicResource.getRank());
-                        clonedTopic.addTopicResource(clonedTopicResource);
+                topic.getTopicResources()
+                        .stream()
+                        .filter(topicResource -> topicResource.getResource().isPresent())
+                        .forEach(topicResource -> {
+                            try {
+                                connectionService.connectTopicResource(clonedTopic, topicResource.getResource().get(), topicResource.isPrimary(), topicResource.getRank());
+                            } catch (DuplicateConnectionException | InvalidArgumentServiceException ignored) {
                     }
-                }
+                        });
                 /* filters */
                 topic.getTopicFilters().stream()
                         .filter(topicFilter -> topicFilter.getFilter().isPresent() && topicFilter.getRelevance().isPresent())
-                        .forEach(topicFilter -> clonedTopic.addFilter(topicFilter.getFilter().get(), topicFilter.getRelevance().get()));
+                        .forEach(topicFilter -> TopicFilter.create(clonedTopic, topicFilter.getFilter().get(), topicFilter.getRelevance().get()));
 
                 /* translations */
                 topic.getTranslations().forEach(translation -> clonedTopic.addTranslation(translation.getLanguageCode()).setName(translation.getName()));
@@ -246,9 +246,10 @@ public class TopicReusedInSameSubjectCloningService {
                         .forEach(topicSubtopic -> {
                             TopicCloning subtopicCloning = new TopicCloning(topic, topicSubtopic.getSubtopic().get());
                             clonedSubtopics.add(subtopicCloning);
-                            TopicSubtopic clonedSubtopic = clonedTopic.addSubtopic(subtopicCloning.getClonedTopic());
-                            clonedSubtopic.setPrimary(topicSubtopic.isPrimary());
-                            clonedSubtopic.setRank(topicSubtopic.getRank());
+                            try {
+                                connectionService.connectTopicSubtopic(clonedTopic, subtopicCloning.getClonedTopic(), topicSubtopic.isPrimary(), topicSubtopic.getRank());
+                            } catch (DuplicateConnectionException | InvalidArgumentServiceException ignored) {
+                            }
                         });
 
                 clonedTopic = topicRepository.save(clonedTopic);

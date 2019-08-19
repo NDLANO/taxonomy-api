@@ -12,21 +12,21 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
-public class CachedUrlEntityTest {
-    private CachedUrlEntity cachedUrlEntity;
+public class EntityWithPathTest {
+    private EntityWithPath entityWithPath;
 
     @Before
     public void setUp() {
-        this.cachedUrlEntity = spy(CachedUrlEntity.class);
+        this.entityWithPath = spy(EntityWithPath.class);
     }
 
     @Test
     public void getCachedUrls() {
         final var cachedUrlSet = new HashSet<>();
 
-        setField(cachedUrlEntity, "cachedUrls", cachedUrlSet);
+        setField(entityWithPath, "cachedUrls", cachedUrlSet);
 
-        assertEquals(cachedUrlSet, cachedUrlEntity.getCachedUrls());
+        assertEquals(cachedUrlSet, entityWithPath.getCachedUrls());
     }
 
     @Test
@@ -42,11 +42,11 @@ public class CachedUrlEntityTest {
         when(cachedUrl2.isPrimary()).thenReturn(false);
         when(cachedUrl3.isPrimary()).thenReturn(true);
 
-        setField(cachedUrlEntity, "cachedUrls", Set.of(cachedUrl1, cachedUrl2));
-        assertFalse(cachedUrlEntity.getPrimaryPath().isPresent());
-        setField(cachedUrlEntity, "cachedUrls", Set.of(cachedUrl1, cachedUrl2, cachedUrl3));
-        assertTrue(cachedUrlEntity.getPrimaryPath().isPresent());
-        assertEquals("/path3", cachedUrlEntity.getPrimaryPath().get());
+        setField(entityWithPath, "cachedUrls", Set.of(cachedUrl1, cachedUrl2));
+        assertFalse(entityWithPath.getPrimaryPath().isPresent());
+        setField(entityWithPath, "cachedUrls", Set.of(cachedUrl1, cachedUrl2, cachedUrl3));
+        assertTrue(entityWithPath.getPrimaryPath().isPresent());
+        assertEquals("/path3", entityWithPath.getPrimaryPath().get());
     }
 
     @Test
@@ -81,13 +81,13 @@ public class CachedUrlEntityTest {
         when(context5.getPublicId()).thenReturn(new URI("urn:context5"));
 
 
-        setField(cachedUrlEntity, "cachedUrls", Set.of(cachedUrl1, cachedUrl2, cachedUrl31, cachedUrl3, cachedUrl4));
+        setField(entityWithPath, "cachedUrls", Set.of(cachedUrl1, cachedUrl2, cachedUrl31, cachedUrl3, cachedUrl4));
 
-        assertEquals("/context1/path1", cachedUrlEntity.getPathByContext(context1).get());
-        assertEquals("/context2/path1", cachedUrlEntity.getPathByContext(context2).get());
-        assertEquals("/context3/path1", cachedUrlEntity.getPathByContext(context3).get());
-        assertEquals("/context4/path1", cachedUrlEntity.getPathByContext(context4).get());
-        assertTrue(Set.of("/context2/path1", "/context3/path1").contains(cachedUrlEntity.getPathByContext(context5).get()));
+        assertEquals("/context1/path1", entityWithPath.getPathByContext(context1).get());
+        assertEquals("/context2/path1", entityWithPath.getPathByContext(context2).get());
+        assertEquals("/context3/path1", entityWithPath.getPathByContext(context3).get());
+        assertEquals("/context4/path1", entityWithPath.getPathByContext(context4).get());
+        assertTrue(Set.of("/context2/path1", "/context3/path1").contains(entityWithPath.getPathByContext(context5).get()));
     }
 
     @Test
@@ -103,9 +103,9 @@ public class CachedUrlEntityTest {
         when(cachedUrl2.isPrimary()).thenReturn(false);
         when(cachedUrl3.isPrimary()).thenReturn(true);
 
-        setField(cachedUrlEntity, "cachedUrls", Set.of(cachedUrl1, cachedUrl2, cachedUrl3));
+        setField(entityWithPath, "cachedUrls", Set.of(cachedUrl1, cachedUrl2, cachedUrl3));
 
-        final var allPaths = cachedUrlEntity.getAllPaths();
+        final var allPaths = entityWithPath.getAllPaths();
 
         assertEquals(3, allPaths.size());
         assertTrue(allPaths.contains("/path1"));

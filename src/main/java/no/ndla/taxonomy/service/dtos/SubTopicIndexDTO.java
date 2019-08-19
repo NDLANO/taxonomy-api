@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.rest.v1.dtos.topics;
+package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
@@ -12,7 +12,7 @@ import java.net.URI;
  *
  */
 @ApiModel("SubTopicIndexDocument")
-public class SubTopicIndexDocument {
+public class SubTopicIndexDTO {
     @JsonProperty
     @ApiModelProperty(value = "Topic id", example = "urn:topic:234")
     public URI id;
@@ -29,11 +29,11 @@ public class SubTopicIndexDocument {
     @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
     public Boolean isPrimary;
 
-    public SubTopicIndexDocument() {
+    public SubTopicIndexDTO() {
 
     }
 
-    public SubTopicIndexDocument(TopicSubtopic topicSubtopic, String language) {
+    public SubTopicIndexDTO(TopicSubtopic topicSubtopic, String language) {
         topicSubtopic.getSubtopic().ifPresent(topic -> {
             this.id = topic.getPublicId();
 

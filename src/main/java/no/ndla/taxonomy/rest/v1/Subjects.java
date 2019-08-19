@@ -11,8 +11,10 @@ import no.ndla.taxonomy.rest.v1.dtos.subjects.FilterIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
+import no.ndla.taxonomy.service.SubjectService;
 import no.ndla.taxonomy.service.TopicResourceTreeSortable;
 import no.ndla.taxonomy.service.TopicTreeSorter;
+import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,11 +36,12 @@ public class Subjects extends CrudController<Subject> {
     private final SubjectTopicRepository subjectTopicRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final TopicTreeSorter topicTreeSorter;
+    private final SubjectService subjectService;
 
     public Subjects(SubjectRepository subjectRepository, TopicTreeBySubjectElementRepository subjectTopicTreeElementRepository,
                     TopicResourceRepository topicResourceRepository,
                     SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository,
-                    TopicTreeSorter topicTreeSorter) {
+                    TopicTreeSorter topicTreeSorter, SubjectService subjectService) {
         this.subjectRepository = subjectRepository;
         repository = subjectRepository;
         this.subjectTopicTreeElementRepository = subjectTopicTreeElementRepository;
@@ -46,6 +49,7 @@ public class Subjects extends CrudController<Subject> {
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicTreeSorter = topicTreeSorter;
+        this.subjectService = subjectService;
     }
 
     @GetMapping
@@ -319,5 +323,17 @@ public class Subjects extends CrudController<Subject> {
                 .flatMap(Collection::stream)
                 .map(FilterIndexDocument::new)
                 .collect(Collectors.toList());
+    }
+
+    @DeleteMapping("/{id}")
+    @ApiOperation(value = "Deletes a single entity by id")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable("id") URI id) {
+        try {
+            subjectService.delete(id);
+        } catch (NotFoundServiceException e) {
+            throw new NotFoundHttpRequestException(e);
+        }
     }
 }

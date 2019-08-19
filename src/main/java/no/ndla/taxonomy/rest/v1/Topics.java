@@ -3,15 +3,24 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.repositories.SubjectRepository;
+import no.ndla.taxonomy.repositories.TopicRepository;
+import no.ndla.taxonomy.repositories.TopicResourceRepository;
+import no.ndla.taxonomy.repositories.TopicTreeByTopicElementRepository;
 import no.ndla.taxonomy.rest.BadHttpRequestException;
 import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
-import no.ndla.taxonomy.rest.v1.dtos.topics.*;
+import no.ndla.taxonomy.rest.v1.dtos.topics.FilterIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.topics.TopicIndexDocument;
+import no.ndla.taxonomy.rest.v1.dtos.topics.TopicWithPathsIndexDocument;
 import no.ndla.taxonomy.service.TopicResourceTreeSortable;
 import no.ndla.taxonomy.service.TopicResourceTypeService;
+import no.ndla.taxonomy.service.TopicService;
 import no.ndla.taxonomy.service.TopicTreeSorter;
+import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
+import no.ndla.taxonomy.service.dtos.SubTopicIndexDTO;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
@@ -26,36 +35,32 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/topics"})
-@Transactional
 public class Topics extends CrudController<Topic> {
 
 
     private final TopicResourceTypeService topicResourceTypeService;
     private final TopicRepository topicRepository;
-    private final TopicSubtopicRepository topicSubtopicRepository;
-    private final SubjectTopicRepository subjectTopicRepository;
     private final SubjectRepository subjectRepository;
     private final TopicResourceRepository topicResourceRepository;
     private final TopicTreeByTopicElementRepository topicTreeRepository;
     private final TopicTreeSorter topicTreeSorter;
+    private final TopicService topicService;
 
     public Topics(TopicRepository topicRepository,
-                  TopicSubtopicRepository topicSubtopicRepository,
-                  SubjectTopicRepository subjectTopicRepository,
                   TopicResourceTypeService topicResourceTypeService,
                   SubjectRepository subjectRepository,
                   TopicResourceRepository topicResourceRepository,
                   TopicTreeByTopicElementRepository topicTreeRepository,
-                  TopicTreeSorter topicTreeSorter) {
+                  TopicTreeSorter topicTreeSorter,
+                  TopicService topicService) {
         this.topicRepository = topicRepository;
         this.repository = topicRepository;
-        this.topicSubtopicRepository = topicSubtopicRepository;
-        this.subjectTopicRepository = subjectTopicRepository;
         this.topicResourceTypeService = topicResourceTypeService;
         this.topicResourceRepository = topicResourceRepository;
         this.subjectRepository = subjectRepository;
         this.topicTreeRepository = topicTreeRepository;
         this.topicTreeSorter = topicTreeSorter;
+        this.topicService = topicService;
     }
 
     private List<TopicIndexDocument> createTopicIndexDocumentsByPrimaryPath(Topic topic, String language) {
@@ -94,6 +99,7 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping
     @ApiOperation("Gets all topics")
+    @Transactional
     public List<TopicIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
@@ -108,6 +114,7 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
+    @Transactional
     public TopicWithPathsIndexDocument get(@PathVariable("id") URI id,
                                            @ApiParam(value = "ISO-639-1 language code", example = "nb")
                                            @RequestParam(value = "language", required = false, defaultValue = "") String language
@@ -121,6 +128,7 @@ public class Topics extends CrudController<Topic> {
     @PostMapping
     @ApiOperation(value = "Creates a new topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public ResponseEntity<Void> post(@ApiParam(name = "connection", value = "The new topic") @RequestBody CreateTopicCommand command) {
         return doPost(new Topic(), command);
     }
@@ -130,6 +138,7 @@ public class Topics extends CrudController<Topic> {
     @ApiOperation(value = "Updates a single topic")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(name = "topic", value = "The updated topic. Fields not included will be set to null.") @RequestBody UpdateTopicCommand command) {
@@ -139,6 +148,7 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping("/{id}/resources")
     @ApiOperation(value = "Gets all resources for the given topic")
+    @Transactional
     public List<ResourceIndexDocument> getResources(
             @ApiParam(value = "id", required = true)
             @PathVariable("id") URI topicId,
@@ -230,6 +240,7 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping("/{id}/resource-types")
     @ApiOperation(value = "Gets all resource types associated with this resource")
+    @Transactional
     public List<no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument> getResourceTypes(
             @PathVariable("id")
                     URI id,
@@ -260,6 +271,7 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters associated with this topic")
+    @Transactional
     public List<FilterIndexDocument> getFilters(
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
@@ -279,7 +291,7 @@ public class Topics extends CrudController<Topic> {
 
     @GetMapping("/{id}/topics")
     @ApiOperation(value = "Gets all subtopics for this topic")
-    public List<SubTopicIndexDocument> getSubTopics(
+    public List<SubTopicIndexDTO> getSubTopics(
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
@@ -294,47 +306,41 @@ public class Topics extends CrudController<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        if (filterIds == null || filterIds.length == 0) {
-            filterIds = getSubjectFilters(subjectId);
+        if (filterIds == null) {
+            filterIds = new URI[0];
         }
 
-        if (filterIds.length > 0) {
-            return topicSubtopicRepository.findAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(id, Set.of(filterIds))
-                    .stream()
-                    .map(topicSubtopic -> new SubTopicIndexDocument(topicSubtopic, language))
-                    .collect(Collectors.toList());
-        } else {
-            return topicSubtopicRepository.findAllByTopicPublicIdIncludingSubtopicAndSubtopicTranslations(id)
-                    .stream()
-                    .map(topicSubtopic -> new SubTopicIndexDocument(topicSubtopic, language))
-                    .collect(Collectors.toList());
+        try {
+            if (filterIds.length == 0) {
+                return topicService.getFilteredSubtopicConnections(id, subjectId, language);
+            }
+
+            return topicService.getFilteredSubtopicConnections(id, Set.of(filterIds), language);
+        } catch (NotFoundServiceException e) {
+            throw new NotFoundHttpRequestException(e);
         }
     }
 
     @GetMapping("/{id}/connections")
     @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
-    public List<ConnectionIndexDocument> getAllConnections(@PathVariable("id") URI id) {
-        final var results = new ArrayList<ConnectionIndexDocument>();
+    public List<ConnectionIndexDTO> getAllConnections(@PathVariable("id") URI id) {
+        try {
+            return topicService.getAllConnections(id);
+        } catch (NotFoundServiceException e) {
+            throw new NotFoundHttpRequestException(e);
+        }
+    }
 
-        topicSubtopicRepository
-                .findAllBySubtopicPublicIdIncludingTopicAndSubtopicAndCachedUrls(id)
-                .stream()
-                .map(ConnectionIndexDocument::parentConnection)
-                .forEach(results::add);
-
-        subjectTopicRepository
-                .findAllByTopicPublicIdIncludingSubjectAndTopicAndCachedUrls(id)
-                .stream()
-                .map(ConnectionIndexDocument::new)
-                .forEach(results::add);
-
-        topicSubtopicRepository
-                .findAllByTopicPublicIdIncludingTopicAndSubtopicAndCachedUrls(id)
-                .stream()
-                .map(ConnectionIndexDocument::subtopicConnection)
-                .forEach(results::add);
-
-        return results;
+    @DeleteMapping("/{id}")
+    @ApiOperation(value = "Deletes a single entity by id")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable("id") URI id) {
+        try {
+            topicService.delete(id);
+        } catch (NotFoundServiceException e) {
+            throw new NotFoundHttpRequestException(e);
+        }
     }
 
 }

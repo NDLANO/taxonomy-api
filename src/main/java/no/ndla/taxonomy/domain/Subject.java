@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
-public class Subject extends CachedUrlEntity {
+public class Subject extends EntityWithPath {
     @Column
     @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI contentUri;
@@ -27,25 +27,26 @@ public class Subject extends CachedUrlEntity {
         setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
     }
 
+    @Override
+    public Set<EntityWithPathConnection> getParentConnections() {
+        return Set.of();
+    }
+
+    @Override
+    public Set<EntityWithPathConnection> getChildConnections() {
+        return subjectTopics.stream().collect(Collectors.toUnmodifiableSet());
+    }
+
     public void addSubjectTopic(SubjectTopic subjectTopic) {
         this.subjectTopics.add(subjectTopic);
 
         if (subjectTopic.getSubject().orElse(null) != this) {
-            subjectTopic.setSubject(this);
+            throw new IllegalArgumentException("Subject must be set on SubjectTopic before associating with Subject");
         }
     }
 
-    public SubjectTopic addTopic(Topic topic) {
-        refuseIfDuplicate(topic);
-
-        SubjectTopic subjectTopic = new SubjectTopic(this, topic);
-        this.addSubjectTopic(subjectTopic);
-        if (topic.hasSingleSubject()) topic.setPrimarySubject(this);
-        return subjectTopic;
-    }
-
     public Set<SubjectTopic> getSubjectTopics() {
-        return this.subjectTopics;
+        return this.subjectTopics.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void addFilter(Filter filter) {
@@ -57,17 +58,15 @@ public class Subject extends CachedUrlEntity {
     }
 
     public void removeSubjectTopic(SubjectTopic subjectTopic) {
-        final var topicToRemove = subjectTopic.getTopic().orElse(null);
-
         this.subjectTopics.remove(subjectTopic);
 
         if (subjectTopic.getSubject().orElse(null) == this) {
-            subjectTopic.setSubject(null);
+            subjectTopic.disassociate();
         }
     }
 
     public Set<Filter> getFilters() {
-        return filters;
+        return filters.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void removeFilter(Filter filter) {
@@ -80,18 +79,12 @@ public class Subject extends CachedUrlEntity {
         }
     }
 
-    private void refuseIfDuplicate(Topic topic) {
-        if (getTopics().contains(topic)) {
-            throw new DuplicateIdException("Subject with id " + getPublicId() + " already contains topic with id " + topic.getPublicId());
-        }
-    }
-
     public Collection<Topic> getTopics() {
         return subjectTopics.stream()
                 .map(SubjectTopic::getTopic)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     public SubjectTranslation addTranslation(String languageCode) {
@@ -110,7 +103,7 @@ public class Subject extends CachedUrlEntity {
     }
 
     public Set<SubjectTranslation> getTranslations() {
-        return translations;
+        return translations.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void removeTranslation(String languageCode) {
@@ -147,23 +140,8 @@ public class Subject extends CachedUrlEntity {
         this.contentUri = contentUri;
     }
 
-    public void removeTopic(Topic topic) {
-        // Removes SubjectTopic that references requested Topic if exists, otherwise throws exception
-        subjectTopics.stream()
-                .filter(subjectTopic -> topic.equals(subjectTopic.getTopic().orElse(null)))
-                .findFirst()
-                .ifPresentOrElse(
-                        this::removeSubjectTopic,
-                        () -> {
-                            throw new ChildNotFoundException("Subject " + this.getPublicId() + " has no topic with id " + topic.getPublicId());
-                        }
-                );
-    }
-
     @PreRemove
     void preRemove() {
-        for (var subjectTopic : subjectTopics.toArray()) {
-            removeSubjectTopic((SubjectTopic) subjectTopic);
-        }
+        new HashSet<>(subjectTopics).forEach(SubjectTopic::disassociate);
     }
 }

@@ -9,7 +9,13 @@ import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
-import no.ndla.taxonomy.service.RankableConnectionUpdater;
+import no.ndla.taxonomy.rest.BadHttpRequestException;
+import no.ndla.taxonomy.rest.ConflictHttpResponseException;
+import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
+import no.ndla.taxonomy.service.EntityConnectionService;
+import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
+import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
+import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,10 +32,13 @@ import java.util.stream.Collectors;
 public class TopicSubtopics {
     private final TopicRepository topicRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
+    private final EntityConnectionService connectionService;
 
-    public TopicSubtopics(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository) {
+    public TopicSubtopics(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository,
+                          EntityConnectionService connectionService) {
         this.topicRepository = topicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
+        this.connectionService = connectionService;
     }
 
     @GetMapping
@@ -59,18 +67,14 @@ public class TopicSubtopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Topic subtopic = topicRepository.getByPublicId(command.subtopicid);
 
-        TopicSubtopic topicSubtopic = topic.addSubtopic(subtopic, command.primary);
-
-        List<TopicSubtopic> connectionsForTopic = topicSubtopicRepository.findByTopic(topic);
-        connectionsForTopic.sort(Comparator.comparingInt(TopicSubtopic::getRank));
-        if (command.rank == 0) {
-            TopicSubtopic highestRankedConnection = connectionsForTopic.get(connectionsForTopic.size() - 1);
-            topicSubtopic.setRank(highestRankedConnection.getRank() + 1);
-        } else {
-            List<TopicSubtopic> rankedConnections = RankableConnectionUpdater.rank(connectionsForTopic, topicSubtopic, command.rank);
-            topicSubtopicRepository.saveAll(rankedConnections);
+        final TopicSubtopic topicSubtopic;
+        try {
+            topicSubtopic = connectionService.connectTopicSubtopic(topic, subtopic, command.primary, command.rank == 0 ? null : command.rank);
+        } catch (DuplicateConnectionException e) {
+            throw new ConflictHttpResponseException(e);
+        } catch (InvalidArgumentServiceException e) {
+            throw new BadHttpRequestException(e);
         }
-        topicSubtopicRepository.save(topicSubtopic);
 
         URI location = URI.create("/topic-subtopics/" + topicSubtopic.getPublicId());
         return ResponseEntity.created(location).build();
@@ -81,9 +85,7 @@ public class TopicSubtopics {
     @ApiOperation(value = "Removes a connection between a topic and a subtopic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
-        TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
-        topicSubtopicRepository.delete(topicSubtopic);
-        topicSubtopicRepository.flush();
+        connectionService.disconnectTopicSubtopic(topicSubtopicRepository.getByPublicId(id));
     }
 
     @PutMapping("/{id}")
@@ -94,18 +96,17 @@ public class TopicSubtopics {
                     @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
         final var topicSubtopic = topicSubtopicRepository.getByPublicId(id);
 
-        // Just for the record, it should not be possible for there to be a non-existing topic or subtopic because of database constraints
-        final var topic = topicSubtopic.getTopic().orElseThrow(RuntimeException::new);
-        final var subtopic = topicSubtopic.getSubtopic().orElseThrow(RuntimeException::new);
-
-        if (command.primary) {
-            subtopic.setPrimaryParentTopic(topic);
-        } else if (topicSubtopic.isPrimary() && !command.primary) {
+        if (topicSubtopic.isPrimary() && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
-        List<TopicSubtopic> existingConnections = topicSubtopicRepository.findByTopic(topic);
-        List<TopicSubtopic> rankedConnections = RankableConnectionUpdater.rank(existingConnections, topicSubtopic, command.rank);
-        topicSubtopicRepository.saveAll(rankedConnections);
+
+        try {
+            connectionService.updateTopicSubtopic(topicSubtopic, command.primary, command.rank > 0 ? command.rank : null);
+        } catch (InvalidArgumentServiceException e) {
+            throw new BadHttpRequestException(e);
+        } catch (NotFoundServiceException e) {
+            throw new NotFoundHttpRequestException(e);
+        }
     }
 
     public static class AddSubtopicToTopicCommand {
