@@ -86,7 +86,7 @@ public class TestSeeder {
     }
 
     private SubjectTopic createSubjectTopic(String publicId, Topic topic, Subject subject, Boolean isPrimary, Integer rank) {
-        final var subjectTopic = new SubjectTopic(subject, topic);
+        final var subjectTopic = SubjectTopic.create(subject, topic);
 
         if (publicId != null) {
             subjectTopic.setPublicId(URI.create(publicId));
@@ -108,9 +108,7 @@ public class TestSeeder {
     }
 
     private TopicSubtopic createTopicSubtopic(String publicId, Topic topic, Topic subTopic, Boolean isPrimary, Integer rank) {
-        final var topicSubtopic = new TopicSubtopic();
-        topicSubtopic.setTopic(topic);
-        topicSubtopic.setSubtopic(subTopic);
+        final var topicSubtopic = TopicSubtopic.create(topic, subTopic);
 
         if (publicId != null) {
             topicSubtopic.setPublicId(URI.create(publicId));
@@ -164,10 +162,7 @@ public class TestSeeder {
     }
 
     private TopicFilter createTopicFilter(String publicId, Topic topic, Filter filter, Relevance relevance) {
-        final var topicFilter = new TopicFilter();
-        topicFilter.setTopic(topic);
-        topicFilter.setFilter(filter);
-        topicFilter.setRelevance(relevance);
+        final var topicFilter = TopicFilter.create(topic, filter, relevance);
 
         if (publicId != null) {
             topicFilter.setPublicId(URI.create(publicId));
@@ -199,9 +194,7 @@ public class TestSeeder {
     }
 
     private TopicResource createTopicResource(String publicId, Topic topic, Resource resource, Boolean isPrimary, Integer rank) {
-        final var topicResource = new TopicResource();
-        topicResource.setTopic(topic);
-        topicResource.setResource(resource);
+        final var topicResource = TopicResource.create(topic, resource);
 
         if (publicId != null) {
             topicResource.setPublicId(URI.create(publicId));
@@ -219,7 +212,7 @@ public class TestSeeder {
     }
 
     private ResourceFilter createResourceFilter(String publicId, Resource resource, Filter filter, Relevance relevance) {
-        final var resourceFilter = new ResourceFilter(resource, filter, relevance);
+        final var resourceFilter = ResourceFilter.create(resource, filter, relevance);
 
         if (publicId != null) {
             resourceFilter.setPublicId(URI.create(publicId));
@@ -247,7 +240,7 @@ public class TestSeeder {
     }
 
     private ResourceResourceType createResourceResourceType(String publicId, Resource resource, ResourceType resourceType) {
-        final var resourceResourceType = new ResourceResourceType(resource, resourceType);
+        final var resourceResourceType = ResourceResourceType.create(resource, resourceType);
 
         if (publicId != null) {
             resourceResourceType.setPublicId(URI.create(publicId));
