@@ -27,8 +27,10 @@ public class Resource extends EntityWithPath {
     private Set<ResourceFilter> filters = new HashSet<>();
 
     @Override
-    public Set<EntityWithPathConnection> getParentConnections() {
-        return topics.stream().collect(Collectors.toUnmodifiableSet());
+    public Optional<EntityWithPathConnection> getParentConnection() {
+        return topics.stream()
+                .map(connection -> (EntityWithPathConnection) connection)
+                .findFirst();
     }
 
     @Override
@@ -40,12 +42,12 @@ public class Resource extends EntityWithPath {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
     }
 
-    public Collection<Topic> getTopics() {
+    public Optional<Topic> getTopic() {
         return getTopicResources()
                 .stream()
                 .map(TopicResource::getTopic)
                 .map(Optional::get)
-                .collect(Collectors.toUnmodifiableSet());
+                .findFirst();
     }
 
     public Collection<ResourceType> getResourceTypes() {
@@ -128,13 +130,6 @@ public class Resource extends EntityWithPath {
                 translation.setResource(null);
             }
         }
-    }
-
-    public Optional<Topic> getPrimaryTopic() {
-        for (TopicResource topic : topics) {
-            if (topic.isPrimary()) return topic.getTopic();
-        }
-        return Optional.empty();
     }
 
     public void removeResourceType(ResourceType resourceType) {

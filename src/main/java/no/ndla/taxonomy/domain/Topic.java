@@ -48,9 +48,10 @@ public class Topic extends EntityWithPath {
     }
 
     @Override
-    public Set<EntityWithPathConnection> getParentConnections() {
+    public Optional<EntityWithPathConnection> getParentConnection() {
         return Stream.concat(parentTopicSubtopics.stream(), subjectTopics.stream())
-                .collect(Collectors.toUnmodifiableSet());
+                .map(entity -> (EntityWithPathConnection) entity)
+                .findFirst();
     }
 
     @Override
@@ -74,7 +75,6 @@ public class Topic extends EntityWithPath {
     public Optional<String> getPrimaryPath() {
         return getCachedUrls()
                 .stream()
-                .filter(CachedUrl::isPrimary)
                 .map(CachedUrl::getPath).min((path1, path2) -> {
                     if (path1.startsWith("/topic") && path2.startsWith("/topic")) {
                         return 0;
@@ -118,8 +118,8 @@ public class Topic extends EntityWithPath {
         return this.childTopicSubtopics.stream().collect(Collectors.toUnmodifiableSet());
     }
 
-    public Set<TopicSubtopic> getParentTopicSubtopics() {
-        return this.parentTopicSubtopics.stream().collect(Collectors.toUnmodifiableSet());
+    public Optional<TopicSubtopic> getParentTopicSubtopic() {
+        return this.parentTopicSubtopics.stream().findFirst();
     }
 
     public void addChildTopicSubtopic(TopicSubtopic topicSubtopic) {
@@ -192,17 +192,6 @@ public class Topic extends EntityWithPath {
         }
     }
 
-    public boolean hasSingleSubject() {
-        return subjectTopics.size() == 1;
-    }
-
-    public Optional<Topic> getPrimaryParentTopic() {
-        for (TopicSubtopic parentTopic : parentTopicSubtopics) {
-            if (parentTopic.isPrimary()) return parentTopic.getTopic();
-        }
-        return Optional.empty();
-    }
-
     public Set<Topic> getSubtopics() {
         return childTopicSubtopics.stream()
                 .map(TopicSubtopic::getSubtopic)
@@ -210,12 +199,12 @@ public class Topic extends EntityWithPath {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    public Set<Topic> getParentTopics() {
+    public Optional<Topic> getParentTopic() {
         return parentTopicSubtopics.stream()
                 .map(TopicSubtopic::getTopic)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toUnmodifiableSet());
+                .findFirst();
     }
 
     public Set<Resource> getResources() {

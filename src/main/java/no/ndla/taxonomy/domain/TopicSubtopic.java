@@ -17,9 +17,6 @@ public class TopicSubtopic extends DomainEntity implements EntityWithPathConnect
     @JoinColumn(name = "subtopic_id")
     private Topic subtopic;
 
-    @Column(name = "is_primary")
-    private boolean primary;
-
     @Column(name = "rank")
     private int rank;
 
@@ -28,10 +25,6 @@ public class TopicSubtopic extends DomainEntity implements EntityWithPathConnect
     }
 
     public static TopicSubtopic create(Topic parentTopic, Topic subTopic) {
-        return create(parentTopic, subTopic, false);
-    }
-
-    public static TopicSubtopic create(Topic parentTopic, Topic subTopic, boolean primary) {
         if (parentTopic == null || subTopic == null) {
             throw new NullPointerException();
         }
@@ -40,7 +33,6 @@ public class TopicSubtopic extends DomainEntity implements EntityWithPathConnect
 
         topicSubtopic.topic = parentTopic;
         topicSubtopic.subtopic = subTopic;
-        topicSubtopic.setPrimary(primary);
 
         parentTopic.addChildTopicSubtopic(topicSubtopic);
         subTopic.addParentTopicSubtopic(topicSubtopic);
@@ -62,14 +54,6 @@ public class TopicSubtopic extends DomainEntity implements EntityWithPathConnect
         if (subTopic != null) {
             subTopic.removeParentTopicSubtopic(this);
         }
-    }
-
-    public boolean isPrimary() {
-        return primary;
-    }
-
-    public void setPrimary(boolean primary) {
-        this.primary = primary;
     }
 
     public Optional<Topic> getTopic() {

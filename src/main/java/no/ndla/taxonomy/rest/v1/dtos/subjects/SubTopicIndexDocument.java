@@ -92,7 +92,7 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
         subjectTopic.getSubject().ifPresent(s -> this.parent = s.getPublicId());
 
         this.connectionId = subjectTopic.getPublicId();
-        this.isPrimary = subjectTopic.isPrimary();
+        this.isPrimary = true;
         this.rank = subjectTopic.getRank();
     }
 
@@ -108,7 +108,7 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
         topicSubtopic.getTopic().ifPresent(topic -> this.parent = topic.getPublicId());
 
         this.connectionId = topicSubtopic.getPublicId();
-        this.isPrimary = topicSubtopic.isPrimary();
+        this.isPrimary = true;
         this.rank = topicSubtopic.getRank();
 
     }

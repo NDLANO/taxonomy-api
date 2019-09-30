@@ -57,4 +57,193 @@
             root_topic_id,topic_id,parent_topic_id;
         </createView>
     </changeSet>
+
+    <changeSet id="20190924 disable update triggers for cached_url before removing shared topics"
+               author="Jon-Eirik Pettersen">
+        <sql splitStatements="false" stripComments="false">
+            DROP TRIGGER refresh_paths ON subject;
+            DROP TRIGGER refresh_paths ON topic;
+            DROP TRIGGER refresh_paths ON resource;
+            DROP TRIGGER refresh_paths ON subject_topic;
+            DROP TRIGGER refresh_paths ON topic_subtopic;
+            DROP TRIGGER refresh_paths ON topic_resource;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20190924 clone and remove shared topics" author="Jon-Eirik Pettersen">
+        <customChange class="no.ndla.taxonomy.migration.RemoveSharedTopicsSqlChange"/>
+    </changeSet>
+
+    <changeSet id="20190925 re-create cached_url without primary connection column" author="Jon-Eirik Pettersen">
+        <sql>
+            DROP MATERIALIZED VIEW cached_url;
+
+            CREATE MATERIALIZED VIEW cached_url as (
+            WITH RECURSIVE tree (id, public_id, name, parent_public_id, level, path) AS (
+            SELECT
+            contexts.id,
+            contexts.public_id,
+            contexts.name,
+            cast(NULL AS VARCHAR) AS parent_public_id,
+            0 AS level,
+            '/' || substr(contexts.public_id, 5) AS path
+            FROM
+            (
+            SELECT
+            id,
+            public_id,
+            name
+            FROM subject
+
+            UNION ALL
+
+            SELECT
+            id,
+            public_id,
+            name
+            FROM topic
+            WHERE context = TRUE
+            ) contexts
+
+            UNION ALL
+
+            SELECT
+            child.id,
+            child.public_id,
+            child.name,
+            parent.public_id AS parent_public_id,
+            parent.level + 1 AS level,
+            parent.path || '/' || substr(child.public_id, 5)
+            FROM
+            (
+            SELECT
+            r.id,
+            r.public_id,
+            t.public_id AS parent_public_id,
+            r.name
+            FROM
+            resource r
+            INNER JOIN topic_resource tr ON tr.resource_id = r.id
+            INNER JOIN topic t ON tr.topic_id = t.id
+
+            UNION ALL
+
+            SELECT
+            st.id,
+            st.public_id,
+            t.public_id AS parent_public_id,
+            st.name
+            FROM topic t
+            INNER JOIN topic_subtopic tst ON t.id = tst.topic_id
+            INNER JOIN topic st ON tst.subtopic_id = st.id
+
+            UNION ALL
+
+            SELECT
+            t.id,
+            t.public_id,
+            s.public_id AS parent_public_id,
+            t.name
+            FROM
+            subject s
+            INNER JOIN subject_topic st ON s.id = st.subject_id
+            INNER JOIN topic t ON st.topic_id = t.id
+            ) child
+            INNER JOIN tree AS parent ON parent.public_id = child.parent_public_id
+            WHERE 1 = 1
+            )
+
+            SELECT
+            id,
+            public_id,
+            path,
+            parent_public_id
+            FROM
+            tree t
+            );
+        </sql>
+        <sql>
+            CREATE UNIQUE INDEX cached_url_path_idx ON cached_url (path);
+        </sql>
+        <sql>
+            CREATE INDEX cached_url_public_id_idx ON cached_url (public_id);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20190925 re-enable update triggers for cached_url" author="Jon-Eirik Pettersen">
+        <sql splitStatements="false" stripComments="false">
+            create trigger refresh_paths
+            after insert or update or delete or truncate
+            on subject
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+            after insert or update or delete or truncate
+            on topic
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+            after insert or update or delete or truncate
+            on resource
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+            after insert or update or delete or truncate
+            on subject_topic
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+            after insert or update or delete or truncate
+            on topic_subtopic
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+            after insert or update or delete or truncate
+            on topic_resource
+            execute procedure update_url_cache();
+        </sql>
+        <sql>
+            REFRESH MATERIALIZED VIEW CONCURRENTLY cached_url;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20190925 remove is_primary column from connection tables" author="Jon-Eirik Pettersen">
+        <dropColumn tableName="subject_topic" columnName="is_primary"/>
+        <dropColumn tableName="topic_subtopic" columnName="is_primary"/>
+        <dropColumn tableName="topic_resource" columnName="is_primary"/>
+    </changeSet>
+
+    <changeSet id="20190925 add constraints to prevent shared topics or resources from being created"
+               author="Jon-Eirik Pettersen">
+        <addUniqueConstraint tableName="topic_resource" columnNames="resource_id"
+                             constraintName="unique_topic_resource_resource_id"/>
+        <addUniqueConstraint tableName="topic_subtopic" columnNames="subtopic_id"
+                             constraintName="unique_topic_subtopic_subtopic_id"/>
+        <addUniqueConstraint tableName="subject_topic" columnNames="topic_id"
+                             constraintName="unique_subject_topic_topic_id"/>
+
+        <sql stripComments="false" splitStatements="false">
+            CREATE FUNCTION check_subject_topic_uniqueness() RETURNS trigger AS $$
+            BEGIN
+            IF EXISTS(SELECT child_topic_id FROM (SELECT id, topic_id AS child_topic_id FROM subject_topic UNION SELECT
+            id, subtopic_id AS child_topic_id FROM topic_subtopic) AS children GROUP BY child_topic_id HAVING COUNT(*) >
+            1) THEN
+            RAISE EXCEPTION 'More than one connection to parent object found';
+            END IF;
+
+            RETURN NULL;
+            END;
+            $$
+            LANGUAGE plpgsql
+        </sql>
+
+        <sql>
+            CREATE TRIGGER check_subject_topic_uniqueness_on_topic_subtopic AFTER INSERT OR UPDATE ON topic_subtopic
+            EXECUTE PROCEDURE check_subject_topic_uniqueness();
+        </sql>
+        <sql>
+            CREATE TRIGGER check_subject_topic_uniqueness_on_subject_topic AFTER INSERT OR UPDATE ON subject_topic
+            EXECUTE PROCEDURE check_subject_topic_uniqueness();
+        </sql>
+    </changeSet>
 </databaseChangeLog>

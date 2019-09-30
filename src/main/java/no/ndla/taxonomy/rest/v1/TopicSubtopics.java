@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.PrimaryParentRequiredException;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.repositories.TopicRepository;
@@ -69,7 +68,7 @@ public class TopicSubtopics {
 
         final TopicSubtopic topicSubtopic;
         try {
-            topicSubtopic = connectionService.connectTopicSubtopic(topic, subtopic, command.primary, command.rank == 0 ? null : command.rank);
+            topicSubtopic = connectionService.connectTopicSubtopic(topic, subtopic, command.rank == 0 ? null : command.rank);
         } catch (DuplicateConnectionException e) {
             throw new ConflictHttpResponseException(e);
         } catch (InvalidArgumentServiceException e) {
@@ -96,12 +95,8 @@ public class TopicSubtopics {
                     @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
         final var topicSubtopic = topicSubtopicRepository.getByPublicId(id);
 
-        if (topicSubtopic.isPrimary() && !command.primary) {
-            throw new PrimaryParentRequiredException();
-        }
-
         try {
-            connectionService.updateTopicSubtopic(topicSubtopic, command.primary, command.rank > 0 ? command.rank : null);
+            connectionService.updateTopicSubtopic(topicSubtopic, command.rank > 0 ? command.rank : null);
         } catch (InvalidArgumentServiceException e) {
             throw new BadHttpRequestException(e);
         } catch (NotFoundServiceException e) {
@@ -119,7 +114,7 @@ public class TopicSubtopics {
         public URI subtopicid;
 
         @JsonProperty
-        @ApiModelProperty(value = "Primary connection", example = "true")
+        @ApiModelProperty(value = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
         public boolean primary = true;
 
         @JsonProperty
@@ -133,7 +128,7 @@ public class TopicSubtopics {
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(value = "Primary connection", example = "true")
+        @ApiModelProperty(value = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
         public boolean primary;
 
         @JsonProperty
@@ -155,7 +150,7 @@ public class TopicSubtopics {
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(value = "Primary connection", example = "true")
+        @ApiModelProperty(value = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
         public boolean primary;
 
         @JsonProperty
@@ -169,7 +164,7 @@ public class TopicSubtopics {
             id = topicSubtopic.getPublicId();
             topicSubtopic.getTopic().ifPresent(topic -> topicid = topic.getPublicId());
             topicSubtopic.getSubtopic().ifPresent(subtopic -> subtopicid = subtopic.getPublicId());
-            primary = topicSubtopic.isPrimary();
+            primary = true;
             rank = topicSubtopic.getRank();
         }
     }

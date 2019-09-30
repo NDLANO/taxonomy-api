@@ -10,10 +10,6 @@ public interface EntityWithPathConnection {
 
     void setRank(int rank);
 
-    boolean isPrimary();
-
-    void setPrimary(boolean isPrimary);
-
     Optional<EntityWithPath> getConnectedParent();
 
     Optional<EntityWithPath> getConnectedChild();

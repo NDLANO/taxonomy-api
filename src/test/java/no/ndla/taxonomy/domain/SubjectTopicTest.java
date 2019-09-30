@@ -31,15 +31,6 @@ public class SubjectTopicTest {
     }
 
     @Test
-    public void setPrimaryAndIsPrimary() {
-        assertFalse(subjectTopic.isPrimary());
-        subjectTopic.setPrimary(true);
-        assertTrue(subjectTopic.isPrimary());
-        subjectTopic.setPrimary(false);
-        assertFalse(subjectTopic.isPrimary());
-    }
-
-    @Test
     public void getAndSetRank() {
         assertEquals(0, subjectTopic.getRank());
         subjectTopic.setRank(10);

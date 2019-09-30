@@ -64,7 +64,6 @@ public class Resources extends CrudController<Resource> {
 
                     return resource.getCachedUrls()
                             .stream()
-                            .filter(CachedUrl::isPrimary)
                             .map(cachedUrl -> {
                                 final var resourceIndexDocument = new ResourceIndexDocument(resource, language);
                                 resource.getPrimaryPath().ifPresent(resourceIndexDocument::setPath);
@@ -213,7 +212,7 @@ public class Resources extends CrudController<Resource> {
         return new ParentTopicIndexDocument() {{
             name = topic.getTranslation(languageCode).map(TopicTranslation::getName).orElse(topic.getName());
             id = topic.getPublicId();
-            isPrimary = topicResource.isPrimary();
+            isPrimary = true;
             try {
                 contentUri = topic.getContentUri() != null ? topic.getContentUri() : new URI("");
             } catch (URISyntaxException e) {

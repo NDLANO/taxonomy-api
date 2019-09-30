@@ -17,9 +17,6 @@ public class TopicResource extends DomainEntity implements EntityWithPathConnect
     @JoinColumn(name = "resource_id")
     private Resource resource;
 
-    @Column(name = "is_primary")
-    private boolean primary;
-
     @Column(name = "rank")
     private int rank;
 
@@ -28,15 +25,10 @@ public class TopicResource extends DomainEntity implements EntityWithPathConnect
     }
 
     public static TopicResource create(Topic topic, Resource resource) {
-        return create(topic, resource, false);
-    }
-
-    public static TopicResource create(Topic topic, Resource resource, boolean primary) {
         final var topicResource = new TopicResource();
 
         topicResource.topic = topic;
         topicResource.resource = resource;
-        topicResource.setPrimary(primary);
 
         topic.addTopicResource(topicResource);
         resource.addTopicResource(topicResource);
@@ -47,8 +39,6 @@ public class TopicResource extends DomainEntity implements EntityWithPathConnect
     public void disassociate() {
         final var topic = this.topic;
         final var resource = this.resource;
-
-        final var wasPrimary = isPrimary();
 
         this.topic = null;
         this.resource = null;
@@ -64,14 +54,6 @@ public class TopicResource extends DomainEntity implements EntityWithPathConnect
 
     public Optional<Topic> getTopic() {
         return Optional.ofNullable(topic);
-    }
-
-    public boolean isPrimary() {
-        return primary;
-    }
-
-    public void setPrimary(boolean primary) {
-        this.primary = primary;
     }
 
     public Optional<Resource> getResource() {

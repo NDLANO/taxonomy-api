@@ -44,6 +44,6 @@ public class SubTopicIndexDTO {
             this.contentUri = topic.getContentUri();
         });
 
-        this.isPrimary = topicSubtopic.isPrimary();
+        this.isPrimary = true;
     }
 }

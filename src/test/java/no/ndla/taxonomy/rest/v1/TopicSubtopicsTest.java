@@ -35,55 +35,11 @@ public class TopicSubtopicsTest extends RestTest {
         );
 
         final var connection = topicSubtopicRepository.findByPublicId(id);
-        assertTrue(connection.isPrimary());
 
         Topic calculus = topicRepository.getByPublicId(calculusId);
         assertEquals(1, calculus.getSubtopics().size());
         assertAnyTrue(calculus.getSubtopics(), t -> "integration".equals(t.getName()));
         assertNotNull(topicSubtopicRepository.getByPublicId(id));
-        assertTrue(calculus.getChildrenTopicSubtopics().iterator().next().isPrimary());
-    }
-
-    @Test
-    public void can_add_secondary_subtopic_to_topic() throws Exception {
-        URI integrationId, calculusId;
-        calculusId = builder.topic(t -> t.name("calculus")).getPublicId();
-        integrationId = builder.topic(t -> t.name("integration")).getPublicId();
-
-        final var parentTopic2PublicId = builder.topic().getPublicId();
-
-        // 20190819 JEP@Cerpus: Behavior change: It was possible to create a non-primary subtopic when no topic existed
-        // before, but it has changed. The first connection to a topic will ignore the primary parameter and will be
-        // forced to become primary (subject-topics already did this)
-
-        URI id = getId(
-                testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
-                    topicid = calculusId;
-                    subtopicid = integrationId;
-                    primary = false;
-                }})
-        );
-
-        Topic calculus = topicRepository.getByPublicId(calculusId);
-        assertEquals(1, calculus.getSubtopics().size());
-        assertAnyTrue(calculus.getSubtopics(), t -> "integration".equals(t.getName()));
-        assertNotNull(topicSubtopicRepository.getByPublicId(id));
-        assertTrue(calculus.getChildrenTopicSubtopics().iterator().next().isPrimary());
-
-        URI connection2Id = getId(
-                testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
-                    topicid = parentTopic2PublicId;
-                    subtopicid = integrationId;
-                    primary = false;
-                }})
-        );
-
-        final var connection2 = topicSubtopicRepository.findFirstByPublicId(connection2Id).orElse(null);
-        assertNotNull(connection2);
-
-        assertEquals(parentTopic2PublicId, connection2.getTopic().map(Topic::getPublicId).orElse(null));
-        assertEquals(integrationId, connection2.getSubtopic().map(Topic::getPublicId).orElse(null));
-        assertFalse(connection2.isPrimary());
     }
 
     @Test
@@ -109,26 +65,6 @@ public class TopicSubtopicsTest extends RestTest {
         URI id = save(TopicSubtopic.create(newTopic(), newTopic())).getPublicId();
         testUtils.deleteResource("/v1/topic-subtopics/" + id);
         assertNull(topicRepository.findByPublicId(id));
-    }
-
-    @Test
-    public void can_update_topic_subtopic() throws Exception {
-        URI id = save(TopicSubtopic.create(newTopic(), newTopic(), true)).getPublicId();
-
-        testUtils.updateResource("/v1/topic-subtopics/" + id, new TopicSubtopics.UpdateTopicSubtopicCommand() {{
-            primary = true;
-        }});
-
-        assertTrue(topicSubtopicRepository.getByPublicId(id).isPrimary());
-    }
-
-    @Test
-    public void cannot_unset_primary_topic() throws Exception {
-        URI id = save(TopicSubtopic.create(newTopic(), newTopic(), true)).getPublicId();
-
-        testUtils.updateResource("/v1/topic-subtopics/" + id, new TopicSubtopics.UpdateTopicSubtopicCommand() {{
-            primary = false;
-        }}, status().is4xxClientError());
     }
 
     @Test
@@ -164,76 +100,6 @@ public class TopicSubtopicsTest extends RestTest {
         assertEquals(topicid, topicSubtopicIndexDocument.topicid);
 
         assertEquals(subtopicid, topicSubtopicIndexDocument.subtopicid);
-    }
-
-    @Test
-    public void deleted_primary_parent_topic_is_replaced() throws Exception {
-        Topic subtopic = builder.topic();
-        Topic primary = builder.topic(t -> t.name("primary").subtopic(subtopic, true));
-        builder.topic(t -> t.name("other").subtopic(subtopic));
-
-        testUtils.deleteResource("/v1/topics/" + primary.getPublicId());
-
-        assertEquals("other", subtopic.getPrimaryParentTopic().get().getName());
-    }
-
-    @Test
-    public void setting_new_parent_makes_old_one_secondary() throws Exception {
-        Topic subtopic = builder.topic(t -> t.name("a subtopic"));
-
-        builder.topic("electricity", t -> t
-                .name("electricity")
-                .subtopic(subtopic, true)
-        );
-
-        Topic newPrimary = builder.topic("wiring", t -> t
-                .name("Wiring")
-        );
-
-        testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
-            topicid = newPrimary.getPublicId();
-            subtopicid = subtopic.getPublicId();
-            primary = true;
-        }});
-
-        subtopic.getParentTopicSubtopics().forEach(topicResource -> {
-            Topic topic = topicResource.getTopic().orElse(null);
-            if (topic.equals(newPrimary)) assertTrue(topicResource.isPrimary());
-            else assertFalse(topicResource.isPrimary());
-        });
-
-    }
-
-    @Test
-    public void setting_secondary_parent_primary_makes_old_primary_parent_secondary() throws Exception {
-        Topic subtopic = builder.topic(t -> t.name("a subtopic"));
-
-        Topic oldprimary = builder.topic("electricity", t -> t
-                .name("electricity")
-                .subtopic(subtopic, true)
-        );
-
-        Topic newPrimary = builder.topic("wiring", t -> t
-                .name("Wiring")
-        );
-
-        testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
-            topicid = newPrimary.getPublicId();
-            subtopicid = subtopic.getPublicId();
-            primary = true;
-        }});
-
-        TopicSubtopic topicSubtopic = oldprimary.getChildrenTopicSubtopics().iterator().next();
-
-        testUtils.updateResource("/v1/topic-subtopics/" + topicSubtopic.getPublicId().toString(), new TopicSubtopics.AddSubtopicToTopicCommand() {{
-            primary = true;
-        }});
-
-        subtopic.getParentTopicSubtopics().forEach(topicResource -> {
-            Topic topic = topicResource.getTopic().orElse(null);
-            if (topic.equals(oldprimary)) assertTrue(topicResource.isPrimary());
-            else assertFalse(topicResource.isPrimary());
-        });
     }
 
     @Test

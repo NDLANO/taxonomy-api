@@ -8,7 +8,6 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
@@ -494,17 +493,13 @@ public class Builder {
         }
 
         public SubjectBuilder topic(String key) {
-            return topic(key, false, null);
+            return topic(key, null);
         }
 
-        public SubjectBuilder topic(String key, boolean primary) {
-            return topic(key, primary, null);
-        }
-
-        public SubjectBuilder topic(String key, boolean primary, Consumer<TopicBuilder> consumer) {
+        public SubjectBuilder topic(String key, Consumer<TopicBuilder> consumer) {
             TopicBuilder topicBuilder = getTopicBuilder(key);
             if (null != consumer) consumer.accept(topicBuilder);
-            topic(topicBuilder.topic, primary);
+            topic(topicBuilder.topic);
 
             refreshAllCachedUrls();
 
@@ -513,19 +508,11 @@ public class Builder {
 
 
         public SubjectBuilder topic(Consumer<TopicBuilder> consumer) {
-            return topic(null, false, consumer);
-        }
-
-        public SubjectBuilder topic(boolean primary, Consumer<TopicBuilder> consumer) {
-            return topic(null, primary, consumer);
+            return topic(null, consumer);
         }
 
         public SubjectBuilder topic(Topic topic) {
-            return topic(topic, false);
-        }
-
-        public SubjectBuilder topic(Topic topic, boolean primary) {
-            SubjectTopic subjectTopic = SubjectTopic.create(subject, topic, primary);
+            SubjectTopic subjectTopic = SubjectTopic.create(subject, topic);
             entityManager.persist(subjectTopic);
 
             refreshAllCachedUrls();
@@ -590,54 +577,22 @@ public class Builder {
         }
 
         public TopicBuilder subtopic(String topicKey) {
-            return subtopic(topicKey, false);
-        }
-
-        public TopicBuilder subtopic(String topicKey, boolean primary) {
-            return subtopic(topicKey, primary, null);
-        }
-
-        public TopicBuilder subtopic(Consumer<TopicBuilder> consumer, boolean primary) {
-            return subtopic(null, primary, consumer);
+            return subtopic(topicKey, null);
         }
 
         public TopicBuilder subtopic(Consumer<TopicBuilder> consumer) {
-            return subtopic(null, false, consumer);
+            return subtopic(null, consumer);
         }
 
         public TopicBuilder subtopic(String key, Consumer<TopicBuilder> consumer) {
-            return subtopic(key, false, consumer);
-        }
-
-        public TopicBuilder subtopic(boolean primary, Consumer<TopicBuilder> consumer) {
-            return subtopic(null, primary, consumer);
-        }
-
-        public TopicBuilder subtopic(String key, boolean primary, Consumer<TopicBuilder> consumer) {
             TopicBuilder topicBuilder = getTopicBuilder(key);
             if (null != consumer) consumer.accept(topicBuilder);
-            subtopic(topicBuilder.topic, primary);
+            subtopic(topicBuilder.topic);
             return this;
         }
 
         public TopicBuilder subtopic(Topic subtopic) {
-            entityManager.persist(TopicSubtopic.create(topic, subtopic));
-            return this;
-        }
-
-        public TopicBuilder subtopic(Topic subtopic, boolean isPrimary) {
-            if (isPrimary) {
-                final var toUpdate = subtopic.getParentTopicSubtopics().stream()
-                        .filter(TopicSubtopic::isPrimary)
-                        .collect(Collectors.toSet());
-
-                toUpdate.forEach(topicSubtopic1 -> topicSubtopic1.setPrimary(false));
-            }
-
             final var topicSubtopic = TopicSubtopic.create(topic, subtopic);
-            if (isPrimary) {
-                topicSubtopic.setPrimary(true);
-            }
 
             refreshAllCachedUrls();
 
@@ -652,39 +607,19 @@ public class Builder {
             return resource(resourceKey, null);
         }
 
-        public TopicBuilder resource(boolean primary, Consumer<ResourceBuilder> consumer) {
-            return resource(null, primary, consumer);
-        }
-
         public TopicBuilder resource(Consumer<ResourceBuilder> consumer) {
             return resource(null, consumer);
         }
 
         public TopicBuilder resource(String resourceKey, Consumer<ResourceBuilder> consumer) {
-            return resource(resourceKey, false, consumer);
-        }
-
-        public TopicBuilder resource(String resourceKey, boolean primary, Consumer<ResourceBuilder> consumer) {
             ResourceBuilder resource = getResourceBuilder(resourceKey);
             if (null != consumer) consumer.accept(resource);
 
-            return resource(resource.resource, primary);
-        }
-
-        public TopicBuilder resource(String resourceKey, boolean primary) {
-            return resource(resourceKey, primary, null);
+            return resource(resource.resource);
         }
 
         public TopicBuilder resource(Resource resource) {
             entityManager.persist(TopicResource.create(topic, resource));
-
-            refreshAllCachedUrls();
-
-            return this;
-        }
-
-        public TopicBuilder resource(Resource resource, boolean primary) {
-            entityManager.persist(TopicResource.create(topic, resource, primary));
 
             refreshAllCachedUrls();
 

@@ -17,9 +17,6 @@ public class SubjectTopic extends DomainEntity implements EntityWithPathConnecti
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
-    @Column(name = "is_primary")
-    private boolean primary;
-
     @Column(name = "rank")
     private int rank;
 
@@ -28,10 +25,6 @@ public class SubjectTopic extends DomainEntity implements EntityWithPathConnecti
     }
 
     public static SubjectTopic create(Subject subject, Topic topic) {
-        return create(subject, topic, false);
-    }
-
-    public static SubjectTopic create(Subject subject, Topic topic, boolean primary) {
         if (topic == null || subject == null) {
             throw new NullPointerException();
         }
@@ -39,7 +32,6 @@ public class SubjectTopic extends DomainEntity implements EntityWithPathConnecti
         final var subjectTopic = new SubjectTopic();
         subjectTopic.subject = subject;
         subjectTopic.topic = topic;
-        subjectTopic.setPrimary(primary);
 
         subject.addSubjectTopic(subjectTopic);
         topic.addSubjectTopic(subjectTopic);
@@ -69,14 +61,6 @@ public class SubjectTopic extends DomainEntity implements EntityWithPathConnecti
 
     public Optional<Topic> getTopic() {
         return Optional.ofNullable(topic);
-    }
-
-    public boolean isPrimary() {
-        return primary;
-    }
-
-    public void setPrimary(boolean primary) {
-        this.primary = primary;
     }
 
     public int getRank() {
