@@ -33,15 +33,6 @@ public class TopicSubtopicTest {
     }
 
     @Test
-    public void setAndIsPrimary() {
-        assertFalse(topicSubtopic.isPrimary());
-        topicSubtopic.setPrimary(true);
-        assertTrue(topicSubtopic.isPrimary());
-        topicSubtopic.setPrimary(false);
-        assertFalse(topicSubtopic.isPrimary());
-    }
-
-    @Test
     public void getAndSetRank() {
         assertEquals(0, topicSubtopic.getRank());
         topicSubtopic.setRank(10);
@@ -50,8 +41,6 @@ public class TopicSubtopicTest {
 
     @Test
     public void preRemove() {
-        topicSubtopic.setPrimary(true);
-
         topicSubtopic.preRemove();
 
         verify(topic).removeChildTopicSubTopic(topicSubtopic);

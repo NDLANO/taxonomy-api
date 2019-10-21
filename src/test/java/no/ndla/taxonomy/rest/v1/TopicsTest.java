@@ -1,13 +1,13 @@
 package no.ndla.taxonomy.rest.v1;
 
 
+import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.TopicIndexDocument;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
-import no.ndla.taxonomy.service.dtos.SubTopicIndexDTO;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -15,7 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import java.net.URI;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
@@ -26,11 +27,14 @@ public class TopicsTest extends RestTest {
     @Autowired
     EntityManager entityManager;
 
+    @Autowired
+    private TestSeeder testSeeder;
+
     @Test
     public void can_get_single_topic() throws Exception {
         builder.subject(s -> s
                 .publicId("urn:subject:1")
-                .topic(true, t -> t
+                .topic(t -> t
                         .name("trigonometry")
                         .contentUri("urn:article:1")
                         .publicId("urn:topic:1")
@@ -42,31 +46,6 @@ public class TopicsTest extends RestTest {
         assertEquals("trigonometry", topic.name);
         assertEquals("urn:article:1", topic.contentUri.toString());
         assertEquals("/subject:1/topic:1", topic.path);
-    }
-
-    @Test
-    public void primary_url_is_returned_when_getting_single_topic() throws Exception {
-        {
-            builder.subject(s -> s
-                    .publicId("urn:subject:1")
-                    .topic("topic", false, t -> t.publicId("urn:topic:1"))
-            );
-
-            builder.subject(s -> s
-                    .publicId("urn:subject:2")
-                    .topic("topic", true)
-            );
-
-            var topic = builder.topic("topic");
-
-            entityManager.merge(topic);
-        }
-
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
-        TopicIndexDocument topic = testUtils.getObject(TopicIndexDocument.class, response);
-
-        assertEquals("/subject:2/topic:1", topic.path);
     }
 
     @Test
@@ -85,10 +64,10 @@ public class TopicsTest extends RestTest {
     public void can_get_all_topics() throws Exception {
         builder.subject(s -> s
                 .name("Basic science")
-                .topic(true, t -> t.name("photo synthesis")));
+                .topic(t -> t.name("photo synthesis")));
         builder.subject(s -> s
                 .name("Maths")
-                .topic(true, t -> t.name("trigonometry")));
+                .topic(t -> t.name("trigonometry")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics");
         TopicIndexDocument[] topics = testUtils.getObject(TopicIndexDocument[].class, response);
@@ -104,10 +83,10 @@ public class TopicsTest extends RestTest {
     /**
      * This test creates a structure of subjects and topics as follows:
      * <pre>
-     *   S:1         S:2
-     *    \         /
-     *     T:1    /
-     *      \   /
+     *   S:1
+     *    \
+     *     T:1
+     *      \
      *       T:2
      *      /  \
      *    T:3   T:4
@@ -126,21 +105,21 @@ public class TopicsTest extends RestTest {
      */
     @Test
     public void can_get_all_connections() throws Exception {
+        testSeeder.topicConnectionsTestSetup();
 
-        executeSqlScript("classpath:topic_connections_test_setup.sql", false);
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:2000/connections");
         ConnectionIndexDTO[] connections = testUtils.getObject(ConnectionIndexDTO[].class, response);
 
-        assertEquals("Correct number of connections", 4, connections.length);
+        assertEquals("Correct number of connections", 3, connections.length);
         assertAllTrue(connections, c -> c.paths.size() > 0); //all connections have at least one path
 
         connectionsHaveCorrectTypes(connections);
-        primaryConnectionsAreReportedCorrectly(connections);
     }
 
     @Test
     public void can_get_unfiltered_subtopics() throws Exception {
-        executeSqlScript("classpath:subtopics_by_topic_id_and_filters_test_setup.sql", false);
+        testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
+
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
         TopicIndexDocument[] subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
         assertEquals("Unfiltered subtopics", 7, subtopics.length);
@@ -148,7 +127,8 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_filtered_subtopics() throws Exception {
-        executeSqlScript("classpath:subtopics_by_topic_id_and_filters_test_setup.sql", false);
+        testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
+
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:1");
         TopicIndexDocument[] subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
         assertEquals("Filter 1 subtopics", 3, subtopics.length);
@@ -158,19 +138,8 @@ public class TopicsTest extends RestTest {
         assertEquals("Filter 2 subtopics", 4, subtopics.length);
     }
 
-    private void primaryConnectionsAreReportedCorrectly(ConnectionIndexDTO[] connections) {
-        Map<String, ConnectionIndexDTO> connectionsByName = new HashMap<>();
-        Arrays.stream(connections).forEach(c -> connectionsByName.put(c.targetId.toString(), c));
-        assertFalse(connectionsByName.containsKey("urn:subject:1000"));
-        assertFalse(connectionsByName.get("urn:subject:2000").isPrimary);
-        assertFalse(connectionsByName.get("urn:topic:4000").isPrimary);
-        assertTrue(connectionsByName.get("urn:topic:1000").isPrimary);
-        assertTrue(connectionsByName.get("urn:topic:3000").isPrimary);
-    }
-
     private void connectionsHaveCorrectTypes(ConnectionIndexDTO[] connections) {
         ConnectionTypeCounter connectionTypeCounter = new ConnectionTypeCounter(connections).countTypes();
-        assertEquals(1, connectionTypeCounter.getSubjectCount());
         assertEquals(1, connectionTypeCounter.getParentCount());
         assertEquals(2, connectionTypeCounter.getChildCount());
     }
@@ -241,36 +210,6 @@ public class TopicsTest extends RestTest {
         testUtils.deleteResource("/v1/topics/" + parentId);
 
         assertNull(topicRepository.findByPublicId(parentId));
-    }
-
-    @Test
-    public void can_delete_topic_that_exists_in_2_subjects() throws Exception {
-        Topic topic = builder.topic(child -> child
-                .name("MAIN TOPIC")
-                .translation("nb", tr -> tr.name("HovedEmne"))
-                .resource(r -> r.publicId("urn:resource:1")));
-
-        builder.subject(s -> s.name("primary").topic(topic));
-        builder.subject(s -> s.name("secondary").topic(topic));
-
-        testUtils.deleteResource("/v1/topics/" + topic.getPublicId());
-
-        assertNull(topicRepository.findByPublicId(topic.getPublicId()));
-    }
-
-    @Test
-    public void can_delete_topic_that_has_2_parenttopics() throws Exception {
-        Topic topic = builder.topic(child -> child
-                .name("MAIN TOPIC")
-                .translation("nb", tr -> tr.name("HovedEmne"))
-                .resource(r -> r.publicId("urn:resource:1")));
-
-        builder.topic(t -> t.name("primary").subtopic(topic));
-        builder.topic(t -> t.name("secondary").subtopic(topic));
-
-        testUtils.deleteResource("/v1/topics/" + topic.getPublicId());
-
-        assertNull(topicRepository.findByPublicId(topic.getPublicId()));
     }
 
     @Test
@@ -360,25 +299,25 @@ public class TopicsTest extends RestTest {
         builder.subject(s -> s
                 .publicId("urn:subject:1")
                 .name("subject a")
-                .topic(true, t -> t
+                .topic(t -> t
                         .publicId("urn:topic:a")
                         .name("a")
-                        .resource(true, r -> r
+                        .resource(r -> r
                                 .publicId("urn:resource:1")
                                 .name("resource a").contentUri("urn:article:a"))
-                        .subtopic(true, st -> st
+                        .subtopic(st -> st
                                 .publicId("urn:topic:a:1")
                                 .name("aa")
-                                .resource(true, r -> r.name("resource aa").contentUri("urn:article:aa"))
-                                .subtopic(true, st2 -> st2
+                                .resource(r -> r.name("resource aa").contentUri("urn:article:aa"))
+                                .subtopic(st2 -> st2
                                         .publicId("urn:topic:a:1:1")
                                         .name("aaa")
-                                        .resource(true, r -> r.name("resource aaa").contentUri("urn:article:aaa"))
+                                        .resource(r -> r.name("resource aaa").contentUri("urn:article:aaa"))
                                 )
-                                .subtopic(true, st2 -> st2
+                                .subtopic(st2 -> st2
                                         .publicId("urn:topic:a:1:2")
                                         .name("aab")
-                                        .resource(true, r -> r.name("resource aab").contentUri("urn:article:aab"))
+                                        .resource(r -> r.name("resource aab").contentUri("urn:article:aab"))
                                 )
                         )
                 ));
@@ -396,7 +335,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void resources_by_topic_id_recursively_are_ordered_by_rank_in_parent() throws Exception {
-        executeSqlScript("classpath:resources_by_topic_id_test_setup.sql", false);
+        testSeeder.resourcesBySubjectIdTestSetup();
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:5/resources?recursive=true");
         ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
         assertEquals(6, result.length);
@@ -413,19 +352,19 @@ public class TopicsTest extends RestTest {
     @Test
     public void can_get_urls_for_resources_for_a_topic_recursively() throws Exception {
         builder.subject(s -> s.publicId("urn:subject:1")
-                .topic(true, t -> t
+                .topic(t -> t
                         .publicId("urn:topic:a")
-                        .resource(true, r -> r.publicId("urn:resource:a"))
-                        .subtopic(true, st -> st
+                        .resource(r -> r.publicId("urn:resource:a"))
+                        .subtopic(st -> st
                                 .publicId("urn:topic:aa")
-                                .resource(true, r -> r.publicId("urn:resource:aa"))
-                                .subtopic(true, st2 -> st2
+                                .resource(r -> r.publicId("urn:resource:aa"))
+                                .subtopic(st2 -> st2
                                         .publicId("urn:topic:aaa")
-                                        .resource("aaa", true, r -> r.publicId("urn:resource:aaa"))
+                                        .resource("aaa", r -> r.publicId("urn:resource:aaa"))
                                 )
-                                .subtopic(true, st2 -> st2
+                                .subtopic(st2 -> st2
                                         .publicId("urn:topic:aab")
-                                        .resource(true, r -> r.publicId("urn:resource:aab"))
+                                        .resource(r -> r.publicId("urn:resource:aab"))
                                 )
                         )
                 ));
@@ -457,58 +396,6 @@ public class TopicsTest extends RestTest {
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "resource 1".equals(r.name));
         assertAnyTrue(result, r -> "resource 2".equals(r.name));
-    }
-
-    @Test
-    public void can_get_primary_and_secondary_subtopics() throws Exception {
-        Topic externalTopic = builder.topic("secondary topic", t -> t
-                .name("secondary topic")
-                .publicId("urn:topic:b"));
-
-        URI parentTopicId = URI.create("urn:topic:a");
-        builder.subject("subject", s -> s
-                .name("subject")
-                .publicId("urn:subject:1")
-                .topic("parent", true, t -> t
-                        .name("parent topic")
-                        .publicId(parentTopicId.toString())
-                        .subtopic("child aa", true, child -> child
-                                .name("child topic aa")
-                                .publicId("urn:topic:aa")
-                                .subtopic("ignored grandchild", true, grandchild -> grandchild
-                                        .name("ignored grandchild topic")
-                                        .publicId("urn:topic:aaa")
-                                )
-                        )
-                        .subtopic("child ab", true, child -> child
-                                .name("child topic ab")
-                                .publicId("urn:topic:ab")
-                        )
-                        .subtopic(externalTopic, false)
-                )
-        );
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/" + parentTopicId + "/topics");
-        SubTopicIndexDTO[] topics = testUtils.getObject(SubTopicIndexDTO[].class, response);
-
-        // Result is not sorted, order is not important
-        var topicList = Arrays.stream(topics).sorted(Comparator.comparing(topic -> topic.id)).collect(Collectors.toList());
-
-        assertEquals(3, topicList.size());
-
-        var topic1 = topicList.get(0);
-        var topic2 = topicList.get(1);
-        var topic3 = topicList.get(2);
-
-        assertEquals("child topic aa", topic1.name);
-        assertEquals("urn:topic:aa", topic1.id.toString());
-        assertTrue(topic1.isPrimary);
-        assertEquals("child topic ab", topic2.name);
-        assertEquals("urn:topic:ab", topic2.id.toString());
-        assertTrue(topic2.isPrimary);
-        assertEquals("secondary topic", topic3.name);
-        assertEquals("urn:topic:b", topic3.id.toString());
-        assertFalse(topic3.isPrimary);
     }
 
     @Test
@@ -563,7 +450,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void resources_can_be_filtered_by_relevance() throws Exception {
-        executeSqlScript("classpath:resource_with_filters_and_relevances_test_setup.sql", false);
+        testSeeder.resourceWithFiltersAndRelevancesTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?relevance=urn:relevance:core");
         ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
@@ -577,7 +464,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void resources_can_be_filtered_by_filters() throws Exception {
-        executeSqlScript("classpath:resource_with_filters_and_relevances_test_setup.sql", false);
+        testSeeder.resourceWithFiltersAndRelevancesTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?filter=urn:filter:1");
         ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
@@ -603,30 +490,44 @@ public class TopicsTest extends RestTest {
         final var topic3 = builder.topic(builder -> builder.publicId("urn:topic:3"));
 
         SubjectTopic.create(subject1, topic1);
-        SubjectTopic.create(subject1, topic2);
-        SubjectTopic.create(subject1, topic3);
+        SubjectTopic.create(subject2, topic2);
+        SubjectTopic.create(subject3, topic3);
 
-        final var resource1 = builder.resource(builder -> builder.publicId("urn:resource:1"));
-        final var resource2 = builder.resource(builder -> builder.publicId("urn:resource:2"));
-        final var resource3 = builder.resource(builder -> builder.publicId("urn:resource:3"));
+        final var resource11 = builder.resource(builder -> builder.publicId("urn:resource:11"));
+        final var resource12 = builder.resource(builder -> builder.publicId("urn:resource:12"));
+        final var resource13 = builder.resource(builder -> builder.publicId("urn:resource:13"));
 
-        resource1.addFilter(filter1, relevance1);
-        resource2.addFilter(filter2, relevance1);
+        final var resource21 = builder.resource(builder -> builder.publicId("urn:resource:21"));
+        final var resource22 = builder.resource(builder -> builder.publicId("urn:resource:22"));
+        final var resource23 = builder.resource(builder -> builder.publicId("urn:resource:23"));
+
+        final var resource31 = builder.resource(builder -> builder.publicId("urn:resource:31"));
+        final var resource32 = builder.resource(builder -> builder.publicId("urn:resource:32"));
+        final var resource33 = builder.resource(builder -> builder.publicId("urn:resource:33"));
+
+        resource11.addFilter(filter1, relevance1);
+
+        resource21.addFilter(filter1, relevance1);
+        resource22.addFilter(filter2, relevance1);
+
+        resource31.addFilter(filter1, relevance1);
+        resource32.addFilter(filter2, relevance1);
 
         subject1.addFilter(filter1);
+        subject1.addFilter(filter2);
         subject2.addFilter(filter2);
 
-        TopicResource.create(topic1, resource1);
-        TopicResource.create(topic1, resource2);
-        TopicResource.create(topic1, resource3);
+        TopicResource.create(topic1, resource11);
+        TopicResource.create(topic1, resource12);
+        TopicResource.create(topic1, resource13);
 
-        TopicResource.create(topic2, resource1);
-        TopicResource.create(topic2, resource2);
-        TopicResource.create(topic2, resource3);
+        TopicResource.create(topic2, resource21);
+        TopicResource.create(topic2, resource22);
+        TopicResource.create(topic2, resource23);
 
-        TopicResource.create(topic3, resource1);
-        TopicResource.create(topic3, resource2);
-        TopicResource.create(topic3, resource3);
+        TopicResource.create(topic3, resource31);
+        TopicResource.create(topic3, resource32);
+        TopicResource.create(topic3, resource33);
 
         {
             final var resources = Arrays.asList(testUtils.getObject(ResourceIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:1/resources")));
@@ -635,7 +536,7 @@ public class TopicsTest extends RestTest {
                     resources.stream()
                             .map(ResourceIndexDocument::getId)
                             .collect(Collectors.toSet())
-                            .containsAll(Set.of(new URI("urn:resource:1"), new URI("urn:resource:2"), new URI("urn:resource:3")))
+                            .containsAll(Set.of(new URI("urn:resource:11"), new URI("urn:resource:12"), new URI("urn:resource:13")))
             );
         }
 
@@ -646,30 +547,29 @@ public class TopicsTest extends RestTest {
                     resources.stream()
                             .map(ResourceIndexDocument::getId)
                             .collect(Collectors.toSet())
-                            .contains(new URI("urn:resource:1"))
+                            .contains(new URI("urn:resource:11"))
             );
         }
 
         {
-            final var resources = Arrays.asList(testUtils.getObject(ResourceIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:1/resources?subject=urn:subject:2")));
+            final var resources = Arrays.asList(testUtils.getObject(ResourceIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:2/resources?subject=urn:subject:2")));
             assertTrue(
                     resources.stream()
                             .map(ResourceIndexDocument::getId)
                             .collect(Collectors.toSet())
-                            .contains(new URI("urn:resource:2"))
+                            .contains(new URI("urn:resource:22"))
             );
         }
 
         // subject:3 has no filters assigned, resulting in no filters, and then returning all topics
         {
-            final var resources = Arrays.asList(testUtils.getObject(ResourceIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:1/resources?subject=urn:subject:3")));
+            final var resources = Arrays.asList(testUtils.getObject(ResourceIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:3/resources?subject=urn:subject:3")));
             assertEquals(3, resources.size());
             assertTrue(
                     resources.stream()
                             .map(ResourceIndexDocument::getId)
                             .collect(Collectors.toSet())
-                            .containsAll(Set.of(new URI("urn:resource:1"), new URI("urn:resource:2"), new URI("urn:resource:3"))
-                            )
+                            .containsAll(Set.of(new URI("urn:resource:31"), new URI("urn:resource:32"), new URI("urn:resource:33")))
             );
         }
     }

@@ -13,10 +13,9 @@ public class CachedUrl {
     public CachedUrl() {
     }
 
-    public CachedUrl(URI publicId, String path, boolean primary) {
+    public CachedUrl(URI publicId, String path) {
         this.publicId = publicId;
         this.path = path;
-        this.primary = primary;
     }
 
     @Column
@@ -29,9 +28,6 @@ public class CachedUrl {
     @Id
     @Column
     private String path;
-
-    @Column(name = "is_primary")
-    private boolean primary;
 
     public URI getPublicId() {
         return publicId;
@@ -47,13 +43,5 @@ public class CachedUrl {
 
     public void setPath(String path) {
         this.path = path;
-    }
-
-    public boolean isPrimary() {
-        return primary;
-    }
-
-    public void setPrimary(boolean primary) {
-        this.primary = primary;
     }
 }

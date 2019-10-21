@@ -28,8 +28,8 @@ public class Subject extends EntityWithPath {
     }
 
     @Override
-    public Set<EntityWithPathConnection> getParentConnections() {
-        return Set.of();
+    public Optional<EntityWithPathConnection> getParentConnection() {
+        return Optional.empty();
     }
 
     @Override

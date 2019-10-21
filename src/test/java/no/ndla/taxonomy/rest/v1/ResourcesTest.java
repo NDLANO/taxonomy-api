@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 
+import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceType;
@@ -12,6 +13,7 @@ import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceFullIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
@@ -21,14 +23,16 @@ import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ResourcesTest extends RestTest {
+    @Autowired
+    private TestSeeder testSeeder;
 
     @Test
     public void can_get_single_resource() throws Exception {
         builder.subject(s -> s
                 .publicId("urn:subject:1")
-                .topic(true, t -> t
+                .topic(t -> t
                         .publicId("urn:topic:1")
-                        .resource(true, r -> r
+                        .resource(r -> r
                                 .name("introduction to trigonometry")
                                 .contentUri("urn:article:1")
                                 .publicId("urn:resource:1")
@@ -40,29 +44,6 @@ public class ResourcesTest extends RestTest {
         assertEquals("introduction to trigonometry", resource.name);
         assertEquals("urn:article:1", resource.contentUri.toString());
         assertEquals("/subject:1/topic:1/resource:1", resource.path);
-    }
-
-    @Test
-    public void primary_url_is_return_when_getting_single_resource() throws Exception {
-        builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .topic(t -> t
-                        .publicId("urn:topic:1")
-                        .resource("resource", r -> r
-                                .publicId("urn:resource:1")
-                        )));
-        builder.subject(s -> s
-                .publicId("urn:subject:2")
-                .topic("primary", true, t -> t
-                        .publicId("urn:topic:2")
-                        .resource("resource", true)
-                )
-        );
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
-        ResourceIndexDocument resource = testUtils.getObject(ResourceIndexDocument.class, response);
-
-        assertEquals("/subject:2/topic:2/resource:1", resource.path);
     }
 
     @Test
@@ -79,8 +60,8 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_all_resources() throws Exception {
-        builder.subject(s -> s.topic(true, t -> t.resource(true, r -> r.name("The inner planets"))));
-        builder.subject(s -> s.topic(true, t -> t.resource(true, r -> r.name("Gas giants"))));
+        builder.subject(s -> s.topic(t -> t.resource(r -> r.name("The inner planets"))));
+        builder.subject(s -> s.topic(t -> t.resource(r -> r.name("Gas giants"))));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources");
         ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
@@ -148,7 +129,7 @@ public class ResourcesTest extends RestTest {
         Resource resource = builder.resource(r -> r
                 .translation("nb", tr -> tr.name("ressurs"))
                 .resourceType(rt -> rt.name("Learning path")));
-        resource.getTranslation("nb").orElse(null);
+        resource.getTranslation("nb");
 
         builder.topic(t -> t
                 .resource(resource));
@@ -156,17 +137,6 @@ public class ResourcesTest extends RestTest {
         URI id = builder.resource("resource").getPublicId();
         testUtils.deleteResource("/v1/resources/" + id);
         assertNull(resourceRepository.findByPublicId(id));
-    }
-
-    @Test
-    public void can_delete_resource_with_two_parent_topics() throws Exception {
-        Resource resource = builder.resource("resource");
-
-        builder.topic(child -> child.resource(resource)).name("DELETE EDGE TO ME");
-        builder.topic(child -> child.resource(resource)).name("DELETE EDGE TO ME ALSO");
-
-        testUtils.deleteResource("/v1/resources/" + resource.getPublicId());
-        assertNull(resourceRepository.findByPublicId(resource.getPublicId()));
     }
 
     @Test
@@ -234,7 +204,7 @@ public class ResourcesTest extends RestTest {
                 .name("Philosophy and Mind")
                 .publicId("urn:topic:1")
                 .contentUri(URI.create("urn:article:6662"))
-                .resource(resource, true));
+                .resource(resource));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/" + resource.getPublicId() + "/full");
         ResourceFullIndexDocument result = testUtils.getObject(ResourceFullIndexDocument.class, response);
@@ -250,14 +220,5 @@ public class ResourcesTest extends RestTest {
         assertEquals(topic.getName(), t.name);
         assertTrue(t.isPrimary);
         assertEquals(URI.create("urn:article:6662"), t.contentUri);
-    }
-
-    @Test
-    public void full_resource_has_all_paths() throws Exception {
-        executeSqlScript("classpath:resource_in_dual_subjects_test_setup.sql", false);
-        MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1/full");
-        ResourceFullIndexDocument result = testUtils.getObject(ResourceFullIndexDocument.class, response);
-        assertNotNull(result.paths);
-        assertEquals(2, result.paths.size());
     }
 }

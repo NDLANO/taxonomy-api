@@ -108,7 +108,7 @@ public class UrlResolverServiceTest {
         String nodeId = "urn:topic:1:183926";
         builder.subject(s -> s
                 .publicId("urn:subject:2")
-                .topic(true, t -> t
+                .topic(t -> t
                         .publicId(nodeId)
                 )
         );
@@ -128,7 +128,7 @@ public class UrlResolverServiceTest {
         String nodeId = "urn:topic:1:183926";
         builder.subject(s -> s
                 .publicId("urn:subject:2")
-                .topic(true, t -> t
+                .topic(t -> t
                         .publicId(nodeId)
                 )
         );
@@ -168,7 +168,7 @@ public class UrlResolverServiceTest {
     public void resolveOldUrlBadSubjectPrimaryPath() {
         builder.subject(s -> s
                 .publicId("urn:subject:2")
-                .topic(true, t -> t
+                .topic(t -> t
                         .publicId("urn:topic:1:183926")
                 )
         );

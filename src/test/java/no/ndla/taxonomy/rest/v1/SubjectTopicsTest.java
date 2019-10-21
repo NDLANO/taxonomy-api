@@ -35,7 +35,6 @@ public class SubjectTopicsTest extends RestTest {
         );
 
         final var connection = subjectTopicRepository.findByPublicId(id);
-        assertTrue(connection.isPrimary());
 
         Subject physics = subjectRepository.getByPublicId(subjectId);
         assertEquals(1, physics.getTopics().size());
@@ -65,17 +64,6 @@ public class SubjectTopicsTest extends RestTest {
         URI id = save(SubjectTopic.create(newSubject(), newTopic())).getPublicId();
         testUtils.deleteResource("/v1/subject-topics/" + id);
         assertNull(subjectRepository.findByPublicId(id));
-    }
-
-    @Test
-    public void can_update_subject_topic() throws Exception {
-        URI id = save(SubjectTopic.create(newSubject(), newTopic())).getPublicId();
-
-        testUtils.updateResource("/v1/subject-topics/" + id, new SubjectTopics.UpdateSubjectTopicCommand() {{
-            primary = true;
-        }});
-
-        assertTrue(subjectTopicRepository.getByPublicId(id).isPrimary());
     }
 
     @Test
@@ -191,15 +179,6 @@ public class SubjectTopicsTest extends RestTest {
     }
 
     @Test
-    public void cannot_unset_primary_subject() throws Exception {
-        URI id = save(SubjectTopic.create(newSubject(), newTopic(), true)).getPublicId();
-
-        testUtils.updateResource("/v1/subject-topics/" + id, new SubjectTopics.UpdateSubjectTopicCommand() {{
-            primary = false;
-        }}, status().is4xxClientError());
-    }
-
-    @Test
     public void can_get_topics() throws Exception {
         Subject physics = newSubject().name("physics");
         Topic electricity = newTopic().name("electricity");
@@ -237,49 +216,6 @@ public class SubjectTopicsTest extends RestTest {
         SubjectTopics.SubjectTopicIndexDocument subjectTopicIndexDocument = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument.class, resource);
         assertEquals(subjectid, subjectTopicIndexDocument.subjectid);
         assertEquals(topicid, subjectTopicIndexDocument.topicid);
-    }
-
-    @Test
-    public void topic_can_only_have_one_primary_subject() throws Exception {
-        Topic topic = builder.topic("graphs", r -> r.name("graphs"));
-
-        builder.subject("elementary maths", t -> t
-                .name("elementary maths")
-                .topic(topic, true));
-
-        Subject newPrimary = builder.subject("graph theory", t -> t
-                .name("graph theory"));
-
-        testUtils.createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
-            subjectid = newPrimary.getPublicId();
-            topicid = topic.getPublicId();
-            primary = true;
-        }});
-
-        topic.getSubjectTopics().forEach(subjectTopic -> {
-            if (newPrimary.equals(subjectTopic.getSubject().orElse(null))) {
-                assertTrue(subjectTopic.isPrimary());
-            } else {
-                assertFalse(subjectTopic.isPrimary());
-            }
-        });
-    }
-
-    @Test
-    public void deleted_primary_subject_is_replaced() throws Exception {
-        Topic topic = newTopic();
-        URI primary = save(SubjectTopic.create(newSubject(), topic, true)).getPublicId();
-        URI other = save(SubjectTopic.create(newSubject(), topic, false)).getPublicId();
-
-        assertEquals(2, topic.getSubjectTopics().size());
-
-        testUtils.deleteResource("/v1/subject-topics/" + primary);
-
-        assertEquals(1, topic.getSubjectTopics().size());
-
-        SubjectTopic subjectTopic = topic.getSubjectTopics().iterator().next();
-        assertEquals(other, subjectTopic.getPublicId());
-        assertTrue(subjectTopic.isPrimary());
     }
 
     @Test

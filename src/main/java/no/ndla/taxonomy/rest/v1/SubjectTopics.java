@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.PrimaryParentRequiredException;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.Topic;
@@ -69,18 +68,16 @@ public class SubjectTopics {
     @ApiOperation("Adds a new topic to a subject")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "command", value = "The subject and topic getting connected. Use primary=true if primary connection for this topic.") @RequestBody AddTopicToSubjectCommand command) {
+            @ApiParam(name = "command", value = "The subject and topic getting connected.") @RequestBody AddTopicToSubjectCommand command) {
 
         Subject subject = subjectRepository.getByPublicId(command.subjectid);
         Topic topic = topicRepository.getByPublicId(command.topicid);
 
         final SubjectTopic subjectTopic;
         try {
-            subjectTopic = connectionService.connectSubjectTopic(subject, topic, command.primary, command.rank == 0 ? null : command.rank);
+            subjectTopic = connectionService.connectSubjectTopic(subject, topic, command.rank == 0 ? null : command.rank);
         } catch (DuplicateConnectionException e) {
             throw new ConflictHttpResponseException(e);
-        } catch (InvalidArgumentServiceException e) {
-            throw new BadHttpRequestException(e);
         }
 
         URI location = URI.create("/subject-topics/" + subjectTopic.getPublicId());
@@ -103,12 +100,8 @@ public class SubjectTopics {
                     @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
 
-        if (subjectTopic.isPrimary() && !command.primary) {
-            throw new PrimaryParentRequiredException();
-        }
-
         try {
-            connectionService.updateSubjectTopic(subjectTopic, command.primary, command.rank > 0 ? command.rank : null);
+            connectionService.updateSubjectTopic(subjectTopic, command.rank > 0 ? command.rank : null);
         } catch (InvalidArgumentServiceException e) {
             throw new BadHttpRequestException(e);
         } catch (NotFoundServiceException e) {
@@ -127,8 +120,7 @@ public class SubjectTopics {
         public URI topicid;
 
         @JsonProperty
-        @ApiModelProperty(value = "If this is the primary subject of this topic.", example = "true",
-                notes = "The first subject added to a topic will always become primary, regardless of the value provided here.")
+        @ApiModelProperty(value = "Backwards compatibility: Always true, ignored on insert/update.", example = "true")
         public boolean primary;
 
         @JsonProperty
@@ -186,7 +178,7 @@ public class SubjectTopics {
                     .map(Topic::getPublicId)
                     .orElse(null);
 
-            primary = subjectTopic.isPrimary();
+            primary = true;
             rank = subjectTopic.getRank();
         }
     }

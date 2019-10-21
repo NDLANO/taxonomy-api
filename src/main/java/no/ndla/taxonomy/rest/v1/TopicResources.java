@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.PrimaryParentRequiredException;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicResource;
@@ -76,7 +75,7 @@ public class TopicResources {
 
         final TopicResource topicResource;
         try {
-            topicResource = connectionService.connectTopicResource(topic, resource, command.primary, command.rank == 0 ? null : command.rank);
+            topicResource = connectionService.connectTopicResource(topic, resource, command.rank == 0 ? null : command.rank);
         } catch (DuplicateConnectionException e) {
             throw new ConflictHttpResponseException(e);
         } catch (InvalidArgumentServiceException e) {
@@ -105,12 +104,8 @@ public class TopicResources {
                             command) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
 
-        if (topicResource.isPrimary() && !command.primary) {
-            throw new PrimaryParentRequiredException();
-        }
-
         try {
-            connectionService.updateTopicResource(topicResource, command.primary, command.rank > 0 ? command.rank : null);
+            connectionService.updateTopicResource(topicResource, command.rank > 0 ? command.rank : null);
         } catch (InvalidArgumentServiceException e) {
             throw new BadHttpRequestException(e);
         } catch (NotFoundServiceException e) {
@@ -128,7 +123,7 @@ public class TopicResources {
         public URI resourceId;
 
         @JsonProperty
-        @ApiModelProperty(value = "Primary connection", example = "true")
+        @ApiModelProperty(value = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
         public boolean primary = true;
 
         @JsonProperty
@@ -142,7 +137,7 @@ public class TopicResources {
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(value = "Primary connection", example = "true")
+        @ApiModelProperty(value = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
         public boolean primary;
 
         @JsonProperty
@@ -165,7 +160,7 @@ public class TopicResources {
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(value = "Primary connection", example = "true")
+        @ApiModelProperty(value = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
         public boolean primary;
 
         @JsonProperty
@@ -179,7 +174,7 @@ public class TopicResources {
             id = topicResource.getPublicId();
             topicResource.getTopic().ifPresent(topic -> topicid = topic.getPublicId());
             topicResource.getResource().ifPresent(resource -> resourceId = resource.getPublicId());
-            primary = topicResource.isPrimary();
+            primary = true;
             rank = topicResource.getRank();
         }
     }

@@ -30,35 +30,22 @@ public class TopicTest {
     public void getPrimaryPath() {
         assertFalse(topic.getPrimaryPath().isPresent());
 
-        final var cachedNonPrimaryContextUrl = mock(CachedUrl.class);
-        final var cachedNonPrimarySubjectUrl = mock(CachedUrl.class);
         final var cachedPrimaryContextUrl = mock(CachedUrl.class);
         final var cachedPrimarySubjectUrl = mock(CachedUrl.class);
 
-        when(cachedNonPrimaryContextUrl.isPrimary()).thenReturn(false);
-        when(cachedNonPrimarySubjectUrl.isPrimary()).thenReturn(false);
-        when(cachedPrimaryContextUrl.isPrimary()).thenReturn(true);
-        when(cachedPrimarySubjectUrl.isPrimary()).thenReturn(true);
-
-        when(cachedNonPrimaryContextUrl.getPath()).thenReturn("/topic/non-primary");
-        when(cachedNonPrimarySubjectUrl.getPath()).thenReturn("/subject/non-primary");
         when(cachedPrimaryContextUrl.getPath()).thenReturn("/topic/primary");
         when(cachedPrimarySubjectUrl.getPath()).thenReturn("/subject/primary");
 
-        // If just returning non-primary paths getPrimaryPath() must return none
-        setField(topic, "cachedUrls", Set.of(cachedNonPrimaryContextUrl, cachedNonPrimarySubjectUrl));
-        assertFalse(topic.getPrimaryPath().isPresent());
-
         // If returning a primary subject path along it must return it
-        setField(topic, "cachedUrls", Set.of(cachedNonPrimaryContextUrl, cachedNonPrimarySubjectUrl, cachedPrimarySubjectUrl));
+        setField(topic, "cachedUrls", Set.of(cachedPrimarySubjectUrl));
         assertEquals("/subject/primary", topic.getPrimaryPath().orElse(""));
 
         // And adding a primary context URL (topic) it must be returned instead
-        setField(topic, "cachedUrls", Set.of(cachedNonPrimaryContextUrl, cachedNonPrimarySubjectUrl, cachedPrimarySubjectUrl, cachedPrimaryContextUrl));
+        setField(topic, "cachedUrls", Set.of(cachedPrimarySubjectUrl, cachedPrimaryContextUrl));
         assertEquals("/topic/primary", topic.getPrimaryPath().orElse(""));
 
         // Order must not matter
-        setField(topic, "cachedUrls", Set.of(cachedNonPrimaryContextUrl, cachedPrimaryContextUrl, cachedPrimarySubjectUrl, cachedNonPrimarySubjectUrl));
+        setField(topic, "cachedUrls", Set.of(cachedPrimaryContextUrl, cachedPrimarySubjectUrl));
         assertEquals("/topic/primary", topic.getPrimaryPath().orElse(""));
     }
 
@@ -70,8 +57,6 @@ public class TopicTest {
 
         final var subjectTopic1 = mock(SubjectTopic.class);
         final var subjectTopic2 = mock(SubjectTopic.class);
-        when(subjectTopic1.isPrimary()).thenReturn(true);
-        when(subjectTopic2.isPrimary()).thenReturn(false);
 
         try {
             topic.addSubjectTopic(subjectTopic1);
@@ -153,7 +138,7 @@ public class TopicTest {
 
     @Test
     public void addGetAndRemoveParentTopicSubtopics() {
-        assertEquals(0, topic.getParentTopicSubtopics().size());
+        assertFalse(topic.getParentTopicSubtopic().isPresent());
 
         final var topicSubtopic1 = mock(TopicSubtopic.class);
         final var topicSubtopic2 = mock(TopicSubtopic.class);
@@ -167,8 +152,8 @@ public class TopicTest {
         topic.addParentTopicSubtopic(topicSubtopic1);
 
 
-        assertEquals(1, topic.getParentTopicSubtopics().size());
-        assertTrue(topic.getParentTopicSubtopics().contains(topicSubtopic1));
+        assertTrue(topic.getParentTopicSubtopic().isPresent());
+        assertSame(topicSubtopic1, topic.getParentTopicSubtopic().orElseThrow());
 
         try {
             topic.addParentTopicSubtopic(topicSubtopic2);
@@ -176,21 +161,9 @@ public class TopicTest {
         } catch (IllegalArgumentException ignored) {
         }
 
-        when(topicSubtopic2.getSubtopic()).thenReturn(Optional.of(topic));
-        topic.addParentTopicSubtopic(topicSubtopic2);
-
-        assertEquals(2, topic.getParentTopicSubtopics().size());
-        assertTrue(topic.getParentTopicSubtopics().containsAll(Set.of(topicSubtopic1, topicSubtopic2)));
-
         topic.removeParentTopicSubtopic(topicSubtopic1);
         verify(topicSubtopic1).disassociate();
-        assertEquals(1, topic.getParentTopicSubtopics().size());
-        assertTrue(topic.getParentTopicSubtopics().contains(topicSubtopic2));
-
-        topic.removeParentTopicSubtopic(topicSubtopic2);
-        verify(topicSubtopic2).disassociate();
-        assertEquals(0, topic.getParentTopicSubtopics().size());
-
+        assertFalse(topic.getParentTopicSubtopic().isPresent());
     }
 
     @Test
@@ -273,75 +246,20 @@ public class TopicTest {
     }
 
     @Test
-    public void hasSingleSubject() {
-        final var subjectTopic1 = mock(SubjectTopic.class);
-        final var subjectTopic2 = mock(SubjectTopic.class);
-
-        assertFalse(topic.hasSingleSubject());
-
-        when(subjectTopic1.getTopic()).thenReturn(Optional.of(topic));
-        topic.addSubjectTopic(subjectTopic1);
-        assertTrue(topic.hasSingleSubject());
-
-        when(subjectTopic2.getTopic()).thenReturn(Optional.of(topic));
-        topic.addSubjectTopic(subjectTopic2);
-        assertFalse(topic.hasSingleSubject());
-    }
-
-    @Test
-    public void getPrimaryParentTopic() {
+    public void getParentTopic() {
         final var parentTopic1 = mock(Topic.class);
-        final var parentTopic2 = mock(Topic.class);
-        final var parentTopic3 = mock(Topic.class);
-
-        final var parentTopicSubtopic1 = mock(TopicSubtopic.class);
-        final var parentTopicSubtopic2 = mock(TopicSubtopic.class);
-        final var parentTopicSubtopic3 = mock(TopicSubtopic.class);
-
-        Set.of(parentTopicSubtopic1, parentTopicSubtopic2, parentTopicSubtopic3)
-                .forEach(parentTopicSubtopic -> when(parentTopicSubtopic.getSubtopic()).thenReturn(Optional.of(topic)));
-
-        when(parentTopicSubtopic1.getTopic()).thenReturn(Optional.of(parentTopic1));
-        when(parentTopicSubtopic2.getTopic()).thenReturn(Optional.of(parentTopic2));
-        when(parentTopicSubtopic3.getTopic()).thenReturn(Optional.of(parentTopic3));
-
-        when(parentTopicSubtopic2.isPrimary()).thenReturn(true);
-
-        assertFalse(topic.getPrimaryParentTopic().isPresent());
-        topic.addParentTopicSubtopic(parentTopicSubtopic1);
-        assertFalse(topic.getPrimaryParentTopic().isPresent());
-
-        topic.addParentTopicSubtopic(parentTopicSubtopic2);
-        assertTrue(topic.getPrimaryParentTopic().isPresent());
-        assertEquals(parentTopic2, topic.getPrimaryParentTopic().orElse(null));
-
-        topic.addParentTopicSubtopic(parentTopicSubtopic3);
-        assertTrue(topic.getPrimaryParentTopic().isPresent());
-        assertEquals(parentTopic2, topic.getPrimaryParentTopic().orElse(null));
-    }
-
-    @Test
-    public void getParentTopics() {
-        final var parentTopic1 = mock(Topic.class);
-        final var parentTopic2 = mock(Topic.class);
 
         final var topicSubtopic1 = mock(TopicSubtopic.class);
-        final var topicSubtopic2 = mock(TopicSubtopic.class);
-        final var topicSubtopic3 = mock(TopicSubtopic.class); // Returns no topic, must not trigger error
 
         when(topicSubtopic1.getSubtopic()).thenReturn(Optional.of(topic));
-        when(topicSubtopic2.getSubtopic()).thenReturn(Optional.of(topic));
-        when(topicSubtopic3.getSubtopic()).thenReturn(Optional.of(topic));
         when(topicSubtopic1.getTopic()).thenReturn(Optional.of(parentTopic1));
-        when(topicSubtopic2.getTopic()).thenReturn(Optional.of(parentTopic2));
-        when(topicSubtopic3.getTopic()).thenReturn(Optional.empty());
+
+        assertFalse(topic.getParentTopic().isPresent());
 
         topic.addParentTopicSubtopic(topicSubtopic1);
-        topic.addParentTopicSubtopic(topicSubtopic2);
-        topic.addParentTopicSubtopic(topicSubtopic3);
 
-        assertEquals(2, topic.getParentTopics().size());
-        assertTrue(topic.getParentTopics().containsAll(Set.of(parentTopic1, parentTopic2)));
+        assertTrue(topic.getParentTopic().isPresent());
+        assertSame(parentTopic1, topic.getParentTopic().orElseThrow());
     }
 
     @Test

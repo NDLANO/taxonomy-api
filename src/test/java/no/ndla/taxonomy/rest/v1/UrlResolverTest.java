@@ -1,7 +1,6 @@
 package no.ndla.taxonomy.rest.v1;
 
 
-import no.ndla.taxonomy.domain.Resource;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -84,26 +83,6 @@ public class UrlResolverTest extends RestTest {
 
         String redirect = resolveUrlAndExpectRedirect("/subject:1/topic:2/resource:1");
         assertEquals("/subject:1/topic:1/resource:1", redirect);
-    }
-
-    @Test
-    public void is_redirected_to_closest_url() throws Exception {
-        Resource resource = builder.resource(r -> r.publicId("urn:resource:1"));
-        builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .topic("topic1", true, t -> t
-                        .publicId("urn:topic:1")
-                        .resource(resource)
-                )
-        );
-
-        builder.subject(s -> s
-                .publicId("urn:subject:2")
-                .topic("topic1")
-        );
-
-        String redirect = resolveUrlAndExpectRedirect("/subject:2/topic:2/resource:1");
-        assertEquals("/subject:2/topic:1/resource:1", redirect);
     }
 
     @Test

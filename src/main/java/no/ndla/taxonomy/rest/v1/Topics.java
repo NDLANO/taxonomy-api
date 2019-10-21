@@ -63,30 +63,6 @@ public class Topics extends CrudController<Topic> {
         this.topicService = topicService;
     }
 
-    private List<TopicIndexDocument> createTopicIndexDocumentsByPrimaryPath(Topic topic, String language) {
-        if (topic.getCachedUrls().stream().anyMatch(CachedUrl::isPrimary)) {
-            // Return one full object for each of the different primary paths the object has (cachedUrls)
-            return topic.getCachedUrls().stream()
-                    .filter(CachedUrl::isPrimary)
-                    .map(cachedUrl -> new TopicIndexDocument() {{
-                        name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
-                        id = topic.getPublicId();
-                        contentUri = topic.getContentUri();
-                        path = cachedUrl.getPath();
-                    }})
-                    .collect(Collectors.toList());
-        } else {
-            // Object has no primary paths, but we still needs to return it. It will have the "path" field set to null
-            return List.of(new TopicIndexDocument() {{
-                name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
-                id = topic.getPublicId();
-                contentUri = topic.getContentUri();
-                path = null;
-            }});
-
-        }
-    }
-
     private TopicWithPathsIndexDocument createTopicWithPathsIndexDocument(Topic topic, String language) {
         return new TopicWithPathsIndexDocument() {{
             name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
@@ -106,8 +82,7 @@ public class Topics extends CrudController<Topic> {
     ) {
         return topicRepository.findAllIncludingCachedUrlsAndTranslations()
                 .stream()
-                .map(topic -> this.createTopicIndexDocumentsByPrimaryPath(topic, language))
-                .flatMap(Collection::stream)
+                .map(topic -> this.createTopicWithPathsIndexDocument(topic, language))
                 .collect(Collectors.toList());
     }
 

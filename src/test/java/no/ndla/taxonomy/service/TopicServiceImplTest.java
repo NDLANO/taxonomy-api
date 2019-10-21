@@ -14,12 +14,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -51,18 +53,9 @@ public class TopicServiceImplTest {
     public void delete() throws NotFoundServiceException {
         final var topicId = builder.topic().getPublicId();
 
-        doAnswer(invocation -> {
-            final var topic = (Topic) invocation.getArgument(0);
-
-            assertEquals(topicId, topic.getPublicId());
-
-            return null;
-        }).when(entityConnectionService).replacePrimaryConnectionsFor(any(Topic.class));
-
         topicService.delete(topicId);
 
         assertFalse(topicRepository.findFirstByPublicId(topicId).isPresent());
-        verify(entityConnectionService).replacePrimaryConnectionsFor(any(Topic.class));
     }
 
     @Test
@@ -73,22 +66,18 @@ public class TopicServiceImplTest {
         final var parentTopicSubtopic = mock(TopicSubtopic.class);
         final var childTopicSubtopic = mock(TopicSubtopic.class);
 
-        when(subjectTopic.isPrimary()).thenReturn(true);
-        when(parentTopicSubtopic.isPrimary()).thenReturn(false);
-        when(childTopicSubtopic.isPrimary()).thenReturn(false);
-
         when(subjectTopic.getPublicId()).thenReturn(URI.create("urn:subject-topic"));
         when(parentTopicSubtopic.getPublicId()).thenReturn(URI.create("urn:parent-topic"));
         when(childTopicSubtopic.getPublicId()).thenReturn(URI.create("urn:child-topic"));
 
-        final var parentConnectionsToReturn = Set.of(subjectTopic, parentTopicSubtopic);
+        final var parentConnectionToReturn = Optional.of(subjectTopic);
         final var childConnectionsToReturn = Set.of(childTopicSubtopic);
 
-        when(entityConnectionService.getParentConnections(any(Topic.class))).thenAnswer(invocationOnMock -> {
+        when(entityConnectionService.getParentConnection(any(Topic.class))).thenAnswer(invocationOnMock -> {
             final var topic = (Topic) invocationOnMock.getArgument(0);
             assertEquals(topicId, topic.getPublicId());
 
-            return parentConnectionsToReturn;
+            return parentConnectionToReturn;
         });
         when(entityConnectionService.getChildConnections(any(Topic.class))).thenAnswer(invocationOnMock -> {
             final var topic = (Topic) invocationOnMock.getArgument(0);
@@ -99,16 +88,11 @@ public class TopicServiceImplTest {
 
         final var returnedConnections = topicService.getAllConnections(topicId);
 
-        assertEquals(3, returnedConnections.size());
+        assertEquals(2, returnedConnections.size());
         returnedConnections.forEach(connection -> {
             if (connection.connectionId.equals(URI.create("urn:subject-topic"))) {
-                assertTrue(connection.isPrimary);
                 assertEquals("parent-subject", connection.type);
-            } else if (connection.connectionId.equals(URI.create("urn:parent-topic"))) {
-                assertFalse(connection.isPrimary);
-                assertEquals("parent-topic", connection.type);
             } else if (connection.connectionId.equals(URI.create("urn:child-topic"))) {
-                assertFalse(connection.isPrimary);
                 assertEquals("subtopic", connection.type);
             } else {
                 fail();
@@ -138,11 +122,11 @@ public class TopicServiceImplTest {
         TopicFilter.create(topic1, filter1, relevance);
         TopicFilter.create(topic2, filter2, relevance);
 
-        SubjectTopic.create(subject1, rootTopic, true);
+        SubjectTopic.create(subject1, rootTopic);
 
-        TopicSubtopic.create(rootTopic, topic1, true);
-        TopicSubtopic.create(rootTopic, topic2, true);
-        TopicSubtopic.create(rootTopic, topic3, true);
+        TopicSubtopic.create(rootTopic, topic1);
+        TopicSubtopic.create(rootTopic, topic2);
+        TopicSubtopic.create(rootTopic, topic3);
 
         final var filter1Id = filter1.getPublicId();
         final var filter2Id = filter2.getPublicId();

@@ -103,7 +103,7 @@ public class ContextsTest extends RestTest {
 
         Subject subject = builder.subject(s -> s
                 .publicId("urn:subject:1")
-                .topic(topic, true)
+                .topic(topic)
         );
 
         topic.setContext(true);

@@ -38,7 +38,7 @@ public class ConnectionIndexDTO {
 
     private ConnectionIndexDTO(EntityWithPathConnection connection, boolean isParentConnection) {
         this.connectionId = connection.getPublicId();
-        this.isPrimary = connection.isPrimary();
+        this.isPrimary = true;
 
         final var connectedObject = isParentConnection ? connection.getConnectedParent() : connection.getConnectedChild();
 
