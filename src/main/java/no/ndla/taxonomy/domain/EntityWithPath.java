@@ -31,12 +31,11 @@ public abstract class EntityWithPath extends DomainObject {
 
     public abstract Set<EntityWithPathConnection> getChildConnections();
 
-    public Optional<String> getPathByContext(DomainEntity context) {
+    public Optional<CachedUrl> getCachedUrlByContext(DomainEntity context) {
         final var contextPublicId = context.getPublicId();
 
         return getCachedUrls()
-                .stream()
-                .sorted((cachedUrl1, cachedUrl2) -> {
+                .stream().min((cachedUrl1, cachedUrl2) -> {
                     final var path1 = cachedUrl1.getPath();
                     final var path2 = cachedUrl2.getPath();
 
@@ -75,10 +74,10 @@ public abstract class EntityWithPath extends DomainObject {
                     }
 
                     return 0;
-                })
-                .map(CachedUrl::getPath)
-                .findFirst();
-
+                });
+    }
+    public Optional<String> getPathByContext(DomainEntity context) {
+        return getCachedUrlByContext(context).map(CachedUrl::getPath);
     }
 
     public Set<String> getAllPaths() {

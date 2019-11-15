@@ -4,6 +4,7 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.net.URI;
+import java.util.Optional;
 
 @Entity
 @Table(name = "cached_url")
@@ -23,13 +24,18 @@ public class CachedUrl {
     @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI publicId;
 
+    @Column
+    @Type(type = "no.ndla.taxonomy.hibernate.UriType")
+    private URI parentPublicId;
+
     @Id
     @Column
     private String path;
 
-    public CachedUrl(URI publicId, String path, boolean primary) {
+    public CachedUrl(URI publicId, URI parentPublicId, String path, boolean primary) {
         this.publicId = publicId;
         this.path = path;
+        this.parentPublicId = parentPublicId;
         this.primary = primary;
     }
 
@@ -55,5 +61,13 @@ public class CachedUrl {
 
     public void setPrimary(boolean primary) {
         this.primary = primary;
+    }
+
+    public Optional<URI> getParentPublicId() {
+        return Optional.ofNullable(parentPublicId);
+    }
+
+    public void setParentPublicId(URI parentPublicId) {
+        this.parentPublicId = parentPublicId;
     }
 }

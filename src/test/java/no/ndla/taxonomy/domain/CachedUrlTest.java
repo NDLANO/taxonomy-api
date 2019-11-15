@@ -18,10 +18,11 @@ public class CachedUrlTest {
 
     @Test
     public void testConstructor() throws URISyntaxException {
-        final var cachedUrl = new CachedUrl(new URI("urn:test1"), "/test/path", true);
+        final var cachedUrl = new CachedUrl(new URI("urn:test1"), URI.create("urn:test:1"), "/test/path", true);
         assertEquals("urn:test1", cachedUrl.getPublicId().toString());
         assertEquals("/test/path", cachedUrl.getPath());
         assertTrue(cachedUrl.isPrimary());
+        assertEquals("urn:test:1", cachedUrl.getParentPublicId().map(URI::toString).orElse(null));
     }
 
     @Test
@@ -47,5 +48,13 @@ public class CachedUrlTest {
         assertTrue(cachedUrl.isPrimary());
         cachedUrl.setPrimary(false);
         assertFalse(cachedUrl.isPrimary());
+    }
+
+    @Test
+    public void testGetAndSetParentPublicId() {
+        assertFalse(cachedUrl.getParentPublicId().isPresent());
+
+        cachedUrl.setParentPublicId(URI.create("urn:test:1"));
+        assertEquals("urn:test:1", cachedUrl.getParentPublicId().map(URI::toString).orElse(null));
     }
 }

@@ -86,10 +86,11 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
 
         subjectTopic.getTopic().ifPresent(topic -> {
             this.populateFromTopic(topic);
-            this.path = topic.getPathByContext(subject).orElse(null);
+            topic.getCachedUrlByContext(subject).ifPresent(cachedUrl -> {
+                this.path = cachedUrl.getPath();
+                this.parent = cachedUrl.getParentPublicId().orElse(null);
+            });
         });
-
-        subjectTopic.getSubject().ifPresent(s -> this.parent = s.getPublicId());
 
         this.connectionId = subjectTopic.getPublicId();
         this.isPrimary = true;
@@ -102,10 +103,12 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
 
         topicSubtopic.getSubtopic().ifPresent(subtopic -> {
             this.populateFromTopic(subtopic);
-            this.path = subtopic.getPathByContext(subject).orElse(null);
-        });
 
-        topicSubtopic.getTopic().ifPresent(topic -> this.parent = topic.getPublicId());
+            subtopic.getCachedUrlByContext(subject).ifPresent(cachedUrl -> {
+                this.path = cachedUrl.getPath();
+                this.parent = cachedUrl.getParentPublicId().orElse(null);
+            });
+        });
 
         this.connectionId = topicSubtopic.getPublicId();
         this.isPrimary = true;
