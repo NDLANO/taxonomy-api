@@ -37,6 +37,15 @@ public class TopicResourceTest {
     }
 
     @Test
+    public void setAndIsPrimary() {
+        assertFalse(topicResource.isPrimary().orElseThrow());
+        topicResource.setPrimary(true);
+        assertTrue(topicResource.isPrimary().orElseThrow());
+        topicResource.setPrimary(false);
+        assertFalse(topicResource.isPrimary().orElseThrow());
+    }
+
+    @Test
     public void setAndGetRank() {
         assertEquals(0, topicResource.getRank());
         topicResource.setRank(100);

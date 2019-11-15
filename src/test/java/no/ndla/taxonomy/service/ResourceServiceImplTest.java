@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
+import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.junit.Before;
@@ -11,8 +12,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -23,11 +25,14 @@ public class ResourceServiceImplTest {
     @Autowired
     private Builder builder;
 
+    private EntityConnectionService connectionService;
     private ResourceServiceImpl resourceService;
 
     @Before
     public void setUp() {
-        resourceService = new ResourceServiceImpl(resourceRepository);
+        connectionService = mock(EntityConnectionService.class);
+
+        resourceService = new ResourceServiceImpl(resourceRepository, connectionService);
     }
 
     @Test
@@ -35,10 +40,16 @@ public class ResourceServiceImplTest {
     public void delete() throws NotFoundServiceException {
         final var resourceId = builder.resource().getPublicId();
 
-        assertTrue(resourceRepository.findFirstByPublicId(resourceId).isPresent());
+        doAnswer(invocation -> {
+            final var resource = (Resource) invocation.getArgument(0);
+
+            assertEquals(resourceId, resource.getPublicId());
+
+            return null;
+        }).when(connectionService).replacePrimaryConnectionsFor(any(Resource.class));
 
         resourceService.delete(resourceId);
 
-        assertFalse(resourceRepository.findFirstByPublicId(resourceId).isPresent());
+        verify(connectionService).replacePrimaryConnectionsFor(any(Resource.class));
     }
 }

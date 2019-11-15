@@ -63,17 +63,20 @@ public class ResourceTest {
     @Test
     public void getTopics() {
         final var topic1 = mock(Topic.class);
+        final var topic2 = mock(Topic.class);
 
-        assertFalse(resource.getTopic().isPresent());
+        assertEquals(0, resource.getTopics().size());
 
         final var topicResource1 = mock(TopicResource.class);
+        final var topicResource2 = mock(TopicResource.class);
 
         when(topicResource1.getTopic()).thenReturn(Optional.of(topic1));
+        when(topicResource2.getTopic()).thenReturn(Optional.of(topic2));
 
-        setField(resource, "topics", Set.of(topicResource1));
+        setField(resource, "topics", Set.of(topicResource1, topicResource2));
 
-        assertTrue(resource.getTopic().isPresent());
-        assertSame(topic1, resource.getTopic().orElseThrow());
+        assertEquals(2, resource.getTopics().size());
+        assertTrue(resource.getTopics().containsAll(Set.of(topic1, topic2)));
     }
 
     @Test

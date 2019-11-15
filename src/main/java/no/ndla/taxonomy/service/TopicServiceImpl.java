@@ -37,6 +37,8 @@ public class TopicServiceImpl implements TopicService {
     public void delete(URI publicId) throws NotFoundServiceException {
         final var topicToDelete = topicRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Topic was not found"));
 
+        connectionService.replacePrimaryConnectionsFor(topicToDelete);
+
         topicRepository.delete(topicToDelete);
         topicRepository.flush();
     }
@@ -46,7 +48,7 @@ public class TopicServiceImpl implements TopicService {
         final var topic = topicRepository.findFirstByPublicId(topicPublicId).orElseThrow(() -> new NotFoundServiceException("Topic was not found"));
 
         return Stream.concat(
-                connectionService.getParentConnection(topic)
+                connectionService.getParentConnections(topic)
                         .stream()
                         .map(ConnectionIndexDTO::parentConnection),
                 connectionService.getChildConnections(topic)

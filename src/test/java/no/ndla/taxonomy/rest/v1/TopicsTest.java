@@ -302,22 +302,22 @@ public class TopicsTest extends RestTest {
                 .topic(t -> t
                         .publicId("urn:topic:a")
                         .name("a")
-                        .resource(r -> r
+                        .resource(true, r -> r
                                 .publicId("urn:resource:1")
                                 .name("resource a").contentUri("urn:article:a"))
                         .subtopic(st -> st
                                 .publicId("urn:topic:a:1")
                                 .name("aa")
-                                .resource(r -> r.name("resource aa").contentUri("urn:article:aa"))
+                                .resource(true, r -> r.name("resource aa").contentUri("urn:article:aa"))
                                 .subtopic(st2 -> st2
                                         .publicId("urn:topic:a:1:1")
                                         .name("aaa")
-                                        .resource(r -> r.name("resource aaa").contentUri("urn:article:aaa"))
+                                        .resource(true, r -> r.name("resource aaa").contentUri("urn:article:aaa"))
                                 )
                                 .subtopic(st2 -> st2
                                         .publicId("urn:topic:a:1:2")
                                         .name("aab")
-                                        .resource(r -> r.name("resource aab").contentUri("urn:article:aab"))
+                                        .resource(true, r -> r.name("resource aab").contentUri("urn:article:aab"))
                                 )
                         )
                 ));
@@ -354,17 +354,17 @@ public class TopicsTest extends RestTest {
         builder.subject(s -> s.publicId("urn:subject:1")
                 .topic(t -> t
                         .publicId("urn:topic:a")
-                        .resource(r -> r.publicId("urn:resource:a"))
+                        .resource(true, r -> r.publicId("urn:resource:a"))
                         .subtopic(st -> st
                                 .publicId("urn:topic:aa")
-                                .resource(r -> r.publicId("urn:resource:aa"))
+                                .resource(true, r -> r.publicId("urn:resource:aa"))
                                 .subtopic(st2 -> st2
                                         .publicId("urn:topic:aaa")
-                                        .resource("aaa", r -> r.publicId("urn:resource:aaa"))
+                                        .resource("aaa", true, r -> r.publicId("urn:resource:aaa"))
                                 )
                                 .subtopic(st2 -> st2
                                         .publicId("urn:topic:aab")
-                                        .resource(r -> r.publicId("urn:resource:aab"))
+                                        .resource(true, r -> r.publicId("urn:resource:aab"))
                                 )
                         )
                 ));
@@ -493,41 +493,29 @@ public class TopicsTest extends RestTest {
         SubjectTopic.create(subject2, topic2);
         SubjectTopic.create(subject3, topic3);
 
-        final var resource11 = builder.resource(builder -> builder.publicId("urn:resource:11"));
-        final var resource12 = builder.resource(builder -> builder.publicId("urn:resource:12"));
-        final var resource13 = builder.resource(builder -> builder.publicId("urn:resource:13"));
+        final var resource1 = builder.resource(builder -> builder.publicId("urn:resource:1"));
+        final var resource2 = builder.resource(builder -> builder.publicId("urn:resource:2"));
+        final var resource3 = builder.resource(builder -> builder.publicId("urn:resource:3"));
 
-        final var resource21 = builder.resource(builder -> builder.publicId("urn:resource:21"));
-        final var resource22 = builder.resource(builder -> builder.publicId("urn:resource:22"));
-        final var resource23 = builder.resource(builder -> builder.publicId("urn:resource:23"));
+        resource1.addFilter(filter1, relevance1);
 
-        final var resource31 = builder.resource(builder -> builder.publicId("urn:resource:31"));
-        final var resource32 = builder.resource(builder -> builder.publicId("urn:resource:32"));
-        final var resource33 = builder.resource(builder -> builder.publicId("urn:resource:33"));
-
-        resource11.addFilter(filter1, relevance1);
-
-        resource21.addFilter(filter1, relevance1);
-        resource22.addFilter(filter2, relevance1);
-
-        resource31.addFilter(filter1, relevance1);
-        resource32.addFilter(filter2, relevance1);
+        resource2.addFilter(filter2, relevance1);
 
         subject1.addFilter(filter1);
         subject1.addFilter(filter2);
         subject2.addFilter(filter2);
 
-        TopicResource.create(topic1, resource11);
-        TopicResource.create(topic1, resource12);
-        TopicResource.create(topic1, resource13);
+        TopicResource.create(topic1, resource1);
+        TopicResource.create(topic1, resource2);
+        TopicResource.create(topic1, resource3);
 
-        TopicResource.create(topic2, resource21);
-        TopicResource.create(topic2, resource22);
-        TopicResource.create(topic2, resource23);
+        TopicResource.create(topic2, resource1);
+        TopicResource.create(topic2, resource2);
+        TopicResource.create(topic2, resource3);
 
-        TopicResource.create(topic3, resource31);
-        TopicResource.create(topic3, resource32);
-        TopicResource.create(topic3, resource33);
+        TopicResource.create(topic3, resource1);
+        TopicResource.create(topic3, resource2);
+        TopicResource.create(topic3, resource3);
 
         {
             final var resources = Arrays.asList(testUtils.getObject(ResourceIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:1/resources")));
@@ -536,7 +524,7 @@ public class TopicsTest extends RestTest {
                     resources.stream()
                             .map(ResourceIndexDocument::getId)
                             .collect(Collectors.toSet())
-                            .containsAll(Set.of(new URI("urn:resource:11"), new URI("urn:resource:12"), new URI("urn:resource:13")))
+                            .containsAll(Set.of(new URI("urn:resource:1"), new URI("urn:resource:2"), new URI("urn:resource:3")))
             );
         }
 
@@ -547,7 +535,7 @@ public class TopicsTest extends RestTest {
                     resources.stream()
                             .map(ResourceIndexDocument::getId)
                             .collect(Collectors.toSet())
-                            .contains(new URI("urn:resource:11"))
+                            .contains(new URI("urn:resource:1"))
             );
         }
 
@@ -557,7 +545,7 @@ public class TopicsTest extends RestTest {
                     resources.stream()
                             .map(ResourceIndexDocument::getId)
                             .collect(Collectors.toSet())
-                            .contains(new URI("urn:resource:22"))
+                            .contains(new URI("urn:resource:2"))
             );
         }
 
@@ -569,7 +557,7 @@ public class TopicsTest extends RestTest {
                     resources.stream()
                             .map(ResourceIndexDocument::getId)
                             .collect(Collectors.toSet())
-                            .containsAll(Set.of(new URI("urn:resource:31"), new URI("urn:resource:32"), new URI("urn:resource:33")))
+                            .containsAll(Set.of(new URI("urn:resource:1"), new URI("urn:resource:2"), new URI("urn:resource:3")))
             );
         }
     }

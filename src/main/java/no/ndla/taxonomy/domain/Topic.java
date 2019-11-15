@@ -48,10 +48,10 @@ public class Topic extends EntityWithPath {
     }
 
     @Override
-    public Optional<EntityWithPathConnection> getParentConnection() {
+    public Set<EntityWithPathConnection> getParentConnections() {
         return Stream.concat(parentTopicSubtopics.stream(), subjectTopics.stream())
                 .map(entity -> (EntityWithPathConnection) entity)
-                .findFirst();
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override

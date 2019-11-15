@@ -36,11 +36,62 @@ public class TopicResourcesTest extends RestTest {
         );
 
         final var connection = topicResourceRepository.findByPublicId(id);
+        assertTrue(connection.isPrimary().orElseThrow());
 
         Topic calculus = topicRepository.getByPublicId(calculusId);
         assertEquals(1, calculus.getResources().size());
         assertAnyTrue(calculus.getResources(), t -> "Introduction to integration".equals(t.getName()));
         assertNotNull(topicResourceRepository.getByPublicId(id));
+        assertTrue(calculus.getTopicResources().iterator().next().isPrimary().orElseThrow());
+    }
+
+    @Test
+    public void can_add_secondary_resource_to_topic() throws Exception {
+        final var calculusId = newTopic().name("calculus").getPublicId();
+        var resource = newResource();
+        resource.setName("Introduction to integration");
+        final var integrationId = resource.getPublicId();
+
+        final var topic2 = newTopic();
+        final var topic2Id = topic2.getPublicId();
+
+        // 20190819 JEP@Cerpus: Behavior change: It was possible to create a non-primary resource when no resource existed
+        // before, but it has changed. The first connection to a resource will ignore the primary parameter and will be
+        // forced to become primary (subject-topics already did this)
+
+        final var id = getId(
+                testUtils.createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
+                    topicid = calculusId;
+                    resourceId = integrationId;
+                    primary = false;
+                }})
+        );
+
+        final var calculus = topicRepository.getByPublicId(calculusId);
+        assertEquals(1, calculus.getResources().size());
+        assertAnyTrue(calculus.getResources(), t -> "Introduction to integration".equals(t.getName()));
+        assertNotNull(topicResourceRepository.getByPublicId(id));
+        // First topic connection will always be primary
+        assertTrue(calculus.getTopicResources().iterator().next().isPrimary().orElseThrow());
+
+        // After behavior change: Add the resource again to another topic with primary = false should create a non-primary resource connection
+        final var resource2ConnectionPublicId = getId(
+                testUtils.createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
+                    topicid = topic2Id;
+                    resourceId = integrationId;
+                    primary = false;
+                }})
+        );
+
+        final var resource2Connection = topicResourceRepository.findFirstByPublicId(resource2ConnectionPublicId).orElse(null);
+
+        assertNotNull(resource2Connection);
+        assertSame(topic2, resource2Connection.getTopic().orElse(null));
+        assertSame(resource, resource2Connection.getResource().orElse(null));
+        assertFalse(resource2Connection.isPrimary().orElseThrow());
+
+        assertEquals(1, topic2.getResources().size());
+        assertEquals(2, resource.getTopicResources().size());
     }
 
     @Test
@@ -70,6 +121,37 @@ public class TopicResourcesTest extends RestTest {
         URI id = save(TopicResource.create(newTopic(), newResource())).getPublicId();
         testUtils.deleteResource("/v1/topic-resources/" + id);
         assertNull(topicRepository.findByPublicId(id));
+    }
+
+    @Test
+    public void can_update_topic_resource() throws Exception {
+        URI id = save(TopicResource.create(newTopic(), newResource())).getPublicId();
+
+        testUtils.updateResource("/v1/topic-resources/" + id, new TopicResources.UpdateTopicResourceCommand() {{
+            primary = true;
+        }});
+
+        assertTrue(topicResourceRepository.getByPublicId(id).isPrimary().orElseThrow());
+    }
+
+    @Test
+    public void cannot_unset_primary_topic() throws Exception {
+        URI id = save(TopicResource.create(newTopic(), newResource(), true)).getPublicId();
+
+        testUtils.updateResource("/v1/topic-resources/" + id, new TopicResources.UpdateTopicResourceCommand() {{
+            primary = false;
+        }}, status().is4xxClientError());
+    }
+
+    @Test
+    public void deleted_primary_topic_is_replaced() throws Exception {
+        Resource resource = builder.resource(r -> r.name("resource"));
+        Topic primary = builder.topic(t -> t.name("primary").resource(resource));
+        builder.topic(t -> t.name("other").resource(resource, true));
+
+        testUtils.deleteResource("/v1/topics/" + primary.getPublicId());
+
+        assertEquals("other", resource.getPrimaryTopic().get().getName());
     }
 
     @Test
@@ -104,6 +186,33 @@ public class TopicResourcesTest extends RestTest {
         TopicResources.TopicResourceIndexDocument topicResourceIndexDocument = testUtils.getObject(TopicResources.TopicResourceIndexDocument.class, resource);
         assertEquals(electricity.getPublicId(), topicResourceIndexDocument.topicid);
         assertEquals(alternatingCurrent.getPublicId(), topicResourceIndexDocument.resourceId);
+    }
+
+    @Test
+    public void resource_can_only_have_one_primary_topic() throws Exception {
+        Resource graphs = builder.resource(r -> r.name("graphs"));
+
+        builder.topic(t -> t
+                .name("elementary maths")
+                .resource(graphs)
+        );
+
+        Topic graphTheory = builder.topic(t -> t
+                .name("graph theory"));
+
+        testUtils.createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
+            topicid = graphTheory.getPublicId();
+            resourceId = graphs.getPublicId();
+            primary = true;
+        }});
+
+        graphs.getTopicResources().forEach(topicResource -> {
+            if (topicResource.getTopic().orElseThrow(RuntimeException::new).equals(graphTheory)) {
+                assertTrue(topicResource.isPrimary().orElseThrow());
+            } else {
+                assertFalse(topicResource.isPrimary().orElseThrow());
+            }
+        });
     }
 
     @Test

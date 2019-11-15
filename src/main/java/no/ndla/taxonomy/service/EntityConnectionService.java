@@ -6,20 +6,19 @@ import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 
 import java.util.Collection;
-import java.util.Optional;
 
 public interface EntityConnectionService {
     SubjectTopic connectSubjectTopic(Subject subject, Topic topic) throws DuplicateConnectionException, InvalidArgumentServiceException;
 
     TopicSubtopic connectTopicSubtopic(Topic topic, Topic subTopic) throws DuplicateConnectionException, InvalidArgumentServiceException;
 
+    TopicSubtopic connectTopicSubtopic(Topic topic, Topic subTopic, Integer rank) throws DuplicateConnectionException, InvalidArgumentServiceException;
+
     SubjectTopic connectSubjectTopic(Subject subject, Topic topic, Integer rank) throws DuplicateConnectionException;
 
     TopicResource connectTopicResource(Topic topic, Resource resource) throws DuplicateConnectionException, InvalidArgumentServiceException;
 
-    TopicSubtopic connectTopicSubtopic(Topic topic, Topic subTopic, Integer rank) throws DuplicateConnectionException, InvalidArgumentServiceException;
-
-    TopicResource connectTopicResource(Topic topic, Resource resource, Integer rank) throws DuplicateConnectionException, InvalidArgumentServiceException;
+    TopicResource connectTopicResource(Topic topic, Resource resource, boolean isPrimary, Integer rank) throws DuplicateConnectionException, InvalidArgumentServiceException;
 
     void disconnectTopicSubtopic(Topic topic, Topic subTopic);
 
@@ -35,11 +34,13 @@ public interface EntityConnectionService {
 
     void updateTopicSubtopic(TopicSubtopic topicSubtopic, Integer newRank) throws InvalidArgumentServiceException, NotFoundServiceException;
 
-    void updateTopicResource(TopicResource topicResource, Integer newRank) throws InvalidArgumentServiceException, NotFoundServiceException;
+    void updateTopicResource(TopicResource topicResource, boolean isPrimary, Integer newRank) throws InvalidArgumentServiceException, NotFoundServiceException;
 
     void updateSubjectTopic(SubjectTopic subjectTopic, Integer newRank) throws InvalidArgumentServiceException, NotFoundServiceException;
 
-    Optional<EntityWithPathConnection> getParentConnection(EntityWithPath entity);
+    void replacePrimaryConnectionsFor(EntityWithPath entity);
+
+    Collection<EntityWithPathConnection> getParentConnections(EntityWithPath entity);
 
     Collection<EntityWithPathConnection> getChildConnections(EntityWithPath entity);
 }
