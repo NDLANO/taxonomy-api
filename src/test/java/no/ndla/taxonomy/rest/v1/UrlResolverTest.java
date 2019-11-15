@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 
+import no.ndla.taxonomy.domain.Resource;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -83,6 +84,49 @@ public class UrlResolverTest extends RestTest {
 
         String redirect = resolveUrlAndExpectRedirect("/subject:1/topic:2/resource:1");
         assertEquals("/subject:1/topic:1/resource:1", redirect);
+    }
+
+    @Test
+    public void is_redirected_to_closest_url() throws Exception {
+        Resource resource = builder.resource("resource", r -> r.publicId("urn:resource:1"));
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .topic("topic1", t -> t
+                        .publicId("urn:topic:1")
+                        .resource("resource")
+                )
+        );
+
+        builder.subject(s -> s
+                .publicId("urn:subject:2")
+                .topic("topic2", t -> t
+                        .publicId("urn:topic:2")
+                        .resource("resource", true)
+                )
+        );
+
+        builder.subject(s -> s
+                .publicId("urn:subject:3")
+                .topic("topic3", t -> t
+                        .publicId("urn:topic:3")
+                        .resource("resource")
+                )
+        );
+
+        {
+            String redirect = resolveUrlAndExpectRedirect("/subject:1/topic:2/resource:1");
+            assertEquals("/subject:1/topic:1/resource:1", redirect);
+        }
+
+        {
+            String redirect = resolveUrlAndExpectRedirect("/subject:2/topic:1/resource:1");
+            assertEquals("/subject:2/topic:2/resource:1", redirect);
+        }
+
+        {
+            String redirect = resolveUrlAndExpectRedirect("/subject:3/topic:2/resource:1");
+            assertEquals("/subject:3/topic:3/resource:1", redirect);
+        }
     }
 
     @Test

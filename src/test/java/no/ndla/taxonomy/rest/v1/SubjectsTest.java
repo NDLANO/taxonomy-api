@@ -344,14 +344,14 @@ public class SubjectsTest extends RestTest {
                 .publicId("urn:subject:1")
                 .topic(t -> t
                         .publicId("urn:topic:1")
-                        .resource(r -> r.publicId("urn:resource:1"))
+                        .resource(true, r -> r.publicId("urn:resource:1"))
                 )
                 .topic(t -> t
                         .publicId("urn:topic:2")
-                        .resource(r -> r.publicId("urn:resource:2"))
+                        .resource(true, r -> r.publicId("urn:resource:2"))
                         .subtopic(st -> st
                                 .publicId("urn:topic:21")
-                                .resource(r -> r.publicId("urn:resource:3"))
+                                .resource(true, r -> r.publicId("urn:resource:3"))
                         )
                 )
         );

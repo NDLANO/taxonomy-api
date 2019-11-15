@@ -50,18 +50,11 @@ public class QueryTest extends RestTest {
                 .publicId("urn:resource:2")
                 .contentUri("urn:article:3"));
 
-        builder.resource(r -> r
-                .publicId("urn:resource:3")
-                .contentUri("urn:article:345")
-                .resourceType(rt -> rt.name("Subject material"))
-        );
-
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/resources?contentURI=urn:article:345");
         ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
 
-        assertEquals(2, resources.length);
+        assertEquals(1, resources.length);
         assertAnyTrue(resources, r -> "urn:resource:1".equals(r.id.toString()));
-        assertAnyTrue(resources, r -> "urn:resource:3".equals(r.id.toString()));
     }
 
     @Test

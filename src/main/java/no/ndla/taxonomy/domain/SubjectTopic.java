@@ -85,4 +85,18 @@ public class SubjectTopic extends DomainEntity implements EntityWithPathConnecti
     public Optional<EntityWithPath> getConnectedChild() {
         return Optional.ofNullable(topic);
     }
+
+    @Override
+    public Optional<Boolean> isPrimary() {
+        return Optional.empty();
+    }
+
+    @Override
+    public void setPrimary(boolean isPrimary) {
+        if (isPrimary) {
+            return;
+        }
+
+        throw new UnsupportedOperationException("SubjectTopic can not be non-primary");
+    }
 }

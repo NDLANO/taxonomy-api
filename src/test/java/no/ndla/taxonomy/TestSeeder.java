@@ -185,11 +185,15 @@ public class TestSeeder {
         return resource;
     }
 
-    private TopicResource createTopicResource(String publicId, Topic topic, Resource resource, Integer rank) {
+    private TopicResource createTopicResource(String publicId, Topic topic, Resource resource, Boolean isPrimary, Integer rank) {
         final var topicResource = TopicResource.create(topic, resource);
 
         if (publicId != null) {
             topicResource.setPublicId(URI.create(publicId));
+        }
+
+        if (isPrimary != null) {
+            topicResource.setPrimary(isPrimary);
         }
 
         if (rank != null) {
@@ -327,6 +331,22 @@ public class TestSeeder {
         createTopicSubtopic("urn:topic-subtopic:5", topic5, topic8, 3);
     }
 
+    public void resourceInDualSubjectsTestSetup() {
+        final var subject1 = createSubject("urn:subject:1", "S:1");
+        final var subject2 = createSubject("urn:subject:2", "S:2");
+
+        final var topic1 = createTopic("urn:topic:1", "ST:1", null, false);
+        final var topic2 = createTopic("urn:topic:2", "ST:2", null, false);
+
+        createSubjectTopic("urn:subject-topic:1", topic1, subject1, 1);
+        createSubjectTopic("urn:subject-topic:2", topic2, subject2, 1);
+
+        final var resource1 = createResource("urn:resource:1", "R:1", null);
+
+        createTopicResource("urn:topic-resource:1", topic1, resource1, true, 1);
+        createTopicResource("urn:topic-resource:2", topic2, resource1, false, 1);
+    }
+
     public void resourceWithFilterAndTypeTestSetup() {
         //  create a test structure with subjects, topics, and resources as follows
         // (S=subject, ST = subject-topic, TST = topic-subtopic, R = resource, F = filter)
@@ -345,9 +365,9 @@ public class TestSeeder {
         final var resource2 = createResource("urn:resource:2", "R:2", null);
         final var resource3 = createResource("urn:resource:3", "R:3", null);
 
-        createTopicResource("urn:topic-resource:1", topic1, resource1, 1);
-        createTopicResource("urn:topic-resource:2", topic1, resource2, 2);
-        createTopicResource("urn:topic-resource:3", topic1, resource3, 3);
+        createTopicResource("urn:topic-resource:1", topic1, resource1, true, 1);
+        createTopicResource("urn:topic-resource:2", topic1, resource2, true, 2);
+        createTopicResource("urn:topic-resource:3", topic1, resource3, true, 3);
 
         final var filter1 = createFilter("urn:filter:1", subject1, "Vg1");
         final var filter2 = createFilter("urn:filter:2", subject1, "Vg2");
@@ -391,16 +411,16 @@ public class TestSeeder {
         final var resource9 = createResource("urn:resource:9", "R:9", null);
         final var resource10 = createResource("urn:resource:10", "R:10", null);
 
-        createTopicResource("urn:topic-resource:1", topic1, resource1, 1);
-        createTopicResource("urn:topic-resource:2", topic1, resource2, 2);
-        createTopicResource("urn:topic-resource:3", topic1, resource3, 3);
-        createTopicResource("urn:topic-resource:4", topic1, resource4, 4);
-        createTopicResource("urn:topic-resource:5", topic1, resource5, 5);
-        createTopicResource("urn:topic-resource:6", topic1, resource6, 6);
-        createTopicResource("urn:topic-resource:7", topic1, resource7, 7);
-        createTopicResource("urn:topic-resource:8", topic1, resource8, 8);
-        createTopicResource("urn:topic-resource:9", topic1, resource9, 9);
-        createTopicResource("urn:topic-resource:10", topic1, resource10, 10);
+        createTopicResource("urn:topic-resource:1", topic1, resource1, true, 1);
+        createTopicResource("urn:topic-resource:2", topic1, resource2, true, 2);
+        createTopicResource("urn:topic-resource:3", topic1, resource3, true, 3);
+        createTopicResource("urn:topic-resource:4", topic1, resource4, true, 4);
+        createTopicResource("urn:topic-resource:5", topic1, resource5, true, 5);
+        createTopicResource("urn:topic-resource:6", topic1, resource6, true, 6);
+        createTopicResource("urn:topic-resource:7", topic1, resource7, true, 7);
+        createTopicResource("urn:topic-resource:8", topic1, resource8, true, 8);
+        createTopicResource("urn:topic-resource:9", topic1, resource9, true, 9);
+        createTopicResource("urn:topic-resource:10", topic1, resource10, true, 10);
 
         final var filter1 = createFilter("urn:filter:1", subject1, "Year 1");
         final var filter2 = createFilter("urn:filter:2", subject1, "Year 2");
@@ -488,16 +508,16 @@ public class TestSeeder {
         final var resource9 = createResource("urn:resource:9", "R:9", null);
         final var resource10 = createResource("urn:resource:10", "R:10", null);
 
-        createTopicResource("urn:topic-resource:1", topic2, resource1, 1);
-        createTopicResource("urn:topic-resource:2", topic4, resource2, 1);
-        createTopicResource("urn:topic-resource:3", topic6, resource3, 1);
-        createTopicResource("urn:topic-resource:4", topic6, resource4, 3);
-        createTopicResource("urn:topic-resource:5", topic6, resource5, 2);
-        createTopicResource("urn:topic-resource:6", topic7, resource6, 1);
-        createTopicResource("urn:topic-resource:7", topic8, resource7, 1);
-        createTopicResource("urn:topic-resource:8", topic8, resource8, 2);
-        createTopicResource("urn:topic-resource:9", topic1, resource9, 1);
-        createTopicResource("urn:topic-resource:10", topic9, resource10, 1);
+        createTopicResource("urn:topic-resource:1", topic2, resource1, true, 1);
+        createTopicResource("urn:topic-resource:2", topic4, resource2, true, 1);
+        createTopicResource("urn:topic-resource:3", topic6, resource3, true, 1);
+        createTopicResource("urn:topic-resource:4", topic6, resource4, true, 3);
+        createTopicResource("urn:topic-resource:5", topic6, resource5, true, 2);
+        createTopicResource("urn:topic-resource:6", topic7, resource6, true, 1);
+        createTopicResource("urn:topic-resource:7", topic8, resource7, true, 1);
+        createTopicResource("urn:topic-resource:8", topic8, resource8, true, 2);
+        createTopicResource("urn:topic-resource:9", topic1, resource9, true, 1);
+        createTopicResource("urn:topic-resource:10", topic9, resource10, true, 1);
 
 
         final var filter1 = createFilter("urn:filter:1", subject1, "F:1");

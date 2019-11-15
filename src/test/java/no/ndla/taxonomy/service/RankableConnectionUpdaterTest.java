@@ -128,6 +128,16 @@ public class RankableConnectionUpdaterTest {
         }
 
         @Override
+        public Optional<Boolean> isPrimary() {
+            return Optional.empty();
+        }
+
+        @Override
+        public void setPrimary(boolean isPrimary) {
+
+        }
+
+        @Override
         public Optional<EntityWithPath> getConnectedParent() {
             return Optional.empty();
         }

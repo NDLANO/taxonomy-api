@@ -14,14 +14,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -53,9 +51,18 @@ public class TopicServiceImplTest {
     public void delete() throws NotFoundServiceException {
         final var topicId = builder.topic().getPublicId();
 
+        doAnswer(invocation -> {
+            final var topic = (Topic) invocation.getArgument(0);
+
+            assertEquals(topicId, topic.getPublicId());
+
+            return null;
+        }).when(entityConnectionService).replacePrimaryConnectionsFor(any(Topic.class));
+
         topicService.delete(topicId);
 
         assertFalse(topicRepository.findFirstByPublicId(topicId).isPresent());
+        verify(entityConnectionService).replacePrimaryConnectionsFor(any(Topic.class));
     }
 
     @Test
@@ -70,14 +77,14 @@ public class TopicServiceImplTest {
         when(parentTopicSubtopic.getPublicId()).thenReturn(URI.create("urn:parent-topic"));
         when(childTopicSubtopic.getPublicId()).thenReturn(URI.create("urn:child-topic"));
 
-        final var parentConnectionToReturn = Optional.of(subjectTopic);
+        final var parentConnectionsToReturn = Set.of(subjectTopic);
         final var childConnectionsToReturn = Set.of(childTopicSubtopic);
 
-        when(entityConnectionService.getParentConnection(any(Topic.class))).thenAnswer(invocationOnMock -> {
+        when(entityConnectionService.getParentConnections(any(Topic.class))).thenAnswer(invocationOnMock -> {
             final var topic = (Topic) invocationOnMock.getArgument(0);
             assertEquals(topicId, topic.getPublicId());
 
-            return parentConnectionToReturn;
+            return parentConnectionsToReturn;
         });
         when(entityConnectionService.getChildConnections(any(Topic.class))).thenAnswer(invocationOnMock -> {
             final var topic = (Topic) invocationOnMock.getArgument(0);

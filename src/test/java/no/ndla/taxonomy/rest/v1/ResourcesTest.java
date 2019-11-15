@@ -32,7 +32,7 @@ public class ResourcesTest extends RestTest {
                 .publicId("urn:subject:1")
                 .topic(t -> t
                         .publicId("urn:topic:1")
-                        .resource(r -> r
+                        .resource(true, r -> r
                                 .name("introduction to trigonometry")
                                 .contentUri("urn:article:1")
                                 .publicId("urn:resource:1")
@@ -44,6 +44,29 @@ public class ResourcesTest extends RestTest {
         assertEquals("introduction to trigonometry", resource.name);
         assertEquals("urn:article:1", resource.contentUri.toString());
         assertEquals("/subject:1/topic:1/resource:1", resource.path);
+    }
+
+    @Test
+    public void primary_url_is_return_when_getting_single_resource() throws Exception {
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .topic(t -> t
+                        .publicId("urn:topic:1")
+                        .resource("resource", r -> r
+                                .publicId("urn:resource:1")
+                        )));
+        builder.subject(s -> s
+                .publicId("urn:subject:2")
+                .topic("primary", t -> t
+                        .publicId("urn:topic:2")
+                        .resource("resource", true)
+                )
+        );
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
+        ResourceIndexDocument resource = testUtils.getObject(ResourceIndexDocument.class, response);
+
+        assertEquals("/subject:2/topic:2/resource:1", resource.path);
     }
 
     @Test
@@ -60,8 +83,8 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_all_resources() throws Exception {
-        builder.subject(s -> s.topic(t -> t.resource(r -> r.name("The inner planets"))));
-        builder.subject(s -> s.topic(t -> t.resource(r -> r.name("Gas giants"))));
+        builder.subject(s -> s.topic(t -> t.resource(true, r -> r.name("The inner planets"))));
+        builder.subject(s -> s.topic(t -> t.resource(true, r -> r.name("Gas giants"))));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources");
         ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
@@ -140,6 +163,17 @@ public class ResourcesTest extends RestTest {
     }
 
     @Test
+    public void can_delete_resource_with_two_parent_topics() throws Exception {
+        Resource resource = builder.resource("resource");
+
+        builder.topic(child -> child.resource(resource)).name("DELETE EDGE TO ME");
+        builder.topic(child -> child.resource(resource)).name("DELETE EDGE TO ME ALSO");
+
+        testUtils.deleteResource("/v1/resources/" + resource.getPublicId());
+        assertNull(resourceRepository.findByPublicId(resource.getPublicId()));
+    }
+
+    @Test
     public void can_get_resource_by_id() throws Exception {
         var resource = newResource();
         resource.setName("The inner planets");
@@ -204,7 +238,7 @@ public class ResourcesTest extends RestTest {
                 .name("Philosophy and Mind")
                 .publicId("urn:topic:1")
                 .contentUri(URI.create("urn:article:6662"))
-                .resource(resource));
+                .resource(resource, true));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/" + resource.getPublicId() + "/full");
         ResourceFullIndexDocument result = testUtils.getObject(ResourceFullIndexDocument.class, response);
@@ -220,5 +254,15 @@ public class ResourcesTest extends RestTest {
         assertEquals(topic.getName(), t.name);
         assertTrue(t.isPrimary);
         assertEquals(URI.create("urn:article:6662"), t.contentUri);
+    }
+
+    @Test
+    public void full_resource_has_all_paths() throws Exception {
+        testSeeder.resourceInDualSubjectsTestSetup();
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1/full");
+        ResourceFullIndexDocument result = testUtils.getObject(ResourceFullIndexDocument.class, response);
+        assertNotNull(result.paths);
+        assertEquals(2, result.paths.size());
     }
 }

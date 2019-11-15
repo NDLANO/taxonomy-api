@@ -246,4 +246,190 @@
             EXECUTE PROCEDURE check_subject_topic_uniqueness();
         </sql>
     </changeSet>
+
+    <changeSet id="20190924 disable update triggers for cached_url before removing shared topics"
+               author="Jon-Eirik Pettersen">
+        <sql splitStatements="false" stripComments="false">
+            DROP TRIGGER refresh_paths ON subject;
+            DROP TRIGGER refresh_paths ON topic;
+            DROP TRIGGER refresh_paths ON resource;
+            DROP TRIGGER refresh_paths ON subject_topic;
+            DROP TRIGGER refresh_paths ON topic_subtopic;
+            DROP TRIGGER refresh_paths ON topic_resource;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20191114 re-add primary field to topic_resources" author="Jon-Eirik Pettersen">
+        <addColumn tableName="topic_resource">
+            <column name="is_primary" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20191114 remove update triggers before merging resources" author="Jon-Eirik Pettersen">
+        <sql splitStatements="false" stripComments="false">
+            DROP TRIGGER IF EXISTS refresh_paths ON subject;
+            DROP TRIGGER IF EXISTS refresh_paths ON topic;
+            DROP TRIGGER IF EXISTS refresh_paths ON resource;
+            DROP TRIGGER IF EXISTS refresh_paths ON subject_topic;
+            DROP TRIGGER IF EXISTS refresh_paths ON topic_subtopic;
+            DROP TRIGGER IF EXISTS refresh_paths ON topic_resource;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20191114 remove unique constraints for topic_resource" author="Jon-Eirik Pettersen">
+        <dropUniqueConstraint tableName="topic_resource" constraintName="unique_topic_resource_resource_id"/>
+    </changeSet>
+
+    <changeSet id="20191115 merge resources with shared content" author="Jon-Eirik Pettersen">
+        <customChange class="no.ndla.taxonomy.migration.MergeSharedContentResourcesSqlChange"/>
+    </changeSet>
+
+    <changeSet id="20191115 set single primary resource connection" author="Jon-Eirik Pettersen">
+        <customChange class="no.ndla.taxonomy.migration.SetSinglePrimaryConnectionOnResourcesSqlChange"/>
+    </changeSet>
+
+    <changeSet id="20191115 re-create cached_url and update triggers" author="Jon-Eirik Pettersen">
+        <sql>
+            DROP MATERIALIZED VIEW cached_url;
+
+            CREATE MATERIALIZED VIEW cached_url as (
+            WITH RECURSIVE tree (id, public_id, name, parent_public_id, level, is_primary, path) AS (
+            SELECT
+            contexts.id,
+            contexts.public_id,
+            contexts.name,
+            cast(NULL AS VARCHAR) AS parent_public_id,
+            0 AS level,
+            TRUE AS is_primary,
+            '/' || substr(contexts.public_id, 5) AS path
+            FROM
+            (
+            SELECT
+            id,
+            public_id,
+            name
+            FROM subject
+
+            UNION ALL
+
+            SELECT
+            id,
+            public_id,
+            name
+            FROM topic
+            WHERE context = TRUE
+            ) contexts
+
+            UNION ALL
+
+            SELECT
+            child.id,
+            child.public_id,
+            child.name,
+            parent.public_id AS parent_public_id,
+            parent.level + 1 AS level,
+            child.is_primary AND parent.is_primary AS is_primary,
+            parent.path || '/' || substr(child.public_id, 5)
+            FROM
+            (
+            SELECT
+            r.id,
+            r.public_id,
+            t.public_id AS parent_public_id,
+            r.name,
+            tr.is_primary AS is_primary
+            FROM
+            resource r
+            INNER JOIN topic_resource tr ON tr.resource_id = r.id
+            INNER JOIN topic t ON tr.topic_id = t.id
+
+            UNION ALL
+
+            SELECT
+            st.id,
+            st.public_id,
+            t.public_id AS parent_public_id,
+            st.name,
+            TRUE AS is_primary
+            FROM topic t
+            INNER JOIN topic_subtopic tst ON t.id = tst.topic_id
+            INNER JOIN topic st ON tst.subtopic_id = st.id
+
+            UNION ALL
+
+            SELECT
+            t.id,
+            t.public_id,
+            s.public_id AS parent_public_id,
+            t.name,
+            TRUE AS is_primary
+            FROM
+            subject s
+            INNER JOIN subject_topic st ON s.id = st.subject_id
+            INNER JOIN topic t ON st.topic_id = t.id
+            ) child
+            INNER JOIN tree AS parent ON parent.public_id = child.parent_public_id
+            WHERE 1 = 1
+            )
+
+            SELECT
+            id,
+            public_id,
+            path,
+            is_primary,
+            parent_public_id
+            FROM
+            tree t
+            );
+        </sql>
+        <sql>
+            CREATE UNIQUE INDEX cached_url_path_idx ON cached_url (path);
+        </sql>
+        <sql>
+            CREATE INDEX cached_url_public_id_idx ON cached_url (public_id);
+        </sql>
+
+        <sql splitStatements="false" stripComments="false">
+            create trigger refresh_paths
+            after insert or update or delete or truncate
+            on subject
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+            after insert or update or delete or truncate
+            on topic
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+            after insert or update or delete or truncate
+            on resource
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+            after insert or update or delete or truncate
+            on subject_topic
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+            after insert or update or delete or truncate
+            on topic_subtopic
+            execute procedure update_url_cache();
+
+            create trigger refresh_paths
+            after insert or update or delete or truncate
+            on topic_resource
+            execute procedure update_url_cache();
+        </sql>
+        <sql>
+            REFRESH MATERIALIZED VIEW CONCURRENTLY cached_url;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20191115 add unique constraint to prevent shared content_uri on resources"
+               author="Jon-Eirik Pettersen">
+        <addUniqueConstraint tableName="resource" columnNames="content_uri"
+                             constraintName="unique_resource_content_uri"/>
+    </changeSet>
 </databaseChangeLog>

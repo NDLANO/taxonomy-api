@@ -11,15 +11,19 @@ import java.net.URI;
 @Transactional(readOnly = true)
 public class ResourceServiceImpl implements ResourceService {
     private final ResourceRepository resourceRepository;
+    private final EntityConnectionService connectionService;
 
-    public ResourceServiceImpl(ResourceRepository resourceRepository) {
+    public ResourceServiceImpl(ResourceRepository resourceRepository, EntityConnectionService connectionService) {
         this.resourceRepository = resourceRepository;
+        this.connectionService = connectionService;
     }
 
     @Override
     @Transactional
     public void delete(URI id) throws NotFoundServiceException {
         final var resourceToDelete = resourceRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundServiceException("Subject was not found"));
+
+        connectionService.replacePrimaryConnectionsFor(resourceToDelete);
 
         resourceRepository.delete(resourceToDelete);
         resourceRepository.flush();

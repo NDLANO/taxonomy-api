@@ -86,4 +86,18 @@ public class TopicSubtopic extends DomainEntity implements EntityWithPathConnect
     public void preRemove() {
         disassociate();
     }
+
+    @Override
+    public Optional<Boolean> isPrimary() {
+        return Optional.empty();
+    }
+
+    @Override
+    public void setPrimary(boolean isPrimary) {
+        if (isPrimary) {
+            return;
+        }
+
+        throw new UnsupportedOperationException("TopicSubtopic can not be non-primary");
+    }
 }

@@ -607,19 +607,39 @@ public class Builder {
             return resource(resourceKey, null);
         }
 
+        public TopicBuilder resource(boolean primary, Consumer<ResourceBuilder> consumer) {
+            return resource(null, primary, consumer);
+        }
+
         public TopicBuilder resource(Consumer<ResourceBuilder> consumer) {
             return resource(null, consumer);
         }
 
         public TopicBuilder resource(String resourceKey, Consumer<ResourceBuilder> consumer) {
+            return resource(resourceKey, false, consumer);
+        }
+
+        public TopicBuilder resource(String resourceKey, boolean primary, Consumer<ResourceBuilder> consumer) {
             ResourceBuilder resource = getResourceBuilder(resourceKey);
             if (null != consumer) consumer.accept(resource);
 
-            return resource(resource.resource);
+            return resource(resource.resource, primary);
+        }
+
+        public TopicBuilder resource(String resourceKey, boolean primary) {
+            return resource(resourceKey, primary, null);
         }
 
         public TopicBuilder resource(Resource resource) {
             entityManager.persist(TopicResource.create(topic, resource));
+
+            refreshAllCachedUrls();
+
+            return this;
+        }
+
+        public TopicBuilder resource(Resource resource, boolean primary) {
+            entityManager.persist(TopicResource.create(topic, resource, primary));
 
             refreshAllCachedUrls();
 

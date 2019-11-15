@@ -22,11 +22,12 @@ public abstract class EntityWithPath extends DomainObject {
     public Optional<String> getPrimaryPath() {
         return getCachedUrls()
                 .stream()
+                .filter(CachedUrl::isPrimary)
                 .map(CachedUrl::getPath)
                 .findFirst();
     }
 
-    public abstract Optional<EntityWithPathConnection> getParentConnection();
+    public abstract Set<EntityWithPathConnection> getParentConnections();
 
     public abstract Set<EntityWithPathConnection> getChildConnections();
 
@@ -42,15 +43,34 @@ public abstract class EntityWithPath extends DomainObject {
                     final var path1MatchesContext = path1.startsWith("/" + contextPublicId.getSchemeSpecificPart());
                     final var path2MatchesContext = path2.startsWith("/" + contextPublicId.getSchemeSpecificPart());
 
-                    if (path1MatchesContext && path2MatchesContext) {
+                    final var path1IsPrimary = cachedUrl1.isPrimary();
+                    final var path2IsPrimary = cachedUrl2.isPrimary();
+
+                    if (path1IsPrimary && path2IsPrimary && path1MatchesContext && path2MatchesContext) {
                         return 0;
                     }
 
-                    if (path1MatchesContext) {
+                    if (path1MatchesContext && path2MatchesContext && path1IsPrimary) {
                         return -1;
                     }
 
-                    if (path2MatchesContext) {
+                    if (path1MatchesContext && path2MatchesContext && path2IsPrimary) {
+                        return 1;
+                    }
+
+                    if (path1MatchesContext && !path2MatchesContext) {
+                        return -1;
+                    }
+
+                    if (path2MatchesContext && !path1MatchesContext) {
+                        return 1;
+                    }
+
+                    if (path1IsPrimary && !path2IsPrimary) {
+                        return -1;
+                    }
+
+                    if (path2IsPrimary && !path1IsPrimary) {
                         return 1;
                     }
 
