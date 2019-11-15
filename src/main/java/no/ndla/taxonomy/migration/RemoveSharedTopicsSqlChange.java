@@ -330,44 +330,56 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
 
     private void cloneAndDisconnectTopic(int topicId) throws DatabaseException, SQLException {
         final class TopicConnection {
+            private int id;
             private String type;
             private int parentId;
             private int topicId;
             private int rank;
 
-            public TopicConnection(String type, int parentId, int topicId, int rank) {
+            public TopicConnection(String type, int id, int parentId, int topicId, int rank) {
                 this.type = type;
+                this.id = id;
                 this.parentId = parentId;
                 this.topicId = topicId;
                 this.rank = rank;
             }
         }
 
-        try (var query = connection.prepareStatement("SELECT 'topic' as type, topic_id AS parent_id, subtopic_id AS topic_id, rank FROM topic_subtopic WHERE subtopic_id = " + topicId + " UNION SELECT 'subject' as type, subject_id AS parent_id, topic_id AS topic_id, rank FROM subject_topic WHERE topic_id = " + topicId)) {
+        try (var query = connection.prepareStatement("SELECT 'topic' as type, id, topic_id AS parent_id, subtopic_id AS topic_id, rank FROM topic_subtopic WHERE subtopic_id = " + topicId + " UNION SELECT 'subject' as type, id, subject_id AS parent_id, topic_id AS topic_id, rank FROM subject_topic WHERE topic_id = " + topicId)) {
             final var result = query.executeQuery();
 
             final var rows = new ArrayList<TopicConnection>();
 
             while (result.next()) {
-                rows.add(new TopicConnection(result.getString("type"), result.getInt("parent_id"), result.getInt("topic_id"), result.getInt("rank")));
+                rows.add(new TopicConnection(result.getString("type"), result.getInt("id"), result.getInt("parent_id"), result.getInt("topic_id"), result.getInt("rank")));
             }
 
             if (rows.size() < 2) {
                 throw new IllegalArgumentException("Could not get two or more parent topic/subject connections for topic with id " + topicId);
             }
 
-            try (
-                    var deleteSubTopicsQuery = connection.prepareStatement("DELETE FROM topic_subtopic WHERE subtopic_id = " + topicId);
-                    var deleteSubjectTopicQuery = connection.prepareStatement("DELETE FROM subject_topic WHERE topic_id = " + topicId)
-            ) {
-                final var deletedRows = deleteSubTopicsQuery.executeUpdate() + deleteSubjectTopicQuery.executeUpdate();
-
-                if (deletedRows != rows.size()) {
-                    throw new IllegalStateException("Got different row count on DELETE than SELECT");
-                }
-            }
+            // Keep one connection
+            rows.remove(0);
 
             for (final var connectionToClone : rows) {
+                String tableToDeleteFrom;
+                switch (connectionToClone.type) {
+                    case "subject":
+                        tableToDeleteFrom = "subject_topic";
+                        break;
+                    case "topic":
+                        tableToDeleteFrom = "topic_subtopic";
+                        break;
+                    default:
+                        throw new RuntimeException();
+                }
+
+                try (var deleteSubTopicsQuery = connection.prepareStatement("DELETE FROM " + tableToDeleteFrom + " WHERE id = " + connectionToClone.id)) {
+                    if (deleteSubTopicsQuery.executeUpdate() != 1) {
+                        throw new IllegalStateException("Got wrong deleted rows count from delete");
+                    }
+                }
+
                 final var newTopicId = cloneTopic(topicId);
 
                 switch (connectionToClone.type) {
@@ -437,13 +449,16 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
                 throw new IllegalArgumentException("Could not get two or more parent topic connections for resource with id" + resourceId);
             }
 
-            try (var topicResourceDeleteQuery = connection.prepareStatement("DELETE FROM topic_resource WHERE resource_id = " + resourceId)) {
-                if (topicResourceDeleteQuery.executeUpdate() != rows.size()) {
-                    throw new IllegalStateException("Got different row count on DELETE than SELECT");
-                }
-            }
+            // Keep one connection
+            rows.remove(0);
 
             for (final var connectionToClone : rows) {
+                try (var topicResourceDeleteQuery = connection.prepareStatement("DELETE FROM topic_resource WHERE id = " + connectionToClone.id)) {
+                    if (topicResourceDeleteQuery.executeUpdate() != 1) {
+                        throw new IllegalStateException("Got wrong delete row count when deleting one connection");
+                    }
+                }
+
                 final var newResourceId = cloneResource(resourceId);
                 final var newPublicId = "urn:topic-resource:" + randomUUID();
 
@@ -511,7 +526,8 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
                     while (sharedTopicsQueryResult.next()) {
                         countSharedTopics++;
 
-                        cloneAndDisconnectTopic(sharedTopicsQueryResult.getInt("child_id"));
+                        final var childId = sharedTopicsQueryResult.getInt("child_id");
+                        cloneAndDisconnectTopic(childId);
                     }
                 }
 
