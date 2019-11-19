@@ -111,10 +111,39 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
             while (sharedContentResult.next()) {
                 final var sourceResourceId = sharedContentResult.getInt(1);
 
+                if (sourceResourceId == destinationResourceId) {
+                    throw new CustomChangeException("Source and destination is equal");
+                }
+
                 mergeResourceRelations(destinationResourceId, sourceResourceId);
 
-                try (var updateConnectionsQuery = connection.prepareStatement("UPDATE topic_resource SET resource_id =  " + destinationResourceId + " WHERE resource_id = " + sourceResourceId)) {
-                    updateConnectionsQuery.executeUpdate();
+                try (var updateSelectQuery = connection.prepareStatement("SELECT id, topic_id FROM topic_resource WHERE resource_id = " + sourceResourceId)) {
+                    final var updateSelectResult = updateSelectQuery.executeQuery();
+
+                    while (updateSelectResult.next()) {
+                        final var id = updateSelectResult.getInt(1);
+                        final var topicId = updateSelectResult.getInt(2);
+
+                        try (var existsQuery = connection.prepareStatement("SELECT COUNT(*) FROM topic_resource WHERE topic_id = " + topicId + " AND resource_id = " + destinationResourceId)) {
+                            final var existsResult = existsQuery.executeQuery();
+
+                            if (!existsResult.next()) {
+                                throw new CustomChangeException("No result set returned from count query");
+                            }
+
+                            if (existsResult.getInt(1) == 0) {
+                                try (var updateConnectionsQuery = connection.prepareStatement("UPDATE topic_resource SET resource_id =  " + destinationResourceId + " WHERE id = " + id)) {
+                                    updateConnectionsQuery.executeUpdate();
+                                }
+                            } else {
+                                try (var deleteConnectionQuery = connection.prepareStatement("DELETE FROM topic_resource WHERE id = " + id)) {
+                                    if (deleteConnectionQuery.executeUpdate() != 1) {
+                                        throw new CustomChangeException("Unexpected change rows from delete topic_resource query");
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 try (var removeTranslationsQuery = connection.prepareStatement("DELETE FROM resource_translation WHERE resource_id = " + sourceResourceId)) {
