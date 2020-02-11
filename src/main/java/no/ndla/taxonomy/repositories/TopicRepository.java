@@ -52,5 +52,13 @@ public interface TopicRepository extends TaxonomyRepository<Topic> {
             "   WHERE t.publicId = :publicId")
     Optional<Topic> findFirstByPublicIdIncludingFilters(URI publicId);
 
+    @Query(
+            "SELECT DISTINCT t" +
+                    "   FROM Topic t" +
+                    "   LEFT JOIN FETCH t.cachedUrls" +
+                    "   WHERE t.publicId = :publicId")
+    Optional<Topic> findFirstByPublicIdIncludingCachedUrls(URI publicId);
+
+
     Optional<Topic> findFirstByPublicId(URI publicId);
 }

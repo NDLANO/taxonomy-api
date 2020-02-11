@@ -1,9 +1,8 @@
 package no.ndla.taxonomy.rest.v1;
 
 
-import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.service.dtos.ResolvedUrl;
 import org.junit.Test;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,12 +13,12 @@ public class UrlResolverTest extends RestTest {
     public void can_resolve_url_for_subject() throws Exception {
         builder.subject(s -> s.publicId("urn:subject:1").contentUri("urn:article:1").name("the subject"));
 
-        UrlResolver.ResolvedUrl url = resolveUrl("/subject:1");
+        ResolvedUrl url = resolveUrl("/subject:1");
 
         assertEquals("urn:subject:1", url.id.toString());
         assertEquals("the subject", url.name);
         assertEquals("urn:article:1", url.contentUri.toString());
-        assertEquals(0, url.parents.length);
+        assertEquals(0, url.parents.size());
     }
 
     @Test
@@ -32,7 +31,7 @@ public class UrlResolverTest extends RestTest {
                         .contentUri("urn:article:1"))
         );
 
-        UrlResolver.ResolvedUrl url = resolveUrl("/subject:1/topic:1");
+        ResolvedUrl url = resolveUrl("/subject:1/topic:1");
 
         assertEquals("urn:topic:1", url.id.toString());
         assertEquals("the topic", url.name);
@@ -50,7 +49,7 @@ public class UrlResolverTest extends RestTest {
                 )
         );
 
-        UrlResolver.ResolvedUrl url = resolveUrl("/subject:1/topic:1/topic:2");
+        ResolvedUrl url = resolveUrl("/subject:1/topic:1/topic:2");
         assertEquals("urn:article:1", url.contentUri.toString());
         assertParents(url, "urn:topic:1", "urn:subject:1");
     }
@@ -66,14 +65,49 @@ public class UrlResolverTest extends RestTest {
                 )
         );
 
-        UrlResolver.ResolvedUrl url = resolveUrl("/subject:1/topic:1/resource:1");
+        ResolvedUrl url = resolveUrl("/subject:1/topic:1/resource:1");
         assertEquals("urn:article:1", url.contentUri.toString());
         assertParents(url, "urn:topic:1", "urn:subject:1");
     }
 
+    @Test
+    public void ignores_multiple_or_leading_or_trailing_slashes() throws Exception {
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .topic(t -> t
+                        .publicId("urn:topic:1")
+                        .resource(r -> r.publicId("urn:resource:1").contentUri("urn:article:1"))
+                )
+        );
+
+        {
+            ResolvedUrl url = resolveUrl("/subject:1/topic:1/resource:1");
+            assertEquals("urn:article:1", url.contentUri.toString());
+            assertParents(url, "urn:topic:1", "urn:subject:1");
+            assertEquals("/subject:1/topic:1/resource:1", url.path);
+        }
+        {
+            ResolvedUrl url = resolveUrl("subject:1/topic:1/resource:1");
+            assertEquals("urn:article:1", url.contentUri.toString());
+            assertParents(url, "urn:topic:1", "urn:subject:1");
+            assertEquals("/subject:1/topic:1/resource:1", url.path);
+        }
+        {
+            ResolvedUrl url = resolveUrl("/subject:1/topic:1/resource:1/");
+            assertEquals("urn:article:1", url.contentUri.toString());
+            assertParents(url, "urn:topic:1", "urn:subject:1");
+            assertEquals("/subject:1/topic:1/resource:1", url.path);
+        }
+        {
+            ResolvedUrl url = resolveUrl("//subject:1////topic:1/resource:1//");
+            assertEquals("urn:article:1", url.contentUri.toString());
+            assertParents(url, "urn:topic:1", "urn:subject:1");
+            assertEquals("/subject:1/topic:1/resource:1", url.path);
+        }
+    }
 
     @Test
-    public void is_redirected_to_new_url() throws Exception {
+    public void gets_404_on_wrong_path_to_resource() throws Exception {
         builder.subject(s -> s
                 .publicId("urn:subject:1")
                 .topic(t -> t
@@ -82,51 +116,8 @@ public class UrlResolverTest extends RestTest {
                 )
         );
 
-        String redirect = resolveUrlAndExpectRedirect("/subject:1/topic:2/resource:1");
-        assertEquals("/subject:1/topic:1/resource:1", redirect);
-    }
-
-    @Test
-    public void is_redirected_to_closest_url() throws Exception {
-        Resource resource = builder.resource("resource", r -> r.publicId("urn:resource:1"));
-        builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .topic("topic1", t -> t
-                        .publicId("urn:topic:1")
-                        .resource("resource")
-                )
-        );
-
-        builder.subject(s -> s
-                .publicId("urn:subject:2")
-                .topic("topic2", t -> t
-                        .publicId("urn:topic:2")
-                        .resource("resource", true)
-                )
-        );
-
-        builder.subject(s -> s
-                .publicId("urn:subject:3")
-                .topic("topic3", t -> t
-                        .publicId("urn:topic:3")
-                        .resource("resource")
-                )
-        );
-
-        {
-            String redirect = resolveUrlAndExpectRedirect("/subject:1/topic:2/resource:1");
-            assertEquals("/subject:1/topic:1/resource:1", redirect);
-        }
-
-        {
-            String redirect = resolveUrlAndExpectRedirect("/subject:2/topic:1/resource:1");
-            assertEquals("/subject:2/topic:2/resource:1", redirect);
-        }
-
-        {
-            String redirect = resolveUrlAndExpectRedirect("/subject:3/topic:2/resource:1");
-            assertEquals("/subject:3/topic:3/resource:1", redirect);
-        }
+        testUtils.getResource("/v1/url/resolve?path=/subject:1/topic:2/resource:1", status().isNotFound());
+        testUtils.getResource("/v1/url/resolve?path=/subject:1/topic:1/resource:1", status().isOk());
     }
 
     @Test
@@ -135,19 +126,14 @@ public class UrlResolverTest extends RestTest {
         testUtils.getResource("/v1/url/resolve?path=" + path, status().isNotFound());
     }
 
-    private void assertParents(UrlResolver.ResolvedUrl path, String... expected) {
-        assertEquals(expected.length, path.parents.length);
+    private void assertParents(ResolvedUrl path, String... expected) {
+        assertEquals(expected.length, path.parents.size());
         for (int i = 0; i < expected.length; i++) {
-            assertEquals(expected[i], path.parents[i].toString());
+            assertEquals(expected[i], path.parents.get(i).toString());
         }
     }
 
-    private String resolveUrlAndExpectRedirect(String path) throws Exception {
-        MockHttpServletResponse response = testUtils.getResource("/v1/url/resolve?path=" + path, status().is3xxRedirection());
-        return response.getHeader("Location");
-    }
-
-    private UrlResolver.ResolvedUrl resolveUrl(String url) throws Exception {
-        return testUtils.getObject(UrlResolver.ResolvedUrl.class, testUtils.getResource("/v1/url/resolve?path=" + url));
+    private ResolvedUrl resolveUrl(String url) throws Exception {
+        return testUtils.getObject(ResolvedUrl.class, testUtils.getResource("/v1/url/resolve?path=" + url));
     }
 }

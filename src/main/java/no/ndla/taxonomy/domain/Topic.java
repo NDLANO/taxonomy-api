@@ -309,6 +309,7 @@ public class Topic extends EntityWithPath {
         this.context = context;
     }
 
+    @Override
     public boolean isContext() {
         return context;
     }

@@ -144,4 +144,9 @@ public class Subject extends EntityWithPath {
     void preRemove() {
         new HashSet<>(subjectTopics).forEach(SubjectTopic::disassociate);
     }
+
+    @Override
+    public boolean isContext() {
+        return true;
+    }
 }

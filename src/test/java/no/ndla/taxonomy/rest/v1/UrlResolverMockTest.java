@@ -16,11 +16,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.net.URI;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.verify;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -51,7 +53,7 @@ public class UrlResolverMockTest {
     public void resolveOldUrl404WhenNotImported() throws Exception {
         String oldUrl = "no/such/path";
 
-        given(this.urlResolverService.resolveUrl(oldUrl)).willReturn(null);
+        given(this.urlResolverService.resolveOldUrl(oldUrl)).willReturn(Optional.empty());
         ResultActions result = mvc.perform(
                 get("/v1/url/mapping?url=" + oldUrl)
                         .accept(APPLICATION_JSON_UTF8));
@@ -64,7 +66,7 @@ public class UrlResolverMockTest {
         String oldUrl = "ndla.no/nb/node/183926?fag=127013";
         String newPath = "subject:11/topic:1:183926";
 
-        given(this.urlResolverService.resolveUrl(oldUrl)).willReturn(newPath);
+        given(this.urlResolverService.resolveOldUrl(oldUrl)).willReturn(Optional.of(newPath));
         ResultActions result = mvc.perform(
                 get("/v1/url/mapping?url=" + oldUrl)
                         .accept(APPLICATION_JSON_UTF8));
@@ -109,7 +111,8 @@ public class UrlResolverMockTest {
         String oldUrl = "ndla.no/nb/node/183926?fag=127013";
         URI nodeId = new URI("urn:topic:1:183926");
         URI subjectId = new URI("urn:subject:11");
-        given(this.urlResolverService.putUrlMapping(any(), any(), any())).willThrow(new UrlResolverService.NodeIdNotFoundExeption("urk på burk"));
+
+        doThrow(new UrlResolverService.NodeIdNotFoundExeption("")).when(this.urlResolverService).putUrlMapping(any(), any(), any());
 
         ResultActions result = mvc.perform(
                 put("/v1/url/mapping")
