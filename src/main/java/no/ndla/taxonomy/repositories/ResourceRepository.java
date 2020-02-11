@@ -43,4 +43,11 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
     List<Resource> findAllByPublicIdIncludingCachedUrls(URI publicId);
 
     Optional<Resource> findFirstByPublicId(URI publicId);
+
+    @Query(
+            "SELECT DISTINCT r" +
+                    "   FROM Resource r" +
+                    "   LEFT JOIN FETCH r.cachedUrls" +
+                    "   WHERE r.publicId = :publicId")
+    Optional<Resource> findFirstByPublicIdIncludingCachedUrls(URI publicId);
 }

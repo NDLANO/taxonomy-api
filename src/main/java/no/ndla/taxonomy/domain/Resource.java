@@ -222,4 +222,9 @@ public class Resource extends EntityWithPath {
         new HashSet<>(topics).forEach(TopicResource::disassociate);
         new HashSet<>(filters).forEach(ResourceFilter::disassociate);
     }
+
+    @Override
+    public boolean isContext() {
+        return false;
+    }
 }

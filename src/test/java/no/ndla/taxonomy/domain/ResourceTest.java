@@ -385,4 +385,10 @@ public class ResourceTest {
         verify(resourceFilter1).disassociate();
         verify(resourceFilter2).disassociate();
     }
+
+    @Test
+    public void isContext() {
+        final var resource = new Resource();
+        assertFalse(resource.isContext());
+    }
 }

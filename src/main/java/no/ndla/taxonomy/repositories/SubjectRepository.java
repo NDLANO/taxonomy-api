@@ -37,4 +37,11 @@ public interface SubjectRepository extends TaxonomyRepository<Subject> {
     Optional<Subject> findFirstByPublicIdIncludingFilters(URI publicId);
 
     Optional<Subject> findFirstByPublicId(URI publicId);
+
+    @Query(
+            "SELECT DISTINCT s" +
+                    "   FROM Subject s" +
+                    "   LEFT JOIN FETCH s.cachedUrls" +
+                    "   WHERE s.publicId = :publicId")
+    Optional<Subject> findFirstByPublicIdIncludingCachedUrls(URI publicId);
 }

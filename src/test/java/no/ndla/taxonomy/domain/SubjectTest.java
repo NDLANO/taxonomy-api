@@ -162,4 +162,10 @@ public class SubjectTest {
 
         Set.of(subjectTopic1, subjectTopic2).forEach(subjectTopic -> verify(subjectTopic).disassociate());
     }
+
+    @Test
+    public void isContext() {
+        final var subject = new Subject();
+        assertTrue(subject.isContext());
+    }
 }

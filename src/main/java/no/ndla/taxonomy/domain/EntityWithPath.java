@@ -86,4 +86,11 @@ public abstract class EntityWithPath extends DomainObject {
     }
 
     abstract public URI getContentUri();
+
+    /**
+     * Checks if this entitiy can be a root node (first element in a path)
+     *
+     * @return true if root
+     */
+    abstract public boolean isContext();
 }
