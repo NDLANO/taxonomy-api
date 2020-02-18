@@ -4,6 +4,7 @@ import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicResourceType;
 import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.service.MetadataApiService;
 import no.ndla.taxonomy.service.TopicResourceTypeService;
 import no.ndla.taxonomy.service.TopicService;
 import no.ndla.taxonomy.service.TopicTreeSorter;
@@ -49,6 +50,8 @@ public class TopicsWebTest {
     TopicTreeSorter topicTreeSorter;
     @MockBean
     TopicService topicService;
+    @MockBean
+    MetadataApiService metadataApiService;
 
     @Autowired
     private MockMvc mockMvc;
