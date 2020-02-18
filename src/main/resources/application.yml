@@ -37,7 +37,7 @@ logging.level:
 spring.profiles: dev
 
 service: ndla-taxonomy-dev
-ndla.taxonomy-metadata.url: http://taxonomy-metadata-dev
+ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-dev
 
 ---
 spring.profiles: staging
@@ -47,7 +47,7 @@ auth0:
   jwks.kid: NDFFOTUxMjQ1ODNDMTlBRkE0RkQ4NDc0RjUxNjUxREE0MTUyQTQ3NQ
 
 service: ndla-taxonomy-staging
-ndla.taxonomy-metadata.url: http://taxonomy-metadata-staging
+ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-staging
 
 ---
 spring.profiles: prod
@@ -57,7 +57,7 @@ auth0:
   jwks.kid: OEI1MUU4ODk5NzM5MzI2MzZDODk1N0YwQzdDMDQyODVCQzQ3QTI0MA
 
 service: ndla-taxonomy-prod
-ndla.taxonomy-metadata.url: http://taxonomy-metadata-prod
+ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-prod
 
 ---
 spring.profiles: ffprod
@@ -67,7 +67,7 @@ auth0:
   jwks.kid: OEI1MUU4ODk5NzM5MzI2MzZDODk1N0YwQzdDMDQyODVCQzQ3QTI0MA
 
 service: ndla-taxonomy-ffprod
-ndla.taxonomy-metadata.url: http://taxonomy-metadata-ffprod
+ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-ffprod
 
 ---
 spring.profiles: test
@@ -77,10 +77,10 @@ auth0:
   jwks.kid: QzlEOTQ5M0NGMDk4NjExOEJGMjc2MjVFODhEQkE1NUI2NkE0RTQyRg
 
 service: ndla-taxonomy-test
-ndla.taxonomy-metadata.url: http://taxonomy-metadata-test
+ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-test
 
 ---
 spring.profiles: brukertest
 
 service: ndla-taxonomy-brukertest
-ndla.taxonomy-metadata.url: http://taxonomy-metadata-brukertest
+ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-brukertest
