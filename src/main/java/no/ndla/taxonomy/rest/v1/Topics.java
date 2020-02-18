@@ -3,6 +3,7 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
@@ -15,10 +16,7 @@ import no.ndla.taxonomy.rest.v1.dtos.topics.FilterIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.TopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.TopicWithPathsIndexDocument;
-import no.ndla.taxonomy.service.TopicResourceTreeSortable;
-import no.ndla.taxonomy.service.TopicResourceTypeService;
-import no.ndla.taxonomy.service.TopicService;
-import no.ndla.taxonomy.service.TopicTreeSorter;
+import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
 import no.ndla.taxonomy.service.dtos.SubTopicIndexDTO;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
@@ -52,7 +50,9 @@ public class Topics extends CrudController<Topic> {
                   TopicResourceRepository topicResourceRepository,
                   TopicTreeByTopicElementRepository topicTreeRepository,
                   TopicTreeSorter topicTreeSorter,
-                  TopicService topicService) {
+                  TopicService topicService, MetadataApiService metadataApiService) {
+        super(metadataApiService);
+
         this.topicRepository = topicRepository;
         this.repository = topicRepository;
         this.topicResourceTypeService = topicResourceTypeService;
@@ -98,7 +98,6 @@ public class Topics extends CrudController<Topic> {
                 .map(topic -> this.createTopicWithPathsIndexDocument(topic, language))
                 .orElseThrow(() -> new NotFoundHttpRequestException("Topic was not found"));
     }
-
 
     @PostMapping
     @ApiOperation(value = "Creates a new topic")

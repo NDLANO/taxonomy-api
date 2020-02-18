@@ -5,11 +5,16 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Filter;
+import no.ndla.taxonomy.domain.FilterTranslation;
+import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.domain.exceptions.NotFoundException;
+import no.ndla.taxonomy.domain.exceptions.SubjectRequiredException;
 import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
+import no.ndla.taxonomy.service.MetadataApiService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,7 +33,9 @@ public class Filters extends CrudController<Filter> {
     private final SubjectRepository subjectRepository;
     private final FilterRepository filterRepository;
 
-    public Filters(FilterRepository repository, SubjectRepository subjectRepository) {
+    public Filters(FilterRepository repository, SubjectRepository subjectRepository, MetadataApiService metadataApiService) {
+        super(metadataApiService);
+
         this.subjectRepository = subjectRepository;
         this.repository = filterRepository = repository;
     }

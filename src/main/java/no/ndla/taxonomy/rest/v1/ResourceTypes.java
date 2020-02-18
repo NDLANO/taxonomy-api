@@ -6,12 +6,13 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.NotFoundException;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.ResourceTypeTranslation;
+import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
+import no.ndla.taxonomy.service.MetadataApiService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,7 +31,9 @@ public class ResourceTypes extends CrudController<ResourceType> {
 
     private final ResourceTypeRepository resourceTypeRepository;
 
-    public ResourceTypes(ResourceTypeRepository resourceTypeRepository) {
+    public ResourceTypes(ResourceTypeRepository resourceTypeRepository, MetadataApiService metadataApiService) {
+        super(metadataApiService);
+
         this.resourceTypeRepository = resourceTypeRepository;
         repository = resourceTypeRepository;
     }
