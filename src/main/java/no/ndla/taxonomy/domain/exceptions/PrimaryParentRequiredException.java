@@ -1,4 +1,4 @@
-package no.ndla.taxonomy.domain;
+package no.ndla.taxonomy.domain.exceptions;
 
 import org.springframework.web.bind.annotation.ResponseStatus;
 

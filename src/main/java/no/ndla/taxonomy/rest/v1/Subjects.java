@@ -3,6 +3,7 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
@@ -11,6 +12,7 @@ import no.ndla.taxonomy.rest.v1.dtos.subjects.FilterIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
+import no.ndla.taxonomy.service.MetadataApiService;
 import no.ndla.taxonomy.service.SubjectService;
 import no.ndla.taxonomy.service.TopicResourceTreeSortable;
 import no.ndla.taxonomy.service.TopicTreeSorter;
@@ -41,7 +43,9 @@ public class Subjects extends CrudController<Subject> {
     public Subjects(SubjectRepository subjectRepository, TopicTreeBySubjectElementRepository subjectTopicTreeElementRepository,
                     TopicResourceRepository topicResourceRepository,
                     SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository,
-                    TopicTreeSorter topicTreeSorter, SubjectService subjectService) {
+                    TopicTreeSorter topicTreeSorter, SubjectService subjectService, MetadataApiService metadataApiService) {
+        super(metadataApiService);
+
         this.subjectRepository = subjectRepository;
         repository = subjectRepository;
         this.subjectTopicTreeElementRepository = subjectTopicTreeElementRepository;

@@ -1,5 +1,8 @@
-package no.ndla.taxonomy.domain;
+package no.ndla.taxonomy.domain.exceptions;
 
+import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.domain.Topic;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;

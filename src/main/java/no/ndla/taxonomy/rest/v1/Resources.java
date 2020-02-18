@@ -10,6 +10,7 @@ import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
 import no.ndla.taxonomy.rest.v1.dtos.resources.*;
+import no.ndla.taxonomy.service.MetadataApiService;
 import no.ndla.taxonomy.service.ResourceService;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
@@ -36,7 +37,9 @@ public class Resources extends CrudController<Resource> {
     public Resources(ResourceRepository resourceRepository,
                      ResourceResourceTypeRepository resourceResourceTypeRepository,
                      ResourceFilterRepository resourceFilterRepository,
-                     ResourceService resourceService) {
+                     ResourceService resourceService, MetadataApiService metadataApiService) {
+        super(metadataApiService);
+
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceFilterRepository = resourceFilterRepository;
         this.resourceRepository = resourceRepository;

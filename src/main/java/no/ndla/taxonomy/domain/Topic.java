@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.domain;
 
 
+import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;

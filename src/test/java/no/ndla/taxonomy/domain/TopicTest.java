@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.domain;
 
+import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
 import org.junit.Before;
 import org.junit.Test;
 
