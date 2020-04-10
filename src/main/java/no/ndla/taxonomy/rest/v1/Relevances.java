@@ -11,7 +11,6 @@ import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
-import no.ndla.taxonomy.service.MetadataApiService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,9 +28,7 @@ public class Relevances extends CrudController<Relevance> {
 
     private final RelevanceRepository relevanceRepository;
 
-    public Relevances(RelevanceRepository repository, MetadataApiService metadataApiService) {
-        super(metadataApiService);
-
+    public Relevances(RelevanceRepository repository) {
         this.repository = relevanceRepository = repository;
     }
 

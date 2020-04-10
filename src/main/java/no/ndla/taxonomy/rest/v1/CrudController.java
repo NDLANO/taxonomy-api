@@ -6,16 +6,16 @@ import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
-import no.ndla.taxonomy.service.MetadataApiService;
 import no.ndla.taxonomy.service.URNValidator;
-import no.ndla.taxonomy.service.dtos.MetadataDto;
-import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -25,14 +25,8 @@ import java.util.Map;
 public abstract class CrudController<T extends DomainObject> {
     protected TaxonomyRepository<T> repository;
 
-    private MetadataApiService metadataApiService;
-
     private static final Map<Class<?>, String> locations = new HashMap<>();
     private final URNValidator validator = new URNValidator();
-
-    CrudController(MetadataApiService metadataApiService) {
-        this.metadataApiService = metadataApiService;
-    }
 
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Deletes a single entity by id")
@@ -73,24 +67,5 @@ public abstract class CrudController<T extends DomainObject> {
 
     protected String getLocation() {
         return locations.computeIfAbsent(getClass(), aClass -> aClass.getAnnotation(RequestMapping.class).path()[0]);
-    }
-
-    @GetMapping("/{id}/metadata")
-    public MetadataDto getMetadata(@PathVariable("id") URI id) {
-        try {
-            return metadataApiService.getMetadataByPublicId(id);
-        } catch (ServiceUnavailableException e) {
-            throw new ServiceUnavailableHttpResponseException(e);
-        }
-    }
-
-    @PutMapping("/{id}/metadata")
-    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public MetadataDto putMetadata(@PathVariable("id") URI id, @RequestBody MetadataDto entityToUpdate) {
-        try {
-            return metadataApiService.updateMetadataByPublicId(id, entityToUpdate);
-        } catch (ServiceUnavailableException e) {
-            throw new ServiceUnavailableHttpResponseException(e);
-        }
     }
 }

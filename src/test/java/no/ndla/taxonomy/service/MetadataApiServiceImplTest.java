@@ -50,8 +50,8 @@ public class MetadataApiServiceImplTest {
         });
 
         final var returnedEntity = metadataApiService.getMetadataByPublicId(URI.create("urn:test:1"));
-        assertEquals(2, returnedEntity.getCompetenceAims().size());
-        assertTrue(returnedEntity.getCompetenceAims().containsAll(Set.of("A1", "A2")));
+        assertEquals(2, returnedEntity.getGrepCodes().size());
+        assertTrue(returnedEntity.getGrepCodes().containsAll(Set.of("A1", "A2")));
 
     }
 
@@ -87,12 +87,12 @@ public class MetadataApiServiceImplTest {
         });
 
         final var requestObject = mock(MetadataDto.class);
-        when(requestObject.getCompetenceAims()).thenReturn(Set.of("B1", "B2"));
+        when(requestObject.getGrepCodes()).thenReturn(Set.of("B1", "B2"));
 
         final var returnedEntity = metadataApiService.updateMetadataByPublicId(URI.create("urn:test:1"), requestObject);
 
-        assertEquals(2, returnedEntity.getCompetenceAims().size());
-        assertTrue(returnedEntity.getCompetenceAims().containsAll(Set.of("A3", "A4")));
+        assertEquals(2, returnedEntity.getGrepCodes().size());
+        assertTrue(returnedEntity.getGrepCodes().containsAll(Set.of("A3", "A4")));
 
         verify(restTemplate).put(eq("http://metadata/v1/taxonomy_entities/urn:test:1"), any(MetadataApiEntity.class));
     }
@@ -100,7 +100,7 @@ public class MetadataApiServiceImplTest {
     @Test
     public void updateMetadataByPublicId_withServiceError() {
         final var requestObject = mock(MetadataDto.class);
-        when(requestObject.getCompetenceAims()).thenReturn(Set.of("B1", "B2"));
+        when(requestObject.getGrepCodes()).thenReturn(Set.of("B1", "B2"));
 
         doThrow(new RestClientException("")).when(restTemplate).put(eq("http://metadata/v1/taxonomy_entities/urn:test:1"), any(MetadataApiEntity.class));
 
