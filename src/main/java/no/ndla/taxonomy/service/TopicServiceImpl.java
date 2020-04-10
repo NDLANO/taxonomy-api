@@ -8,6 +8,7 @@ import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
 import no.ndla.taxonomy.service.dtos.SubTopicIndexDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,23 +25,29 @@ public class TopicServiceImpl implements TopicService {
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final EntityConnectionService connectionService;
     private final FilterRepository filterRepository;
+    private final MetadataApiService metadataApiService;
 
-    public TopicServiceImpl(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository, FilterRepository filterRepository, EntityConnectionService connectionService) {
+    public TopicServiceImpl(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository,
+                            FilterRepository filterRepository, EntityConnectionService connectionService,
+                            MetadataApiService metadataApiService) {
         this.topicRepository = topicRepository;
         this.connectionService = connectionService;
         this.filterRepository = filterRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
+        this.metadataApiService = metadataApiService;
     }
 
     @Override
     @Transactional
-    public void delete(URI publicId) throws NotFoundServiceException {
+    public void delete(URI publicId) throws NotFoundServiceException, ServiceUnavailableException {
         final var topicToDelete = topicRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Topic was not found"));
 
         connectionService.replacePrimaryConnectionsFor(topicToDelete);
 
         topicRepository.delete(topicToDelete);
         topicRepository.flush();
+
+        metadataApiService.deleteMetadataByPublicId(publicId);
     }
 
     @Override

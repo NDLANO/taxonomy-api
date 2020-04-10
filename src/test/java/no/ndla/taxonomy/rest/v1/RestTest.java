@@ -3,10 +3,12 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.service.MetadataApiService;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
@@ -61,6 +63,9 @@ public abstract class RestTest extends AbstractTransactionalJUnit4SpringContextT
 
     @Autowired
     protected TestUtils testUtils;
+
+    @MockBean
+    MetadataApiService metadataApiService;
 
     Builder builder;
 

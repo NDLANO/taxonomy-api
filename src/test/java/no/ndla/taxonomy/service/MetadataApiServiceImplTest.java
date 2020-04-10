@@ -123,4 +123,19 @@ public class MetadataApiServiceImplTest {
 
         }
     }
+
+    @Test
+    public void deleteMetadataByPublicId() throws ServiceUnavailableException {
+        doThrow(new RestClientException("")).when(restTemplate).delete("http://metadata/v1/taxonomy_entities/urn:test:124");
+
+        metadataApiService.deleteMetadataByPublicId(URI.create("urn:test:123"));
+        verify(restTemplate).delete("http://metadata/v1/taxonomy_entities/urn:test:123");
+
+        try {
+            metadataApiService.deleteMetadataByPublicId(URI.create("urn:test:124"));
+            fail("Expected ServiceUnavailableException");
+        } catch (ServiceUnavailableException ignored) {
+
+        }
+    }
 }

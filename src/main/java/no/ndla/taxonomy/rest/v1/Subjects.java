@@ -17,6 +17,7 @@ import no.ndla.taxonomy.service.SubjectService;
 import no.ndla.taxonomy.service.TopicResourceTreeSortable;
 import no.ndla.taxonomy.service.TopicTreeSorter;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -338,6 +339,8 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
             subjectService.delete(id);
         } catch (NotFoundServiceException e) {
             throw new NotFoundHttpRequestException(e);
+        } catch (ServiceUnavailableException e) {
+            throw new ServiceUnavailableHttpResponseException(e);
         }
     }
 }

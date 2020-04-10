@@ -3,6 +3,7 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -25,14 +28,18 @@ public class SubjectServiceImplTest {
 
     private SubjectServiceImpl subjectService;
 
+    private MetadataApiService metadataApiService;
+
     @Before
     public void setUp() {
-        subjectService = new SubjectServiceImpl(subjectRepository);
+        metadataApiService = mock(MetadataApiService.class);
+
+        subjectService = new SubjectServiceImpl(subjectRepository, metadataApiService);
     }
 
     @Test
     @Transactional
-    public void delete() throws NotFoundServiceException {
+    public void delete() throws NotFoundServiceException, ServiceUnavailableException {
         final var subjectId = builder.subject().getPublicId();
 
         assertTrue(subjectRepository.findFirstByPublicId(subjectId).isPresent());
@@ -40,5 +47,7 @@ public class SubjectServiceImplTest {
         subjectService.delete(subjectId);
 
         assertFalse(subjectRepository.findFirstByPublicId(subjectId).isPresent());
+
+        verify(metadataApiService).deleteMetadataByPublicId(subjectId);
     }
 }

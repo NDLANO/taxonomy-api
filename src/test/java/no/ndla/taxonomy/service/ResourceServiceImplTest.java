@@ -4,6 +4,7 @@ import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,17 +28,19 @@ public class ResourceServiceImplTest {
 
     private EntityConnectionService connectionService;
     private ResourceServiceImpl resourceService;
+    private MetadataApiService metadataApiService;
 
     @Before
     public void setUp() {
         connectionService = mock(EntityConnectionService.class);
+        metadataApiService = mock(MetadataApiService.class);
 
-        resourceService = new ResourceServiceImpl(resourceRepository, connectionService);
+        resourceService = new ResourceServiceImpl(resourceRepository, connectionService, metadataApiService);
     }
 
     @Test
     @Transactional
-    public void delete() throws NotFoundServiceException {
+    public void delete() throws NotFoundServiceException, ServiceUnavailableException {
         final var resourceId = builder.resource().getPublicId();
 
         doAnswer(invocation -> {
@@ -51,5 +54,6 @@ public class ResourceServiceImplTest {
         resourceService.delete(resourceId);
 
         verify(connectionService).replacePrimaryConnectionsFor(any(Resource.class));
+        verify(metadataApiService).deleteMetadataByPublicId(resourceId);
     }
 }

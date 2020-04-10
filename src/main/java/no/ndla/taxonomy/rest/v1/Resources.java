@@ -13,6 +13,7 @@ import no.ndla.taxonomy.rest.v1.dtos.resources.*;
 import no.ndla.taxonomy.service.MetadataApiService;
 import no.ndla.taxonomy.service.ResourceService;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -235,6 +236,8 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
             resourceService.delete(id);
         } catch (NotFoundServiceException e) {
             throw new NotFoundHttpRequestException(e);
+        } catch (ServiceUnavailableException e) {
+            throw new ServiceUnavailableHttpResponseException(e);
         }
     }
 }
