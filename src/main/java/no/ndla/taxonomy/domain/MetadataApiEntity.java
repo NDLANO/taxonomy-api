@@ -15,7 +15,7 @@ public class MetadataApiEntity {
     }
 
     public MetadataApiEntity(MetadataDto entityMetadataObject) {
-        entityMetadataObject.getCompetenceAims().forEach(aim -> addCompetenceAim(new CompetenceAim(aim)));
+        entityMetadataObject.getGrepCodes().forEach(aim -> addCompetenceAim(new CompetenceAim(aim)));
     }
 
     public String getPublicId() {

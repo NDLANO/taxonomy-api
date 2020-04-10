@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @RestController
 @Transactional
 @RequestMapping(path = {"/v1/subjects"})
-public class Subjects extends CrudController<Subject> {
+public class Subjects extends PathResolvableEntityRestController<Subject> {
     private final SubjectRepository subjectRepository;
     private final TopicTreeBySubjectElementRepository subjectTopicTreeElementRepository;
     private final TopicResourceRepository topicResourceRepository;

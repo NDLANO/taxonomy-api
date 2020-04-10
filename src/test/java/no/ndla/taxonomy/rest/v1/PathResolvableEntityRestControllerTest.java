@@ -12,11 +12,14 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-public class CrudControllerTest {
+public class PathResolvableEntityRestControllerTest {
+
     private MetadataApiService metadataApiService;
-    private CrudController<MockEntity> controller;
+    private PathResolvableEntityRestController<MockEntity> controller;
 
     @Before
     public void setUp() throws Exception {
@@ -28,32 +31,32 @@ public class CrudControllerTest {
     public void getMetadata() throws ServiceUnavailableException {
         when(metadataApiService.getMetadataByPublicId(URI.create("urn:test:1"))).thenAnswer(invocationOnMock -> {
             final var toReturn = mock(MetadataDto.class);
-            when(toReturn.getCompetenceAims()).thenReturn(Set.of("A", "B"));
+            when(toReturn.getGrepCodes()).thenReturn(Set.of("A", "B"));
 
             return toReturn;
         });
         final var result = controller.getMetadata(URI.create("urn:test:1"));
 
-        assertEquals(2, result.getCompetenceAims().size());
-        assertTrue(result.getCompetenceAims().containsAll(Set.of("A", "B")));
+        assertEquals(2, result.getGrepCodes().size());
+        assertTrue(result.getGrepCodes().containsAll(Set.of("A", "B")));
     }
 
     @Test
     public void putMetadata() throws ServiceUnavailableException {
         when(metadataApiService.updateMetadataByPublicId(eq(URI.create(("urn:test:1"))), any(MetadataDto.class))).thenAnswer(invocationOnMock -> {
             final var toReturn = mock(MetadataDto.class);
-            when(toReturn.getCompetenceAims()).thenReturn(Set.of("A", "B"));
+            when(toReturn.getGrepCodes()).thenReturn(Set.of("A", "B"));
 
             return toReturn;
         });
 
         final var requestObject = new MetadataDto();
-        requestObject.setCompetenceAims(Set.of("C", "D"));
+        requestObject.setGrepCodes(Set.of("C", "D"));
 
         final var result = controller.putMetadata(URI.create("urn:test:1"), requestObject);
 
-        assertEquals(2, result.getCompetenceAims().size());
-        assertTrue(result.getCompetenceAims().containsAll(Set.of("A", "B")));
+        assertEquals(2, result.getGrepCodes().size());
+        assertTrue(result.getGrepCodes().containsAll(Set.of("A", "B")));
 
         verify(metadataApiService).updateMetadataByPublicId(eq(URI.create("urn:test:1")), any(MetadataDto.class));
     }
@@ -62,7 +65,7 @@ public class CrudControllerTest {
 
     }
 
-    private static class MockController extends CrudController<MockEntity> {
+    private static class MockController extends PathResolvableEntityRestController<MockEntity> {
 
         MockController(MetadataApiService metadataApiService) {
             super(metadataApiService);

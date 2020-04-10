@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/resources"})
-public class Resources extends CrudController<Resource> {
+public class Resources extends PathResolvableEntityRestController<Resource> {
     private final ResourceRepository resourceRepository;
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ResourceFilterRepository resourceFilterRepository;

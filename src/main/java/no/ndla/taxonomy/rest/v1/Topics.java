@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/topics"})
-public class Topics extends CrudController<Topic> {
+public class Topics extends PathResolvableEntityRestController<Topic> {
 
 
     private final TopicResourceTypeService topicResourceTypeService;
