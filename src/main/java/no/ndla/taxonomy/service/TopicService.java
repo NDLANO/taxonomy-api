@@ -3,13 +3,14 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
 import no.ndla.taxonomy.service.dtos.SubTopicIndexDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 
 public interface TopicService {
-    void delete(URI publicId) throws NotFoundServiceException;
+    void delete(URI publicId) throws NotFoundServiceException, ServiceUnavailableException;
 
     List<ConnectionIndexDTO> getAllConnections(URI topicPublicId) throws NotFoundServiceException;
 

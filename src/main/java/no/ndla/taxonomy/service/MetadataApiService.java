@@ -9,4 +9,6 @@ public interface MetadataApiService {
     MetadataDto getMetadataByPublicId(URI publicId) throws ServiceUnavailableException;
 
     MetadataDto updateMetadataByPublicId(URI publicId, MetadataDto metadataApiEntity) throws ServiceUnavailableException;
+
+    void deleteMetadataByPublicId(URI publicId) throws ServiceUnavailableException;
 }

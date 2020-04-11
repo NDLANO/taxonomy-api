@@ -5,6 +5,7 @@ import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,15 +41,18 @@ public class TopicServiceImplTest {
 
     private TopicServiceImpl topicService;
 
+    private MetadataApiService metadataApiService;
+
     @Before
     public void setUp() {
         entityConnectionService = mock(EntityConnectionService.class);
+        metadataApiService = mock(MetadataApiService.class);
 
-        topicService = new TopicServiceImpl(topicRepository, topicSubtopicRepository, filterRepository, entityConnectionService);
+        topicService = new TopicServiceImpl(topicRepository, topicSubtopicRepository, filterRepository, entityConnectionService, metadataApiService);
     }
 
     @Test
-    public void delete() throws NotFoundServiceException {
+    public void delete() throws NotFoundServiceException, ServiceUnavailableException {
         final var topicId = builder.topic().getPublicId();
 
         doAnswer(invocation -> {
@@ -63,6 +67,8 @@ public class TopicServiceImplTest {
 
         assertFalse(topicRepository.findFirstByPublicId(topicId).isPresent());
         verify(entityConnectionService).replacePrimaryConnectionsFor(any(Topic.class));
+
+        verify(metadataApiService).deleteMetadataByPublicId(topicId);
     }
 
     @Test

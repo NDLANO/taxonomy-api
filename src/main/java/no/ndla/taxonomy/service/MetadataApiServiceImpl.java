@@ -20,14 +20,19 @@ public class MetadataApiServiceImpl implements MetadataApiService {
         this.restTemplate = restTemplate;
     }
 
-    @Override
-    public MetadataDto getMetadataByPublicId(URI publicId) throws ServiceUnavailableException {
+    private String getServiceUrl() throws ServiceUnavailableException {
         if (serviceUrl == null) {
             throw new ServiceUnavailableException("No serviceUrl defined for taxonomy-metadata");
         }
 
+        return serviceUrl;
+    }
+
+    @Override
+    public MetadataDto getMetadataByPublicId(URI publicId) throws ServiceUnavailableException {
+
         try {
-            final var returnedEntity = restTemplate.getForEntity(serviceUrl + "/v1/taxonomy_entities/" + publicId, MetadataApiEntity.class).getBody();
+            final var returnedEntity = restTemplate.getForEntity(getServiceUrl() + "/v1/taxonomy_entities/" + publicId, MetadataApiEntity.class).getBody();
 
             if (returnedEntity == null) {
                 throw new ServiceUnavailableException("No response from service");
@@ -41,16 +46,21 @@ public class MetadataApiServiceImpl implements MetadataApiService {
 
     @Override
     public MetadataDto updateMetadataByPublicId(URI publicId, MetadataDto metadataApiEntity) throws ServiceUnavailableException {
-        if (serviceUrl == null) {
-            throw new ServiceUnavailableException("No serviceUrl defined for taxonomy-metadata");
-        }
-
         final var requestObject = new MetadataApiEntity(metadataApiEntity);
 
         try {
-            restTemplate.put(serviceUrl + "/v1/taxonomy_entities/" + publicId, requestObject);
+            restTemplate.put(getServiceUrl() + "/v1/taxonomy_entities/" + publicId, requestObject);
 
             return getMetadataByPublicId(publicId);
+        } catch (RestClientException exception) {
+            throw new ServiceUnavailableException(exception);
+        }
+    }
+
+    @Override
+    public void deleteMetadataByPublicId(URI publicId) throws ServiceUnavailableException {
+        try {
+            restTemplate.delete(getServiceUrl() + "/v1/taxonomy_entities/" + publicId);
         } catch (RestClientException exception) {
             throw new ServiceUnavailableException(exception);
         }
