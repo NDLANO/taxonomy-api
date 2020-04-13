@@ -3,8 +3,6 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.ResourceRepository;
-import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,7 +38,7 @@ public class ResourceServiceImplTest {
 
     @Test
     @Transactional
-    public void delete() throws NotFoundServiceException, ServiceUnavailableException {
+    public void delete() {
         final var resourceId = builder.resource().getPublicId();
 
         doAnswer(invocation -> {

@@ -1,7 +1,6 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.service.dtos.ResolvedUrl;
-import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 
 import java.net.URI;
 import java.util.Optional;
@@ -15,7 +14,7 @@ public interface UrlResolverService {
 
     void putUrlMapping(String oldUrl, URI nodeId, URI subjectId) throws NodeIdNotFoundExeption;
 
-    Optional<ResolvedUrl> resolveUrl(String path) throws InvalidArgumentServiceException;
+    Optional<ResolvedUrl> resolveUrl(String path);
 
     class NodeIdNotFoundExeption extends Exception {
         public NodeIdNotFoundExeption(String message) {

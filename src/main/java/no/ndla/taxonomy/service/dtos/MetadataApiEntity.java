@@ -1,6 +1,4 @@
-package no.ndla.taxonomy.domain;
-
-import no.ndla.taxonomy.service.dtos.MetadataDto;
+package no.ndla.taxonomy.service.dtos;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -9,6 +7,7 @@ import java.util.stream.Collectors;
 public class MetadataApiEntity {
     private String publicId;
     private Set<CompetenceAim> competenceAims = new HashSet<>();
+    private boolean visible;
 
     public MetadataApiEntity() {
 
@@ -16,6 +15,7 @@ public class MetadataApiEntity {
 
     public MetadataApiEntity(MetadataDto entityMetadataObject) {
         entityMetadataObject.getGrepCodes().forEach(aim -> addCompetenceAim(new CompetenceAim(aim)));
+        this.visible = entityMetadataObject.isVisible();
     }
 
     public String getPublicId() {
@@ -28,6 +28,14 @@ public class MetadataApiEntity {
 
     public Set<CompetenceAim> getCompetenceAims() {
         return competenceAims.stream().collect(Collectors.toUnmodifiableSet());
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 
     void setCompetenceAims(Set<CompetenceAim> competenceAims) {

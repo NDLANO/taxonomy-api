@@ -6,14 +6,13 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.ResourceFilterRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
-import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
+import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
 import no.ndla.taxonomy.rest.v1.dtos.resources.*;
 import no.ndla.taxonomy.service.MetadataApiService;
+import no.ndla.taxonomy.service.MetadataEntityWrapperService;
 import no.ndla.taxonomy.service.ResourceService;
-import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,16 +33,19 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ResourceFilterRepository resourceFilterRepository;
     private final ResourceService resourceService;
+    private final MetadataEntityWrapperService metadataWrapperService;
 
     public Resources(ResourceRepository resourceRepository,
                      ResourceResourceTypeRepository resourceResourceTypeRepository,
                      ResourceFilterRepository resourceFilterRepository,
-                     ResourceService resourceService, MetadataApiService metadataApiService) {
+                     ResourceService resourceService, MetadataApiService metadataApiService,
+                     MetadataEntityWrapperService metadataWrapperService) {
         super(metadataApiService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceFilterRepository = resourceFilterRepository;
         this.resourceRepository = resourceRepository;
+        this.metadataWrapperService = metadataWrapperService;
         this.repository = resourceRepository;
         this.resourceService = resourceService;
     }
@@ -53,24 +55,27 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
     @Transactional(readOnly = true)
     public List<ResourceIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "") String language
+            @RequestParam(value = "language", required = false, defaultValue = "") String language,
+            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
     ) {
 
-        return resourceRepository.findAllIncludingCachedUrlsAndTranslations()
+        return metadataWrapperService.wrapEntities(resourceRepository.findAllIncludingCachedUrlsAndTranslations(), includeMetadata)
                 .stream()
-                .flatMap(resource -> {
+                .flatMap(wrappedResource -> {
+                    final var resource = wrappedResource.getEntity();
+
                     // Return single object with null path if there is no primary paths
                     // If primary paths exists, return one object for each primary path found
 
                     if (resource.getPrimaryPath().isEmpty()) {
-                        return Set.of(new ResourceIndexDocument(resource, language)).stream();
+                        return Set.of(new ResourceIndexDocument(wrappedResource, language)).stream();
                     }
 
                     return resource.getCachedUrls()
                             .stream()
                             .filter(CachedUrl::isPrimary)
                             .map(cachedUrl -> {
-                                final var resourceIndexDocument = new ResourceIndexDocument(resource, language);
+                                final var resourceIndexDocument = new ResourceIndexDocument(wrappedResource, language);
                                 resource.getPrimaryPath().ifPresent(resourceIndexDocument::setPath);
 
                                 return resourceIndexDocument;
@@ -85,12 +90,13 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
     public ResourceIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @RequestParam(value = "language", required = false, defaultValue = "") String language,
+            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata) {
 
         final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
-                .orElseThrow(() -> new NotFoundHttpRequestException("No such resource found"));
+                .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
 
-        return new ResourceWithPathsIndexDocument(resource, language);
+        return new ResourceWithPathsIndexDocument(metadataWrapperService.wrapEntity(resource, includeMetadata), language);
     }
 
     @PutMapping("/{id}")
@@ -155,7 +161,7 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id).orElseThrow(() -> new NotFoundHttpRequestException("Resource not found"));
+        final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id).orElseThrow(() -> new NotFoundHttpResponseException("Resource not found"));
 
         final ResourceIndexDocument resourceIndexDocument;
 
@@ -232,12 +238,6 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
-        try {
-            resourceService.delete(id);
-        } catch (NotFoundServiceException e) {
-            throw new NotFoundHttpRequestException(e);
-        } catch (ServiceUnavailableException e) {
-            throw new ServiceUnavailableHttpResponseException(e);
-        }
+        resourceService.delete(id);
     }
 }

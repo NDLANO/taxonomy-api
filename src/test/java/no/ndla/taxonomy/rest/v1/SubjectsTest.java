@@ -11,7 +11,7 @@ import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -19,6 +19,7 @@ import java.net.URI;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class SubjectsTest extends RestTest {
@@ -27,18 +28,40 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_single_subject() throws Exception {
-        URI english = builder.subject(s -> s
+        builder.subject(s -> s
                 .name("english")
                 .contentUri("urn:article:1")
                 .publicId("urn:subject:1")
-        ).getPublicId();
+        );
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + english);
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1");
         SubjectIndexDocument subject = testUtils.getObject(SubjectIndexDocument.class, response);
 
         assertEquals("english", subject.name);
         assertEquals("urn:article:1", subject.contentUri.toString());
         assertEquals("/subject:1", subject.path);
+
+        assertNull(subject.metadata);
+    }
+
+    @Test
+    public void can_get_single_subject_with_metadata() throws Exception {
+        builder.subject(s -> s
+                .name("english")
+                .contentUri("urn:article:1")
+                .publicId("urn:subject:1")
+        );
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1?includeMetadata=true");
+        SubjectIndexDocument subject = testUtils.getObject(SubjectIndexDocument.class, response);
+
+        assertEquals("english", subject.name);
+        assertEquals("urn:article:1", subject.contentUri.toString());
+        assertEquals("/subject:1", subject.path);
+
+        assertNotNull(subject.metadata);
+        assertTrue(subject.metadata.isVisible());
+        assertTrue(subject.metadata.getGrepCodes().size() == 1 && subject.metadata.getGrepCodes().contains("SUBJECT1"));
     }
 
     @Test
@@ -54,6 +77,28 @@ public class SubjectsTest extends RestTest {
         assertAnyTrue(subjects, s -> "mathematics".equals(s.name));
         assertAllTrue(subjects, s -> isValidId(s.id));
         assertAllTrue(subjects, s -> !s.path.isEmpty());
+
+        assertAllTrue(subjects, s -> s.metadata == null);
+    }
+
+    @Test
+    public void can_get_all_subjects_with_metadata() throws Exception {
+        builder.subject(s -> s.name("english"));
+        builder.subject(s -> s.name("mathematics"));
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects?includeMetadata=true");
+        SubjectIndexDocument[] subjects = testUtils.getObject(SubjectIndexDocument[].class, response);
+        assertEquals(2, subjects.length);
+
+        assertAnyTrue(subjects, s -> "english".equals(s.name));
+        assertAnyTrue(subjects, s -> "mathematics".equals(s.name));
+        assertAllTrue(subjects, s -> isValidId(s.id));
+        assertAllTrue(subjects, s -> !s.path.isEmpty());
+
+        assertAllTrue(subjects, s -> s.metadata != null);
+
+        assertAllTrue(subjects, s -> s.metadata.isVisible());
+        assertAllTrue(subjects, s -> s.metadata.getGrepCodes().size() == 1);
     }
 
     @Test
@@ -118,9 +163,12 @@ public class SubjectsTest extends RestTest {
                 .translation("nb", tr -> tr.name("fag"))
                 .filter(f -> f.publicId("urn:filter:1"))
         ).getPublicId();
+
         testUtils.deleteResource("/v1/subjects/" + id);
         assertNull(subjectRepository.findByPublicId(id));
         assertNull(filterRepository.findByPublicId(URI.create("urn:filter:1")));
+
+        verify(metadataApiService).deleteMetadataByPublicId(id);
     }
 
     @Test
@@ -145,7 +193,6 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(topics, t -> !t.path.isEmpty());
         assertAllTrue(topics, t -> t.parent.equals(subject.getPublicId()));
     }
-
 
     @Test
     public void can_get_topics_recursively() throws Exception {

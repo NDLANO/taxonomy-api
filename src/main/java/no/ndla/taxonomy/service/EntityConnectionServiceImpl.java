@@ -6,7 +6,6 @@ import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
-import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,9 +20,9 @@ import java.util.stream.Stream;
 @Transactional
 @Service
 public class EntityConnectionServiceImpl implements EntityConnectionService {
-    private SubjectTopicRepository subjectTopicRepository;
-    private TopicSubtopicRepository topicSubtopicRepository;
-    private TopicResourceRepository topicResourceRepository;
+    private final SubjectTopicRepository subjectTopicRepository;
+    private final TopicSubtopicRepository topicSubtopicRepository;
+    private final TopicResourceRepository topicResourceRepository;
 
 
     public EntityConnectionServiceImpl(SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository) {
@@ -33,7 +32,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public SubjectTopic connectSubjectTopic(Subject subject, Topic topic) throws DuplicateConnectionException, InvalidArgumentServiceException {
+    public SubjectTopic connectSubjectTopic(Subject subject, Topic topic) {
         final var highestRank = subject.getSubjectTopics().stream()
                 .map(SubjectTopic::getRank)
                 .max(Integer::compare);
@@ -42,7 +41,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public TopicResource connectTopicResource(Topic topic, Resource resource) throws InvalidArgumentServiceException, DuplicateConnectionException {
+    public TopicResource connectTopicResource(Topic topic, Resource resource) {
         return connectTopicResource(topic, resource, true, null);
     }
 
@@ -90,7 +89,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public SubjectTopic connectSubjectTopic(Subject subject, Topic topic, Integer rank) throws DuplicateConnectionException {
+    public SubjectTopic connectSubjectTopic(Subject subject, Topic topic, Integer rank) {
         if (topic.getParentConnections().size() > 0) {
             throw new DuplicateConnectionException();
         }
@@ -106,12 +105,12 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public TopicSubtopic connectTopicSubtopic(Topic topic, Topic subTopic) throws DuplicateConnectionException, InvalidArgumentServiceException {
+    public TopicSubtopic connectTopicSubtopic(Topic topic, Topic subTopic) {
         return connectTopicSubtopic(topic, subTopic, null);
     }
 
     @Override
-    public TopicSubtopic connectTopicSubtopic(Topic topic, Topic subTopic, Integer rank) throws DuplicateConnectionException, InvalidArgumentServiceException {
+    public TopicSubtopic connectTopicSubtopic(Topic topic, Topic subTopic, Integer rank) {
         if (subTopic.getParentConnections().size() > 0) {
             throw new DuplicateConnectionException();
         }
@@ -146,7 +145,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public TopicResource connectTopicResource(Topic topic, Resource resource, boolean isPrimary, Integer rank) throws DuplicateConnectionException, InvalidArgumentServiceException {
+    public TopicResource connectTopicResource(Topic topic, Resource resource, boolean isPrimary, Integer rank) {
         if (topic.getTopicResources().stream()
                 .anyMatch(topicResource -> topicResource.getResource().orElse(null) == resource)) {
             throw new DuplicateConnectionException();
@@ -233,7 +232,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         topicResourceRepository.flush();
     }
 
-    private void updatePrimaryConnection(EntityWithPathConnection connectable, boolean setPrimaryTo) throws InvalidArgumentServiceException {
+    private void updatePrimaryConnection(EntityWithPathConnection connectable, boolean setPrimaryTo) {
         final var updatedConnectables = new HashSet<EntityWithPathConnection>();
         updatedConnectables.add(connectable);
 
@@ -267,7 +266,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         saveConnections(updatedConnections);
     }
 
-    private void updateRankableConnection(EntityWithPathConnection connection, boolean isPrimary, Integer newRank) throws InvalidArgumentServiceException, NotFoundServiceException {
+    private void updateRankableConnection(EntityWithPathConnection connection, boolean isPrimary, Integer newRank) {
         updatePrimaryConnection(connection, isPrimary);
 
         if (newRank != null) {
@@ -276,17 +275,17 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public void updateTopicSubtopic(TopicSubtopic topicSubtopic, Integer newRank) throws InvalidArgumentServiceException, NotFoundServiceException {
+    public void updateTopicSubtopic(TopicSubtopic topicSubtopic, Integer newRank) {
         updateRank(topicSubtopic, newRank);
     }
 
     @Override
-    public void updateTopicResource(TopicResource topicResource, boolean isPrimary, Integer newRank) throws InvalidArgumentServiceException, NotFoundServiceException {
+    public void updateTopicResource(TopicResource topicResource, boolean isPrimary, Integer newRank) {
         updateRankableConnection(topicResource, isPrimary, newRank);
     }
 
     @Override
-    public void updateSubjectTopic(SubjectTopic subjectTopic, Integer newRank) throws InvalidArgumentServiceException, NotFoundServiceException {
+    public void updateSubjectTopic(SubjectTopic subjectTopic, Integer newRank) {
         updateRank(subjectTopic, newRank);
     }
 

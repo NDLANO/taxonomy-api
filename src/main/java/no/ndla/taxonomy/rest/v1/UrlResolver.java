@@ -7,11 +7,9 @@ import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
-import no.ndla.taxonomy.rest.BadHttpRequestException;
-import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
+import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.service.UrlResolverService;
 import no.ndla.taxonomy.service.dtos.ResolvedUrl;
-import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,11 +31,7 @@ public class UrlResolver {
 
     @GetMapping("/resolve")
     public ResolvedUrl resolve(@RequestParam String path) {
-        try {
-            return urlResolverService.resolveUrl(path).orElseThrow(() -> new NotFoundHttpRequestException("Element with path was not found"));
-        } catch (InvalidArgumentServiceException e) {
-            throw new BadHttpRequestException(e);
-        }
+        return urlResolverService.resolveUrl(path).orElseThrow(() -> new NotFoundHttpResponseException("Element with path was not found"));
     }
 
 
@@ -56,10 +50,8 @@ public class UrlResolver {
     public void putTaxonomyNodeAndSubjectForOldUrl(@RequestBody UrlMapping urlMapping) {
         try {
             urlResolverService.putUrlMapping(urlMapping.url, URI.create(urlMapping.nodeId), URI.create(urlMapping.subjectId));
-        } catch (IllegalArgumentException ex) {
-            throw new BadHttpRequestException(ex.getMessage());
         } catch (UrlResolverService.NodeIdNotFoundExeption ex) {
-            throw new NotFoundHttpRequestException(ex.getMessage());
+            throw new NotFoundHttpResponseException(ex.getMessage());
         }
     }
 

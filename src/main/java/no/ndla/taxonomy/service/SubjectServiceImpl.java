@@ -2,7 +2,6 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +20,7 @@ public class SubjectServiceImpl implements SubjectService {
 
     @Override
     @Transactional
-    public void delete(URI publicId) throws NotFoundServiceException, ServiceUnavailableException {
+    public void delete(URI publicId) {
         final var subjectToDelete = subjectRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Subject was not found"));
 
         subjectRepository.delete(subjectToDelete);

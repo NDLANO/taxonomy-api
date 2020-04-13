@@ -6,7 +6,6 @@ import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.UrlMappingRepository;
-import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -291,7 +290,7 @@ public class UrlResolverServiceImplTest {
 
     @Test
     @Transactional
-    public void resolveEntitiesFromPath() throws InvalidArgumentServiceException {
+    public void resolveEntitiesFromPath() {
         builder.subject(s -> s
                 .publicId("urn:subject:1")
                 .topic(t -> t

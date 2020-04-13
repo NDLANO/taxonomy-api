@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.domain;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
@@ -11,7 +12,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 @Component
-@Transactional
+@Transactional(propagation = Propagation.MANDATORY)
 public class Builder {
     private final EntityManager entityManager;
     private final Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();

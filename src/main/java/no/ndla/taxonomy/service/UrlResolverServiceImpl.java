@@ -151,7 +151,7 @@ public class UrlResolverServiceImpl implements UrlResolverService {
         }
     }
 
-    private void validateEntityPath(List<EntityWithPath> entities) throws NotFoundServiceException {
+    private void validateEntityPath(List<EntityWithPath> entities) {
         // Verify that the path is actually valid, not just that the objects referred to exists. We could use the CachedUrl
         // to do this validation, but would rather not since the CachedUrl view generation could be removed later
 
@@ -176,7 +176,7 @@ public class UrlResolverServiceImpl implements UrlResolverService {
     }
 
     @Override
-    public Optional<ResolvedUrl> resolveUrl(String path) throws InvalidArgumentServiceException {
+    public Optional<ResolvedUrl> resolveUrl(String path) {
         try {
             final var resolvedPathComponents = resolveEntitiesFromPath(path);
 
@@ -210,7 +210,7 @@ public class UrlResolverServiceImpl implements UrlResolverService {
         }
     }
 
-    private List<EntityWithPath> resolveEntitiesFromPath(String path) throws NotFoundServiceException, InvalidArgumentServiceException {
+    private List<EntityWithPath> resolveEntitiesFromPath(String path) {
         final var pathParts = path.split("/+");
 
         final var returnedList = new ArrayList<EntityWithPath>();
@@ -230,7 +230,7 @@ public class UrlResolverServiceImpl implements UrlResolverService {
         return returnedList;
     }
 
-    private Optional<EntityWithPath> getEntityFromPublicId(URI publicId) throws InvalidArgumentServiceException {
+    private Optional<EntityWithPath> getEntityFromPublicId(URI publicId) {
         final var publicIdUrnPart = publicId.getSchemeSpecificPart();
         if (!publicId.getScheme().equals("urn") || publicIdUrnPart == null) {
             throw new InvalidArgumentServiceException("No valid URN provided");

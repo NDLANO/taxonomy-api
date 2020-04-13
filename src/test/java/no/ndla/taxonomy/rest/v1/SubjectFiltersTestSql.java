@@ -2,7 +2,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 

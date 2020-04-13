@@ -3,6 +3,7 @@ package no.ndla.taxonomy.rest.v1.dtos.topics;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 
 import java.net.URI;
 
@@ -27,5 +28,6 @@ public class TopicIndexDocument {
     @ApiModelProperty(value = "The primary path for this topic", example = "/subject:1/topic:1")
     public String path;
 
-
+    @ApiModelProperty(value = "Metadata object for this entity if requested")
+    public MetadataDto metadata;
 }

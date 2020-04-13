@@ -8,7 +8,7 @@ import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.TopicIndexDocument;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TopicsTest extends RestTest {
@@ -40,12 +41,36 @@ public class TopicsTest extends RestTest {
                         .publicId("urn:topic:1")
                 ));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/" + "urn:topic:1");
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
         TopicIndexDocument topic = testUtils.getObject(TopicIndexDocument.class, response);
 
         assertEquals("trigonometry", topic.name);
         assertEquals("urn:article:1", topic.contentUri.toString());
         assertEquals("/subject:1/topic:1", topic.path);
+
+        assertNull(topic.metadata);
+    }
+
+    @Test
+    public void can_get_single_topic_with_metadata() throws Exception {
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .topic(t -> t
+                        .name("trigonometry")
+                        .contentUri("urn:article:1")
+                        .publicId("urn:topic:1")
+                ));
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1?includeMetadata=true");
+        TopicIndexDocument topic = testUtils.getObject(TopicIndexDocument.class, response);
+
+        assertEquals("trigonometry", topic.name);
+        assertEquals("urn:article:1", topic.contentUri.toString());
+        assertEquals("/subject:1/topic:1", topic.path);
+
+        assertNotNull(topic.metadata);
+        assertTrue(topic.metadata.isVisible());
+        assertTrue(topic.metadata.getGrepCodes().size() == 1 && topic.metadata.getGrepCodes().contains("TOPIC1"));
     }
 
     @Test
@@ -73,10 +98,35 @@ public class TopicsTest extends RestTest {
         TopicIndexDocument[] topics = testUtils.getObject(TopicIndexDocument[].class, response);
         assertEquals(2, topics.length);
 
-        assertAnyTrue(topics, s -> "photo synthesis".equals(s.name));
-        assertAnyTrue(topics, s -> "trigonometry".equals(s.name));
-        assertAllTrue(topics, s -> isValidId(s.id));
+        assertAnyTrue(topics, t -> "photo synthesis".equals(t.name));
+        assertAnyTrue(topics, t -> "trigonometry".equals(t.name));
+        assertAllTrue(topics, t -> isValidId(t.id));
         assertAllTrue(topics, t -> t.path.contains("subject") && t.path.contains("topic"));
+
+        assertAllTrue(topics, t -> t.metadata == null);
+    }
+
+    @Test
+    public void can_get_all_topics_with_metadata() throws Exception {
+        builder.subject(s -> s
+                .name("Basic science")
+                .topic(t -> t.name("photo synthesis")));
+        builder.subject(s -> s
+                .name("Maths")
+                .topic(t -> t.name("trigonometry")));
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics?includeMetadata=true");
+        TopicIndexDocument[] topics = testUtils.getObject(TopicIndexDocument[].class, response);
+        assertEquals(2, topics.length);
+
+        assertAnyTrue(topics, t -> "photo synthesis".equals(t.name));
+        assertAnyTrue(topics, t -> "trigonometry".equals(t.name));
+        assertAllTrue(topics, t -> isValidId(t.id));
+        assertAllTrue(topics, t -> t.path.contains("subject") && t.path.contains("topic"));
+
+        assertAllTrue(topics, t -> t.metadata != null);
+        assertAllTrue(topics, t -> t.metadata.isVisible());
+        assertAllTrue(topics, t -> t.metadata.getGrepCodes().size() == 1);
     }
 
 
@@ -210,6 +260,8 @@ public class TopicsTest extends RestTest {
         testUtils.deleteResource("/v1/topics/" + parentId);
 
         assertNull(topicRepository.findByPublicId(parentId));
+
+        verify(metadataApiService).deleteMetadataByPublicId(parentId);
     }
 
     @Test
@@ -220,9 +272,13 @@ public class TopicsTest extends RestTest {
                 .resource(r -> r.publicId("urn:resource:1"))
                 .resource(r -> r.publicId("urn:resource:2")));
 
-        testUtils.deleteResource("/v1/topics/" + topic.getPublicId());
+        final var topicId = topic.getPublicId();
 
-        assertNull(topicRepository.findByPublicId(topic.getPublicId()));
+        testUtils.deleteResource("/v1/topics/" + topicId);
+
+        assertNull(topicRepository.findByPublicId(topicId));
+
+        verify(metadataApiService).deleteMetadataByPublicId(topicId);
     }
 
     @Test
@@ -241,6 +297,8 @@ public class TopicsTest extends RestTest {
 
         assertNull(topicRepository.findByPublicId(parentId));
         assertNotNull(topicRepository.findByPublicId(childTopic.getPublicId()));
+
+        verify(metadataApiService).deleteMetadataByPublicId(parentId);
     }
 
     @Test
@@ -260,6 +318,8 @@ public class TopicsTest extends RestTest {
         assertNull(topicRepository.findByPublicId(parentId));
         assertNotNull(resourceRepository.findByPublicId(resource.getPublicId()));
         assertNotNull(filterRepository.findByPublicId(filter.getPublicId()));
+
+        verify(metadataApiService).deleteMetadataByPublicId(parentId);
     }
 
     @Test

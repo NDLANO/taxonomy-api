@@ -1,6 +1,6 @@
 package no.ndla.taxonomy.service.exceptions;
 
-public class NotFoundServiceException extends Exception {
+public class NotFoundServiceException extends RuntimeException {
     public NotFoundServiceException() {
     }
 

@@ -1,14 +1,17 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.service.dtos.MetadataDto;
-import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 
 import java.net.URI;
+import java.util.Collection;
+import java.util.Set;
 
 public interface MetadataApiService {
-    MetadataDto getMetadataByPublicId(URI publicId) throws ServiceUnavailableException;
+    MetadataDto getMetadataByPublicId(URI publicId);
 
-    MetadataDto updateMetadataByPublicId(URI publicId, MetadataDto metadataApiEntity) throws ServiceUnavailableException;
+    Set<MetadataDto> getMetadataByPublicId(Collection<URI> publicIds);
 
-    void deleteMetadataByPublicId(URI publicId) throws ServiceUnavailableException;
+    MetadataDto updateMetadataByPublicId(URI publicId, MetadataDto metadataApiEntity);
+
+    void deleteMetadataByPublicId(URI publicId);
 }

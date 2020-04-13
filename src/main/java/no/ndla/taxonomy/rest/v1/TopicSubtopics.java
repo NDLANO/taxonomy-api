@@ -8,13 +8,7 @@ import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
-import no.ndla.taxonomy.rest.BadHttpRequestException;
-import no.ndla.taxonomy.rest.ConflictHttpResponseException;
-import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.service.EntityConnectionService;
-import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
-import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
-import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -66,14 +60,7 @@ public class TopicSubtopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Topic subtopic = topicRepository.getByPublicId(command.subtopicid);
 
-        final TopicSubtopic topicSubtopic;
-        try {
-            topicSubtopic = connectionService.connectTopicSubtopic(topic, subtopic, command.rank == 0 ? null : command.rank);
-        } catch (DuplicateConnectionException e) {
-            throw new ConflictHttpResponseException(e);
-        } catch (InvalidArgumentServiceException e) {
-            throw new BadHttpRequestException(e);
-        }
+        final var topicSubtopic = connectionService.connectTopicSubtopic(topic, subtopic, command.rank == 0 ? null : command.rank);
 
         URI location = URI.create("/topic-subtopics/" + topicSubtopic.getPublicId());
         return ResponseEntity.created(location).build();
@@ -95,13 +82,7 @@ public class TopicSubtopics {
                     @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
         final var topicSubtopic = topicSubtopicRepository.getByPublicId(id);
 
-        try {
-            connectionService.updateTopicSubtopic(topicSubtopic, command.rank > 0 ? command.rank : null);
-        } catch (InvalidArgumentServiceException e) {
-            throw new BadHttpRequestException(e);
-        } catch (NotFoundServiceException e) {
-            throw new NotFoundHttpRequestException(e);
-        }
+        connectionService.updateTopicSubtopic(topicSubtopic, command.rank > 0 ? command.rank : null);
     }
 
     public static class AddSubtopicToTopicCommand {

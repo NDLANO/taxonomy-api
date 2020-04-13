@@ -1,7 +1,7 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.config.MetadataApiConfig;
-import no.ndla.taxonomy.domain.MetadataApiEntity;
+import no.ndla.taxonomy.service.dtos.MetadataApiEntity;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.junit.Before;
@@ -9,9 +9,15 @@ import org.junit.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -30,11 +36,13 @@ public class MetadataApiServiceImplTest {
 
         when(metadataApiConfig.getServiceUrl()).thenReturn("http://metadata");
 
-        this.metadataApiService = new MetadataApiServiceImpl(metadataApiConfig, restTemplate);
+        final var threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
+
+        this.metadataApiService = new MetadataApiServiceImpl(metadataApiConfig, restTemplate, threadPoolExecutor);
     }
 
     @Test
-    public void getMetadataByPublicId() throws ServiceUnavailableException {
+    public void getMetadataByPublicId_single() {
         when(restTemplate.getForEntity(eq("http://metadata/v1/taxonomy_entities/urn:test:1"), any(Class.class))).thenAnswer(invocationOnMock -> {
             final var aim1 = mock(MetadataApiEntity.CompetenceAim.class);
             final var aim2 = mock(MetadataApiEntity.CompetenceAim.class);
@@ -55,8 +63,72 @@ public class MetadataApiServiceImplTest {
 
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Test
-    public void updateMetadataByPublicId() throws ServiceUnavailableException {
+    public void getMetadataByPublicId_multiple() {
+        final var idList = new HashSet<URI>();
+
+        for (var i = 0; i < 1000; i++) {
+            idList.add(URI.create("urn:test:" + i));
+        }
+
+        when(restTemplate.getForEntity(any(String.class), eq(MetadataApiEntity[].class))).thenAnswer(invocationOnMock -> {
+            final var requestUrl = (String) invocationOnMock.getArgument(0);
+
+            final var parsedUrl = URI.create(requestUrl);
+
+            assertEquals("/v1/taxonomy_entities/", parsedUrl.getPath());
+            assertEquals("metadata", parsedUrl.getHost());
+            assertEquals("http", parsedUrl.getScheme());
+
+            final var queryMap = UriComponentsBuilder.fromUriString(requestUrl).build().getQueryParams();
+
+            assertTrue(queryMap.containsKey("publicIds"));
+            final var publicIdListString = queryMap.getFirst("publicIds");
+
+            final var publicIdList = Arrays.stream(publicIdListString.split(",")).map(URI::create).collect(Collectors.toSet());
+
+            assertTrue(publicIdList.size() <= 100);
+            assertTrue(publicIdList.size() > 0);
+
+            assertTrue(idList.containsAll(publicIdList));
+
+            final var entitiesToReturn = new ArrayList<MetadataApiEntity>();
+
+
+            publicIdList.forEach(publicId -> {
+                final var entityMock = mock(MetadataApiEntity.class);
+                when(entityMock.getPublicId()).thenReturn(publicId.toString());
+
+                final var aim = mock(MetadataApiEntity.CompetenceAim.class);
+                when(aim.getCode()).thenReturn(publicId.getSchemeSpecificPart().toUpperCase().replace(":", ""));
+
+                when(entityMock.getCompetenceAims()).thenReturn(Set.of(aim));
+                when(entityMock.isVisible()).thenReturn(false);
+
+                entitiesToReturn.add(entityMock);
+            });
+
+            return ResponseEntity.ok(entitiesToReturn.toArray(new MetadataApiEntity[0]));
+        });
+
+        final var returned = metadataApiService.getMetadataByPublicId(idList);
+
+        assertEquals(1000, returned.size());
+
+        returned.forEach(metadataDto -> {
+            final var publicId = metadataDto.getPublicId();
+            assertFalse(metadataDto.isVisible());
+            assertEquals(1, metadataDto.getGrepCodes().size());
+            assertTrue(metadataDto.getGrepCodes().contains(URI.create(publicId).getSchemeSpecificPart().toUpperCase().replace(":", "")));
+
+            assertTrue(idList.contains(URI.create(publicId)));
+        });
+    }
+
+
+    @Test
+    public void updateMetadataByPublicId() {
         doAnswer(invocationOnMock -> {
             final var apiEntity = (MetadataApiEntity) invocationOnMock.getArgument(1);
 
@@ -125,7 +197,7 @@ public class MetadataApiServiceImplTest {
     }
 
     @Test
-    public void deleteMetadataByPublicId() throws ServiceUnavailableException {
+    public void deleteMetadataByPublicId() {
         doThrow(new RestClientException("")).when(restTemplate).delete("http://metadata/v1/taxonomy_entities/urn:test:124");
 
         metadataApiService.deleteMetadataByPublicId(URI.create("urn:test:123"));

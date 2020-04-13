@@ -6,8 +6,8 @@ import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.FilterIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
@@ -19,7 +19,7 @@ public class SubjectFiltersTest extends RestTest {
     private Filter vg1, vg2;
     private Relevance core, supplementary;
 
-    @Before
+    @BeforeEach
     public void before() {
         core = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
         supplementary = builder.relevance(r -> r.publicId("urn:relevance:supplementary").name("Supplementary material"));

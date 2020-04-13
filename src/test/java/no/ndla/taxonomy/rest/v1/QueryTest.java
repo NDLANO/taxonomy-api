@@ -3,7 +3,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.rest.v1.dtos.queries.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.queries.TopicIndexDocument;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.mock.web.MockHttpServletResponse;
 

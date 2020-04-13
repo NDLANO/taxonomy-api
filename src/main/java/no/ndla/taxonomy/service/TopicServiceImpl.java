@@ -8,7 +8,6 @@ import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
 import no.ndla.taxonomy.service.dtos.SubTopicIndexDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +38,7 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     @Transactional
-    public void delete(URI publicId) throws NotFoundServiceException, ServiceUnavailableException {
+    public void delete(URI publicId) {
         final var topicToDelete = topicRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Topic was not found"));
 
         connectionService.replacePrimaryConnectionsFor(topicToDelete);
@@ -51,7 +50,7 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public List<ConnectionIndexDTO> getAllConnections(URI topicPublicId) throws NotFoundServiceException {
+    public List<ConnectionIndexDTO> getAllConnections(URI topicPublicId) {
         final var topic = topicRepository.findFirstByPublicId(topicPublicId).orElseThrow(() -> new NotFoundServiceException("Topic was not found"));
 
         return Stream.concat(
@@ -66,7 +65,7 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId, String languageCode) throws NotFoundServiceException {
+    public List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId, String languageCode) {
         return getFilteredSubtopicConnections(
                 topicPublicId,
                 filterRepository.findAllBySubjectPublicId(subjectPublicId).stream().map(Filter::getPublicId).collect(Collectors.toSet()),
@@ -74,7 +73,7 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, Collection<URI> filterPublicIds, String languageCode) throws NotFoundServiceException {
+    public List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, Collection<URI> filterPublicIds, String languageCode) {
         final Collection<TopicSubtopic> subtopicConnections;
         if (filterPublicIds != null && filterPublicIds.size() > 0) {
             subtopicConnections = topicSubtopicRepository.findAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(topicPublicId, filterPublicIds);

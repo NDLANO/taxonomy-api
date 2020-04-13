@@ -6,11 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.TopicResourceType;
-import no.ndla.taxonomy.rest.BadHttpRequestException;
-import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
+import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.service.TopicResourceTypeService;
-import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
-import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @RestController
@@ -32,40 +28,13 @@ public class TopicsWithResourceTypes {
         this.topicResourceTypeService = topicResourceTypeService;
     }
 
-    private interface ServiceCall {
-        void call() throws InvalidArgumentServiceException, NotFoundServiceException;
-    }
-    private interface ServiceReturningCall<T> {
-        T call() throws InvalidArgumentServiceException, NotFoundServiceException;
-    }
-    private void handleServiceExceptions(ServiceCall serviceCall) {
-        try {
-            serviceCall.call();
-        } catch (InvalidArgumentServiceException e) {
-            throw new BadHttpRequestException(e.getMessage());
-        } catch (NotFoundServiceException e) {
-            throw new NotFoundHttpRequestException(e.getMessage());
-        }
-    }
-    private <T> T handleServiceExceptions(ServiceReturningCall<T> serviceCall) {
-        return (new Supplier<T>() {
-            private T returnValue;
-
-            @Override
-            public T get() {
-                handleServiceExceptions(() -> { returnValue = serviceCall.call(); });
-                return returnValue;
-            }
-        }).get();
-    }
-
     @PostMapping
     @ApiOperation(value = "Adds a resource type to a topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "connection", value = "The new resource/resource type connection") @RequestBody CreateTopicResourceTypeCommand command) {
 
-        URI location = URI.create("/topic-resourcetypes/" + handleServiceExceptions(() -> topicResourceTypeService.addTopicResourceType(command.topicId, command.resourceTypeId)));
+        URI location = URI.create("/topic-resourcetypes/" + topicResourceTypeService.addTopicResourceType(command.topicId, command.resourceTypeId));
         return ResponseEntity.created(location).build();
     }
 
@@ -74,7 +43,7 @@ public class TopicsWithResourceTypes {
     @ApiOperation("Removes a resource type from a topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
-        handleServiceExceptions(() -> topicResourceTypeService.deleteTopicResourceType(id));
+        topicResourceTypeService.deleteTopicResourceType(id);
     }
 
     @GetMapping
@@ -89,7 +58,7 @@ public class TopicsWithResourceTypes {
     @ApiOperation("Gets a single connection between topic and resource type")
     public TopicResourceTypeIndexDocument get(@PathVariable("id") URI id) {
         return new TopicResourceTypeIndexDocument(
-                topicResourceTypeService.findById(id).orElseThrow(() -> new NotFoundHttpRequestException("TopicResourceType not found"))
+                topicResourceTypeService.findById(id).orElseThrow(() -> new NotFoundHttpResponseException("TopicResourceType not found"))
         );
     }
 

@@ -2,7 +2,6 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +23,7 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Override
     @Transactional
-    public void delete(URI id) throws NotFoundServiceException, ServiceUnavailableException {
+    public void delete(URI id) {
         final var resourceToDelete = resourceRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundServiceException("Subject was not found"));
 
         connectionService.replacePrimaryConnectionsFor(resourceToDelete);
