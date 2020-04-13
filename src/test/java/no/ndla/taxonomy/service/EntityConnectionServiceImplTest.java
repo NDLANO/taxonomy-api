@@ -9,7 +9,6 @@ import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
-import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,7 +43,7 @@ public class EntityConnectionServiceImplTest {
     }
 
     @Test
-    public void connectSubjectTopic() throws InvalidArgumentServiceException, DuplicateConnectionException {
+    public void connectSubjectTopic() {
         final var subject1 = builder.subject();
         final var subject2 = builder.subject();
 
@@ -108,7 +107,7 @@ public class EntityConnectionServiceImplTest {
     }
 
     @Test
-    public void connectTopicSubtopic() throws InvalidArgumentServiceException, DuplicateConnectionException {
+    public void connectTopicSubtopic() {
         final var topic1 = builder.topic();
         final var topic2 = builder.topic();
         final var topic4 = builder.topic();
@@ -202,7 +201,7 @@ public class EntityConnectionServiceImplTest {
     }
 
     @Test
-    public void connectTopicResource() throws InvalidArgumentServiceException, DuplicateConnectionException {
+    public void connectTopicResource() {
         final var topic1 = builder.topic();
         final var topic2 = builder.topic();
         final var topic3 = builder.topic();
@@ -395,7 +394,7 @@ public class EntityConnectionServiceImplTest {
     }
 
     @Test
-    public void updateTopicSubtopic() throws NotFoundServiceException, InvalidArgumentServiceException {
+    public void updateTopicSubtopic() {
         final var rootTopic1 = builder.topic();
         final var rootTopic3 = builder.topic();
 
@@ -420,7 +419,7 @@ public class EntityConnectionServiceImplTest {
     }
 
     @Test
-    public void updateSubjectTopic() throws NotFoundServiceException, InvalidArgumentServiceException {
+    public void updateSubjectTopic() {
         final var topic1 = builder.topic();
         final var topic2 = builder.topic();
         final var topic3 = builder.topic();
@@ -443,7 +442,7 @@ public class EntityConnectionServiceImplTest {
     }
 
     @Test
-    public void updateTopicResource() throws NotFoundServiceException, InvalidArgumentServiceException {
+    public void updateTopicResource() {
         final var topic1 = builder.topic();
         final var topic2 = builder.topic();
 

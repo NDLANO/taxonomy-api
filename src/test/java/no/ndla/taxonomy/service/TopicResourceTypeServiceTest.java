@@ -35,12 +35,12 @@ public class TopicResourceTypeServiceTest {
     }
 
     @Test(expected = InvalidArgumentServiceException.class)
-    public void testTopicNotSpecified() throws NotFoundServiceException, InvalidArgumentServiceException {
+    public void testTopicNotSpecified() {
         topicResourceTypeService.getTopicResourceTypes(null);
     }
 
     @Test(expected = NotFoundServiceException.class)
-    public void testTopicNotFound() throws NotFoundServiceException, InvalidArgumentServiceException, URISyntaxException {
+    public void testTopicNotFound() throws URISyntaxException {
         try {
             topicResourceTypeService.getTopicResourceTypes(new URI("urn:topic:1"));
         } finally {
@@ -49,7 +49,7 @@ public class TopicResourceTypeServiceTest {
     }
 
     @Test
-    public void testNoResourceTypes() throws URISyntaxException, NotFoundServiceException, InvalidArgumentServiceException {
+    public void testNoResourceTypes() throws URISyntaxException {
         Topic topic = new Topic();
         given(topicRepository.findByPublicId(new URI("urn:topic:1"))).willReturn(topic);
         assertEquals(List.of(), topicResourceTypeService.getTopicResourceTypes(new URI("urn:topic:1")));
@@ -57,7 +57,7 @@ public class TopicResourceTypeServiceTest {
     }
 
     @Test
-    public void testResourceTypes() throws URISyntaxException, NotFoundServiceException, InvalidArgumentServiceException {
+    public void testResourceTypes() throws URISyntaxException {
         Topic topic = new Topic();
         ResourceType resourceType = new ResourceType();
         var topicResourceType = TopicResourceType.create(topic, resourceType);
@@ -75,17 +75,17 @@ public class TopicResourceTypeServiceTest {
     }
 
     @Test(expected = InvalidArgumentServiceException.class)
-    public void testAddResourceTypeWithTopicIdNull() throws URISyntaxException, NotFoundServiceException, InvalidArgumentServiceException {
+    public void testAddResourceTypeWithTopicIdNull() throws URISyntaxException {
         topicResourceTypeService.addTopicResourceType(null, new URI("urn:resourcetype:1"));
     }
 
     @Test(expected = InvalidArgumentServiceException.class)
-    public void testAddResourceTypeWithResourceTypeIdNull() throws URISyntaxException, NotFoundServiceException, InvalidArgumentServiceException {
+    public void testAddResourceTypeWithResourceTypeIdNull() throws URISyntaxException {
         topicResourceTypeService.addTopicResourceType(new URI("urn:topic:1"), null);
     }
 
     @Test(expected = NotFoundServiceException.class)
-    public void testAddResourceTypeWithTopicNotFound() throws URISyntaxException, NotFoundServiceException, InvalidArgumentServiceException {
+    public void testAddResourceTypeWithTopicNotFound() throws URISyntaxException {
         try {
             topicResourceTypeService.addTopicResourceType(new URI("urn:topic:1"), new URI("urn:resourcetype:1"));
         } finally {
@@ -95,7 +95,7 @@ public class TopicResourceTypeServiceTest {
     }
 
     @Test(expected = NotFoundServiceException.class)
-    public void testAddResourceTypeWithResourceTypeNotFound() throws URISyntaxException, NotFoundServiceException, InvalidArgumentServiceException {
+    public void testAddResourceTypeWithResourceTypeNotFound() throws URISyntaxException {
         Topic topic = new Topic();
         given(topicRepository.findByPublicId(new URI("urn:topic:1"))).willReturn(topic);
         try {
@@ -107,7 +107,7 @@ public class TopicResourceTypeServiceTest {
     }
 
     @Test
-    public void testAddResourceType() throws URISyntaxException, NotFoundServiceException, InvalidArgumentServiceException {
+    public void testAddResourceType() throws URISyntaxException {
         Topic topic = spy(new Topic());
         given(topicRepository.findByPublicId(new URI("urn:topic:1"))).willReturn(topic);
         ResourceType resourceType = new ResourceType();
@@ -118,12 +118,12 @@ public class TopicResourceTypeServiceTest {
     }
 
     @Test(expected = InvalidArgumentServiceException.class)
-    public void testDeleteTopicResourceTypeNull() throws NotFoundServiceException, InvalidArgumentServiceException {
+    public void testDeleteTopicResourceTypeNull() {
         topicResourceTypeService.deleteTopicResourceType(null);
     }
 
     @Test(expected = NotFoundServiceException.class)
-    public void testDeleteTopicResourceTypeNotFound() throws URISyntaxException, NotFoundServiceException, InvalidArgumentServiceException {
+    public void testDeleteTopicResourceTypeNotFound() throws URISyntaxException {
         try {
             topicResourceTypeService.deleteTopicResourceType(new URI("urn:topicresourcetype:1"));
         } finally {
@@ -132,7 +132,7 @@ public class TopicResourceTypeServiceTest {
     }
 
     @Test
-    public void testDeleteTopicResourceType() throws URISyntaxException, NotFoundServiceException, InvalidArgumentServiceException {
+    public void testDeleteTopicResourceType() throws URISyntaxException {
         TopicResourceType topicResourceType = TopicResourceType.create(new Topic(), new ResourceType());
         given(topicResourceTypeRepository.findByPublicId(new URI("urn:topicresourcetype:1"))).willReturn(topicResourceType);
         topicResourceTypeService.deleteTopicResourceType(new URI("urn:topicresourcetype:1"));

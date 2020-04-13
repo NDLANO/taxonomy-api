@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.SubjectTranslation;
+import no.ndla.taxonomy.service.MetadataWrappedEntity;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 
 import java.net.URI;
 
@@ -29,8 +31,16 @@ public class SubjectIndexDocument {
     @ApiModelProperty(value = "The path part of the url to this subject.", example = "/subject:1")
     public String path;
 
+    public MetadataDto metadata;
+
     public SubjectIndexDocument() {
 
+    }
+
+    public SubjectIndexDocument(MetadataWrappedEntity<Subject> wrappedSubject, String languageCode) {
+        this(wrappedSubject.getEntity(), languageCode);
+
+        wrappedSubject.getMetadata().ifPresent(metadataDto -> this.metadata = metadataDto);
     }
 
     public SubjectIndexDocument(Subject subject, String languageCode) {

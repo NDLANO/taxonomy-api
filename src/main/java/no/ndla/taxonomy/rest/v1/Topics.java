@@ -8,8 +8,7 @@ import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import no.ndla.taxonomy.repositories.TopicTreeByTopicElementRepository;
-import no.ndla.taxonomy.rest.BadHttpRequestException;
-import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
+import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.dtos.topics.FilterIndexDocument;
@@ -19,9 +18,6 @@ import no.ndla.taxonomy.rest.v1.dtos.topics.TopicWithPathsIndexDocument;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
 import no.ndla.taxonomy.service.dtos.SubTopicIndexDTO;
-import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
-import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,8 +31,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping(path = {"/v1/topics"})
 public class Topics extends PathResolvableEntityRestController<Topic> {
-
-
     private final TopicResourceTypeService topicResourceTypeService;
     private final TopicRepository topicRepository;
     private final SubjectRepository subjectRepository;
@@ -44,6 +38,7 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
     private final TopicTreeByTopicElementRepository topicTreeRepository;
     private final TopicTreeSorter topicTreeSorter;
     private final TopicService topicService;
+    private final MetadataEntityWrapperService metadataWrapperService;
 
     public Topics(TopicRepository topicRepository,
                   TopicResourceTypeService topicResourceTypeService,
@@ -51,10 +46,13 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
                   TopicResourceRepository topicResourceRepository,
                   TopicTreeByTopicElementRepository topicTreeRepository,
                   TopicTreeSorter topicTreeSorter,
-                  TopicService topicService, MetadataApiService metadataApiService) {
+                  TopicService topicService,
+                  MetadataApiService metadataApiService,
+                  MetadataEntityWrapperService metadataWrapperService) {
         super(metadataApiService);
 
         this.topicRepository = topicRepository;
+        this.metadataWrapperService = metadataWrapperService;
         this.repository = topicRepository;
         this.topicResourceTypeService = topicResourceTypeService;
         this.topicResourceRepository = topicResourceRepository;
@@ -64,13 +62,16 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
         this.topicService = topicService;
     }
 
-    private TopicWithPathsIndexDocument createTopicWithPathsIndexDocument(Topic topic, String language) {
+    private TopicWithPathsIndexDocument createTopicWithPathsIndexDocument(MetadataWrappedEntity<Topic> wrappedTopic, String language) {
+        final var topic = wrappedTopic.getEntity();
+
         return new TopicWithPathsIndexDocument() {{
             name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
             id = topic.getPublicId();
             contentUri = topic.getContentUri();
             path = topic.getPrimaryPath().orElse(null);
             paths = new ArrayList<>(topic.getAllPaths());
+            metadata = wrappedTopic.getMetadata().orElse(null);
         }};
     }
 
@@ -79,9 +80,11 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
     @Transactional
     public List<TopicIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "") String language
+            @RequestParam(value = "language", required = false, defaultValue = "") String language,
+            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
     ) {
-        return topicRepository.findAllIncludingCachedUrlsAndTranslations()
+
+        return metadataWrapperService.wrapEntities(topicRepository.findAllIncludingCachedUrlsAndTranslations(), includeMetadata)
                 .stream()
                 .map(topic -> this.createTopicWithPathsIndexDocument(topic, language))
                 .collect(Collectors.toList());
@@ -93,11 +96,15 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
     @Transactional
     public TopicWithPathsIndexDocument get(@PathVariable("id") URI id,
                                            @ApiParam(value = "ISO-639-1 language code", example = "nb")
-                                           @RequestParam(value = "language", required = false, defaultValue = "") String language
+                                           @RequestParam(value = "language", required = false, defaultValue = "") String language,
+                                           @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
     ) {
-        return topicRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
-                .map(topic -> this.createTopicWithPathsIndexDocument(topic, language))
-                .orElseThrow(() -> new NotFoundHttpRequestException("Topic was not found"));
+        return this.createTopicWithPathsIndexDocument(
+                metadataWrapperService.wrapEntity(
+                        topicRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id).orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found")),
+                        includeMetadata),
+                language
+        );
     }
 
     @PostMapping
@@ -146,7 +153,8 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
                     URI[] filterIds,
             @RequestParam(value = "relevance", required = false, defaultValue = "")
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
-                    URI relevance
+                    URI relevance,
+            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
     ) {
         final var topic = topicRepository.findFirstByPublicId(topicId).orElseThrow(() -> new NotFoundException("Topic", topicId));
 
@@ -191,13 +199,16 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
 
         // Sort the list, extract all the topicResource objects in between topics and return list of documents
 
-        return topicTreeSorter
+        final var sortedList = topicTreeSorter
                 .sortList(resourcesToSort)
                 .stream()
                 .map(TopicResourceTreeSortable::getTopicResource)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .map(topicResource -> new ResourceIndexDocument(topicResource, language))
+                .collect(Collectors.toList());
+
+        return metadataWrapperService.wrapEntities(sortedList, includeMetadata, (entity) -> entity.getResource().map(Resource::getPublicId).orElse(null)).stream()
+                .map(wrappedTopicResource -> new ResourceIndexDocument(wrappedTopicResource, language))
                 .collect(Collectors.toList());
     }
 
@@ -223,25 +234,19 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        try {
-            return topicResourceTypeService.getTopicResourceTypes(id)
-                    .stream()
-                    .filter(topicResourceType -> topicResourceType.getResourceType().isPresent())
-                    .map(topicResourceType -> new no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument() {{
-                        ResourceType resourceType = topicResourceType.getResourceType().get();
-                        id = resourceType.getPublicId();
-                        ResourceType parent = resourceType.getParent().orElse(null);
-                        parentId = parent != null ? parent.getPublicId() : null;
-                        connectionId = topicResourceType.getPublicId();
-                        ResourceTypeTranslation translation = language != null ? resourceType.getTranslation(language).orElse(null) : null;
-                        name = translation != null ? translation.getName() : resourceType.getName();
-                    }})
-                    .collect(Collectors.toList());
-        } catch (InvalidArgumentServiceException e) {
-            throw new BadHttpRequestException(e.getMessage());
-        } catch (NotFoundServiceException e) {
-            throw new NotFoundHttpRequestException(e.getMessage());
-        }
+        return topicResourceTypeService.getTopicResourceTypes(id)
+                .stream()
+                .filter(topicResourceType -> topicResourceType.getResourceType().isPresent())
+                .map(topicResourceType -> new no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument() {{
+                    ResourceType resourceType = topicResourceType.getResourceType().get();
+                    id = resourceType.getPublicId();
+                    ResourceType parent = resourceType.getParent().orElse(null);
+                    parentId = parent != null ? parent.getPublicId() : null;
+                    connectionId = topicResourceType.getPublicId();
+                    ResourceTypeTranslation translation = language != null ? resourceType.getTranslation(language).orElse(null) : null;
+                    name = translation != null ? translation.getName() : resourceType.getName();
+                }})
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}/filters")
@@ -285,25 +290,17 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
             filterIds = new URI[0];
         }
 
-        try {
-            if (filterIds.length == 0) {
-                return topicService.getFilteredSubtopicConnections(id, subjectId, language);
-            }
-
-            return topicService.getFilteredSubtopicConnections(id, Set.of(filterIds), language);
-        } catch (NotFoundServiceException e) {
-            throw new NotFoundHttpRequestException(e);
+        if (filterIds.length == 0) {
+            return topicService.getFilteredSubtopicConnections(id, subjectId, language);
         }
+
+        return topicService.getFilteredSubtopicConnections(id, Set.of(filterIds), language);
     }
 
     @GetMapping("/{id}/connections")
     @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
     public List<ConnectionIndexDTO> getAllConnections(@PathVariable("id") URI id) {
-        try {
-            return topicService.getAllConnections(id);
-        } catch (NotFoundServiceException e) {
-            throw new NotFoundHttpRequestException(e);
-        }
+        return topicService.getAllConnections(id);
     }
 
     @DeleteMapping("/{id}")
@@ -311,13 +308,7 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
-        try {
-            topicService.delete(id);
-        } catch (NotFoundServiceException e) {
-            throw new NotFoundHttpRequestException(e);
-        } catch (ServiceUnavailableException e) {
-            throw new ServiceUnavailableHttpResponseException(e);
-        }
+        topicService.delete(id);
     }
 
 }

@@ -7,7 +7,9 @@ import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceTranslation;
 import no.ndla.taxonomy.domain.TopicResource;
+import no.ndla.taxonomy.service.MetadataWrappedEntity;
 import no.ndla.taxonomy.service.TopicTreeSorter;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 
 import java.net.URI;
 import java.util.HashSet;
@@ -59,8 +61,16 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     @JsonIgnore
     public int topicNumericId;
 
+    public MetadataDto metadata;
+
     public ResourceIndexDocument() {
 
+    }
+
+    public ResourceIndexDocument(MetadataWrappedEntity<TopicResource> wrappedTopicResource, String language) {
+        this(wrappedTopicResource.getEntity(), language);
+
+        wrappedTopicResource.getMetadata().ifPresent(metadataDto -> this.metadata = metadataDto);
     }
 
     public ResourceIndexDocument(TopicResource topicResource, String language) {

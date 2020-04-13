@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.service.MetadataWrappedEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,14 +23,9 @@ public class ResourceWithPathsIndexDocument extends ResourceIndexDocument {
         super();
     }
 
-    public ResourceWithPathsIndexDocument(Resource resource) {
-        super(resource);
-        setPathsFromResource(resource);
-    }
-
-    public ResourceWithPathsIndexDocument(Resource resource, String languageCode) {
-        super(resource, languageCode);
-        setPathsFromResource(resource);
+    public ResourceWithPathsIndexDocument(MetadataWrappedEntity<Resource> wrappedResource, String languageCode) {
+        super(wrappedResource, languageCode);
+        setPathsFromResource(wrappedResource.getEntity());
     }
 
     private void setPathsFromResource(Resource resource) {

@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceTranslation;
+import no.ndla.taxonomy.service.MetadataWrappedEntity;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 
 import java.net.URI;
 import java.util.Optional;
@@ -32,6 +34,8 @@ public class ResourceIndexDocument {
     @ApiModelProperty(value = "The path part of the url to this resource", example = "/subject:1/topic:1/resource:1")
     public String path;
 
+    public MetadataDto metadata;
+
     public ResourceIndexDocument() {
     }
 
@@ -39,6 +43,12 @@ public class ResourceIndexDocument {
         this.id = resource.getPublicId();
         this.contentUri = resource.getContentUri();
         this.name = resource.getName();
+    }
+
+    public ResourceIndexDocument(MetadataWrappedEntity<Resource> wrappedResource, String languageCode) {
+        this(wrappedResource.getEntity(), languageCode);
+
+        wrappedResource.getMetadata().ifPresent(metadataDto -> this.metadata = metadataDto);
     }
 
     public ResourceIndexDocument(Resource resource, String languageCode) {

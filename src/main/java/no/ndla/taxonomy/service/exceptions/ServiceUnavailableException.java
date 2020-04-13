@@ -1,6 +1,6 @@
 package no.ndla.taxonomy.service.exceptions;
 
-public class ServiceUnavailableException extends Exception {
+public class ServiceUnavailableException extends RuntimeException {
     public ServiceUnavailableException(String message) {
         super(message);
     }

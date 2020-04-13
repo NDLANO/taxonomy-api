@@ -3,7 +3,6 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.DomainObject;
 import no.ndla.taxonomy.service.MetadataApiService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
-import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,7 +27,7 @@ public class PathResolvableEntityRestControllerTest {
     }
 
     @Test
-    public void getMetadata() throws ServiceUnavailableException {
+    public void getMetadata() {
         when(metadataApiService.getMetadataByPublicId(URI.create("urn:test:1"))).thenAnswer(invocationOnMock -> {
             final var toReturn = mock(MetadataDto.class);
             when(toReturn.getGrepCodes()).thenReturn(Set.of("A", "B"));
@@ -42,7 +41,7 @@ public class PathResolvableEntityRestControllerTest {
     }
 
     @Test
-    public void putMetadata() throws ServiceUnavailableException {
+    public void putMetadata() {
         when(metadataApiService.updateMetadataByPublicId(eq(URI.create(("urn:test:1"))), any(MetadataDto.class))).thenAnswer(invocationOnMock -> {
             final var toReturn = mock(MetadataDto.class);
             when(toReturn.getGrepCodes()).thenReturn(Set.of("A", "B"));

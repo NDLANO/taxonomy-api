@@ -4,8 +4,6 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
-import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,6 +22,7 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
+@Transactional
 public class TopicServiceImplTest {
     @Autowired
     private TopicRepository topicRepository;
@@ -52,7 +51,7 @@ public class TopicServiceImplTest {
     }
 
     @Test
-    public void delete() throws NotFoundServiceException, ServiceUnavailableException {
+    public void delete() {
         final var topicId = builder.topic().getPublicId();
 
         doAnswer(invocation -> {
@@ -72,7 +71,7 @@ public class TopicServiceImplTest {
     }
 
     @Test
-    public void getAllConnections() throws NotFoundServiceException {
+    public void getAllConnections() {
         final var topicId = builder.topic().getPublicId();
 
         final var subjectTopic = mock(SubjectTopic.class);
@@ -115,7 +114,7 @@ public class TopicServiceImplTest {
 
     @Test
     @Transactional
-    public void getFilteredSubtopicConnections() throws NotFoundServiceException {
+    public void getFilteredSubtopicConnections() {
         final var subject1 = builder.subject();
         final var subject2 = builder.subject();
         final var subject3 = builder.subject();

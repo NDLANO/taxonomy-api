@@ -1,6 +1,6 @@
 package no.ndla.taxonomy.service.exceptions;
 
-public class InvalidArgumentServiceException extends Exception {
+public class InvalidArgumentServiceException extends RuntimeException {
     public InvalidArgumentServiceException() {
     }
 

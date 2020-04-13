@@ -10,13 +10,7 @@ import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
-import no.ndla.taxonomy.rest.BadHttpRequestException;
-import no.ndla.taxonomy.rest.ConflictHttpResponseException;
-import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
 import no.ndla.taxonomy.service.EntityConnectionService;
-import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
-import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
-import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -74,11 +68,7 @@ public class SubjectTopics {
         Topic topic = topicRepository.getByPublicId(command.topicid);
 
         final SubjectTopic subjectTopic;
-        try {
-            subjectTopic = connectionService.connectSubjectTopic(subject, topic, command.rank == 0 ? null : command.rank);
-        } catch (DuplicateConnectionException e) {
-            throw new ConflictHttpResponseException(e);
-        }
+        subjectTopic = connectionService.connectSubjectTopic(subject, topic, command.rank == 0 ? null : command.rank);
 
         URI location = URI.create("/subject-topics/" + subjectTopic.getPublicId());
         return ResponseEntity.created(location).build();
@@ -100,13 +90,7 @@ public class SubjectTopics {
                     @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
 
-        try {
-            connectionService.updateSubjectTopic(subjectTopic, command.rank > 0 ? command.rank : null);
-        } catch (InvalidArgumentServiceException e) {
-            throw new BadHttpRequestException(e);
-        } catch (NotFoundServiceException e) {
-            throw new NotFoundHttpRequestException(e);
-        }
+        connectionService.updateSubjectTopic(subjectTopic, command.rank > 0 ? command.rank : null);
     }
 
 

@@ -12,7 +12,7 @@ import no.ndla.taxonomy.rest.v1.dtos.resources.ParentTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceFullIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -20,6 +20,7 @@ import java.net.URI;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ResourcesTest extends RestTest {
@@ -44,6 +45,31 @@ public class ResourcesTest extends RestTest {
         assertEquals("introduction to trigonometry", resource.name);
         assertEquals("urn:article:1", resource.contentUri.toString());
         assertEquals("/subject:1/topic:1/resource:1", resource.path);
+
+        assertNull(resource.metadata);
+    }
+
+    @Test
+    public void can_get_single_resource_with_metadata() throws Exception {
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .topic(t -> t
+                        .publicId("urn:topic:1")
+                        .resource(true, r -> r
+                                .name("introduction to trigonometry")
+                                .contentUri("urn:article:1")
+                                .publicId("urn:resource:1")
+                        )));
+
+        final var response = testUtils.getResource("/v1/resources/urn:resource:1?includeMetadata=true");
+        final var resource = testUtils.getObject(ResourceIndexDocument.class, response);
+
+        assertEquals("introduction to trigonometry", resource.name);
+        assertEquals("urn:article:1", resource.contentUri.toString());
+        assertEquals("/subject:1/topic:1/resource:1", resource.path);
+
+        assertTrue(resource.metadata.isVisible());
+        assertTrue(resource.metadata.getGrepCodes().size() == 1 && resource.metadata.getGrepCodes().contains("RESOURCE1"));
     }
 
     @Test
@@ -86,6 +112,8 @@ public class ResourcesTest extends RestTest {
         builder.subject(s -> s.topic(t -> t.resource(true, r -> r.name("The inner planets"))));
         builder.subject(s -> s.topic(t -> t.resource(true, r -> r.name("Gas giants"))));
 
+        final var allResources = resourceRepository.findAll();
+
         MockHttpServletResponse response = testUtils.getResource("/v1/resources");
         ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
 
@@ -94,6 +122,27 @@ public class ResourcesTest extends RestTest {
         assertAnyTrue(resources, s -> "Gas giants".equals(s.name));
         assertAllTrue(resources, s -> isValidId(s.id));
         assertAllTrue(resources, r -> !r.path.isEmpty());
+
+        assertAllTrue(resources, r -> r.metadata == null);
+    }
+
+    @Test
+    public void can_get_all_resources_with_metadata() throws Exception {
+        builder.subject(s -> s.topic(t -> t.resource(true, r -> r.name("The inner planets"))));
+        builder.subject(s -> s.topic(t -> t.resource(true, r -> r.name("Gas giants"))));
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/resources?includeMetadata=true");
+        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+
+        assertEquals(2, resources.length);
+        assertAnyTrue(resources, s -> "The inner planets".equals(s.name));
+        assertAnyTrue(resources, s -> "Gas giants".equals(s.name));
+        assertAllTrue(resources, s -> isValidId(s.id));
+        assertAllTrue(resources, r -> !r.path.isEmpty());
+
+        assertAllTrue(resources, r -> r.metadata != null);
+        assertAllTrue(resources, r -> r.metadata.isVisible());
+        assertAllTrue(resources, r -> r.metadata.getGrepCodes().size() == 1);
     }
 
     @Test
@@ -160,6 +209,8 @@ public class ResourcesTest extends RestTest {
         URI id = builder.resource("resource").getPublicId();
         testUtils.deleteResource("/v1/resources/" + id);
         assertNull(resourceRepository.findByPublicId(id));
+
+        verify(metadataApiService).deleteMetadataByPublicId(id);
     }
 
     @Test
@@ -169,8 +220,12 @@ public class ResourcesTest extends RestTest {
         builder.topic(child -> child.resource(resource)).name("DELETE EDGE TO ME");
         builder.topic(child -> child.resource(resource)).name("DELETE EDGE TO ME ALSO");
 
-        testUtils.deleteResource("/v1/resources/" + resource.getPublicId());
-        assertNull(resourceRepository.findByPublicId(resource.getPublicId()));
+        final var publicId = resource.getPublicId();
+
+        testUtils.deleteResource("/v1/resources/" + publicId);
+        assertNull(resourceRepository.findByPublicId(publicId));
+
+        verify(metadataApiService).deleteMetadataByPublicId(publicId);
     }
 
     @Test

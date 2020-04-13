@@ -2,8 +2,6 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,7 +37,7 @@ public class SubjectServiceImplTest {
 
     @Test
     @Transactional
-    public void delete() throws NotFoundServiceException, ServiceUnavailableException {
+    public void delete() {
         final var subjectId = builder.subject().getPublicId();
 
         assertTrue(subjectRepository.findFirstByPublicId(subjectId).isPresent());

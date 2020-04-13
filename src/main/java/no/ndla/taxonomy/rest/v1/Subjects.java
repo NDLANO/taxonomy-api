@@ -5,19 +5,14 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.*;
-import no.ndla.taxonomy.rest.NotFoundHttpRequestException;
+import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.FilterIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
-import no.ndla.taxonomy.service.MetadataApiService;
-import no.ndla.taxonomy.service.SubjectService;
-import no.ndla.taxonomy.service.TopicResourceTreeSortable;
-import no.ndla.taxonomy.service.TopicTreeSorter;
-import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
+import no.ndla.taxonomy.service.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,14 +35,17 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final TopicTreeSorter topicTreeSorter;
     private final SubjectService subjectService;
+    private final MetadataEntityWrapperService metadataWrapperService;
 
     public Subjects(SubjectRepository subjectRepository, TopicTreeBySubjectElementRepository subjectTopicTreeElementRepository,
                     TopicResourceRepository topicResourceRepository,
                     SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository,
-                    TopicTreeSorter topicTreeSorter, SubjectService subjectService, MetadataApiService metadataApiService) {
+                    TopicTreeSorter topicTreeSorter, SubjectService subjectService, MetadataApiService metadataApiService,
+                    MetadataEntityWrapperService metadataWrapperService) {
         super(metadataApiService);
 
         this.subjectRepository = subjectRepository;
+        this.metadataWrapperService = metadataWrapperService;
         repository = subjectRepository;
         this.subjectTopicTreeElementRepository = subjectTopicTreeElementRepository;
         this.topicResourceRepository = topicResourceRepository;
@@ -61,11 +59,10 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
     @ApiOperation("Gets all subjects")
     public List<SubjectIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
+            @RequestParam(value = "language", required = false, defaultValue = "") String language,
+            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
     ) {
-        return subjectRepository
-                .findAllIncludingCachedUrlsAndTranslations()
+        return metadataWrapperService.wrapEntities(subjectRepository.findAllIncludingCachedUrlsAndTranslations(), includeMetadata)
                 .stream()
                 .map(subject -> new SubjectIndexDocument(subject, language))
                 .collect(Collectors.toList());
@@ -76,12 +73,13 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
     public SubjectIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
+            @RequestParam(value = "language", required = false, defaultValue = "") String language,
+            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
     ) {
         return subjectRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
+                .map(subject -> metadataWrapperService.wrapEntity(subject, includeMetadata))
                 .map(subject -> new SubjectIndexDocument(subject, language))
-                .orElseThrow(() -> new NotFoundHttpRequestException("Subject not found"));
+                .orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
     }
 
     @PutMapping("/{id}")
@@ -120,7 +118,8 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
                     Set<URI> filterIds,
             @RequestParam(value = "relevance", required = false, defaultValue = "")
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
-                    URI relevance
+                    URI relevance,
+            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
     ) {
         final var subject = subjectRepository.findFirstByPublicId(id)
                 .orElseThrow(() -> new NotFoundException("Subject", id));
@@ -265,7 +264,8 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
                     URI[] filterIds,
             @RequestParam(value = "relevance", required = false, defaultValue = "")
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
-                    URI relevance
+                    URI relevance,
+            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
     ) {
         final var subject = subjectRepository.findFirstByPublicId(subjectId)
                 .orElseThrow(() -> new NotFoundException("Subject", subjectId));
@@ -309,13 +309,16 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
 
         topicResources.forEach(topicResource -> resourcesToSort.add(new TopicResourceTreeSortable(topicResource)));
 
-        return topicTreeSorter
+        final var sortedTopicResources = topicTreeSorter
                 .sortList(resourcesToSort)
                 .stream()
                 .map(TopicResourceTreeSortable::getTopicResource)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .map(topicResource -> new ResourceIndexDocument(topicResource, language))
+                .collect(Collectors.toList());
+
+        return metadataWrapperService.wrapEntities(sortedTopicResources, includeMetadata, (entity) -> entity.getResource().map(Resource::getPublicId).orElse(null)).stream()
+                .map(wrappedTopicResource -> new ResourceIndexDocument(wrappedTopicResource, language))
                 .collect(Collectors.toList());
     }
 
@@ -335,12 +338,6 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
-        try {
-            subjectService.delete(id);
-        } catch (NotFoundServiceException e) {
-            throw new NotFoundHttpRequestException(e);
-        } catch (ServiceUnavailableException e) {
-            throw new ServiceUnavailableHttpResponseException(e);
-        }
+        subjectService.delete(id);
     }
 }

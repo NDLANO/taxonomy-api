@@ -4,10 +4,7 @@ import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicResourceType;
 import no.ndla.taxonomy.repositories.*;
-import no.ndla.taxonomy.service.MetadataApiService;
-import no.ndla.taxonomy.service.TopicResourceTypeService;
-import no.ndla.taxonomy.service.TopicService;
-import no.ndla.taxonomy.service.TopicTreeSorter;
+import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,6 +49,8 @@ public class TopicsWebTest {
     TopicService topicService;
     @MockBean
     MetadataApiService metadataApiService;
+    @MockBean
+    MetadataEntityWrapperService metadataEntityWrapperService;
 
     @Autowired
     private MockMvc mockMvc;
