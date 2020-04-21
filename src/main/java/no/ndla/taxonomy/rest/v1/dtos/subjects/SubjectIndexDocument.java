@@ -31,6 +31,7 @@ public class SubjectIndexDocument {
     @ApiModelProperty(value = "The path part of the url to this subject.", example = "/subject:1")
     public String path;
 
+    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true, otherwise null. Read only.")
     public MetadataDto metadata;
 
     public SubjectIndexDocument() {

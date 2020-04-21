@@ -59,8 +59,12 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
     @ApiOperation("Gets all subjects")
     public List<SubjectIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "") String language,
-            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language,
+
+            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
+            @RequestParam(required = false, defaultValue = "false")
+                    boolean includeMetadata
     ) {
         return metadataWrapperService.wrapEntities(subjectRepository.findAllIncludingCachedUrlsAndTranslations(), includeMetadata)
                 .stream()
@@ -73,8 +77,12 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
     public SubjectIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "") String language,
-            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language,
+
+            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
+            @RequestParam(required = false, defaultValue = "false")
+                    boolean includeMetadata
     ) {
         return subjectRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
                 .map(subject -> metadataWrapperService.wrapEntity(subject, includeMetadata))
@@ -119,7 +127,10 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
             @RequestParam(value = "relevance", required = false, defaultValue = "")
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
                     URI relevance,
-            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
+
+            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
+            @RequestParam(required = false, defaultValue = "false")
+                    boolean includeMetadata
     ) {
         final var subject = subjectRepository.findFirstByPublicId(id)
                 .orElseThrow(() -> new NotFoundException("Subject", id));
@@ -149,13 +160,25 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
 
         final var returnList = new ArrayList<SubTopicIndexDocument>();
 
-        subjectTopics.stream()
+        // Filtering
+
+        final var filteredSubjectTopics = subjectTopics.stream()
+                .filter(subjectTopic -> subjectTopic.getTopic().isPresent())
                 .filter(subjectTopic -> searchForFilterOrRelevance(subjectTopic, filterIdSet, relevanceArgument, topicSubtopics))
+                .collect(Collectors.toList());
+
+        final var filteredTopicSubtopics = topicSubtopics.stream()
+                .filter(topicSubtopic -> topicSubtopic.getSubtopic().isPresent())
+                .filter(topicSubtopic -> searchForFilterOrRelevance(topicSubtopic, filterIdSet, relevanceArgument, topicSubtopics))
+                .collect(Collectors.toList());
+
+        // Wrapping with metadata from API if asked for
+
+        metadataWrapperService.wrapEntities(filteredSubjectTopics, includeMetadata, subjectTopic -> subjectTopic.getTopic().orElseThrow().getPublicId()).stream()
                 .map(subjectTopic -> createSubTopicIndexDocument(subject, subjectTopic, language))
                 .forEach(returnList::add);
 
-        topicSubtopics.stream()
-                .filter(topicSubtopic -> searchForFilterOrRelevance(topicSubtopic, filterIdSet, relevanceArgument, topicSubtopics))
+        metadataWrapperService.wrapEntities(filteredTopicSubtopics, includeMetadata, topicSubtopic -> topicSubtopic.getSubtopic().orElseThrow().getPublicId()).stream()
                 .map(topicSubtopic -> createSubTopicIndexDocument(subject, topicSubtopic, language))
                 .forEach(returnList::add);
 
@@ -167,14 +190,9 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
         return topicTreeSorter.sortList(returnList).stream().distinct().collect(Collectors.toList());
     }
 
-    private SubTopicIndexDocument createSubTopicIndexDocument(Subject subject, Object connection, String language) {
-        if (connection instanceof SubjectTopic) {
-            return new SubTopicIndexDocument(subject, (SubjectTopic) connection, language);
-        } else if (connection instanceof TopicSubtopic) {
-            return new SubTopicIndexDocument(subject, (TopicSubtopic) connection, language);
-        } else {
-            throw new IllegalArgumentException();
-        }
+    private <T extends DomainEntity> SubTopicIndexDocument createSubTopicIndexDocument(Subject subject, MetadataWrappedEntity<T> connection, String language) {
+        //noinspection unchecked
+        return new SubTopicIndexDocument(subject, (MetadataWrappedEntity<DomainEntity>) connection, language);
     }
 
     private boolean hasFilterAndRelevanceOrJustFilterIfRelevanceIsNotSet(Topic topic, Collection<URI> filterPublicId, URI relevancePublicId) {
@@ -265,7 +283,10 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
             @RequestParam(value = "relevance", required = false, defaultValue = "")
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
                     URI relevance,
-            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
+
+            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
+            @RequestParam(required = false, defaultValue = "false")
+                    boolean includeMetadata
     ) {
         final var subject = subjectRepository.findFirstByPublicId(subjectId)
                 .orElseThrow(() -> new NotFoundException("Subject", subjectId));

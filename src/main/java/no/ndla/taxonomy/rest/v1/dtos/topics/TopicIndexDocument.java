@@ -28,6 +28,6 @@ public class TopicIndexDocument {
     @ApiModelProperty(value = "The primary path for this topic", example = "/subject:1/topic:1")
     public String path;
 
-    @ApiModelProperty(value = "Metadata object for this entity if requested")
+    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true, otherwise null. Read only.")
     public MetadataDto metadata;
 }

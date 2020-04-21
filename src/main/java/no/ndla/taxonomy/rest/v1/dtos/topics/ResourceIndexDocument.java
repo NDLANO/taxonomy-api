@@ -63,6 +63,7 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
     public Boolean isPrimary;
 
+    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true, otherwise null. Read only.")
     public MetadataDto metadata;
 
     public URI getId() {

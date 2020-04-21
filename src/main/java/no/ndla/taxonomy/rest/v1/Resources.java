@@ -55,8 +55,12 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
     @Transactional(readOnly = true)
     public List<ResourceIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "") String language,
-            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language,
+
+            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
+            @RequestParam(required = false, defaultValue = "false")
+                    boolean includeMetadata
     ) {
 
         return metadataWrapperService.wrapEntities(resourceRepository.findAllIncludingCachedUrlsAndTranslations(), includeMetadata)
@@ -88,10 +92,17 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
     @ApiOperation(value = "Gets a single resource")
     @Transactional(readOnly = true)
     public ResourceIndexDocument get(
-            @PathVariable("id") URI id,
+            @PathVariable("id")
+                    URI id,
+
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "") String language,
-            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata) {
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language,
+
+            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
+            @RequestParam(required = false, defaultValue = "false")
+                    boolean includeMetadata
+    ) {
 
         final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
                 .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
