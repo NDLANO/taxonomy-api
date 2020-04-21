@@ -61,6 +61,7 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     @JsonIgnore
     public int topicNumericId;
 
+    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true, otherwise null. Read only.")
     public MetadataDto metadata;
 
     public ResourceIndexDocument() {

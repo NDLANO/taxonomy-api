@@ -25,15 +25,18 @@ public class TopicServiceImpl implements TopicService {
     private final EntityConnectionService connectionService;
     private final FilterRepository filterRepository;
     private final MetadataApiService metadataApiService;
+    private final MetadataEntityWrapperService metadataEntityWrapperService;
 
     public TopicServiceImpl(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository,
                             FilterRepository filterRepository, EntityConnectionService connectionService,
-                            MetadataApiService metadataApiService) {
+                            MetadataApiService metadataApiService,
+                            MetadataEntityWrapperService metadataEntityWrapperService) {
         this.topicRepository = topicRepository;
         this.connectionService = connectionService;
         this.filterRepository = filterRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.metadataApiService = metadataApiService;
+        this.metadataEntityWrapperService = metadataEntityWrapperService;
     }
 
     @Override
@@ -65,24 +68,28 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId, String languageCode) {
+    public List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId, String languageCode, boolean includeMetadata) {
+        // NOTE: Since no filter is specified, it defaults to the same as specifying i list of all filters that exists for the given subject
+
         return getFilteredSubtopicConnections(
                 topicPublicId,
                 filterRepository.findAllBySubjectPublicId(subjectPublicId).stream().map(Filter::getPublicId).collect(Collectors.toSet()),
-                languageCode);
+                languageCode,
+                includeMetadata);
     }
 
     @Override
-    public List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, Collection<URI> filterPublicIds, String languageCode) {
-        final Collection<TopicSubtopic> subtopicConnections;
+    public List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, Collection<URI> filterPublicIds, String languageCode, boolean includeMetadata) {
+        final List<TopicSubtopic> subtopicConnections;
         if (filterPublicIds != null && filterPublicIds.size() > 0) {
             subtopicConnections = topicSubtopicRepository.findAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(topicPublicId, filterPublicIds);
         } else {
             subtopicConnections = topicSubtopicRepository.findAllByTopicPublicIdIncludingSubtopicAndSubtopicTranslations(topicPublicId);
         }
 
-        return subtopicConnections.stream()
-                .map(topicSubtopic -> new SubTopicIndexDTO(topicSubtopic, languageCode))
-                .collect(Collectors.toUnmodifiableList());
+        return
+                metadataEntityWrapperService.wrapEntities(subtopicConnections, includeMetadata, topicSubtopic -> topicSubtopic.getSubtopic().orElseThrow().getPublicId()).stream()
+                        .map(topicSubtopic -> new SubTopicIndexDTO(topicSubtopic, languageCode))
+                        .collect(Collectors.toUnmodifiableList());
     }
 }

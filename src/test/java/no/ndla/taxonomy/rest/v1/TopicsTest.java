@@ -173,7 +173,23 @@ public class TopicsTest extends RestTest {
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
         TopicIndexDocument[] subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
         assertEquals("Unfiltered subtopics", 7, subtopics.length);
+
+        assertAllTrue(subtopics, subtopic -> subtopic.metadata == null);
     }
+
+    @Test
+    public void can_get_unfiltered_subtopics_with_metadata() throws Exception {
+        testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics?includeMetadata=true");
+        TopicIndexDocument[] subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
+        assertEquals("Unfiltered subtopics", 7, subtopics.length);
+
+        assertAllTrue(subtopics, subtopic -> subtopic.metadata != null);
+        assertAllTrue(subtopics, subtopic -> subtopic.metadata.isVisible());
+        assertAllTrue(subtopics, subtopic -> subtopic.metadata.getGrepCodes().size() == 1);
+    }
+
 
     @Test
     public void can_get_filtered_subtopics() throws Exception {
@@ -332,6 +348,21 @@ public class TopicsTest extends RestTest {
         ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(first(topic.getTopicResources()).getPublicId(), result[0].connectionId);
+    }
+
+    @Test
+    public void can_get_resource_connections_with_metadata() throws Exception {
+        Topic topic = builder.topic(t -> t
+                .publicId("urn:topic:1")
+                .resource()
+        );
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?includeMetadata=true");
+        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+
+        assertEquals(first(topic.getTopicResources()).getPublicId(), result[0].connectionId);
+        assertAllTrue(result, connection -> connection.metadata != null);
+        assertAllTrue(result, connection -> connection.metadata.isVisible());
+        assertAllTrue(result, connection -> connection.metadata.getGrepCodes().size() == 1);
     }
 
     @Test

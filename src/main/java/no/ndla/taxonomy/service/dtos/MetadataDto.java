@@ -1,14 +1,21 @@
 package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 import java.util.HashSet;
 import java.util.Set;
 
+@ApiModel("Metadata")
 public class MetadataDto {
     @JsonIgnore
     private String publicId;
+
+    @ApiModelProperty
     private Set<String> grepCodes;
+
+    @ApiModelProperty
     private boolean visible;
 
     public MetadataDto() {

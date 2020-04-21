@@ -80,8 +80,11 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
     @Transactional
     public List<TopicIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "") String language,
-            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language,
+            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
+            @RequestParam(required = false, defaultValue = "false")
+                    boolean includeMetadata
     ) {
 
         return metadataWrapperService.wrapEntities(topicRepository.findAllIncludingCachedUrlsAndTranslations(), includeMetadata)
@@ -96,8 +99,12 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
     @Transactional
     public TopicWithPathsIndexDocument get(@PathVariable("id") URI id,
                                            @ApiParam(value = "ISO-639-1 language code", example = "nb")
-                                           @RequestParam(value = "language", required = false, defaultValue = "") String language,
-                                           @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
+                                           @RequestParam(value = "language", required = false, defaultValue = "")
+                                                   String language,
+
+                                           @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
+                                               @RequestParam(required = false, defaultValue = "false")
+                                                       boolean includeMetadata
     ) {
         return this.createTopicWithPathsIndexDocument(
                 metadataWrapperService.wrapEntity(
@@ -154,7 +161,10 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
             @RequestParam(value = "relevance", required = false, defaultValue = "")
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
                     URI relevance,
-            @RequestParam(required = false, defaultValue = "false") boolean includeMetadata
+
+            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
+            @RequestParam(required = false, defaultValue = "false")
+                    boolean includeMetadata
     ) {
         final var topic = topicRepository.findFirstByPublicId(topicId).orElseThrow(() -> new NotFoundException("Topic", topicId));
 
@@ -284,17 +294,21 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
                     URI[] filterIds,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
+                    String language,
+
+            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
+            @RequestParam(required = false, defaultValue = "false")
+                    boolean includeMetadata
     ) {
         if (filterIds == null) {
             filterIds = new URI[0];
         }
 
         if (filterIds.length == 0) {
-            return topicService.getFilteredSubtopicConnections(id, subjectId, language);
+            return topicService.getFilteredSubtopicConnections(id, subjectId, language, includeMetadata);
         }
 
-        return topicService.getFilteredSubtopicConnections(id, Set.of(filterIds), language);
+        return topicService.getFilteredSubtopicConnections(id, Set.of(filterIds), language, includeMetadata);
     }
 
     @GetMapping("/{id}/connections")

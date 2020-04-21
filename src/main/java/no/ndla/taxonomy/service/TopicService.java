@@ -12,7 +12,7 @@ public interface TopicService {
 
     List<ConnectionIndexDTO> getAllConnections(URI topicPublicId);
 
-    List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId, String languageCode);
+    List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId, String languageCode, boolean includeMetadata);
 
-    List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, Collection<URI> filterPublicIds, String languageCode);
+    List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, Collection<URI> filterPublicIds, String languageCode, boolean includeMetadata);
 }

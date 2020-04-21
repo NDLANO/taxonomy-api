@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.domain.TopicTranslation;
+import no.ndla.taxonomy.service.MetadataWrappedEntity;
 
 import java.net.URI;
 
@@ -29,11 +30,16 @@ public class SubTopicIndexDTO {
     @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
     public Boolean isPrimary;
 
+    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true, otherwise null. Read only.")
+    public MetadataDto metadata;
+
     public SubTopicIndexDTO() {
 
     }
 
-    public SubTopicIndexDTO(TopicSubtopic topicSubtopic, String language) {
+    public SubTopicIndexDTO(MetadataWrappedEntity<TopicSubtopic> wrappedTopicSubtopic, String language) {
+        final var topicSubtopic = wrappedTopicSubtopic.getEntity();
+
         topicSubtopic.getSubtopic().ifPresent(topic -> {
             this.id = topic.getPublicId();
 
@@ -45,5 +51,7 @@ public class SubTopicIndexDTO {
         });
 
         this.isPrimary = true;
+
+        wrappedTopicSubtopic.getMetadata().ifPresent(metadataDto -> this.metadata = metadataDto);
     }
 }
