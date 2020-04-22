@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.rest.v1.dtos.subjects;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -31,7 +32,8 @@ public class SubjectIndexDocument {
     @ApiModelProperty(value = "The path part of the url to this subject.", example = "/subject:1")
     public String path;
 
-    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true, otherwise null. Read only.")
+    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true. Read only.")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public MetadataDto metadata;
 
     public SubjectIndexDocument() {
