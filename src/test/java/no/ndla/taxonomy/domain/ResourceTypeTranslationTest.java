@@ -1,19 +1,19 @@
 package no.ndla.taxonomy.domain;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 public class ResourceTypeTranslationTest {
     private ResourceTypeTranslation resourceTypeTranslation;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         resourceTypeTranslation = new ResourceTypeTranslation();
     }

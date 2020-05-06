@@ -6,7 +6,6 @@ import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
 import java.net.URI;
 
 /**
@@ -29,10 +28,8 @@ public class TestSeeder {
     private final TopicResourceRepository topicResourceRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    private final EntityManager entityManager;
-
     public TestSeeder(SubjectRepository subjectRepository, TopicRepository topicRepository, ResourceRepository resourceRepository, FilterRepository filterRepository, RelevanceRepository relevanceRepository, ResourceTypeRepository resourceTypeRepository, SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository,
-                      CachedUrlUpdaterService cachedUrlUpdaterService, EntityManager entityManager) {
+                      CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
@@ -43,7 +40,6 @@ public class TestSeeder {
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicResourceRepository = topicResourceRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
-        this.entityManager = entityManager;
     }
 
     private Topic createTopic(String publicId, String name, String contentUri, Boolean context) {

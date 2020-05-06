@@ -9,22 +9,24 @@ import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @Transactional
+@DirtiesContext
 public class EntityConnectionServiceImplTest {
     @Autowired
     private SubjectTopicRepository subjectTopicRepository;
@@ -40,7 +42,7 @@ public class EntityConnectionServiceImplTest {
     @Autowired
     private Builder builder;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         cachedUrlUpdaterService = mock(CachedUrlUpdaterService.class);
 
@@ -63,7 +65,7 @@ public class EntityConnectionServiceImplTest {
         assertNotNull(connection1.getPublicId());
         assertEquals(1, connection1.getRank());
 
-        verify(cachedUrlUpdaterService).updateCachedUrls(topic1);
+        verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(topic1);
 
         assertTrue(subjectTopicRepository.findFirstBySubjectAndTopic(subject1, topic1).isPresent());
 
@@ -131,7 +133,7 @@ public class EntityConnectionServiceImplTest {
         assertSame(topic2, connection1.getTopic().orElse(null));
         assertSame(topic1, connection1.getSubtopic().orElse(null));
 
-        verify(cachedUrlUpdaterService).updateCachedUrls(topic2);
+        verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(topic1);
 
         // Test ranking
         final var connection4 = service.connectTopicSubtopic(topic4, topic5, null);
@@ -231,7 +233,7 @@ public class EntityConnectionServiceImplTest {
         assertTrue(connection1.isPrimary().orElseThrow());
         assertEquals(1, connection1.getRank());
 
-        verify(cachedUrlUpdaterService).updateCachedUrls(resource1);
+        verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(resource1);
 
         final var connection2 = service.connectTopicResource(topic1, resource2, true, null);
         assertNotNull(connection2);
@@ -395,7 +397,7 @@ public class EntityConnectionServiceImplTest {
 
         service.disconnectTopicResource(topic1, resource1);
 
-        verify(cachedUrlUpdaterService).updateCachedUrls(resource1);
+        verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(resource1);
 
         assertTrue(topic2resource1.isPrimary().orElseThrow() ^ topic3resource1.isPrimary().orElseThrow());
         assertFalse(topic1resource1.getResource().isPresent());

@@ -1,7 +1,7 @@
 package no.ndla.taxonomy.domain;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -9,13 +9,13 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class EntityWithPathTest {
     private EntityWithPath entityWithPath;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.entityWithPath = spy(EntityWithPath.class);
     }

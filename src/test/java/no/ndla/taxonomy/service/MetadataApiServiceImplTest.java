@@ -4,8 +4,8 @@ import no.ndla.taxonomy.config.MetadataApiConfig;
 import no.ndla.taxonomy.service.dtos.MetadataApiEntity;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -29,7 +29,7 @@ public class MetadataApiServiceImplTest {
     private MetadataApiServiceImpl metadataApiService;
     private RestTemplate restTemplate;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         final var metadataApiConfig = mock(MetadataApiConfig.class);
         this.restTemplate = mock(RestTemplate.class);

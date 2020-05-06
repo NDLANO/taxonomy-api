@@ -1,14 +1,14 @@
 package no.ndla.taxonomy.domain;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.getField;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
@@ -16,7 +16,7 @@ import static org.springframework.test.util.ReflectionTestUtils.setField;
 public class FilterTest {
     private Filter filter;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.filter = new Filter();
     }

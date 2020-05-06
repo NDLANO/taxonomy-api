@@ -2,21 +2,23 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.repositories.SubjectRepository;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
+@DirtiesContext
 public class SubjectServiceImplTest {
     @Autowired
     private SubjectRepository subjectRepository;
@@ -28,12 +30,10 @@ public class SubjectServiceImplTest {
 
     private MetadataApiService metadataApiService;
 
-    private EntityConnectionService entityConnectionService;
-
-    @Before
+    @BeforeEach
     public void setUp() {
         metadataApiService = mock(MetadataApiService.class);
-        entityConnectionService = mock(EntityConnectionService.class);
+        EntityConnectionService entityConnectionService = mock(EntityConnectionService.class);
 
         subjectService = new SubjectServiceImpl(subjectRepository, metadataApiService, entityConnectionService);
     }

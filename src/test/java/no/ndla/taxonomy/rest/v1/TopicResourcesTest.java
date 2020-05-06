@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import static no.ndla.taxonomy.TestUtils.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TopicResourcesTest extends RestTest {

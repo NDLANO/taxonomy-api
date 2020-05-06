@@ -2,8 +2,8 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.Collection;
@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -19,7 +19,7 @@ public class MetadataEntityWrapperServiceImplTest {
     private MetadataEntityWrapperService wrapperService;
     private MetadataApiService apiService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         apiService = mock(MetadataApiService.class);
 

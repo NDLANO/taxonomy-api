@@ -4,26 +4,26 @@ package no.ndla.taxonomy.repositories;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicResourceType;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.Iterator;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 @ActiveProfiles("junit")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+@DirtiesContext
 @Transactional
 public class TopicResourceTypeRepositoryTest {
     private URI testTopic;
@@ -92,7 +92,7 @@ public class TopicResourceTypeRepositoryTest {
         assertEquals(testResourceType, topicResourceType.getResourceType().map(ResourceType::getPublicId).orElse(null));
     }
 
-    @After
+    @AfterEach
     public void afterTesting() {
         try {
             topicRepository.deleteByPublicId(testTopic);
@@ -103,7 +103,7 @@ public class TopicResourceTypeRepositoryTest {
         assertNull(topicResourceTypeRepository.findByPublicId(testTopicResourceType));
     }
 
-    @Before
+    @BeforeEach
     public void beforeTesting() {
         this.testTopic = null;
         this.testResourceType = null;

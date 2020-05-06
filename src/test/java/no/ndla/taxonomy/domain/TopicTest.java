@@ -1,22 +1,22 @@
 package no.ndla.taxonomy.domain;
 
 import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 public class TopicTest {
     private Topic topic;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         topic = new Topic();
     }

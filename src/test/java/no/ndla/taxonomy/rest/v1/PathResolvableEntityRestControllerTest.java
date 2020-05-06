@@ -5,14 +5,14 @@ import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.MetadataApiService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -22,7 +22,7 @@ public class PathResolvableEntityRestControllerTest {
     private MetadataApiService metadataApiService;
     private PathResolvableEntityRestController<MockEntity> controller;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         metadataApiService = mock(MetadataApiService.class);
         controller = new MockController(metadataApiService);

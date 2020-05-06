@@ -2,7 +2,7 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.EntityWithPathConnection;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RankableConnectionUpdaterTest {
     private void verifyOrder(List<TestRankable> list, List<String> expectedOrder) {

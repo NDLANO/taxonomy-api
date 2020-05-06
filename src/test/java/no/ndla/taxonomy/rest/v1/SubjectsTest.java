@@ -18,7 +18,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.net.URI;
 
 import static no.ndla.taxonomy.TestUtils.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 

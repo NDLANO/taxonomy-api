@@ -7,8 +7,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.net.URI;
 
 import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class RelevancesTest extends RestTest {

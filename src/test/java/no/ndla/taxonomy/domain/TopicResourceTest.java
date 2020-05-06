@@ -1,9 +1,9 @@
 package no.ndla.taxonomy.domain;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -12,7 +12,7 @@ public class TopicResourceTest {
     private Resource resource;
     private TopicResource topicResource;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         topic = mock(Topic.class);
         resource = mock(Resource.class);
