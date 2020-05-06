@@ -7,28 +7,33 @@ import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Transactional
+@Transactional(propagation = Propagation.MANDATORY)
 @Service
 public class EntityConnectionServiceImpl implements EntityConnectionService {
     private final SubjectTopicRepository subjectTopicRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final TopicResourceRepository topicResourceRepository;
 
+    private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public EntityConnectionServiceImpl(SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository) {
+
+    public EntityConnectionServiceImpl(SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicResourceRepository = topicResourceRepository;
+        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
 
     @Override
@@ -72,6 +77,8 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         }
 
         updateRank(connection, rank);
+
+        cachedUrlUpdaterService.updateCachedUrls(child);
 
         return connection;
     }
@@ -170,8 +177,12 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     @Override
     public void disconnectTopicSubtopic(TopicSubtopic topicSubtopic) {
+        final var subTopic = topicSubtopic.getSubtopic();
+
         topicSubtopic.disassociate();
         topicSubtopicRepository.delete(topicSubtopic);
+
+        subTopic.ifPresent(cachedUrlUpdaterService::updateCachedUrls);
 
         topicSubtopicRepository.flush();
     }
@@ -185,8 +196,12 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     @Override
     public void disconnectSubjectTopic(SubjectTopic subjectTopic) {
+        final var topic = subjectTopic.getTopic();
+
         subjectTopic.disassociate();
         subjectTopicRepository.delete(subjectTopic);
+
+        topic.ifPresent(cachedUrlUpdaterService::updateCachedUrls);
     }
 
     @Override
@@ -199,17 +214,23 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     @Override
     public void disconnectTopicResource(TopicResource topicResource) {
         boolean setNewPrimary = topicResource.isPrimary().orElseThrow() && topicResource.getResource().isPresent();
-        final var resource = topicResource.getResource().orElse(null);
+        final var resourceOptional = topicResource.getResource();
 
         topicResource.disassociate();
         topicResourceRepository.delete(topicResource);
 
-        if (setNewPrimary) {
-            resource.getTopicResources().stream().findFirst().ifPresent(topicResource1 -> {
-                topicResource1.setPrimary(true);
-                topicResourceRepository.saveAndFlush(topicResource1);
-            });
-        }
+        resourceOptional.ifPresent(resource -> {
+            if (setNewPrimary) {
+                resource.getTopicResources().stream().findFirst().ifPresent(topicResource1 -> {
+                    topicResource1.setPrimary(true);
+                    topicResourceRepository.saveAndFlush(topicResource1);
+
+                    topicResource1.getResource().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
+                });
+            }
+
+            cachedUrlUpdaterService.updateCachedUrls(resource);
+        });
 
         topicResourceRepository.flush();
     }
@@ -255,6 +276,8 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         connectable.setPrimary(setPrimaryTo);
 
         saveConnections(updatedConnectables);
+
+        updatedConnectables.forEach(updatedConnectable -> updatedConnectable.getConnectedChild().ifPresent(cachedUrlUpdaterService::updateCachedUrls));
 
         if (!setPrimaryTo && !foundNewPrimary.get()) {
             throw new InvalidArgumentServiceException("Requested to set non-primary, but cannot find another node to set primary");
@@ -326,5 +349,21 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     @Override
     public Collection<EntityWithPathConnection> getChildConnections(EntityWithPath entity) {
         return entity.getChildConnections();
+    }
+
+    @Override
+    public void disconnectAllChildren(EntityWithPath entity) {
+        Set.copyOf(entity.getChildConnections())
+                .forEach(connection -> {
+                    if (connection instanceof SubjectTopic) {
+                        disconnectSubjectTopic((SubjectTopic) connection);
+                    } else if (connection instanceof TopicSubtopic) {
+                        disconnectTopicSubtopic((TopicSubtopic) connection);
+                    } else if (connection instanceof TopicResource) {
+                        disconnectTopicResource((TopicResource) connection);
+                    } else {
+                        throw new IllegalStateException("Unknown child object on entity trying to disconnect children from");
+                    }
+                });
     }
 }

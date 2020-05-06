@@ -12,16 +12,21 @@ import java.net.URI;
 public class SubjectServiceImpl implements SubjectService {
     private final SubjectRepository subjectRepository;
     private final MetadataApiService metadataApiService;
+    private final EntityConnectionService entityConnectionService;
 
-    public SubjectServiceImpl(SubjectRepository subjectRepository, MetadataApiService metadataApiService) {
+    public SubjectServiceImpl(SubjectRepository subjectRepository, MetadataApiService metadataApiService,
+                              EntityConnectionService entityConnectionService) {
         this.subjectRepository = subjectRepository;
         this.metadataApiService = metadataApiService;
+        this.entityConnectionService = entityConnectionService;
     }
 
     @Override
     @Transactional
     public void delete(URI publicId) {
         final var subjectToDelete = subjectRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Subject was not found"));
+
+        entityConnectionService.disconnectAllChildren(subjectToDelete);
 
         subjectRepository.delete(subjectToDelete);
         subjectRepository.flush();

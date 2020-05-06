@@ -3,6 +3,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.MetadataApiService;
 import no.ndla.taxonomy.service.MetadataEntityWrapperService;
 import no.ndla.taxonomy.service.MetadataWrappedEntity;
@@ -84,6 +85,9 @@ public abstract class RestTest {
     @MockBean
     protected MetadataEntityWrapperService metadataEntityWrapperService;
 
+    @Autowired
+    protected CachedUrlUpdaterService cachedUrlUpdaterService;
+
     protected Builder builder;
 
     private MetadataDto createMetadataObject(URI publicId, DomainEntity entity) {
@@ -101,7 +105,7 @@ public abstract class RestTest {
     @SuppressWarnings("unchecked")
     @BeforeEach
     public void restTestSetUp() {
-        builder = new Builder(entityManager);
+        builder = new Builder(entityManager, cachedUrlUpdaterService);
 
         when(metadataEntityWrapperService.wrapEntity(any(DomainEntity.class), anyBoolean()))
                 .thenAnswer(invocationOnMock ->

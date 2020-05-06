@@ -2,7 +2,6 @@ package no.ndla.taxonomy.domain;
 
 import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.net.URI;
@@ -13,7 +12,6 @@ import java.util.stream.Collectors;
 public class Resource extends EntityWithPath {
 
     @Column
-    @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI contentUri;
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -27,6 +25,14 @@ public class Resource extends EntityWithPath {
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceFilter> filters = new HashSet<>();
+
+    @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
+    protected Set<CachedPath> cachedPaths = new HashSet<>();
+
+    @Override
+    public Set<CachedPath> getCachedPaths() {
+        return cachedPaths;
+    }
 
     @Override
     public Set<EntityWithPathConnection> getParentConnections() {
@@ -220,9 +226,9 @@ public class Resource extends EntityWithPath {
 
     @PreRemove
     void preRemove() {
-        new HashSet<>(resourceResourceTypes).forEach(ResourceResourceType::disassociate);
-        new HashSet<>(topics).forEach(TopicResource::disassociate);
-        new HashSet<>(filters).forEach(ResourceFilter::disassociate);
+        Set.copyOf(resourceResourceTypes).forEach(ResourceResourceType::disassociate);
+        Set.copyOf(topics).forEach(TopicResource::disassociate);
+        Set.copyOf(filters).forEach(ResourceFilter::disassociate);
     }
 
     @Override

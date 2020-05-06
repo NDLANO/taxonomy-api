@@ -33,8 +33,10 @@ public class Filters extends CrudController<Filter> {
     private final FilterRepository filterRepository;
 
     public Filters(FilterRepository repository, SubjectRepository subjectRepository) {
+        super(repository);
+
         this.subjectRepository = subjectRepository;
-        this.repository = filterRepository = repository;
+        this.filterRepository = repository;
     }
 
     @GetMapping

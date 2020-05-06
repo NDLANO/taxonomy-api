@@ -1,6 +1,8 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.DomainObject;
+import no.ndla.taxonomy.repositories.TaxonomyRepository;
+import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.MetadataApiService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,7 +16,9 @@ import java.net.URI;
 public class PathResolvableEntityRestController<T extends DomainObject> extends CrudController<T> {
     private final MetadataApiService metadataApiService;
 
-    PathResolvableEntityRestController(MetadataApiService metadataApiService) {
+    PathResolvableEntityRestController(TaxonomyRepository<T> taxonomyRepository, MetadataApiService metadataApiService, CachedUrlUpdaterService cachedUrlUpdaterService) {
+        super(taxonomyRepository, cachedUrlUpdaterService);
+
         this.metadataApiService = metadataApiService;
     }
 

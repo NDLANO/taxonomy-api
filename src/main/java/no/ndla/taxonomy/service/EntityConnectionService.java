@@ -40,4 +40,6 @@ public interface EntityConnectionService {
     Collection<EntityWithPathConnection> getParentConnections(EntityWithPath entity);
 
     Collection<EntityWithPathConnection> getChildConnections(EntityWithPath entity);
+
+    void disconnectAllChildren(EntityWithPath entity);
 }

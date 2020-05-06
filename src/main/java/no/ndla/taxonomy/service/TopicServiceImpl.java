@@ -44,7 +44,7 @@ public class TopicServiceImpl implements TopicService {
     public void delete(URI publicId) {
         final var topicToDelete = topicRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Topic was not found"));
 
-        connectionService.replacePrimaryConnectionsFor(topicToDelete);
+        connectionService.disconnectAllChildren(topicToDelete);
 
         topicRepository.delete(topicToDelete);
         topicRepository.flush();

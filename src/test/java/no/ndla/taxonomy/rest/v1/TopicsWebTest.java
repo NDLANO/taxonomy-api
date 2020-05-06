@@ -51,6 +51,8 @@ public class TopicsWebTest {
     MetadataApiService metadataApiService;
     @MockBean
     MetadataEntityWrapperService metadataEntityWrapperService;
+    @MockBean
+    CachedUrlUpdaterService cachedUrlUpdaterService;
 
     @Autowired
     private MockMvc mockMvc;

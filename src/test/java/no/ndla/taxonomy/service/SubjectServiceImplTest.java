@@ -28,11 +28,14 @@ public class SubjectServiceImplTest {
 
     private MetadataApiService metadataApiService;
 
+    private EntityConnectionService entityConnectionService;
+
     @Before
     public void setUp() {
         metadataApiService = mock(MetadataApiService.class);
+        entityConnectionService = mock(EntityConnectionService.class);
 
-        subjectService = new SubjectServiceImpl(subjectRepository, metadataApiService);
+        subjectService = new SubjectServiceImpl(subjectRepository, metadataApiService, entityConnectionService);
     }
 
     @Test

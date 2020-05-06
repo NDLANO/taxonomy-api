@@ -1,6 +1,8 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.DomainObject;
+import no.ndla.taxonomy.repositories.TaxonomyRepository;
+import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.MetadataApiService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.junit.Before;
@@ -67,7 +69,7 @@ public class PathResolvableEntityRestControllerTest {
     private static class MockController extends PathResolvableEntityRestController<MockEntity> {
 
         MockController(MetadataApiService metadataApiService) {
-            super(metadataApiService);
+            super(mock(TaxonomyRepository.class), metadataApiService, mock(CachedUrlUpdaterService.class));
         }
     }
 }

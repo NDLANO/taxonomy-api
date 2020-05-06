@@ -10,6 +10,7 @@ import java.util.Set;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 public class SubjectTest {
     private Subject subject;
@@ -167,5 +168,13 @@ public class SubjectTest {
     public void isContext() {
         final var subject = new Subject();
         assertTrue(subject.isContext());
+    }
+
+    @Test
+    public void getCachedPaths() {
+        final var cachedPaths = Set.of();
+
+        setField(subject, "cachedPaths", cachedPaths);
+        assertSame(cachedPaths, subject.getCachedPaths());
     }
 }

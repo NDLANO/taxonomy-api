@@ -1,29 +1,36 @@
 package no.ndla.taxonomy.domain;
 
-import javax.persistence.JoinColumn;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.OneToMany;
 import java.net.URI;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @MappedSuperclass
 public abstract class EntityWithPath extends DomainObject {
-    @OneToMany
-    @JoinColumn(name = "publicId", referencedColumnName = "publicId", updatable = false, insertable = false)
-    private final Set<CachedUrl> cachedUrls = new HashSet<>();
+    public abstract Set<CachedPath> getCachedPaths();
 
-    public Set<CachedUrl> getCachedUrls() {
-        return this.cachedUrls;
+    public void addCachedPath(CachedPath cachedPath) {
+        this.getCachedPaths().add(cachedPath);
+
+        if (cachedPath.getOwningEntity().orElse(null) != this) {
+            cachedPath.setOwningEntity(this);
+        }
+    }
+
+    public void removeCachedPath(CachedPath cachedPath) {
+        this.getCachedPaths().remove(cachedPath);
+
+        if (cachedPath.getOwningEntity().orElse(null) == this) {
+            cachedPath.setOwningEntity(null);
+        }
     }
 
     public Optional<String> getPrimaryPath() {
-        return getCachedUrls()
+        return getCachedPaths()
                 .stream()
-                .filter(CachedUrl::isPrimary)
-                .map(CachedUrl::getPath)
+                .filter(CachedPath::isPrimary)
+                .map(CachedPath::getPath)
                 .findFirst();
     }
 
@@ -34,7 +41,7 @@ public abstract class EntityWithPath extends DomainObject {
     public Optional<String> getPathByContext(DomainEntity context) {
         final var contextPublicId = context.getPublicId();
 
-        return getCachedUrls()
+        return getCachedPaths()
                 .stream()
                 .sorted((cachedUrl1, cachedUrl2) -> {
                     final var path1 = cachedUrl1.getPath();
@@ -76,13 +83,13 @@ public abstract class EntityWithPath extends DomainObject {
 
                     return 0;
                 })
-                .map(CachedUrl::getPath)
+                .map(CachedPath::getPath)
                 .findFirst();
 
     }
 
     public Set<String> getAllPaths() {
-        return getCachedUrls().stream().map(CachedUrl::getPath).collect(Collectors.toSet());
+        return getCachedPaths().stream().map(CachedPath::getPath).collect(Collectors.toSet());
     }
 
     abstract public URI getContentUri();

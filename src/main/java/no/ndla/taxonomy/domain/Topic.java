@@ -2,7 +2,6 @@ package no.ndla.taxonomy.domain;
 
 
 import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.net.URI;
@@ -35,17 +34,24 @@ public class Topic extends EntityWithPath {
     private Set<TopicFilter> topicFilters = new HashSet<>();
 
     @Column
-    @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI contentUri;
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TopicTranslation> translations = new HashSet<>();
+
+    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
+    protected Set<CachedPath> cachedPaths = new HashSet<>();
 
     @Column
     private boolean context;
 
     public Topic() {
         setPublicId(URI.create("urn:topic:" + UUID.randomUUID()));
+    }
+
+    @Override
+    public Set<CachedPath> getCachedPaths() {
+        return cachedPaths;
     }
 
     @Override
@@ -74,9 +80,9 @@ public class Topic extends EntityWithPath {
 
          */
     public Optional<String> getPrimaryPath() {
-        return getCachedUrls()
+        return getCachedPaths()
                 .stream()
-                .map(CachedUrl::getPath).min((path1, path2) -> {
+                .map(CachedPath::getPath).min((path1, path2) -> {
                     if (path1.startsWith("/topic") && path2.startsWith("/topic")) {
                         return 0;
                     }
@@ -317,11 +323,11 @@ public class Topic extends EntityWithPath {
 
     @PreRemove
     void preRemove() {
-        new HashSet<>(subjectTopics).forEach(SubjectTopic::disassociate);
-        new HashSet<>(childTopicSubtopics).forEach(TopicSubtopic::disassociate);
-        new HashSet<>(parentTopicSubtopics).forEach(TopicSubtopic::disassociate);
-        new HashSet<>(topicResources).forEach(TopicResource::disassociate);
-        new HashSet<>(topicResourceTypes).forEach(TopicResourceType::disassociate);
-        new HashSet<>(topicFilters).forEach(TopicFilter::disassociate);
+        Set.copyOf(subjectTopics).forEach(SubjectTopic::disassociate);
+        Set.copyOf(childTopicSubtopics).forEach(TopicSubtopic::disassociate);
+        Set.copyOf(parentTopicSubtopics).forEach(TopicSubtopic::disassociate);
+        Set.copyOf(topicResources).forEach(TopicResource::disassociate);
+        Set.copyOf(topicResourceTypes).forEach(TopicResourceType::disassociate);
+        Set.copyOf(topicFilters).forEach(TopicFilter::disassociate);
     }
 }

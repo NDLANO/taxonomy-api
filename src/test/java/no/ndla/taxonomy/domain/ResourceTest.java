@@ -392,4 +392,12 @@ public class ResourceTest {
         final var resource = new Resource();
         assertFalse(resource.isContext());
     }
+
+    @Test
+    public void getCachedPaths() {
+        final var cachedPaths = Set.of();
+
+        setField(resource, "cachedPaths", cachedPaths);
+        assertSame(cachedPaths, resource.getCachedPaths());
+    }
 }

@@ -26,7 +26,8 @@ public class ResourceServiceImpl implements ResourceService {
     public void delete(URI id) {
         final var resourceToDelete = resourceRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundServiceException("Subject was not found"));
 
-        connectionService.replacePrimaryConnectionsFor(resourceToDelete);
+        // ATM resources can not have any children, but still implements the interface that could have children
+        connectionService.disconnectAllChildren(resourceToDelete);
 
         resourceRepository.delete(resourceToDelete);
         resourceRepository.flush();

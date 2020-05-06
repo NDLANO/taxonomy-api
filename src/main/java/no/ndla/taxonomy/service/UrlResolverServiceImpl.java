@@ -1,6 +1,6 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.CachedUrl;
+import no.ndla.taxonomy.domain.CachedPath;
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.UrlMapping;
 import no.ndla.taxonomy.repositories.ResourceRepository;
@@ -74,9 +74,9 @@ public class UrlResolverServiceImpl implements UrlResolverService {
         try {
             return getEntityFromPublicId(publicId)
                     .stream()
-                    .map(EntityWithPath::getCachedUrls)
+                    .map(EntityWithPath::getCachedPaths)
                     .flatMap(Set::stream)
-                    .map(CachedUrl::getPath)
+                    .map(CachedPath::getPath)
                     .collect(Collectors.toList());
         } catch (InvalidArgumentServiceException e) {
             return List.of();

@@ -28,7 +28,7 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   LEFT JOIN FETCH rf.filter" +
             "   LEFT JOIN rf.relevance rel" +
             "   LEFT JOIN FETCH r.resourceTranslations" +
-            "   LEFT JOIN FETCH r.cachedUrls" +
+            "   LEFT JOIN FETCH r.cachedPaths" +
             "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
             "   LEFT JOIN FETCH rf.relevance" +
             "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
@@ -55,7 +55,7 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   LEFT JOIN FETCH tr.topic t" +
             "   LEFT JOIN rf.relevance rel" +
             "   LEFT JOIN FETCH r.resourceTranslations" +
-            "   LEFT JOIN FETCH r.cachedUrls" +
+            "   LEFT JOIN FETCH r.cachedPaths" +
             "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
             "   LEFT JOIN FETCH rf.relevance" +
             "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
@@ -88,7 +88,7 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   LEFT JOIN r.resourceResourceTypes rrt " +
             "   LEFT JOIN rrt.resourceType rt" +
             "   LEFT JOIN FETCH r.resourceTranslations" +
-            "   LEFT JOIN FETCH r.cachedUrls" +
+            "   LEFT JOIN FETCH r.cachedPaths" +
             "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
             "   LEFT JOIN FETCH rf.relevance" +
             "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
@@ -124,7 +124,7 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   LEFT JOIN r.resourceResourceTypes rrt " +
             "   LEFT JOIN rrt.resourceType rt" +
             "   LEFT JOIN FETCH r.resourceTranslations" +
-            "   LEFT JOIN FETCH r.cachedUrls" +
+            "   LEFT JOIN FETCH r.cachedPaths" +
             "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
             "   LEFT JOIN FETCH rf.relevance" +
             "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +

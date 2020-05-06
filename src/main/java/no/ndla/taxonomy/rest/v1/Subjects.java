@@ -41,12 +41,12 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
                     TopicResourceRepository topicResourceRepository,
                     SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository,
                     TopicTreeSorter topicTreeSorter, SubjectService subjectService, MetadataApiService metadataApiService,
-                    MetadataEntityWrapperService metadataWrapperService) {
-        super(metadataApiService);
+                    MetadataEntityWrapperService metadataWrapperService,
+                    CachedUrlUpdaterService cachedUrlUpdaterService) {
+        super(subjectRepository, metadataApiService, cachedUrlUpdaterService);
 
         this.subjectRepository = subjectRepository;
         this.metadataWrapperService = metadataWrapperService;
-        repository = subjectRepository;
         this.subjectTopicTreeElementRepository = subjectTopicTreeElementRepository;
         this.topicResourceRepository = topicResourceRepository;
         this.subjectTopicRepository = subjectTopicRepository;

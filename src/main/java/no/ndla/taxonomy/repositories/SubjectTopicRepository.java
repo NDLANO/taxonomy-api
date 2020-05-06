@@ -24,7 +24,7 @@ public interface SubjectTopicRepository extends TaxonomyRepository<SubjectTopic>
             "   FROM SubjectTopic st" +
             "   JOIN FETCH st.topic t" +
             "   JOIN FETCH st.subject s" +
-            "   LEFT JOIN FETCH s.cachedUrls" +
+            "   LEFT JOIN FETCH s.cachedPaths" +
             "   WHERE t.publicId = :topicPublicId")
     List<SubjectTopic> findAllByTopicPublicIdIncludingSubjectAndTopicAndCachedUrls(URI topicPublicId);
 
@@ -35,7 +35,7 @@ public interface SubjectTopicRepository extends TaxonomyRepository<SubjectTopic>
             "   LEFT JOIN FETCH t.topicFilters tf" +
             "   LEFT JOIN FETCH tf.filter f" +
             "   LEFT JOIN FETCH tf.relevance" +
-            "   LEFT JOIN FETCH t.cachedUrls" +
+            "   LEFT JOIN FETCH t.cachedPaths" +
             "   LEFT JOIN FETCH t.translations" +
             "   LEFT JOIN FETCH f.translations" +
             "   WHERE st.subject = :subject AND st.topic.id IN :topicId")

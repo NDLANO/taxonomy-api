@@ -29,7 +29,8 @@ public class Relevances extends CrudController<Relevance> {
     private final RelevanceRepository relevanceRepository;
 
     public Relevances(RelevanceRepository repository) {
-        this.repository = relevanceRepository = repository;
+        super(repository);
+        relevanceRepository = repository;
     }
 
     @GetMapping

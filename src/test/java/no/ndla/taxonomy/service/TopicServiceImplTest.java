@@ -59,20 +59,13 @@ public class TopicServiceImplTest {
 
     @Test
     public void delete() {
-        final var topicId = builder.topic().getPublicId();
-
-        doAnswer(invocation -> {
-            final var topic = (Topic) invocation.getArgument(0);
-
-            assertEquals(topicId, topic.getPublicId());
-
-            return null;
-        }).when(entityConnectionService).replacePrimaryConnectionsFor(any(Topic.class));
+        final var createdTopic = builder.topic();
+        final var topicId = createdTopic.getPublicId();
 
         topicService.delete(topicId);
 
         assertFalse(topicRepository.findFirstByPublicId(topicId).isPresent());
-        verify(entityConnectionService).replacePrimaryConnectionsFor(any(Topic.class));
+        verify(entityConnectionService).disconnectAllChildren(createdTopic);
 
         verify(metadataApiService).deleteMetadataByPublicId(topicId);
     }

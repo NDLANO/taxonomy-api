@@ -2,6 +2,7 @@ package no.ndla.taxonomy;
 
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,11 +27,12 @@ public class TestSeeder {
     private final SubjectTopicRepository subjectTopicRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final TopicResourceRepository topicResourceRepository;
+    private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
     private final EntityManager entityManager;
 
     public TestSeeder(SubjectRepository subjectRepository, TopicRepository topicRepository, ResourceRepository resourceRepository, FilterRepository filterRepository, RelevanceRepository relevanceRepository, ResourceTypeRepository resourceTypeRepository, SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository,
-                      EntityManager entityManager) {
+                      CachedUrlUpdaterService cachedUrlUpdaterService, EntityManager entityManager) {
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
@@ -40,6 +42,7 @@ public class TestSeeder {
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicResourceRepository = topicResourceRepository;
+        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
         this.entityManager = entityManager;
     }
 
@@ -63,7 +66,7 @@ public class TestSeeder {
 
         topicRepository.saveAndFlush(topic);
 
-        entityManager.refresh(topic);
+        cachedUrlUpdaterService.updateCachedUrls(topic);
 
         return topic;
     }
@@ -80,7 +83,7 @@ public class TestSeeder {
 
         subjectRepository.saveAndFlush(subject);
 
-        entityManager.refresh(subject);
+        cachedUrlUpdaterService.updateCachedUrls(subject);
 
         return subject;
     }
@@ -98,7 +101,7 @@ public class TestSeeder {
 
         subjectTopicRepository.saveAndFlush(subjectTopic);
 
-        entityManager.refresh(subjectTopic.getTopic().orElseThrow(RuntimeException::new));
+        subjectTopic.getSubject().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
 
         return subjectTopic;
     }
@@ -116,7 +119,7 @@ public class TestSeeder {
 
         topicSubtopicRepository.saveAndFlush(topicSubtopic);
 
-        entityManager.refresh(topicSubtopic.getSubtopic().orElseThrow(RuntimeException::new));
+        topicSubtopic.getTopic().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
 
         return topicSubtopic;
     }
@@ -180,7 +183,8 @@ public class TestSeeder {
 
         resourceRepository.saveAndFlush(resource);
 
-        entityManager.refresh(resource);
+        cachedUrlUpdaterService.updateCachedUrls(resource);
+
 
         return resource;
     }
@@ -199,6 +203,8 @@ public class TestSeeder {
         if (rank != null) {
             topicResource.setRank(rank);
         }
+
+        topicResource.getTopic().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
 
         return topicResourceRepository.saveAndFlush(topicResource);
     }

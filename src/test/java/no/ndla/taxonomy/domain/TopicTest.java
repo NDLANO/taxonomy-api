@@ -31,22 +31,22 @@ public class TopicTest {
     public void getPrimaryPath() {
         assertFalse(topic.getPrimaryPath().isPresent());
 
-        final var cachedPrimaryContextUrl = mock(CachedUrl.class);
-        final var cachedPrimarySubjectUrl = mock(CachedUrl.class);
+        final var cachedPrimaryContextUrl = mock(CachedPath.class);
+        final var cachedPrimarySubjectUrl = mock(CachedPath.class);
 
         when(cachedPrimaryContextUrl.getPath()).thenReturn("/topic/primary");
         when(cachedPrimarySubjectUrl.getPath()).thenReturn("/subject/primary");
 
         // If returning a primary subject path along it must return it
-        setField(topic, "cachedUrls", Set.of(cachedPrimarySubjectUrl));
+        setField(topic, "cachedPaths", Set.of(cachedPrimarySubjectUrl));
         assertEquals("/subject/primary", topic.getPrimaryPath().orElse(""));
 
         // And adding a primary context URL (topic) it must be returned instead
-        setField(topic, "cachedUrls", Set.of(cachedPrimarySubjectUrl, cachedPrimaryContextUrl));
+        setField(topic, "cachedPaths", Set.of(cachedPrimarySubjectUrl, cachedPrimaryContextUrl));
         assertEquals("/topic/primary", topic.getPrimaryPath().orElse(""));
 
         // Order must not matter
-        setField(topic, "cachedUrls", Set.of(cachedPrimaryContextUrl, cachedPrimarySubjectUrl));
+        setField(topic, "cachedPaths", Set.of(cachedPrimaryContextUrl, cachedPrimarySubjectUrl));
         assertEquals("/topic/primary", topic.getPrimaryPath().orElse(""));
     }
 
@@ -535,4 +535,11 @@ public class TopicTest {
         topicFilters.forEach(topicFilter -> verify(topicFilter).disassociate());
     }
 
+    @Test
+    public void getCachedPaths() {
+        final var cachedPaths = Set.of();
+
+        setField(topic, "cachedPaths", cachedPaths);
+        assertSame(cachedPaths, topic.getCachedPaths());
+    }
 }

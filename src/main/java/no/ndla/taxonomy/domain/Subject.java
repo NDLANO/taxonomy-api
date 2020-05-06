@@ -1,8 +1,6 @@
 package no.ndla.taxonomy.domain;
 
 
-import org.hibernate.annotations.Type;
-
 import javax.persistence.*;
 import java.net.URI;
 import java.util.*;
@@ -11,7 +9,6 @@ import java.util.stream.Collectors;
 @Entity
 public class Subject extends EntityWithPath {
     @Column
-    @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI contentUri;
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -23,8 +20,16 @@ public class Subject extends EntityWithPath {
     @OneToMany(mappedBy = "subject", orphanRemoval = true)
     private Set<Filter> filters = new HashSet<>();
 
+    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
+    protected Set<CachedPath> cachedPaths = new HashSet<>();
+
     public Subject() {
         setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
+    }
+
+    @Override
+    public Set<CachedPath> getCachedPaths() {
+        return cachedPaths;
     }
 
     @Override
@@ -142,7 +147,7 @@ public class Subject extends EntityWithPath {
 
     @PreRemove
     void preRemove() {
-        new HashSet<>(subjectTopics).forEach(SubjectTopic::disassociate);
+        Set.copyOf(subjectTopics).forEach(SubjectTopic::disassociate);
     }
 
     @Override

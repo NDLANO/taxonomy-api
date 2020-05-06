@@ -8,6 +8,7 @@ import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicTranslation;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
+import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,10 +28,12 @@ import java.util.stream.Collectors;
 public class Contexts {
     private final TopicRepository topicRepository;
     private final SubjectRepository subjectRepository;
+    private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public Contexts(TopicRepository topicRepository, SubjectRepository subjectRepository) {
+    public Contexts(TopicRepository topicRepository, SubjectRepository subjectRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.topicRepository = topicRepository;
         this.subjectRepository = subjectRepository;
+        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
 
     }
 
@@ -75,6 +78,8 @@ public class Contexts {
         topic.setContext(true);
         URI location = URI.create("/v1/contexts/" + topic.getPublicId());
 
+        cachedUrlUpdaterService.updateCachedUrls(topic);
+
         return ResponseEntity.created(location).build();
     }
 
@@ -86,6 +91,8 @@ public class Contexts {
     public void delete(@PathVariable("id") URI id) {
         Topic topic = topicRepository.getByPublicId(id);
         topic.setContext(false);
+
+        cachedUrlUpdaterService.updateCachedUrls(topic);
     }
 
     public static class ContextIndexDocument {

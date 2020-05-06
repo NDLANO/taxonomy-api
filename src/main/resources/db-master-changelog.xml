@@ -432,4 +432,83 @@
         <addUniqueConstraint tableName="resource" columnNames="content_uri"
                              constraintName="unique_resource_content_uri"/>
     </changeSet>
+
+    <changeSet id="20200504 add cached_paths table" author="Jon-Eirik Pettersen">
+        <createTable tableName="cached_path">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="public_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="path" type="varchar(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_primary" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subject_id" type="integer"/>
+            <column name="topic_id" type="integer"/>
+            <column name="resource_id" type="integer"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20200505 add foreign keys and indices to cached_paths" author="Jon-Eirik Pettersen">
+        <createIndex tableName="cached_path" indexName="cached_path_subject_id">
+            <column name="subject_id"/>
+        </createIndex>
+
+        <createIndex tableName="cached_path" indexName="cached_path_topic_id">
+            <column name="topic_id"/>
+        </createIndex>
+
+        <createIndex tableName="cached_path" indexName="cached_path_resource_id">
+            <column name="resource_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseTableName="cached_path" baseColumnNames="subject_id"
+                                 constraintName="fk_cached_path_subject_id"
+                                 referencedTableName="subject" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+        <addForeignKeyConstraint baseTableName="cached_path" baseColumnNames="resource_id"
+                                 constraintName="fk_cached_path_resource_id"
+                                 referencedTableName="resource" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+        <addForeignKeyConstraint baseTableName="cached_path" baseColumnNames="topic_id"
+                                 constraintName="fk_cached_path_topic_id"
+                                 referencedTableName="topic" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+    </changeSet>
+
+    <changeSet id="20200506 add unique constraint to cached_path path" author="Jon-Eirik Pettersen">
+        <addUniqueConstraint tableName="cached_path" columnNames="path" constraintName="unique_cached_path_path"/>
+    </changeSet>
+
+    <changeSet id="20200506 migrate data from cached_url materialized view to cached_path table"
+               author="Jon-Eirik Pettersen">
+        <sql splitStatements="false" stripComments="false">
+            TRUNCATE cached_path;
+
+            INSERT INTO cached_path
+            SELECT
+            uuid_in(md5(random()::text || clock_timestamp()::text)::cstring) AS id,
+            public_id, path, is_primary,
+            (SELECT id FROM subject WHERE subject.public_id = cached_url.public_id) as subject_id,
+            (SELECT id FROM topic WHERE topic.public_id = cached_url.public_id) as topic_id,
+            (SELECT id FROM resource WHERE resource.public_id = cached_url.public_id) as resource_id
+            FROM cached_url;
+        </sql>
+    </changeSet>
+    <changeSet id="20200506 delete cached_url materialized view" author="Jon-Eirik Pettersen">
+        <sql splitStatements="false" stripComments="false">
+            DROP TRIGGER IF EXISTS refresh_paths ON subject;
+            DROP TRIGGER IF EXISTS refresh_paths ON topic;
+            DROP TRIGGER IF EXISTS refresh_paths ON resource;
+            DROP TRIGGER IF EXISTS refresh_paths ON subject_topic;
+            DROP TRIGGER IF EXISTS refresh_paths ON topic_subtopic;
+            DROP TRIGGER IF EXISTS refresh_paths ON topic_resource;
+
+            DROP MATERIALIZED VIEW cached_url;
+        </sql>
+    </changeSet>
 </databaseChangeLog>
