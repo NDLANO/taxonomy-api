@@ -6,22 +6,24 @@ import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.UrlMappingRepository;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
+@DirtiesContext
 /*
  * Test Service and database together.
  */
@@ -45,7 +47,7 @@ public class UrlResolverServiceImplTest {
 
     private UrlResolverServiceImpl urlResolverService;
 
-    @Before
+    @BeforeEach
     public void restTestSetUp() {
         urlResolverService = new UrlResolverServiceImpl(subjectRepository, topicRepository, resourceRepository, urlMappingRepository, oldUrlCanonifier);
     }
@@ -72,7 +74,7 @@ public class UrlResolverServiceImplTest {
     }
 
 
-    @Test()
+    @Test
     @Transactional
     public void queryForNonExistingNodeShouldNotMatchSimilarNodeId() {
         String oldUrl = "ndla.no/node/54";
@@ -195,10 +197,10 @@ public class UrlResolverServiceImplTest {
         assertEquals("/subject:2/topic:1:183926", path);
     }
 
-    @Test(expected = Exception.class)
+    @Test
     @Transactional
-    public void putOldUrlForNonexistentResource() throws Exception {
-        urlResolverService.putUrlMapping("abc", URI.create("urn:topic:1:12"), URI.create("urn:subject:12"));
+    public void putOldUrlForNonexistentResource() {
+        assertThrows(Exception.class, () -> urlResolverService.putUrlMapping("abc", URI.create("urn:topic:1:12"), URI.create("urn:subject:12")));
     }
 
     @Test

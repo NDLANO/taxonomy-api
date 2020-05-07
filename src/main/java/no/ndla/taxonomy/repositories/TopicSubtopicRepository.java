@@ -23,17 +23,9 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
             "   FROM TopicSubtopic ts" +
             "   JOIN FETCH ts.topic t" +
             "   JOIN FETCH ts.subtopic st" +
-            "   LEFT JOIN FETCH t.cachedUrls" +
+            "   LEFT JOIN FETCH t.cachedPaths" +
             "   WHERE st.publicId = :subTopicPublicId")
     List<TopicSubtopic> findAllBySubtopicPublicIdIncludingTopicAndSubtopicAndCachedUrls(URI subTopicPublicId);
-
-    @Query("SELECT DISTINCT ts" +
-            "   FROM TopicSubtopic ts" +
-            "   JOIN FETCH ts.topic t" +
-            "   JOIN FETCH ts.subtopic st" +
-            "   LEFT JOIN FETCH st.cachedUrls" +
-            "   WHERE t.publicId = :topicPublicId")
-    List<TopicSubtopic> findAllByTopicPublicIdIncludingTopicAndSubtopicAndCachedUrls(URI topicPublicId);
 
     @Query("SELECT DISTINCT ts" +
             "   FROM TopicSubtopic ts" +
@@ -70,7 +62,7 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
             "   LEFT JOIN FETCH ts.subtopic st" +
             "   LEFT JOIN FETCH t.translations" +
             "   LEFT JOIN FETCH st.translations" +
-            "   LEFT JOIN FETCH st.cachedUrls" +
+            "   LEFT JOIN FETCH st.cachedPaths" +
             "   LEFT JOIN FETCH st.topicFilters tf" +
             "   LEFT JOIN FETCH tf.filter f" +
             "   LEFT JOIN FETCH f.translations" +

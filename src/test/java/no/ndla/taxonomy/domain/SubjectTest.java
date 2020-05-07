@@ -1,20 +1,21 @@
 package no.ndla.taxonomy.domain;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 public class SubjectTest {
     private Subject subject;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         subject = new Subject();
     }
@@ -167,5 +168,13 @@ public class SubjectTest {
     public void isContext() {
         final var subject = new Subject();
         assertTrue(subject.isContext());
+    }
+
+    @Test
+    public void getCachedPaths() {
+        final var cachedPaths = Set.of();
+
+        setField(subject, "cachedPaths", cachedPaths);
+        assertSame(cachedPaths, subject.getCachedPaths());
     }
 }

@@ -1,7 +1,5 @@
 package no.ndla.taxonomy.domain;
 
-import org.hibernate.annotations.Type;
-
 import javax.persistence.*;
 import java.io.Serializable;
 import java.net.URI;
@@ -13,7 +11,6 @@ public class DomainEntity implements Serializable {
     private Integer id;
 
     @Column
-    @Type(type = "no.ndla.taxonomy.hibernate.UriType")
     private URI publicId;
 
     public Integer getId() {

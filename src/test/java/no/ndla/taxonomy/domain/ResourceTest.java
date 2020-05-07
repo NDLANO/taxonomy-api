@@ -1,8 +1,8 @@
 package no.ndla.taxonomy.domain;
 
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -10,14 +10,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 public class ResourceTest {
     private Resource resource;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.resource = new Resource();
     }
@@ -391,5 +391,13 @@ public class ResourceTest {
     public void isContext() {
         final var resource = new Resource();
         assertFalse(resource.isContext());
+    }
+
+    @Test
+    public void getCachedPaths() {
+        final var cachedPaths = Set.of();
+
+        setField(resource, "cachedPaths", cachedPaths);
+        assertSame(cachedPaths, resource.getCachedPaths());
     }
 }

@@ -19,8 +19,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
+import static org.springframework.test.util.AssertionErrors.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -115,9 +117,9 @@ public class TestUtils {
     }
 
     public static <V> void assertAnyTrue(V[] objects, Predicate<V> predicate) {
-        assertTrue("Array was empty", objects.length > 0);
+        assertTrue(objects.length > 0, "Array was empty");
         String className = objects[0].getClass().getSimpleName();
-        assertTrue("No " + className + " matching predicate found.", Arrays.stream(objects).anyMatch(predicate));
+        assertTrue(Arrays.stream(objects).anyMatch(predicate), "No " + className + " matching predicate found.");
     }
 
     public static <V> void assertAnyTrue(Iterable<V> objects, Predicate<V> predicate) {

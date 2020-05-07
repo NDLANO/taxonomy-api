@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.domain;
 
+import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,12 +10,12 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 @Component
 @Transactional(propagation = Propagation.MANDATORY)
 public class Builder {
     private final EntityManager entityManager;
+    private final CachedUrlUpdaterService cachedUrlUpdaterService;
     private final Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();
     private final Map<String, SubjectBuilder> subjects = new HashMap<>();
     private final Map<String, TopicBuilder> topics = new HashMap<>();
@@ -24,32 +25,13 @@ public class Builder {
     private final Map<String, UrlMappingBuilder> cachedUrlOldRigBuilders = new HashMap<>();
     private int keyCounter = 0;
 
-    public Builder(EntityManager entityManager) {
+    public Builder(EntityManager entityManager, CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.entityManager = entityManager;
+        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
 
     private String createKey() {
         return "DefaultKey:" + keyCounter++;
-    }
-
-    /*
-        This method is required because JPA does not know that cached_url is being updated on every update to the
-        database. It needs to be told to force update of the CachedUrl entries after each save that changes the
-        table.
-     */
-    private void refreshAllCachedUrls() {
-        entityManager.flush();
-
-        Stream.concat(subjects.values().stream().map(builder -> builder.subject), Stream.concat(topics.values().stream().map(builder -> builder.topic), resources.values().stream().map(builder -> builder.resource))
-                .filter(entity -> entity.getId() != null))
-                .forEach(entity -> {
-                    // IllegalArgumentException is thrown on deleted objects, just ignore them
-                    try {
-                        entityManager.refresh(entity);
-                    } catch (IllegalArgumentException ignored) {
-
-                    }
-                });
     }
 
     public Topic topic(String key) {
@@ -193,7 +175,7 @@ public class Builder {
 
         entityManager.persist(subject.subject);
 
-        refreshAllCachedUrls();
+        cachedUrlUpdaterService.updateCachedUrls(subject.subject);
 
         return subject.subject;
     }
@@ -409,8 +391,6 @@ public class Builder {
         public ResourceBuilder() {
             resource = new Resource();
             entityManager.persist(resource);
-
-            refreshAllCachedUrls();
         }
 
         public ResourceBuilder name(String name) {
@@ -457,7 +437,7 @@ public class Builder {
         public ResourceBuilder publicId(String id) {
             resource.setPublicId(URI.create(id));
 
-            refreshAllCachedUrls();
+            cachedUrlUpdaterService.updateCachedUrls(resource);
 
             return this;
         }
@@ -502,7 +482,7 @@ public class Builder {
             if (null != consumer) consumer.accept(topicBuilder);
             topic(topicBuilder.topic);
 
-            refreshAllCachedUrls();
+            cachedUrlUpdaterService.updateCachedUrls(topicBuilder.topic);
 
             return this;
         }
@@ -516,7 +496,7 @@ public class Builder {
             SubjectTopic subjectTopic = SubjectTopic.create(subject, topic);
             entityManager.persist(subjectTopic);
 
-            refreshAllCachedUrls();
+            cachedUrlUpdaterService.updateCachedUrls(topic);
 
             return this;
         }
@@ -557,7 +537,7 @@ public class Builder {
         public SubjectBuilder publicId(String id) {
             subject.setPublicId(URI.create(id));
 
-            refreshAllCachedUrls();
+            cachedUrlUpdaterService.updateCachedUrls(subject);
 
             return this;
         }
@@ -593,9 +573,9 @@ public class Builder {
         }
 
         public TopicBuilder subtopic(Topic subtopic) {
-            final var topicSubtopic = TopicSubtopic.create(topic, subtopic);
+            TopicSubtopic.create(topic, subtopic);
 
-            refreshAllCachedUrls();
+            cachedUrlUpdaterService.updateCachedUrls(subtopic);
 
             return this;
         }
@@ -634,7 +614,7 @@ public class Builder {
         public TopicBuilder resource(Resource resource) {
             entityManager.persist(TopicResource.create(topic, resource));
 
-            refreshAllCachedUrls();
+            cachedUrlUpdaterService.updateCachedUrls(resource);
 
             return this;
         }
@@ -642,7 +622,7 @@ public class Builder {
         public TopicBuilder resource(Resource resource, boolean primary) {
             entityManager.persist(TopicResource.create(topic, resource, primary));
 
-            refreshAllCachedUrls();
+            cachedUrlUpdaterService.updateCachedUrls(resource);
 
             return this;
         }
@@ -668,7 +648,7 @@ public class Builder {
         public TopicBuilder publicId(String id) {
             topic.setPublicId(URI.create(id));
 
-            refreshAllCachedUrls();
+            cachedUrlUpdaterService.updateCachedUrls(topic);
 
             return this;
         }
@@ -682,7 +662,7 @@ public class Builder {
         public void isContext(boolean b) {
             topic.setContext(b);
 
-            refreshAllCachedUrls();
+            cachedUrlUpdaterService.updateCachedUrls(topic);
         }
 
     }

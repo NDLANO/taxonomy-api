@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -160,7 +160,7 @@ public class TopicsTest extends RestTest {
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:2000/connections");
         ConnectionIndexDTO[] connections = testUtils.getObject(ConnectionIndexDTO[].class, response);
 
-        assertEquals("Correct number of connections", 3, connections.length);
+        assertEquals(3, connections.length, "Correct number of connections");
         assertAllTrue(connections, c -> c.paths.size() > 0); //all connections have at least one path
 
         connectionsHaveCorrectTypes(connections);
@@ -172,7 +172,7 @@ public class TopicsTest extends RestTest {
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
         TopicIndexDocument[] subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
-        assertEquals("Unfiltered subtopics", 7, subtopics.length);
+        assertEquals(7, subtopics.length, "Unfiltered subtopics");
 
         assertAllTrue(subtopics, subtopic -> subtopic.metadata == null);
     }
@@ -183,7 +183,7 @@ public class TopicsTest extends RestTest {
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics?includeMetadata=true");
         TopicIndexDocument[] subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
-        assertEquals("Unfiltered subtopics", 7, subtopics.length);
+        assertEquals(7, subtopics.length, "Unfiltered subtopics");
 
         assertAllTrue(subtopics, subtopic -> subtopic.metadata != null);
         assertAllTrue(subtopics, subtopic -> subtopic.metadata.isVisible());
@@ -197,11 +197,11 @@ public class TopicsTest extends RestTest {
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:1");
         TopicIndexDocument[] subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
-        assertEquals("Filter 1 subtopics", 3, subtopics.length);
+        assertEquals(3, subtopics.length, "Filter 1 subtopics");
 
         response = testUtils.getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:2");
         subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
-        assertEquals("Filter 2 subtopics", 4, subtopics.length);
+        assertEquals(4, subtopics.length, "Filter 2 subtopics");
     }
 
     private void connectionsHaveCorrectTypes(ConnectionIndexDTO[] connections) {

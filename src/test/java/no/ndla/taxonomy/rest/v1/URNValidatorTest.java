@@ -5,26 +5,18 @@ import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.exceptions.IdFormatException;
 import no.ndla.taxonomy.service.URNValidator;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 
-@SpringBootTest
-@ActiveProfiles("junit")
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public class URNValidatorTest {
-
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
-
     private URNValidator validator;
     private ResourceType entity;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         validator = new URNValidator();
         entity = new ResourceType();
@@ -34,27 +26,21 @@ public class URNValidatorTest {
     public void urnWithOutURNIsRejected() {
         URI id = URI.create("resourcetype:1");
 
-        exception.expect(IdFormatException.class);
-        exception.expectMessage("Id should start with urn:");
-        validator.validate(id, entity);
+        assertThrows(IdFormatException.class, () -> validator.validate(id, entity), "Id should start with urn:");
     }
 
     @Test
     public void urnWithoutEntityIsRejected() {
         URI id = URI.create("urn:wrong:1");
 
-        exception.expect(IdFormatException.class);
-        exception.expectMessage("Id should contain entity name");
-        validator.validate(id, entity);
+        assertThrows(IdFormatException.class, () -> validator.validate(id, entity), "Id should have entity name");
     }
 
     @Test
     public void urnMustHaveID() {
         URI id = URI.create("urn:resourcetype");
 
-        exception.expect(IdFormatException.class);
-        exception.expectMessage("Id should have id field");
-        validator.validate(id, entity);
+        assertThrows(IdFormatException.class, () -> validator.validate(id, entity), "Id should have id field");
     }
 
     @Test

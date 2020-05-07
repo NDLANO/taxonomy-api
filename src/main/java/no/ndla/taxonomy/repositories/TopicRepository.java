@@ -12,7 +12,7 @@ public interface TopicRepository extends TaxonomyRepository<Topic> {
     @Query(
             "SELECT DISTINCT t" +
                     "   FROM Topic t" +
-                    "   LEFT JOIN FETCH t.cachedUrls" +
+                    "   LEFT JOIN FETCH t.cachedPaths" +
                     "   LEFT JOIN FETCH t.translations" +
                     "   WHERE t.context = :context")
     List<Topic> findAllByContextIncludingCachedUrlsAndTranslations(boolean context);
@@ -20,30 +20,24 @@ public interface TopicRepository extends TaxonomyRepository<Topic> {
     @Query(
             "SELECT DISTINCT t" +
                     "   FROM Topic t" +
-                    "   LEFT JOIN FETCH t.cachedUrls" +
+                    "   LEFT JOIN FETCH t.cachedPaths" +
                     "   LEFT JOIN FETCH t.translations")
     List<Topic> findAllIncludingCachedUrlsAndTranslations();
 
     @Query(
             "SELECT DISTINCT t" +
                     "   FROM Topic t" +
-                    "   LEFT JOIN FETCH t.cachedUrls" +
+                    "   LEFT JOIN FETCH t.cachedPaths" +
                     "   LEFT JOIN FETCH t.translations" +
                     "   WHERE t.publicId = :publicId")
     Optional<Topic> findFirstByPublicIdIncludingCachedUrlsAndTranslations(URI publicId);
 
     @Query("SELECT DISTINCT t" +
             "   FROM Topic t" +
-            "   LEFT JOIN FETCH t.cachedUrls" +
+            "   LEFT JOIN FETCH t.cachedPaths" +
             "   LEFT JOIN FETCH t.translations" +
             "   WHERE t.contentUri = :contentUri")
     List<Topic> findAllByContentUriIncludingCachedUrlsAndTranslations(URI contentUri);
-
-    @Query("SELECT DISTINCT t" +
-            "   FROM Topic t" +
-            "   LEFT JOIN FETCH t.cachedUrls" +
-            "   WHERE t.publicId = :publicId")
-    List<Topic> findAllByPublicIdIncludingCachedUrls(URI publicId);
 
     @Query("SELECT DISTINCT t" +
             "   FROM Topic t" +
@@ -55,7 +49,7 @@ public interface TopicRepository extends TaxonomyRepository<Topic> {
     @Query(
             "SELECT DISTINCT t" +
                     "   FROM Topic t" +
-                    "   LEFT JOIN FETCH t.cachedUrls" +
+                    "   LEFT JOIN FETCH t.cachedPaths" +
                     "   WHERE t.publicId = :publicId")
     Optional<Topic> findFirstByPublicIdIncludingCachedUrls(URI publicId);
 

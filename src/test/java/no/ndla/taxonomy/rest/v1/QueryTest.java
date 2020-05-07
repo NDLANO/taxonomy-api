@@ -2,18 +2,13 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.rest.v1.dtos.queries.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.queries.TopicIndexDocument;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.ExpectedException;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class QueryTest extends RestTest {
-
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
 
     @Test
     public void can_get_resource_by_contentURI() throws Exception {

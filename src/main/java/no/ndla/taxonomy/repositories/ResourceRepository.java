@@ -12,7 +12,7 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
     @Query(
             "SELECT DISTINCT r" +
                     "   FROM Resource r" +
-                    "   LEFT JOIN FETCH r.cachedUrls" +
+                    "   LEFT JOIN FETCH r.cachedPaths" +
                     "   LEFT JOIN FETCH r.resourceTranslations" +
                     "   WHERE r.publicId = :publicId")
     Optional<Resource> findFirstByPublicIdIncludingCachedUrlsAndTranslations(URI publicId);
@@ -20,14 +20,14 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
     @Query(
             "SELECT DISTINCT r" +
                     "   FROM Resource r" +
-                    "   LEFT JOIN FETCH r.cachedUrls" +
+                    "   LEFT JOIN FETCH r.cachedPaths" +
                     "   LEFT JOIN FETCH r.resourceTranslations")
     List<Resource> findAllIncludingCachedUrlsAndTranslations();
 
     @Query(
             "SELECT distinct r" +
                     "   FROM Resource r" +
-                    "   LEFT JOIN FETCH r.cachedUrls" +
+                    "   LEFT JOIN FETCH r.cachedPaths" +
                     "   LEFT JOIN FETCH r.resourceResourceTypes rrt" +
                     "   LEFT JOIN FETCH rrt.resourceType rt" +
                     "   LEFT JOIN FETCH rt.resourceTypeTranslations" +
@@ -36,18 +36,12 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
     )
     List<Resource> findAllByContentUriIncludingCachedUrlsAndResourceTypesAndTranslations(URI contentUri);
 
-    @Query("SELECT DISTINCT r" +
-            "   FROM Resource r" +
-            "   LEFT JOIN FETCH r.cachedUrls" +
-            "   WHERE r.publicId = :publicId")
-    List<Resource> findAllByPublicIdIncludingCachedUrls(URI publicId);
-
     Optional<Resource> findFirstByPublicId(URI publicId);
 
     @Query(
             "SELECT DISTINCT r" +
                     "   FROM Resource r" +
-                    "   LEFT JOIN FETCH r.cachedUrls" +
+                    "   LEFT JOIN FETCH r.cachedPaths" +
                     "   WHERE r.publicId = :publicId")
     Optional<Resource> findFirstByPublicIdIncludingCachedUrls(URI publicId);
 }

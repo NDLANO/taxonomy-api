@@ -8,15 +8,15 @@ import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicResourceTypeRepository;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -26,7 +26,7 @@ public class TopicResourceTypeServiceTest {
     private TopicResourceTypeRepository topicResourceTypeRepository;
     private TopicResourceTypeService topicResourceTypeService;
 
-    @Before
+    @BeforeEach
     public void beforeTesting() {
         topicRepository = mock(TopicRepository.class);
         resourceTypeRepository = mock(ResourceTypeRepository.class);
@@ -34,18 +34,20 @@ public class TopicResourceTypeServiceTest {
         topicResourceTypeService = new TopicResourceTypeService(topicRepository, resourceTypeRepository, topicResourceTypeRepository);
     }
 
-    @Test(expected = InvalidArgumentServiceException.class)
+    @Test
     public void testTopicNotSpecified() {
-        topicResourceTypeService.getTopicResourceTypes(null);
+        assertThrows(InvalidArgumentServiceException.class, () -> topicResourceTypeService.getTopicResourceTypes(null));
     }
 
-    @Test(expected = NotFoundServiceException.class)
+    @Test
     public void testTopicNotFound() throws URISyntaxException {
         try {
             topicResourceTypeService.getTopicResourceTypes(new URI("urn:topic:1"));
-        } finally {
-            verify(topicRepository, times(1)).findByPublicId(new URI("urn:topic:1"));
+            fail("Expected NotFoundServiceException");
+        } catch (NotFoundServiceException ignored) {
         }
+
+        verify(topicRepository, times(1)).findByPublicId(new URI("urn:topic:1"));
     }
 
     @Test
@@ -74,36 +76,33 @@ public class TopicResourceTypeServiceTest {
         );
     }
 
-    @Test(expected = InvalidArgumentServiceException.class)
-    public void testAddResourceTypeWithTopicIdNull() throws URISyntaxException {
-        topicResourceTypeService.addTopicResourceType(null, new URI("urn:resourcetype:1"));
+    @Test
+    public void testAddResourceTypeWithTopicIdNull() {
+        assertThrows(InvalidArgumentServiceException.class, () -> topicResourceTypeService.addTopicResourceType(null, new URI("urn:resourcetype:1")));
     }
 
-    @Test(expected = InvalidArgumentServiceException.class)
-    public void testAddResourceTypeWithResourceTypeIdNull() throws URISyntaxException {
-        topicResourceTypeService.addTopicResourceType(new URI("urn:topic:1"), null);
+    @Test
+    public void testAddResourceTypeWithResourceTypeIdNull() {
+        assertThrows(InvalidArgumentServiceException.class, () -> topicResourceTypeService.addTopicResourceType(new URI("urn:topic:1"), null));
     }
 
-    @Test(expected = NotFoundServiceException.class)
+    @Test
     public void testAddResourceTypeWithTopicNotFound() throws URISyntaxException {
-        try {
-            topicResourceTypeService.addTopicResourceType(new URI("urn:topic:1"), new URI("urn:resourcetype:1"));
-        } finally {
-            verify(topicRepository, times(1)).findByPublicId(new URI("urn:topic:1"));
-            verify(resourceTypeRepository, never()).findByPublicId(new URI("urn:resourcetype:1"));
-        }
+        assertThrows(NotFoundServiceException.class, () -> topicResourceTypeService.addTopicResourceType(new URI("urn:topic:1"), new URI("urn:resourcetype:1")));
+
+        verify(topicRepository, times(1)).findByPublicId(new URI("urn:topic:1"));
+        verify(resourceTypeRepository, never()).findByPublicId(new URI("urn:resourcetype:1"));
     }
 
-    @Test(expected = NotFoundServiceException.class)
+    @Test
     public void testAddResourceTypeWithResourceTypeNotFound() throws URISyntaxException {
         Topic topic = new Topic();
         given(topicRepository.findByPublicId(new URI("urn:topic:1"))).willReturn(topic);
-        try {
-            topicResourceTypeService.addTopicResourceType(new URI("urn:topic:1"), new URI("urn:resourcetype:1"));
-        } finally {
-            verify(topicRepository, times(1)).findByPublicId(new URI("urn:topic:1"));
-            verify(resourceTypeRepository, times(1)).findByPublicId(new URI("urn:resourcetype:1"));
-        }
+
+        assertThrows(NotFoundServiceException.class, () -> topicResourceTypeService.addTopicResourceType(new URI("urn:topic:1"), new URI("urn:resourcetype:1")));
+
+        verify(topicRepository, times(1)).findByPublicId(new URI("urn:topic:1"));
+        verify(resourceTypeRepository, times(1)).findByPublicId(new URI("urn:resourcetype:1"));
     }
 
     @Test
@@ -117,18 +116,16 @@ public class TopicResourceTypeServiceTest {
         verify(topicRepository, times(1)).save(topic);
     }
 
-    @Test(expected = InvalidArgumentServiceException.class)
+    @Test
     public void testDeleteTopicResourceTypeNull() {
-        topicResourceTypeService.deleteTopicResourceType(null);
+        assertThrows(InvalidArgumentServiceException.class, () -> topicResourceTypeService.deleteTopicResourceType(null));
     }
 
-    @Test(expected = NotFoundServiceException.class)
+    @Test
     public void testDeleteTopicResourceTypeNotFound() throws URISyntaxException {
-        try {
-            topicResourceTypeService.deleteTopicResourceType(new URI("urn:topicresourcetype:1"));
-        } finally {
-            verify(topicResourceTypeRepository, times(1)).findByPublicId(new URI("urn:topicresourcetype:1"));
-        }
+        assertThrows(NotFoundServiceException.class, () -> topicResourceTypeService.deleteTopicResourceType(new URI("urn:topicresourcetype:1")));
+
+        verify(topicResourceTypeRepository, times(1)).findByPublicId(new URI("urn:topicresourcetype:1"));
     }
 
     @Test

@@ -10,6 +10,7 @@ import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
 import no.ndla.taxonomy.rest.v1.dtos.resources.*;
+import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.MetadataApiService;
 import no.ndla.taxonomy.service.MetadataEntityWrapperService;
 import no.ndla.taxonomy.service.ResourceService;
@@ -39,8 +40,9 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
                      ResourceResourceTypeRepository resourceResourceTypeRepository,
                      ResourceFilterRepository resourceFilterRepository,
                      ResourceService resourceService, MetadataApiService metadataApiService,
-                     MetadataEntityWrapperService metadataWrapperService) {
-        super(metadataApiService);
+                     MetadataEntityWrapperService metadataWrapperService,
+                     CachedUrlUpdaterService cachedUrlUpdaterService) {
+        super(resourceRepository, metadataApiService, cachedUrlUpdaterService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceFilterRepository = resourceFilterRepository;
@@ -75,9 +77,9 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
                         return Set.of(new ResourceIndexDocument(wrappedResource, language)).stream();
                     }
 
-                    return resource.getCachedUrls()
+                    return resource.getCachedPaths()
                             .stream()
-                            .filter(CachedUrl::isPrimary)
+                            .filter(CachedPath::isPrimary)
                             .map(cachedUrl -> {
                                 final var resourceIndexDocument = new ResourceIndexDocument(wrappedResource, language);
                                 resource.getPrimaryPath().ifPresent(resourceIndexDocument::setPath);

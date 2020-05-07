@@ -3,13 +3,17 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.rest.v1.dtos.topics.TopicWithPathsIndexDocument;
+import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ContextsTest extends RestTest {
+    @Autowired
+    private CachedUrlUpdaterService cachedUrlUpdaterService;
 
     @Test
     public void all_subjects_are_contexts() throws Exception {
@@ -108,6 +112,8 @@ public class ContextsTest extends RestTest {
 
         topic.setContext(true);
         topicRepository.saveAndFlush(topic);
+
+        cachedUrlUpdaterService.updateCachedUrls(topic);
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
         TopicWithPathsIndexDocument topicIndexDocument = testUtils.getObject(TopicWithPathsIndexDocument.class, response);

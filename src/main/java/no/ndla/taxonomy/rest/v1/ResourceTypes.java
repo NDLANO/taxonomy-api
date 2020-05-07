@@ -31,8 +31,9 @@ public class ResourceTypes extends CrudController<ResourceType> {
     private final ResourceTypeRepository resourceTypeRepository;
 
     public ResourceTypes(ResourceTypeRepository resourceTypeRepository) {
+        super(resourceTypeRepository);
+
         this.resourceTypeRepository = resourceTypeRepository;
-        repository = resourceTypeRepository;
     }
 
     @GetMapping

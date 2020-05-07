@@ -1,15 +1,15 @@
 package no.ndla.taxonomy.service;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class OldUrlCanonifierTest {
 
     private OldUrlCanonifier canonifier;
 
-    @Before
+    @BeforeEach
     public void init() {
         canonifier = new OldUrlCanonifier();
     }

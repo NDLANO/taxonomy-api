@@ -4,7 +4,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.service.dtos.ResolvedUrl;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class UrlResolverTest extends RestTest {
