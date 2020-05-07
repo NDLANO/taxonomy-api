@@ -3,14 +3,15 @@
 <databaseChangeLog
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd"
+        logicalFilePath="classpath:db-master-changelog.xml">
 
     <preConditions>
         <dbms type="postgresql"/>
     </preConditions>
 
-    <include file="db-migrate-changelog-from-flyway.xml" />
-    <include file="db-migrate-from-flyway.xml" />
+    <include file="db-migrate-changelog-from-flyway.xml"/>
+    <include file="db-migrate-from-flyway.xml"/>
 
     <changeSet id="20190614 topic_resource_types" author="janespen">
         <createTable tableName="topic_resource_type">
@@ -500,6 +501,10 @@
         </sql>
     </changeSet>
     <changeSet id="20200506 delete cached_url materialized view" author="Jon-Eirik Pettersen">
+        <preConditions onFail="CONTINUE">
+            <changeSetExecuted id="20200507 after cached_url migration" author="Jon-Eirik Pettersen"
+                               changeLogFile="classpath:db-master-changelog.xml"/>
+        </preConditions>
         <sql splitStatements="false" stripComments="false">
             DROP TRIGGER IF EXISTS refresh_paths ON subject;
             DROP TRIGGER IF EXISTS refresh_paths ON topic;
@@ -510,5 +515,10 @@
 
             DROP MATERIALIZED VIEW cached_url;
         </sql>
+    </changeSet>
+
+    <changeSet id="20200507 after cached_url migration" author="Jon-Eirik Pettersen">
+        <comment>Does nothing, but marks as run, and used to apply previous changeSet on second application start
+        </comment>
     </changeSet>
 </databaseChangeLog>
