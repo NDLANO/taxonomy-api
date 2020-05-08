@@ -41,6 +41,7 @@
             FROM topic_subtopic ts
             INNER JOIN topic_tree ON ts.topic_id = topic_tree.topic_id)
             SELECT topic_tree.* FROM topic_tree
+            ORDER BY topic_level;
         </createView>
     </changeSet>
 
