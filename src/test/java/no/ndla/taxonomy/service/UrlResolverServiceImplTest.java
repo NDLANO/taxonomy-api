@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import javax.persistence.EntityManager;
@@ -23,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-@DirtiesContext
 /*
  * Test Service and database together.
  */
@@ -46,6 +44,13 @@ public class UrlResolverServiceImplTest {
     private OldUrlCanonifier oldUrlCanonifier;
 
     private UrlResolverServiceImpl urlResolverService;
+
+    @BeforeEach
+    void clearAllRepos() {
+        resourceRepository.deleteAllAndFlush();
+        topicRepository.deleteAllAndFlush();
+        subjectRepository.deleteAllAndFlush();
+    }
 
     @BeforeEach
     public void restTestSetUp() {

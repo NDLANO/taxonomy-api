@@ -8,6 +8,7 @@ import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.TopicIndexDocument;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -30,6 +31,13 @@ public class TopicsTest extends RestTest {
 
     @Autowired
     private TestSeeder testSeeder;
+
+    @BeforeEach
+    void clearAllRepos() {
+        resourceRepository.deleteAllAndFlush();
+        topicRepository.deleteAllAndFlush();
+        subjectRepository.deleteAllAndFlush();
+    }
 
     @Test
     public void can_get_single_topic() throws Exception {

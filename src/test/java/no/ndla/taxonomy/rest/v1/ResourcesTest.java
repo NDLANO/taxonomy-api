@@ -12,6 +12,7 @@ import no.ndla.taxonomy.rest.v1.dtos.resources.ParentTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceFullIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -26,6 +27,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class ResourcesTest extends RestTest {
     @Autowired
     private TestSeeder testSeeder;
+
+    @BeforeEach
+    void clearAllRepos() {
+        resourceRepository.deleteAllAndFlush();
+        topicRepository.deleteAllAndFlush();
+        subjectRepository.deleteAllAndFlush();
+    }
 
     @Test
     public void can_get_single_resource() throws Exception {

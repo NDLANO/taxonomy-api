@@ -1,10 +1,9 @@
 server.port: 5000
 
 spring:
+  datasource.name: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1
   jpa:
     hibernate.ddl-auto: none
-    properties.hibernate.temp.use_jdbc_metadata_defaults: false
-    properties.hibernate.dialect: org.hibernate.dialect.PostgreSQL94Dialect
   liquibase:
     change-log: classpath:db-master-changelog.xml
 

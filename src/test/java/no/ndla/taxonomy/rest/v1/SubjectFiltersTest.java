@@ -20,6 +20,13 @@ public class SubjectFiltersTest extends RestTest {
     private Relevance core, supplementary;
 
     @BeforeEach
+    void clearAllRepos() {
+        resourceRepository.deleteAllAndFlush();
+        topicRepository.deleteAllAndFlush();
+        subjectRepository.deleteAllAndFlush();
+    }
+
+    @BeforeEach
     public void before() {
         core = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
         supplementary = builder.relevance(r -> r.publicId("urn:relevance:supplementary").name("Supplementary material"));
