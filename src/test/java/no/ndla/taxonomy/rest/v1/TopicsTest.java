@@ -376,7 +376,7 @@ public class TopicsTest extends RestTest {
     @Test
     public void can_get_resource_connection_id_recursively() throws Exception {
         builder.topic("topic", t -> t
-                .publicId("urn:topic:1")
+                .publicId("urn:topic:1343")
                 .resource(r -> r
                         .name("a")
                         .publicId("urn:resource:1"))
@@ -386,7 +386,7 @@ public class TopicsTest extends RestTest {
                                 .publicId("urn:resource:2")))
         );
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?recursive=true");
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1343/resources?recursive=true");
         ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(first(builder.topic("topic").getTopicResources()).getPublicId(), result[0].connectionId);

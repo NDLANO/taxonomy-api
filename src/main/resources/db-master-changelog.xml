@@ -735,29 +735,10 @@
         <addAutoIncrement tableName="topic_resource_type" columnName="id" columnDataType="int"/>
     </changeSet>
 
-    <changeSet id="20200508 re-create topic_tree_by_subject_id_view view" author="Jon-Eirik Pettersen">
-        <!--
-            H2 did not like re-using the topic_tree name used in the original migration, postgres will still have the view in place
-            but H2 removed it when the next view topic_tree_by_topic_id_view was created
-        -->
+    <changeSet id="20200508 delete view topic_tree_by_subject_id_view" author="Jon-Eirik Pettersen">
         <sql>DROP VIEW IF EXISTS topic_tree_by_subject_id_view</sql>
-
-        <createView viewName="topic_tree_by_subject_id_view" replaceIfExists="true">
-            WITH RECURSIVE topic_subject_tree(topic_id, connection_id, parent_topic_id, topic_rank, topic_level,
-            subject_id) AS
-            (
-
-            SELECT st.topic_id, 0 AS connection_id, 0 AS parent_topic_id, st.rank AS topic_rank, 0 AS topic_level,
-            st.subject_id AS subject_id
-            FROM subject_topic st
-
-            UNION ALL
-
-            SELECT ts.subtopic_id, ts.id AS connection_id, ts.topic_id, ts.rank as topic_rank, topic_level + 1,
-            topic_subject_tree.subject_id subject_id
-            FROM topic_subtopic ts
-            INNER JOIN topic_subject_tree ON ts.topic_id = topic_subject_tree.topic_id)
-            SELECT topic_subject_tree.* FROM topic_subject_tree;
-        </createView>
+    </changeSet>
+    <changeSet id="20200508 delete view topic_tree_by_topic_id_view" author="Jon-Eirik Pettersen">
+        <sql>DROP VIEW IF EXISTS topic_tree_by_topic_id_view</sql>
     </changeSet>
 </databaseChangeLog>

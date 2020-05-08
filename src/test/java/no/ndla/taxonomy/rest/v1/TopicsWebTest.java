@@ -42,8 +42,6 @@ public class TopicsWebTest {
     @MockBean
     TopicResourceRepository topicResourceRepository;
     @MockBean
-    TopicTreeByTopicElementRepository topicTreeByTopicElementRepository;
-    @MockBean
     TopicTreeSorter topicTreeSorter;
     @MockBean
     TopicService topicService;
@@ -53,6 +51,8 @@ public class TopicsWebTest {
     MetadataEntityWrapperService metadataEntityWrapperService;
     @MockBean
     CachedUrlUpdaterService cachedUrlUpdaterService;
+    @MockBean
+    RecursiveTopicTreeService recursiveTopicTreeService;
 
     @Autowired
     private MockMvc mockMvc;

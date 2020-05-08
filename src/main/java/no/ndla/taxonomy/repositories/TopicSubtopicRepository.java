@@ -1,7 +1,6 @@
 package no.ndla.taxonomy.repositories;
 
 
-import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import org.springframework.data.jpa.repository.Query;
 
@@ -9,9 +8,24 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopic> {
-    List<TopicSubtopic> findByTopic(Topic topic);
+    @SuppressWarnings("SpringDataRepositoryMethodReturnTypeInspection")
+    @Query("SELECT ts.topic.id AS topicId, ts.subtopic.id AS subtopicId, ts.rank AS rank" +
+            "   FROM TopicSubtopic ts" +
+            "   JOIN ts.topic" +
+            "   JOIN ts.subtopic" +
+            "   WHERE ts.topic.id IN :topicId")
+    List<TopicTreeElement> findAllByTopicIdInIncludingTopicAndSubtopic(Set<Integer> topicId);
+
+    interface TopicTreeElement {
+        Integer getTopicId();
+
+        Integer getSubtopicId();
+
+        Integer getRank();
+    }
 
     @Query("SELECT ts" +
             "   FROM TopicSubtopic ts" +
