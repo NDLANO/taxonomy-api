@@ -7,7 +7,6 @@ import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
-import no.ndla.taxonomy.repositories.TopicTreeByTopicElementRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
@@ -35,21 +34,21 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
     private final TopicRepository topicRepository;
     private final SubjectRepository subjectRepository;
     private final TopicResourceRepository topicResourceRepository;
-    private final TopicTreeByTopicElementRepository topicTreeRepository;
     private final TopicTreeSorter topicTreeSorter;
     private final TopicService topicService;
     private final MetadataEntityWrapperService metadataWrapperService;
+    private final RecursiveTopicTreeService recursiveTopicTreeService;
 
     public Topics(TopicRepository topicRepository,
                   TopicResourceTypeService topicResourceTypeService,
                   SubjectRepository subjectRepository,
                   TopicResourceRepository topicResourceRepository,
-                  TopicTreeByTopicElementRepository topicTreeRepository,
                   TopicTreeSorter topicTreeSorter,
                   TopicService topicService,
                   MetadataApiService metadataApiService,
                   MetadataEntityWrapperService metadataWrapperService,
-                  CachedUrlUpdaterService cachedUrlUpdaterService) {
+                  CachedUrlUpdaterService cachedUrlUpdaterService,
+                  RecursiveTopicTreeService recursiveTopicTreeService) {
         super(topicRepository, metadataApiService, cachedUrlUpdaterService);
 
         this.topicRepository = topicRepository;
@@ -57,9 +56,9 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
         this.topicResourceTypeService = topicResourceTypeService;
         this.topicResourceRepository = topicResourceRepository;
         this.subjectRepository = subjectRepository;
-        this.topicTreeRepository = topicTreeRepository;
         this.topicTreeSorter = topicTreeSorter;
         this.topicService = topicService;
+        this.recursiveTopicTreeService = recursiveTopicTreeService;
     }
 
     private TopicWithPathsIndexDocument createTopicWithPathsIndexDocument(MetadataWrappedEntity<Topic> wrappedTopic, String language) {
@@ -134,7 +133,6 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
         doPut(id, command);
     }
 
-
     @GetMapping("/{id}/resources")
     @ApiOperation(value = "Gets all resources for the given topic")
     @Transactional
@@ -180,12 +178,12 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
         }
 
         if (recursive) {
-            final var topicList = topicTreeRepository.findAllByRootTopicIdOrTopicIdOrderByParentTopicIdAscParentTopicIdAscTopicRankAsc(topic.getId(), topic.getId());
+            final var topicList = recursiveTopicTreeService.getRecursiveTopics(topic);
 
-            topicList.forEach(topicTreeElement -> resourcesToSort.add(new TopicResourceTreeSortable("topic", "topic", topicTreeElement.getTopicId(), topicTreeElement.getParentTopicId(), topicTreeElement.getTopicRank())));
+            topicList.forEach(topicTreeElement -> resourcesToSort.add(new TopicResourceTreeSortable("topic", "topic", topicTreeElement.getTopicId(), topicTreeElement.getParentTopicId().orElse(0), topicTreeElement.getRank())));
 
             topicIdsToSearchFor = topicList.stream()
-                    .map(TopicTreeByTopicElement::getTopicId)
+                    .map(RecursiveTopicTreeService.TopicTreeElement::getTopicId)
                     .collect(Collectors.toSet());
         } else {
             topicIdsToSearchFor = Set.of(topic.getId());

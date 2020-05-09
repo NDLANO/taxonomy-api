@@ -8,6 +8,7 @@ import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.TopicIndexDocument;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -30,6 +31,13 @@ public class TopicsTest extends RestTest {
 
     @Autowired
     private TestSeeder testSeeder;
+
+    @BeforeEach
+    void clearAllRepos() {
+        resourceRepository.deleteAllAndFlush();
+        topicRepository.deleteAllAndFlush();
+        subjectRepository.deleteAllAndFlush();
+    }
 
     @Test
     public void can_get_single_topic() throws Exception {
@@ -368,7 +376,7 @@ public class TopicsTest extends RestTest {
     @Test
     public void can_get_resource_connection_id_recursively() throws Exception {
         builder.topic("topic", t -> t
-                .publicId("urn:topic:1")
+                .publicId("urn:topic:1343")
                 .resource(r -> r
                         .name("a")
                         .publicId("urn:resource:1"))
@@ -378,7 +386,7 @@ public class TopicsTest extends RestTest {
                                 .publicId("urn:resource:2")))
         );
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?recursive=true");
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1343/resources?recursive=true");
         ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(first(builder.topic("topic").getTopicResources()).getPublicId(), result[0].connectionId);

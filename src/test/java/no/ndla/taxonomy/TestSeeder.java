@@ -243,6 +243,15 @@ public class TestSeeder {
         return resourceResourceType;
     }
 
+    private void clearAll() {
+        resourceTypeRepository.deleteAllAndFlush();
+        relevanceRepository.deleteAllAndFlush();
+        filterRepository.deleteAllAndFlush();
+        resourceRepository.deleteAllAndFlush();
+        topicRepository.deleteAllAndFlush();
+        subjectRepository.deleteAllAndFlush();
+    }
+
     public void recursiveTopicsBySubjectIdAndFiltersTestSetup() {
         // create a test structure with subjects, topics and subtopics as follows
         // (S=subject, ST = subject-topic, TST = topic-subtopic, F=Filter)
@@ -258,6 +267,8 @@ public class TestSeeder {
         //        - TST:3-3 (F:2)
 
         // NOTE ST:3 does not have F:2 but should "inherit" it because one of the subtopics has F:2
+
+        clearAll();
 
         final var subject1 = createSubject("urn:subject:1", "S:1");
 
@@ -310,6 +321,7 @@ public class TestSeeder {
         //        - TST:3-2
         //        - TST:3-3
 
+        clearAll();
 
         final var subject1 = createSubject("urn:subject:1", "S:1");
 
@@ -334,6 +346,8 @@ public class TestSeeder {
     }
 
     public void resourceInDualSubjectsTestSetup() {
+        clearAll();
+
         final var subject1 = createSubject("urn:subject:1", "S:1");
         final var subject2 = createSubject("urn:subject:2", "S:2");
 
@@ -357,6 +371,8 @@ public class TestSeeder {
         //   - ST:1
         //      - R:1
         //      - R:2
+
+        clearAll();
 
         final var subject1 = createSubject("urn:subject:1", "S:1");
 
@@ -395,6 +411,7 @@ public class TestSeeder {
         //      - R:2
         //
 
+        clearAll();
 
         final var subject1 = createSubject("urn:subject:1", "S:1");
 
@@ -475,6 +492,8 @@ public class TestSeeder {
         //            - R:8 (F:2)
         //
 
+        clearAll();
+
         final var subject1 = createSubject("urn:subject:1", "S:1");
 
         final var topic1 = createTopic("urn:topic:1", "ST:1", null, false);
@@ -551,6 +570,9 @@ public class TestSeeder {
         // Subtopics     T1-1, T1-2, T1-3 (have filter F:1),
         //               T1-4, T1-5, T1-6, T1-7 (have filter F:2)
         //
+
+        clearAll();
+
         final var subject1 = createSubject("urn:subject:1", "S:1");
 
         final var topic1 = createTopic("urn:topic:1", "T1", null, false);
@@ -599,6 +621,9 @@ public class TestSeeder {
         //                /  \
         //             T:3   T:4
         //
+
+        clearAll();
+
         final var subject1 = createSubject("urn:subject:1000", "S:1");
 
         final var topic1 = createTopic("urn:topic:1000", "T1", null, false);

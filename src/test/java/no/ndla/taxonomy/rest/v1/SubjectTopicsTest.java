@@ -6,6 +6,7 @@ import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.service.RankableConnectionUpdater;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -20,6 +21,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class SubjectTopicsTest extends RestTest {
+
+    @BeforeEach
+    void clearAllRepos() {
+        topicRepository.deleteAllAndFlush();
+        subjectRepository.deleteAllAndFlush();
+    }
 
     @Test
     public void can_add_topic_to_subject() throws Exception {

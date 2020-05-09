@@ -4,6 +4,7 @@ import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.rest.v1.dtos.topics.TopicWithPathsIndexDocument;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -15,8 +16,17 @@ public class ContextsTest extends RestTest {
     @Autowired
     private CachedUrlUpdaterService cachedUrlUpdaterService;
 
+    @BeforeEach
+    void cleanDatabase() {
+        subjectRepository.deleteAllAndFlush();
+        topicRepository.deleteAllAndFlush();
+    }
+
     @Test
     public void all_subjects_are_contexts() throws Exception {
+        subjectRepository.flush();
+        topicRepository.flush();
+
         builder.subject(s -> s
                 .publicId("urn:subject:1")
                 .name("Subject 1")
@@ -52,7 +62,7 @@ public class ContextsTest extends RestTest {
     @Test
     public void can_add_topic_as_context() throws Exception {
         Topic topic = builder.topic(t -> t
-                .publicId("urn:topic:1")
+                .publicId("urn:topic:ct:2")
         );
 
         testUtils.createResource("/v1/contexts", new Contexts.CreateContextCommand() {{
@@ -77,6 +87,9 @@ public class ContextsTest extends RestTest {
 
     @Test
     public void can_get_translated_contexts() throws Exception {
+        subjectRepository.deleteAllAndFlush();
+        topicRepository.deleteAllAndFlush();
+
         builder.subject(s -> s
                 .publicId("urn:subject:1")
                 .name("Subject 1")

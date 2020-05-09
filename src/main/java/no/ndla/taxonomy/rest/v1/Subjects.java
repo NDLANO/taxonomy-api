@@ -4,7 +4,10 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
-import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.repositories.SubjectRepository;
+import no.ndla.taxonomy.repositories.SubjectTopicRepository;
+import no.ndla.taxonomy.repositories.TopicResourceRepository;
+import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
@@ -29,30 +32,30 @@ import java.util.stream.Collectors;
 @RequestMapping(path = {"/v1/subjects"})
 public class Subjects extends PathResolvableEntityRestController<Subject> {
     private final SubjectRepository subjectRepository;
-    private final TopicTreeBySubjectElementRepository subjectTopicTreeElementRepository;
     private final TopicResourceRepository topicResourceRepository;
     private final SubjectTopicRepository subjectTopicRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final TopicTreeSorter topicTreeSorter;
     private final SubjectService subjectService;
     private final MetadataEntityWrapperService metadataWrapperService;
+    private final RecursiveTopicTreeService recursiveTopicTreeService;
 
-    public Subjects(SubjectRepository subjectRepository, TopicTreeBySubjectElementRepository subjectTopicTreeElementRepository,
+    public Subjects(SubjectRepository subjectRepository,
                     TopicResourceRepository topicResourceRepository,
                     SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository,
                     TopicTreeSorter topicTreeSorter, SubjectService subjectService, MetadataApiService metadataApiService,
                     MetadataEntityWrapperService metadataWrapperService,
-                    CachedUrlUpdaterService cachedUrlUpdaterService) {
+                    CachedUrlUpdaterService cachedUrlUpdaterService, RecursiveTopicTreeService recursiveTopicTreeService) {
         super(subjectRepository, metadataApiService, cachedUrlUpdaterService);
 
         this.subjectRepository = subjectRepository;
         this.metadataWrapperService = metadataWrapperService;
-        this.subjectTopicTreeElementRepository = subjectTopicTreeElementRepository;
         this.topicResourceRepository = topicResourceRepository;
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicTreeSorter = topicTreeSorter;
         this.subjectService = subjectService;
+        this.recursiveTopicTreeService = recursiveTopicTreeService;
     }
 
     @GetMapping
@@ -135,12 +138,12 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
         final var subject = subjectRepository.findFirstByPublicId(id)
                 .orElseThrow(() -> new NotFoundException("Subject", id));
 
-        final var subjectTopicTree = subjectTopicTreeElementRepository.findAllBySubjectIdOrderBySubjectIdAscParentTopicIdAscTopicRankAsc(subject.getId());
         final List<Integer> topicIds;
 
         if (recursive) {
-            topicIds = subjectTopicTree.stream()
-                    .map(TopicTreeBySubjectElement::getTopicId)
+            topicIds = recursiveTopicTreeService.getRecursiveTopics(subject)
+                    .stream()
+                    .map(RecursiveTopicTreeService.TopicTreeElement::getTopicId)
                     .collect(Collectors.toList());
         } else {
             topicIds = subject.getSubjectTopics().stream()
@@ -291,9 +294,11 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
         final var subject = subjectRepository.findFirstByPublicId(subjectId)
                 .orElseThrow(() -> new NotFoundException("Subject", subjectId));
 
-        final var subjectTopicTree = subjectTopicTreeElementRepository.findAllBySubjectIdOrderBySubjectIdAscParentTopicIdAscTopicRankAsc(subject.getId());
-        final var subjectIds = subjectTopicTree.stream()
-                .map(TopicTreeBySubjectElement::getTopicId)
+        final var subjectTopicTree = recursiveTopicTreeService.getRecursiveTopics(subject);
+
+        final var topicIds = recursiveTopicTreeService.getRecursiveTopics(subject)
+                .stream()
+                .map(RecursiveTopicTreeService.TopicTreeElement::getTopicId)
                 .collect(Collectors.toList());
 
         // Populate a tree of subject->topic relations, add the resources to the list and then run sort on the list so all
@@ -302,12 +307,12 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
         final Set<TopicResourceTreeSortable> resourcesToSort = new HashSet<>();
 
         subjectTopicTree.forEach(treeElement -> {
-            if (treeElement.getParentTopicId() == 0) {
+            if (treeElement.getParentSubjectId().isPresent()) {
                 // This is a subjectTopic connection
-                resourcesToSort.add(new TopicResourceTreeSortable("topic", "subject", treeElement.getTopicId(), treeElement.getSubjectId(), treeElement.getTopicRank()));
+                resourcesToSort.add(new TopicResourceTreeSortable("topic", "subject", treeElement.getTopicId(), treeElement.getParentSubjectId().orElse(0), treeElement.getRank()));
             } else {
                 // This is a topicSubtopic connection
-                resourcesToSort.add(new TopicResourceTreeSortable("topic", "topic", treeElement.getTopicId(), treeElement.getParentTopicId(), treeElement.getTopicRank()));
+                resourcesToSort.add(new TopicResourceTreeSortable("topic", "topic", treeElement.getTopicId(), treeElement.getParentTopicId().orElse(0), treeElement.getRank()));
             }
         });
 
@@ -319,13 +324,13 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
 
         final List<TopicResource> topicResources;
         if (filterIdSet.size() > 0 && resourceTypeIdSet.size() > 0) {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(subjectIds, filterIdSet, resourceTypeIdSet, relevanceArgument);
+            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, filterIdSet, resourceTypeIdSet, relevanceArgument);
         } else if (filterIdSet.size() > 0) {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(subjectIds, filterIdSet, relevanceArgument);
+            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, filterIdSet, relevanceArgument);
         } else if (resourceTypeIdSet.size() > 0) {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(subjectIds, resourceTypeIdSet, relevanceArgument);
+            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, resourceTypeIdSet, relevanceArgument);
         } else {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(subjectIds, relevanceArgument);
+            topicResources = topicResourceRepository.findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, relevanceArgument);
         }
 
         topicResources.forEach(topicResource -> resourcesToSort.add(new TopicResourceTreeSortable(topicResource)));

@@ -5,6 +5,7 @@ import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -17,6 +18,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class SubjectTranslationsTest extends RestTest {
+    @BeforeEach
+    void clearAllRepos() {
+        subjectRepository.deleteAllAndFlush();
+    }
+
     @Test
     public void can_get_all_subjects() throws Exception {
         builder.subject(s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));

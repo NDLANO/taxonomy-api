@@ -19,4 +19,9 @@ public interface TaxonomyRepository<T> extends JpaRepository<T, Integer> {
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     void deleteByPublicId(URI id);
+
+    default void deleteAllAndFlush() {
+        deleteAll();
+        flush();
+    }
 }

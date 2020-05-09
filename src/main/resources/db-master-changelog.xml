@@ -7,7 +7,7 @@
         logicalFilePath="classpath:db-master-changelog.xml">
 
     <preConditions>
-        <dbms type="postgresql"/>
+        <dbms type="postgresql,h2"/>
     </preConditions>
 
     <include file="db-migrate-changelog-from-flyway.xml"/>
@@ -24,6 +24,7 @@
     </changeSet>
 
     <changeSet id="20190622 create topic_tree_by_subject_id_view view" author="Jon-Eirik Pettersen">
+        <validCheckSum>8:3d5d0d5752c5e425e50ff075d9169180</validCheckSum>
         <!-- Modified query from old code migrated to a view for usage in queries -->
         <createView viewName="topic_tree_by_subject_id_view" replaceIfExists="true">
             WITH RECURSIVE topic_tree(topic_id, connection_id, parent_topic_id, topic_rank, topic_level, subject_id) AS
@@ -35,7 +36,7 @@
 
             UNION ALL
 
-            SELECT ts.subtopic_id, ts.id AS connection_id, ts.topic_id, ts."rank" as topic_rank, topic_level + 1,
+            SELECT ts.subtopic_id, ts.id AS connection_id, ts.topic_id, ts.rank as topic_rank, topic_level + 1,
             topic_tree.subject_id subject_id
             FROM topic_subtopic ts
             INNER JOIN topic_tree ON ts.topic_id = topic_tree.topic_id)
@@ -43,6 +44,7 @@
             ORDER BY topic_level;
         </createView>
     </changeSet>
+
     <changeSet id="20190623 create topic_tree_by_topic_id_view view" author="Jon-Eirik Pettersen">
         <createView viewName="topic_tree_by_topic_id_view" replaceIfExists="true">
             WITH RECURSIVE topic_tree(root_topic_id, topic_id, parent_topic_id, topic_rank, topic_level) AS (
@@ -60,7 +62,7 @@
     </changeSet>
 
     <changeSet id="20190924 disable update triggers for cached_url before removing shared topics"
-               author="Jon-Eirik Pettersen">
+               author="Jon-Eirik Pettersen" dbms="!h2">
         <sql splitStatements="false" stripComments="false">
             DROP TRIGGER refresh_paths ON subject;
             DROP TRIGGER refresh_paths ON topic;
@@ -75,7 +77,8 @@
         <customChange class="no.ndla.taxonomy.migration.RemoveSharedTopicsSqlChange"/>
     </changeSet>
 
-    <changeSet id="20190925 re-create cached_url without primary connection column" author="Jon-Eirik Pettersen">
+    <changeSet id="20190925 re-create cached_url without primary connection column" author="Jon-Eirik Pettersen"
+               dbms="!h2">
         <sql>
             DROP MATERIALIZED VIEW cached_url;
 
@@ -171,7 +174,98 @@
         </sql>
     </changeSet>
 
-    <changeSet id="20190925 re-enable update triggers for cached_url" author="Jon-Eirik Pettersen">
+    <changeSet id="20200506 re-create cached_url without primary connection column h2" author="Jon-Eirik Pettersen"
+               dbms="h2">
+        <sql>
+            DROP VIEW cached_url;
+
+            CREATE VIEW cached_url as (
+            WITH RECURSIVE tree (id, public_id, name, parent_public_id, level, path) AS (
+            SELECT
+            contexts.id,
+            contexts.public_id,
+            contexts.name,
+            cast(NULL AS VARCHAR) AS parent_public_id,
+            0 AS level,
+            '/' || substr(contexts.public_id, 5) AS path
+            FROM
+            (
+            SELECT
+            id,
+            public_id,
+            name
+            FROM subject
+
+            UNION ALL
+
+            SELECT
+            id,
+            public_id,
+            name
+            FROM topic
+            WHERE context = TRUE
+            ) contexts
+
+            UNION ALL
+
+            SELECT
+            child.id,
+            child.public_id,
+            child.name,
+            parent.public_id AS parent_public_id,
+            parent.level + 1 AS level,
+            parent.path || '/' || substr(child.public_id, 5)
+            FROM
+            (
+            SELECT
+            r.id,
+            r.public_id,
+            t.public_id AS parent_public_id,
+            r.name
+            FROM
+            resource r
+            INNER JOIN topic_resource tr ON tr.resource_id = r.id
+            INNER JOIN topic t ON tr.topic_id = t.id
+
+            UNION ALL
+
+            SELECT
+            st.id,
+            st.public_id,
+            t.public_id AS parent_public_id,
+            st.name
+            FROM topic t
+            INNER JOIN topic_subtopic tst ON t.id = tst.topic_id
+            INNER JOIN topic st ON tst.subtopic_id = st.id
+
+            UNION ALL
+
+            SELECT
+            t.id,
+            t.public_id,
+            s.public_id AS parent_public_id,
+            t.name
+            FROM
+            subject s
+            INNER JOIN subject_topic st ON s.id = st.subject_id
+            INNER JOIN topic t ON st.topic_id = t.id
+            ) child
+            INNER JOIN tree AS parent ON parent.public_id = child.parent_public_id
+            WHERE 1 = 1
+            )
+
+            SELECT
+            id,
+            public_id,
+            path,
+            parent_public_id
+            FROM
+            tree t
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="20190925 re-enable update triggers for cached_url" author="Jon-Eirik Pettersen" dbms="!h2">
         <sql splitStatements="false" stripComments="false">
             create trigger refresh_paths
             after insert or update or delete or truncate
@@ -223,7 +317,7 @@
         <addUniqueConstraint tableName="subject_topic" columnNames="topic_id"
                              constraintName="unique_subject_topic_topic_id"/>
 
-        <sql stripComments="false" splitStatements="false">
+        <sql stripComments="false" splitStatements="false" dbms="!h2">
             CREATE FUNCTION check_subject_topic_uniqueness() RETURNS trigger AS $$
             BEGIN
             IF EXISTS(SELECT child_topic_id FROM (SELECT id, topic_id AS child_topic_id FROM subject_topic UNION SELECT
@@ -238,18 +332,18 @@
             LANGUAGE plpgsql
         </sql>
 
-        <sql>
+        <sql dbms="!h2">
             CREATE TRIGGER check_subject_topic_uniqueness_on_topic_subtopic AFTER INSERT OR UPDATE ON topic_subtopic
             EXECUTE PROCEDURE check_subject_topic_uniqueness();
         </sql>
-        <sql>
+        <sql dbms="!h2">
             CREATE TRIGGER check_subject_topic_uniqueness_on_subject_topic AFTER INSERT OR UPDATE ON subject_topic
             EXECUTE PROCEDURE check_subject_topic_uniqueness();
         </sql>
     </changeSet>
 
     <changeSet id="20190924 disable update triggers for cached_url before removing shared topics"
-               author="Jon-Eirik Pettersen">
+               author="Jon-Eirik Pettersen" dbms="!h2">
         <sql splitStatements="false" stripComments="false">
             DROP TRIGGER refresh_paths ON subject;
             DROP TRIGGER refresh_paths ON topic;
@@ -268,7 +362,7 @@
         </addColumn>
     </changeSet>
 
-    <changeSet id="20191114 remove update triggers before merging resources" author="Jon-Eirik Pettersen">
+    <changeSet id="20191114 remove update triggers before merging resources" author="Jon-Eirik Pettersen" dbms="!h2">
         <sql splitStatements="false" stripComments="false">
             DROP TRIGGER IF EXISTS refresh_paths ON subject;
             DROP TRIGGER IF EXISTS refresh_paths ON topic;
@@ -291,7 +385,7 @@
         <customChange class="no.ndla.taxonomy.migration.SetSinglePrimaryConnectionOnResourcesSqlChange"/>
     </changeSet>
 
-    <changeSet id="20191115 re-create cached_url and update triggers" author="Jon-Eirik Pettersen">
+    <changeSet id="20191115 re-create cached_url and update triggers" author="Jon-Eirik Pettersen" dbms="!h2">
         <sql>
             DROP MATERIALIZED VIEW cached_url;
 
@@ -428,6 +522,102 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20191115 re-create cached_url and update triggers h2" author="Jon-Eirik Pettersen" dbms="h2">
+        <sql>
+            DROP VIEW cached_url;
+
+            CREATE VIEW cached_url as (
+            WITH RECURSIVE tree (id, public_id, name, parent_public_id, level, is_primary, path) AS (
+            SELECT
+            contexts.id,
+            contexts.public_id,
+            contexts.name,
+            cast(NULL AS VARCHAR) AS parent_public_id,
+            0 AS level,
+            TRUE AS is_primary,
+            '/' || substr(contexts.public_id, 5) AS path
+            FROM
+            (
+            SELECT
+            id,
+            public_id,
+            name
+            FROM subject
+
+            UNION ALL
+
+            SELECT
+            id,
+            public_id,
+            name
+            FROM topic
+            WHERE context = TRUE
+            ) contexts
+
+            UNION ALL
+
+            SELECT
+            child.id,
+            child.public_id,
+            child.name,
+            parent.public_id AS parent_public_id,
+            parent.level + 1 AS level,
+            child.is_primary AND parent.is_primary AS is_primary,
+            parent.path || '/' || substr(child.public_id, 5)
+            FROM
+            (
+            SELECT
+            r.id,
+            r.public_id,
+            t.public_id AS parent_public_id,
+            r.name,
+            tr.is_primary AS is_primary
+            FROM
+            resource r
+            INNER JOIN topic_resource tr ON tr.resource_id = r.id
+            INNER JOIN topic t ON tr.topic_id = t.id
+
+            UNION ALL
+
+            SELECT
+            st.id,
+            st.public_id,
+            t.public_id AS parent_public_id,
+            st.name,
+            TRUE AS is_primary
+            FROM topic t
+            INNER JOIN topic_subtopic tst ON t.id = tst.topic_id
+            INNER JOIN topic st ON tst.subtopic_id = st.id
+
+            UNION ALL
+
+            SELECT
+            t.id,
+            t.public_id,
+            s.public_id AS parent_public_id,
+            t.name,
+            TRUE AS is_primary
+            FROM
+            subject s
+            INNER JOIN subject_topic st ON s.id = st.subject_id
+            INNER JOIN topic t ON st.topic_id = t.id
+            ) child
+            INNER JOIN tree AS parent ON parent.public_id = child.parent_public_id
+            WHERE 1 = 1
+            )
+
+            SELECT
+            id,
+            public_id,
+            path,
+            is_primary,
+            parent_public_id
+            FROM
+            tree t
+            );
+        </sql>
+    </changeSet>
+
     <changeSet id="20191115 add unique constraint to prevent shared content_uri on resources"
                author="Jon-Eirik Pettersen">
         <addUniqueConstraint tableName="resource" columnNames="content_uri"
@@ -486,7 +676,7 @@
     </changeSet>
 
     <changeSet id="20200506 migrate data from cached_url materialized view to cached_path table"
-               author="Jon-Eirik Pettersen">
+               author="Jon-Eirik Pettersen" dbms="!h2">
         <sql splitStatements="false" stripComments="false">
             TRUNCATE cached_path;
 
@@ -500,11 +690,7 @@
             FROM cached_url;
         </sql>
     </changeSet>
-    <changeSet id="20200506 delete cached_url materialized view" author="Jon-Eirik Pettersen">
-        <preConditions onFail="CONTINUE">
-            <changeSetExecuted id="20200507 after cached_url migration" author="Jon-Eirik Pettersen"
-                               changeLogFile="classpath:db-master-changelog.xml"/>
-        </preConditions>
+    <changeSet id="20200506 delete cached_url materialized view" author="Jon-Eirik Pettersen" dbms="!h2">
         <sql splitStatements="false" stripComments="false">
             DROP TRIGGER IF EXISTS refresh_paths ON subject;
             DROP TRIGGER IF EXISTS refresh_paths ON topic;
@@ -516,9 +702,43 @@
             DROP MATERIALIZED VIEW cached_url;
         </sql>
     </changeSet>
+    <changeSet id="20200506 delete cached_url view h2" author="Jon-Eirik Pettersen" dbms="h2">
+        <sql splitStatements="false" stripComments="false">
+            DROP VIEW cached_url;
+        </sql>
+    </changeSet>
 
-    <changeSet id="20200507 after cached_url migration" author="Jon-Eirik Pettersen">
-        <comment>Does nothing, but marks as run, and used to apply previous changeSet on second application start
-        </comment>
+    <changeSet id="20200506 add auto_increment to serial columns" author="Jon-Eirik Pettersen">
+        <!--
+            This was correctly set up by flyway migrations, but newly created databases after flyway
+            migration had some issues both on Postgres and H2, but not the embedded postgres used before on tests
+        -->
+
+        <addAutoIncrement tableName="subject" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="subject_translation" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="topic" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="topic_translation" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="resource" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="resource_translation" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="filter" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="filter_translation" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="resource_type" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="resource_type_translation" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="subject_topic" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="topic_subtopic" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="topic_resource" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="topic_filter" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="resource_filter" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="relevance" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="relevance_translation" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="resource_resource_type" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="topic_resource_type" columnName="id" columnDataType="int"/>
+    </changeSet>
+
+    <changeSet id="20200508 delete view topic_tree_by_subject_id_view" author="Jon-Eirik Pettersen">
+        <sql>DROP VIEW IF EXISTS topic_tree_by_subject_id_view</sql>
+    </changeSet>
+    <changeSet id="20200508 delete view topic_tree_by_topic_id_view" author="Jon-Eirik Pettersen">
+        <sql>DROP VIEW IF EXISTS topic_tree_by_topic_id_view</sql>
     </changeSet>
 </databaseChangeLog>

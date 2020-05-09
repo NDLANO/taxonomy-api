@@ -69,7 +69,7 @@ public class SetSinglePrimaryConnectionOnResourcesSqlChange implements CustomSql
         }
 
         try {
-            try (var resourcesWithOtherThanOnePrimaryConnectionQuery = connection.prepareStatement("SELECT tr1.resource_id, (SELECT COUNT(*) FROM topic_resource tr2 WHERE \"is_primary\" = TRUE AND tr2.resource_id = tr1.resource_id) FROM topic_resource tr1 GROUP BY tr1.resource_id HAVING (SELECT COUNT(*) FROM topic_resource tr2 WHERE \"is_primary\" = TRUE AND tr2.resource_id = tr1.resource_id) != 1")) {
+            try (var resourcesWithOtherThanOnePrimaryConnectionQuery = connection.prepareStatement("SELECT tr1.resource_id, (SELECT COUNT(*) FROM topic_resource tr2 WHERE is_primary = TRUE AND tr2.resource_id = tr1.resource_id) FROM topic_resource tr1 GROUP BY tr1.resource_id HAVING (SELECT COUNT(*) FROM topic_resource tr2 WHERE is_primary = TRUE AND tr2.resource_id = tr1.resource_id) != 1")) {
                 final var resourceListQuery = resourcesWithOtherThanOnePrimaryConnectionQuery.executeQuery();
 
                 while (resourceListQuery.next()) {
