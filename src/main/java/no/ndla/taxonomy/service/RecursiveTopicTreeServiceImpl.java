@@ -13,6 +13,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/*
+    This class replicates old structure previously implemented as recursive queries in database, methods
+    generally just returns flat lists that replicates the old database views
+ */
 @Transactional(propagation = Propagation.MANDATORY)
 @Service
 public class RecursiveTopicTreeServiceImpl implements RecursiveTopicTreeService {
@@ -22,7 +26,14 @@ public class RecursiveTopicTreeServiceImpl implements RecursiveTopicTreeService 
         this.topicSubtopicRepository = topicSubtopicRepository;
     }
 
-    private void addSubTopicIdsRecursively(Set<TopicTreeElement> topics, Set<Integer> topicIds) {
+    private void addSubTopicIdsRecursively(Set<TopicTreeElement> topics, Set<Integer> topicIds, int ttl) {
+        // Method just takes the list of topicIds provided and add each of the subtopics it finds to the list,
+        // and then recursively runs the same method on each of the found subtopic IDs, once for each level
+
+        if (--ttl < 0) {
+            throw new IllegalStateException("Recursion limit reached, probably an infinite loop in the topic structure");
+        }
+
         final var topicIdsThisLevel = new HashSet<Integer>();
 
         topicSubtopicRepository.findAllByTopicIdInIncludingTopicAndSubtopic(topicIds)
@@ -32,7 +43,7 @@ public class RecursiveTopicTreeServiceImpl implements RecursiveTopicTreeService 
                 });
 
         if (topicIdsThisLevel.size() > 0) {
-            addSubTopicIdsRecursively(topics, topicIdsThisLevel);
+            addSubTopicIdsRecursively(topics, topicIdsThisLevel, ttl);
         }
     }
 
@@ -41,7 +52,7 @@ public class RecursiveTopicTreeServiceImpl implements RecursiveTopicTreeService 
         final var toReturn = new HashSet<TopicTreeElement>();
         toReturn.add(new TopicTreeElement(topic.getId(), null, null, 0));
 
-        addSubTopicIdsRecursively(toReturn, Set.of(topic.getId()));
+        addSubTopicIdsRecursively(toReturn, Set.of(topic.getId()), 1000);
 
         return toReturn;
     }
@@ -56,6 +67,7 @@ public class RecursiveTopicTreeServiceImpl implements RecursiveTopicTreeService 
                 .filter(st -> st.getSubject().isPresent())
                 .collect(Collectors.toSet());
 
+        // The actual integer IDs of each of the subtopics of this subject
         final var subtopicIds = subjectTopics.stream()
                 .map(SubjectTopic::getTopic)
                 .filter(Optional::isPresent)
@@ -70,7 +82,7 @@ public class RecursiveTopicTreeServiceImpl implements RecursiveTopicTreeService 
             toReturn.add(new TopicTreeElement(topicId, subjectId, null, subjectTopic.getRank()));
         });
 
-        addSubTopicIdsRecursively(toReturn, subtopicIds);
+        addSubTopicIdsRecursively(toReturn, subtopicIds, 1000);
 
         return toReturn;
     }
