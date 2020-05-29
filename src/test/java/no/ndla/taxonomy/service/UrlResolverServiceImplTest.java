@@ -336,17 +336,17 @@ public class UrlResolverServiceImplTest {
 
         {
             final var resolvedUrl = urlResolverService.resolveUrl("/subject:1/topic:1/resource:1").orElseThrow();
-            assertEquals(2, resolvedUrl.parents.size());
+            assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.parents
+            final var parentIdList = resolvedUrl.getParents()
                     .stream()
                     .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
-            assertEquals("resource:1", resolvedUrl.id.getSchemeSpecificPart());
-            assertEquals("Resource Name", resolvedUrl.name);
-            assertEquals(URI.create("urn:test:1"), resolvedUrl.contentUri);
-            assertEquals("/subject:1/topic:1/resource:1", resolvedUrl.path);
+            assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
+            assertEquals("Resource Name", resolvedUrl.getName());
+            assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
+            assertEquals("/subject:1/topic:1/resource:1", resolvedUrl.getPath());
 
             assertEquals("topic:1", parentIdList.get(0));
             assertEquals("subject:1", parentIdList.get(1));
@@ -354,17 +354,17 @@ public class UrlResolverServiceImplTest {
 
         {
             final var resolvedUrl = urlResolverService.resolveUrl("/subject:2/topic:2/resource:1").orElseThrow();
-            assertEquals(2, resolvedUrl.parents.size());
+            assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.parents
+            final var parentIdList = resolvedUrl.getParents()
                     .stream()
                     .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
-            assertEquals("resource:1", resolvedUrl.id.getSchemeSpecificPart());
-            assertEquals("Resource Name", resolvedUrl.name);
-            assertEquals(URI.create("urn:test:1"), resolvedUrl.contentUri);
-            assertEquals("/subject:2/topic:2/resource:1", resolvedUrl.path);
+            assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
+            assertEquals("Resource Name", resolvedUrl.getName());
+            assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
+            assertEquals("/subject:2/topic:2/resource:1", resolvedUrl.getPath());
 
             assertEquals("topic:2", parentIdList.get(0));
             assertEquals("subject:2", parentIdList.get(1));
@@ -372,37 +372,37 @@ public class UrlResolverServiceImplTest {
 
         {
             final var resolvedUrl = urlResolverService.resolveUrl("/subject:2/topic:2").orElseThrow();
-            assertEquals(1, resolvedUrl.parents.size());
+            assertEquals(1, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.parents
+            final var parentIdList = resolvedUrl.getParents()
                     .stream()
                     .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
-            assertEquals("topic:2", resolvedUrl.id.getSchemeSpecificPart());
-            assertEquals("/subject:2/topic:2", resolvedUrl.path);
+            assertEquals("topic:2", resolvedUrl.getId().getSchemeSpecificPart());
+            assertEquals("/subject:2/topic:2", resolvedUrl.getPath());
 
             assertEquals("subject:2", parentIdList.get(0));
         }
 
         {
             final var resolvedUrl = urlResolverService.resolveUrl("/subject:2").orElseThrow();
-            assertEquals(0, resolvedUrl.parents.size());
-            assertEquals("subject:2", resolvedUrl.id.getSchemeSpecificPart());
-            assertEquals("/subject:2", resolvedUrl.path);
+            assertEquals(0, resolvedUrl.getParents().size());
+            assertEquals("subject:2", resolvedUrl.getId().getSchemeSpecificPart());
+            assertEquals("/subject:2", resolvedUrl.getPath());
         }
 
         {
             final var resolvedUrl = urlResolverService.resolveUrl("/subject:2/").orElseThrow();
-            assertEquals(0, resolvedUrl.parents.size());
-            assertEquals("subject:2", resolvedUrl.id.getSchemeSpecificPart());
-            assertEquals("/subject:2", resolvedUrl.path);
+            assertEquals(0, resolvedUrl.getParents().size());
+            assertEquals("subject:2", resolvedUrl.getId().getSchemeSpecificPart());
+            assertEquals("/subject:2", resolvedUrl.getPath());
         }
         {
             final var resolvedUrl = urlResolverService.resolveUrl("subject:2").orElseThrow();
-            assertEquals(0, resolvedUrl.parents.size());
-            assertEquals("subject:2", resolvedUrl.id.getSchemeSpecificPart());
-            assertEquals("/subject:2", resolvedUrl.path);
+            assertEquals(0, resolvedUrl.getParents().size());
+            assertEquals("subject:2", resolvedUrl.getId().getSchemeSpecificPart());
+            assertEquals("/subject:2", resolvedUrl.getPath());
         }
 
         // Test with a non-valid path
@@ -415,17 +415,17 @@ public class UrlResolverServiceImplTest {
         // Since topic3 is a context in itself, it would be valid to use it as root
         {
             final var resolvedUrl = urlResolverService.resolveUrl("/topic:3/resource:1").orElseThrow();
-            assertEquals(1, resolvedUrl.parents.size());
+            assertEquals(1, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.parents
+            final var parentIdList = resolvedUrl.getParents()
                     .stream()
                     .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
-            assertEquals("resource:1", resolvedUrl.id.getSchemeSpecificPart());
-            assertEquals("Resource Name", resolvedUrl.name);
-            assertEquals(URI.create("urn:test:1"), resolvedUrl.contentUri);
-            assertEquals("/topic:3/resource:1", resolvedUrl.path);
+            assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
+            assertEquals("Resource Name", resolvedUrl.getName());
+            assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
+            assertEquals("/topic:3/resource:1", resolvedUrl.getPath());
 
             assertEquals("topic:3", parentIdList.get(0));
         }
@@ -433,17 +433,17 @@ public class UrlResolverServiceImplTest {
         // Going via subject:3 is also valid
         {
             final var resolvedUrl = urlResolverService.resolveUrl("/subject:3/topic:3/resource:1").orElseThrow();
-            assertEquals(2, resolvedUrl.parents.size());
+            assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.parents
+            final var parentIdList = resolvedUrl.getParents()
                     .stream()
                     .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
-            assertEquals("resource:1", resolvedUrl.id.getSchemeSpecificPart());
-            assertEquals("Resource Name", resolvedUrl.name);
-            assertEquals(URI.create("urn:test:1"), resolvedUrl.contentUri);
-            assertEquals("/subject:3/topic:3/resource:1", resolvedUrl.path);
+            assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
+            assertEquals("Resource Name", resolvedUrl.getName());
+            assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
+            assertEquals("/subject:3/topic:3/resource:1", resolvedUrl.getPath());
 
             assertEquals("topic:3", parentIdList.get(0));
             assertEquals("subject:3", parentIdList.get(1));
@@ -452,17 +452,17 @@ public class UrlResolverServiceImplTest {
         // Additional slashes should make no difference
         {
             final var resolvedUrl = urlResolverService.resolveUrl("////subject:3///topic:3//////resource:1///").orElseThrow();
-            assertEquals(2, resolvedUrl.parents.size());
+            assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.parents
+            final var parentIdList = resolvedUrl.getParents()
                     .stream()
                     .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
-            assertEquals("resource:1", resolvedUrl.id.getSchemeSpecificPart());
-            assertEquals("Resource Name", resolvedUrl.name);
-            assertEquals(URI.create("urn:test:1"), resolvedUrl.contentUri);
-            assertEquals("/subject:3/topic:3/resource:1", resolvedUrl.path);
+            assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
+            assertEquals("Resource Name", resolvedUrl.getName());
+            assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
+            assertEquals("/subject:3/topic:3/resource:1", resolvedUrl.getPath());
 
             assertEquals("topic:3", parentIdList.get(0));
             assertEquals("subject:3", parentIdList.get(1));
@@ -471,17 +471,17 @@ public class UrlResolverServiceImplTest {
         // No leading slash should make no difference
         {
             final var resolvedUrl = urlResolverService.resolveUrl("subject:3///topic:3//////resource:1///").orElseThrow();
-            assertEquals(2, resolvedUrl.parents.size());
+            assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.parents
+            final var parentIdList = resolvedUrl.getParents()
                     .stream()
                     .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
-            assertEquals("resource:1", resolvedUrl.id.getSchemeSpecificPart());
-            assertEquals("Resource Name", resolvedUrl.name);
-            assertEquals(URI.create("urn:test:1"), resolvedUrl.contentUri);
-            assertEquals("/subject:3/topic:3/resource:1", resolvedUrl.path);
+            assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
+            assertEquals("Resource Name", resolvedUrl.getName());
+            assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
+            assertEquals("/subject:3/topic:3/resource:1", resolvedUrl.getPath());
 
             assertEquals("topic:3", parentIdList.get(0));
             assertEquals("subject:3", parentIdList.get(1));

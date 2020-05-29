@@ -40,7 +40,7 @@ public class TopicTranslationsTest extends RestTest {
         ).getPublicId();
 
         final var topic = getTopic(id, "nb");
-        assertEquals("Trigonometri", topic.name);
+        assertEquals("Trigonometri", topic.getName());
     }
 
 
@@ -50,7 +50,7 @@ public class TopicTranslationsTest extends RestTest {
                 .name("Trigonometry")
         ).getPublicId();
         final var topic = getTopic(id, "XX");
-        assertEquals("Trigonometry", topic.name);
+        assertEquals("Trigonometry", topic.getName());
     }
 
     @Test
@@ -63,7 +63,7 @@ public class TopicTranslationsTest extends RestTest {
         ).getPublicId();
 
         final var topic = getTopic(id, null);
-        assertEquals("Trigonometry", topic.name);
+        assertEquals("Trigonometry", topic.getName());
     }
 
     @Test

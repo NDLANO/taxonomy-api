@@ -18,7 +18,7 @@ public class ResourceWithParentTopicsDTO extends ResourceDTO {
                     "\"contentUri\": \"urn:article:6662\"," +
                     "\"path\": \"/subject:2/topic:1:181900\"," +
                     "\"primary\": \"true\"}]")
-    public Set<TopicWithResourceConnectionDTO> parentTopics = new HashSet<>();
+    private Set<TopicWithResourceConnectionDTO> parentTopics = new HashSet<>();
 
     public ResourceWithParentTopicsDTO() {
         super();

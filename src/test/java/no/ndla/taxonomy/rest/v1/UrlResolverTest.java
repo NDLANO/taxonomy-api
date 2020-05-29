@@ -15,10 +15,10 @@ public class UrlResolverTest extends RestTest {
 
         ResolvedUrl url = resolveUrl("/subject:1");
 
-        assertEquals("urn:subject:1", url.id.toString());
-        assertEquals("the subject", url.name);
-        assertEquals("urn:article:1", url.contentUri.toString());
-        assertEquals(0, url.parents.size());
+        assertEquals("urn:subject:1", url.getId().toString());
+        assertEquals("the subject", url.getName());
+        assertEquals("urn:article:1", url.getContentUri().toString());
+        assertEquals(0, url.getParents().size());
     }
 
     @Test
@@ -33,9 +33,9 @@ public class UrlResolverTest extends RestTest {
 
         ResolvedUrl url = resolveUrl("/subject:1/topic:1");
 
-        assertEquals("urn:topic:1", url.id.toString());
-        assertEquals("the topic", url.name);
-        assertEquals("urn:article:1", url.contentUri.toString());
+        assertEquals("urn:topic:1", url.getId().toString());
+        assertEquals("the topic", url.getName());
+        assertEquals("urn:article:1", url.getContentUri().toString());
         assertParents(url, "urn:subject:1");
     }
 
@@ -50,7 +50,7 @@ public class UrlResolverTest extends RestTest {
         );
 
         ResolvedUrl url = resolveUrl("/subject:1/topic:1/topic:2");
-        assertEquals("urn:article:1", url.contentUri.toString());
+        assertEquals("urn:article:1", url.getContentUri().toString());
         assertParents(url, "urn:topic:1", "urn:subject:1");
     }
 
@@ -66,7 +66,7 @@ public class UrlResolverTest extends RestTest {
         );
 
         ResolvedUrl url = resolveUrl("/subject:1/topic:1/resource:1");
-        assertEquals("urn:article:1", url.contentUri.toString());
+        assertEquals("urn:article:1", url.getContentUri().toString());
         assertParents(url, "urn:topic:1", "urn:subject:1");
     }
 
@@ -82,27 +82,27 @@ public class UrlResolverTest extends RestTest {
 
         {
             ResolvedUrl url = resolveUrl("/subject:1/topic:1/resource:1");
-            assertEquals("urn:article:1", url.contentUri.toString());
+            assertEquals("urn:article:1", url.getContentUri().toString());
             assertParents(url, "urn:topic:1", "urn:subject:1");
-            assertEquals("/subject:1/topic:1/resource:1", url.path);
+            assertEquals("/subject:1/topic:1/resource:1", url.getPath());
         }
         {
             ResolvedUrl url = resolveUrl("subject:1/topic:1/resource:1");
-            assertEquals("urn:article:1", url.contentUri.toString());
+            assertEquals("urn:article:1", url.getContentUri().toString());
             assertParents(url, "urn:topic:1", "urn:subject:1");
-            assertEquals("/subject:1/topic:1/resource:1", url.path);
+            assertEquals("/subject:1/topic:1/resource:1", url.getPath());
         }
         {
             ResolvedUrl url = resolveUrl("/subject:1/topic:1/resource:1/");
-            assertEquals("urn:article:1", url.contentUri.toString());
+            assertEquals("urn:article:1", url.getContentUri().toString());
             assertParents(url, "urn:topic:1", "urn:subject:1");
-            assertEquals("/subject:1/topic:1/resource:1", url.path);
+            assertEquals("/subject:1/topic:1/resource:1", url.getPath());
         }
         {
             ResolvedUrl url = resolveUrl("//subject:1////topic:1/resource:1//");
-            assertEquals("urn:article:1", url.contentUri.toString());
+            assertEquals("urn:article:1", url.getContentUri().toString());
             assertParents(url, "urn:topic:1", "urn:subject:1");
-            assertEquals("/subject:1/topic:1/resource:1", url.path);
+            assertEquals("/subject:1/topic:1/resource:1", url.getPath());
         }
     }
 
@@ -127,9 +127,9 @@ public class UrlResolverTest extends RestTest {
     }
 
     private void assertParents(ResolvedUrl path, String... expected) {
-        assertEquals(expected.length, path.parents.size());
+        assertEquals(expected.length, path.getParents().size());
         for (int i = 0; i < expected.length; i++) {
-            assertEquals(expected[i], path.parents.get(i).toString());
+            assertEquals(expected[i], path.getParents().get(i).toString());
         }
     }
 

@@ -19,19 +19,19 @@ public class ConnectionIndexDTO {
 
     @JsonProperty
     @ApiModelProperty(value = "The id of the subject-topic or topic-subtopic connection", example = "urn:subject-topic:1")
-    public URI connectionId;
+    private URI connectionId;
     @JsonProperty
     @ApiModelProperty(value = "The id of the connected subject or topic", example = "urn:subject:1")
-    public URI targetId;
+    private URI targetId;
     @JsonProperty
     @ApiModelProperty(value = "The path part of the url for the subject or subtopic connected to this topic", example = "/subject:1/topic:1")
-    public Set<String> paths = new HashSet<>();
+    private Set<String> paths = new HashSet<>();
     @JsonProperty
     @ApiModelProperty(value = "The type of connection (parent subject, parent topic or subtopic")
-    public String type;
+    private String type;
     @JsonProperty
     @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
-    public Boolean isPrimary;
+    private Boolean isPrimary;
 
     public ConnectionIndexDTO() {
     }
@@ -68,5 +68,25 @@ public class ConnectionIndexDTO {
 
     public static ConnectionIndexDTO childConnection(EntityWithPathConnection connection) {
         return new ConnectionIndexDTO(connection, false);
+    }
+
+    public URI getConnectionId() {
+        return connectionId;
+    }
+
+    public URI getTargetId() {
+        return targetId;
+    }
+
+    public Set<String> getPaths() {
+        return paths;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public Boolean getPrimary() {
+        return isPrimary;
     }
 }

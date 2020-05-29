@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.service.dtos;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.TopicResource;
@@ -10,17 +11,18 @@ import java.net.URI;
 @ApiModel("TopicWithResourceConnection")
 public class TopicWithResourceConnectionDTO extends TopicDTO {
     @ApiParam
-    public URI connectionId;
+    private URI connectionId;
 
     @ApiParam
-    public boolean isPrimary;
+    @JsonProperty("isPrimary")
+    private boolean isPrimary;
 
     @ApiParam
-    public int rank;
+    private int rank;
 
     public TopicWithResourceConnectionDTO(MetadataWrappedEntity<TopicResource> wrappedTopicResource, String language) {
         this(wrappedTopicResource.getEntity(), language);
-        wrappedTopicResource.getMetadata().ifPresent(metadataDto -> this.metadata = metadataDto);
+        wrappedTopicResource.getMetadata().ifPresent(this::setMetadata);
     }
 
     public TopicWithResourceConnectionDTO(TopicResource topicResource, String language) {
@@ -33,5 +35,17 @@ public class TopicWithResourceConnectionDTO extends TopicDTO {
 
     public TopicWithResourceConnectionDTO() {
         super();
+    }
+
+    public URI getConnectionId() {
+        return connectionId;
+    }
+
+    public boolean isPrimary() {
+        return isPrimary;
+    }
+
+    public int getRank() {
+        return rank;
     }
 }

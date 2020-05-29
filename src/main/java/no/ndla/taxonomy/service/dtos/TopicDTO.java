@@ -15,27 +15,27 @@ import java.util.Set;
 public class TopicDTO {
     @JsonProperty
     @ApiModelProperty(value = "Topic id", example = "urn:topic:234")
-    public URI id;
+    private URI id;
 
     @JsonProperty
     @ApiModelProperty(value = "The name of the topic", example = "Trigonometry")
-    public String name;
+    private String name;
 
     @JsonProperty
     @ApiModelProperty(value = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
-    public URI contentUri;
+    private URI contentUri;
 
     @JsonProperty
     @ApiModelProperty(value = "The primary path for this topic", example = "/subject:1/topic:1")
-    public String path;
+    private String path;
 
     @JsonProperty
     @ApiModelProperty(value = "List of all paths to this topic")
-    public Set<String> paths;
+    private Set<String> paths;
 
     @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public MetadataDto metadata;
+    private MetadataDto metadata;
 
     public TopicDTO() {
 
@@ -58,5 +58,33 @@ public class TopicDTO {
         this(wrappedTopic.getEntity(), languageCode);
 
         wrappedTopic.getMetadata().ifPresent(metadata -> this.metadata = metadata);
+    }
+
+    public URI getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public URI getContentUri() {
+        return contentUri;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public Set<String> getPaths() {
+        return paths;
+    }
+
+    public MetadataDto getMetadata() {
+        return metadata;
+    }
+
+    protected void setMetadata(MetadataDto metadata) {
+        this.metadata = metadata;
     }
 }

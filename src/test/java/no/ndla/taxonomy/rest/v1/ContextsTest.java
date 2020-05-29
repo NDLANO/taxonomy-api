@@ -130,6 +130,6 @@ public class ContextsTest extends RestTest {
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
         final var topicIndexDocument = testUtils.getObject(TopicDTO.class, response);
-        assertEquals("/topic:1", topicIndexDocument.path);
+        assertEquals("/topic:1", topicIndexDocument.getPath());
     }
 }

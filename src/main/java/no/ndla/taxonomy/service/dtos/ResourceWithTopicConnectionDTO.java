@@ -11,13 +11,13 @@ import java.net.URI;
 @ApiModel("ResourceWithTopicConnection")
 public class ResourceWithTopicConnectionDTO extends ResourceDTO {
     @ApiParam
-    public URI topicId;
+    private URI topicId;
 
     @ApiParam
-    public URI connectionId;
+    private URI connectionId;
 
     @ApiParam
-    public int rank;
+    private int rank;
 
     public ResourceWithTopicConnectionDTO() {
 
@@ -25,7 +25,8 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
 
     public ResourceWithTopicConnectionDTO(MetadataWrappedEntity<TopicResource> wrappedTopicResource, String language) {
         this(wrappedTopicResource.getEntity(), language);
-        wrappedTopicResource.getMetadata().ifPresent(metadataDto -> this.metadata = metadataDto);
+
+        wrappedTopicResource.getMetadata().ifPresent(this::setMetadata);
     }
 
     public ResourceWithTopicConnectionDTO(TopicResource topicResource, String language) {
@@ -37,5 +38,17 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
 
         this.connectionId = topicResource.getPublicId();
         this.rank = topicResource.getRank();
+    }
+
+    public URI getTopicId() {
+        return topicId;
+    }
+
+    public URI getConnectionId() {
+        return connectionId;
+    }
+
+    public int getRank() {
+        return rank;
     }
 }

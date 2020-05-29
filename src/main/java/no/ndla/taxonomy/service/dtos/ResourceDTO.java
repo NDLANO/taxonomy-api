@@ -10,7 +10,6 @@ import no.ndla.taxonomy.service.MetadataWrappedEntity;
 
 import java.net.URI;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,39 +17,43 @@ import java.util.stream.Collectors;
 public class ResourceDTO {
     @JsonProperty
     @ApiModelProperty(example = "urn:resource:345")
-    public URI id;
+    private URI id;
 
     @JsonProperty
     @ApiModelProperty(value = "The name of the resource", example = "Introduction to integration")
-    public String name;
+    private String name;
 
     @JsonProperty
     @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
             notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
                     "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
-    public URI contentUri;
+    private URI contentUri;
 
     @JsonProperty
     @ApiModelProperty(value = "The path part of the url to this resource", example = "/subject:1/topic:1/resource:1")
-    public String path;
+    private String path;
 
     @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public MetadataDto metadata;
+    private MetadataDto metadata;
 
     @JsonProperty
     @ApiModelProperty(value = "Resource type(s)", example = "[{\"id\": \"urn:resourcetype:1\",\"name\":\"lecture\"}]")
-    public Set<ResourceTypeDTO> resourceTypes = new HashSet<>();
+    private Set<ResourceTypeDTO> resourceTypes = new HashSet<>();
 
     @JsonProperty
     @ApiModelProperty(value = "Filters this resource is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
-    public Set<FilterWithConnectionDTO> filters = new HashSet<>();
+    private Set<FilterWithConnectionDTO> filters = new HashSet<>();
 
     @JsonProperty
     @ApiModelProperty(value = "All paths that lead to this resource", example = "[\"/subject:1/topic:1/resource:1\", \"/subject:2/topic:3/resource:1\"]")
-    public Set<String> paths;
+    private Set<String> paths;
 
     public ResourceDTO() {
+    }
+
+    protected void setMetadata(MetadataDto metadata) {
+        this.metadata = metadata;
     }
 
     public ResourceDTO(MetadataWrappedEntity<Resource> wrappedResource, String languageCode) {
@@ -81,8 +84,8 @@ public class ResourceDTO {
         this.paths = resource.getAllPaths();
     }
 
-    Optional<String> getPath() {
-        return Optional.ofNullable(path);
+    public String getPath() {
+        return path;
     }
 
     public void setPath(String path) {
@@ -116,4 +119,6 @@ public class ResourceDTO {
     public Set<String> getPaths() {
         return paths;
     }
+
+
 }

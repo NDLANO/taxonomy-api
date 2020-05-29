@@ -290,8 +290,8 @@ public class TopicResourcesTest extends RestTest {
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/" + geometry.getPublicId() + "/resources");
         final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
-        assertEquals(circles.getPublicId(), resources[0].id);
-        assertEquals(squares.getPublicId(), resources[1].id);
+        assertEquals(circles.getPublicId(), resources[0].getId());
+        assertEquals(squares.getPublicId(), resources[1].getId());
     }
 
     @Test

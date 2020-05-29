@@ -102,10 +102,10 @@ public class TopicServiceImplTest {
 
         assertEquals(2, returnedConnections.size());
         returnedConnections.forEach(connection -> {
-            if (connection.connectionId.equals(URI.create("urn:subject-topic"))) {
-                assertEquals("parent-subject", connection.type);
-            } else if (connection.connectionId.equals(URI.create("urn:child-topic"))) {
-                assertEquals("subtopic", connection.type);
+            if (connection.getConnectionId().equals(URI.create("urn:subject-topic"))) {
+                assertEquals("parent-subject", connection.getType());
+            } else if (connection.getConnectionId().equals(URI.create("urn:child-topic"))) {
+                assertEquals("subtopic", connection.getType());
             } else {
                 fail();
             }
@@ -231,30 +231,30 @@ public class TopicServiceImplTest {
 
         // Collections that should contain all objects
         Set.of(subtopicsWithNullFilters, subtopicsWithEmptyFilters, subtopicsBySubject3Filters, subtopicsWithNullSubjectId).forEach(allSubtopics -> {
-            assertTrue(allSubtopics.stream().map(document -> document.id).collect(Collectors.toSet()).containsAll(Set.of(topic1Id, topic2Id, topic3Id)));
+            assertTrue(allSubtopics.stream().map(document -> document.getId()).collect(Collectors.toSet()).containsAll(Set.of(topic1Id, topic2Id, topic3Id)));
         });
 
         // Collections with only topic1
         Set.of(subtopicsByFilter1, subtopicsBySubject1Filters).forEach(withFilter1 -> {
-            assertTrue(withFilter1.stream().map(document -> document.id).collect(Collectors.toSet()).contains(topic1Id));
+            assertTrue(withFilter1.stream().map(document -> document.getId()).collect(Collectors.toSet()).contains(topic1Id));
         });
         // Collections with only topic2
         Set.of(subtopicsByFilter2, subtopicsBySubject2Filters).forEach(withFilter2 -> {
-            assertTrue(withFilter2.stream().map(document -> document.id).collect(Collectors.toSet()).contains(topic2Id));
+            assertTrue(withFilter2.stream().map(document -> document.getId()).collect(Collectors.toSet()).contains(topic2Id));
         });
 
         // Check if metadata is present on the list that is supposed to include metadata
         subtopicsWithEmptyFiltersAndMetadata.forEach(subtopicDto -> {
-            assertNotNull(subtopicDto.metadata);
-            switch (subtopicDto.name) {
+            assertNotNull(subtopicDto.getMetadata());
+            switch (subtopicDto.getName()) {
                 case "topic1":
-                    assertSame(metadataObject1, subtopicDto.metadata);
+                    assertSame(metadataObject1, subtopicDto.getMetadata());
                     break;
                 case "topic2":
-                    assertSame(metadataObject2, subtopicDto.metadata);
+                    assertSame(metadataObject2, subtopicDto.getMetadata());
                     break;
                 case "topic3":
-                    assertSame(metadataObject3, subtopicDto.metadata);
+                    assertSame(metadataObject3, subtopicDto.getMetadata());
                     break;
                 default:
                     fail("Unknown topic returned");

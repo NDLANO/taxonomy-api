@@ -181,9 +181,9 @@ public class SubjectTranslationsTest extends RestTest {
 
         assertEquals(2, resources.length);
 
-        assertAnyTrue(resources, r -> r.name.equals("Introduksjon til trigonometri"));
-        assertAnyTrue(resources, r -> r.name.equals("Introduksjon til calculus"));
-        assertAllTrue(resources, r -> r.resourceTypes.iterator().next().getName().equals("Artikkel"));
+        assertAnyTrue(resources, r -> r.getName().equals("Introduksjon til trigonometri"));
+        assertAnyTrue(resources, r -> r.getName().equals("Introduksjon til calculus"));
+        assertAllTrue(resources, r -> r.getResourceTypes().iterator().next().getName().equals("Artikkel"));
     }
 
     private SubjectIndexDocument getSubject(URI id, String language) throws Exception {
