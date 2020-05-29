@@ -2,6 +2,7 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.repositories.ResourceRepository;
+import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,10 +17,6 @@ import static org.mockito.Mockito.verify;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 public class ResourceServiceImplTest {
-    @Autowired
-    private ResourceRepository resourceRepository;
-
-    @Autowired
     private Builder builder;
 
     private EntityConnectionService connectionService;
@@ -27,11 +24,21 @@ public class ResourceServiceImplTest {
     private MetadataApiService metadataApiService;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp(@Autowired ResourceRepository resourceRepository,
+                      @Autowired TopicResourceRepository topicResourceRepository,
+                      @Autowired Builder builder) {
+        this.builder = builder;
+
         connectionService = mock(EntityConnectionService.class);
         metadataApiService = mock(MetadataApiService.class);
 
-        resourceService = new ResourceServiceImpl(resourceRepository, connectionService, metadataApiService);
+        final var domainEntityHelperService = mock(DomainEntityHelperService.class);
+        final var recursiveTopicTreeService = mock(RecursiveTopicTreeService.class);
+        final var topicTreeSorter = mock(TopicTreeSorter.class);
+        final var metadataEntityWrapperService = mock(MetadataEntityWrapperService.class);
+
+        resourceService = new ResourceServiceImpl(resourceRepository, topicResourceRepository, connectionService,
+                metadataApiService, domainEntityHelperService, recursiveTopicTreeService, topicTreeSorter, metadataEntityWrapperService);
     }
 
     @Test

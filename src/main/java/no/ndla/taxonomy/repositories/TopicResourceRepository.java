@@ -1,7 +1,6 @@
 package no.ndla.taxonomy.repositories;
 
 
-import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicResource;
 import org.springframework.data.jpa.repository.Query;
 
@@ -12,8 +11,6 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface TopicResourceRepository extends TaxonomyRepository<TopicResource> {
-    List<TopicResource> findByTopic(Topic topic);
-
     @Query("SELECT tr" +
             "   FROM TopicResource tr" +
             "   JOIN FETCH tr.topic" +
@@ -25,7 +22,8 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   LEFT JOIN FETCH tr.topic t" +
             "   LEFT JOIN FETCH tr.resource r" +
             "   LEFT JOIN FETCH r.filters rf" +
-            "   LEFT JOIN FETCH rf.filter" +
+            "   LEFT JOIN FETCH rf.filter f" +
+            "   LEFT JOIN FETCH f.translations" +
             "   LEFT JOIN rf.relevance rel" +
             "   LEFT JOIN FETCH r.resourceTranslations" +
             "   LEFT JOIN FETCH r.cachedPaths" +
@@ -50,7 +48,8 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   FROM TopicResource tr" +
             "   JOIN FETCH tr.resource r" +
             "   LEFT JOIN FETCH r.filters rf" +
-            "   LEFT JOIN FETCH rf.filter" +
+            "   LEFT JOIN FETCH rf.filter f" +
+            "   LEFT JOIN FETCH f.translations" +
             "   JOIN rf.filter f" +
             "   LEFT JOIN FETCH tr.topic t" +
             "   LEFT JOIN rf.relevance rel" +
@@ -81,7 +80,8 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   FROM TopicResource tr" +
             "   INNER JOIN FETCH tr.resource r" +
             "   LEFT JOIN FETCH r.filters rf" +
-            "   LEFT JOIN FETCH rf.filter" +
+            "   LEFT JOIN FETCH rf.filter f" +
+            "   LEFT JOIN FETCH f.translations" +
             "   LEFT JOIN rf.filter f" +
             "   LEFT JOIN FETCH tr.topic t" +
             "   LEFT JOIN rf.relevance rel" +
@@ -118,7 +118,8 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   FROM TopicResource tr" +
             "   JOIN FETCH tr.resource r" +
             "   LEFT JOIN FETCH r.filters rf" +
-            "   LEFT JOIN FETCH rf.filter" +
+            "   LEFT JOIN FETCH rf.filter f" +
+            "   LEFT JOIN FETCH f.translations" +
             "   LEFT JOIN FETCH tr.topic t" +
             "   LEFT JOIN rf.relevance rel" +
             "   LEFT JOIN r.resourceResourceTypes rrt " +

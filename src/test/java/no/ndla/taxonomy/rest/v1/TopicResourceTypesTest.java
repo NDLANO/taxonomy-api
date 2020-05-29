@@ -54,8 +54,8 @@ public class TopicResourceTypesTest extends RestTest {
 
         assertEquals(1, result.length);
         assertEquals(2, result[0].resourceTypes.size());
-        assertAnyTrue(result[0].resourceTypes, rt -> rt.id.equals(lecture.getPublicId()));
-        assertAnyTrue(result[0].resourceTypes, rt -> rt.id.equals(assignment.getPublicId()));
+        assertAnyTrue(result[0].resourceTypes, rt -> rt.getId().equals(lecture.getPublicId()));
+        assertAnyTrue(result[0].resourceTypes, rt -> rt.getId().equals(assignment.getPublicId()));
     }
 
     @Test
@@ -85,10 +85,10 @@ public class TopicResourceTypesTest extends RestTest {
         assertEquals(2, result.length);
         assertEquals(2, result[0].resourceTypes.size());
         assertEquals(2, result[1].resourceTypes.size());
-        assertAnyTrue(result[0].resourceTypes, rt -> rt.id.equals(lecture.getPublicId()));
-        assertAnyTrue(result[0].resourceTypes, rt -> rt.id.equals(assignment.getPublicId()));
-        assertAnyTrue(result[1].resourceTypes, rt -> rt.id.equals(lecture.getPublicId()));
-        assertAnyTrue(result[1].resourceTypes, rt -> rt.id.equals(assignment.getPublicId()));
+        assertAnyTrue(result[0].resourceTypes, rt -> rt.getId().equals(lecture.getPublicId()));
+        assertAnyTrue(result[0].resourceTypes, rt -> rt.getId().equals(assignment.getPublicId()));
+        assertAnyTrue(result[1].resourceTypes, rt -> rt.getId().equals(lecture.getPublicId()));
+        assertAnyTrue(result[1].resourceTypes, rt -> rt.getId().equals(assignment.getPublicId()));
     }
 
     @Test

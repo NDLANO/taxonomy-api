@@ -1,8 +1,9 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.rest.v1.dtos.queries.TopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
-import no.ndla.taxonomy.rest.v1.dtos.topics.TopicIndexDocument;
+import no.ndla.taxonomy.service.dtos.TopicDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -22,7 +23,7 @@ public class TopicTranslationsTest extends RestTest {
         builder.topic(t -> t.name("Integration").translation("nb", l -> l.name("Integrasjon")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics?language=nb");
-        TopicIndexDocument[] topics = testUtils.getObject(TopicIndexDocument[].class, response);
+        final var topics = testUtils.getObject(TopicIndexDocument[].class, response);
 
         assertEquals(2, topics.length);
         assertAnyTrue(topics, s -> s.name.equals("Trigonometri"));
@@ -38,8 +39,8 @@ public class TopicTranslationsTest extends RestTest {
                 )
         ).getPublicId();
 
-        TopicIndexDocument topic = getTopic(id, "nb");
-        assertEquals("Trigonometri", topic.name);
+        final var topic = getTopic(id, "nb");
+        assertEquals("Trigonometri", topic.getName());
     }
 
 
@@ -48,8 +49,8 @@ public class TopicTranslationsTest extends RestTest {
         URI id = builder.topic(t -> t
                 .name("Trigonometry")
         ).getPublicId();
-        TopicIndexDocument topic = getTopic(id, "XX");
-        assertEquals("Trigonometry", topic.name);
+        final var topic = getTopic(id, "XX");
+        assertEquals("Trigonometry", topic.getName());
     }
 
     @Test
@@ -61,8 +62,8 @@ public class TopicTranslationsTest extends RestTest {
                 )
         ).getPublicId();
 
-        TopicIndexDocument topic = getTopic(id, null);
-        assertEquals("Trigonometry", topic.name);
+        final var topic = getTopic(id, null);
+        assertEquals("Trigonometry", topic.getName());
     }
 
     @Test
@@ -150,7 +151,7 @@ public class TopicTranslationsTest extends RestTest {
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "Introduksjon til calculus".equals(r.name));
         assertAnyTrue(result, r -> "Introduksjon til integrasjon".equals(r.name));
-        assertAllTrue(result, r -> r.resourceTypes.iterator().next().name.equals("Artikkel"));
+        assertAllTrue(result, r -> r.resourceTypes.iterator().next().getName().equals("Artikkel"));
     }
 
     @Test
@@ -179,13 +180,13 @@ public class TopicTranslationsTest extends RestTest {
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "ressurs 1".equals(r.name));
         assertAnyTrue(result, r -> "ressurs 2".equals(r.name));
-        assertAllTrue(result, r -> r.resourceTypes.iterator().next().name.equals("Artikkel"));
+        assertAllTrue(result, r -> r.resourceTypes.iterator().next().getName().equals("Artikkel"));
     }
 
-    private TopicIndexDocument getTopic(URI id, String language) throws Exception {
+    private TopicDTO getTopic(URI id, String language) throws Exception {
         String path = "/v1/topics/" + id;
         if (isNotEmpty(language)) path = path + "?language=" + language;
-        return testUtils.getObject(TopicIndexDocument.class, testUtils.getResource(path));
+        return testUtils.getObject(TopicDTO.class, testUtils.getResource(path));
     }
 
 }

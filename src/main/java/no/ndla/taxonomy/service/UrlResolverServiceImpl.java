@@ -185,24 +185,25 @@ public class UrlResolverServiceImpl implements UrlResolverService {
             final var leafElement = resolvedPathComponents.get(resolvedPathComponents.size() - 1);
 
             final var resolvedUrl = new ResolvedUrl();
-            resolvedUrl.contentUri = leafElement.getContentUri();
-            resolvedUrl.id = leafElement.getPublicId();
+            resolvedUrl.setContentUri(leafElement.getContentUri());
+            resolvedUrl.setId(leafElement.getPublicId());
 
             // Create a list of parents with publicId in reversed order, not including the node itself
-            resolvedUrl.parents = resolvedPathComponents.subList(0, resolvedPathComponents.size() - 1)
+            resolvedUrl.setParents(resolvedPathComponents.subList(0, resolvedPathComponents.size() - 1)
                     .stream()
                     .map(EntityWithPath::getPublicId)
                     .sorted(Collections.reverseOrder())
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()));
 
-            resolvedUrl.name = leafElement.getName();
+            resolvedUrl.setName(leafElement.getName());
 
             // Generate a string path from the sorted list of parent nodes, a cleaned version of the provided string path parameter
-            resolvedUrl.path = "/" +
+            resolvedUrl.setPath("/" +
                     resolvedPathComponents.stream()
                             .map(EntityWithPath::getPublicId)
                             .map(URI::getSchemeSpecificPart)
-                            .collect(Collectors.joining("/"));
+                            .collect(Collectors.joining("/"))
+            );
 
             return Optional.of(resolvedUrl);
         } catch (NotFoundServiceException e) {

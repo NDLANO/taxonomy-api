@@ -10,6 +10,7 @@ import no.ndla.taxonomy.domain.TopicResource;
 import no.ndla.taxonomy.service.MetadataWrappedEntity;
 import no.ndla.taxonomy.service.TopicTreeSorter;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.dtos.ResourceTypeDTO;
 
 import java.net.URI;
 import java.util.HashSet;
@@ -35,7 +36,7 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
 
     @JsonProperty
     @ApiModelProperty(value = "Resource type(s)", example = "[{\"id\":\"urn:resourcetype:1\", \"name\":\"lecture\"}]")
-    public Set<ResourceTypeIndexDocument> resourceTypes = new HashSet<>();
+    public Set<ResourceTypeDTO> resourceTypes = new HashSet<>();
 
     @JsonProperty
     @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
@@ -94,7 +95,7 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
 
             this.resourceTypes = resource.getResourceResourceTypes().stream()
                     .map(ResourceResourceType::getResourceType)
-                    .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language))
+                    .map(resourceType -> new ResourceTypeDTO(resourceType, language))
                     .collect(Collectors.toSet());
 
             this.contentUri = resource.getContentUri();

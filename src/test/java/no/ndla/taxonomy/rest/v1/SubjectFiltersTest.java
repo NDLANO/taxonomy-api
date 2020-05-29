@@ -90,9 +90,9 @@ public class SubjectFiltersTest extends RestTest {
         assertEquals(2, topics.length);
         assertAnyTrue(topics, t -> "statics".equals(t.name));
         assertAnyTrue(topics, t -> "optics".equals(t.name));
-        assertAnyTrue(topics[0].filters, f -> vg1.getPublicId().equals(f.id));
-        assertAnyTrue(topics[0].filters, f -> vg1.getName().equals(f.name));
-        assertAnyTrue(topics[0].filters, f -> core.getPublicId().equals(f.relevanceId));
+        assertAnyTrue(topics[0].filters, f -> vg1.getPublicId().equals(f.getId()));
+        assertAnyTrue(topics[0].filters, f -> vg1.getName().equals(f.getName()));
+        assertAnyTrue(topics[0].filters, f -> core.getPublicId().equals(f.getRelevanceId()));
         assertEquals(1, topics[0].filters.size());
     }
 
@@ -110,10 +110,10 @@ public class SubjectFiltersTest extends RestTest {
         SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
 
         assertEquals(2, topics[0].filters.size());
-        assertAnyTrue(topics[0].filters, f -> vg1.getPublicId().equals(f.id));
-        assertAnyTrue(topics[0].filters, f -> core.getPublicId().equals(f.relevanceId));
-        assertAnyTrue(topics[0].filters, f -> supplementary.getPublicId().equals(f.relevanceId));
-        assertAnyTrue(topics[0].filters, f -> vg2.getPublicId().equals(f.id));
+        assertAnyTrue(topics[0].filters, f -> vg1.getPublicId().equals(f.getId()));
+        assertAnyTrue(topics[0].filters, f -> core.getPublicId().equals(f.getRelevanceId()));
+        assertAnyTrue(topics[0].filters, f -> supplementary.getPublicId().equals(f.getRelevanceId()));
+        assertAnyTrue(topics[0].filters, f -> vg2.getPublicId().equals(f.getId()));
     }
 
     @Test
