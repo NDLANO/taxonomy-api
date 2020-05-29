@@ -2,8 +2,8 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.rest.v1.dtos.topics.TopicWithPathsIndexDocument;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.dtos.TopicDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,7 +129,7 @@ public class ContextsTest extends RestTest {
         cachedUrlUpdaterService.updateCachedUrls(topic);
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
-        TopicWithPathsIndexDocument topicIndexDocument = testUtils.getObject(TopicWithPathsIndexDocument.class, response);
+        final var topicIndexDocument = testUtils.getObject(TopicDTO.class, response);
         assertEquals("/topic:1", topicIndexDocument.path);
     }
 }

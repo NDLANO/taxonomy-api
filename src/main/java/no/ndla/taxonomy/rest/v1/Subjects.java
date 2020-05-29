@@ -6,13 +6,11 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.SubjectTopicRepository;
-import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.FilterIndexDocument;
-import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import no.ndla.taxonomy.service.*;
@@ -32,7 +30,6 @@ import java.util.stream.Collectors;
 @RequestMapping(path = {"/v1/subjects"})
 public class Subjects extends PathResolvableEntityRestController<Subject> {
     private final SubjectRepository subjectRepository;
-    private final TopicResourceRepository topicResourceRepository;
     private final SubjectTopicRepository subjectTopicRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final TopicTreeSorter topicTreeSorter;
@@ -41,7 +38,6 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
     private final RecursiveTopicTreeService recursiveTopicTreeService;
 
     public Subjects(SubjectRepository subjectRepository,
-                    TopicResourceRepository topicResourceRepository,
                     SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository,
                     TopicTreeSorter topicTreeSorter, SubjectService subjectService, MetadataApiService metadataApiService,
                     MetadataEntityWrapperService metadataWrapperService,
@@ -50,7 +46,6 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
 
         this.subjectRepository = subjectRepository;
         this.metadataWrapperService = metadataWrapperService;
-        this.topicResourceRepository = topicResourceRepository;
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicTreeSorter = topicTreeSorter;
@@ -265,87 +260,6 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
         }
 
         return foundFilter.get();
-    }
-
-    @GetMapping("/{id}/resources")
-    @ApiOperation(value = "Gets all resources for a subject. Searches recursively in all topics belonging to this subject." +
-            "The ordering of resources will be based on the rank of resources relative to the topics they belong to.")
-    public List<ResourceIndexDocument> getResources(
-            @PathVariable("id") URI subjectId,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language,
-            @RequestParam(value = "type", required = false, defaultValue = "")
-            @ApiParam(value = "Filter by resource type id(s). If not specified, resources of all types will be returned." +
-                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
-                    URI[] resourceTypeIds,
-            @RequestParam(value = "filter", required = false, defaultValue = "")
-            @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned." +
-                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
-                    URI[] filterIds,
-            @RequestParam(value = "relevance", required = false, defaultValue = "")
-            @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
-                    URI relevance,
-
-            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
-            @RequestParam(required = false, defaultValue = "false")
-                    boolean includeMetadata
-    ) {
-        final var subject = subjectRepository.findFirstByPublicId(subjectId)
-                .orElseThrow(() -> new NotFoundException("Subject", subjectId));
-
-        final var subjectTopicTree = recursiveTopicTreeService.getRecursiveTopics(subject);
-
-        final var topicIds = recursiveTopicTreeService.getRecursiveTopics(subject)
-                .stream()
-                .map(RecursiveTopicTreeService.TopicTreeElement::getTopicId)
-                .collect(Collectors.toList());
-
-        // Populate a tree of subject->topic relations, add the resources to the list and then run sort on the list so all
-        // levels are sorted on rank and relation type
-
-        final Set<TopicResourceTreeSortable> resourcesToSort = new HashSet<>();
-
-        subjectTopicTree.forEach(treeElement -> {
-            if (treeElement.getParentSubjectId().isPresent()) {
-                // This is a subjectTopic connection
-                resourcesToSort.add(new TopicResourceTreeSortable("topic", "subject", treeElement.getTopicId(), treeElement.getParentSubjectId().orElse(0), treeElement.getRank()));
-            } else {
-                // This is a topicSubtopic connection
-                resourcesToSort.add(new TopicResourceTreeSortable("topic", "topic", treeElement.getTopicId(), treeElement.getParentTopicId().orElse(0), treeElement.getRank()));
-            }
-        });
-
-        final Set<URI> filterIdSet = filterIds != null ? Set.of(filterIds) : Set.of();
-        final Set<URI> resourceTypeIdSet = resourceTypeIds != null ? Set.of(resourceTypeIds) : Set.of();
-
-        // If null is sent to query it will be ignored, otherwise it will filter by relevance
-        final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
-
-        final List<TopicResource> topicResources;
-        if (filterIdSet.size() > 0 && resourceTypeIdSet.size() > 0) {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, filterIdSet, resourceTypeIdSet, relevanceArgument);
-        } else if (filterIdSet.size() > 0) {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, filterIdSet, relevanceArgument);
-        } else if (resourceTypeIdSet.size() > 0) {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, resourceTypeIdSet, relevanceArgument);
-        } else {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, relevanceArgument);
-        }
-
-        topicResources.forEach(topicResource -> resourcesToSort.add(new TopicResourceTreeSortable(topicResource)));
-
-        final var sortedTopicResources = topicTreeSorter
-                .sortList(resourcesToSort)
-                .stream()
-                .map(TopicResourceTreeSortable::getTopicResource)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toList());
-
-        return metadataWrapperService.wrapEntities(sortedTopicResources, includeMetadata, (entity) -> entity.getResource().map(Resource::getPublicId).orElse(null)).stream()
-                .map(wrappedTopicResource -> new ResourceIndexDocument(wrappedTopicResource, language))
-                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}/filters")

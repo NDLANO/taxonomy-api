@@ -5,6 +5,7 @@ import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicResource;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
+import no.ndla.taxonomy.service.dtos.ResourceWithTopicConnectionDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -287,7 +288,7 @@ public class TopicResourcesTest extends RestTest {
         }});
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/" + geometry.getPublicId() + "/resources");
-        TopicResources.TopicResourceIndexDocument[] resources = testUtils.getObject(TopicResources.TopicResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
         assertEquals(circles.getPublicId(), resources[0].id);
         assertEquals(squares.getPublicId(), resources[1].id);

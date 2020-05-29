@@ -2,9 +2,9 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
+import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -177,13 +177,13 @@ public class SubjectTranslationsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources?language=nb");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(2, resources.length);
 
         assertAnyTrue(resources, r -> r.name.equals("Introduksjon til trigonometri"));
         assertAnyTrue(resources, r -> r.name.equals("Introduksjon til calculus"));
-        assertAllTrue(resources, r -> r.resourceTypes.iterator().next().name.equals("Artikkel"));
+        assertAllTrue(resources, r -> r.resourceTypes.iterator().next().getName().equals("Artikkel"));
     }
 
     private SubjectIndexDocument getSubject(URI id, String language) throws Exception {

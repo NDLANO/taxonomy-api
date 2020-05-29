@@ -6,8 +6,10 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
-import no.ndla.taxonomy.rest.v1.dtos.topics.TopicIndexDocument;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
+import no.ndla.taxonomy.service.dtos.ResourceDTO;
+import no.ndla.taxonomy.service.dtos.ResourceWithTopicConnectionDTO;
+import no.ndla.taxonomy.service.dtos.TopicDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +52,7 @@ public class TopicsTest extends RestTest {
                 ));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
-        TopicIndexDocument topic = testUtils.getObject(TopicIndexDocument.class, response);
+        final var topic = testUtils.getObject(TopicDTO.class, response);
 
         assertEquals("trigonometry", topic.name);
         assertEquals("urn:article:1", topic.contentUri.toString());
@@ -70,7 +72,7 @@ public class TopicsTest extends RestTest {
                 ));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1?includeMetadata=true");
-        TopicIndexDocument topic = testUtils.getObject(TopicIndexDocument.class, response);
+        final var topic = testUtils.getObject(TopicDTO.class, response);
 
         assertEquals("trigonometry", topic.name);
         assertEquals("urn:article:1", topic.contentUri.toString());
@@ -88,7 +90,7 @@ public class TopicsTest extends RestTest {
         );
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
-        TopicIndexDocument topic = testUtils.getObject(TopicIndexDocument.class, response);
+        final var topic = testUtils.getObject(TopicDTO.class, response);
 
         assertNull(topic.path);
     }
@@ -103,7 +105,7 @@ public class TopicsTest extends RestTest {
                 .topic(t -> t.name("trigonometry")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics");
-        TopicIndexDocument[] topics = testUtils.getObject(TopicIndexDocument[].class, response);
+        final var topics = testUtils.getObject(TopicDTO[].class, response);
         assertEquals(2, topics.length);
 
         assertAnyTrue(topics, t -> "photo synthesis".equals(t.name));
@@ -124,7 +126,7 @@ public class TopicsTest extends RestTest {
                 .topic(t -> t.name("trigonometry")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics?includeMetadata=true");
-        TopicIndexDocument[] topics = testUtils.getObject(TopicIndexDocument[].class, response);
+        final var topics = testUtils.getObject(TopicDTO[].class, response);
         assertEquals(2, topics.length);
 
         assertAnyTrue(topics, t -> "photo synthesis".equals(t.name));
@@ -179,7 +181,7 @@ public class TopicsTest extends RestTest {
         testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
-        TopicIndexDocument[] subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
+        final var subtopics = testUtils.getObject(TopicDTO[].class, response);
         assertEquals(7, subtopics.length, "Unfiltered subtopics");
 
         assertAllTrue(subtopics, subtopic -> subtopic.metadata == null);
@@ -190,7 +192,7 @@ public class TopicsTest extends RestTest {
         testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics?includeMetadata=true");
-        TopicIndexDocument[] subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
+        final var subtopics = testUtils.getObject(TopicDTO[].class, response);
         assertEquals(7, subtopics.length, "Unfiltered subtopics");
 
         assertAllTrue(subtopics, subtopic -> subtopic.metadata != null);
@@ -203,13 +205,17 @@ public class TopicsTest extends RestTest {
     public void can_get_filtered_subtopics() throws Exception {
         testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:1");
-        TopicIndexDocument[] subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
-        assertEquals(3, subtopics.length, "Filter 1 subtopics");
+        {
+            final var response = testUtils.getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:1");
+            final var subtopics = testUtils.getObject(TopicDTO[].class, response);
+            assertEquals(3, subtopics.length, "Filter 1 subtopics");
+        }
 
-        response = testUtils.getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:2");
-        subtopics = testUtils.getObject(TopicIndexDocument[].class, response);
-        assertEquals(4, subtopics.length, "Filter 2 subtopics");
+        {
+            final var response = testUtils.getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:2");
+            final var subtopics = testUtils.getObject(TopicDTO[].class, response);
+            assertEquals(4, subtopics.length, "Filter 2 subtopics");
+        }
     }
 
     private void connectionsHaveCorrectTypes(ConnectionIndexDTO[] connections) {
@@ -353,7 +359,7 @@ public class TopicsTest extends RestTest {
                 .resource()
         );
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources");
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
         assertEquals(first(topic.getTopicResources()).getPublicId(), result[0].connectionId);
     }
@@ -365,7 +371,7 @@ public class TopicsTest extends RestTest {
                 .resource()
         );
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?includeMetadata=true");
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
         assertEquals(first(topic.getTopicResources()).getPublicId(), result[0].connectionId);
         assertAllTrue(result, connection -> connection.metadata != null);
@@ -387,7 +393,7 @@ public class TopicsTest extends RestTest {
         );
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1343/resources?recursive=true");
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
         assertEquals(first(builder.topic("topic").getTopicResources()).getPublicId(), result[0].connectionId);
         assertEquals(first(builder.topic("subtopic").getTopicResources()).getPublicId(), result[1].connectionId);
@@ -422,7 +428,7 @@ public class TopicsTest extends RestTest {
                 ));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:a/resources?recursive=true");
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
         assertEquals(4, result.length);
         assertAnyTrue(result, r -> "resource a".equals(r.name) && "urn:article:a".equals(r.contentUri.toString()));
@@ -436,7 +442,7 @@ public class TopicsTest extends RestTest {
     public void resources_by_topic_id_recursively_are_ordered_by_rank_in_parent() throws Exception {
         testSeeder.resourcesBySubjectIdTestSetup();
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:5/resources?recursive=true");
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
         assertEquals(6, result.length);
         assertEquals("urn:resource:3", result[0].id.toString());
         assertEquals("urn:resource:5", result[1].id.toString());
@@ -469,7 +475,7 @@ public class TopicsTest extends RestTest {
                 ));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:a/resources?recursive=true");
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
         assertEquals(4, result.length);
         assertAnyTrue(result, r -> "/subject:1/topic:a/resource:a".equals(r.path));
@@ -490,7 +496,7 @@ public class TopicsTest extends RestTest {
                 ));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources");
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "resource 1".equals(r.name));
@@ -552,11 +558,11 @@ public class TopicsTest extends RestTest {
         testSeeder.resourceWithFiltersAndRelevancesTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?relevance=urn:relevance:core");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
         assertEquals(10, resources.length);
 
         MockHttpServletResponse response2 = testUtils.getResource("/v1/topics/urn:topic:1/resources?relevance=urn:relevance:supplementary");
-        ResourceIndexDocument[] resources2 = testUtils.getObject(ResourceIndexDocument[].class, response2);
+        final var resources2 = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response2);
         assertEquals(5, resources2.length);
 
     }
@@ -566,11 +572,11 @@ public class TopicsTest extends RestTest {
         testSeeder.resourceWithFiltersAndRelevancesTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?filter=urn:filter:1");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
         assertEquals(5, resources.length);
 
         MockHttpServletResponse response2 = testUtils.getResource("/v1/topics/urn:topic:1/resources?filter=urn:filter:1,urn:filter:2");
-        ResourceIndexDocument[] resources2 = testUtils.getObject(ResourceIndexDocument[].class, response2);
+        final var resources2 = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response2);
         assertEquals(10, resources2.length);
     }
 
@@ -617,22 +623,22 @@ public class TopicsTest extends RestTest {
         TopicResource.create(topic3, resource3);
 
         {
-            final var resources = Arrays.asList(testUtils.getObject(ResourceIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:1/resources")));
+            final var resources = Arrays.asList(testUtils.getObject(ResourceWithTopicConnectionDTO[].class, testUtils.getResource("/v1/topics/urn:topic:1/resources")));
             assertEquals(3, resources.size());
             assertTrue(
                     resources.stream()
-                            .map(ResourceIndexDocument::getId)
+                            .map(ResourceDTO::getId)
                             .collect(Collectors.toSet())
                             .containsAll(Set.of(new URI("urn:resource:1"), new URI("urn:resource:2"), new URI("urn:resource:3")))
             );
         }
 
         {
-            final var resources = Arrays.asList(testUtils.getObject(ResourceIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:1/resources?subject=urn:subject:1")));
+            final var resources = Arrays.asList(testUtils.getObject(ResourceWithTopicConnectionDTO[].class, testUtils.getResource("/v1/topics/urn:topic:1/resources?subject=urn:subject:1")));
             assertEquals(1, resources.size());
             assertTrue(
                     resources.stream()
-                            .map(ResourceIndexDocument::getId)
+                            .map(ResourceDTO::getId)
                             .collect(Collectors.toSet())
                             .contains(new URI("urn:resource:1"))
             );

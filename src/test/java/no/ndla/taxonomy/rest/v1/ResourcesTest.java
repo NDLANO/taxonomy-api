@@ -8,10 +8,10 @@ import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
-import no.ndla.taxonomy.rest.v1.dtos.resources.ParentTopicIndexDocument;
-import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceFullIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceIndexDocument;
-import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceTypeIndexDocument;
+import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ResourceWithParentTopicsDTO;
+import no.ndla.taxonomy.service.dtos.TopicWithResourceConnectionDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -269,10 +269,10 @@ public class ResourcesTest extends RestTest {
         );
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1/resource-types");
-        ResourceTypeIndexDocument[] result = testUtils.getObject(ResourceTypeIndexDocument[].class, response);
+        final var result = testUtils.getObject(ResourceTypeWithConnectionDTO[].class, response);
         assertEquals(2, result.length);
-        assertAnyTrue(result, rt -> rt.name.equals("Article") && rt.id.toString().equals("urn:resourcetype:2") && rt.parentId.toString().equals("urn:resourcetype:1") && rt.connectionId.toString().contains("urn:resource-resourcetype"));
-        assertAnyTrue(result, rt -> rt.name.equals("Video") && rt.id.toString().equals("urn:resourcetype:3") && rt.parentId.toString().equals("urn:resourcetype:1"));
+        assertAnyTrue(result, rt -> rt.getName().equals("Article") && rt.getId().toString().equals("urn:resourcetype:2") && rt.getParentId().toString().equals("urn:resourcetype:1") && rt.getConnectionId().toString().contains("urn:resource-resourcetype"));
+        assertAnyTrue(result, rt -> rt.getName().equals("Video") && rt.getId().toString().equals("urn:resourcetype:3") && rt.getParentId().toString().equals("urn:resourcetype:1"));
     }
 
     @Test
@@ -304,16 +304,16 @@ public class ResourcesTest extends RestTest {
                 .resource(resource, true));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/" + resource.getPublicId() + "/full");
-        ResourceFullIndexDocument result = testUtils.getObject(ResourceFullIndexDocument.class, response);
+        final var result = testUtils.getObject(ResourceWithParentTopicsDTO.class, response);
 
         assertEquals(resource.getPublicId(), result.id);
         assertEquals(resource.getName(), result.name);
         assertEquals(1, result.resourceTypes.size());
-        assertEquals(resourceType.getName(), result.resourceTypes.iterator().next().name);
+        assertEquals(resourceType.getName(), result.getResourceTypes().iterator().next().getName());
         assertEquals(1, result.filters.size());
-        assertEquals(filter.getName(), result.filters.iterator().next().name);
+        assertEquals(filter.getName(), result.getFilters().iterator().next().getName());
         assertEquals(1, result.parentTopics.size());
-        ParentTopicIndexDocument t = result.parentTopics.iterator().next();
+        final TopicWithResourceConnectionDTO t = result.getParentTopics().iterator().next();
         assertEquals(topic.getName(), t.name);
         assertTrue(t.isPrimary);
         assertEquals(URI.create("urn:article:6662"), t.contentUri);
@@ -324,7 +324,7 @@ public class ResourcesTest extends RestTest {
         testSeeder.resourceInDualSubjectsTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1/full");
-        ResourceFullIndexDocument result = testUtils.getObject(ResourceFullIndexDocument.class, response);
+        final var result = testUtils.getObject(ResourceWithParentTopicsDTO.class, response);
         assertNotNull(result.paths);
         assertEquals(2, result.paths.size());
     }

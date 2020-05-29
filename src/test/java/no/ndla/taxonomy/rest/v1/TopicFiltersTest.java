@@ -5,8 +5,8 @@ import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.rest.v1.dtos.topics.FilterIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
+import no.ndla.taxonomy.service.dtos.FilterWithConnectionDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -55,12 +55,12 @@ public class TopicFiltersTest extends RestTest {
         );
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/filters");
-        FilterIndexDocument[] filters = testUtils.getObject(FilterIndexDocument[].class, response);
+        final var filters = testUtils.getObject(FilterWithConnectionDTO[].class, response);
 
         assertEquals(2, filters.length);
-        assertAnyTrue(filters, f -> f.id.equals(vg1.getPublicId()));
-        assertAnyTrue(filters, f -> f.id.equals(vg2.getPublicId()));
-        assertAllTrue(filters, f -> f.relevanceId.equals(core.getPublicId()));
+        assertAnyTrue(filters, f -> f.getId().equals(vg1.getPublicId()));
+        assertAnyTrue(filters, f -> f.getId().equals(vg2.getPublicId()));
+        assertAllTrue(filters, f -> f.getRelevanceId().equals(core.getPublicId()));
     }
 
     @Test

@@ -8,9 +8,10 @@ import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
-import no.ndla.taxonomy.rest.v1.dtos.subjects.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
+import no.ndla.taxonomy.service.dtos.ResourceDTO;
+import no.ndla.taxonomy.service.dtos.ResourceWithTopicConnectionDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -359,7 +360,7 @@ public class SubjectsTest extends RestTest {
         testSeeder.resourcesBySubjectIdTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/resources");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(10, resources.length);
         assertEquals("R:9", resources[0].name);
@@ -380,7 +381,7 @@ public class SubjectsTest extends RestTest {
 
         //filter 1
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/resources?filter=urn:filter:1");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(5, resources.length);
         assertEquals("R:9", resources[0].name);
@@ -391,7 +392,7 @@ public class SubjectsTest extends RestTest {
 
         //filter 2
         MockHttpServletResponse response2 = testUtils.getResource("/v1/subjects/urn:subject:1/resources?filter=urn:filter:2");
-        ResourceIndexDocument[] resources2 = testUtils.getObject(ResourceIndexDocument[].class, response2);
+        final var resources2 = testUtils.getObject(ResourceDTO[].class, response2);
 
         assertEquals(5, resources2.length);
         assertEquals("R:2", resources2[0].name);
@@ -412,7 +413,7 @@ public class SubjectsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals("urn:article:1", resources[0].contentUri.toString());
     }
@@ -433,10 +434,10 @@ public class SubjectsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
-        assertEquals("urn:filter:vg1", first(resources[0].filters).id.toString());
-        assertEquals("urn:relevance:core", first(resources[0].filters).relevanceId.toString());
+        assertEquals("urn:filter:vg1", first(resources[0].filters).getId().toString());
+        assertEquals("urn:relevance:core", first(resources[0].filters).getRelevanceId().toString());
     }
 
     @Test
@@ -454,7 +455,7 @@ public class SubjectsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
         assertEquals(3, resources.length);
 
@@ -480,7 +481,7 @@ public class SubjectsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources?includeMetadata=true");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
         assertEquals(3, resources.length);
 
@@ -512,7 +513,7 @@ public class SubjectsTest extends RestTest {
         );
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/resources");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(3, resources.length);
         assertAnyTrue(resources, r -> r.path.equals("/subject:1/topic:1/resource:1"));
