@@ -114,6 +114,37 @@ public class TopicsTest extends RestTest {
     }
 
     @Test
+    public void can_get_topics_by_contentURI() throws Exception {
+        builder.subject(s -> s
+                .name("Basic science")
+                .topic(t -> {
+                    t.name("photo synthesis");
+                    t.contentUri(URI.create("urn:test:1"));
+                }));
+        builder.subject(s -> s
+                .name("Maths")
+                .topic(t -> {
+                    t.name("trigonometry");
+                    t.contentUri(URI.create("urn:test:2"));
+                }));
+
+        {
+            final var response = testUtils.getResource("/v1/topics?contentURI=urn:test:1");
+            final var topics = testUtils.getObject(TopicDTO[].class, response);
+            assertEquals(1, topics.length);
+            assertEquals("photo synthesis", topics[0].getName());
+        }
+
+        {
+            final var response = testUtils.getResource("/v1/topics?contentURI=urn:test:2");
+            final var topics = testUtils.getObject(TopicDTO[].class, response);
+            assertEquals(1, topics.length);
+            assertEquals("trigonometry", topics[0].getName());
+        }
+    }
+
+
+    @Test
     public void can_get_all_topics_with_metadata() throws Exception {
         builder.subject(s -> s
                 .name("Basic science")

@@ -5,7 +5,6 @@ import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
-import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceIndexDocument;
 import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,13 +45,13 @@ public class ResourcesTest extends RestTest {
                         )));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
-        ResourceIndexDocument resource = testUtils.getObject(ResourceIndexDocument.class, response);
+        final var resource = testUtils.getObject(ResourceDTO.class, response);
 
-        assertEquals("introduction to trigonometry", resource.name);
-        assertEquals("urn:article:1", resource.contentUri.toString());
-        assertEquals("/subject:1/topic:1/resource:1", resource.path);
+        assertEquals("introduction to trigonometry", resource.getName());
+        assertEquals("urn:article:1", resource.getContentUri().toString());
+        assertEquals("/subject:1/topic:1/resource:1", resource.getPath());
 
-        assertNull(resource.metadata);
+        assertNull(resource.getMetadata());
     }
 
     @Test
@@ -68,14 +67,14 @@ public class ResourcesTest extends RestTest {
                         )));
 
         final var response = testUtils.getResource("/v1/resources/urn:resource:1?includeMetadata=true");
-        final var resource = testUtils.getObject(ResourceIndexDocument.class, response);
+        final var resource = testUtils.getObject(ResourceDTO.class, response);
 
-        assertEquals("introduction to trigonometry", resource.name);
-        assertEquals("urn:article:1", resource.contentUri.toString());
-        assertEquals("/subject:1/topic:1/resource:1", resource.path);
+        assertEquals("introduction to trigonometry", resource.getName());
+        assertEquals("urn:article:1", resource.getContentUri().toString());
+        assertEquals("/subject:1/topic:1/resource:1", resource.getPath());
 
-        assertTrue(resource.metadata.isVisible());
-        assertTrue(resource.metadata.getGrepCodes().size() == 1 && resource.metadata.getGrepCodes().contains("RESOURCE1"));
+        assertTrue(resource.getMetadata().isVisible());
+        assertTrue(resource.getMetadata().getGrepCodes().size() == 1 && resource.getMetadata().getGrepCodes().contains("RESOURCE1"));
     }
 
     @Test
@@ -96,9 +95,9 @@ public class ResourcesTest extends RestTest {
         );
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
-        ResourceIndexDocument resource = testUtils.getObject(ResourceIndexDocument.class, response);
+        final var resource = testUtils.getObject(ResourceDTO.class, response);
 
-        assertEquals("/subject:2/topic:2/resource:1", resource.path);
+        assertEquals("/subject:2/topic:2/resource:1", resource.getPath());
     }
 
     @Test
@@ -108,9 +107,9 @@ public class ResourcesTest extends RestTest {
         );
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
-        ResourceIndexDocument resource = testUtils.getObject(ResourceIndexDocument.class, response);
+        final var resource = testUtils.getObject(ResourceDTO.class, response);
 
-        assertNull(resource.path);
+        assertNull(resource.getPath());
     }
 
     @Test
@@ -121,15 +120,45 @@ public class ResourcesTest extends RestTest {
         final var allResources = resourceRepository.findAll();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(2, resources.length);
-        assertAnyTrue(resources, s -> "The inner planets".equals(s.name));
-        assertAnyTrue(resources, s -> "Gas giants".equals(s.name));
-        assertAllTrue(resources, s -> isValidId(s.id));
-        assertAllTrue(resources, r -> !r.path.isEmpty());
+        assertAnyTrue(resources, s -> "The inner planets".equals(s.getName()));
+        assertAnyTrue(resources, s -> "Gas giants".equals(s.getName()));
+        assertAllTrue(resources, s -> isValidId(s.getId()));
+        assertAllTrue(resources, r -> !r.getPath().isEmpty());
 
-        assertAllTrue(resources, r -> r.metadata == null);
+        assertAllTrue(resources, r -> r.getMetadata() == null);
+    }
+
+    @Test
+    public void can_get_resources_by_contentURI() throws Exception {
+        builder.subject(s -> s.topic(t -> t.resource(true, r -> {
+            r.name("The inner planets");
+            r.contentUri("urn:test:1");
+        })));
+
+        builder.subject(s -> s.topic(t -> t.resource(true, r -> {
+            r.name("Gas giants");
+            r.contentUri("urn:test:2");
+        })));
+
+
+        {
+            final var response = testUtils.getResource("/v1/resources?contentURI=urn:test:1");
+            final var resources = testUtils.getObject(ResourceDTO[].class, response);
+
+            assertEquals(1, resources.length);
+            assertEquals("The inner planets", resources[0].getName());
+        }
+
+        {
+            final var response = testUtils.getResource("/v1/resources?contentURI=urn:test:2");
+            final var resources = testUtils.getObject(ResourceDTO[].class, response);
+
+            assertEquals(1, resources.length);
+            assertEquals("Gas giants", resources[0].getName());
+        }
     }
 
     @Test
@@ -138,17 +167,17 @@ public class ResourcesTest extends RestTest {
         builder.subject(s -> s.topic(t -> t.resource(true, r -> r.name("Gas giants"))));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources?includeMetadata=true");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(2, resources.length);
-        assertAnyTrue(resources, s -> "The inner planets".equals(s.name));
-        assertAnyTrue(resources, s -> "Gas giants".equals(s.name));
-        assertAllTrue(resources, s -> isValidId(s.id));
-        assertAllTrue(resources, r -> !r.path.isEmpty());
+        assertAnyTrue(resources, s -> "The inner planets".equals(s.getName()));
+        assertAnyTrue(resources, s -> "Gas giants".equals(s.getName()));
+        assertAllTrue(resources, s -> isValidId(s.getId()));
+        assertAllTrue(resources, r -> !r.getPath().isEmpty());
 
-        assertAllTrue(resources, r -> r.metadata != null);
-        assertAllTrue(resources, r -> r.metadata.isVisible());
-        assertAllTrue(resources, r -> r.metadata.getGrepCodes().size() == 1);
+        assertAllTrue(resources, r -> r.getMetadata() != null);
+        assertAllTrue(resources, r -> r.getMetadata().isVisible());
+        assertAllTrue(resources, r -> r.getMetadata().getGrepCodes().size() == 1);
     }
 
     @Test
@@ -241,9 +270,9 @@ public class ResourcesTest extends RestTest {
         URI id = resource.getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/" + id);
-        ResourceIndexDocument result = testUtils.getObject(ResourceIndexDocument.class, response);
+        final var result = testUtils.getObject(ResourceDTO.class, response);
 
-        assertEquals(id, result.id);
+        assertEquals(id, result.getId());
     }
 
     @Test

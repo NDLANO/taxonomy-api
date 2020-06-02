@@ -45,20 +45,25 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
 
     @GetMapping
     @ApiOperation("Gets all topics")
-    @Transactional
     public List<TopicDTO> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language,
+
+            @ApiParam(value = "Filter by contentUri")
+            @RequestParam(value = "contentURI", required = false)
+                    URI contentUriFilter,
+
             @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
             @RequestParam(required = false, defaultValue = "false")
                     boolean includeMetadata
     ) {
 
-        return metadataWrapperService.wrapEntities(topicRepository.findAllIncludingCachedUrlsAndTranslations(), includeMetadata)
-                .stream()
-                .map(topic -> new TopicDTO(topic, language))
-                .collect(Collectors.toList());
+        if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
+            contentUriFilter = null;
+        }
+
+        return topicService.getTopics(language, contentUriFilter, includeMetadata);
     }
 
 
@@ -145,13 +150,16 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
+
             @RequestParam(value = "subject", required = false, defaultValue = "")
             @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.")
                     URI subjectId,
+
             @RequestParam(value = "filter", required = false, defaultValue = "")
             @ApiParam(value = "Select by filter id(s). If not specified, all subtopics connected to this topic will be returned." +
                     "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
                     URI[] filterIds,
+
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language,
