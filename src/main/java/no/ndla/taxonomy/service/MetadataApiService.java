@@ -11,7 +11,9 @@ public interface MetadataApiService {
 
     Set<MetadataDto> getMetadataByPublicId(Collection<URI> publicIds);
 
-    MetadataDto updateMetadataByPublicId(URI publicId, MetadataDto metadataApiEntity);
+    MetadataDto updateMetadataByPublicId(URI publicId, MetadataDto metadataDto);
+
+    Set<MetadataDto> updateMetadataByPublicIds(Set<URI> publicIds, MetadataDto metaDataDto);
 
     void deleteMetadataByPublicId(URI publicId);
 }

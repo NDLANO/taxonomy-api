@@ -12,10 +12,12 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -77,7 +79,7 @@ public class MetadataApiServiceImpl implements MetadataApiService {
         }
     }
 
-    private Set<MetadataDto> doBulkRead(Collection<URI> publicIds) {
+    private List<MetadataDto> doBulkRead(Collection<URI> publicIds) {
         if (publicIds.size() > 100) {
             throw new IllegalArgumentException("More than 100 entities in request");
         }
@@ -93,7 +95,7 @@ public class MetadataApiServiceImpl implements MetadataApiService {
 
             return Arrays.stream(returnedEntities)
                     .map(MetadataDto::new)
-                    .collect(Collectors.toSet());
+                    .collect(Collectors.toList());
         } catch (RestClientException exception) {
             throw new ServiceUnavailableException(exception);
         }
@@ -102,18 +104,46 @@ public class MetadataApiServiceImpl implements MetadataApiService {
 
     @Override
     public Set<MetadataDto> getMetadataByPublicId(Collection<URI> publicIds) {
+        return doBulkActionAndReturnDtos(publicIds, this::doBulkRead);
+    }
 
+    private List<MetadataDto> doBulkUpdate(Collection<URI> publicIds, MetadataDto metadataDto) {
+        if (publicIds.size() == 0) {
+            return List.of();
+        }
+
+        // Clones the request DTO into one object for each publicId to update
+        final var requestObjects = publicIds.stream()
+                .map(publicId -> {
+                    final var clonedMetadataDto = MetadataDto.of(metadataDto);
+                    clonedMetadataDto.setPublicId(publicId.toString());
+                    return clonedMetadataDto;
+                })
+                .map(MetadataApiEntity::new)
+                .collect(Collectors.toSet());
+
+        try {
+            restTemplate.put(getServiceUrl() + "/v1/taxonomy_entities/", requestObjects);
+
+            return doBulkRead(publicIds);
+        } catch (RestClientException exception) {
+            throw new ServiceUnavailableException(exception);
+        }
+    }
+
+    private Set<MetadataDto> doBulkActionAndReturnDtos(Collection<URI> publicIds, Function<Collection<URI>, List<MetadataDto>> action) {
         // Splits the collection of IDs into lists of maximum 100 entries each
         final var counter = new AtomicInteger(0);
         final var chunks = publicIds.stream()
                 .collect(Collectors.groupingBy(iterator -> counter.getAndIncrement() / 100))
                 .values();
 
-        // Read each list in parallel from the metadata service
+        // Do action and return on each of the 100 entry chunks
         final var metadataFutureEntries = chunks.stream()
-                .map(list -> executor.submit(() -> doBulkRead(list)))
+                .map(list -> executor.submit(() -> action.apply(list)))
                 .collect(Collectors.toSet());
 
+        // Converts the list of futures into flat list of DTOs to return
         return metadataFutureEntries.stream()
                 .map(futureSet -> {
                     try {
@@ -124,5 +154,11 @@ public class MetadataApiServiceImpl implements MetadataApiService {
                 })
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
+    }
+
+
+    @Override
+    public Set<MetadataDto> updateMetadataByPublicIds(Set<URI> publicIds, MetadataDto metaDataDto) {
+        return doBulkActionAndReturnDtos(publicIds, list -> doBulkUpdate(list, metaDataDto));
     }
 }
