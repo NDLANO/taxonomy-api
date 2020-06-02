@@ -1,7 +1,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.rest.v1.dtos.resources.ResourceIndexDocument;
+import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -20,11 +20,11 @@ public class ResourceTranslationsTest extends RestTest {
         builder.resource(r -> r.name("Gas giants").translation("nb", tr -> tr.name("Gasskjemper")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources?language=nb");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(2, resources.length);
-        assertAnyTrue(resources, s -> "De indre planetene".equals(s.name));
-        assertAnyTrue(resources, s -> "Gasskjemper".equals(s.name));
+        assertAnyTrue(resources, s -> "De indre planetene".equals(s.getName()));
+        assertAnyTrue(resources, s -> "Gasskjemper".equals(s.getName()));
     }
 
     @Test
@@ -35,9 +35,9 @@ public class ResourceTranslationsTest extends RestTest {
         ).getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/" + trigonometry + "?language=nb");
-        ResourceIndexDocument resource = testUtils.getObject(ResourceIndexDocument.class, response);
+        final var resource = testUtils.getObject(ResourceDTO.class, response);
 
-        assertEquals("Introduksjon til trigonometri", resource.name);
+        assertEquals("Introduksjon til trigonometri", resource.getName());
     }
 
     @Test
@@ -45,8 +45,8 @@ public class ResourceTranslationsTest extends RestTest {
         URI id = builder.resource(t -> t
                 .name("Introduction to algrebra")
         ).getPublicId();
-        ResourceIndexDocument resource = getResourceIndexDocument(id, "XX");
-        assertEquals("Introduction to algrebra", resource.name);
+        final var resource = getResourceIndexDocument(id, "XX");
+        assertEquals("Introduction to algrebra", resource.getName());
     }
 
     @Test
@@ -58,8 +58,8 @@ public class ResourceTranslationsTest extends RestTest {
                 )
         ).getPublicId();
 
-        ResourceIndexDocument resource = getResourceIndexDocument(id, null);
-        assertEquals("Introduction to algrebra", resource.name);
+        final var resource = getResourceIndexDocument(id, null);
+        assertEquals("Introduction to algrebra", resource.getName());
     }
 
     @Test
@@ -71,7 +71,7 @@ public class ResourceTranslationsTest extends RestTest {
             name = "Introduksjon til algebra";
         }});
 
-        assertEquals("Introduksjon til algebra", resource.getTranslation("nb").get().getName());
+        assertEquals("Introduksjon til algebra", resource.getTranslation("nb").orElseThrow().getName());
     }
 
     @Test
@@ -121,10 +121,10 @@ public class ResourceTranslationsTest extends RestTest {
         assertEquals("nb", translation.language);
     }
 
-    private ResourceIndexDocument getResourceIndexDocument(URI id, String language) throws Exception {
+    private ResourceDTO getResourceIndexDocument(URI id, String language) throws Exception {
         String path = "/v1/resources/" + id;
         if (isNotEmpty(language)) path = path + "?language=" + language;
-        return testUtils.getObject(ResourceIndexDocument.class, testUtils.getResource(path));
+        return testUtils.getObject(ResourceDTO.class, testUtils.getResource(path));
     }
 
 }

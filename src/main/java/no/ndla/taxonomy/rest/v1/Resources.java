@@ -57,11 +57,19 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language,
 
+            @RequestParam(value = "contentURI", required = false)
+            @ApiParam(value = "Filter by contentUri")
+                    URI contentUriFilter,
+
             @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
             @RequestParam(required = false, defaultValue = "false")
                     boolean includeMetadata
     ) {
-        return resourceService.getResources(language, includeMetadata);
+        if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
+            contentUriFilter = null;
+        }
+
+        return resourceService.getResources(language, contentUriFilter, includeMetadata);
     }
 
     @GetMapping("/v1/resources/{id}")

@@ -1,12 +1,14 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Filter;
+import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
 import no.ndla.taxonomy.service.dtos.SubTopicIndexDTO;
+import no.ndla.taxonomy.service.dtos.TopicDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,6 +52,22 @@ public class TopicServiceImpl implements TopicService {
         topicRepository.flush();
 
         metadataApiService.deleteMetadataByPublicId(publicId);
+    }
+
+    @Override
+    public List<TopicDTO> getTopics(String languageCode, URI contentUriFilter, boolean includeMetadata) {
+        final List<Topic> filteredTopics;
+
+        if (contentUriFilter != null) {
+            filteredTopics = topicRepository.findAllByContentUriIncludingCachedUrlsAndTranslations(contentUriFilter);
+        } else {
+            filteredTopics = topicRepository.findAllIncludingCachedUrlsAndTranslations();
+        }
+
+        return metadataEntityWrapperService.wrapEntities(filteredTopics, includeMetadata)
+                .stream()
+                .map(topic -> new TopicDTO(topic, languageCode))
+                .collect(Collectors.toList());
     }
 
     @Override

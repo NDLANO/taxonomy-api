@@ -13,12 +13,9 @@ import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.validation.constraints.NotNull;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -95,8 +92,8 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    public List<ResourceWithTopicConnectionDTO> getResourcesBySubjectId(@NotNull URI subjectPublicId, @NotNull Set<URI> filterIds,
-                                                                        @NotNull Set<URI> resourceTypeIds, URI relevance,
+    public List<ResourceWithTopicConnectionDTO> getResourcesBySubjectId(URI subjectPublicId, Set<URI> filterIds,
+                                                                        Set<URI> resourceTypeIds, URI relevance,
                                                                         String language, boolean includeMetadata) {
         final var subject = domainEntityHelperService.getSubjectByPublicId(subjectPublicId);
 
@@ -168,7 +165,7 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    public ResourceDTO getResourceByPublicId(@NotNull URI publicId, String languageCode, boolean includeMetadata) {
+    public ResourceDTO getResourceByPublicId(URI publicId, String languageCode, boolean includeMetadata) {
         final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
 
@@ -176,18 +173,42 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    public ResourceWithParentTopicsDTO getResourceWithParentTopicsByPublicId(@NotNull URI publicId, String languageCode) {
+    public ResourceWithParentTopicsDTO getResourceWithParentTopicsByPublicId(URI publicId, String languageCode) {
         final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
 
         return new ResourceWithParentTopicsDTO(resource, languageCode);
     }
 
-    @Override
-    public List<ResourceDTO> getResources(String languageCode, boolean includeMetadata) {
-        return metadataEntityWrapperService.wrapEntities(resourceRepository.findAllIncludingCachedUrlsAndTranslations(), includeMetadata)
+    private List<ResourceDTO> createDto(List<Resource> resources, String languageCode, boolean includeMetadata) {
+        return metadataEntityWrapperService.wrapEntities(resources, includeMetadata)
                 .stream()
                 .map(wrappedResource -> new ResourceDTO(wrappedResource, languageCode))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ResourceDTO> getResources(String languageCode, URI contentUriFilter, boolean includeMetadata) {
+        final List<ResourceDTO> listToReturn = new ArrayList<>();
+
+        if (contentUriFilter != null) {
+            return createDto(resourceRepository.findAllByContentUriIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(contentUriFilter), languageCode, includeMetadata);
+        } else {
+            // Get all resource ids and chunk it in requests with all relations small enough to not create a huge heap space usage peak
+
+            final var allResourceIds = resourceRepository.getAllResourceIds();
+
+            final var counter = new AtomicInteger();
+
+            allResourceIds.stream()
+                    .collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000))
+                    .values()
+                    .forEach(idChunk -> {
+                        final var resources = resourceRepository.findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
+                        listToReturn.addAll(createDto(resources, languageCode, includeMetadata));
+                    });
+        }
+
+        return listToReturn;
     }
 }
