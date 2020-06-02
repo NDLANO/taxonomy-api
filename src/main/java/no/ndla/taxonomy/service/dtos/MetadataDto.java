@@ -16,21 +16,40 @@ public class MetadataDto {
     private Set<String> grepCodes;
 
     @ApiModelProperty
-    private boolean visible;
+    private Boolean visible;
 
     public MetadataDto() {
 
     }
 
     public MetadataDto(MetadataApiEntity metadataApiEntity) {
-        this.grepCodes = new HashSet<>();
         this.publicId = metadataApiEntity.getPublicId();
-        this.visible = metadataApiEntity.isVisible();
+        this.visible = metadataApiEntity.isVisible().orElse(null);
 
         metadataApiEntity.getCompetenceAims()
-                .stream()
-                .map(MetadataApiEntity.CompetenceAim::getCode)
-                .forEach(grepCodes::add);
+                .ifPresent(competenceAims -> {
+                    grepCodes = new HashSet<>();
+                    competenceAims.stream()
+                            .map(MetadataApiEntity.CompetenceAim::getCode)
+                            .forEach(this::addGrepCode);
+                });
+    }
+
+    public static MetadataDto of(MetadataDto metadataDto) {
+        final var newMetadataDto = new MetadataDto();
+        newMetadataDto.setPublicId(metadataDto.getPublicId());
+        newMetadataDto.setGrepCodes(metadataDto.getGrepCodes());
+        newMetadataDto.setVisible(metadataDto.isVisible());
+
+        return newMetadataDto;
+    }
+
+    private void addGrepCode(String grepCode) {
+        if (this.grepCodes == null) {
+            grepCodes = new HashSet<>();
+        }
+
+        grepCodes.add(grepCode);
     }
 
     public Set<String> getGrepCodes() {
@@ -49,11 +68,11 @@ public class MetadataDto {
         this.publicId = publicId;
     }
 
-    public boolean isVisible() {
+    public Boolean isVisible() {
         return visible;
     }
 
-    public void setVisible(boolean visible) {
+    public void setVisible(Boolean visible) {
         this.visible = visible;
     }
 }

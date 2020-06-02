@@ -63,8 +63,12 @@ public class Topic extends EntityWithPath {
 
     @Override
     public Set<EntityWithPathConnection> getChildConnections() {
-        return Stream.concat(childTopicSubtopics.stream(), topicResources.stream())
-                .collect(Collectors.toUnmodifiableSet());
+        final var toReturn = new HashSet<EntityWithPathConnection>();
+
+        toReturn.addAll(getChildrenTopicSubtopics());
+        toReturn.addAll(getTopicResources());
+
+        return toReturn;
     }
 
     public Topic name(String name) {
@@ -158,7 +162,9 @@ public class Topic extends EntityWithPath {
     }
 
     public Set<TopicResource> getTopicResources() {
-        return this.topicResources.stream().collect(Collectors.toUnmodifiableSet());
+        return this.topicResources
+                .stream()
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     public void addTopicResource(TopicResource topicResource) {

@@ -32,10 +32,10 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
     public Topics(TopicRepository topicRepository,
                   TopicResourceTypeService topicResourceTypeService,
                   TopicService topicService,
-                  MetadataApiService metadataApiService,
+                  MetadataUpdateService metadataUpdateService,
                   MetadataEntityWrapperService metadataWrapperService,
                   CachedUrlUpdaterService cachedUrlUpdaterService) {
-        super(topicRepository, metadataApiService, cachedUrlUpdaterService);
+        super(topicRepository, metadataUpdateService, cachedUrlUpdaterService);
 
         this.topicRepository = topicRepository;
         this.metadataWrapperService = metadataWrapperService;

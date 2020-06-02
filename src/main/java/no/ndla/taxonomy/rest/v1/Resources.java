@@ -9,7 +9,7 @@ import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
-import no.ndla.taxonomy.service.MetadataApiService;
+import no.ndla.taxonomy.service.MetadataUpdateService;
 import no.ndla.taxonomy.service.ResourceService;
 import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.http.HttpStatus;
@@ -34,9 +34,9 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
     public Resources(ResourceRepository resourceRepository,
                      ResourceResourceTypeRepository resourceResourceTypeRepository,
                      ResourceFilterRepository resourceFilterRepository,
-                     ResourceService resourceService, MetadataApiService metadataApiService,
+                     ResourceService resourceService, MetadataUpdateService metadataUpdateService,
                      CachedUrlUpdaterService cachedUrlUpdaterService) {
-        super(resourceRepository, metadataApiService, cachedUrlUpdaterService);
+        super(resourceRepository, metadataUpdateService, cachedUrlUpdaterService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceFilterRepository = resourceFilterRepository;
@@ -166,7 +166,8 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
 
     @GetMapping("/v1/subjects/{subjectId}/resources")
     @ApiOperation(value = "Gets all resources for a subject. Searches recursively in all topics belonging to this subject." +
-            "The ordering of resources will be based on the rank of resources relative to the topics they belong to.")
+            "The ordering of resources will be based on the rank of resources relative to the topics they belong to.",
+            tags = {"subjects"})
     public List<ResourceWithTopicConnectionDTO> getResourcesForSubject(
             @PathVariable("subjectId") URI subjectId,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
@@ -198,7 +199,7 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
     }
 
     @GetMapping("/v1/topics/{id}/resources")
-    @ApiOperation(value = "Gets all resources for the given topic")
+    @ApiOperation(value = "Gets all resources for the given topic", tags = {"topics"})
     public List<ResourceWithTopicConnectionDTO> getResources(
             @ApiParam(value = "id", required = true)
             @PathVariable("id") URI topicId,

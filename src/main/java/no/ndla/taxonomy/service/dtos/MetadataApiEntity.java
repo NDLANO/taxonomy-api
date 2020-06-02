@@ -1,21 +1,39 @@
 package no.ndla.taxonomy.service.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class MetadataApiEntity {
     private String publicId;
+
+    @JsonProperty
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<CompetenceAim> competenceAims = new HashSet<>();
-    private boolean visible;
+
+    @JsonProperty
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Boolean visible;
 
     public MetadataApiEntity() {
 
     }
 
     public MetadataApiEntity(MetadataDto entityMetadataObject) {
-        entityMetadataObject.getGrepCodes().forEach(aim -> addCompetenceAim(new CompetenceAim(aim)));
+        if (entityMetadataObject.getGrepCodes() != null) {
+            this.competenceAims = new HashSet<>();
+            entityMetadataObject.getGrepCodes().forEach(aim -> addCompetenceAim(new CompetenceAim(aim)));
+        } else {
+            competenceAims = null;
+        }
+
         this.visible = entityMetadataObject.isVisible();
+        this.publicId = entityMetadataObject.getPublicId();
     }
 
     public String getPublicId() {
@@ -26,15 +44,20 @@ public class MetadataApiEntity {
         this.publicId = publicId;
     }
 
-    public Set<CompetenceAim> getCompetenceAims() {
-        return competenceAims.stream().collect(Collectors.toUnmodifiableSet());
+    @JsonIgnore
+    public Optional<Set<CompetenceAim>> getCompetenceAims() {
+        if (competenceAims == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(competenceAims.stream().collect(Collectors.toUnmodifiableSet()));
     }
 
-    public boolean isVisible() {
-        return visible;
+    public Optional<Boolean> isVisible() {
+        return Optional.ofNullable(visible);
     }
 
-    public void setVisible(boolean visible) {
+    public void setVisible(Boolean visible) {
         this.visible = visible;
     }
 
@@ -43,10 +66,18 @@ public class MetadataApiEntity {
     }
 
     public void addCompetenceAim(CompetenceAim competenceAim) {
+        if (competenceAims == null) {
+            competenceAims = new HashSet<>();
+        }
+
         this.competenceAims.add(competenceAim);
     }
 
     public void removeCompetenceAim(CompetenceAim competenceAim) {
+        if (competenceAims == null) {
+            return;
+        }
+
         this.competenceAims.remove(competenceAim);
     }
 
