@@ -19,6 +19,9 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
     @ApiParam
     private int rank;
 
+    @ApiParam
+    private boolean primary;
+
     public ResourceWithTopicConnectionDTO() {
 
     }
@@ -38,6 +41,7 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
 
         this.connectionId = topicResource.getPublicId();
         this.rank = topicResource.getRank();
+        this.primary = topicResource.isPrimary().get();
     }
 
     public URI getTopicId() {
