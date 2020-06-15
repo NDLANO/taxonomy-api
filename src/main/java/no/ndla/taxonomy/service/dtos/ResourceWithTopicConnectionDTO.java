@@ -7,7 +7,6 @@ import no.ndla.taxonomy.domain.TopicResource;
 import no.ndla.taxonomy.service.MetadataWrappedEntity;
 
 import java.net.URI;
-import java.util.Optional;
 
 @ApiModel("ResourceWithTopicConnection")
 public class ResourceWithTopicConnectionDTO extends ResourceDTO {
