@@ -7,6 +7,7 @@ import no.ndla.taxonomy.domain.TopicResource;
 import no.ndla.taxonomy.service.MetadataWrappedEntity;
 
 import java.net.URI;
+import java.util.Optional;
 
 @ApiModel("ResourceWithTopicConnection")
 public class ResourceWithTopicConnectionDTO extends ResourceDTO {
@@ -18,6 +19,9 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
 
     @ApiParam
     private int rank;
+
+    @ApiParam
+    private boolean primary;
 
     public ResourceWithTopicConnectionDTO() {
 
@@ -38,6 +42,7 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
 
         this.connectionId = topicResource.getPublicId();
         this.rank = topicResource.getRank();
+        this.primary = topicResource.isPrimary().get();
     }
 
     public URI getTopicId() {
