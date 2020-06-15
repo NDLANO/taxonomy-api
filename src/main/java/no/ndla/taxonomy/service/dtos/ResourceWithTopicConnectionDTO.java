@@ -41,7 +41,7 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
 
         this.connectionId = topicResource.getPublicId();
         this.rank = topicResource.getRank();
-        this.primary = topicResource.isPrimary().get();
+        this.primary = topicResource.isPrimary().orElse(false);
     }
 
     public URI getTopicId() {
@@ -54,5 +54,9 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
 
     public int getRank() {
         return rank;
+    }
+
+    public boolean isPrimary() {
+        return primary;
     }
 }

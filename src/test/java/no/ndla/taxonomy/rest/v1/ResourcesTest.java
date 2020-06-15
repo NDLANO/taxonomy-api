@@ -450,6 +450,7 @@ public class ResourcesTest extends RestTest {
         assertAnyTrue(result, r -> "resource aaa".equals(r.getName()) && "urn:article:aaa".equals(r.getContentUri().toString()));
         assertAnyTrue(result, r -> "resource aab".equals(r.getName()) && "urn:article:aab".equals(r.getContentUri().toString()));
         assertAllTrue(result, r -> !r.getPaths().isEmpty());
+        assertAllTrue(result, ResourceWithTopicConnectionDTO::isPrimary);
     }
 
     @Test
@@ -467,6 +468,37 @@ public class ResourcesTest extends RestTest {
 
     }
 
+    @Test
+    public void primary_status_is_returned_on_resources() throws Exception {
+        final var resource = builder.resource("r1", rb -> {
+            rb.name("resource 1");
+        });
+
+        builder.topic(tb -> {
+            tb.name("topic 1");
+            tb.publicId("urn:topic:rt:1201");
+            tb.resource(resource, true);
+        });
+
+        builder.topic(tb -> {
+            tb.name("topic 2");
+            tb.publicId("urn:topic:rt:1202");
+            tb.resource(resource, false);
+        });
+
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:rt:1201/resources");
+            final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            assertEquals(1, result.length);
+            assertTrue(result[0].isPrimary());
+        }
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:rt:1202/resources");
+            final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            assertEquals(1, result.length);
+            assertFalse(result[0].isPrimary());
+        }
+    }
 
     @Test
     public void can_get_urls_for_resources_for_a_topic_recursively() throws Exception {
@@ -496,6 +528,7 @@ public class ResourcesTest extends RestTest {
         assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/resource:aa".equals(r.getPath()));
         assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aaa/resource:aaa".equals(r.getPath()));
         assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aab/resource:aab".equals(r.getPath()));
+        assertAllTrue(result, ResourceWithTopicConnectionDTO::isPrimary);
     }
 
     @Test
