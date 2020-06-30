@@ -1,8 +1,5 @@
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.DomainObject;
-import no.ndla.taxonomy.repositories.TaxonomyRepository;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.MetadataApiService;
 import no.ndla.taxonomy.service.MetadataUpdateService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
@@ -18,19 +15,19 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-public class PathResolvableEntityRestControllerTest {
+class MetadataControllerTest {
 
     private MetadataApiService metadataApiService;
     private MetadataUpdateService metadataUpdateService;
-    private PathResolvableEntityRestController<MockEntity> controller;
+    private MetadataController controller;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    public void setUp() {
         metadataApiService = mock(MetadataApiService.class);
         metadataUpdateService = mock(MetadataUpdateService.class);
         when(metadataUpdateService.getMetadataApiService()).thenReturn(metadataApiService);
 
-        controller = new MockController(metadataUpdateService);
+        controller = new MetadataController(metadataApiService, metadataUpdateService);
     }
 
     @Test
@@ -74,7 +71,6 @@ public class PathResolvableEntityRestControllerTest {
             final var entityToUpdate = mock(MetadataDto.class);
 
             when(metadataUpdateService.updateMetadataRecursivelyByPublicId(eq(URI.create("urn:test:1")), same(entityToUpdate), eq(true))).thenReturn(returnObject);
-
             assertSame(returnObject, controller.updateRecursively(URI.create("urn:test:1"), true, entityToUpdate));
         }
 
@@ -85,17 +81,6 @@ public class PathResolvableEntityRestControllerTest {
             when(metadataUpdateService.updateMetadataRecursivelyByPublicId(eq(URI.create("urn:test:2")), same(entityToUpdate), eq(false))).thenReturn(returnObject);
 
             assertSame(returnObject, controller.updateRecursively(URI.create("urn:test:2"), false, entityToUpdate));
-        }
-    }
-
-    private static class MockEntity extends DomainObject {
-
-    }
-
-    private static class MockController extends PathResolvableEntityRestController<MockEntity> {
-
-        MockController(MetadataUpdateService metadataUpdateService) {
-            super(mock(TaxonomyRepository.class), metadataUpdateService, mock(CachedUrlUpdaterService.class));
         }
     }
 }

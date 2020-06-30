@@ -9,7 +9,6 @@ import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
-import no.ndla.taxonomy.service.MetadataUpdateService;
 import no.ndla.taxonomy.service.ResourceService;
 import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.http.HttpStatus;
@@ -26,7 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
-public class Resources extends PathResolvableEntityRestController<Resource> {
+public class Resources extends CrudController<Resource> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ResourceFilterRepository resourceFilterRepository;
     private final ResourceService resourceService;
@@ -34,9 +33,9 @@ public class Resources extends PathResolvableEntityRestController<Resource> {
     public Resources(ResourceRepository resourceRepository,
                      ResourceResourceTypeRepository resourceResourceTypeRepository,
                      ResourceFilterRepository resourceFilterRepository,
-                     ResourceService resourceService, MetadataUpdateService metadataUpdateService,
+                     ResourceService resourceService,
                      CachedUrlUpdaterService cachedUrlUpdaterService) {
-        super(resourceRepository, metadataUpdateService, cachedUrlUpdaterService);
+        super(resourceRepository, cachedUrlUpdaterService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceFilterRepository = resourceFilterRepository;
