@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @RestController
 @Transactional
 @RequestMapping(path = {"/v1/subjects"})
-public class Subjects extends PathResolvableEntityRestController<Subject> {
+public class Subjects extends CrudController<Subject> {
     private final SubjectRepository subjectRepository;
     private final SubjectTopicRepository subjectTopicRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
@@ -39,10 +39,10 @@ public class Subjects extends PathResolvableEntityRestController<Subject> {
 
     public Subjects(SubjectRepository subjectRepository,
                     SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository,
-                    TopicTreeSorter topicTreeSorter, SubjectService subjectService, MetadataUpdateService metadataUpdateService,
+                    TopicTreeSorter topicTreeSorter, SubjectService subjectService,
                     MetadataEntityWrapperService metadataWrapperService,
                     CachedUrlUpdaterService cachedUrlUpdaterService, RecursiveTopicTreeService recursiveTopicTreeService) {
-        super(subjectRepository, metadataUpdateService, cachedUrlUpdaterService);
+        super(subjectRepository, cachedUrlUpdaterService);
 
         this.subjectRepository = subjectRepository;
         this.metadataWrapperService = metadataWrapperService;

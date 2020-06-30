@@ -7,7 +7,10 @@ import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
 import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
-import no.ndla.taxonomy.service.*;
+import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.MetadataEntityWrapperService;
+import no.ndla.taxonomy.service.TopicResourceTypeService;
+import no.ndla.taxonomy.service.TopicService;
 import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +26,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/topics"})
-public class Topics extends PathResolvableEntityRestController<Topic> {
+public class Topics extends CrudController<Topic> {
     private final TopicResourceTypeService topicResourceTypeService;
     private final TopicRepository topicRepository;
     private final TopicService topicService;
@@ -32,10 +35,9 @@ public class Topics extends PathResolvableEntityRestController<Topic> {
     public Topics(TopicRepository topicRepository,
                   TopicResourceTypeService topicResourceTypeService,
                   TopicService topicService,
-                  MetadataUpdateService metadataUpdateService,
                   MetadataEntityWrapperService metadataWrapperService,
                   CachedUrlUpdaterService cachedUrlUpdaterService) {
-        super(topicRepository, metadataUpdateService, cachedUrlUpdaterService);
+        super(topicRepository, cachedUrlUpdaterService);
 
         this.topicRepository = topicRepository;
         this.metadataWrapperService = metadataWrapperService;
