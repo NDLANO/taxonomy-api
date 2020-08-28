@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Component
@@ -25,6 +26,8 @@ public class MetadataApiServiceImpl implements MetadataApiService {
     private final RestTemplate restTemplate;
     private final String serviceUrl;
     private final ThreadPoolExecutor executor;
+
+    private final Logger logger = Logger.getLogger(this.getClass().toString());
 
     public MetadataApiServiceImpl(MetadataApiConfig metadataApiConfig, RestTemplate restTemplate,
                                   @Qualifier("metadataApiExecutor") ThreadPoolExecutor metadataApiExecutor) {
@@ -107,6 +110,24 @@ public class MetadataApiServiceImpl implements MetadataApiService {
         return doBulkActionAndReturnDtos(publicIds, this::doBulkRead);
     }
 
+    private void doEntitiesPut(Set<MetadataApiEntity> requestObjects) {
+        var retryTtl = 5;
+
+        while (true) {
+            try {
+                restTemplate.put(getServiceUrl() + "/v1/taxonomy_entities/", requestObjects);
+
+                return;
+            } catch (RestClientException exception) {
+                logger.warning("Error bulk updating metadata: " + exception.getMessage() + " Will retry " + retryTtl + " more times");
+
+                if (--retryTtl < 1) {
+                    throw exception;
+                }
+            }
+        }
+    }
+
     private List<MetadataDto> doBulkUpdate(Collection<URI> publicIds, MetadataDto metadataDto) {
         if (publicIds.size() == 0) {
             return List.of();
@@ -123,7 +144,7 @@ public class MetadataApiServiceImpl implements MetadataApiService {
                 .collect(Collectors.toSet());
 
         try {
-            restTemplate.put(getServiceUrl() + "/v1/taxonomy_entities/", requestObjects);
+            doEntitiesPut(requestObjects);
 
             return doBulkRead(publicIds);
         } catch (RestClientException exception) {
