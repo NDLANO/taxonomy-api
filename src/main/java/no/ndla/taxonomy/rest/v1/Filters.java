@@ -170,7 +170,7 @@ public class Filters extends CrudController<Filter> {
         public URI subjectId;
 
         @JsonProperty
-        @ApiModelProperty(value = "ID of frontpage introducing this filter. Must be a valid URI, but preferably not a URL.", example = "urn:frontpage:1")
+        @ApiModelProperty(value = "ID of frontpage introducing this filter.", example = "urn:frontpage:1")
         public URI contentUri;
 
         @Override
