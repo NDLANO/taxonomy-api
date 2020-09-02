@@ -18,6 +18,10 @@ public class FilterDTO {
     @ApiModelProperty(value = "The name of the filter", example = "1T-YF")
     private String name;
 
+    @JsonProperty
+    @ApiModelProperty(value = "ID of frontpage introducing this filter.", example = "urn:frontpage:1")
+    public URI contentUri;
+
     public FilterDTO() {
 
     }
@@ -29,6 +33,8 @@ public class FilterDTO {
                 .getTranslation(languageCode)
                 .map(FilterTranslation::getName)
                 .orElse(filter.getName());
+
+        this.contentUri = filter.getContentUri();
     }
 
     public URI getId() {
@@ -37,5 +43,9 @@ public class FilterDTO {
 
     public String getName() {
         return name;
+    }
+
+    public URI getContentUri() {
+        return contentUri;
     }
 }

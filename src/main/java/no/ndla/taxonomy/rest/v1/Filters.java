@@ -107,6 +107,10 @@ public class Filters extends CrudController<Filter> {
         @ApiModelProperty(value = "The id of the connected subject", example = "urn:subject:1")
         public URI subjectId;
 
+        @JsonProperty
+        @ApiModelProperty(value = "ID of frontpage introducing this filter.", example = "urn:frontpage:1")
+        public URI contentUri;
+
         public FilterIndexDocument() {
         }
 
@@ -119,6 +123,7 @@ public class Filters extends CrudController<Filter> {
             subjectId = filter.getSubject()
                     .map(Subject::getPublicId)
                     .orElse(null);
+            contentUri = filter.getContentUri();
         }
 
         public URI getId() {
@@ -139,6 +144,10 @@ public class Filters extends CrudController<Filter> {
         @ApiModelProperty(value = "This filter will be connected to this subject.")
         public URI subjectId;
 
+        @JsonProperty
+        @ApiModelProperty(value = "ID of frontpage introducing this filter.", example = "urn:frontpage:1")
+        public URI contentUri;
+
         @Override
         public URI getId() {
             return id;
@@ -147,6 +156,7 @@ public class Filters extends CrudController<Filter> {
         @Override
         public void apply(Filter filter) {
             filter.setName(name);
+            filter.setContentUri(contentUri);
         }
     }
 
@@ -159,9 +169,14 @@ public class Filters extends CrudController<Filter> {
         @ApiModelProperty(value = "This filter will be connected to this subject. Fields not included will be set to null.")
         public URI subjectId;
 
+        @JsonProperty
+        @ApiModelProperty(value = "ID of frontpage introducing this filter. Must be a valid URI, but preferably not a URL.", example = "urn:frontpage:1")
+        public URI contentUri;
+
         @Override
         public void apply(Filter filter) {
             filter.setName(name);
+            filter.setContentUri(contentUri);
         }
     }
 }
