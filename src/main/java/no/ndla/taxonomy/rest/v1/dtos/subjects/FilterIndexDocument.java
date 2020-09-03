@@ -7,6 +7,7 @@ import no.ndla.taxonomy.domain.Filter;
 
 import java.net.URI;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  *
@@ -21,13 +22,18 @@ public class FilterIndexDocument {
     @ApiModelProperty(value = "Filter name", example = "1T-YF")
     public String name;
 
+    @JsonProperty
+    @ApiModelProperty(value = "ID of frontpage introducing this filter.", example = "urn:frontpage:1")
+    public Optional<URI> contentUri;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FilterIndexDocument that = (FilterIndexDocument) o;
         return Objects.equals(id, that.id) &&
-                Objects.equals(name, that.name);
+                Objects.equals(name, that.name) &&
+                Objects.equals(contentUri, that.contentUri);
     }
 
     @Override
@@ -41,5 +47,6 @@ public class FilterIndexDocument {
     public FilterIndexDocument(Filter filter) {
         this.id = filter.getPublicId();
         this.name = filter.getName();
+        this.contentUri = filter.getContentUri();
     }
 }

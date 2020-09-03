@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
+import java.util.Optional;
 
 import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,7 +40,7 @@ public class SubjectFiltersTest extends RestTest {
         builder.subject(s -> s
                 .name("Byggfag")
                 .publicId("urn:subject:1")
-                .filter(f -> f.name("Tømrer"))
+                .filter(f -> f.name("Tømrer").contentUri(URI.create("urn:frontpage:1")))
                 .filter(f -> f.name("Rørlegger"))
         );
 
@@ -49,6 +50,7 @@ public class SubjectFiltersTest extends RestTest {
         assertEquals(2, filters.length);
         assertAnyTrue(filters, f -> f.name.equals("Tømrer"));
         assertAnyTrue(filters, f -> f.name.equals("Rørlegger"));
+        assertAnyTrue(filters, f -> f.contentUri.equals(Optional.of(URI.create("urn:frontpage:1"))));
     }
 
     @Test
