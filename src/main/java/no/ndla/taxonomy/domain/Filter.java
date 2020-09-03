@@ -32,8 +32,8 @@ public class Filter extends DomainObject {
         setPublicId(URI.create("urn:filter:" + UUID.randomUUID()));
     }
 
-    public URI getContentUri() {
-        return contentUri;
+    public Optional<URI> getContentUri() {
+        return Optional.ofNullable(contentUri);
     }
 
     public void setContentUri(URI contentUri) {

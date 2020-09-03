@@ -123,7 +123,7 @@ public class Filters extends CrudController<Filter> {
             subjectId = filter.getSubject()
                     .map(Subject::getPublicId)
                     .orElse(null);
-            contentUri = filter.getContentUri();
+            filter.getContentUri().ifPresent(contentUri -> this.contentUri = contentUri);
         }
 
         public URI getId() {

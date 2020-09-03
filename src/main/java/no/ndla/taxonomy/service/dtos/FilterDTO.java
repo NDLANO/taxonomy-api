@@ -34,7 +34,7 @@ public class FilterDTO {
                 .map(FilterTranslation::getName)
                 .orElse(filter.getName());
 
-        this.contentUri = filter.getContentUri();
+        filter.getContentUri().ifPresent(contentUri -> this.contentUri = contentUri);
     }
 
     public URI getId() {

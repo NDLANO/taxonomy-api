@@ -272,6 +272,11 @@ public class Builder {
             return this;
         }
 
+        public FilterBuilder contentUri(URI contentUri) {
+            filter.setContentUri(contentUri);
+            return this;
+        }
+
         public FilterBuilder translation(String languageCode, Consumer<FilterTranslationBuilder> consumer) {
             FilterTranslation filterTranslation = filter.addTranslation(languageCode);
             entityManager.persist(filterTranslation);

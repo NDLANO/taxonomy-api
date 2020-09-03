@@ -47,6 +47,47 @@ public class FiltersTest extends RestTest {
     }
 
     @Test
+    public void can_get_all_filters_with_contentUri() throws Exception {
+        builder.filter(f -> f
+                .publicId("urn:filter:1")
+                .name("F1")
+                .contentUri(URI.create("urn:article:1"))
+        );
+
+        builder.filter(f -> f
+                .publicId("urn:filter:2")
+                .name("F2")
+                .contentUri(URI.create("urn:article:2"))
+        );
+
+        builder.filter(f -> f
+                .publicId("urn:filter:3")
+                .name("F3")
+        );
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/filters");
+        Filters.FilterIndexDocument[] filters = testUtils.getObject(Filters.FilterIndexDocument[].class, response);
+
+        assertEquals(3, filters.length);
+
+        for (Filters.FilterIndexDocument filter : filters) {
+            switch (filter.name) {
+                case "F1":
+                    assertEquals(URI.create("urn:article:1"), filter.contentUri);
+                    break;
+                case "F2":
+                    assertEquals(URI.create("urn:article:2"), filter.contentUri);
+                    break;
+                case "F3":
+                    assertNull(filter.contentUri);
+                    break;
+                default:
+                    fail("Unexpected filter returned");
+            }
+        }
+    }
+
+    @Test
     public void can_delete_filter() throws Exception {
         Filter filter = builder.filter(f -> f.publicId("urn:filter:1").name("1T-YF"));
 
@@ -153,9 +194,26 @@ public class FiltersTest extends RestTest {
         testUtils.createResource("/v1/filters", command, status().isCreated());
 
         Filter filter = filterRepository.getByPublicId(URI.create("urn:filter:1"));
-        assertEquals("urn:subject:1", filter.getSubject().get().getPublicId().toString());
+        assertEquals("urn:subject:1", filter.getSubject().orElseThrow().getPublicId().toString());
+        assertFalse(filter.getContentUri().isPresent());
     }
 
+    @Test
+    public void can_create_filter_with_contentUri() throws Exception {
+        builder.subject(s -> s.publicId("urn:subject:1"));
+
+        Filters.CreateFilterCommand command = new Filters.CreateFilterCommand() {{
+            id = URI.create("urn:filter:1");
+            name = "name";
+            subjectId = URI.create("urn:subject:1");
+            contentUri = URI.create("urn:article:1");
+        }};
+        testUtils.createResource("/v1/filters", command, status().isCreated());
+
+        Filter filter = filterRepository.getByPublicId(URI.create("urn:filter:1"));
+        assertEquals("urn:subject:1", filter.getSubject().orElseThrow().getPublicId().toString());
+        assertEquals(URI.create("urn:article:1"), filter.getContentUri().orElseThrow());
+    }
 
     @Test
     public void subject_is_required() throws Exception {
@@ -190,12 +248,14 @@ public class FiltersTest extends RestTest {
         Filters.UpdateFilterCommand command = new Filters.UpdateFilterCommand() {{
             name = "1T-ST";
             subjectId = URI.create("urn:subject:1");
+            contentUri = URI.create("urn:article:2");
         }};
 
         testUtils.updateResource("/v1/filters/" + id, command);
 
         Filter filter = filterRepository.getByPublicId(id);
         assertEquals(command.name, filter.getName());
+        assertEquals(URI.create("urn:article:2"), filter.getContentUri().orElseThrow());
     }
 
     @Test
