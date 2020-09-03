@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 @Entity
 public class Filter extends DomainObject {
 
+    @Column
+    private URI contentUri;
+
     @OneToMany(orphanRemoval = true, cascade = CascadeType.ALL, mappedBy = "filter")
     private Set<FilterTranslation> translations = new HashSet<>();
 
@@ -29,6 +32,13 @@ public class Filter extends DomainObject {
         setPublicId(URI.create("urn:filter:" + UUID.randomUUID()));
     }
 
+    public Optional<URI> getContentUri() {
+        return Optional.ofNullable(contentUri);
+    }
+
+    public void setContentUri(URI contentUri) {
+        this.contentUri = contentUri;
+    }
 
     public FilterTranslation addTranslation(String languageCode) {
         FilterTranslation filterTranslation = getTranslation(languageCode).orElse(null);

@@ -741,4 +741,12 @@
     <changeSet id="20200508 delete view topic_tree_by_topic_id_view" author="Jon-Eirik Pettersen">
         <sql>DROP VIEW IF EXISTS topic_tree_by_topic_id_view</sql>
     </changeSet>
+
+    <changeSet id="20200902 add content_uri to filter" author="Gunnar Velle">
+        <addColumn tableName="filter">
+            <column name="content_uri" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
