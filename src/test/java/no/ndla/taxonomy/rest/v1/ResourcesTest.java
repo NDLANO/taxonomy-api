@@ -3,8 +3,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
-import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
+import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
 import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -182,7 +181,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_create_resource() throws Exception {
-        URI id = getId(testUtils.createResource("/v1/resources", new CreateResourceCommand() {{
+        URI id = getId(testUtils.createResource("/v1/resources", new ResourceCommand() {{
             name = "testresource";
             contentUri = URI.create("urn:article:1");
         }}));
@@ -196,7 +195,7 @@ public class ResourcesTest extends RestTest {
     public void can_update_resource() throws Exception {
         URI id = newResource().getPublicId();
 
-        UpdateResourceCommand command = new UpdateResourceCommand() {{
+        final var command = new ResourceCommand() {{
             name = "The inner planets";
             contentUri = URI.create("urn:article:1");
         }};
@@ -210,7 +209,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_create_resource_with_id() throws Exception {
-        CreateResourceCommand command = new CreateResourceCommand() {{
+        final var command = new ResourceCommand() {{
             id = URI.create("urn:resource:1");
             name = "name";
         }};
@@ -222,7 +221,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        CreateResourceCommand command = new CreateResourceCommand() {{
+        final var command = new ResourceCommand() {{
             id = URI.create("urn:resource:1");
             name = "name";
         }};
@@ -308,7 +307,7 @@ public class ResourcesTest extends RestTest {
                 .publicId("urn:resource:1")
                 .name("What is maths?"));
 
-        CreateResourceCommand command = new CreateResourceCommand() {{
+        final var command = new ResourceCommand() {{
             id = URI.create("urn:resource:2");
             name = "What is maths?";
         }};
@@ -745,7 +744,7 @@ public class ResourcesTest extends RestTest {
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources");
         final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
-        assertEquals("urn:filter:vg1", first(resources[0].getFilters()).getId().toString());
+        assertEquals("urn:filter:vg1", first(resources[0].getFilters()).getId().orElseThrow().toString());
         assertEquals("urn:relevance:core", first(resources[0].getFilters()).getRelevanceId().toString());
     }
 

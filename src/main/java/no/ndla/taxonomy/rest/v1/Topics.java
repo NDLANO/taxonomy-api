@@ -5,8 +5,7 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
-import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
+import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.MetadataEntityWrapperService;
 import no.ndla.taxonomy.service.TopicResourceTypeService;
@@ -93,7 +92,7 @@ public class Topics extends CrudController<Topic> {
     @ApiOperation(value = "Creates a new topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(@ApiParam(name = "connection", value = "The new topic") @RequestBody CreateTopicCommand command) {
+    public ResponseEntity<Void> post(@ApiParam(name = "connection", value = "The new topic") @RequestBody TopicCommand command) {
         return doPost(new Topic(), command);
     }
 
@@ -105,7 +104,7 @@ public class Topics extends CrudController<Topic> {
     @Transactional
     public void put(
             @PathVariable("id") URI id,
-            @ApiParam(name = "topic", value = "The updated topic. Fields not included will be set to null.") @RequestBody UpdateTopicCommand command) {
+            @ApiParam(name = "topic", value = "The updated topic. Fields not included will be set to null.") @RequestBody TopicCommand command) {
         doPut(id, command);
     }
 

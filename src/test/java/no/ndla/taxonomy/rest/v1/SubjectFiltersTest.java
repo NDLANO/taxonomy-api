@@ -3,9 +3,9 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.rest.v1.dtos.subjects.FilterIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
+import no.ndla.taxonomy.service.dtos.FilterDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -43,12 +43,12 @@ public class SubjectFiltersTest extends RestTest {
                 .filter(f -> f.name("Rørlegger"))
         );
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/filters");
-        FilterIndexDocument[] filters = testUtils.getObject(FilterIndexDocument[].class, response);
+        final var response = testUtils.getResource("/v1/subjects/urn:subject:1/filters");
+        final var filters = testUtils.getObject(FilterDTO[].class, response);
 
         assertEquals(2, filters.length);
-        assertAnyTrue(filters, f -> f.name.equals("Tømrer"));
-        assertAnyTrue(filters, f -> f.name.equals("Rørlegger"));
+        assertAnyTrue(filters, f -> f.getName().equals("Tømrer"));
+        assertAnyTrue(filters, f -> f.getName().equals("Rørlegger"));
     }
 
     @Test
@@ -90,7 +90,7 @@ public class SubjectFiltersTest extends RestTest {
         assertEquals(2, topics.length);
         assertAnyTrue(topics, t -> "statics".equals(t.name));
         assertAnyTrue(topics, t -> "optics".equals(t.name));
-        assertAnyTrue(topics[0].filters, f -> vg1.getPublicId().equals(f.getId()));
+        assertAnyTrue(topics[0].filters, f -> vg1.getPublicId().equals(f.getId().orElseThrow()));
         assertAnyTrue(topics[0].filters, f -> vg1.getName().equals(f.getName()));
         assertAnyTrue(topics[0].filters, f -> core.getPublicId().equals(f.getRelevanceId()));
         assertEquals(1, topics[0].filters.size());
@@ -110,10 +110,10 @@ public class SubjectFiltersTest extends RestTest {
         SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
 
         assertEquals(2, topics[0].filters.size());
-        assertAnyTrue(topics[0].filters, f -> vg1.getPublicId().equals(f.getId()));
+        assertAnyTrue(topics[0].filters, f -> vg1.getPublicId().equals(f.getId().orElseThrow()));
         assertAnyTrue(topics[0].filters, f -> core.getPublicId().equals(f.getRelevanceId()));
         assertAnyTrue(topics[0].filters, f -> supplementary.getPublicId().equals(f.getRelevanceId()));
-        assertAnyTrue(topics[0].filters, f -> vg2.getPublicId().equals(f.getId()));
+        assertAnyTrue(topics[0].filters, f -> vg2.getPublicId().equals(f.getId().orElseThrow()));
     }
 
     @Test

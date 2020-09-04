@@ -2,6 +2,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.service.dtos.FilterDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -148,11 +149,12 @@ public class FiltersTest extends RestTest {
     @Test
     public void can_delete_filter_connected_to_subject() throws Exception {
         builder.subject(s -> s.publicId("urn:subject:1"));
-        Filters.CreateFilterCommand command = new Filters.CreateFilterCommand() {{
-            id = URI.create("urn:filter:1");
-            name = "name";
-            subjectId = URI.create("urn:subject:1");
-        }};
+
+        final var command = new FilterDTO();
+        command.setId(URI.create("urn:filter:1"));
+        command.setName("name");
+        command.setSubjectId(URI.create("urn:subject:1"));
+
         testUtils.createResource("/v1/filters", command, status().isCreated());
         Filter preResultFilter = filterRepository.findByPublicId(URI.create("urn:filter:1"));
         assertNotNull(preResultFilter);
@@ -166,11 +168,12 @@ public class FiltersTest extends RestTest {
     @Test
     public void can_delete_filter_connected_to_2_topics() throws Exception {
         builder.subject(s -> s.publicId("urn:subject:1"));
-        Filters.CreateFilterCommand command = new Filters.CreateFilterCommand() {{
-            id = URI.create("urn:filter:1");
-            name = "name";
-            subjectId = URI.create("urn:subject:1");
-        }};
+
+        final var command = new FilterDTO();
+        command.setId(URI.create("urn:filter:1"));
+        command.setName("name");
+        command.setSubjectId(URI.create("urn:subject:1"));
+
         testUtils.createResource("/v1/filters", command, status().isCreated());
         Filter filter = filterRepository.findByPublicId(URI.create("urn:filter:1"));
         builder.topic(t -> t.publicId("urn:topic:1").filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core1"))));
@@ -186,11 +189,11 @@ public class FiltersTest extends RestTest {
     public void can_create_filter() throws Exception {
         builder.subject(s -> s.publicId("urn:subject:1"));
 
-        Filters.CreateFilterCommand command = new Filters.CreateFilterCommand() {{
-            id = URI.create("urn:filter:1");
-            name = "name";
-            subjectId = URI.create("urn:subject:1");
-        }};
+        final var command = new FilterDTO();
+        command.setId(URI.create("urn:filter:1"));
+        command.setName("name");
+        command.setSubjectId(URI.create("urn:subject:1"));
+
         testUtils.createResource("/v1/filters", command, status().isCreated());
 
         Filter filter = filterRepository.getByPublicId(URI.create("urn:filter:1"));
@@ -202,12 +205,12 @@ public class FiltersTest extends RestTest {
     public void can_create_filter_with_contentUri() throws Exception {
         builder.subject(s -> s.publicId("urn:subject:1"));
 
-        Filters.CreateFilterCommand command = new Filters.CreateFilterCommand() {{
-            id = URI.create("urn:filter:1");
-            name = "name";
-            subjectId = URI.create("urn:subject:1");
-            contentUri = URI.create("urn:article:1");
-        }};
+        final var command = new FilterDTO();
+        command.setId(URI.create("urn:filter:1"));
+        command.setName("name");
+        command.setSubjectId(URI.create("urn:subject:1"));
+        command.setContentUri(URI.create("urn:article:1"));
+
         testUtils.createResource("/v1/filters", command, status().isCreated());
 
         Filter filter = filterRepository.getByPublicId(URI.create("urn:filter:1"));
@@ -217,10 +220,9 @@ public class FiltersTest extends RestTest {
 
     @Test
     public void subject_is_required() throws Exception {
-        Filters.CreateFilterCommand command = new Filters.CreateFilterCommand() {{
-            id = URI.create("urn:filter:1");
-            name = "name";
-        }};
+        final var command = new FilterDTO();
+        command.setId(URI.create("urn:filter:1"));
+        command.setName("name");
 
         testUtils.createResource("/v1/filters", command, status().isBadRequest());
     }
@@ -229,11 +231,11 @@ public class FiltersTest extends RestTest {
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
         builder.subject(s -> s.publicId("urn:subject:1"));
-        Filters.CreateFilterCommand command = new Filters.CreateFilterCommand() {{
-            id = URI.create("urn:filter:1");
-            name = "name";
-            subjectId = URI.create("urn:subject:1");
-        }};
+
+        final var command = new FilterDTO();
+        command.setId(URI.create("urn:filter:1"));
+        command.setName("name");
+        command.setSubjectId(URI.create("urn:subject:1"));
 
         testUtils.createResource("/v1/filters", command, status().isCreated());
         testUtils.createResource("/v1/filters", command, status().isConflict());
@@ -245,16 +247,15 @@ public class FiltersTest extends RestTest {
 
         URI id = builder.filter().getPublicId();
 
-        Filters.UpdateFilterCommand command = new Filters.UpdateFilterCommand() {{
-            name = "1T-ST";
-            subjectId = URI.create("urn:subject:1");
-            contentUri = URI.create("urn:article:2");
-        }};
+        final var command = new FilterDTO();
+        command.setName("1T-ST");
+        command.setSubjectId(URI.create("urn:subject:1"));
+        command.setContentUri(URI.create("urn:article:2"));
 
         testUtils.updateResource("/v1/filters/" + id, command);
 
         Filter filter = filterRepository.getByPublicId(id);
-        assertEquals(command.name, filter.getName());
+        assertEquals(command.getName(), filter.getName());
         assertEquals(URI.create("urn:article:2"), filter.getContentUri().orElseThrow());
     }
 
@@ -273,9 +274,10 @@ public class FiltersTest extends RestTest {
                 .name("Tømrer")
                 .publicId("urn:filter:2"));
 
-        testUtils.updateResource("/v1/filters/urn:filter:2", new Filters.UpdateFilterCommand() {{
-            subjectId = URI.create("urn:subject:1");
-        }});
+        final var updateDto = new FilterDTO();
+        updateDto.setSubjectId(URI.create("urn:subject:1"));
+
+        testUtils.updateResource("/v1/filters/urn:filter:2", updateDto);
 
         MockHttpServletResponse response = testUtils.getResource("/v1/filters/urn:filter:2");
         Filters.FilterIndexDocument filter = testUtils.getObject(Filters.FilterIndexDocument.class, response);
@@ -296,9 +298,10 @@ public class FiltersTest extends RestTest {
                 .publicId("urn:filter:2")
                 .subject(first));
 
-        testUtils.updateResource("/v1/filters/urn:filter:2", new Filters.UpdateFilterCommand() {{
-            subjectId = URI.create("urn:subject:3");
-        }});
+        final var updateDto = new FilterDTO();
+        updateDto.setSubjectId(URI.create("urn:subject:3"));
+
+        testUtils.updateResource("/v1/filters/urn:filter:2", updateDto);
 
         MockHttpServletResponse response = testUtils.getResource("/v1/filters/urn:filter:2");
         Filters.FilterIndexDocument filter = testUtils.getObject(Filters.FilterIndexDocument.class, response);

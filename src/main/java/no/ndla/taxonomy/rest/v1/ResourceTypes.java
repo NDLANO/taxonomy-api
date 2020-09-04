@@ -10,8 +10,7 @@ import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.ResourceTypeTranslation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
-import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
-import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
+import no.ndla.taxonomy.service.UpdatableDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +20,7 @@ import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -68,7 +68,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "resourceType", value = "The new resource type")
-            @RequestBody CreateResourceTypeCommand command
+            @RequestBody ResourceTypeCommand command
     ) {
         ResourceType resourceType = new ResourceType();
         if (null != command.parentId) {
@@ -85,7 +85,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     public void put(
             @PathVariable URI id,
             @ApiParam(name = "resourceType", value = "The updated resource type. Fields not included will be set to null.")
-            @RequestBody UpdateResourceTypeCommand
+            @RequestBody ResourceTypeCommand
                     command
     ) {
         ResourceType resourceType = doPut(id, command);
@@ -152,7 +152,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
         }
     }
 
-    public static class CreateResourceTypeCommand extends CreateCommand<ResourceType> {
+    public static class ResourceTypeCommand implements UpdatableDto<ResourceType> {
         @JsonProperty
         @ApiModelProperty(value = "If specified, the new resource type will be a child of the mentioned resource type.")
         public URI parentId;
@@ -166,32 +166,13 @@ public class ResourceTypes extends CrudController<ResourceType> {
         public String name;
 
         @Override
-        public URI getId() {
-            return id;
+        public Optional<URI> getId() {
+            return Optional.ofNullable(id);
         }
 
         @Override
         public void apply(ResourceType entity) {
             entity.setName(name);
-        }
-    }
-
-    public static class UpdateResourceTypeCommand extends UpdateCommand<ResourceType> {
-        @JsonProperty
-        @ApiModelProperty(value = "If specified, this resource type will be a child of the mentioned parent resource type. If left blank, this resource type will become a top level resource type")
-        public URI parentId;
-
-        @JsonProperty
-        @ApiModelProperty(value = "The name of the resource type", example = "Lecture")
-        public String name;
-
-        @JsonProperty
-        @ApiModelProperty(value = "The id of the resource type", example = "urn:resourcetype:lecture")
-        public URI id;
-
-        @Override
-        public void apply(ResourceType resourceType) {
-            resourceType.setName(name);
         }
     }
 }

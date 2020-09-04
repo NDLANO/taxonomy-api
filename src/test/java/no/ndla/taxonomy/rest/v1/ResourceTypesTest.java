@@ -68,7 +68,7 @@ public class ResourceTypesTest extends RestTest {
 
     @Test
     public void can_create_resourcetype() throws Exception {
-        ResourceTypes.CreateResourceTypeCommand command = new ResourceTypes.CreateResourceTypeCommand() {{
+        ResourceTypes.ResourceTypeCommand command = new ResourceTypes.ResourceTypeCommand() {{
             id = URI.create("urn:resourcetype:1");
             name = "name";
         }};
@@ -81,7 +81,7 @@ public class ResourceTypesTest extends RestTest {
 
     @Test
     public void cannot_create_duplicate_resourcetype() throws Exception {
-        ResourceTypes.CreateResourceTypeCommand command = new ResourceTypes.CreateResourceTypeCommand() {{
+        ResourceTypes.ResourceTypeCommand command = new ResourceTypes.ResourceTypeCommand() {{
             id = URI.create("urn:resourcetype:1");
             name = "name";
         }};
@@ -100,7 +100,7 @@ public class ResourceTypesTest extends RestTest {
     public void can_update_resourcetype() throws Exception {
         URI id = builder.resourceType(rt -> rt.name("video")).getPublicId();
 
-        testUtils.updateResource("/v1/resource-types/" + id, new ResourceTypes.UpdateResourceTypeCommand() {{
+        testUtils.updateResource("/v1/resource-types/" + id, new ResourceTypes.ResourceTypeCommand() {{
             name = "Audiovideo";
         }});
 
@@ -112,7 +112,7 @@ public class ResourceTypesTest extends RestTest {
     public void can_change_resource_type_id() throws Exception {
         URI id = builder.resourceType(rt -> rt.name("video")).getPublicId();
 
-        testUtils.updateResource("/v1/resource-types/" + id, new ResourceTypes.UpdateResourceTypeCommand() {{
+        testUtils.updateResource("/v1/resource-types/" + id, new ResourceTypes.ResourceTypeCommand() {{
             name = "Audiovideo";
             id = URI.create("urn:resourcetype:audiovideo");
         }});
@@ -125,7 +125,7 @@ public class ResourceTypesTest extends RestTest {
     public void can_add_subresourcetype_to_resourcetype() throws Exception {
         ResourceType parent = builder.resourceType(rt -> rt.name("external"));
 
-        URI childId = getId(testUtils.createResource("/v1/resource-types/", new ResourceTypes.CreateResourceTypeCommand() {{
+        URI childId = getId(testUtils.createResource("/v1/resource-types/", new ResourceTypes.ResourceTypeCommand() {{
             parentId = parent.getPublicId();
             name = "youtube";
         }}));
@@ -142,7 +142,7 @@ public class ResourceTypesTest extends RestTest {
 
         URI childId = child.getPublicId();
 
-        testUtils.updateResource("/v1/resource-types/" + childId, new ResourceTypes.UpdateResourceTypeCommand() {{
+        testUtils.updateResource("/v1/resource-types/" + childId, new ResourceTypes.ResourceTypeCommand() {{
             parentId = null;
             name = child.getName();
         }});
@@ -157,7 +157,7 @@ public class ResourceTypesTest extends RestTest {
         child.setParent(oldParent);
         URI newParentId = builder.resourceType(rt -> rt.name("video")).getPublicId();
 
-        testUtils.updateResource("/v1/resource-types/" + child.getPublicId(), new ResourceTypes.UpdateResourceTypeCommand() {{
+        testUtils.updateResource("/v1/resource-types/" + child.getPublicId(), new ResourceTypes.ResourceTypeCommand() {{
             parentId = newParentId;
             name = child.getName();
         }});

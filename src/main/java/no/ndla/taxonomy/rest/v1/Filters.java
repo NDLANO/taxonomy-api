@@ -12,8 +12,7 @@ import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.domain.exceptions.SubjectRequiredException;
 import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
-import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
+import no.ndla.taxonomy.service.dtos.FilterDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -68,7 +67,7 @@ public class Filters extends CrudController<Filter> {
     @PostMapping
     @ApiOperation(value = "Creates a new filter")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public ResponseEntity<Void> post(@ApiParam(name = "filter", value = "The new filter") @RequestBody CreateFilterCommand command) {
+    public ResponseEntity<Void> post(@ApiParam(name = "filter", value = "The new filter") @RequestBody FilterDTO command) {
         if (command.subjectId == null) throw new SubjectRequiredException();
 
         Filter filter = new Filter();
@@ -83,7 +82,7 @@ public class Filters extends CrudController<Filter> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable("id") URI id,
-            @ApiParam(name = "filter", value = "The updated filter") @RequestBody UpdateFilterCommand command
+            @ApiParam(name = "filter", value = "The updated filter") @RequestBody FilterDTO command
     ) {
         if (command.subjectId == null) throw new SubjectRequiredException();
 
@@ -128,55 +127,6 @@ public class Filters extends CrudController<Filter> {
 
         public URI getId() {
             return id;
-        }
-    }
-
-    public static class CreateFilterCommand extends CreateCommand<Filter> {
-        @JsonProperty
-        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:filter: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:filter:1")
-        public URI id;
-
-        @JsonProperty
-        @ApiModelProperty(required = true, value = "The name of the filter", example = "1T-YF")
-        public String name;
-
-        @JsonProperty
-        @ApiModelProperty(value = "This filter will be connected to this subject.")
-        public URI subjectId;
-
-        @JsonProperty
-        @ApiModelProperty(value = "ID of frontpage introducing this filter.", example = "urn:frontpage:1")
-        public URI contentUri;
-
-        @Override
-        public URI getId() {
-            return id;
-        }
-
-        @Override
-        public void apply(Filter filter) {
-            filter.setName(name);
-            filter.setContentUri(contentUri);
-        }
-    }
-
-    public static class UpdateFilterCommand extends UpdateCommand<Filter> {
-        @JsonProperty
-        @ApiModelProperty(required = true, value = "The name of the filter", example = "1T-YF")
-        public String name;
-
-        @JsonProperty
-        @ApiModelProperty(value = "This filter will be connected to this subject. Fields not included will be set to null.")
-        public URI subjectId;
-
-        @JsonProperty
-        @ApiModelProperty(value = "ID of frontpage introducing this filter.", example = "urn:frontpage:1")
-        public URI contentUri;
-
-        @Override
-        public void apply(Filter filter) {
-            filter.setName(name);
-            filter.setContentUri(contentUri);
         }
     }
 }

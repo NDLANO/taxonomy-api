@@ -9,8 +9,7 @@ import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.RelevanceTranslation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
-import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
+import no.ndla.taxonomy.service.UpdatableDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -62,7 +62,7 @@ public class Relevances extends CrudController<Relevance> {
     @PostMapping
     @ApiOperation(value = "Creates a new relevance")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public ResponseEntity<Void> post(@ApiParam(name = "relevance", value = "The new relevance") @RequestBody CreateRelevanceCommand command) {
+    public ResponseEntity<Void> post(@ApiParam(name = "relevance", value = "The new relevance") @RequestBody RelevanceCommand command) {
         return doPost(new Relevance(), command);
     }
 
@@ -72,7 +72,7 @@ public class Relevances extends CrudController<Relevance> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable("id") URI id,
-            @ApiParam(name = "relevance", value = "The updated relevance. Fields not included will be set to null.") @RequestBody UpdateRelevanceCommand command
+            @ApiParam(name = "relevance", value = "The updated relevance. Fields not included will be set to null.") @RequestBody RelevanceCommand command
     ) {
         doPut(id, command);
     }
@@ -99,9 +99,9 @@ public class Relevances extends CrudController<Relevance> {
         }
     }
 
-    public static class CreateRelevanceCommand extends CreateCommand<Relevance> {
+    public static class RelevanceCommand implements UpdatableDto<Relevance> {
         @JsonProperty
-        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:relevance: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:relevance:supplementary")
+        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:relevance: and be a valid URI. If ommitted, an id will be assigned automatically. Ignored on update", example = "urn:relevance:supplementary")
         public URI id;
 
         @JsonProperty
@@ -109,20 +109,9 @@ public class Relevances extends CrudController<Relevance> {
         public String name;
 
         @Override
-        public URI getId() {
-            return id;
+        public Optional<URI> getId() {
+            return Optional.ofNullable(id);
         }
-
-        @Override
-        public void apply(Relevance entity) {
-            entity.setName(name);
-        }
-    }
-
-    public static class UpdateRelevanceCommand extends UpdateCommand<Relevance> {
-        @JsonProperty
-        @ApiModelProperty(required = true, value = "The name of the relevance", example = "Supplementary")
-        public String name;
 
         @Override
         public void apply(Relevance entity) {

@@ -58,8 +58,8 @@ public class TopicFiltersTest extends RestTest {
         final var filters = testUtils.getObject(FilterWithConnectionDTO[].class, response);
 
         assertEquals(2, filters.length);
-        assertAnyTrue(filters, f -> f.getId().equals(vg1.getPublicId()));
-        assertAnyTrue(filters, f -> f.getId().equals(vg2.getPublicId()));
+        assertAnyTrue(filters, f -> f.getId().orElseThrow().equals(vg1.getPublicId()));
+        assertAnyTrue(filters, f -> f.getId().orElseThrow().equals(vg2.getPublicId()));
         assertAllTrue(filters, f -> f.getRelevanceId().equals(core.getPublicId()));
     }
 

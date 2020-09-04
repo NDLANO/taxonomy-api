@@ -3,8 +3,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.rest.v1.commands.CreateTopicCommand;
-import no.ndla.taxonomy.rest.v1.commands.UpdateTopicCommand;
+import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
 import no.ndla.taxonomy.service.dtos.TopicDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -254,7 +253,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_create_topic() throws Exception {
-        CreateTopicCommand createTopicCommand = new CreateTopicCommand() {{
+        final var createTopicCommand = new TopicCommand() {{
             name = "trigonometry";
             contentUri = URI.create("urn:article:1");
         }};
@@ -269,7 +268,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_create_topic_with_id() throws Exception {
-        CreateTopicCommand createTopicCommand = new CreateTopicCommand() {{
+        final var createTopicCommand = new TopicCommand() {{
             id = URI.create("urn:topic:1");
             name = "trigonometry";
         }};
@@ -282,7 +281,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        CreateTopicCommand command = new CreateTopicCommand() {{
+        final var command = new TopicCommand() {{
             id = URI.create("urn:topic:1");
             name = "name";
         }};
@@ -295,7 +294,7 @@ public class TopicsTest extends RestTest {
     public void can_update_topic() throws Exception {
         URI id = builder.topic().getPublicId();
 
-        testUtils.updateResource("/v1/topics/" + id, new UpdateTopicCommand() {{
+        testUtils.updateResource("/v1/topics/" + id, new TopicCommand() {{
             name = "trigonometry";
             contentUri = URI.create("urn:article:1");
         }});

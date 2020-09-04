@@ -8,12 +8,11 @@ import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
-import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
-import no.ndla.taxonomy.rest.v1.dtos.subjects.FilterIndexDocument;
+import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import no.ndla.taxonomy.service.*;
+import no.ndla.taxonomy.service.dtos.FilterDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -94,7 +93,7 @@ public class Subjects extends CrudController<Subject> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable("id") URI id,
-            @ApiParam(name = "subject", value = "The updated subject. Fields not included will be set to null.") @RequestBody UpdateSubjectCommand command
+            @ApiParam(name = "subject", value = "The updated subject. Fields not included will be set to null.") @RequestBody SubjectCommand command
     ) {
         doPut(id, command);
     }
@@ -102,7 +101,7 @@ public class Subjects extends CrudController<Subject> {
     @PostMapping
     @ApiOperation(value = "Creates a new subject")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public ResponseEntity<Void> post(@ApiParam(name = "subject", value = "The new subject") @RequestBody CreateSubjectCommand command) {
+    public ResponseEntity<Void> post(@ApiParam(name = "subject", value = "The new subject") @RequestBody SubjectCommand command) {
         final var subject = new Subject();
         return doPost(subject, command);
     }
@@ -264,12 +263,12 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters for a subject")
-    public List<FilterIndexDocument> getFilters(@PathVariable("id") URI subjectId) {
+    public List<FilterDTO> getFilters(@PathVariable("id") URI subjectId) {
         return subjectRepository.findFirstByPublicIdIncludingFilters(subjectId)
                 .stream()
                 .map(Subject::getFilters)
                 .flatMap(Collection::stream)
-                .map(FilterIndexDocument::new)
+                .map(filter -> new FilterDTO(filter, null))
                 .collect(Collectors.toList());
     }
 
