@@ -41,6 +41,7 @@ public class FilterDTO implements UpdatableDto<Filter> {
                 .orElse(filter.getName());
 
         filter.getContentUri().ifPresent(contentUri -> this.contentUri = contentUri);
+        filter.getSubject().ifPresent(subject -> this.subjectId = subject.getPublicId());
     }
 
     public String getName() {
