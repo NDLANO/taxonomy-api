@@ -6,8 +6,7 @@ import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.ResourceFilterRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
-import no.ndla.taxonomy.rest.v1.commands.CreateResourceCommand;
-import no.ndla.taxonomy.rest.v1.commands.UpdateResourceCommand;
+import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.ResourceService;
 import no.ndla.taxonomy.service.dtos.*;
@@ -95,7 +94,7 @@ public class Resources extends CrudController<Resource> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable("id") URI id, @ApiParam(name = "resource", value = "the updated resource. Fields not included will be set to null.")
-    @RequestBody UpdateResourceCommand command) {
+    @RequestBody ResourceCommand command) {
         doPut(id, command);
     }
 
@@ -104,7 +103,7 @@ public class Resources extends CrudController<Resource> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @ApiParam(name = "resource", value = "the new resource") @RequestBody CreateResourceCommand command) {
+            @ApiParam(name = "resource", value = "the new resource") @RequestBody ResourceCommand command) {
         return doPost(new Resource(), command);
     }
 

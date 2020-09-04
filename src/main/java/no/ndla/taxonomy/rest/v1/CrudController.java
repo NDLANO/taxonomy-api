@@ -5,10 +5,9 @@ import no.ndla.taxonomy.domain.DomainObject;
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
-import no.ndla.taxonomy.rest.v1.commands.CreateCommand;
-import no.ndla.taxonomy.rest.v1.commands.UpdateCommand;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.URNValidator;
+import no.ndla.taxonomy.service.UpdatableDto;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +49,7 @@ public abstract class CrudController<T extends DomainObject> {
     }
 
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    protected T doPut(URI id, UpdateCommand<T> command) {
+    protected T doPut(URI id, UpdatableDto<T> command) {
         T entity = repository.getByPublicId(id);
         validator.validate(id, entity);
         command.apply(entity);
@@ -63,12 +62,13 @@ public abstract class CrudController<T extends DomainObject> {
     }
 
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    protected ResponseEntity<Void> doPost(T entity, CreateCommand<T> command) {
+    protected ResponseEntity<Void> doPost(T entity, UpdatableDto<T> command) {
         try {
-            if (null != command.getId()) {
-                validator.validate(command.getId(), entity);
-                entity.setPublicId(command.getId());
-            }
+            command.getId().ifPresent(id -> {
+                validator.validate(id, entity);
+                entity.setPublicId(id);
+            });
+
             command.apply(entity);
             URI location = URI.create(getLocation() + "/" + entity.getPublicId());
             repository.saveAndFlush(entity);
@@ -79,9 +79,9 @@ public abstract class CrudController<T extends DomainObject> {
 
             return ResponseEntity.created(location).build();
         } catch (DataIntegrityViolationException e) {
-            if (command.getId() != null) {
-                throw new DuplicateIdException(command.getId().toString());
-            }
+            command.getId().ifPresent(id -> {
+                throw new DuplicateIdException(id.toString());
+            });
 
             throw new DuplicateIdException();
         }

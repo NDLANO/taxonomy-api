@@ -4,8 +4,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.rest.v1.commands.CreateSubjectCommand;
-import no.ndla.taxonomy.rest.v1.commands.UpdateSubjectCommand;
+import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import org.junit.jupiter.api.Test;
@@ -100,7 +99,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_create_subject() throws Exception {
-        CreateSubjectCommand createSubjectCommand = new CreateSubjectCommand() {{
+        final var createSubjectCommand = new SubjectCommand() {{
             name = "testsubject";
             contentUri = URI.create("urn:article:1");
         }};
@@ -117,7 +116,7 @@ public class SubjectsTest extends RestTest {
     public void can_update_subject() throws Exception {
         URI id = builder.subject().getPublicId();
 
-        UpdateSubjectCommand command = new UpdateSubjectCommand() {{
+        final var command = new SubjectCommand() {{
             name = "physics";
             contentUri = URI.create("urn:article:1");
         }};
@@ -131,7 +130,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_create_subject_with_id() throws Exception {
-        CreateSubjectCommand command = new CreateSubjectCommand() {{
+        final var command = new SubjectCommand() {{
             id = URI.create("urn:subject:1");
             name = "name";
         }};
@@ -144,7 +143,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        CreateSubjectCommand command = new CreateSubjectCommand() {{
+        final var command = new SubjectCommand() {{
             id = URI.create("urn:subject:1");
             name = "name";
         }};

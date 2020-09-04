@@ -33,7 +33,7 @@ public class ResourceFiltersTest extends RestTest {
 
         assertEquals(1, resource.getResourceFilters().size());
         assertEquals(first(resource.getResourceFilters()).getPublicId(), id);
-        assertEquals("urn:relevance:core", first(resource.getResourceFilters()).getRelevance().get().getPublicId().toString());
+        assertEquals("urn:relevance:core", first(resource.getResourceFilters()).getRelevance().orElseThrow().getPublicId().toString());
     }
 
     @Test
@@ -52,8 +52,8 @@ public class ResourceFiltersTest extends RestTest {
         final var filters = testUtils.getObject(FilterWithConnectionDTO[].class, response);
 
         assertEquals(2, filters.length);
-        assertAnyTrue(filters, f -> f.getId().equals(filter1.getPublicId()));
-        assertAnyTrue(filters, f -> f.getId().equals(filter2.getPublicId()));
+        assertAnyTrue(filters, f -> f.getId().orElseThrow().equals(filter1.getPublicId()));
+        assertAnyTrue(filters, f -> f.getId().orElseThrow().equals(filter2.getPublicId()));
         assertAllTrue(filters, f -> f.getRelevanceId().equals(relevance.getPublicId()));
     }
 
@@ -103,7 +103,7 @@ public class ResourceFiltersTest extends RestTest {
         testUtils.updateResource("/v1/resource-filters/" + id, new ResourceFilters.UpdateResourceFilterCommand() {{
             relevanceId = supplementary.getPublicId();
         }});
-        assertEquals("urn:relevance:supplementary", first(resource.getResourceFilters()).getRelevance().get().getPublicId().toString());
+        assertEquals("urn:relevance:supplementary", first(resource.getResourceFilters()).getRelevance().orElseThrow().getPublicId().toString());
     }
 
     @Test

@@ -3,12 +3,14 @@ package no.ndla.taxonomy.rest.v1.commands;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.service.UpdatableDto;
 
 import java.net.URI;
+import java.util.Optional;
 
-public class CreateResourceCommand extends CreateCommand<Resource> {
+public class ResourceCommand implements UpdatableDto<Resource> {
     @JsonProperty
-    @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:resource:2")
+    @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically. Ignored on update", example = "urn:resource:2")
     public URI id;
 
     @JsonProperty
@@ -22,8 +24,8 @@ public class CreateResourceCommand extends CreateCommand<Resource> {
     public String name;
 
     @Override
-    public URI getId() {
-        return id;
+    public Optional<URI> getId() {
+        return Optional.ofNullable(id);
     }
 
     @Override

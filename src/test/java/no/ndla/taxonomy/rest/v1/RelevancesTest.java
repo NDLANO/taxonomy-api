@@ -59,7 +59,7 @@ public class RelevancesTest extends RestTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        Relevances.CreateRelevanceCommand command = new Relevances.CreateRelevanceCommand() {{
+        Relevances.RelevanceCommand command = new Relevances.RelevanceCommand() {{
             id = URI.create("urn:relevance:1");
             name = "name";
         }};
@@ -72,7 +72,7 @@ public class RelevancesTest extends RestTest {
     public void can_update_relevance() throws Exception {
         URI id = builder.relevance().getPublicId();
 
-        Relevances.UpdateRelevanceCommand command = new Relevances.UpdateRelevanceCommand() {{
+        Relevances.RelevanceCommand command = new Relevances.RelevanceCommand() {{
             name = "Supplementary material";
         }};
 
