@@ -38,4 +38,6 @@ public interface SubjectRepository extends TaxonomyRepository<Subject> {
                     "   LEFT JOIN FETCH s.cachedPaths" +
                     "   WHERE s.publicId = :publicId")
     Optional<Subject> findFirstByPublicIdIncludingCachedUrls(URI publicId);
+
+    boolean existsByPublicId(URI publicId);
 }

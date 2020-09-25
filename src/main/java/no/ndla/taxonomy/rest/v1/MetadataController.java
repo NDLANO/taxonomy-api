@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 
 @RestController
-@Api(tags = {"topics", "resources", "subjects"})
+@Api(tags = {"topics", "resources", "subjects", "filters"})
 public class MetadataController {
     private final MetadataApiService metadataApiService;
     private final MetadataUpdateService metadataUpdateService;
@@ -28,6 +28,7 @@ public class MetadataController {
                     "/v1/subjects/{id}/metadata",
                     "/v1/topics/{id}/metadata",
                     "/v1/resources/{id}/metadata",
+                    "/v1/filters/{id}/metadata",
             }
     )
     @ApiOperation(value = "Gets metadata for entity")
@@ -40,6 +41,7 @@ public class MetadataController {
                     "/v1/subjects/{id}/metadata",
                     "/v1/topics/{id}/metadata",
                     "/v1/resources/{id}/metadata",
+                    "/v1/filters/{id}/metadata",
             }
     )
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -52,7 +54,7 @@ public class MetadataController {
             path = {
                     "/v1/subjects/{id}/metadata-recursive",
                     "/v1/topics/{id}/metadata-recursive",
-                    "/v1/resources/{id}/metadata-recursive",
+                    "/v1/resources/{id}/metadata-recursive"
             }
     )
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")

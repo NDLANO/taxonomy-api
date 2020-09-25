@@ -12,7 +12,6 @@ import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import no.ndla.taxonomy.service.*;
-import no.ndla.taxonomy.service.dtos.FilterDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -259,17 +258,6 @@ public class Subjects extends CrudController<Subject> {
         }
 
         return foundFilter.get();
-    }
-
-    @GetMapping("/{id}/filters")
-    @ApiOperation(value = "Gets all filters for a subject")
-    public List<FilterDTO> getFilters(@PathVariable("id") URI subjectId) {
-        return subjectRepository.findFirstByPublicIdIncludingFilters(subjectId)
-                .stream()
-                .map(Subject::getFilters)
-                .flatMap(Collection::stream)
-                .map(filter -> new FilterDTO(filter, null))
-                .collect(Collectors.toList());
     }
 
     @DeleteMapping("/{id}")

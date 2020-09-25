@@ -3,13 +3,15 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.repositories.ResourceFilterRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.ResourceService;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.dtos.ResourceDTO;
+import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ResourceWithParentTopicsDTO;
+import no.ndla.taxonomy.service.dtos.ResourceWithTopicConnectionDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,18 +28,15 @@ import java.util.stream.Collectors;
 @RestController
 public class Resources extends CrudController<Resource> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
-    private final ResourceFilterRepository resourceFilterRepository;
     private final ResourceService resourceService;
 
     public Resources(ResourceRepository resourceRepository,
                      ResourceResourceTypeRepository resourceResourceTypeRepository,
-                     ResourceFilterRepository resourceFilterRepository,
                      ResourceService resourceService,
                      CachedUrlUpdaterService cachedUrlUpdaterService) {
         super(resourceRepository, cachedUrlUpdaterService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
-        this.resourceFilterRepository = resourceFilterRepository;
         this.repository = resourceRepository;
         this.resourceService = resourceService;
     }
@@ -121,22 +120,6 @@ public class Resources extends CrudController<Resource> {
         return resourceResourceTypeRepository.findAllByResourcePublicIdIncludingResourceAndResourceTypeAndResourceTypeParent(id)
                 .stream()
                 .map(resourceResourceType -> new ResourceTypeWithConnectionDTO(resourceResourceType, language))
-                .collect(Collectors.toList());
-    }
-
-    @GetMapping("/v1/resources/{id}/filters")
-    @ApiOperation(value = "Gets all filters associated with this resource")
-    @Transactional(readOnly = true)
-    public List<FilterWithConnectionDTO> getFilters(
-            @PathVariable("id")
-                    URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
-    ) {
-        return resourceFilterRepository.findAllByResourcePublicIdIncludingResourceAndFilterAndRelevance(id)
-                .stream()
-                .map(resourceFilter -> new FilterWithConnectionDTO(resourceFilter, language))
                 .collect(Collectors.toList());
     }
 

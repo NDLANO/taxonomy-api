@@ -1,72 +1,69 @@
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Filter;
-import no.ndla.taxonomy.domain.FilterTranslation;
 import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.domain.exceptions.SubjectRequiredException;
 import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
+import no.ndla.taxonomy.service.FilterService;
 import no.ndla.taxonomy.service.dtos.FilterDTO;
+import no.ndla.taxonomy.service.dtos.FilterWithConnectionDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = {"/v1/filters"})
-@Transactional
 public class Filters extends CrudController<Filter> {
-
     private final SubjectRepository subjectRepository;
-    private final FilterRepository filterRepository;
+    private final FilterService filterService;
 
-    public Filters(FilterRepository repository, SubjectRepository subjectRepository) {
+    public Filters(FilterRepository repository, SubjectRepository subjectRepository, FilterService filterService) {
         super(repository);
 
         this.subjectRepository = subjectRepository;
-        this.filterRepository = repository;
+        this.filterService = filterService;
     }
 
-    @GetMapping
+    @GetMapping("/v1/filters")
     @ApiOperation("Gets all filters")
-    public List<FilterIndexDocument> index(
+    public List<FilterDTO> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
+                    String language,
+
+            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
+            @RequestParam(required = false, defaultValue = "false")
+                    boolean includeMetadata
     ) {
-        return filterRepository.findAllWithSubjectAndTranslations()
-                .stream()
-                .map((filter) -> new FilterIndexDocument(filter, language))
-                .collect(Collectors.toList());
+        return filterService.getFilters(language, includeMetadata);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/v1/filters/{id}")
     @ApiOperation(value = "Gets a single filter", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
-    public FilterIndexDocument get(
+    public FilterDTO get(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
+                    String language,
+
+            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
+            @RequestParam(required = false, defaultValue = "false")
+                    boolean includeMetadata
     ) {
-        return filterRepository.findFirstByPublicIdWithSubjectAndTranslations(id)
-                .map((filter) -> new FilterIndexDocument(filter, language))
-                .orElseThrow(() -> new NotFoundException("Filter", id));
+        return filterService.getFilterByPublicId(id, language, includeMetadata);
     }
 
-    @PostMapping
+    @PostMapping("/v1/filters")
     @ApiOperation(value = "Creates a new filter")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public ResponseEntity<Void> post(@ApiParam(name = "filter", value = "The new filter") @RequestBody FilterDTO command) {
         if (command.subjectId == null) throw new SubjectRequiredException();
 
@@ -76,10 +73,11 @@ public class Filters extends CrudController<Filter> {
         return doPost(filter, command);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/v1/filters/{id}")
     @ApiOperation("Updates a filter")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(name = "filter", value = "The updated filter") @RequestBody FilterDTO command
@@ -92,41 +90,41 @@ public class Filters extends CrudController<Filter> {
         repository.save(filter);
     }
 
-    @ApiModel("Filters.FilterIndexDocument")
-    public static class FilterIndexDocument {
-        @JsonProperty
-        @ApiModelProperty(example = "urn:filter:1")
-        public URI id;
+    @DeleteMapping("/v1/filters/{id}")
+    @ApiOperation(value = "Delete a single filter by ID")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
+    public void delete(@PathVariable("id") URI id) {
+        repository.deleteByPublicId(id);
+    }
 
-        @JsonProperty
-        @ApiModelProperty(value = "The name of the filter", example = "1T-YF")
-        public String name;
+    @GetMapping("/v1/subjects/{subjectId}/filters")
+    @ApiOperation(value = "Gets all filters for a subject", tags = {"subjects"})
+    public List<FilterDTO> getFiltersBySubjectId(
+            @PathVariable("subjectId") URI subjectId,
 
-        @JsonProperty
-        @ApiModelProperty(value = "The id of the connected subject", example = "urn:subject:1")
-        public URI subjectId;
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
+                    String language,
+            boolean includeMetadata) {
+        return filterService.getFiltersBySubjectId(subjectId, language, includeMetadata);
+    }
 
-        @JsonProperty
-        @ApiModelProperty(value = "ID of frontpage introducing this filter.", example = "urn:frontpage:1")
-        public URI contentUri;
+    @GetMapping("/v1/resources/{resourceId}/filters")
+    @ApiOperation(value = "Gets all filters associated with this resource", tags = {"resources"})
+    public List<FilterWithConnectionDTO> getFiltersByResourceId(
+            @PathVariable("resourceId")
+                    URI resourceId,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language,
+            boolean includeMetadata
+    ) {
+        return filterService.getFiltersWithConnectionByResourceId(resourceId, language, includeMetadata);
+    }
 
-        public FilterIndexDocument() {
-        }
-
-        public FilterIndexDocument(Filter filter, String translation) {
-            name = filter.getTranslation(translation)
-                    .map(FilterTranslation::getName)
-                    .orElse(filter.getName());
-
-            id = filter.getPublicId();
-            subjectId = filter.getSubject()
-                    .map(Subject::getPublicId)
-                    .orElse(null);
-            filter.getContentUri().ifPresent(contentUri -> this.contentUri = contentUri);
-        }
-
-        public URI getId() {
-            return id;
-        }
+    @Override
+    protected String getLocation() {
+        return "/v1/filters";
     }
 }

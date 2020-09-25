@@ -59,4 +59,6 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
                     "   LEFT JOIN FETCH r.cachedPaths" +
                     "   WHERE r.publicId = :publicId")
     Optional<Resource> findFirstByPublicIdIncludingCachedUrls(URI publicId);
+
+    boolean existsByPublicId(URI publicId);
 }
