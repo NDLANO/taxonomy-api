@@ -587,8 +587,8 @@ public class TestSeeder {
         createSubjectTopic("urn:subject-topic:1", topic1, subject1, 1);
 
         createTopicSubtopic("urn:topic-subtopic:1", topic1, topic2, 1);
-        createTopicSubtopic("urn:topic-subtopic:2", topic1, topic3, 2);
         createTopicSubtopic("urn:topic-subtopic:3", topic1, topic4, 3);
+        createTopicSubtopic("urn:topic-subtopic:2", topic1, topic3, 2);
         createTopicSubtopic("urn:topic-subtopic:4", topic1, topic5, 4);
         createTopicSubtopic("urn:topic-subtopic:5", topic1, topic6, 5);
         createTopicSubtopic("urn:topic-subtopic:6", topic1, topic7, 6);

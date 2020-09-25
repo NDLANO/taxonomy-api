@@ -217,6 +217,24 @@ public class TopicsTest extends RestTest {
     }
 
     @Test
+    public void subtopics_are_sorted_by_rank() throws Exception {
+        testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
+        final var subtopics = testUtils.getObject(TopicDTO[].class, response);
+        assertEquals(7, subtopics.length);
+
+        assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() == null);
+
+        assertEquals("urn:topic:2", subtopics[0].getId().toString());
+        assertEquals("urn:topic:3", subtopics[1].getId().toString());
+        assertEquals("urn:topic:4", subtopics[2].getId().toString());
+        assertEquals("urn:topic:5", subtopics[3].getId().toString());
+        assertEquals("urn:topic:6", subtopics[4].getId().toString());
+        assertEquals("urn:topic:7", subtopics[5].getId().toString());
+    }
+
+    @Test
     public void can_get_unfiltered_subtopics_with_metadata() throws Exception {
         testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
 
