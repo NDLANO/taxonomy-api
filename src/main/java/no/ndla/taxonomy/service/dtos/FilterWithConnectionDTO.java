@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.ResourceFilter;
 import no.ndla.taxonomy.domain.TopicFilter;
+import no.ndla.taxonomy.service.MetadataWrappedEntity;
 
 import java.net.URI;
 
@@ -39,6 +40,12 @@ public class FilterWithConnectionDTO extends FilterDTO {
 
         this.connectionId = topicFilter.getPublicId();
         this.relevanceId = topicFilter.getRelevance().orElseThrow().getPublicId();
+    }
+
+    public FilterWithConnectionDTO(MetadataWrappedEntity<ResourceFilter> wrappedResourceFilter, String languageCode) {
+        this(wrappedResourceFilter.getEntity(), languageCode);
+
+        wrappedResourceFilter.getMetadata().ifPresent(this::setMetadata);
     }
 
     public URI getConnectionId() {

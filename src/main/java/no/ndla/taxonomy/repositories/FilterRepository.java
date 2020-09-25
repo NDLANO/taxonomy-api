@@ -23,4 +23,10 @@ public interface FilterRepository extends TaxonomyRepository<Filter> {
 
     @Query("SELECT f FROM Filter f WHERE f.subject.publicId = :subjectPublicId")
     Collection<Filter> findAllBySubjectPublicId(URI subjectPublicId);
+
+    @Query("SELECT DISTINCT f FROM Filter f" +
+            "   LEFT JOIN FETCH f.subject" +
+            "   LEFT JOIN FETCH f.translations" +
+            "   WHERE f.subject.publicId = :subjectPublicId")
+    Collection<Filter> findAllBySubjectPublicIdIncludingSubjectAndTranslations(URI subjectPublicId);
 }

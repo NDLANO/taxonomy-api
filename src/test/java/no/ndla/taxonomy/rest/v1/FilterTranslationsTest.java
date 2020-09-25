@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Filter;
+import no.ndla.taxonomy.service.dtos.FilterDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -23,14 +24,14 @@ public class FilterTranslationsTest extends RestTest {
                 )
         ).getPublicId();
 
-        Filters.FilterIndexDocument resource = getFilterIndexDocument(id, "nn");
-        assertEquals("Tømrar", resource.name);
+        final var resource = getFilterIndexDocument(id, "nn");
+        assertEquals("Tømrar", resource.getName());
     }
 
-    private Filters.FilterIndexDocument getFilterIndexDocument(URI id, String language) throws Exception {
+    private FilterDTO getFilterIndexDocument(URI id, String language) throws Exception {
         String path = "/v1/filters/" + id;
         if (isNotEmpty(language)) path = path + "?language=" + language;
-        return testUtils.getObject(Filters.FilterIndexDocument.class, testUtils.getResource(path));
+        return testUtils.getObject(FilterDTO.class, testUtils.getResource(path));
     }
 
     @Test
@@ -44,10 +45,10 @@ public class FilterTranslationsTest extends RestTest {
         builder.filter(f -> f.name("Negative tall").translation("nn", l -> l.name("Negative tal")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/filters?language=nn");
-        Filters.FilterIndexDocument[] filters = testUtils.getObject(Filters.FilterIndexDocument[].class, response);
+        final var filters = testUtils.getObject(FilterDTO[].class, response);
 
-        assertAnyTrue(filters, f -> f.name.equals("Tømrar"));
-        assertAnyTrue(filters, f -> f.name.equals("Negative tal"));
+        assertAnyTrue(filters, f -> f.getName().equals("Tømrar"));
+        assertAnyTrue(filters, f -> f.getName().equals("Negative tal"));
     }
 
     @Test
@@ -56,8 +57,8 @@ public class FilterTranslationsTest extends RestTest {
                 .name("Tømrer")
         ).getPublicId();
 
-        Filters.FilterIndexDocument resource = getFilterIndexDocument(id, "nn");
-        assertEquals("Tømrer", resource.name);
+        final var resource = getFilterIndexDocument(id, "nn");
+        assertEquals("Tømrer", resource.getName());
     }
 
     @Test
@@ -67,8 +68,8 @@ public class FilterTranslationsTest extends RestTest {
                 .translation("nn", l -> l.name("Tømrar"))
         ).getPublicId();
 
-        Filters.FilterIndexDocument resource = getFilterIndexDocument(id, null);
-        assertEquals("Tømrer", resource.name);
+        final var resource = getFilterIndexDocument(id, null);
+        assertEquals("Tømrer", resource.getName());
     }
 
     @Test
@@ -82,7 +83,7 @@ public class FilterTranslationsTest extends RestTest {
             name = "Tømrar";
         }});
 
-        assertEquals("Tømrar", filter.getTranslation("nn").get().getName());
+        assertEquals("Tømrar", filter.getTranslation("nn").orElseThrow().getName());
     }
 
     @Test

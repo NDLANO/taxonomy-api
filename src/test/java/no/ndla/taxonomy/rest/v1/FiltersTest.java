@@ -22,9 +22,9 @@ public class FiltersTest extends RestTest {
         );
 
         MockHttpServletResponse response = testUtils.getResource("/v1/filters/" + "urn:filter:1");
-        Filters.FilterIndexDocument filter = testUtils.getObject(Filters.FilterIndexDocument.class, response);
+        final var filter = testUtils.getObject(FilterDTO.class, response);
 
-        assertEquals("1T-YF", filter.name);
+        assertEquals("1T-YF", filter.getName());
     }
 
     @Test
@@ -40,11 +40,11 @@ public class FiltersTest extends RestTest {
         );
 
         MockHttpServletResponse response = testUtils.getResource("/v1/filters");
-        Filters.FilterIndexDocument[] filters = testUtils.getObject(Filters.FilterIndexDocument[].class, response);
+        final var filters = testUtils.getObject(FilterDTO[].class, response);
 
         assertEquals(2, filters.length);
-        assertAnyTrue(filters, f -> f.name.equals("1T-YF"));
-        assertAnyTrue(filters, f -> f.name.equals("1T-ST"));
+        assertAnyTrue(filters, f -> f.getName().equals("1T-YF"));
+        assertAnyTrue(filters, f -> f.getName().equals("1T-ST"));
     }
 
     @Test
@@ -67,12 +67,12 @@ public class FiltersTest extends RestTest {
         );
 
         MockHttpServletResponse response = testUtils.getResource("/v1/filters");
-        Filters.FilterIndexDocument[] filters = testUtils.getObject(Filters.FilterIndexDocument[].class, response);
+        final var filters = testUtils.getObject(FilterDTO[].class, response);
 
         assertEquals(3, filters.length);
 
-        for (Filters.FilterIndexDocument filter : filters) {
-            switch (filter.name) {
+        for (var filter : filters) {
+            switch (filter.getName()) {
                 case "F1":
                     assertEquals(URI.create("urn:article:1"), filter.contentUri);
                     break;
@@ -280,7 +280,7 @@ public class FiltersTest extends RestTest {
         testUtils.updateResource("/v1/filters/urn:filter:2", updateDto);
 
         MockHttpServletResponse response = testUtils.getResource("/v1/filters/urn:filter:2");
-        Filters.FilterIndexDocument filter = testUtils.getObject(Filters.FilterIndexDocument.class, response);
+        final var filter = testUtils.getObject(FilterDTO.class, response);
 
         assertEquals("urn:subject:1", filter.subjectId.toString());
     }
@@ -304,7 +304,7 @@ public class FiltersTest extends RestTest {
         testUtils.updateResource("/v1/filters/urn:filter:2", updateDto);
 
         MockHttpServletResponse response = testUtils.getResource("/v1/filters/urn:filter:2");
-        Filters.FilterIndexDocument filter = testUtils.getObject(Filters.FilterIndexDocument.class, response);
+        final var filter = testUtils.getObject(FilterDTO.class, response);
 
         assertEquals("urn:subject:3", filter.subjectId.toString());
     }

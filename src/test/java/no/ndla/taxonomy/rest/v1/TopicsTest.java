@@ -5,6 +5,7 @@ import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
+import no.ndla.taxonomy.service.dtos.FilterDTO;
 import no.ndla.taxonomy.service.dtos.TopicDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -403,27 +405,30 @@ public class TopicsTest extends RestTest {
         TopicResource.create(topic1, resource1);
 
         {
-            final var returnedFilters = Arrays.asList(testUtils.getObject(Filters.FilterIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:1/filters")));
+            final var returnedFilters = Arrays.asList(testUtils.getObject(FilterDTO[].class, testUtils.getResource("/v1/topics/urn:topic:1/filters")));
 
             assertEquals(1, returnedFilters.size());
             assertTrue(returnedFilters
                     .stream()
-                    .map(Filters.FilterIndexDocument::getId)
-                    .collect(Collectors.toList()).contains(new URI("urn:filter:1")));
+                    .map(FilterDTO::getId)
+                    .map(Optional::orElseThrow)
+                    .collect(Collectors.toList())
+                    .contains(new URI("urn:filter:1")));
         }
 
         {
-            final var returnedFilters = Arrays.asList(testUtils.getObject(Filters.FilterIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:2/filters")));
+            final var returnedFilters = Arrays.asList(testUtils.getObject(FilterDTO[].class, testUtils.getResource("/v1/topics/urn:topic:2/filters")));
 
             assertEquals(2, returnedFilters.size());
             assertTrue(returnedFilters
                     .stream()
-                    .map(Filters.FilterIndexDocument::getId)
+                    .map(FilterDTO::getId)
+                    .map(Optional::orElseThrow)
                     .collect(Collectors.toList()).containsAll(Set.of(new URI("urn:filter:1"), new URI("urn:filter:2"))));
         }
 
         {
-            final var returnedFilters = Arrays.asList(testUtils.getObject(Filters.FilterIndexDocument[].class, testUtils.getResource("/v1/topics/urn:topic:3/filters")));
+            final var returnedFilters = Arrays.asList(testUtils.getObject(FilterDTO[].class, testUtils.getResource("/v1/topics/urn:topic:3/filters")));
 
             assertEquals(0, returnedFilters.size());
         }
