@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.domain.TopicTranslation;
 import no.ndla.taxonomy.service.MetadataWrappedEntity;
+import no.ndla.taxonomy.service.TopicTreeSorter;
 
 import java.net.URI;
 
@@ -14,7 +15,7 @@ import java.net.URI;
  *
  */
 @ApiModel("SubTopicIndexDocument")
-public class SubTopicIndexDTO {
+public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
     @JsonProperty
     @ApiModelProperty(value = "Topic id", example = "urn:topic:234")
     private URI id;
@@ -35,6 +36,9 @@ public class SubTopicIndexDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 
+    private int rank;
+    private URI parentId;
+
     public SubTopicIndexDTO() {
 
     }
@@ -53,6 +57,9 @@ public class SubTopicIndexDTO {
         });
 
         this.isPrimary = true;
+
+        this.rank = topicSubtopic.getRank();
+        topicSubtopic.getTopic().ifPresent(topic -> this.parentId = topic.getPublicId());
 
         wrappedTopicSubtopic.getMetadata().ifPresent(metadataDto -> this.metadata = metadataDto);
     }
@@ -75,5 +82,20 @@ public class SubTopicIndexDTO {
 
     public MetadataDto getMetadata() {
         return metadata;
+    }
+
+    @Override
+    public int getSortableRank() {
+        return rank;
+    }
+
+    @Override
+    public URI getSortableId() {
+        return id;
+    }
+
+    @Override
+    public URI getSortableParentId() {
+        return parentId;
     }
 }

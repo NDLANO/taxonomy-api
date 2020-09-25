@@ -14,9 +14,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -46,6 +44,8 @@ public class TopicServiceImplTest {
 
     private MetadataApiService metadataApiService;
 
+    private TopicTreeSorter topicTreeSorter;
+
     private MetadataEntityWrapperService metadataEntityWrapperService;
 
     @BeforeEach
@@ -53,69 +53,17 @@ public class TopicServiceImplTest {
         entityConnectionService = mock(EntityConnectionService.class);
         metadataApiService = mock(MetadataApiService.class);
         metadataEntityWrapperService = mock(MetadataEntityWrapperService.class);
+        this.topicTreeSorter = mock(TopicTreeSorter.class);
 
-        topicService = new TopicServiceImpl(topicRepository, topicSubtopicRepository, filterRepository, entityConnectionService, metadataApiService, metadataEntityWrapperService);
-    }
-
-    @Test
-    public void delete() {
-        final var createdTopic = builder.topic();
-        final var topicId = createdTopic.getPublicId();
-
-        topicService.delete(topicId);
-
-        assertFalse(topicRepository.findFirstByPublicId(topicId).isPresent());
-        verify(entityConnectionService).disconnectAllChildren(createdTopic);
-
-        verify(metadataApiService).deleteMetadataByPublicId(topicId);
-    }
-
-    @Test
-    public void getAllConnections() {
-        final var topicId = builder.topic().getPublicId();
-
-        final var subjectTopic = mock(SubjectTopic.class);
-        final var parentTopicSubtopic = mock(TopicSubtopic.class);
-        final var childTopicSubtopic = mock(TopicSubtopic.class);
-
-        when(subjectTopic.getPublicId()).thenReturn(URI.create("urn:subject-topic"));
-        when(parentTopicSubtopic.getPublicId()).thenReturn(URI.create("urn:parent-topic"));
-        when(childTopicSubtopic.getPublicId()).thenReturn(URI.create("urn:child-topic"));
-
-        final var parentConnectionsToReturn = Set.of(subjectTopic);
-        final var childConnectionsToReturn = Set.of(childTopicSubtopic);
-
-        when(entityConnectionService.getParentConnections(any(Topic.class))).thenAnswer(invocationOnMock -> {
-            final var topic = (Topic) invocationOnMock.getArgument(0);
-            assertEquals(topicId, topic.getPublicId());
-
-            return parentConnectionsToReturn;
-        });
-        when(entityConnectionService.getChildConnections(any(Topic.class))).thenAnswer(invocationOnMock -> {
-            final var topic = (Topic) invocationOnMock.getArgument(0);
-            assertEquals(topicId, topic.getPublicId());
-
-            return childConnectionsToReturn;
-        });
-
-        final var returnedConnections = topicService.getAllConnections(topicId);
-
-        assertEquals(2, returnedConnections.size());
-        returnedConnections.forEach(connection -> {
-            if (connection.getConnectionId().equals(URI.create("urn:subject-topic"))) {
-                assertEquals("parent-subject", connection.getType());
-            } else if (connection.getConnectionId().equals(URI.create("urn:child-topic"))) {
-                assertEquals("subtopic", connection.getType());
-            } else {
-                fail();
-            }
-        });
+        topicService = new TopicServiceImpl(topicRepository, topicSubtopicRepository, filterRepository, entityConnectionService, metadataApiService, metadataEntityWrapperService, topicTreeSorter);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
     @Transactional
     public void getFilteredSubtopicConnections() {
+        when(topicTreeSorter.sortList(anyList())).thenAnswer(i -> new MockedSortedArrayList<>(i.getArgument(0)));
+
         when(metadataEntityWrapperService.wrapEntities(anyList(), eq(false), any(Function.class))).thenAnswer(invocationOnMock -> {
             final var list = (List<DomainEntity>) invocationOnMock.getArgument(0);
 
@@ -212,6 +160,9 @@ public class TopicServiceImplTest {
         final var subtopicsBySubject3Filters = topicService.getFilteredSubtopicConnections(topicId, subject3Id, "", false);
         final var subtopicsWithNullSubjectId = topicService.getFilteredSubtopicConnections(topicId, (URI) null, "", false);
 
+        // Just tests that it was actually passed through sorting
+        assertTrue(subtopicsByFilter1 instanceof MockedSortedArrayList);
+
         assertEquals(3, subtopicsWithEmptyFilters.size());
         assertEquals(3, subtopicsWithNullFilters.size());
         assertEquals(3, subtopicsWithEmptyFiltersAndMetadata.size());
@@ -261,5 +212,66 @@ public class TopicServiceImplTest {
                     break;
             }
         });
+    }
+
+    @Test
+    public void delete() {
+        final var createdTopic = builder.topic();
+        final var topicId = createdTopic.getPublicId();
+
+        topicService.delete(topicId);
+
+        assertFalse(topicRepository.findFirstByPublicId(topicId).isPresent());
+        verify(entityConnectionService).disconnectAllChildren(createdTopic);
+
+        verify(metadataApiService).deleteMetadataByPublicId(topicId);
+    }
+
+    @Test
+    public void getAllConnections() {
+        final var topicId = builder.topic().getPublicId();
+
+        final var subjectTopic = mock(SubjectTopic.class);
+        final var parentTopicSubtopic = mock(TopicSubtopic.class);
+        final var childTopicSubtopic = mock(TopicSubtopic.class);
+
+        when(subjectTopic.getPublicId()).thenReturn(URI.create("urn:subject-topic"));
+        when(parentTopicSubtopic.getPublicId()).thenReturn(URI.create("urn:parent-topic"));
+        when(childTopicSubtopic.getPublicId()).thenReturn(URI.create("urn:child-topic"));
+
+        final var parentConnectionsToReturn = Set.of(subjectTopic);
+        final var childConnectionsToReturn = Set.of(childTopicSubtopic);
+
+        when(entityConnectionService.getParentConnections(any(Topic.class))).thenAnswer(invocationOnMock -> {
+            final var topic = (Topic) invocationOnMock.getArgument(0);
+            assertEquals(topicId, topic.getPublicId());
+
+            return parentConnectionsToReturn;
+        });
+        when(entityConnectionService.getChildConnections(any(Topic.class))).thenAnswer(invocationOnMock -> {
+            final var topic = (Topic) invocationOnMock.getArgument(0);
+            assertEquals(topicId, topic.getPublicId());
+
+            return childConnectionsToReturn;
+        });
+
+        final var returnedConnections = topicService.getAllConnections(topicId);
+
+        assertEquals(2, returnedConnections.size());
+        returnedConnections.forEach(connection -> {
+            if (connection.getConnectionId().equals(URI.create("urn:subject-topic"))) {
+                assertEquals("parent-subject", connection.getType());
+            } else if (connection.getConnectionId().equals(URI.create("urn:child-topic"))) {
+                assertEquals("subtopic", connection.getType());
+            } else {
+                fail();
+            }
+        });
+    }
+
+    static class MockedSortedArrayList<E> extends ArrayList<E> {
+        private MockedSortedArrayList(Collection<E> collection) {
+            super(collection);
+        }
     }
 }

@@ -28,17 +28,19 @@ public class TopicServiceImpl implements TopicService {
     private final FilterRepository filterRepository;
     private final MetadataApiService metadataApiService;
     private final MetadataEntityWrapperService metadataEntityWrapperService;
+    private final TopicTreeSorter topicTreeSorter;
 
     public TopicServiceImpl(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository,
                             FilterRepository filterRepository, EntityConnectionService connectionService,
                             MetadataApiService metadataApiService,
-                            MetadataEntityWrapperService metadataEntityWrapperService) {
+                            MetadataEntityWrapperService metadataEntityWrapperService, TopicTreeSorter topicTreeSorter) {
         this.topicRepository = topicRepository;
         this.connectionService = connectionService;
         this.filterRepository = filterRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.metadataApiService = metadataApiService;
         this.metadataEntityWrapperService = metadataEntityWrapperService;
+        this.topicTreeSorter = topicTreeSorter;
     }
 
     @Override
@@ -105,9 +107,11 @@ public class TopicServiceImpl implements TopicService {
             subtopicConnections = topicSubtopicRepository.findAllByTopicPublicIdIncludingSubtopicAndSubtopicTranslations(topicPublicId);
         }
 
-        return
+        final var wrappedList =
                 metadataEntityWrapperService.wrapEntities(subtopicConnections, includeMetadata, topicSubtopic -> topicSubtopic.getSubtopic().orElseThrow().getPublicId()).stream()
                         .map(topicSubtopic -> new SubTopicIndexDTO(topicSubtopic, languageCode))
                         .collect(Collectors.toUnmodifiableList());
+
+        return topicTreeSorter.sortList(wrappedList);
     }
 }
