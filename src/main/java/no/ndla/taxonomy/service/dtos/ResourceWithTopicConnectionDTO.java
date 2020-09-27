@@ -4,7 +4,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicResource;
-import no.ndla.taxonomy.service.MetadataWrappedEntity;
 
 import java.net.URI;
 
@@ -24,12 +23,6 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
 
     public ResourceWithTopicConnectionDTO() {
 
-    }
-
-    public ResourceWithTopicConnectionDTO(MetadataWrappedEntity<TopicResource> wrappedTopicResource, String language) {
-        this(wrappedTopicResource.getEntity(), language);
-
-        wrappedTopicResource.getMetadata().ifPresent(this::setMetadata);
     }
 
     public ResourceWithTopicConnectionDTO(TopicResource topicResource, String language) {

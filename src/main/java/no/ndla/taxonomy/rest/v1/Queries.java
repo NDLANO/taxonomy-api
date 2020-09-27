@@ -31,7 +31,7 @@ public class Queries {
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) {
-        return resourceController.index(language, contentURI, false);
+        return resourceController.index(language, contentURI);
     }
 
     @GetMapping("/topics")
@@ -41,6 +41,6 @@ public class Queries {
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "") String language
     ) {
-        return topicController.index(language, contentURI, false);
+        return topicController.index(language, contentURI);
     }
 }

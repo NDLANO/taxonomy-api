@@ -6,7 +6,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceTranslation;
-import no.ndla.taxonomy.service.MetadataWrappedEntity;
+import no.ndla.taxonomy.service.InjectMetadata;
+import no.ndla.taxonomy.service.MetadataIdField;
 
 import java.net.URI;
 import java.util.HashSet;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 public class ResourceDTO {
     @JsonProperty
     @ApiModelProperty(example = "urn:resource:345")
+    @MetadataIdField
     private URI id;
 
     @JsonProperty
@@ -33,7 +35,7 @@ public class ResourceDTO {
     @ApiModelProperty(value = "The path part of the url to this resource", example = "/subject:1/topic:1/resource:1")
     private String path;
 
-    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true. Read only.")
+    @ApiModelProperty(value = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 
@@ -43,6 +45,7 @@ public class ResourceDTO {
 
     @JsonProperty
     @ApiModelProperty(value = "Filters this resource is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
+    @InjectMetadata
     private Set<FilterWithConnectionDTO> filters = new HashSet<>();
 
     @JsonProperty
@@ -54,12 +57,6 @@ public class ResourceDTO {
 
     protected void setMetadata(MetadataDto metadata) {
         this.metadata = metadata;
-    }
-
-    public ResourceDTO(MetadataWrappedEntity<Resource> wrappedResource, String languageCode) {
-        this(wrappedResource.getEntity(), languageCode);
-
-        wrappedResource.getMetadata().ifPresent(metadataDto -> this.metadata = metadataDto);
     }
 
     public ResourceDTO(Resource resource, String languageCode) {

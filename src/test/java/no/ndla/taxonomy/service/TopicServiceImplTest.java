@@ -1,21 +1,20 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
-import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
-import java.util.*;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,52 +29,25 @@ public class TopicServiceImplTest {
     private TopicRepository topicRepository;
 
     @Autowired
-    private TopicSubtopicRepository topicSubtopicRepository;
-
-    @Autowired
-    private FilterRepository filterRepository;
-
-    @Autowired
     private Builder builder;
 
-    private EntityConnectionService entityConnectionService;
-
-    private TopicServiceImpl topicService;
-
+    @MockBean
     private MetadataApiService metadataApiService;
 
+    @MockBean
+    private EntityConnectionService entityConnectionService;
+
+    @Autowired
+    private TopicServiceImpl topicService;
+
+    @MockBean
     private TopicTreeSorter topicTreeSorter;
-
-    private MetadataEntityWrapperService metadataEntityWrapperService;
-
-    @BeforeEach
-    public void setUp() {
-        entityConnectionService = mock(EntityConnectionService.class);
-        metadataApiService = mock(MetadataApiService.class);
-        metadataEntityWrapperService = mock(MetadataEntityWrapperService.class);
-        this.topicTreeSorter = mock(TopicTreeSorter.class);
-
-        topicService = new TopicServiceImpl(topicRepository, topicSubtopicRepository, filterRepository, entityConnectionService, metadataApiService, metadataEntityWrapperService, topicTreeSorter);
-    }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
     @Transactional
     public void getFilteredSubtopicConnections() {
         when(topicTreeSorter.sortList(anyList())).thenAnswer(i -> new MockedSortedArrayList<>(i.getArgument(0)));
-
-        when(metadataEntityWrapperService.wrapEntities(anyList(), eq(false), any(Function.class))).thenAnswer(invocationOnMock -> {
-            final var list = (List<DomainEntity>) invocationOnMock.getArgument(0);
-
-            return list.stream()
-                    .map(entity -> {
-                        final var wrapped = mock(MetadataWrappedEntity.class);
-                        when(wrapped.getEntity()).thenReturn(entity);
-
-                        return wrapped;
-                    })
-                    .collect(Collectors.toList());
-        });
 
         final var subject1 = builder.subject();
         final var subject2 = builder.subject();
@@ -120,52 +92,47 @@ public class TopicServiceImplTest {
         final var metadataObject2 = mock(MetadataDto.class);
         final var metadataObject3 = mock(MetadataDto.class);
 
-        when(metadataEntityWrapperService.wrapEntities(anyList(), eq(true), any(Function.class))).thenAnswer(invocationOnMock -> {
-            final var list = (List<DomainEntity>) invocationOnMock.getArgument(0);
-            final var idGet = (Function) invocationOnMock.getArgument(2);
+        when(metadataObject1.getPublicId()).thenReturn(topic1Id.toString());
+        when(metadataObject2.getPublicId()).thenReturn(topic2Id.toString());
+        when(metadataObject3.getPublicId()).thenReturn(topic3Id.toString());
+
+        when(metadataApiService.getMetadataByPublicId(anyCollection())).thenAnswer(invocationOnMock -> {
+            final var list = (Collection<URI>) invocationOnMock.getArgument(0);
 
             return list.stream()
-                    .map(entity -> {
-                        final var wrapped = mock(MetadataWrappedEntity.class);
-                        when(wrapped.getEntity()).thenReturn(entity);
-
-                        final var wrappedId = (URI) idGet.apply(entity);
-
-                        if (wrappedId.equals(topic1Id)) {
-                            when(wrapped.getMetadata()).thenReturn(Optional.of(metadataObject1));
-                        } else if (wrappedId.equals(topic2Id)) {
-                            when(wrapped.getMetadata()).thenReturn(Optional.of(metadataObject2));
-                        } else if (wrappedId.equals(topic3Id)) {
-                            when(wrapped.getMetadata()).thenReturn(Optional.of(metadataObject3));
+                    .map(publicId -> {
+                        if (publicId.equals(topic1Id)) {
+                            return metadataObject1;
+                        } else if (publicId.equals(topic2Id)) {
+                            return metadataObject2;
+                        } else if (publicId.equals(topic3Id)) {
+                            return metadataObject3;
                         } else {
                             fail();
+                            return null;
                         }
-
-                        return wrapped;
                     })
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toSet());
         });
 
-        final var subtopicsWithNullFilters = topicService.getFilteredSubtopicConnections(topicId, (Set<URI>) null, "", false);
-        final var subtopicsWithEmptyFilters = topicService.getFilteredSubtopicConnections(topicId, Set.of(), "", false);
-        final var subtopicsWithEmptyFiltersAndMetadata = topicService.getFilteredSubtopicConnections(topicId, Set.of(), "", true);
+        final var subtopicsWithNullFilters = topicService.getFilteredSubtopicConnections(topicId, (Set<URI>) null, "");
+        final var subtopicsWithEmptyFilters = topicService.getFilteredSubtopicConnections(topicId, Set.of(), "");
 
-        final var subtopicsByFilter1 = topicService.getFilteredSubtopicConnections(topicId, Set.of(filter1Id), "", false);
-        final var subtopicsByFilter2 = topicService.getFilteredSubtopicConnections(topicId, Set.of(filter2Id), "", false);
-        final var subtopicsByFilter3 = topicService.getFilteredSubtopicConnections(topicId, Set.of(filter3Id), "", false);
-        final var subtopicsByFilter1And2 = topicService.getFilteredSubtopicConnections(topicId, Set.of(filter1Id, filter2Id), "", false);
+        final var subtopicsByFilter1 = topicService.getFilteredSubtopicConnections(topicId, Set.of(filter1Id), "");
+        final var subtopicsByFilter2 = topicService.getFilteredSubtopicConnections(topicId, Set.of(filter2Id), "");
+        final var subtopicsByFilter3 = topicService.getFilteredSubtopicConnections(topicId, Set.of(filter3Id), "");
+        final var subtopicsByFilter1And2 = topicService.getFilteredSubtopicConnections(topicId, Set.of(filter1Id, filter2Id), "");
 
-        final var subtopicsBySubject1Filters = topicService.getFilteredSubtopicConnections(topicId, subject1Id, "", false);
-        final var subtopicsBySubject2Filters = topicService.getFilteredSubtopicConnections(topicId, subject2Id, "", false);
-        final var subtopicsBySubject3Filters = topicService.getFilteredSubtopicConnections(topicId, subject3Id, "", false);
-        final var subtopicsWithNullSubjectId = topicService.getFilteredSubtopicConnections(topicId, (URI) null, "", false);
+        final var subtopicsBySubject1Filters = topicService.getFilteredSubtopicConnections(topicId, subject1Id, "");
+        final var subtopicsBySubject2Filters = topicService.getFilteredSubtopicConnections(topicId, subject2Id, "");
+        final var subtopicsBySubject3Filters = topicService.getFilteredSubtopicConnections(topicId, subject3Id, "");
+        final var subtopicsWithNullSubjectId = topicService.getFilteredSubtopicConnections(topicId, (URI) null, "");
 
         // Just tests that it was actually passed through sorting
         assertTrue(subtopicsByFilter1 instanceof MockedSortedArrayList);
 
         assertEquals(3, subtopicsWithEmptyFilters.size());
         assertEquals(3, subtopicsWithNullFilters.size());
-        assertEquals(3, subtopicsWithEmptyFiltersAndMetadata.size());
 
         assertEquals(1, subtopicsByFilter1.size());
         assertEquals(1, subtopicsByFilter2.size());
@@ -195,7 +162,7 @@ public class TopicServiceImplTest {
         });
 
         // Check if metadata is present on the list that is supposed to include metadata
-        subtopicsWithEmptyFiltersAndMetadata.forEach(subtopicDto -> {
+        subtopicsWithEmptyFilters.forEach(subtopicDto -> {
             assertNotNull(subtopicDto.getMetadata());
             switch (subtopicDto.getName()) {
                 case "topic1":

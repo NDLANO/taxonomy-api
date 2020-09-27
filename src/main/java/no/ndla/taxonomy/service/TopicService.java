@@ -11,11 +11,11 @@ import java.util.List;
 public interface TopicService {
     void delete(URI publicId);
 
-    List<TopicDTO> getTopics(String languageCode, URI contentUriFilter, boolean includeMedata);
+    List<TopicDTO> getTopics(String languageCode, URI contentUriFilter);
 
     List<ConnectionIndexDTO> getAllConnections(URI topicPublicId);
 
-    List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId, String languageCode, boolean includeMetadata);
+    List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId, String languageCode);
 
-    List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, Collection<URI> filterPublicIds, String languageCode, boolean includeMetadata);
+    List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, Collection<URI> filterPublicIds, String languageCode);
 }

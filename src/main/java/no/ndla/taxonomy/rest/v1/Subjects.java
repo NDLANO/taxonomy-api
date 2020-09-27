@@ -32,18 +32,15 @@ public class Subjects extends CrudController<Subject> {
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final TopicTreeSorter topicTreeSorter;
     private final SubjectService subjectService;
-    private final MetadataEntityWrapperService metadataWrapperService;
     private final RecursiveTopicTreeService recursiveTopicTreeService;
 
     public Subjects(SubjectRepository subjectRepository,
                     SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository,
                     TopicTreeSorter topicTreeSorter, SubjectService subjectService,
-                    MetadataEntityWrapperService metadataWrapperService,
                     CachedUrlUpdaterService cachedUrlUpdaterService, RecursiveTopicTreeService recursiveTopicTreeService) {
         super(subjectRepository, cachedUrlUpdaterService);
 
         this.subjectRepository = subjectRepository;
-        this.metadataWrapperService = metadataWrapperService;
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicTreeSorter = topicTreeSorter;
@@ -53,16 +50,13 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping
     @ApiOperation("Gets all subjects")
+    @InjectMetadata
     public List<SubjectIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language,
-
-            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
-            @RequestParam(required = false, defaultValue = "false")
-                    boolean includeMetadata
+                    String language
     ) {
-        return metadataWrapperService.wrapEntities(subjectRepository.findAllIncludingCachedUrlsAndTranslations(), includeMetadata)
+        return subjectRepository.findAllIncludingCachedUrlsAndTranslations()
                 .stream()
                 .map(subject -> new SubjectIndexDocument(subject, language))
                 .collect(Collectors.toList());
@@ -70,18 +64,14 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single subject", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
+    @InjectMetadata
     public SubjectIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language,
-
-            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
-            @RequestParam(required = false, defaultValue = "false")
-                    boolean includeMetadata
+                    String language
     ) {
         return subjectRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
-                .map(subject -> metadataWrapperService.wrapEntity(subject, includeMetadata))
                 .map(subject -> new SubjectIndexDocument(subject, language))
                 .orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
     }
@@ -107,6 +97,7 @@ public class Subjects extends CrudController<Subject> {
 
     @GetMapping("/{id}/topics")
     @ApiOperation(value = "Gets all topics associated with a subject", notes = "This resource is read-only. To update the relationship between subjects and topics, use the resource /subject-topics.")
+    @InjectMetadata
     public List<SubTopicIndexDocument> getTopics(
             @PathVariable("id")
                     URI id,
@@ -122,11 +113,7 @@ public class Subjects extends CrudController<Subject> {
                     Set<URI> filterIds,
             @RequestParam(value = "relevance", required = false, defaultValue = "")
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
-                    URI relevance,
-
-            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
-            @RequestParam(required = false, defaultValue = "false")
-                    boolean includeMetadata
+                    URI relevance
     ) {
         final var subject = subjectRepository.findFirstByPublicId(id)
                 .orElseThrow(() -> new NotFoundException("Subject", id));
@@ -170,11 +157,11 @@ public class Subjects extends CrudController<Subject> {
 
         // Wrapping with metadata from API if asked for
 
-        metadataWrapperService.wrapEntities(filteredSubjectTopics, includeMetadata, subjectTopic -> subjectTopic.getTopic().orElseThrow().getPublicId()).stream()
+        filteredSubjectTopics.stream()
                 .map(subjectTopic -> createSubTopicIndexDocument(subject, subjectTopic, language))
                 .forEach(returnList::add);
 
-        metadataWrapperService.wrapEntities(filteredTopicSubtopics, includeMetadata, topicSubtopic -> topicSubtopic.getSubtopic().orElseThrow().getPublicId()).stream()
+        filteredTopicSubtopics.stream()
                 .map(topicSubtopic -> createSubTopicIndexDocument(subject, topicSubtopic, language))
                 .forEach(returnList::add);
 
@@ -186,9 +173,8 @@ public class Subjects extends CrudController<Subject> {
         return topicTreeSorter.sortList(returnList).stream().distinct().collect(Collectors.toList());
     }
 
-    private <T extends DomainEntity> SubTopicIndexDocument createSubTopicIndexDocument(Subject subject, MetadataWrappedEntity<T> connection, String language) {
-        //noinspection unchecked
-        return new SubTopicIndexDocument(subject, (MetadataWrappedEntity<DomainEntity>) connection, language);
+    private SubTopicIndexDocument createSubTopicIndexDocument(Subject subject, DomainEntity connection, String language) {
+        return new SubTopicIndexDocument(subject, connection, language);
     }
 
     private boolean hasFilterAndRelevanceOrJustFilterIfRelevanceIsNotSet(Topic topic, Collection<URI> filterPublicId, URI relevancePublicId) {

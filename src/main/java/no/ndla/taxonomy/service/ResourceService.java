@@ -15,15 +15,15 @@ public interface ResourceService {
                                                                URI filterBySubjectId,
                                                                Set<URI> resourceTypeIds,
                                                                URI relevancePublicId,
-                                                               String languageCode, boolean recursive, boolean includeMetadata);
+                                                               String languageCode, boolean recursive);
 
     List<ResourceWithTopicConnectionDTO> getResourcesBySubjectId(URI subjectPublicId, Set<URI> filterIds,
                                                                  Set<URI> resourceTypeIds, URI relevancePublicId,
-                                                                 String languageCode, boolean includeMetadata);
+                                                                 String languageCode);
 
-    ResourceDTO getResourceByPublicId(URI publicId, String languageCode, boolean includeMetadata);
+    ResourceDTO getResourceByPublicId(URI publicId, String languageCode);
 
     ResourceWithParentTopicsDTO getResourceWithParentTopicsByPublicId(URI publicId, String languageCode);
 
-    List<ResourceDTO> getResources(String languageCode, URI contentUriFilter, boolean includeMetadata);
+    List<ResourceDTO> getResources(String languageCode, URI contentUriFilter);
 }

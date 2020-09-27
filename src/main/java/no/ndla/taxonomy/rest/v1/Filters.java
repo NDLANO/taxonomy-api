@@ -36,13 +36,9 @@ public class Filters extends CrudController<Filter> {
     public List<FilterDTO> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language,
-
-            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
-            @RequestParam(required = false, defaultValue = "false")
-                    boolean includeMetadata
+                    String language
     ) {
-        return filterService.getFilters(language, includeMetadata);
+        return filterService.getFilters(language);
     }
 
     @GetMapping("/v1/filters/{id}")
@@ -51,13 +47,9 @@ public class Filters extends CrudController<Filter> {
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language,
-
-            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
-            @RequestParam(required = false, defaultValue = "false")
-                    boolean includeMetadata
+                    String language
     ) {
-        return filterService.getFilterByPublicId(id, language, includeMetadata);
+        return filterService.getFilterByPublicId(id, language);
     }
 
     @PostMapping("/v1/filters")
@@ -105,9 +97,8 @@ public class Filters extends CrudController<Filter> {
             @PathVariable("subjectId") URI subjectId,
 
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-                    String language,
-            boolean includeMetadata) {
-        return filterService.getFiltersBySubjectId(subjectId, language, includeMetadata);
+                    String language) {
+        return filterService.getFiltersBySubjectId(subjectId, language);
     }
 
     @GetMapping("/v1/resources/{resourceId}/filters")
@@ -117,10 +108,9 @@ public class Filters extends CrudController<Filter> {
                     URI resourceId,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language,
-            boolean includeMetadata
+                    String language
     ) {
-        return filterService.getFiltersWithConnectionByResourceId(resourceId, language, includeMetadata);
+        return filterService.getFiltersWithConnectionByResourceId(resourceId, language);
     }
 
     @Override

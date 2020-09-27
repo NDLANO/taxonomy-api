@@ -37,27 +37,9 @@ public class SubjectsTest extends RestTest {
         assertEquals("urn:article:1", subject.contentUri.toString());
         assertEquals("/subject:1", subject.path);
 
-        assertNull(subject.metadata);
-    }
-
-    @Test
-    public void can_get_single_subject_with_metadata() throws Exception {
-        builder.subject(s -> s
-                .name("english")
-                .contentUri("urn:article:1")
-                .publicId("urn:subject:1")
-        );
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1?includeMetadata=true");
-        SubjectIndexDocument subject = testUtils.getObject(SubjectIndexDocument.class, response);
-
-        assertEquals("english", subject.name);
-        assertEquals("urn:article:1", subject.contentUri.toString());
-        assertEquals("/subject:1", subject.path);
-
-        assertNotNull(subject.metadata);
-        assertTrue(subject.metadata.isVisible());
-        assertTrue(subject.metadata.getGrepCodes().size() == 1 && subject.metadata.getGrepCodes().contains("SUBJECT1"));
+        assertNotNull(subject.getMetadata());
+        assertTrue(subject.getMetadata().isVisible());
+        assertTrue(subject.getMetadata().getGrepCodes().size() == 1 && subject.getMetadata().getGrepCodes().contains("SUBJECT1"));
     }
 
     @Test
@@ -74,27 +56,10 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(subjects, s -> isValidId(s.id));
         assertAllTrue(subjects, s -> !s.path.isEmpty());
 
-        assertAllTrue(subjects, s -> s.metadata == null);
-    }
+        assertAllTrue(subjects, s -> s.getMetadata() != null);
 
-    @Test
-    public void can_get_all_subjects_with_metadata() throws Exception {
-        builder.subject(s -> s.name("english"));
-        builder.subject(s -> s.name("mathematics"));
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects?includeMetadata=true");
-        SubjectIndexDocument[] subjects = testUtils.getObject(SubjectIndexDocument[].class, response);
-        assertEquals(2, subjects.length);
-
-        assertAnyTrue(subjects, s -> "english".equals(s.name));
-        assertAnyTrue(subjects, s -> "mathematics".equals(s.name));
-        assertAllTrue(subjects, s -> isValidId(s.id));
-        assertAllTrue(subjects, s -> !s.path.isEmpty());
-
-        assertAllTrue(subjects, s -> s.metadata != null);
-
-        assertAllTrue(subjects, s -> s.metadata.isVisible());
-        assertAllTrue(subjects, s -> s.metadata.getGrepCodes().size() == 1);
+        assertAllTrue(subjects, s -> s.getMetadata().isVisible());
+        assertAllTrue(subjects, s -> s.getMetadata().getGrepCodes().size() == 1);
     }
 
     @Test
@@ -189,37 +154,11 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(topics, t -> !t.path.isEmpty());
         assertAllTrue(topics, t -> t.parent.equals(subject.getPublicId()));
 
-        assertAllTrue(topics, t -> t.metadata == null);
+        assertAllTrue(topics, t -> t.getMetadata() != null);
+
+        assertAllTrue(topics, t -> t.getMetadata().isVisible());
+        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 1);
     }
-
-    @Test
-    public void can_get_topics_with_metadata() throws Exception {
-        Subject subject = builder.subject(s -> s
-                .name("physics")
-                .topic(t -> t.name("statics").contentUri("urn:article:1"))
-                .topic(t -> t.name("electricity").contentUri("urn:article:2"))
-                .topic(t -> t.name("optics").contentUri("urn:article:3"))
-        );
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics?includeMetadata=true");
-        SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
-
-        assertEquals(3, topics.length);
-        assertAnyTrue(topics, t -> "statics".equals(t.name) && "urn:article:1".equals(t.contentUri.toString()));
-        assertAnyTrue(topics, t -> "electricity".equals(t.name) && "urn:article:2".equals(t.contentUri.toString()));
-        assertAnyTrue(topics, t -> "optics".equals(t.name) && "urn:article:3".equals(t.contentUri.toString()));
-        assertAnyTrue(topics, t -> t.isPrimary);
-        assertAllTrue(topics, t -> isValidId(t.id));
-        assertAllTrue(topics, t -> isValidId(t.connectionId));
-        assertAllTrue(topics, t -> !t.path.isEmpty());
-        assertAllTrue(topics, t -> t.parent.equals(subject.getPublicId()));
-
-        assertAllTrue(topics, t -> t.metadata != null);
-
-        assertAllTrue(topics, t -> t.metadata.isVisible());
-        assertAllTrue(topics, t -> t.metadata.getGrepCodes().size() == 1);
-    }
-
 
     @Test
     public void can_get_topics_recursively() throws Exception {
@@ -251,52 +190,10 @@ public class SubjectsTest extends RestTest {
         assertEquals("grandchild topic", topics[2].name);
         assertEquals("/subject:1/topic:a/topic:aa/topic:aaa", topics[2].path);
 
-        assertAllTrue(topics, t -> t.metadata == null);
+        assertAllTrue(topics, t -> t.getMetadata() != null);
 
-        Subject subject = builder.subject("subject");
-        assertEquals(first(subject.getSubjectTopics()).getPublicId(), topics[0].connectionId);
-
-        Topic parent = builder.topic("parent");
-        assertEquals(first(parent.getChildrenTopicSubtopics()).getPublicId(), topics[1].connectionId);
-
-        Topic child = builder.topic("child");
-        assertEquals(first(child.getChildrenTopicSubtopics()).getPublicId(), topics[2].connectionId);
-    }
-
-    @Test
-    public void can_get_topics_recursively_with_metadata() throws Exception {
-        URI subjectid = builder.subject("subject", s -> s
-                .name("subject")
-                .publicId("urn:subject:1")
-                .topic("parent", parent -> parent
-                        .name("parent topic")
-                        .publicId("urn:topic:a")
-                        .subtopic("child", child -> child
-                                .name("child topic")
-                                .publicId("urn:topic:aa")
-                                .subtopic("grandchild", grandchild -> grandchild
-                                        .name("grandchild topic")
-                                        .publicId("urn:topic:aaa")
-                                )
-                        )
-                )
-        ).getPublicId();
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subjectid + "/topics?recursive=true&includeMetadata=true");
-        SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
-
-        assertEquals(3, topics.length);
-        assertEquals("parent topic", topics[0].name);
-        assertEquals("/subject:1/topic:a", topics[0].path);
-        assertEquals("child topic", topics[1].name);
-        assertEquals("/subject:1/topic:a/topic:aa", topics[1].path);
-        assertEquals("grandchild topic", topics[2].name);
-        assertEquals("/subject:1/topic:a/topic:aa/topic:aaa", topics[2].path);
-
-        assertAllTrue(topics, t -> t.metadata != null);
-
-        assertAllTrue(topics, t -> t.metadata.isVisible());
-        assertAllTrue(topics, t -> t.metadata.getGrepCodes().size() == 1);
+        assertAllTrue(topics, t -> t.getMetadata().isVisible());
+        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 1);
 
         Subject subject = builder.subject("subject");
         assertEquals(first(subject.getSubjectTopics()).getPublicId(), topics[0].connectionId);

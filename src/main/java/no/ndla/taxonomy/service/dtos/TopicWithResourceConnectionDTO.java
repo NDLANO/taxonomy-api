@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.TopicResource;
-import no.ndla.taxonomy.service.MetadataWrappedEntity;
 
 import java.net.URI;
 
@@ -19,11 +18,6 @@ public class TopicWithResourceConnectionDTO extends TopicDTO {
 
     @ApiParam
     private int rank;
-
-    public TopicWithResourceConnectionDTO(MetadataWrappedEntity<TopicResource> wrappedTopicResource, String language) {
-        this(wrappedTopicResource.getEntity(), language);
-        wrappedTopicResource.getMetadata().ifPresent(this::setMetadata);
-    }
 
     public TopicWithResourceConnectionDTO(TopicResource topicResource, String language) {
         super(topicResource.getTopic().orElseThrow(), language);

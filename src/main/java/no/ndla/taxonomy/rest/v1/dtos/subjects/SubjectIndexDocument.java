@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.SubjectTranslation;
-import no.ndla.taxonomy.service.MetadataWrappedEntity;
+import no.ndla.taxonomy.service.MetadataIdField;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 
 import java.net.URI;
@@ -18,6 +18,7 @@ import java.net.URI;
 public class SubjectIndexDocument {
     @JsonProperty
     @ApiModelProperty(example = "urn:subject:1")
+    @MetadataIdField
     public URI id;
 
     @JsonProperty
@@ -32,18 +33,20 @@ public class SubjectIndexDocument {
     @ApiModelProperty(value = "The path part of the url to this subject.", example = "/subject:1")
     public String path;
 
-    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true. Read only.")
+    @ApiModelProperty(value = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public MetadataDto metadata;
+    private MetadataDto metadata;
 
     public SubjectIndexDocument() {
 
     }
 
-    public SubjectIndexDocument(MetadataWrappedEntity<Subject> wrappedSubject, String languageCode) {
-        this(wrappedSubject.getEntity(), languageCode);
+    public MetadataDto getMetadata() {
+        return metadata;
+    }
 
-        wrappedSubject.getMetadata().ifPresent(metadataDto -> this.metadata = metadataDto);
+    public void setMetadata(MetadataDto metadata) {
+        this.metadata = metadata;
     }
 
     public SubjectIndexDocument(Subject subject, String languageCode) {
