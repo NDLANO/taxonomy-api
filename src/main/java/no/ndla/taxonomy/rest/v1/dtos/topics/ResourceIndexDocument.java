@@ -7,7 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceTranslation;
 import no.ndla.taxonomy.domain.TopicResource;
-import no.ndla.taxonomy.service.MetadataWrappedEntity;
+import no.ndla.taxonomy.service.MetadataIdField;
 import no.ndla.taxonomy.service.TopicTreeSorter;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.ResourceTypeDTO;
@@ -28,6 +28,7 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
 
     @JsonProperty
     @ApiModelProperty(value = "Resource id", example = "urn:resource:12")
+    @MetadataIdField
     public URI id;
 
     @JsonProperty
@@ -65,9 +66,17 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
     public Boolean isPrimary;
 
-    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true. Read only.")
+    @ApiModelProperty(value = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public MetadataDto metadata;
+    private MetadataDto metadata;
+
+    public MetadataDto getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(MetadataDto metadata) {
+        this.metadata = metadata;
+    }
 
     public URI getId() {
         return id;
@@ -75,12 +84,6 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
 
     public ResourceIndexDocument() {
 
-    }
-
-    public ResourceIndexDocument(MetadataWrappedEntity<TopicResource> wrappedTopicResource, String language) {
-        this(wrappedTopicResource.getEntity(), language);
-
-        wrappedTopicResource.getMetadata().ifPresent(metadataDto -> this.metadata = metadataDto);
     }
 
     public ResourceIndexDocument(TopicResource topicResource, String language) {

@@ -56,26 +56,6 @@ public class TopicsTest extends RestTest {
         assertEquals("urn:article:1", topic.getContentUri().toString());
         assertEquals("/subject:1/topic:1", topic.getPath());
 
-        assertNull(topic.getMetadata());
-    }
-
-    @Test
-    public void can_get_single_topic_with_metadata() throws Exception {
-        builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .topic(t -> t
-                        .name("trigonometry")
-                        .contentUri("urn:article:1")
-                        .publicId("urn:topic:1")
-                ));
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1?includeMetadata=true");
-        final var topic = testUtils.getObject(TopicDTO.class, response);
-
-        assertEquals("trigonometry", topic.getName());
-        assertEquals("urn:article:1", topic.getContentUri().toString());
-        assertEquals("/subject:1/topic:1", topic.getPath());
-
         assertNotNull(topic.getMetadata());
         assertTrue(topic.getMetadata().isVisible());
         assertTrue(topic.getMetadata().getGrepCodes().size() == 1 && topic.getMetadata().getGrepCodes().contains("TOPIC1"));
@@ -91,27 +71,6 @@ public class TopicsTest extends RestTest {
         final var topic = testUtils.getObject(TopicDTO.class, response);
 
         assertNull(topic.getPath());
-    }
-
-    @Test
-    public void can_get_all_topics() throws Exception {
-        builder.subject(s -> s
-                .name("Basic science")
-                .topic(t -> t.name("photo synthesis")));
-        builder.subject(s -> s
-                .name("Maths")
-                .topic(t -> t.name("trigonometry")));
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics");
-        final var topics = testUtils.getObject(TopicDTO[].class, response);
-        assertEquals(2, topics.length);
-
-        assertAnyTrue(topics, t -> "photo synthesis".equals(t.getName()));
-        assertAnyTrue(topics, t -> "trigonometry".equals(t.getName()));
-        assertAllTrue(topics, t -> isValidId(t.getId()));
-        assertAllTrue(topics, t -> t.getPath().contains("subject") && t.getPath().contains("topic"));
-
-        assertAllTrue(topics, t -> t.getMetadata() == null);
     }
 
     @Test
@@ -146,7 +105,7 @@ public class TopicsTest extends RestTest {
 
 
     @Test
-    public void can_get_all_topics_with_metadata() throws Exception {
+    public void can_get_all_topics() throws Exception {
         builder.subject(s -> s
                 .name("Basic science")
                 .topic(t -> t.name("photo synthesis")));
@@ -154,7 +113,7 @@ public class TopicsTest extends RestTest {
                 .name("Maths")
                 .topic(t -> t.name("trigonometry")));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics?includeMetadata=true");
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics");
         final var topics = testUtils.getObject(TopicDTO[].class, response);
         assertEquals(2, topics.length);
 
@@ -206,25 +165,12 @@ public class TopicsTest extends RestTest {
     }
 
     @Test
-    public void can_get_unfiltered_subtopics() throws Exception {
-        testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
-        final var subtopics = testUtils.getObject(TopicDTO[].class, response);
-        assertEquals(7, subtopics.length, "Unfiltered subtopics");
-
-        assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() == null);
-    }
-
-    @Test
     public void subtopics_are_sorted_by_rank() throws Exception {
         testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
         final var subtopics = testUtils.getObject(TopicDTO[].class, response);
         assertEquals(7, subtopics.length);
-
-        assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() == null);
 
         assertEquals("urn:topic:2", subtopics[0].getId().toString());
         assertEquals("urn:topic:3", subtopics[1].getId().toString());
@@ -235,10 +181,10 @@ public class TopicsTest extends RestTest {
     }
 
     @Test
-    public void can_get_unfiltered_subtopics_with_metadata() throws Exception {
+    public void can_get_unfiltered_subtopics() throws Exception {
         testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics?includeMetadata=true");
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
         final var subtopics = testUtils.getObject(TopicDTO[].class, response);
         assertEquals(7, subtopics.length, "Unfiltered subtopics");
 

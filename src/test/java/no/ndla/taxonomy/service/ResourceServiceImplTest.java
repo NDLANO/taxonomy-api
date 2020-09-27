@@ -35,10 +35,9 @@ public class ResourceServiceImplTest {
         final var domainEntityHelperService = mock(DomainEntityHelperService.class);
         final var recursiveTopicTreeService = mock(RecursiveTopicTreeService.class);
         final var topicTreeSorter = mock(TopicTreeSorter.class);
-        final var metadataEntityWrapperService = mock(MetadataEntityWrapperService.class);
 
         resourceService = new ResourceServiceImpl(resourceRepository, topicResourceRepository, connectionService,
-                metadataApiService, domainEntityHelperService, recursiveTopicTreeService, topicTreeSorter, metadataEntityWrapperService);
+                metadataApiService, domainEntityHelperService, recursiveTopicTreeService, topicTreeSorter);
     }
 
     @Test

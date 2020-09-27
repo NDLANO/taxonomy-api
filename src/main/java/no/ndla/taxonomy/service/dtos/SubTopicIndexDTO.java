@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.domain.TopicTranslation;
-import no.ndla.taxonomy.service.MetadataWrappedEntity;
+import no.ndla.taxonomy.service.MetadataIdField;
 import no.ndla.taxonomy.service.TopicTreeSorter;
 
 import java.net.URI;
@@ -18,6 +18,7 @@ import java.net.URI;
 public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
     @JsonProperty
     @ApiModelProperty(value = "Topic id", example = "urn:topic:234")
+    @MetadataIdField
     private URI id;
 
     @JsonProperty
@@ -32,7 +33,7 @@ public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
     @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
     private Boolean isPrimary;
 
-    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true. Read only.")
+    @ApiModelProperty(value = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 
@@ -43,9 +44,7 @@ public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
 
     }
 
-    public SubTopicIndexDTO(MetadataWrappedEntity<TopicSubtopic> wrappedTopicSubtopic, String language) {
-        final var topicSubtopic = wrappedTopicSubtopic.getEntity();
-
+    public SubTopicIndexDTO(TopicSubtopic topicSubtopic, String language) {
         topicSubtopic.getSubtopic().ifPresent(topic -> {
             this.id = topic.getPublicId();
 
@@ -60,8 +59,10 @@ public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
 
         this.rank = topicSubtopic.getRank();
         topicSubtopic.getTopic().ifPresent(topic -> this.parentId = topic.getPublicId());
+    }
 
-        wrappedTopicSubtopic.getMetadata().ifPresent(metadataDto -> this.metadata = metadataDto);
+    public void setMetadata(MetadataDto metadata) {
+        this.metadata = metadata;
     }
 
     public URI getId() {

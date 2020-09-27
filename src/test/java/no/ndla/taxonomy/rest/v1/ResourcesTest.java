@@ -43,29 +43,7 @@ public class ResourcesTest extends RestTest {
                                 .publicId("urn:resource:1")
                         )));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
-        final var resource = testUtils.getObject(ResourceDTO.class, response);
-
-        assertEquals("introduction to trigonometry", resource.getName());
-        assertEquals("urn:article:1", resource.getContentUri().toString());
-        assertEquals("/subject:1/topic:1/resource:1", resource.getPath());
-
-        assertNull(resource.getMetadata());
-    }
-
-    @Test
-    public void can_get_single_resource_with_metadata() throws Exception {
-        builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .topic(t -> t
-                        .publicId("urn:topic:1")
-                        .resource(true, r -> r
-                                .name("introduction to trigonometry")
-                                .contentUri("urn:article:1")
-                                .publicId("urn:resource:1")
-                        )));
-
-        final var response = testUtils.getResource("/v1/resources/urn:resource:1?includeMetadata=true");
+        final var response = testUtils.getResource("/v1/resources/urn:resource:1");
         final var resource = testUtils.getObject(ResourceDTO.class, response);
 
         assertEquals("introduction to trigonometry", resource.getName());
@@ -116,8 +94,6 @@ public class ResourcesTest extends RestTest {
         builder.subject(s -> s.topic(t -> t.resource(true, r -> r.name("The inner planets"))));
         builder.subject(s -> s.topic(t -> t.resource(true, r -> r.name("Gas giants"))));
 
-        final var allResources = resourceRepository.findAll();
-
         MockHttpServletResponse response = testUtils.getResource("/v1/resources");
         final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
@@ -127,7 +103,9 @@ public class ResourcesTest extends RestTest {
         assertAllTrue(resources, s -> isValidId(s.getId()));
         assertAllTrue(resources, r -> !r.getPath().isEmpty());
 
-        assertAllTrue(resources, r -> r.getMetadata() == null);
+        assertAllTrue(resources, r -> r.getMetadata() != null);
+        assertAllTrue(resources, r -> r.getMetadata().isVisible());
+        assertAllTrue(resources, r -> r.getMetadata().getGrepCodes().size() == 1);
     }
 
     @Test
@@ -158,25 +136,6 @@ public class ResourcesTest extends RestTest {
             assertEquals(1, resources.length);
             assertEquals("Gas giants", resources[0].getName());
         }
-    }
-
-    @Test
-    public void can_get_all_resources_with_metadata() throws Exception {
-        builder.subject(s -> s.topic(t -> t.resource(true, r -> r.name("The inner planets"))));
-        builder.subject(s -> s.topic(t -> t.resource(true, r -> r.name("Gas giants"))));
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/resources?includeMetadata=true");
-        final var resources = testUtils.getObject(ResourceDTO[].class, response);
-
-        assertEquals(2, resources.length);
-        assertAnyTrue(resources, s -> "The inner planets".equals(s.getName()));
-        assertAnyTrue(resources, s -> "Gas giants".equals(s.getName()));
-        assertAllTrue(resources, s -> isValidId(s.getId()));
-        assertAllTrue(resources, r -> !r.getPath().isEmpty());
-
-        assertAllTrue(resources, r -> r.getMetadata() != null);
-        assertAllTrue(resources, r -> r.getMetadata().isVisible());
-        assertAllTrue(resources, r -> r.getMetadata().getGrepCodes().size() == 1);
     }
 
     @Test
@@ -383,7 +342,7 @@ public class ResourcesTest extends RestTest {
                 .publicId("urn:topic:1")
                 .resource()
         );
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?includeMetadata=true");
+        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources");
         final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
         assertEquals(first(topic.getTopicResources()).getPublicId(), result[0].getConnectionId());
@@ -749,32 +708,6 @@ public class ResourcesTest extends RestTest {
     }
 
     @Test
-    public void can_get_resources_for_a_subject_and_its_topics_recursively() throws Exception {
-        URI id = builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .name("subject")
-                .topic("topic a", t -> t
-                        .name("topic a")
-                        .resource(r -> r.name("resource a").resourceType(rt -> rt.name("assignment"))))
-                .topic("topic b", t -> t
-                        .name("topic b")
-                        .resource(r -> r.name("resource b").resourceType(rt -> rt.name("lecture")))
-                        .subtopic("subtopic", st -> st.name("subtopic").resource(r -> r.name("sub resource"))))
-        ).getPublicId();
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources");
-        final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
-
-        assertEquals(3, resources.length);
-
-        assertAnyTrue(resources, r -> r.getConnectionId().equals(first(builder.topic("topic a").getTopicResources()).getPublicId()));
-        assertAnyTrue(resources, r -> r.getConnectionId().equals(first(builder.topic("topic b").getTopicResources()).getPublicId()));
-        assertAnyTrue(resources, r -> r.getConnectionId().equals(first(builder.topic("subtopic").getTopicResources()).getPublicId()));
-
-        assertAllTrue(resources, r -> r.getMetadata() == null);
-    }
-
-    @Test
     public void can_get_resources_for_a_subject_and_its_topics_recursively_with_metadata() throws Exception {
         URI id = builder.subject(s -> s
                 .publicId("urn:subject:1")
@@ -788,7 +721,7 @@ public class ResourcesTest extends RestTest {
                         .subtopic("subtopic", st -> st.name("subtopic").resource(r -> r.name("sub resource"))))
         ).getPublicId();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources?includeMetadata=true");
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources");
         final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
         assertEquals(3, resources.length);

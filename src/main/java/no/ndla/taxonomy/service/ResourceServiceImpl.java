@@ -28,12 +28,11 @@ public class ResourceServiceImpl implements ResourceService {
     private final RecursiveTopicTreeService recursiveTopicTreeService;
     private final TopicResourceRepository topicResourceRepository;
     private final TopicTreeSorter topicTreeSorter;
-    private final MetadataEntityWrapperService metadataEntityWrapperService;
 
     public ResourceServiceImpl(ResourceRepository resourceRepository, TopicResourceRepository topicResourceRepository,
                                EntityConnectionService connectionService, MetadataApiService metadataApiService,
                                DomainEntityHelperService domainEntityHelperService, RecursiveTopicTreeService recursiveTopicTreeService,
-                               TopicTreeSorter topicTreeSorter, MetadataEntityWrapperService metadataEntityWrapperService) {
+                               TopicTreeSorter topicTreeSorter) {
         this.resourceRepository = resourceRepository;
         this.connectionService = connectionService;
         this.metadataApiService = metadataApiService;
@@ -41,7 +40,6 @@ public class ResourceServiceImpl implements ResourceService {
         this.recursiveTopicTreeService = recursiveTopicTreeService;
         this.topicResourceRepository = topicResourceRepository;
         this.topicTreeSorter = topicTreeSorter;
-        this.metadataEntityWrapperService = metadataEntityWrapperService;
     }
 
     @Override
@@ -60,7 +58,7 @@ public class ResourceServiceImpl implements ResourceService {
 
     private List<ResourceWithTopicConnectionDTO> filterTopicResourcesByIdsAndReturn(Set<Integer> topicIds, Set<URI> filterIds, Set<URI> resourceTypeIds, URI relevance,
                                                                                     Set<TopicResourceTreeSortable> sortableListToAddTo,
-                                                                                    String languageCode, boolean includeMetadata) {
+                                                                                    String languageCode) {
         final List<TopicResource> topicResources;
 
         if (filterIds.size() > 0 && resourceTypeIds.size() > 0) {
@@ -77,24 +75,22 @@ public class ResourceServiceImpl implements ResourceService {
 
         // Sort the list, extract all the topicResource objects in between topics and return list of documents
 
-        final var sortedList = topicTreeSorter
+        return topicTreeSorter
                 .sortList(sortableListToAddTo)
                 .stream()
                 .map(TopicResourceTreeSortable::getTopicResource)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toList());
-
-        return metadataEntityWrapperService.wrapEntities(sortedList, includeMetadata, (entity) -> entity.getResource().map(Resource::getPublicId).orElse(null)).stream()
                 .map(wrappedTopicResource -> new ResourceWithTopicConnectionDTO(wrappedTopicResource, languageCode))
                 .collect(Collectors.toList());
 
     }
 
     @Override
+    @InjectMetadata
     public List<ResourceWithTopicConnectionDTO> getResourcesBySubjectId(URI subjectPublicId, Set<URI> filterIds,
                                                                         Set<URI> resourceTypeIds, URI relevance,
-                                                                        String language, boolean includeMetadata) {
+                                                                        String language) {
         final var subject = domainEntityHelperService.getSubjectByPublicId(subjectPublicId);
 
         final var subjectTopicTree = recursiveTopicTreeService.getRecursiveTopics(subject);
@@ -119,14 +115,15 @@ public class ResourceServiceImpl implements ResourceService {
             }
         });
 
-        return filterTopicResourcesByIdsAndReturn(topicIds, filterIds, resourceTypeIds, relevance, resourcesToSort, language, includeMetadata);
+        return filterTopicResourcesByIdsAndReturn(topicIds, filterIds, resourceTypeIds, relevance, resourcesToSort, language);
     }
 
 
     @Override
+    @InjectMetadata
     public List<ResourceWithTopicConnectionDTO> getResourcesByTopicId(URI topicId, Set<URI> filterIdsRequest, URI filterBySubjectId,
                                                                       Set<URI> resourceTypeIds, URI relevancePublicId, String languageCode,
-                                                                      boolean recursive, boolean includeMetadata) {
+                                                                      boolean recursive) {
         final var topic = domainEntityHelperService.getTopicByPublicId(topicId);
 
         final Set<Integer> topicIdsToSearchFor;
@@ -161,18 +158,20 @@ public class ResourceServiceImpl implements ResourceService {
             topicIdsToSearchFor = Set.of(topic.getId());
         }
 
-        return filterTopicResourcesByIdsAndReturn(topicIdsToSearchFor, filterIds, resourceTypeIds, relevancePublicId, resourcesToSort, languageCode, includeMetadata);
+        return filterTopicResourcesByIdsAndReturn(topicIdsToSearchFor, filterIds, resourceTypeIds, relevancePublicId, resourcesToSort, languageCode);
     }
 
     @Override
-    public ResourceDTO getResourceByPublicId(URI publicId, String languageCode, boolean includeMetadata) {
+    @InjectMetadata
+    public ResourceDTO getResourceByPublicId(URI publicId, String languageCode) {
         final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
 
-        return new ResourceDTO(metadataEntityWrapperService.wrapEntity(resource, includeMetadata), languageCode);
+        return new ResourceDTO(resource, languageCode);
     }
 
     @Override
+    @InjectMetadata
     public ResourceWithParentTopicsDTO getResourceWithParentTopicsByPublicId(URI publicId, String languageCode) {
         final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
@@ -180,19 +179,20 @@ public class ResourceServiceImpl implements ResourceService {
         return new ResourceWithParentTopicsDTO(resource, languageCode);
     }
 
-    private List<ResourceDTO> createDto(List<Resource> resources, String languageCode, boolean includeMetadata) {
-        return metadataEntityWrapperService.wrapEntities(resources, includeMetadata)
+    private List<ResourceDTO> createDto(List<Resource> resources, String languageCode) {
+        return resources
                 .stream()
-                .map(wrappedResource -> new ResourceDTO(wrappedResource, languageCode))
+                .map(resource -> new ResourceDTO(resource, languageCode))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<ResourceDTO> getResources(String languageCode, URI contentUriFilter, boolean includeMetadata) {
+    @InjectMetadata
+    public List<ResourceDTO> getResources(String languageCode, URI contentUriFilter) {
         final List<ResourceDTO> listToReturn = new ArrayList<>();
 
         if (contentUriFilter != null) {
-            return createDto(resourceRepository.findAllByContentUriIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(contentUriFilter), languageCode, includeMetadata);
+            return createDto(resourceRepository.findAllByContentUriIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(contentUriFilter), languageCode);
         } else {
             // Get all resource ids and chunk it in requests with all relations small enough to not create a huge heap space usage peak
 
@@ -205,7 +205,7 @@ public class ResourceServiceImpl implements ResourceService {
                     .values()
                     .forEach(idChunk -> {
                         final var resources = resourceRepository.findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
-                        listToReturn.addAll(createDto(resources, languageCode, includeMetadata));
+                        listToReturn.addAll(createDto(resources, languageCode));
                     });
         }
 

@@ -1,6 +1,5 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.ResourceFilterRepository;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,52 +21,51 @@ public class FilterServiceImpl implements FilterService {
     private final FilterRepository filterRepository;
     private final ResourceRepository resourceRepository;
     private final ResourceFilterRepository resourceFilterRepository;
-    private final MetadataEntityWrapperService metadataEntityWrapperService;
 
-    public FilterServiceImpl(SubjectRepository subjectRepository, FilterRepository filterRepository, ResourceRepository resourceRepository, ResourceFilterRepository resourceFilterRepository, MetadataEntityWrapperService metadataEntityWrapperService) {
+    public FilterServiceImpl(SubjectRepository subjectRepository, FilterRepository filterRepository, ResourceRepository resourceRepository, ResourceFilterRepository resourceFilterRepository) {
         this.subjectRepository = subjectRepository;
         this.filterRepository = filterRepository;
         this.resourceRepository = resourceRepository;
         this.resourceFilterRepository = resourceFilterRepository;
-        this.metadataEntityWrapperService = metadataEntityWrapperService;
     }
 
     @Override
-    public List<FilterDTO> getFilters(String languageCode, boolean includeMetadata) {
-        return metadataEntityWrapperService.wrapEntities(filterRepository.findAllWithSubjectAndTranslations(), includeMetadata, DomainEntity::getPublicId).stream()
+    @InjectMetadata
+    public List<FilterDTO> getFilters(String languageCode) {
+        return filterRepository.findAllWithSubjectAndTranslations().stream()
                 .map(wrappedFilter -> new FilterDTO(wrappedFilter, languageCode))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public FilterDTO getFilterByPublicId(URI publicId, String languageCode, boolean includeMetadata) {
+    @InjectMetadata
+    public FilterDTO getFilterByPublicId(URI publicId, String languageCode) {
         return filterRepository.findFirstByPublicIdWithSubjectAndTranslations(publicId)
-                .map(entity -> metadataEntityWrapperService.wrapEntity(entity, includeMetadata))
                 .map((filter) -> new FilterDTO(filter, languageCode))
                 .orElseThrow(() -> new NotFoundException("Filter", publicId));
     }
 
     @Override
-    public List<FilterWithConnectionDTO> getFiltersWithConnectionByResourceId(URI resourceId, String languageCode, boolean includeMetadata) {
+    @InjectMetadata
+    public List<FilterWithConnectionDTO> getFiltersWithConnectionByResourceId(URI resourceId, String languageCode) {
         if (!resourceRepository.existsByPublicId(resourceId)) {
             throw new NotFoundException("Resource", resourceId);
         }
 
-        final var resourceFilterList = resourceFilterRepository.findAllByResourcePublicIdIncludingResourceAndFilterAndRelevance(resourceId);
-
-        return metadataEntityWrapperService.wrapEntities(resourceFilterList, includeMetadata, entityConnection -> entityConnection.getFilter().getPublicId()).stream()
+        return resourceFilterRepository.findAllByResourcePublicIdIncludingResourceAndFilterAndRelevance(resourceId)
+                .stream()
                 .map(wrappedResourceFilter -> new FilterWithConnectionDTO(wrappedResourceFilter, languageCode))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<FilterDTO> getFiltersBySubjectId(URI subjectId, String languageCode, boolean includeMetadata) {
+    @InjectMetadata
+    public List<FilterDTO> getFiltersBySubjectId(URI subjectId, String languageCode) {
         if (!subjectRepository.existsByPublicId(subjectId)) {
             throw new NotFoundException("Subject", subjectId);
         }
 
-        final var filterList = new ArrayList<>(filterRepository.findAllBySubjectPublicIdIncludingSubjectAndTranslations(subjectId));
-        return metadataEntityWrapperService.wrapEntities(filterList, includeMetadata)
+        return filterRepository.findAllBySubjectPublicIdIncludingSubjectAndTranslations(subjectId)
                 .stream()
                 .map(filter -> new FilterDTO(filter, languageCode))
                 .collect(Collectors.toList());

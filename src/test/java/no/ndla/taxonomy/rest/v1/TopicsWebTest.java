@@ -48,8 +48,6 @@ public class TopicsWebTest {
     @MockBean
     MetadataApiService metadataApiService;
     @MockBean
-    MetadataEntityWrapperService metadataEntityWrapperService;
-    @MockBean
     CachedUrlUpdaterService cachedUrlUpdaterService;
     @MockBean
     RecursiveTopicTreeService recursiveTopicTreeService;

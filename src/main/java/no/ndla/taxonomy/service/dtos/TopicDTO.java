@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicTranslation;
-import no.ndla.taxonomy.service.MetadataWrappedEntity;
+import no.ndla.taxonomy.service.MetadataIdField;
 
 import java.net.URI;
 import java.util.Set;
@@ -15,6 +15,7 @@ import java.util.Set;
 public class TopicDTO {
     @JsonProperty
     @ApiModelProperty(value = "Topic id", example = "urn:topic:234")
+    @MetadataIdField
     private URI id;
 
     @JsonProperty
@@ -33,7 +34,7 @@ public class TopicDTO {
     @ApiModelProperty(value = "List of all paths to this topic")
     private Set<String> paths;
 
-    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true. Read only.")
+    @ApiModelProperty(value = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 
@@ -52,12 +53,6 @@ public class TopicDTO {
         this.name = topic.getTranslation(languageCode)
                 .map(TopicTranslation::getName)
                 .orElse(topic.getName());
-    }
-
-    public TopicDTO(MetadataWrappedEntity<Topic> wrappedTopic, String languageCode) {
-        this(wrappedTopic.getEntity(), languageCode);
-
-        wrappedTopic.getMetadata().ifPresent(metadata -> this.metadata = metadata);
     }
 
     public URI getId() {

@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.service.MetadataWrappedEntity;
+import no.ndla.taxonomy.service.InjectMetadata;
+import no.ndla.taxonomy.service.MetadataIdField;
 import no.ndla.taxonomy.service.TopicTreeSorter;
 import no.ndla.taxonomy.service.dtos.FilterWithConnectionDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
@@ -23,6 +24,7 @@ import java.util.Set;
 @ApiModel("SubTopicIndexDocument")
 public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
     @JsonProperty
+    @MetadataIdField
     public URI id;
 
     @JsonProperty
@@ -54,6 +56,7 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
 
     @JsonProperty
     @ApiModelProperty(value = "Filters this topic is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
+    @InjectMetadata
     public Set<FilterWithConnectionDTO> filters = new HashSet<>();
 
     @JsonIgnore
@@ -64,9 +67,47 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
 
     private String language;
 
-    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true. Read only.")
+    @ApiModelProperty(value = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public MetadataDto metadata;
+    private MetadataDto metadata;
+
+    public SubTopicIndexDocument(Subject subject, DomainEntity domainEntity, String language) {
+        this.language = language;
+
+        if (domainEntity instanceof TopicSubtopic) {
+            final var topicSubtopic = (TopicSubtopic) domainEntity;
+
+            topicSubtopic.getSubtopic().ifPresent(subtopic -> {
+                this.populateFromTopic(subtopic);
+                this.path = subtopic.getPathByContext(subject).orElse(null);
+            });
+
+            topicSubtopic.getTopic().ifPresent(topic -> this.parent = topic.getPublicId());
+
+            this.rank = topicSubtopic.getRank();
+        } else if (domainEntity instanceof SubjectTopic) {
+            final var subjectTopic = (SubjectTopic) domainEntity;
+
+            subjectTopic.getTopic().ifPresent(topic -> {
+                this.populateFromTopic(topic);
+                this.path = topic.getPathByContext(subject).orElse(null);
+            });
+
+            subjectTopic.getSubject().ifPresent(s -> this.parent = s.getPublicId());
+
+            this.rank = subjectTopic.getRank();
+        } else {
+            throw new IllegalArgumentException("Wrapped entity must be either a SubjectTopic or TopicSubtopic");
+        }
+
+        this.connectionId = domainEntity.getPublicId();
+
+        this.isPrimary = true;
+    }
+
+    public MetadataDto getMetadata() {
+        return metadata;
+    }
 
     @Override
     @JsonIgnore
@@ -89,40 +130,8 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
 
     }
 
-    public SubTopicIndexDocument(Subject subject, MetadataWrappedEntity<DomainEntity> wrappedEntity, String language) {
-        this.language = language;
-
-        if (wrappedEntity.getEntity() instanceof TopicSubtopic) {
-            final var topicSubtopic = (TopicSubtopic) wrappedEntity.getEntity();
-
-            topicSubtopic.getSubtopic().ifPresent(subtopic -> {
-                this.populateFromTopic(subtopic);
-                this.path = subtopic.getPathByContext(subject).orElse(null);
-            });
-
-            topicSubtopic.getTopic().ifPresent(topic -> this.parent = topic.getPublicId());
-
-            this.rank = topicSubtopic.getRank();
-        } else if (wrappedEntity.getEntity() instanceof SubjectTopic) {
-            final var subjectTopic = (SubjectTopic) wrappedEntity.getEntity();
-
-            subjectTopic.getTopic().ifPresent(topic -> {
-                this.populateFromTopic(topic);
-                this.path = topic.getPathByContext(subject).orElse(null);
-            });
-
-            subjectTopic.getSubject().ifPresent(s -> this.parent = s.getPublicId());
-
-            this.rank = subjectTopic.getRank();
-        } else {
-            throw new IllegalArgumentException("Wrapped entity must be either a SubjectTopic or TopicSubtopic");
-        }
-
-        this.connectionId = wrappedEntity.getEntity().getPublicId();
-
-        this.isPrimary = true;
-
-        wrappedEntity.getMetadata().ifPresent(metadataDto -> this.metadata = metadataDto);
+    public void setMetadata(MetadataDto metadata) {
+        this.metadata = metadata;
     }
 
     private void populateFromTopic(Topic topic) {

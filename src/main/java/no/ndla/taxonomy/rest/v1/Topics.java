@@ -7,7 +7,7 @@ import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
-import no.ndla.taxonomy.service.MetadataEntityWrapperService;
+import no.ndla.taxonomy.service.InjectMetadata;
 import no.ndla.taxonomy.service.TopicResourceTypeService;
 import no.ndla.taxonomy.service.TopicService;
 import no.ndla.taxonomy.service.dtos.*;
@@ -29,17 +29,14 @@ public class Topics extends CrudController<Topic> {
     private final TopicResourceTypeService topicResourceTypeService;
     private final TopicRepository topicRepository;
     private final TopicService topicService;
-    private final MetadataEntityWrapperService metadataWrapperService;
 
     public Topics(TopicRepository topicRepository,
                   TopicResourceTypeService topicResourceTypeService,
                   TopicService topicService,
-                  MetadataEntityWrapperService metadataWrapperService,
                   CachedUrlUpdaterService cachedUrlUpdaterService) {
         super(topicRepository, cachedUrlUpdaterService);
 
         this.topicRepository = topicRepository;
-        this.metadataWrapperService = metadataWrapperService;
         this.topicResourceTypeService = topicResourceTypeService;
         this.topicService = topicService;
     }
@@ -53,39 +50,27 @@ public class Topics extends CrudController<Topic> {
 
             @ApiParam(value = "Filter by contentUri")
             @RequestParam(value = "contentURI", required = false)
-                    URI contentUriFilter,
-
-            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
-            @RequestParam(required = false, defaultValue = "false")
-                    boolean includeMetadata
+                    URI contentUriFilter
     ) {
 
         if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
             contentUriFilter = null;
         }
 
-        return topicService.getTopics(language, contentUriFilter, includeMetadata);
+        return topicService.getTopics(language, contentUriFilter);
     }
 
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
     @Transactional
+    @InjectMetadata
     public TopicDTO get(@PathVariable("id") URI id,
                         @ApiParam(value = "ISO-639-1 language code", example = "nb")
                         @RequestParam(value = "language", required = false, defaultValue = "")
-                                String language,
-
-                        @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
-                        @RequestParam(required = false, defaultValue = "false")
-                                boolean includeMetadata
+                                String language
     ) {
-        return new TopicDTO(
-                metadataWrapperService.wrapEntity(
-                        topicRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id).orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found")),
-                        includeMetadata),
-                language
-        );
+        return new TopicDTO(topicRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id).orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found")), language);
     }
 
     @PostMapping
@@ -128,6 +113,7 @@ public class Topics extends CrudController<Topic> {
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters associated with this topic")
     @Transactional
+    @InjectMetadata
     public List<FilterWithConnectionDTO> getFilters(
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
@@ -163,21 +149,17 @@ public class Topics extends CrudController<Topic> {
 
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language,
-
-            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
-            @RequestParam(required = false, defaultValue = "false")
-                    boolean includeMetadata
+                    String language
     ) {
         if (filterIds == null) {
             filterIds = new URI[0];
         }
 
         if (filterIds.length == 0) {
-            return topicService.getFilteredSubtopicConnections(id, subjectId, language, includeMetadata);
+            return topicService.getFilteredSubtopicConnections(id, subjectId, language);
         }
 
-        return topicService.getFilteredSubtopicConnections(id, Set.of(filterIds), language, includeMetadata);
+        return topicService.getFilteredSubtopicConnections(id, Set.of(filterIds), language);
     }
 
     @GetMapping("/{id}/connections")

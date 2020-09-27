@@ -5,8 +5,6 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.MetadataApiService;
-import no.ndla.taxonomy.service.MetadataEntityWrapperService;
-import no.ndla.taxonomy.service.MetadataWrappedEntity;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,15 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import java.net.URI;
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
@@ -80,15 +75,13 @@ public abstract class RestTest {
 
     @MockBean
     protected MetadataApiService metadataApiService;
-    @MockBean
-    protected MetadataEntityWrapperService metadataEntityWrapperService;
 
     @Autowired
     protected CachedUrlUpdaterService cachedUrlUpdaterService;
 
     protected Builder builder;
 
-    private MetadataDto createMetadataObject(URI publicId, DomainEntity entity) {
+    private MetadataDto createMetadataObject(URI publicId) {
         final var metadata = new MetadataDto();
         metadata.setPublicId(publicId.toString());
 
@@ -105,30 +98,17 @@ public abstract class RestTest {
     public void restTestSetUp() {
         builder = new Builder(entityManager, cachedUrlUpdaterService);
 
-        when(metadataEntityWrapperService.wrapEntity(any(DomainEntity.class), anyBoolean()))
+        when(metadataApiService.getMetadataByPublicId(any(URI.class)))
                 .thenAnswer(invocationOnMock ->
-                        metadataEntityWrapperService.wrapEntities(List.of((DomainEntity) invocationOnMock.getArgument(0)), invocationOnMock.getArgument(1)).get(0));
+                        metadataApiService.getMetadataByPublicId(List.of((URI) invocationOnMock.getArgument(0))).stream().findFirst().orElseThrow());
 
-        when(metadataEntityWrapperService.wrapEntities(any(List.class), anyBoolean()))
-                .thenAnswer(invocationOnMock ->
-                        metadataEntityWrapperService.wrapEntities(invocationOnMock.getArgument(0), invocationOnMock.getArgument(1), DomainEntity::getPublicId));
+        when(metadataApiService.getMetadataByPublicId(any(Collection.class))).thenAnswer(invocationOnMock -> {
+            final var idList = (Collection<URI>) invocationOnMock.getArgument(0);
 
-        when(metadataEntityWrapperService.wrapEntities(any(List.class), anyBoolean(), any(Function.class))).thenAnswer(invocationOnMock -> {
-            final var entities = (List<DomainEntity>) invocationOnMock.getArgument(0);
-            final var includeMetadata = (boolean) invocationOnMock.getArgument(1);
-            final var idCallback = (Function<DomainEntity, URI>) invocationOnMock.getArgument(2);
+            final var returnList = new HashSet<MetadataDto>();
 
-            final var returnList = new ArrayList<MetadataWrappedEntity<DomainEntity>>();
-
-            for (var entity : entities) {
-                final var wrapped = mock(MetadataWrappedEntity.class);
-                when(wrapped.getEntity()).thenReturn(entity);
-
-                if (includeMetadata) {
-                    when(wrapped.getMetadata()).thenAnswer((inv) -> Optional.of(createMetadataObject(idCallback.apply(entity), entity)));
-                }
-
-                returnList.add(wrapped);
+            for (var publicId : idList) {
+                returnList.add(createMetadataObject(publicId));
             }
 
             return returnList;

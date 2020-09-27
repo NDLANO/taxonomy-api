@@ -56,17 +56,13 @@ public class Resources extends CrudController<Resource> {
 
             @RequestParam(value = "contentURI", required = false)
             @ApiParam(value = "Filter by contentUri")
-                    URI contentUriFilter,
-
-            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
-            @RequestParam(required = false, defaultValue = "false")
-                    boolean includeMetadata
+                    URI contentUriFilter
     ) {
         if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
             contentUriFilter = null;
         }
 
-        return resourceService.getResources(language, contentUriFilter, includeMetadata);
+        return resourceService.getResources(language, contentUriFilter);
     }
 
     @GetMapping("/v1/resources/{id}")
@@ -77,14 +73,10 @@ public class Resources extends CrudController<Resource> {
 
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language,
-
-            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
-            @RequestParam(required = false, defaultValue = "false")
-                    boolean includeMetadata
+                    String language
     ) {
 
-        return resourceService.getResourceByPublicId(id, language, includeMetadata);
+        return resourceService.getResourceByPublicId(id, language);
     }
 
     @PutMapping("/v1/resources/{id}")
@@ -164,11 +156,7 @@ public class Resources extends CrudController<Resource> {
                     URI[] filterIds,
             @RequestParam(value = "relevance", required = false, defaultValue = "")
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
-                    URI relevance,
-
-            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
-            @RequestParam(required = false, defaultValue = "false")
-                    boolean includeMetadata
+                    URI relevance
     ) {
         final Set<URI> filterIdSet = filterIds != null ? Set.of(filterIds) : Set.of();
         final Set<URI> resourceTypeIdSet = resourceTypeIds != null ? Set.of(resourceTypeIds) : Set.of();
@@ -176,7 +164,7 @@ public class Resources extends CrudController<Resource> {
         // If null is sent to query it will be ignored, otherwise it will filter by relevance
         final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
 
-        return resourceService.getResourcesBySubjectId(subjectId, filterIdSet, resourceTypeIdSet, relevanceArgument, language, includeMetadata);
+        return resourceService.getResourcesBySubjectId(subjectId, filterIdSet, resourceTypeIdSet, relevanceArgument, language);
     }
 
     @GetMapping("/v1/topics/{id}/resources")
@@ -203,11 +191,7 @@ public class Resources extends CrudController<Resource> {
                     URI[] filterIds,
             @RequestParam(value = "relevance", required = false)
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
-                    URI relevance,
-
-            @ApiParam(value = "Set to true to include metadata in response. Note: Will increase response time significantly on large queries, use only when necessary")
-            @RequestParam(required = false)
-                    boolean includeMetadata
+                    URI relevance
     ) {
         final Set<URI> resourceTypeIdSet;
         final Set<URI> filterIdSet;
@@ -225,7 +209,7 @@ public class Resources extends CrudController<Resource> {
         }
 
         return resourceService.getResourcesByTopicId(topicId, filterIdSet, subjectId, resourceTypeIdSet,
-                relevance, language, recursive, includeMetadata);
+                relevance, language, recursive);
     }
 
 }

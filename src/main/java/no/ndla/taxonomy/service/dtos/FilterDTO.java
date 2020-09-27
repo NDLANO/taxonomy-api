@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.FilterTranslation;
-import no.ndla.taxonomy.service.MetadataWrappedEntity;
+import no.ndla.taxonomy.service.MetadataIdField;
 import no.ndla.taxonomy.service.UpdatableDto;
 
 import java.net.URI;
@@ -16,6 +16,7 @@ import java.util.Optional;
 public class FilterDTO implements UpdatableDto<Filter> {
     @JsonProperty
     @ApiModelProperty(example = "urn:filter:1")
+    @MetadataIdField
     private URI id;
 
     @JsonProperty
@@ -30,7 +31,7 @@ public class FilterDTO implements UpdatableDto<Filter> {
     @ApiModelProperty(value = "ID of frontpage introducing this filter.", example = "urn:frontpage:1")
     public URI contentUri;
 
-    @ApiModelProperty(value = "Metadata object if includeMetadata has been set to true. Read only.")
+    @ApiModelProperty(value = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 
@@ -48,12 +49,6 @@ public class FilterDTO implements UpdatableDto<Filter> {
 
         filter.getContentUri().ifPresent(contentUri -> this.contentUri = contentUri);
         filter.getSubject().ifPresent(subject -> this.subjectId = subject.getPublicId());
-    }
-
-    public FilterDTO(MetadataWrappedEntity<Filter> wrappedFilter, String languageCode) {
-        this(wrappedFilter.getEntity(), languageCode);
-
-        wrappedFilter.getMetadata().ifPresent(metadata -> this.metadata = metadata);
     }
 
     public String getName() {
