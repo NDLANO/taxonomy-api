@@ -51,6 +51,7 @@ public class MetadataInjectAspect {
         for (var method : clazz.getDeclaredMethods()) {
             if (method.getParameterCount() == 1) {
                 if (MetadataDto.class.isAssignableFrom(method.getParameterTypes()[0])) {
+                    method.setAccessible(true);
                     return Optional.of(method);
                 }
             }
@@ -145,53 +146,51 @@ public class MetadataInjectAspect {
         return idList;
     }
 
-    private void injectMetadataIntoDto(Object dto, Set<MetadataDto> metadataDtos) {
+    private void injectMetadataIntoDto(Object dto, Map<String, MetadataDto> metadataDtos) {
         // Searches for any field marked with @InjectMetadata and recursively invokes this method on those fields
         // including collections
         for (var field : getInjectMetadataAnnotatedFields(dto.getClass())) {
-            if (Collection.class.isAssignableFrom(field.getType())) {
-                // Field is a collection, try to inject into all instances of this collection
-                try {
-                    ((Collection<?>) field.get(dto)).forEach(i -> injectMetadataIntoDto(i, metadataDtos));
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
+            try {
+                final var value = field.get(dto);
+
+                if (Collection.class.isAssignableFrom(field.getType())) {
+                    // Field is a collection, try to inject into all instances of this collection
+                    ((Collection<?>) value).forEach(i -> injectMetadataIntoDto(i, metadataDtos));
+                } else {
+                    injectMetadataIntoDto(value, metadataDtos);
                 }
-            } else {
-                try {
-                    injectMetadataIntoDto(field.get(dto), metadataDtos);
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
             }
         }
 
         // Applies metadata to this object if a setMetadata method is found
         getSetMetadataMethod(dto.getClass()).ifPresent(setMetadata -> {
             getMetadataIdForSingleObject(dto).ifPresent(id -> {
-                metadataDtos.stream()
-                        .filter(metadataDto -> metadataDto.getPublicId().equals(id.toString()))
-                        .forEach(metadataDto -> {
-                            try {
-                                setMetadata.setAccessible(true);
-                                setMetadata.invoke(dto, metadataDto);
-                            } catch (IllegalAccessException | InvocationTargetException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
+                if (metadataDtos.containsKey(id.toString())) {
+                    try {
+                        setMetadata.invoke(dto, metadataDtos.get(id.toString()));
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
             });
 
         });
     }
 
     private void injectMetadataIntoDtos(Object dtos, Set<MetadataDto> metadataDtos) {
+        final var metadataMap = metadataDtos.stream()
+                .collect(Collectors.toMap(MetadataDto::getPublicId, metadataDto -> metadataDto));
+
         if (dtos instanceof Collection<?>) {
-            ((Collection<?>) dtos).forEach(dto -> injectMetadataIntoDto(dto, metadataDtos));
+            ((Collection<?>) dtos).forEach(dto -> injectMetadataIntoDto(dto, metadataMap));
 
             return;
         }
 
         // Single DTO
-        injectMetadataIntoDto(dtos, metadataDtos);
+        injectMetadataIntoDto(dtos, metadataMap);
     }
 
     @AfterReturning(value = "@annotation(no.ndla.taxonomy.service.InjectMetadata)", returning = "returnValue")
