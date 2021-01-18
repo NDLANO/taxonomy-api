@@ -17,4 +17,8 @@ public interface EntityWithPathConnection {
     Optional<EntityWithPath> getConnectedParent();
 
     Optional<EntityWithPath> getConnectedChild();
+
+    public Optional<Relevance> getRelevance();
+
+    public void setRelevance(Relevance relevance);
 }

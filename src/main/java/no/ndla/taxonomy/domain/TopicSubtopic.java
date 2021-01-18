@@ -1,6 +1,5 @@
 package no.ndla.taxonomy.domain;
 
-
 import javax.persistence.*;
 import java.net.URI;
 import java.util.Optional;
@@ -19,6 +18,10 @@ public class TopicSubtopic extends DomainEntity implements EntityWithPathConnect
 
     @Column(name = "rank")
     private int rank;
+
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE})
+    @JoinColumn(name = "relevance_id")
+    private Relevance relevance;
 
     private TopicSubtopic() {
         setPublicId(URI.create("urn:topic-subtopic:" + UUID.randomUUID()));
@@ -99,5 +102,15 @@ public class TopicSubtopic extends DomainEntity implements EntityWithPathConnect
         }
 
         throw new UnsupportedOperationException("TopicSubtopic can not be non-primary");
+    }
+
+    @Override
+    public Optional<Relevance> getRelevance() {
+        return Optional.ofNullable(relevance);
+    }
+    
+    @Override
+    public void setRelevance(Relevance relevance) {
+        this.relevance = relevance;
     }
 }

@@ -2,6 +2,7 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.EntityWithPathConnection;
+import no.ndla.taxonomy.domain.Relevance;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -23,15 +24,16 @@ public class RankableConnectionUpdaterTest {
 
     @Test
     public void rank() throws URISyntaxException {
+        final var relevance = new Relevance();
 
-        final var rankable1 = new TestRankable("urn:1", 0);
-        final var rankable2 = new TestRankable("urn:2", 1);
-        final var rankable3 = new TestRankable("urn:3", 10);
-        final var rankable4 = new TestRankable("urn:4", 11);
-        final var rankable5 = new TestRankable("urn:5", 12);
-        final var rankable6 = new TestRankable("urn:6", 20);
-        final var rankable7 = new TestRankable("urn:7", 100);
-        final var rankable8 = new TestRankable("urn:8", 1000);
+        final var rankable1 = new TestRankable("urn:1", relevance, 0);
+        final var rankable2 = new TestRankable("urn:2", relevance, 1);
+        final var rankable3 = new TestRankable("urn:3", relevance, 10);
+        final var rankable4 = new TestRankable("urn:4", relevance, 11);
+        final var rankable5 = new TestRankable("urn:5", relevance, 12);
+        final var rankable6 = new TestRankable("urn:6", relevance, 20);
+        final var rankable7 = new TestRankable("urn:7", relevance, 100);
+        final var rankable8 = new TestRankable("urn:8", relevance, 1000);
 
         final var rankableList = new ArrayList<TestRankable>();
 
@@ -106,10 +108,12 @@ public class RankableConnectionUpdaterTest {
     private static class TestRankable implements EntityWithPathConnection {
         private final URI publicId;
         private int rank;
+        private Relevance relevance;
 
-        private TestRankable(String publicId, int rank) throws URISyntaxException {
+        private TestRankable(String publicId, Relevance relevance, int rank) throws URISyntaxException {
             this.publicId = new URI(publicId);
             this.rank = rank;
+            this.relevance = relevance;
         }
 
         @Override
@@ -145,6 +149,16 @@ public class RankableConnectionUpdaterTest {
         @Override
         public Optional<EntityWithPath> getConnectedChild() {
             return Optional.empty();
+        }
+
+        @Override
+        public Optional<Relevance> getRelevance() {
+            return Optional.ofNullable(this.relevance);
+        }
+
+        @Override
+        public void setRelevance(Relevance relevance) {
+            this.relevance = relevance;
         }
     }
 }

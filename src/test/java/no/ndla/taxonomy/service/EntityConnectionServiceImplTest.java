@@ -55,9 +55,11 @@ public class EntityConnectionServiceImplTest {
         final var topic1 = builder.topic();
         final var topic2 = builder.topic();
 
+        final var relevance = builder.relevance();
+
         assertFalse(subjectTopicRepository.findFirstBySubjectAndTopic(subject1, topic1).isPresent());
 
-        final var connection1 = service.connectSubjectTopic(subject1, topic1);
+        final var connection1 = service.connectSubjectTopic(subject1, topic1, relevance);
         assertNotNull(connection1);
         assertNotNull(connection1.getId());
         assertNotNull(connection1.getPublicId());
@@ -67,7 +69,7 @@ public class EntityConnectionServiceImplTest {
 
         assertTrue(subjectTopicRepository.findFirstBySubjectAndTopic(subject1, topic1).isPresent());
 
-        final var connection2 = service.connectSubjectTopic(subject2, topic2);
+        final var connection2 = service.connectSubjectTopic(subject2, topic2, relevance);
 
         assertNotNull(connection2.getId());
         assertEquals(1, connection2.getRank());
@@ -80,25 +82,25 @@ public class EntityConnectionServiceImplTest {
         final var topic7 = builder.topic();
         final var topic8 = builder.topic();
 
-        final var connection5 = service.connectSubjectTopic(subject4, topic4);
+        final var connection5 = service.connectSubjectTopic(subject4, topic4, relevance);
         assertEquals(1, connection5.getRank());
 
-        final var connection6 = service.connectSubjectTopic(subject4, topic5);
+        final var connection6 = service.connectSubjectTopic(subject4, topic5, relevance);
         assertEquals(1, connection5.getRank());
         assertEquals(2, connection6.getRank());
 
-        final var connection7 = service.connectSubjectTopic(subject4, topic6, 2);
+        final var connection7 = service.connectSubjectTopic(subject4, topic6, relevance, 2);
         assertEquals(1, connection5.getRank());
         assertEquals(3, connection6.getRank());
         assertEquals(2, connection7.getRank());
 
-        final var connection8 = service.connectSubjectTopic(subject4, topic7, 1);
+        final var connection8 = service.connectSubjectTopic(subject4, topic7, relevance, 1);
         assertEquals(2, connection5.getRank());
         assertEquals(4, connection6.getRank());
         assertEquals(3, connection7.getRank());
         assertEquals(1, connection8.getRank());
 
-        final var connection9 = service.connectSubjectTopic(subject4, topic8, 5);
+        final var connection9 = service.connectSubjectTopic(subject4, topic8, relevance, 5);
         assertEquals(2, connection5.getRank());
         assertEquals(4, connection6.getRank());
         assertEquals(3, connection7.getRank());
@@ -106,7 +108,7 @@ public class EntityConnectionServiceImplTest {
         assertEquals(5, connection9.getRank());
 
         try {
-            service.connectSubjectTopic(subject4, topic5);
+            service.connectSubjectTopic(subject4, topic5, relevance);
             fail("Expected DuplicateConnectionException");
         } catch (DuplicateConnectionException ignored) {
 
@@ -123,6 +125,8 @@ public class EntityConnectionServiceImplTest {
         final var topic7 = builder.topic();
         final var topic8 = builder.topic();
         final var topic9 = builder.topic();
+
+        final var relevance = builder.relevance();
 
         final var connection1 = service.connectTopicSubtopic(topic2, topic1, null);
         assertNotNull(connection1);
@@ -141,18 +145,18 @@ public class EntityConnectionServiceImplTest {
         assertEquals(1, connection4.getRank());
         assertEquals(2, connection5.getRank());
 
-        final var connection6 = service.connectTopicSubtopic(topic4, topic7, 1);
+        final var connection6 = service.connectTopicSubtopic(topic4, topic7, relevance, 1);
         assertEquals(2, connection4.getRank());
         assertEquals(3, connection5.getRank());
         assertEquals(1, connection6.getRank());
 
-        final var connection7 = service.connectTopicSubtopic(topic4, topic8, 3);
+        final var connection7 = service.connectTopicSubtopic(topic4, topic8, relevance, 3);
         assertEquals(2, connection4.getRank());
         assertEquals(4, connection5.getRank());
         assertEquals(1, connection6.getRank());
         assertEquals(3, connection7.getRank());
 
-        final var connection8 = service.connectTopicSubtopic(topic4, topic9, 5);
+        final var connection8 = service.connectTopicSubtopic(topic4, topic9, relevance, 5);
         assertEquals(2, connection4.getRank());
         assertEquals(4, connection5.getRank());
         assertEquals(1, connection6.getRank());
@@ -160,7 +164,7 @@ public class EntityConnectionServiceImplTest {
         assertEquals(5, connection8.getRank());
 
         try {
-            service.connectTopicSubtopic(topic4, topic8);
+            service.connectTopicSubtopic(topic4, topic8, relevance);
         } catch (DuplicateConnectionException ignored) {
 
         }
@@ -171,38 +175,38 @@ public class EntityConnectionServiceImplTest {
         final var topic12 = builder.topic();
 
         try {
-            service.connectTopicSubtopic(topic10, topic10);
+            service.connectTopicSubtopic(topic10, topic10, relevance);
             fail("Expected InvalidArgumentServiceException");
         } catch (InvalidArgumentServiceException ignored) {
 
         }
 
-        service.connectTopicSubtopic(topic10, topic11);
-        service.connectTopicSubtopic(topic11, topic12);
+        service.connectTopicSubtopic(topic10, topic11, relevance);
+        service.connectTopicSubtopic(topic11, topic12, relevance);
 
         try {
-            service.connectTopicSubtopic(topic12, topic10);
-            fail("Expected InvalidArgumentServiceException");
-        } catch (InvalidArgumentServiceException ignored) {
-
-        }
-
-        try {
-            service.connectTopicSubtopic(topic11, topic10);
+            service.connectTopicSubtopic(topic12, topic10, relevance);
             fail("Expected InvalidArgumentServiceException");
         } catch (InvalidArgumentServiceException ignored) {
 
         }
 
         try {
-            service.connectTopicSubtopic(topic12, topic11);
+            service.connectTopicSubtopic(topic11, topic10, relevance);
+            fail("Expected InvalidArgumentServiceException");
+        } catch (InvalidArgumentServiceException ignored) {
+
+        }
+
+        try {
+            service.connectTopicSubtopic(topic12, topic11, relevance);
             fail("Expected DuplicateConnectionException");
         } catch (DuplicateConnectionException ignored) {
 
         }
 
         try {
-            service.connectTopicSubtopic(topic11, topic10);
+            service.connectTopicSubtopic(topic11, topic10, relevance);
             fail("Expected InvalidArgumentServiceException");
         } catch (InvalidArgumentServiceException ignored) {
 
@@ -224,7 +228,9 @@ public class EntityConnectionServiceImplTest {
         final var resource6 = builder.resource();
         final var resource7 = builder.resource();
 
-        final var connection1 = service.connectTopicResource(topic1, resource1, true, null);
+        final var relevance = builder.relevance();
+
+        final var connection1 = service.connectTopicResource(topic1, resource1, relevance, true, null);
         assertNotNull(connection1);
         assertSame(topic1, connection1.getTopic().orElse(null));
         assertSame(resource1, connection1.getResource().orElse(null));
@@ -233,7 +239,7 @@ public class EntityConnectionServiceImplTest {
 
         verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(resource1);
 
-        final var connection2 = service.connectTopicResource(topic1, resource2, true, null);
+        final var connection2 = service.connectTopicResource(topic1, resource2, relevance, true, null);
         assertNotNull(connection2);
         assertSame(topic1, connection2.getTopic().orElse(null));
         assertSame(resource2, connection2.getResource().orElse(null));
@@ -243,7 +249,7 @@ public class EntityConnectionServiceImplTest {
         assertTrue(connection1.isPrimary().orElseThrow());
         assertEquals(1, connection1.getRank());
 
-        final var connection3 = service.connectTopicResource(topic2, resource2, false, null);
+        final var connection3 = service.connectTopicResource(topic2, resource2, relevance, false, null);
         assertFalse(connection3.isPrimary().orElseThrow());
         assertEquals(1, connection3.getRank());
 
@@ -251,7 +257,7 @@ public class EntityConnectionServiceImplTest {
         assertTrue(connection2.isPrimary().orElseThrow());
 
         // Test setting primary, should set old primary to non-primary
-        final var connection4 = service.connectTopicResource(topic3, resource2, true, null);
+        final var connection4 = service.connectTopicResource(topic3, resource2, relevance, true, null);
         assertTrue(connection4.isPrimary().orElseThrow());
         assertEquals(1, connection4.getRank());
 
@@ -259,25 +265,25 @@ public class EntityConnectionServiceImplTest {
         assertFalse(connection2.isPrimary().orElseThrow());
 
         // Test ranking
-        final var connection5 = service.connectTopicResource(topic4, resource1, true, null);
+        final var connection5 = service.connectTopicResource(topic4, resource1, relevance, true, null);
         assertEquals(1, connection5.getRank());
 
-        final var connection6 = service.connectTopicResource(topic4, resource2);
+        final var connection6 = service.connectTopicResource(topic4, resource2, relevance);
         assertEquals(1, connection5.getRank());
         assertEquals(2, connection6.getRank());
 
-        final var connection7 = service.connectTopicResource(topic4, resource3, true, 1);
+        final var connection7 = service.connectTopicResource(topic4, resource3, relevance, true, 1);
         assertEquals(2, connection5.getRank());
         assertEquals(3, connection6.getRank());
         assertEquals(1, connection7.getRank());
 
-        final var connection8 = service.connectTopicResource(topic4, resource4, true, 2);
+        final var connection8 = service.connectTopicResource(topic4, resource4, relevance, true, 2);
         assertEquals(3, connection5.getRank());
         assertEquals(4, connection6.getRank());
         assertEquals(1, connection7.getRank());
         assertEquals(2, connection8.getRank());
 
-        final var connection9 = service.connectTopicResource(topic4, resource5, true, 5);
+        final var connection9 = service.connectTopicResource(topic4, resource5, relevance, true, 5);
         assertEquals(3, connection5.getRank());
         assertEquals(4, connection6.getRank());
         assertEquals(1, connection7.getRank());
@@ -285,14 +291,14 @@ public class EntityConnectionServiceImplTest {
         assertEquals(5, connection9.getRank());
 
         // First topic connection for a resource will be primary regardless of request
-        final var forcedPrimaryConnection1 = service.connectTopicResource(topic4, resource6);
+        final var forcedPrimaryConnection1 = service.connectTopicResource(topic4, resource6, relevance);
         assertTrue(forcedPrimaryConnection1.isPrimary().orElseThrow());
-        final var forcedPrimaryConnection2 = service.connectTopicResource(topic4, resource7, false, 1);
+        final var forcedPrimaryConnection2 = service.connectTopicResource(topic4, resource7, relevance, false, 1);
         assertTrue(forcedPrimaryConnection2.isPrimary().orElseThrow());
 
         // Trying to add duplicate connection
         try {
-            service.connectTopicResource(topic4, resource4);
+            service.connectTopicResource(topic4, resource4, relevance);
             fail("Expected DuplicateConnectionException");
         } catch (DuplicateConnectionException ignored) {
         }
@@ -427,6 +433,8 @@ public class EntityConnectionServiceImplTest {
 
         final var subject1 = builder.subject();
 
+        final var relevance = builder.relevance();
+
         final var subjectTopic = SubjectTopic.create(subject1, subTopic2);
 
         final var connection1 = TopicSubtopic.create(rootTopic1, subTopic1);
@@ -437,7 +445,7 @@ public class EntityConnectionServiceImplTest {
 
         assertEquals(1, connection1.getRank());
 
-        service.updateTopicSubtopic(connection1, 2);
+        service.updateTopicSubtopic(connection1, relevance, 2);
         assertEquals(2, connection1.getRank());
     }
 
@@ -453,12 +461,14 @@ public class EntityConnectionServiceImplTest {
         final var subject1topic1 = SubjectTopic.create(subject1, topic1);
         final var subject1topic2 = SubjectTopic.create(subject1, topic2);
 
+        final var relevance = builder.relevance();
+
         SubjectTopic.create(subject3, topic3);
 
         subject1topic1.setRank(1);
         subject1topic2.setRank(2);
 
-        service.updateSubjectTopic(subject1topic2, 1);
+        service.updateSubjectTopic(subject1topic2, relevance, 1);
         assertEquals(2, subject1topic1.getRank());
         assertEquals(1, subject1topic2.getRank());
 
@@ -479,6 +489,8 @@ public class EntityConnectionServiceImplTest {
 
         final var topic2resource1 = TopicResource.create(topic2, resource1, false);
 
+        final var relevance = builder.relevance();
+
         topic1resource1.setRank(1);
         topic1resource2.setRank(2);
         topic1resource3.setRank(3);
@@ -488,14 +500,14 @@ public class EntityConnectionServiceImplTest {
         assertTrue(topic1resource3.isPrimary().orElseThrow());
         assertFalse(topic2resource1.isPrimary().orElseThrow());
 
-        service.updateTopicResource(topic2resource1, true, null);
+        service.updateTopicResource(topic2resource1, relevance, true, null);
 
         assertFalse(topic1resource1.isPrimary().orElseThrow());
         assertTrue(topic1resource2.isPrimary().orElseThrow());
         assertTrue(topic1resource3.isPrimary().orElseThrow());
         assertTrue(topic2resource1.isPrimary().orElseThrow());
 
-        service.updateTopicResource(topic2resource1, false, null);
+        service.updateTopicResource(topic2resource1, relevance, false, null);
 
         assertTrue(topic1resource1.isPrimary().orElseThrow());
         assertTrue(topic1resource2.isPrimary().orElseThrow());
@@ -503,7 +515,7 @@ public class EntityConnectionServiceImplTest {
         assertFalse(topic2resource1.isPrimary().orElseThrow());
 
         try {
-            service.updateTopicResource(topic1resource3, false, null);
+            service.updateTopicResource(topic1resource3, relevance, false, null);
             fail("Expected InvalidArgumentServiceException");
         } catch (InvalidArgumentServiceException ignored) {
 
@@ -512,12 +524,12 @@ public class EntityConnectionServiceImplTest {
         assertEquals(1, topic1resource1.getRank());
         assertEquals(2, topic1resource2.getRank());
         assertEquals(3, topic1resource3.getRank());
-        service.updateTopicResource(topic1resource3, true, 1);
+        service.updateTopicResource(topic1resource3, relevance, true, 1);
         assertEquals(2, topic1resource1.getRank());
         assertEquals(3, topic1resource2.getRank());
         assertEquals(1, topic1resource3.getRank());
 
-        service.updateTopicResource(topic1resource2, true, 2);
+        service.updateTopicResource(topic1resource2, relevance, true, 2);
         assertEquals(3, topic1resource1.getRank());
         assertEquals(2, topic1resource2.getRank());
         assertEquals(1, topic1resource3.getRank());
