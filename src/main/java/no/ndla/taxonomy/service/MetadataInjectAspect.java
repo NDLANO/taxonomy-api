@@ -12,6 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Aspect
@@ -19,10 +20,10 @@ import java.util.stream.Collectors;
 public class MetadataInjectAspect {
     private final MetadataApiService metadataApiService;
 
-    private final Map<Class<?>, Optional<Method>> setMetadataMethods = new HashMap<>();
-    private final Map<Class<?>, Set<Field>> allFields = new HashMap<>();
-    private final Map<Class<?>, Set<Field>> metadataInjectFields = new HashMap<>();
-    private final Map<Class<?>, Set<Field>> metadataIdFields = new HashMap<>();
+    private final Map<Class<?>, Optional<Method>> setMetadataMethods = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Set<Field>> allFields = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Set<Field>> metadataInjectFields = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Set<Field>> metadataIdFields = new ConcurrentHashMap<>();
 
     private final Logger log = LoggerFactory.getLogger(MetadataInjectAspect.class);
 
