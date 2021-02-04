@@ -79,6 +79,16 @@ service: ndla-taxonomy-test
 ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-test
 
 ---
+spring.profiles: test2
+
+auth0:
+  issuer: https://ndla-test.eu.auth0.com/
+  jwks.kid: QzlEOTQ5M0NGMDk4NjExOEJGMjc2MjVFODhEQkE1NUI2NkE0RTQyRg
+
+service: ndla-taxonomy-test2
+ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-test2
+
+---
 spring.profiles: brukertest
 
 service: ndla-taxonomy-brukertest
