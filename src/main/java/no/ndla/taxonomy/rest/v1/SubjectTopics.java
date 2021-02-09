@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
@@ -29,15 +31,18 @@ public class SubjectTopics {
     private final SubjectTopicRepository subjectTopicRepository;
     private final SubjectRepository subjectRepository;
     private final EntityConnectionService connectionService;
+    private final RelevanceRepository relevanceRepository;
 
     public SubjectTopics(SubjectRepository subjectRepository,
                          TopicRepository topicRepository,
                          SubjectTopicRepository subjectTopicRepository,
-                         EntityConnectionService connectionService) {
+                         EntityConnectionService connectionService,
+                         RelevanceRepository relevanceRepository) {
         this.subjectRepository = subjectRepository;
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicRepository = topicRepository;
         this.connectionService = connectionService;
+        this.relevanceRepository = relevanceRepository;
     }
 
 
@@ -66,9 +71,10 @@ public class SubjectTopics {
 
         Subject subject = subjectRepository.getByPublicId(command.subjectid);
         Topic topic = topicRepository.getByPublicId(command.topicid);
+        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
 
         final SubjectTopic subjectTopic;
-        subjectTopic = connectionService.connectSubjectTopic(subject, topic, command.rank == 0 ? null : command.rank);
+        subjectTopic = connectionService.connectSubjectTopic(subject, topic, relevance, command.rank == 0 ? null : command.rank);
 
         URI location = URI.create("/subject-topics/" + subjectTopic.getPublicId());
         return ResponseEntity.created(location).build();
@@ -89,8 +95,9 @@ public class SubjectTopics {
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
+        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
 
-        connectionService.updateSubjectTopic(subjectTopic, command.rank > 0 ? command.rank : null);
+        connectionService.updateSubjectTopic(subjectTopic, relevance, command.rank > 0 ? command.rank : null);
     }
 
 
@@ -110,6 +117,10 @@ public class SubjectTopics {
         @JsonProperty
         @ApiModelProperty(value = "Order in which the topic should be sorted for the topic", example = "1")
         public int rank;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+        public URI relevanceId;
     }
 
     public static class UpdateSubjectTopicCommand {
@@ -125,6 +136,10 @@ public class SubjectTopics {
         @JsonProperty
         @ApiModelProperty(value = "Order in which the topic should be sorted for the subject", example = "1")
         public int rank;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+        public URI relevanceId;
     }
 
     public static class SubjectTopicIndexDocument {
@@ -148,6 +163,10 @@ public class SubjectTopics {
         @ApiModelProperty(value = "Order in which the topic is sorted under the subject", example = "1")
         public int rank;
 
+        @JsonProperty
+        @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+        public URI relevanceId;
+
         SubjectTopicIndexDocument() {
         }
 
@@ -164,6 +183,7 @@ public class SubjectTopics {
 
             primary = true;
             rank = subjectTopic.getRank();
+            relevanceId = subjectTopic.getRelevance().map(Relevance::getPublicId).orElse(null);
         }
     }
 }

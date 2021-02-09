@@ -749,4 +749,16 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="20210118 add relevance_id to topic-subtopic" author="Max Moeschinger">
+        <addColumn tableName="topic_subtopic">
+            <column name="relevance_id" type="integer"><constraints nullable="true" /></column>
+        </addColumn>
+        <addColumn tableName="subject_topic">
+            <column name="relevance_id" type="integer"><constraints nullable="true" /></column>
+        </addColumn>
+        <addColumn tableName="topic_resource">
+            <column name="relevance_id" type="integer"><constraints nullable="true" /></column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

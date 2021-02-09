@@ -10,10 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -37,20 +34,20 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public SubjectTopic connectSubjectTopic(Subject subject, Topic topic) {
+    public SubjectTopic connectSubjectTopic(Subject subject, Topic topic, Relevance relevance) {
         final var highestRank = subject.getSubjectTopics().stream()
                 .map(SubjectTopic::getRank)
                 .max(Integer::compare);
 
-        return connectSubjectTopic(subject, topic, highestRank.orElse(0) + 1);
+        return connectSubjectTopic(subject, topic, relevance, highestRank.orElse(0) + 1);
     }
 
     @Override
-    public TopicResource connectTopicResource(Topic topic, Resource resource) {
-        return connectTopicResource(topic, resource, true, null);
+    public TopicResource connectTopicResource(Topic topic, Resource resource, Relevance relevance) {
+        return connectTopicResource(topic, resource, relevance, true, null);
     }
 
-    private EntityWithPathConnection doCreateConnection(EntityWithPath parent, EntityWithPath child, boolean requestedPrimary, int rank) {
+    private EntityWithPathConnection doCreateConnection(EntityWithPath parent, EntityWithPath child, boolean requestedPrimary, Relevance relevance, int rank) {
         if (child.getParentConnections().size() == 0) {
             // First connected is always primary regardless of request
             requestedPrimary = true;
@@ -77,26 +74,27 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         }
 
         updateRank(connection, rank);
+        updateRelevance(connection, relevance);
 
         cachedUrlUpdaterService.updateCachedUrls(child);
 
         return connection;
     }
 
-    private SubjectTopic createConnection(Subject subject, Topic topic, int rank) {
-        return (SubjectTopic) doCreateConnection(subject, topic, true, rank);
+    private SubjectTopic createConnection(Subject subject, Topic topic, Relevance relevance, int rank) {
+        return (SubjectTopic) doCreateConnection(subject, topic, true, relevance, rank);
     }
 
-    private TopicSubtopic createConnection(Topic topic, Topic subtopic, int rank) {
-        return (TopicSubtopic) doCreateConnection(topic, subtopic, true, rank);
+    private TopicSubtopic createConnection(Topic topic, Topic subtopic, Relevance relevance, int rank) {
+        return (TopicSubtopic) doCreateConnection(topic, subtopic, true, relevance, rank);
     }
 
-    private TopicResource createConnection(Topic topic, Resource resource, boolean primary, int rank) {
-        return (TopicResource) doCreateConnection(topic, resource, primary, rank);
+    private TopicResource createConnection(Topic topic, Resource resource, Relevance relevance, boolean primary, int rank) {
+        return (TopicResource) doCreateConnection(topic, resource, primary, relevance, rank);
     }
 
     @Override
-    public SubjectTopic connectSubjectTopic(Subject subject, Topic topic, Integer rank) {
+    public SubjectTopic connectSubjectTopic(Subject subject, Topic topic, Relevance relevance, Integer rank) {
         if (topic.getParentConnections().size() > 0) {
             throw new DuplicateConnectionException();
         }
@@ -108,16 +106,16 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
                     .orElse(0) + 1;
         }
 
-        return subjectTopicRepository.saveAndFlush(createConnection(subject, topic, rank));
+        return subjectTopicRepository.saveAndFlush(createConnection(subject, topic, relevance, rank));
     }
 
     @Override
-    public TopicSubtopic connectTopicSubtopic(Topic topic, Topic subTopic) {
-        return connectTopicSubtopic(topic, subTopic, null);
+    public TopicSubtopic connectTopicSubtopic(Topic topic, Topic subTopic, Relevance relevance) {
+        return connectTopicSubtopic(topic, subTopic, relevance, null);
     }
 
     @Override
-    public TopicSubtopic connectTopicSubtopic(Topic topic, Topic subTopic, Integer rank) {
+    public TopicSubtopic connectTopicSubtopic(Topic topic, Topic subTopic, Relevance relevance, Integer rank) {
         if (subTopic.getParentConnections().size() > 0) {
             throw new DuplicateConnectionException();
         }
@@ -148,11 +146,11 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
                     .orElse(0) + 1;
         }
 
-        return topicSubtopicRepository.saveAndFlush(createConnection(topic, subTopic, rank));
+        return topicSubtopicRepository.saveAndFlush(createConnection(topic, subTopic, relevance, rank));
     }
 
     @Override
-    public TopicResource connectTopicResource(Topic topic, Resource resource, boolean isPrimary, Integer rank) {
+    public TopicResource connectTopicResource(Topic topic, Resource resource, Relevance relevance, boolean isPrimary, Integer rank) {
         if (topic.getTopicResources().stream()
                 .anyMatch(topicResource -> topicResource.getResource().orElse(null) == resource)) {
             throw new DuplicateConnectionException();
@@ -165,7 +163,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
                     .orElse(0) + 1;
         }
 
-        return topicResourceRepository.saveAndFlush(createConnection(topic, resource, isPrimary, rank));
+        return topicResourceRepository.saveAndFlush(createConnection(topic, resource, relevance, isPrimary, rank));
     }
 
     @Override
@@ -289,6 +287,12 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         saveConnections(updatedConnections);
     }
 
+    private void updateRelevance(EntityWithPathConnection connection, Relevance relevance) {
+        connection.setRelevance(relevance);
+
+        this.saveConnections(Collections.singletonList(connection));
+    }
+
     private void updateRankableConnection(EntityWithPathConnection connection, boolean isPrimary, Integer newRank) {
         updatePrimaryConnection(connection, isPrimary);
 
@@ -298,18 +302,21 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public void updateTopicSubtopic(TopicSubtopic topicSubtopic, Integer newRank) {
+    public void updateTopicSubtopic(TopicSubtopic topicSubtopic, Relevance relevance, Integer newRank) {
         updateRank(topicSubtopic, newRank);
+        updateRelevance(topicSubtopic, relevance);
     }
 
     @Override
-    public void updateTopicResource(TopicResource topicResource, boolean isPrimary, Integer newRank) {
+    public void updateTopicResource(TopicResource topicResource, Relevance relevance, boolean isPrimary, Integer newRank) {
         updateRankableConnection(topicResource, isPrimary, newRank);
+        updateRelevance(topicResource, relevance);
     }
 
     @Override
-    public void updateSubjectTopic(SubjectTopic subjectTopic, Integer newRank) {
+    public void updateSubjectTopic(SubjectTopic subjectTopic, Relevance relevance, Integer newRank) {
         updateRank(subjectTopic, newRank);
+        updateRelevance(subjectTopic, relevance);
     }
 
     @Override
