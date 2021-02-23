@@ -20,6 +20,10 @@ public class SubjectTopic extends DomainEntity implements EntityWithPathConnecti
     @Column(name = "rank")
     private int rank;
 
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE})
+    @JoinColumn(name = "relevance_id")
+    private Relevance relevance;
+
     private SubjectTopic() {
         setPublicId(URI.create("urn:subject-topic:" + UUID.randomUUID()));
     }
@@ -84,6 +88,16 @@ public class SubjectTopic extends DomainEntity implements EntityWithPathConnecti
     @Override
     public Optional<EntityWithPath> getConnectedChild() {
         return Optional.ofNullable(topic);
+    }
+
+    @Override
+    public Optional<Relevance> getRelevance() {
+        return Optional.ofNullable(relevance);
+    }
+
+    @Override
+    public void setRelevance(Relevance relevance) {
+        this.relevance = relevance;
     }
 
     @Override

@@ -23,6 +23,10 @@ public class TopicResource extends DomainEntity implements EntityWithPathConnect
     @Column(name = "rank")
     private int rank;
 
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE})
+    @JoinColumn(name = "relevance_id")
+    private Relevance relevance;
+
     private TopicResource() {
         setPublicId(URI.create("urn:topic-resource:" + UUID.randomUUID()));
     }
@@ -99,5 +103,15 @@ public class TopicResource extends DomainEntity implements EntityWithPathConnect
     @PreRemove
     public void preRemove() {
         disassociate();
+    }
+
+    @Override
+    public Optional<Relevance> getRelevance() {
+        return Optional.ofNullable(relevance);
+    }
+
+    @Override
+    public void setRelevance(Relevance relevance) {
+        this.relevance = relevance;
     }
 }
