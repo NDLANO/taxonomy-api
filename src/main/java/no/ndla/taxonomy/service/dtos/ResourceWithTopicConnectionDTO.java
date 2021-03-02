@@ -2,6 +2,7 @@ package no.ndla.taxonomy.service.dtos;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicResource;
 
@@ -21,6 +22,9 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
     @ApiParam
     private boolean primary;
 
+    @ApiParam
+    public URI relevanceId;
+
     public ResourceWithTopicConnectionDTO() {
 
     }
@@ -35,6 +39,10 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
         this.connectionId = topicResource.getPublicId();
         this.rank = topicResource.getRank();
         this.primary = topicResource.isPrimary().orElse(false);
+        {
+            final Relevance relevance = topicResource.getRelevance().orElse(null);
+            this.relevanceId = relevance != null ? relevance.getPublicId() : null;
+        }
     }
 
     public URI getTopicId() {

@@ -55,6 +55,10 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
     public int rank;
 
     @JsonProperty
+    @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+    public URI relevanceId;
+
+    @JsonProperty
     @ApiModelProperty(value = "Filters this topic is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
     @InjectMetadata
     public Set<FilterWithConnectionDTO> filters = new HashSet<>();
@@ -85,6 +89,11 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
             topicSubtopic.getTopic().ifPresent(topic -> this.parent = topic.getPublicId());
 
             this.rank = topicSubtopic.getRank();
+
+            {
+                final Relevance relevance = topicSubtopic.getRelevance().orElse(null);
+                this.relevanceId = relevance != null ? relevance.getPublicId() : null;
+            }
         } else if (domainEntity instanceof SubjectTopic) {
             final var subjectTopic = (SubjectTopic) domainEntity;
 
@@ -96,6 +105,11 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
             subjectTopic.getSubject().ifPresent(s -> this.parent = s.getPublicId());
 
             this.rank = subjectTopic.getRank();
+
+            {
+                final Relevance relevance = subjectTopic.getRelevance().orElse(null);
+                this.relevanceId = relevance != null ? relevance.getPublicId() : null;
+            }
         } else {
             throw new IllegalArgumentException("Wrapped entity must be either a SubjectTopic or TopicSubtopic");
         }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.domain.TopicTranslation;
 import no.ndla.taxonomy.service.MetadataIdField;
@@ -33,6 +34,10 @@ public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
     @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
     private Boolean isPrimary;
 
+    @JsonProperty
+    @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+    public URI relevanceId;
+
     @ApiModelProperty(value = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
@@ -59,6 +64,11 @@ public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
 
         this.rank = topicSubtopic.getRank();
         topicSubtopic.getTopic().ifPresent(topic -> this.parentId = topic.getPublicId());
+
+        {
+            final Relevance relevance = topicSubtopic.getRelevance().orElse(null);
+            this.relevanceId = relevance != null ? relevance.getPublicId() : null;
+        }
     }
 
     public void setMetadata(MetadataDto metadata) {
