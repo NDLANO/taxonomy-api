@@ -6,14 +6,21 @@ public class JWTPermission {
     private String permission;
 
     public JWTPermission(String scope) {
-        if(scope.contains("-")){
-            this.api = scope.split("-")[0].trim();
-            this.environment = scope.split("-")[1].split(":")[0].trim();
-            this.permission = scope.split(":")[1].trim();
-        }else {
-            this.api = scope.split(":")[0].trim();
+        String parts[] = scope.split(":");
+        if (parts.length > 1) {
+            if (parts[0].contains("-")) {
+                this.api = parts[0].split("-")[0].trim();
+                this.environment = parts[0].split("-")[1].split(":")[0].trim();
+                this.permission = parts[1].trim();
+            } else {
+                this.api = parts[0].trim();
+                this.environment = null;
+                this.permission = parts[1].trim();
+            }
+        } else {
+            this.api = null;
             this.environment = null;
-            this.permission = scope.split(":")[1].trim();
+            this.permission = null;
         }
     }
 
