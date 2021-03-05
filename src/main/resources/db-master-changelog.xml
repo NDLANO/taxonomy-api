@@ -770,4 +770,13 @@
         <dropForeignKeyConstraint baseTableName="topic_filter" constraintName="topic_filter_relevance_id_fkey"/>
         <dropForeignKeyConstraint baseTableName="filter" constraintName="filter_subject_id_fkey"/>
     </changeSet>
+
+    <changeSet id="20210305 01 drop filter relations" author="Jan-Espen Oversand">
+        <dropTable tableName="resource_filter"/>
+        <dropTable tableName="topic_filter"/>
+    </changeSet>
+    <changeSet id="20210305 02 drop filters" author="Jan-Espen Oversand">
+        <dropTable tableName="filter_translation"/>
+        <dropTable tableName="filter"/>
+    </changeSet>
 </databaseChangeLog>
