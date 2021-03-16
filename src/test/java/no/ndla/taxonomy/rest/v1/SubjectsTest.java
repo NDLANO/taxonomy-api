@@ -72,7 +72,7 @@ public class SubjectsTest extends RestTest {
         MockHttpServletResponse response = testUtils.createResource("/v1/subjects", createSubjectCommand);
         URI id = getId(response);
 
-        Subject subject = subjectRepository.getByPublicId(id);
+        Topic subject = topicRepository.getByPublicId(id);
         assertEquals(createSubjectCommand.name, subject.getName());
         assertEquals(createSubjectCommand.contentUri, subject.getContentUri());
     }
@@ -87,7 +87,7 @@ public class SubjectsTest extends RestTest {
         MockHttpServletResponse response = testUtils.createResource("/v1/subjects", command);
         assertEquals("/v1/subjects/urn:subject:1", response.getHeader("Location"));
 
-        assertNotNull(subjectRepository.getByPublicId(command.id));
+        assertNotNull(topicRepository.getByPublicId(command.id));
     }
 
     @Test
@@ -102,7 +102,7 @@ public class SubjectsTest extends RestTest {
 
         testUtils.updateResource("/v1/subjects/" + publicId, command);
 
-        Subject subject = subjectRepository.getByPublicId(publicId);
+        Topic subject = topicRepository.getByPublicId(publicId);
         assertEquals(command.name, subject.getName());
         assertEquals(command.contentUri, subject.getContentUri());
     }
@@ -120,7 +120,7 @@ public class SubjectsTest extends RestTest {
 
         testUtils.updateResource("/v1/subjects/" + publicId, command);
 
-        Subject subject = subjectRepository.getByPublicId(randomId);
+        Topic subject = topicRepository.getByPublicId(randomId);
         assertEquals(command.name, subject.getName());
         assertEquals(command.contentUri, subject.getContentUri());
     }
@@ -144,14 +144,14 @@ public class SubjectsTest extends RestTest {
         ).getPublicId();
 
         testUtils.deleteResource("/v1/subjects/" + id);
-        assertNull(subjectRepository.findByPublicId(id));
+        assertNull(topicRepository.findByPublicId(id));
 
         verify(metadataApiService).deleteMetadataByPublicId(id);
     }
 
     @Test
     public void can_get_topics() throws Exception {
-        Subject subject = builder.subject(s -> s
+        Topic subject = builder.subject(s -> s
                 .name("physics")
                 .topic(t -> t.name("statics").contentUri("urn:article:1"))
                 .topic(t -> t.name("electricity").contentUri("urn:article:2"))
@@ -212,8 +212,8 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(topics, t -> t.getMetadata().isVisible());
         assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 1);
 
-        Subject subject = builder.subject("subject");
-        assertEquals(first(subject.getSubjectTopics()).getPublicId(), topics[0].connectionId);
+        Topic subject = builder.subject("subject");
+        assertEquals(first(subject.getChildrenTopicSubtopics()).getPublicId(), topics[0].connectionId);
 
         Topic parent = builder.topic("parent");
         assertEquals(first(parent.getChildrenTopicSubtopics()).getPublicId(), topics[1].connectionId);

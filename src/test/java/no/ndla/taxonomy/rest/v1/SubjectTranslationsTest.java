@@ -2,6 +2,7 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import no.ndla.taxonomy.service.dtos.ResourceDTO;
@@ -20,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class SubjectTranslationsTest extends RestTest {
     @BeforeEach
     void clearAllRepos() {
-        subjectRepository.deleteAllAndFlush();
+        topicRepository.deleteAllAndFlush();
     }
 
     @Test
@@ -73,7 +74,7 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_add_translation() throws Exception {
-        Subject mathematics = builder.subject(s -> s.name("Mathematics"));
+        Topic mathematics = builder.subject(s -> s.name("Mathematics"));
         URI id = mathematics.getPublicId();
 
         testUtils.updateResource("/v1/subjects/" + id + "/translations/nb", new SubjectTranslations.UpdateSubjectTranslationCommand() {{
@@ -85,7 +86,7 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_delete_translation() throws Exception {
-        Subject subject = builder.subject(s -> s
+        Topic subject = builder.subject(s -> s
                 .name("Mathematics")
                 .translation("nb", l -> l
                         .name("Matematikk")
@@ -100,7 +101,7 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_all_translations() throws Exception {
-        Subject subject = builder.subject(s -> s
+        Topic subject = builder.subject(s -> s
                 .name("Mathematics")
                 .translation("nb", l -> l.name("Matematikk"))
                 .translation("en", l -> l.name("Mathematics"))
@@ -118,7 +119,7 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_single_translation() throws Exception {
-        Subject subject = builder.subject(s -> s
+        Topic subject = builder.subject(s -> s
                 .name("Mathematics")
                 .translation("nb", l -> l.name("Matematikk"))
         );
@@ -132,7 +133,7 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_topics_with_language() throws Exception {
-        Subject subject = builder.subject(s -> s
+        Topic subject = builder.subject(s -> s
                 .name("physics")
                 .topic(t -> t.name("statics").translation("nb", tr -> tr.name("statikk")))
                 .topic(t -> t.name("electricity").translation("nb", tr -> tr.name("elektrisitet")))

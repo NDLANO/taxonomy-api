@@ -4,14 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.domain.SubjectTopic;
-import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.repositories.SubjectTopicRepository;
-import no.ndla.taxonomy.repositories.TopicRepository;
+import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.EntityConnectionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,18 +22,15 @@ import java.util.stream.Collectors;
 @Transactional
 public class SubjectTopics {
     private final TopicRepository topicRepository;
-    private final SubjectTopicRepository subjectTopicRepository;
-    private final SubjectRepository subjectRepository;
+    private final TopicSubtopicRepository topicSubtopicRepository;
     private final EntityConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
 
-    public SubjectTopics(SubjectRepository subjectRepository,
+    public SubjectTopics(TopicSubtopicRepository topicSubtopicRepository,
                          TopicRepository topicRepository,
-                         SubjectTopicRepository subjectTopicRepository,
                          EntityConnectionService connectionService,
                          RelevanceRepository relevanceRepository) {
-        this.subjectRepository = subjectRepository;
-        this.subjectTopicRepository = subjectTopicRepository;
+        this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicRepository = topicRepository;
         this.connectionService = connectionService;
         this.relevanceRepository = relevanceRepository;
@@ -49,9 +40,10 @@ public class SubjectTopics {
     @GetMapping
     @ApiOperation("Gets all connections between subjects and topics")
     public List<SubjectTopicIndexDocument> index() {
-        return subjectTopicRepository
-                .findAllIncludingSubjectAndTopic()
+        return topicSubtopicRepository
+                .findAllIncludingTopicAndSubtopic()
                 .stream()
+                .filter(connection -> connection.getTopic().map(Topic::getPublicId).map(URI::toString).filter(id -> id.startsWith("urn:subject:")).isPresent())
                 .map(SubjectTopicIndexDocument::new)
                 .collect(Collectors.toList());
     }
@@ -59,7 +51,7 @@ public class SubjectTopics {
     @GetMapping("/{id}")
     @ApiOperation("Get a specific connection between a subject and a topic")
     public SubjectTopicIndexDocument get(@PathVariable("id") URI id) {
-        SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
+        TopicSubtopic subjectTopic = topicSubtopicRepository.getByPublicId(id);
         return new SubjectTopicIndexDocument(subjectTopic);
     }
 
@@ -69,11 +61,11 @@ public class SubjectTopics {
     public ResponseEntity<Void> post(
             @ApiParam(name = "command", value = "The subject and topic getting connected.") @RequestBody AddTopicToSubjectCommand command) {
 
-        Subject subject = subjectRepository.getByPublicId(command.subjectid);
+        Topic subject = topicRepository.getByPublicId(command.subjectid);
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
 
-        final SubjectTopic subjectTopic;
+        final TopicSubtopic subjectTopic;
         subjectTopic = connectionService.connectSubjectTopic(subject, topic, relevance, command.rank == 0 ? null : command.rank);
 
         URI location = URI.create("/subject-topics/" + subjectTopic.getPublicId());
@@ -85,7 +77,7 @@ public class SubjectTopics {
     @ApiOperation("Removes a topic from a subject")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
-        connectionService.disconnectSubjectTopic(subjectTopicRepository.getByPublicId(id));
+        connectionService.disconnectTopicSubtopic(topicSubtopicRepository.getByPublicId(id));
     }
 
     @PutMapping("/{id}")
@@ -94,7 +86,7 @@ public class SubjectTopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) {
-        SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
+        TopicSubtopic subjectTopic = topicSubtopicRepository.getByPublicId(id);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
 
         connectionService.updateSubjectTopic(subjectTopic, relevance, command.rank > 0 ? command.rank : null);
@@ -170,14 +162,14 @@ public class SubjectTopics {
         SubjectTopicIndexDocument() {
         }
 
-        SubjectTopicIndexDocument(SubjectTopic subjectTopic) {
+        SubjectTopicIndexDocument(TopicSubtopic subjectTopic) {
             id = subjectTopic.getPublicId();
 
-            subjectid = subjectTopic.getSubject()
-                    .map(Subject::getPublicId)
+            subjectid = subjectTopic.getTopic()
+                    .map(Topic::getPublicId)
                     .orElse(null);
 
-            topicid = subjectTopic.getTopic()
+            topicid = subjectTopic.getSubtopic()
                     .map(Topic::getPublicId)
                     .orElse(null);
 

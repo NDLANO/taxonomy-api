@@ -3,8 +3,8 @@ package no.ndla.taxonomy.service.dtos;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.EntityWithPathConnection;
-import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 
 import java.net.URI;
@@ -47,17 +47,20 @@ public class ConnectionIndexDTO {
             this.paths = Set.copyOf(connected.getAllPaths());
         });
 
+        boolean parentIsSubject = connection.getConnectedParent().map(EntityWithPath::getPublicId).map(URI::toString).filter(uri -> uri.startsWith("urn:subject:")).isPresent();
         if (connection instanceof TopicSubtopic) {
-            if (isParentConnection) {
-                this.type = "parent-topic";
+            if (!parentIsSubject) {
+                if (isParentConnection) {
+                    this.type = "parent-topic";
+                } else {
+                    this.type = "subtopic";
+                }
             } else {
-                this.type = "subtopic";
-            }
-        } else if (connection instanceof SubjectTopic) {
-            if (isParentConnection) {
-                this.type = "parent-subject";
-            } else {
-                this.type = "topic";
+                if (isParentConnection) {
+                    this.type = "parent-subject";
+                } else {
+                    this.type = "topic";
+                }
             }
         }
     }

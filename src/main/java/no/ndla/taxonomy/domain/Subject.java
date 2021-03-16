@@ -12,9 +12,6 @@ public class Subject extends EntityWithPath {
     private URI contentUri;
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<SubjectTopic> subjectTopics = new HashSet<>();
-
-    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SubjectTranslation> translations = new HashSet<>();
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -36,35 +33,7 @@ public class Subject extends EntityWithPath {
 
     @Override
     public Set<EntityWithPathConnection> getChildConnections() {
-        return subjectTopics.stream().collect(Collectors.toUnmodifiableSet());
-    }
-
-    public void addSubjectTopic(SubjectTopic subjectTopic) {
-        this.subjectTopics.add(subjectTopic);
-
-        if (subjectTopic.getSubject().orElse(null) != this) {
-            throw new IllegalArgumentException("Subject must be set on SubjectTopic before associating with Subject");
-        }
-    }
-
-    public Set<SubjectTopic> getSubjectTopics() {
-        return this.subjectTopics.stream().collect(Collectors.toUnmodifiableSet());
-    }
-
-    public void removeSubjectTopic(SubjectTopic subjectTopic) {
-        this.subjectTopics.remove(subjectTopic);
-
-        if (subjectTopic.getSubject().orElse(null) == this) {
-            subjectTopic.disassociate();
-        }
-    }
-
-    public Collection<Topic> getTopics() {
-        return subjectTopics.stream()
-                .map(SubjectTopic::getTopic)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toUnmodifiableSet());
+        return Set.of();
     }
 
     public SubjectTranslation addTranslation(String languageCode) {
@@ -118,11 +87,6 @@ public class Subject extends EntityWithPath {
 
     public void setContentUri(URI contentUri) {
         this.contentUri = contentUri;
-    }
-
-    @PreRemove
-    void preRemove() {
-        Set.copyOf(subjectTopics).forEach(SubjectTopic::disassociate);
     }
 
     @Override

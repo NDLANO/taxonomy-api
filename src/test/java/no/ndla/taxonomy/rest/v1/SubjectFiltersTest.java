@@ -2,6 +2,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +21,6 @@ public class SubjectFiltersTest extends RestTest {
     void clearAllRepos() {
         resourceRepository.deleteAllAndFlush();
         topicRepository.deleteAllAndFlush();
-        subjectRepository.deleteAllAndFlush();
     }
 
     @BeforeEach
@@ -65,7 +65,7 @@ public class SubjectFiltersTest extends RestTest {
 
     @Test
     public void can_get_topics_with_filter() throws Exception {
-        Subject subject = builder.subject(s -> s
+        Topic subject = builder.subject(s -> s
                 .name("physics")
                 .topic(t -> t
                         .name("statics")

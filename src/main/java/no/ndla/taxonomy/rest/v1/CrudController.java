@@ -28,7 +28,7 @@ public abstract class CrudController<T extends DomainObject> {
     protected CachedUrlUpdaterService cachedUrlUpdaterService;
 
     private static final Map<Class<?>, String> locations = new HashMap<>();
-    private final URNValidator validator = new URNValidator();
+    protected URNValidator validator = new URNValidator();
 
     protected CrudController(TaxonomyRepository<T> repository, CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.repository = repository;

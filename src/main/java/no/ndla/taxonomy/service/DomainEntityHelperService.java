@@ -6,7 +6,7 @@ import no.ndla.taxonomy.domain.Topic;
 import java.net.URI;
 
 public interface DomainEntityHelperService {
-    Subject getSubjectByPublicId(URI publicId);
+    Topic getSubjectByPublicId(URI publicId);
 
     Topic getTopicByPublicId(URI publicId);
 }

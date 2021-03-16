@@ -3,7 +3,9 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.exceptions.IdFormatException;
+import no.ndla.taxonomy.service.SubjectURNValidator;
 import no.ndla.taxonomy.service.URNValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,5 +69,19 @@ public class URNValidatorTest {
     public void differentEntityClassesAreAccepted() {
         URI id = URI.create("urn:subject:134");
         validator.validate(id, new Subject());
+    }
+
+    @Test
+    public void testNewTopicSubjectValidator() {
+        URNValidator validator = new SubjectURNValidator();
+        URI id = URI.create("urn:subject:134");
+        validator.validate(id, new Topic());
+    }
+
+    @Test
+    public void testNewTopicSubjectValidatorWrongEntityType() {
+        URNValidator validator = new SubjectURNValidator();
+        URI id = URI.create("urn:subject:134");
+        assertThrows(IdFormatException.class, () -> validator.validate(id, new Resource()));
     }
 }

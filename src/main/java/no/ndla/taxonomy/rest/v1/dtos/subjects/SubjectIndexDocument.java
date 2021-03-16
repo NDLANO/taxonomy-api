@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.SubjectTranslation;
+import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.domain.TopicTranslation;
 import no.ndla.taxonomy.service.MetadataIdField;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 
@@ -49,6 +51,7 @@ public class SubjectIndexDocument {
         this.metadata = metadata;
     }
 
+    @Deprecated
     public SubjectIndexDocument(Subject subject, String languageCode) {
         this.id = subject.getPublicId();
         this.contentUri = subject.getContentUri();
@@ -57,6 +60,18 @@ public class SubjectIndexDocument {
                 .map(SubjectTranslation::getName)
                 .orElse(subject.getName());
         this.path = subject
+                .getPrimaryPath()
+                .orElse(null);
+    }
+
+    public SubjectIndexDocument(Topic topic, String languageCode) {
+        this.id = topic.getPublicId();
+        this.contentUri = topic.getContentUri();
+        this.name = topic
+                .getTranslation(languageCode)
+                .map(TopicTranslation::getName)
+                .orElse(topic.getName());
+        this.path = topic
                 .getPrimaryPath()
                 .orElse(null);
     }

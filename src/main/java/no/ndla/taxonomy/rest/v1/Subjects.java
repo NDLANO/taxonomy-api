@@ -4,8 +4,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
-import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.repositories.SubjectTopicRepository;
+import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
@@ -26,26 +25,26 @@ import java.util.stream.Collectors;
 @RestController
 @Transactional
 @RequestMapping(path = {"/v1/subjects"})
-public class Subjects extends CrudController<Subject> {
-    private final SubjectRepository subjectRepository;
-    private final SubjectTopicRepository subjectTopicRepository;
+public class Subjects extends CrudController<Topic> {
+    private final TopicRepository topicRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final TopicTreeSorter topicTreeSorter;
     private final SubjectService subjectService;
     private final RecursiveTopicTreeService recursiveTopicTreeService;
 
-    public Subjects(SubjectRepository subjectRepository,
-                    SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository,
+    public Subjects(TopicRepository topicRepository,
+                    TopicSubtopicRepository topicSubtopicRepository,
                     TopicTreeSorter topicTreeSorter, SubjectService subjectService,
                     CachedUrlUpdaterService cachedUrlUpdaterService, RecursiveTopicTreeService recursiveTopicTreeService) {
-        super(subjectRepository, cachedUrlUpdaterService);
+        super(topicRepository, cachedUrlUpdaterService);
 
-        this.subjectRepository = subjectRepository;
-        this.subjectTopicRepository = subjectTopicRepository;
+        this.topicRepository = topicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicTreeSorter = topicTreeSorter;
         this.subjectService = subjectService;
         this.recursiveTopicTreeService = recursiveTopicTreeService;
+
+        this.validator = new SubjectURNValidator();
     }
 
     @GetMapping
@@ -56,8 +55,9 @@ public class Subjects extends CrudController<Subject> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return subjectRepository.findAllIncludingCachedUrlsAndTranslations()
+        return topicRepository.findAllIncludingCachedUrlsAndTranslations()
                 .stream()
+                .filter(topic -> topic.getPublicId() != null && topic.getPublicId().toString().startsWith("urn:subject:"))
                 .map(subject -> new SubjectIndexDocument(subject, language))
                 .collect(Collectors.toList());
     }
@@ -71,7 +71,7 @@ public class Subjects extends CrudController<Subject> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return subjectRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
+        return topicRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
                 .map(subject -> new SubjectIndexDocument(subject, language))
                 .orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
     }
@@ -91,7 +91,9 @@ public class Subjects extends CrudController<Subject> {
     @ApiOperation(value = "Creates a new subject")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(@ApiParam(name = "subject", value = "The new subject") @RequestBody SubjectCommand command) {
-        final var subject = new Subject();
+        final var subject = new Topic();
+        subject.setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
+        subject.setContext(true);
         return doPost(subject, command);
     }
 
@@ -115,7 +117,7 @@ public class Subjects extends CrudController<Subject> {
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
                     URI relevance
     ) {
-        final var subject = subjectRepository.findFirstByPublicId(id)
+        final var subject = topicRepository.findFirstByPublicId(id)
                 .orElseThrow(() -> new NotFoundException("Subject", id));
 
         final List<Integer> topicIds;
@@ -126,8 +128,8 @@ public class Subjects extends CrudController<Subject> {
                     .map(RecursiveTopicTreeService.TopicTreeElement::getTopicId)
                     .collect(Collectors.toList());
         } else {
-            topicIds = subject.getSubjectTopics().stream()
-                    .map(SubjectTopic::getTopic)
+            topicIds = subject.getChildrenTopicSubtopics().stream()
+                    .map(TopicSubtopic::getSubtopic)
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .map(Topic::getId)
@@ -138,17 +140,11 @@ public class Subjects extends CrudController<Subject> {
 
         final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
 
-        final var subjectTopics = subjectTopicRepository.findAllBySubjectAndTopicId(subject, topicIds);
         final var topicSubtopics = topicSubtopicRepository.findAllBySubtopicIdIncludeTranslationsAndCachedUrlsAndFilters(topicIds);
 
         final var returnList = new ArrayList<SubTopicIndexDocument>();
 
         // Filtering
-
-        final var filteredSubjectTopics = subjectTopics.stream()
-                .filter(subjectTopic -> subjectTopic.getTopic().isPresent())
-                .filter(subjectTopic -> searchForFilterOrRelevance(subjectTopic, filterIdSet, relevanceArgument, topicSubtopics))
-                .collect(Collectors.toList());
 
         final var filteredTopicSubtopics = topicSubtopics.stream()
                 .filter(topicSubtopic -> topicSubtopic.getSubtopic().isPresent())
@@ -156,10 +152,6 @@ public class Subjects extends CrudController<Subject> {
                 .collect(Collectors.toList());
 
         // Wrapping with metadata from API if asked for
-
-        filteredSubjectTopics.stream()
-                .map(subjectTopic -> createSubTopicIndexDocument(subject, subjectTopic, language))
-                .forEach(returnList::add);
 
         filteredTopicSubtopics.stream()
                 .map(topicSubtopic -> createSubTopicIndexDocument(subject, topicSubtopic, language))
@@ -173,7 +165,7 @@ public class Subjects extends CrudController<Subject> {
         return topicTreeSorter.sortList(returnList).stream().distinct().collect(Collectors.toList());
     }
 
-    private SubTopicIndexDocument createSubTopicIndexDocument(Subject subject, DomainEntity connection, String language) {
+    private SubTopicIndexDocument createSubTopicIndexDocument(Topic subject, DomainEntity connection, String language) {
         return new SubTopicIndexDocument(subject, connection, language);
     }
 
@@ -205,24 +197,6 @@ public class Subjects extends CrudController<Subject> {
                     }
                 }
             });
-        } else if (connection instanceof SubjectTopic) {
-            Topic topic = ((SubjectTopic) connection).getTopic().orElse(null);
-
-            if (topic != null) {
-                if (hasFilterAndRelevanceOrJustFilterIfRelevanceIsNotSet(topic, filterPublicId, relevancePublicId)) {
-                    foundFilter.set(true);
-                }
-
-                topicSubtopics.stream()
-                        .filter(st -> st.getTopic().isPresent())
-                        .forEach(topicSubtopic -> {
-                            if (topicSubtopic.getTopic().get().getId().equals(topic.getId())) {
-                                if (searchForFilterOrRelevance(topicSubtopic, filterPublicId, relevancePublicId, topicSubtopics)) {
-                                    foundFilter.set(true);
-                                }
-                            }
-                        });
-            }
         } else {
             throw new IllegalArgumentException();
         }

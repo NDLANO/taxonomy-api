@@ -9,6 +9,7 @@ import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 @Component
@@ -138,15 +139,15 @@ public class Builder {
         return resources.get(key);
     }
 
-    public Subject subject(String key) {
+    public Topic subject(String key) {
         return subject(key, null);
     }
 
-    public Subject subject() {
+    public Topic subject() {
         return subject(null, null);
     }
 
-    public Subject subject(String key, Consumer<SubjectBuilder> consumer) {
+    public Topic subject(String key, Consumer<SubjectBuilder> consumer) {
         SubjectBuilder subject = getSubjectBuilder(key);
         if (null != consumer) consumer.accept(subject);
 
@@ -157,7 +158,7 @@ public class Builder {
         return subject.subject;
     }
 
-    public Subject subject(Consumer<SubjectBuilder> consumer) {
+    public Topic subject(Consumer<SubjectBuilder> consumer) {
         return subject(null, consumer);
     }
 
@@ -385,10 +386,12 @@ public class Builder {
 
     @Transactional
     public class SubjectBuilder {
-        private final Subject subject;
+        private final Topic subject;
 
         public SubjectBuilder() {
-            subject = new Subject();
+            subject = new Topic();
+            subject.setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
+            subject.setContext(true);
             entityManager.persist(subject);
         }
 
@@ -417,7 +420,7 @@ public class Builder {
         }
 
         public SubjectBuilder topic(Topic topic) {
-            SubjectTopic subjectTopic = SubjectTopic.create(subject, topic);
+            TopicSubtopic subjectTopic = TopicSubtopic.create(subject, topic);
             entityManager.persist(subjectTopic);
 
             cachedUrlUpdaterService.updateCachedUrls(topic);
@@ -434,10 +437,10 @@ public class Builder {
             return this;
         }
 
-        public SubjectBuilder translation(String languageCode, Consumer<SubjectTranslationBuilder> consumer) {
-            SubjectTranslation subjectTranslation = subject.addTranslation(languageCode);
+        public SubjectBuilder translation(String languageCode, Consumer<TopicTranslationBuilder> consumer) {
+            TopicTranslation subjectTranslation = subject.addTranslation(languageCode);
             entityManager.persist(subjectTranslation);
-            SubjectTranslationBuilder builder = new SubjectTranslationBuilder(subjectTranslation);
+            TopicTranslationBuilder builder = new TopicTranslationBuilder(subjectTranslation);
             consumer.accept(builder);
             return this;
         }

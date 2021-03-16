@@ -1,12 +1,9 @@
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.domain.exceptions.SubjectRequiredException;
-import no.ndla.taxonomy.repositories.SubjectRepository;
+import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.springframework.http.HttpStatus;
@@ -20,10 +17,10 @@ import java.util.List;
 
 @RestController
 public class Filters extends ObsoleteCrudController {
-    private final SubjectRepository subjectRepository;
+    private final TopicRepository topicRepository;
 
-    public Filters(SubjectRepository subjectRepository) {
-        this.subjectRepository = subjectRepository;
+    public Filters(TopicRepository topicRepository) {
+        this.topicRepository = topicRepository;
     }
 
     @GetMapping("/v1/filters")

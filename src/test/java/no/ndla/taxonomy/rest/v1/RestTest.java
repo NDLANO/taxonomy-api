@@ -17,10 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import java.net.URI;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -35,16 +32,10 @@ public abstract class RestTest {
     EntityManager entityManager;
 
     @Autowired
-    SubjectRepository subjectRepository;
-
-    @Autowired
     TopicRepository topicRepository;
 
     @Autowired
     TopicResourceRepository topicResourceRepository;
-
-    @Autowired
-    SubjectTopicRepository subjectTopicRepository;
 
     @Autowired
     TopicSubtopicRepository topicSubtopicRepository;
@@ -111,8 +102,10 @@ public abstract class RestTest {
         return entity;
     }
 
-    Subject newSubject() {
-        return save(new Subject());
+    Topic newSubject() {
+        Topic subject = new Topic();
+        subject.setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
+        return save(subject);
     }
 
     Topic newTopic() {

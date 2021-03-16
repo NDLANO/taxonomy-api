@@ -2,7 +2,6 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.repositories.ResourceRepository;
-import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,15 +28,13 @@ import static org.mockito.Mockito.mock;
 @ExtendWith(SpringExtension.class)
 @Transactional
 class MetadataUpdateServiceImplTest {
-    private SubjectRepository subjectRepository;
     private TopicRepository topicRepository;
     private ResourceRepository resourceRepository;
     private MetadataApiService metadataApiService;
     private MetadataUpdateServiceImpl metadataUpdateService;
 
     @BeforeEach
-    void setUp(@Autowired SubjectRepository subjectRepository,
-               @Autowired TopicRepository topicRepository,
+    void setUp(@Autowired TopicRepository topicRepository,
                @Autowired Builder builder,
                @Autowired ResourceRepository resourceRepository) {
 
@@ -79,7 +76,7 @@ class MetadataUpdateServiceImplTest {
             });
         });
 
-        metadataUpdateService = new MetadataUpdateServiceImpl(subjectRepository, topicRepository, resourceRepository, metadataApiService);
+        metadataUpdateService = new MetadataUpdateServiceImpl(topicRepository, resourceRepository, metadataApiService);
     }
 
     @Test

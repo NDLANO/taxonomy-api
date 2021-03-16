@@ -1,7 +1,6 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import org.springframework.stereotype.Service;
@@ -38,7 +37,7 @@ public class RecursiveTopicTreeServiceImpl implements RecursiveTopicTreeService 
 
         topicSubtopicRepository.findAllByTopicIdInIncludingTopicAndSubtopic(topicIds)
                 .forEach(topicSubtopic -> {
-                    topics.add(new TopicTreeElement(topicSubtopic.getSubtopicId(), null, topicSubtopic.getTopicId(), topicSubtopic.getRank()));
+                    topics.add(new TopicTreeElement(topicSubtopic.getSubtopicId(), topicSubtopic.getTopicId(), topicSubtopic.getTopicPublicId(), topicSubtopic.getRank()));
                     topicIdsThisLevel.add(topicSubtopic.getSubtopicId());
                 });
 
@@ -50,39 +49,12 @@ public class RecursiveTopicTreeServiceImpl implements RecursiveTopicTreeService 
     @Override
     public Set<TopicTreeElement> getRecursiveTopics(Topic topic) {
         final var toReturn = new HashSet<TopicTreeElement>();
-        toReturn.add(new TopicTreeElement(topic.getId(), null, null, 0));
+        final var publicId = topic.getPublicId();
+        if (publicId == null || !publicId.toString().startsWith("urn:subject:")) {
+            toReturn.add(new TopicTreeElement(topic.getId(), null, null, 0));
+        }
 
         addSubTopicIdsRecursively(toReturn, Set.of(topic.getId()), 1000);
-
-        return toReturn;
-    }
-
-    @Override
-    public Set<TopicTreeElement> getRecursiveTopics(Subject subject) {
-        final var toReturn = new HashSet<TopicTreeElement>();
-
-        final var subjectTopics = subject.getSubjectTopics()
-                .stream()
-                .filter(st -> st.getTopic().isPresent())
-                .filter(st -> st.getSubject().isPresent())
-                .collect(Collectors.toSet());
-
-        // The actual integer IDs of each of the subtopics of this subject
-        final var subtopicIds = subjectTopics.stream()
-                .map(SubjectTopic::getTopic)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .map(Topic::getId)
-                .collect(Collectors.toSet());
-
-        subjectTopics.forEach(subjectTopic -> {
-            final var topicId = subjectTopic.getTopic().orElseThrow().getId();
-            final var subjectId = subjectTopic.getSubject().orElseThrow().getId();
-
-            toReturn.add(new TopicTreeElement(topicId, subjectId, null, subjectTopic.getRank()));
-        });
-
-        addSubTopicIdsRecursively(toReturn, subtopicIds, 1000);
 
         return toReturn;
     }

@@ -35,7 +35,6 @@ public class TopicsTest extends RestTest {
     void clearAllRepos() {
         resourceRepository.deleteAllAndFlush();
         topicRepository.deleteAllAndFlush();
-        subjectRepository.deleteAllAndFlush();
     }
 
     @Test

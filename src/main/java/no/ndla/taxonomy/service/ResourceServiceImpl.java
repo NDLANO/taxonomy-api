@@ -105,7 +105,7 @@ public class ResourceServiceImpl implements ResourceService {
     public List<ResourceWithTopicConnectionDTO> getResourcesBySubjectId(URI subjectPublicId,
                                                                         Set<URI> resourceTypeIds, URI relevance,
                                                                         String language) {
-        final var subject = domainEntityHelperService.getSubjectByPublicId(subjectPublicId);
+        final var subject = domainEntityHelperService.getTopicByPublicId(subjectPublicId);
 
         final var subjectTopicTree = recursiveTopicTreeService.getRecursiveTopics(subject);
 

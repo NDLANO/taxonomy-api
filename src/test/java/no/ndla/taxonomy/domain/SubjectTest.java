@@ -13,11 +13,11 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 public class SubjectTest {
-    private Subject subject;
+    private Topic subject;
 
     @BeforeEach
     public void setUp() {
-        subject = new Subject();
+        subject = new Topic();
     }
 
     @Test
@@ -28,49 +28,49 @@ public class SubjectTest {
 
     @Test
     public void addGetAndRemoveSubjectTopic() {
-        final var subjectTopic1 = mock(SubjectTopic.class);
-        final var subjectTopic2 = mock(SubjectTopic.class);
+        final var subjectTopic1 = mock(TopicSubtopic.class);
+        final var subjectTopic2 = mock(TopicSubtopic.class);
 
-        assertEquals(0, subject.getSubjectTopics().size());
+        assertEquals(0, subject.getChildConnections().size());
 
         try {
-            subject.addSubjectTopic(subjectTopic1);
+            subject.addChildTopicSubtopic(subjectTopic1);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException ignored) {
 
         }
 
-        when(subjectTopic1.getSubject()).thenReturn(Optional.of(subject));
+        when(subjectTopic1.getTopic()).thenReturn(Optional.of(subject));
 
-        subject.addSubjectTopic(subjectTopic1);
+        subject.addChildTopicSubtopic(subjectTopic1);
 
-        assertEquals(1, subject.getSubjectTopics().size());
-        assertTrue(subject.getSubjectTopics().contains(subjectTopic1));
+        assertEquals(1, subject.getChildConnections().size());
+        assertTrue(subject.getChildrenTopicSubtopics().contains(subjectTopic1));
 
-        when(subjectTopic1.getSubject()).thenReturn(Optional.of(subject));
+        when(subjectTopic1.getTopic()).thenReturn(Optional.of(subject));
 
         try {
-            subject.addSubjectTopic(subjectTopic2);
+            subject.addChildTopicSubtopic(subjectTopic2);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException ignored) {
         }
 
-        when(subjectTopic2.getSubject()).thenReturn(Optional.of(subject));
-        subject.addSubjectTopic(subjectTopic2);
+        when(subjectTopic2.getTopic()).thenReturn(Optional.of(subject));
+        subject.addChildTopicSubtopic(subjectTopic2);
 
-        assertEquals(2, subject.getSubjectTopics().size());
-        assertTrue(subject.getSubjectTopics().containsAll(Set.of(subjectTopic1, subjectTopic2)));
+        assertEquals(2, subject.getChildConnections().size());
+        assertTrue(subject.getChildConnections().containsAll(Set.of(subjectTopic1, subjectTopic2)));
 
-        when(subjectTopic2.getSubject()).thenReturn(Optional.of(subject));
+        when(subjectTopic2.getTopic()).thenReturn(Optional.of(subject));
 
-        subject.removeSubjectTopic(subjectTopic1);
-        assertEquals(1, subject.getSubjectTopics().size());
-        assertTrue(subject.getSubjectTopics().contains(subjectTopic2));
+        subject.removeChildTopicSubTopic(subjectTopic1);
+        assertEquals(1, subject.getChildConnections().size());
+        assertTrue(subject.getChildConnections().contains(subjectTopic2));
         verify(subjectTopic1).disassociate();
 
-        subject.removeSubjectTopic(subjectTopic2);
+        subject.removeChildTopicSubTopic(subjectTopic2);
         verify(subjectTopic2).disassociate();
-        assertEquals(0, subject.getSubjectTopics().size());
+        assertEquals(0, subject.getChildConnections().size());
     }
 
     @Test
@@ -81,23 +81,23 @@ public class SubjectTest {
         assertEquals(1, subject.getTranslations().size());
         assertEquals("nb", returnedTranslation.getLanguageCode());
         assertTrue(subject.getTranslations().contains(returnedTranslation));
-        assertEquals(subject, returnedTranslation.getSubject());
+        assertEquals(subject, returnedTranslation.getTopic());
 
         var returnedTranslation2 = subject.addTranslation("en");
         assertEquals(2, subject.getTranslations().size());
         assertEquals("en", returnedTranslation2.getLanguageCode());
         assertTrue(subject.getTranslations().containsAll(Set.of(returnedTranslation, returnedTranslation2)));
-        assertEquals(subject, returnedTranslation2.getSubject());
+        assertEquals(subject, returnedTranslation2.getTopic());
 
         subject.removeTranslation("nb");
 
-        assertNull(returnedTranslation.getSubject());
+        assertNull(returnedTranslation.getTopic());
         assertFalse(subject.getTranslations().contains(returnedTranslation));
 
         assertFalse(subject.getTranslation("nb").isPresent());
 
         subject.addTranslation(returnedTranslation);
-        assertEquals(subject, returnedTranslation.getSubject());
+        assertEquals(subject, returnedTranslation.getTopic());
         assertTrue(subject.getTranslations().contains(returnedTranslation));
 
         assertEquals(returnedTranslation, subject.getTranslation("nb").get());
@@ -119,16 +119,16 @@ public class SubjectTest {
 
     @Test
     public void preRemove() {
-        final var subjectTopic1 = mock(SubjectTopic.class);
-        final var subjectTopic2 = mock(SubjectTopic.class);
+        final var subjectTopic1 = mock(TopicSubtopic.class);
+        final var subjectTopic2 = mock(TopicSubtopic.class);
 
         Set.of(subjectTopic1, subjectTopic2).forEach(subjectTopic -> {
-            when(subjectTopic.getSubject()).thenReturn(Optional.of(subject));
-            subject.addSubjectTopic(subjectTopic);
-            when(subjectTopic.getSubject()).thenReturn(Optional.of(subject));
+            when(subjectTopic.getTopic()).thenReturn(Optional.of(subject));
+            subject.addChildTopicSubtopic(subjectTopic);
+            when(subjectTopic.getTopic()).thenReturn(Optional.of(subject));
         });
 
-        assertEquals(2, subject.getSubjectTopics().size());
+        assertEquals(2, subject.getChildConnections().size());
 
         subject.preRemove();
 

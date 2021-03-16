@@ -3,10 +3,8 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.SubjectTranslation;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicTranslation;
-import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import org.springframework.http.HttpStatus;
@@ -27,12 +25,10 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class Contexts {
     private final TopicRepository topicRepository;
-    private final SubjectRepository subjectRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public Contexts(TopicRepository topicRepository, SubjectRepository subjectRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
+    public Contexts(TopicRepository topicRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.topicRepository = topicRepository;
-        this.subjectRepository = subjectRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
 
     }
@@ -44,17 +40,9 @@ public class Contexts {
                     String language
     ) {
 
-        final var subjects = subjectRepository.findAllIncludingCachedUrlsAndTranslations();
         final var topics = topicRepository.findAllByContextIncludingCachedUrlsAndTranslations(true);
 
         final var contextDocuments = new ArrayList<ContextIndexDocument>();
-
-        contextDocuments.addAll(subjects.stream()
-                .map(subject -> new ContextIndexDocument(
-                        subject.getPublicId(),
-                        subject.getTranslation(language).map(SubjectTranslation::getName).orElse(subject.getName()),
-                        subject.getPrimaryPath().orElse(null)))
-                .collect(Collectors.toList()));
 
         contextDocuments.addAll(topics.stream()
                 .map(topic -> new ContextIndexDocument(

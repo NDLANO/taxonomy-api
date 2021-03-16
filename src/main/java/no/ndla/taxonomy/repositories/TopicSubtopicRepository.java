@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.repositories;
 
 
+import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import org.springframework.data.jpa.repository.Query;
 
@@ -12,7 +13,7 @@ import java.util.Set;
 
 public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopic> {
     @SuppressWarnings("SpringDataRepositoryMethodReturnTypeInspection")
-    @Query("SELECT ts.topic.id AS topicId, ts.subtopic.id AS subtopicId, ts.rank AS rank" +
+    @Query("SELECT ts.topic.id AS topicId, ts.topic.publicId AS topicPublicId, ts.subtopic.id AS subtopicId, ts.rank AS rank" +
             "   FROM TopicSubtopic ts" +
             "   JOIN ts.topic" +
             "   JOIN ts.subtopic" +
@@ -21,6 +22,7 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
 
     interface TopicTreeElement {
         Integer getTopicId();
+        URI getTopicPublicId(); // To distinguish topic/subject
 
         Integer getSubtopicId();
 
@@ -69,4 +71,6 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
     }
 
     Optional<TopicSubtopic> findFirstByPublicId(URI publicId);
+
+    Optional<TopicSubtopic> findFirstByTopicAndSubtopic(Topic topic, Topic subtopic);
 }

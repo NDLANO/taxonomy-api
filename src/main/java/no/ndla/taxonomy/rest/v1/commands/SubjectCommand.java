@@ -3,12 +3,13 @@ package no.ndla.taxonomy.rest.v1.commands;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.service.UpdatableDto;
 
 import java.net.URI;
 import java.util.Optional;
 
-public class SubjectCommand implements UpdatableDto<Subject> {
+public class SubjectCommand implements UpdatableDto<Topic> {
     @JsonProperty
     @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:subject:1")
     public URI id;
@@ -27,7 +28,7 @@ public class SubjectCommand implements UpdatableDto<Subject> {
     }
 
     @Override
-    public void apply(Subject subject) {
+    public void apply(Topic subject) {
         if (getId().isPresent())
             subject.setPublicId(id);
         subject.setName(name);

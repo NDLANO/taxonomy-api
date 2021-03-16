@@ -16,9 +16,6 @@ import java.util.stream.Stream;
 public class Topic extends EntityWithPath {
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<SubjectTopic> subjectTopics = new HashSet<>();
-
-    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TopicSubtopic> childTopicSubtopics = new HashSet<>();
 
     @OneToMany(mappedBy = "subtopic", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -53,7 +50,7 @@ public class Topic extends EntityWithPath {
 
     @Override
     public Set<EntityWithPathConnection> getParentConnections() {
-        return Stream.concat(parentTopicSubtopics.stream(), subjectTopics.stream())
+        return parentTopicSubtopics.stream()
                 .map(entity -> (EntityWithPathConnection) entity)
                 .collect(Collectors.toUnmodifiableSet());
     }
@@ -98,28 +95,6 @@ public class Topic extends EntityWithPath {
 
                     return 0;
                 });
-    }
-
-    public Set<SubjectTopic> getSubjectTopics() {
-        return this.subjectTopics;
-    }
-
-    public void addSubjectTopic(SubjectTopic subjectTopic) {
-        if (subjectTopic.getTopic().orElse(null) != this) {
-            throw new IllegalArgumentException("Topic must be set on SubjectTopic before associating with Topic");
-        }
-
-        this.subjectTopics.add(subjectTopic);
-    }
-
-    public void removeSubjectTopic(SubjectTopic subjectTopic) {
-        this.subjectTopics.remove(subjectTopic);
-
-        var topic = subjectTopic.getTopic().orElse(null);
-
-        if (topic == this) {
-            subjectTopic.disassociate();
-        }
     }
 
     public Set<TopicSubtopic> getChildrenTopicSubtopics() {
@@ -302,7 +277,6 @@ public class Topic extends EntityWithPath {
 
     @PreRemove
     void preRemove() {
-        Set.copyOf(subjectTopics).forEach(SubjectTopic::disassociate);
         Set.copyOf(childTopicSubtopics).forEach(TopicSubtopic::disassociate);
         Set.copyOf(parentTopicSubtopics).forEach(TopicSubtopic::disassociate);
         Set.copyOf(topicResources).forEach(TopicResource::disassociate);

@@ -770,4 +770,50 @@
         <dropForeignKeyConstraint baseTableName="topic_filter" constraintName="topic_filter_relevance_id_fkey"/>
         <dropForeignKeyConstraint baseTableName="filter" constraintName="filter_subject_id_fkey"/>
     </changeSet>
+
+    <changeSet id="20210308 copy subjects to topics" author="Jan-Espen Oversand">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO topic (public_id, name, content_uri, context)
+                SELECT public_id, name, content_uri, true AS context FROM subject;
+        </sql>
+    </changeSet>
+    <changeSet id="20210308 copy subjects to topics - drop the subject_topic multiple parents restriction"
+               author="Jan-Espen Oversand">
+        <sql dbms="!h2">
+            DROP TRIGGER check_subject_topic_uniqueness_on_topic_subtopic ON topic_subtopic;
+        </sql>
+    </changeSet>
+    <changeSet id="20210308 copy subjects to topics - relations" author="Jan-Espen Oversand">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO topic_subtopic (public_id, topic_id, subtopic_id, rank, relevance_id)
+                SELECT
+                    r.public_id AS public_id,
+                    (SELECT t.id FROM topic t WHERE t.public_id = (SELECT s.public_id FROM subject s WHERE s.id = r.subject_id)) AS topic_id,
+                    r.topic_id AS subtopic_id,
+                    r.rank AS rank,
+                    r.relevance_id AS relevance_id
+                FROM subject_topic r;
+        </sql>
+    </changeSet>
+    <changeSet id="20210315 move cached paths from subject to topic" author="Jan-Espen Oversand">
+        <sql splitStatements="false" stripComments="false">
+            UPDATE cached_path c SET topic_id = (SELECT t.id FROM topic t WHERE t.public_id = c.public_id), subject_id = NULL WHERE c.subject_id IS NOT NULL;
+        </sql>
+    </changeSet>
+    <changeSet id="20210316 copy translations from subjects to topics" author="Jan-Espen Oversand">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO topic_translation
+                (topic_id, language_code, name)
+                SELECT
+                        (SELECT t.id FROM topic t WHERE t.public_id =
+                                (SELECT s.public_id FROM subject s WHERE s.id = st.subject_id)
+                            ) AS topic_id,
+                        st.language_code AS language_code,
+                        st.name as name
+                    FROM subject_translation st;
+        </sql>
+    </changeSet>
+    <changeSet id="20210316 unlink subjects" author="Jan-Espen Oversand">
+        <dropForeignKeyConstraint baseTableName="subject_topic" constraintName="subject_topic_topic_id_fkey"/>
+    </changeSet>
 </databaseChangeLog>

@@ -2,7 +2,6 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import org.junit.jupiter.api.Test;
@@ -118,11 +117,11 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void subtopics_can_be_created_with_rank() throws Exception {
-        Subject subject = builder.subject(s -> s.name("Subject").publicId("urn:subject:1"));
+        Topic subject = builder.subject(s -> s.name("Subject").publicId("urn:subject:1"));
         Topic electricity = builder.topic(s -> s
                 .name("Electricity")
                 .publicId("urn:topic:1"));
-        save(SubjectTopic.create(subject, electricity));
+        save(TopicSubtopic.create(subject, electricity));
         Topic alternatingCurrents = builder.topic(t -> t
                 .name("Alternating currents")
                 .publicId("urn:topic:11"));

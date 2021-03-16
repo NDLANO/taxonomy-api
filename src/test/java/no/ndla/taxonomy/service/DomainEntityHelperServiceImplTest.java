@@ -2,7 +2,6 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,16 +21,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @ExtendWith(SpringExtension.class)
 @Transactional
 class DomainEntityHelperServiceImplTest {
-    private Subject subject1;
-    private Subject subject2;
+    private Topic subject1;
+    private Topic subject2;
     private Topic topic1;
     private Topic topic2;
 
     private DomainEntityHelperServiceImpl service;
 
     @BeforeEach
-    void setUp(@Autowired TopicRepository topicRepository, @Autowired SubjectRepository subjectRepository) {
-        service = new DomainEntityHelperServiceImpl(subjectRepository, topicRepository);
+    void setUp(@Autowired TopicRepository topicRepository) {
+        service = new DomainEntityHelperServiceImpl(topicRepository);
 
         topic1 = new Topic();
         topic1.setPublicId(URI.create("urn:topic:dehsit:1"));
@@ -41,13 +40,13 @@ class DomainEntityHelperServiceImplTest {
         topic2.setPublicId(URI.create("urn:topic:dehsit:2"));
         topic2 = topicRepository.save(topic2);
 
-        subject1 = new Subject();
+        subject1 = new Topic();
         subject1.setPublicId(URI.create("urn:subject:dehsit:1"));
-        subject1 = subjectRepository.save(subject1);
+        subject1 = topicRepository.save(subject1);
 
-        subject2 = new Subject();
+        subject2 = new Topic();
         subject2.setPublicId(URI.create("urn:subject:dehsit:2"));
-        subject2 = subjectRepository.save(subject2);
+        subject2 = topicRepository.save(subject2);
     }
 
     @Test

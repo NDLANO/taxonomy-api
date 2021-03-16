@@ -61,7 +61,7 @@ public class CachedPathTest {
 
     @Test
     public void setOwningEntity() {
-        final var subject = mock(Subject.class);
+        final var subject = mock(Topic.class);
         when(subject.getPublicId()).thenReturn(URI.create("urn:subject:1"));
         final var topic = mock(Topic.class);
         when(topic.getPublicId()).thenReturn(URI.create("urn:topic:1"));
@@ -69,27 +69,23 @@ public class CachedPathTest {
         when(resource.getPublicId()).thenReturn(URI.create("urn:resource:1"));
         final var unknown = mock(EntityWithPath.class);
 
-        assertNull(getField(cachedPath, "subject"));
         assertNull(getField(cachedPath, "topic"));
         assertNull(getField(cachedPath, "resource"));
 
         cachedPath.setOwningEntity(subject);
 
-        assertSame(subject, getField(cachedPath, "subject"));
-        assertNull(getField(cachedPath, "topic"));
+        assertSame(subject, getField(cachedPath, "topic"));
         assertNull(getField(cachedPath, "resource"));
         assertEquals("urn:subject:1", cachedPath.getPublicId().toString());
 
         cachedPath.setOwningEntity(topic);
 
-        assertNull(getField(cachedPath, "subject"));
         assertSame(topic, getField(cachedPath, "topic"));
         assertNull(getField(cachedPath, "resource"));
         assertEquals("urn:topic:1", cachedPath.getPublicId().toString());
 
         cachedPath.setOwningEntity(resource);
 
-        assertNull(getField(cachedPath, "subject"));
         assertNull(getField(cachedPath, "topic"));
         assertSame(resource, getField(cachedPath, "resource"));
         assertEquals("urn:resource:1", cachedPath.getPublicId().toString());
@@ -102,7 +98,6 @@ public class CachedPathTest {
 
         cachedPath.setOwningEntity(null);
 
-        assertNull(getField(cachedPath, "subject"));
         assertNull(getField(cachedPath, "topic"));
         assertNull(getField(cachedPath, "resource"));
 
@@ -125,21 +120,15 @@ public class CachedPathTest {
     public void getOwningEntity() {
         assertFalse(cachedPath.getOwningEntity().isPresent());
 
-        final var subject = mock(Subject.class);
-        setField(cachedPath, "subject", subject);
+        final var subject = mock(Topic.class);
+        when(subject.getPublicId()).thenReturn(URI.create("urn:subject:1"));
+        setField(cachedPath, "topic", subject);
         assertSame(subject, cachedPath.getOwningEntity().orElseThrow());
 
         final var topic = mock(Topic.class);
+        when(topic.getPublicId()).thenReturn(URI.create("urn:topic:1"));
 
         setField(cachedPath, "topic", topic);
-
-        try {
-            cachedPath.getOwningEntity();
-            fail("Expected IllegalStateException");
-        } catch (IllegalStateException ignored) {
-        }
-
-        setField(cachedPath, "subject", null);
 
         assertSame(topic, cachedPath.getOwningEntity().orElseThrow());
 
@@ -164,6 +153,7 @@ public class CachedPathTest {
         assertFalse(cachedPath.getTopic().isPresent());
 
         final var topic = mock(Topic.class);
+        when(topic.getPublicId()).thenReturn(URI.create("urn:topic:1"));
 
         setField(cachedPath, "topic", topic);
 
@@ -174,9 +164,10 @@ public class CachedPathTest {
     public void getSubject() {
         assertFalse(cachedPath.getSubject().isPresent());
 
-        final var subject = mock(Subject.class);
+        final var subject = mock(Topic.class);
+        when(subject.getPublicId()).thenReturn(URI.create("urn:subject:1"));
 
-        setField(cachedPath, "subject", subject);
+        setField(cachedPath, "topic", subject);
 
         assertSame(subject, cachedPath.getSubject().orElseThrow());
     }
@@ -196,8 +187,10 @@ public class CachedPathTest {
     public void setSubject() {
         assertNull(getField(cachedPath, "subject"));
 
-        final var subject1 = mock(Subject.class);
-        final var subject2 = mock(Subject.class);
+        final var subject1 = mock(Topic.class);
+        when(subject1.getPublicId()).thenReturn(URI.create("urn:subject:1"));
+        final var subject2 = mock(Topic.class);
+        when(subject2.getPublicId()).thenReturn(URI.create("urn:subject:2"));
 
         final var subject1CachedPaths = new HashSet<CachedPath>();
         final var subject2CachedPaths = new HashSet<CachedPath>();

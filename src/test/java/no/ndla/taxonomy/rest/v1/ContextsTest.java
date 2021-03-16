@@ -18,13 +18,11 @@ public class ContextsTest extends RestTest {
 
     @BeforeEach
     void cleanDatabase() {
-        subjectRepository.deleteAllAndFlush();
         topicRepository.deleteAllAndFlush();
     }
 
     @Test
     public void all_subjects_are_contexts() throws Exception {
-        subjectRepository.flush();
         topicRepository.flush();
 
         builder.subject(s -> s
@@ -87,7 +85,6 @@ public class ContextsTest extends RestTest {
 
     @Test
     public void can_get_translated_contexts() throws Exception {
-        subjectRepository.deleteAllAndFlush();
         topicRepository.deleteAllAndFlush();
 
         builder.subject(s -> s
@@ -118,7 +115,7 @@ public class ContextsTest extends RestTest {
                 .publicId("urn:topic:1")
         );
 
-        Subject subject = builder.subject(s -> s
+        Topic subject = builder.subject(s -> s
                 .publicId("urn:subject:1")
                 .topic(topic)
         );
