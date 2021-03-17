@@ -822,4 +822,12 @@
     <changeSet id="20210317 drop subject columns and relations" author="">
         <dropColumn tableName="cached_path" columnName="subject_id"/>
     </changeSet>
+
+    <!-- Merging order caution : -->
+    <!-- Caution: The drop tables for subjects assume that filters have been dropped -->
+    <changeSet id="20210317 " author="Jan-Espen Oversand">
+        <dropTable tableName="subject_translation"/>
+        <dropTable tableName="subject_topic"/>
+        <dropTable tableName="subject"/>
+    </changeSet>
 </databaseChangeLog>
