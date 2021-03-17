@@ -71,6 +71,7 @@ public class Subjects extends CrudController<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
+        validator.validate(id, "subject");
         return topicRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
                 .map(subject -> new SubjectIndexDocument(subject, language))
                 .orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
@@ -117,6 +118,7 @@ public class Subjects extends CrudController<Topic> {
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
                     URI relevance
     ) {
+        validator.validate(id, "subject");
         final var subject = topicRepository.findFirstByPublicId(id)
                 .orElseThrow(() -> new NotFoundException("Subject", id));
 
@@ -209,6 +211,7 @@ public class Subjects extends CrudController<Topic> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
+        validator.validate(id, "subject");
         subjectService.delete(id);
     }
 }

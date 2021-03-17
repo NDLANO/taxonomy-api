@@ -70,6 +70,7 @@ public class Topics extends CrudController<Topic> {
                         @RequestParam(value = "language", required = false, defaultValue = "")
                                 String language
     ) {
+        validator.validate(id, "topic");
         return new TopicDTO(topicRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id).orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found")), language);
     }
 
@@ -103,6 +104,7 @@ public class Topics extends CrudController<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
+        validator.validate(id, "topic");
         return topicResourceTypeService.getTopicResourceTypes(id)
                 .stream()
                 .filter(topicResourceType -> topicResourceType.getResourceType().isPresent())
@@ -122,6 +124,7 @@ public class Topics extends CrudController<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
+        validator.validate(id, "topic");
         return List.of();
     }
 
@@ -145,6 +148,8 @@ public class Topics extends CrudController<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
+        validator.validate(id, "topic");
+
         if (filterIds == null) {
             filterIds = new URI[0];
         }
@@ -159,6 +164,7 @@ public class Topics extends CrudController<Topic> {
     @GetMapping("/{id}/connections")
     @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
     public List<ConnectionIndexDTO> getAllConnections(@PathVariable("id") URI id) {
+        validator.validate(id, "topic");
         return topicService.getAllConnections(id);
     }
 
@@ -167,6 +173,7 @@ public class Topics extends CrudController<Topic> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
+        validator.validate(id, "topic");
         topicService.delete(id);
     }
 
