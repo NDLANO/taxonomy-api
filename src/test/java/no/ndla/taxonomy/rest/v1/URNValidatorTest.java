@@ -2,7 +2,6 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceType;
-import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.exceptions.IdFormatException;
 import no.ndla.taxonomy.service.SubjectURNValidator;
@@ -63,12 +62,6 @@ public class URNValidatorTest {
     public void listingStyleURIIsAccepted() {
         URI id = URI.create("urn:resource:1:verktoy:blikkenslageren");
         validator.validate(id, new Resource());
-    }
-
-    @Test
-    public void differentEntityClassesAreAccepted() {
-        URI id = URI.create("urn:subject:134");
-        validator.validate(id, new Subject());
     }
 
     @Test

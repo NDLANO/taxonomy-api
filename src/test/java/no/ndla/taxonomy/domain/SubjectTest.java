@@ -136,12 +136,6 @@ public class SubjectTest {
     }
 
     @Test
-    public void isContext() {
-        final var subject = new Subject();
-        assertTrue(subject.isContext());
-    }
-
-    @Test
     public void getCachedPaths() {
         final var cachedPaths = Set.of();
 

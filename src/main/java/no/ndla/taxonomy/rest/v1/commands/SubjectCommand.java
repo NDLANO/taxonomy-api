@@ -2,7 +2,6 @@ package no.ndla.taxonomy.rest.v1.commands;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
-import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.service.UpdatableDto;
 

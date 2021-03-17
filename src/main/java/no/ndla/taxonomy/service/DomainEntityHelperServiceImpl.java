@@ -1,6 +1,5 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;

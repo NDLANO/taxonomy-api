@@ -104,14 +104,12 @@ public class CachedPathTest {
         cachedPath.setOwningEntity(subject);
         cachedPath.setOwningEntity(null);
 
-        assertNull(getField(cachedPath, "subject"));
         assertNull(getField(cachedPath, "topic"));
         assertNull(getField(cachedPath, "resource"));
 
         cachedPath.setOwningEntity(topic);
         cachedPath.setOwningEntity(null);
 
-        assertNull(getField(cachedPath, "subject"));
         assertNull(getField(cachedPath, "topic"));
         assertNull(getField(cachedPath, "resource"));
     }
@@ -185,8 +183,6 @@ public class CachedPathTest {
 
     @Test
     public void setSubject() {
-        assertNull(getField(cachedPath, "subject"));
-
         final var subject1 = mock(Topic.class);
         when(subject1.getPublicId()).thenReturn(URI.create("urn:subject:1"));
         final var subject2 = mock(Topic.class);

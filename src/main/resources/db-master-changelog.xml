@@ -819,4 +819,7 @@
             ALTER TABLE topic_resource DROP CONSTRAINT IF EXISTS subject_topic_topic_id_fkey;
         </sql>
     </changeSet>
+    <changeSet id="20210317 drop subject columns and relations" author="">
+        <dropColumn tableName="cached_path" columnName="subject_id"/>
+    </changeSet>
 </databaseChangeLog>

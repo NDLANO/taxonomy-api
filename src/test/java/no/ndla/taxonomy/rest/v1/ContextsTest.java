@@ -1,6 +1,5 @@
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.dtos.TopicDTO;

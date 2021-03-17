@@ -171,20 +171,6 @@ public class Builder {
     }
 
     @Transactional
-    public static class SubjectTranslationBuilder {
-        private SubjectTranslation subjectTranslation;
-
-        public SubjectTranslationBuilder(SubjectTranslation subjectTranslation) {
-            this.subjectTranslation = subjectTranslation;
-        }
-
-        public SubjectTranslationBuilder name(String name) {
-            subjectTranslation.setName(name);
-            return this;
-        }
-    }
-
-    @Transactional
     public static class TopicTranslationBuilder {
         private TopicTranslation topicTranslation;
 

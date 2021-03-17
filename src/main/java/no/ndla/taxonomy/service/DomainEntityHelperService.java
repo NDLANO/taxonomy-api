@@ -1,6 +1,5 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
 
 import java.net.URI;

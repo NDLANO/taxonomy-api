@@ -24,9 +24,6 @@ public class CachedPath {
     private String path;
 
     @ManyToOne
-    private Subject subject;
-
-    @ManyToOne
     private Topic topic;
 
     @ManyToOne

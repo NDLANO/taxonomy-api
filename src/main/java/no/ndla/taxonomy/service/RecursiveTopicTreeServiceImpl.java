@@ -1,6 +1,5 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import org.springframework.stereotype.Service;
@@ -8,9 +7,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /*
     This class replicates old structure previously implemented as recursive queries in database, methods
