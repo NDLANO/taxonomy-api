@@ -814,6 +814,9 @@
         </sql>
     </changeSet>
     <changeSet id="20210316 unlink subjects" author="Jan-Espen Oversand">
-        <dropForeignKeyConstraint baseTableName="subject_topic" constraintName="subject_topic_topic_id_fkey"/>
+        <validCheckSum>8:678ff49b688a4c88db5c6de8a307f276</validCheckSum>
+        <sql>
+            ALTER TABLE topic_resource DROP CONSTRAINT IF EXISTS subject_topic_topic_id_fkey;
+        </sql>
     </changeSet>
 </databaseChangeLog>
