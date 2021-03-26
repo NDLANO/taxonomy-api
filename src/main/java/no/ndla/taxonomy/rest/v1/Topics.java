@@ -3,6 +3,7 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.repositories.NodeTypeRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
@@ -18,9 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -28,17 +27,19 @@ import java.util.stream.Collectors;
 public class Topics extends CrudController<Topic> {
     private final TopicResourceTypeService topicResourceTypeService;
     private final TopicRepository topicRepository;
+    private final NodeTypeRepository nodeTypeRepository;
     private final TopicService topicService;
 
     public Topics(TopicRepository topicRepository,
                   TopicResourceTypeService topicResourceTypeService,
                   TopicService topicService,
-                  CachedUrlUpdaterService cachedUrlUpdaterService) {
+                  CachedUrlUpdaterService cachedUrlUpdaterService, NodeTypeRepository nodeTypeRepository) {
         super(topicRepository, cachedUrlUpdaterService);
 
         this.topicRepository = topicRepository;
         this.topicResourceTypeService = topicResourceTypeService;
         this.topicService = topicService;
+        this.nodeTypeRepository = nodeTypeRepository;
     }
 
     @GetMapping
@@ -70,8 +71,7 @@ public class Topics extends CrudController<Topic> {
                         @RequestParam(value = "language", required = false, defaultValue = "")
                                 String language
     ) {
-        validator.validate(id, "topic");
-        return new TopicDTO(topicRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id).orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found")), language);
+        return new TopicDTO(topicRepository.findFirstByPublicIdAndNodeTypeIncludingCachedUrlsAndTranslations(id, URI.create("urn:nodetype:topic")).orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found")), language);
     }
 
     @PostMapping
@@ -79,7 +79,10 @@ public class Topics extends CrudController<Topic> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(@ApiParam(name = "connection", value = "The new topic") @RequestBody TopicCommand command) {
-        return doPost(new Topic(), command);
+        return doPost(
+                new Topic().nodeType(nodeTypeRepository.findByPublicId(URI.create("urn:nodetype:topic"))),
+                command
+        );
     }
 
 

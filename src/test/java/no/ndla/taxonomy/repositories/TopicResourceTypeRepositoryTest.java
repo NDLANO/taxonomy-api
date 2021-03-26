@@ -31,6 +31,8 @@ public class TopicResourceTypeRepositoryTest {
     @Autowired
     private TopicRepository topicRepository;
     @Autowired
+    private NodeTypeRepository nodeTypeRepository;
+    @Autowired
     private ResourceTypeRepository resourceTypeRepository;
     @Autowired
     private TopicResourceTypeRepository topicResourceTypeRepository;
@@ -106,7 +108,7 @@ public class TopicResourceTypeRepositoryTest {
         this.testTopic = null;
         this.testResourceType = null;
         this.testTopicResourceType = null;
-        Topic testTopic = topicRepository.saveAndFlush(new Topic().name(getClass().getCanonicalName() + " test topic"));
+        Topic testTopic = topicRepository.saveAndFlush(new Topic().name(getClass().getCanonicalName() + " test topic").nodeType(nodeTypeRepository.findByPublicId(URI.create("urn:nodetype:topic"))));
         ResourceType testResourceType = null;
         TopicResourceType testTopicResourceType = null;
         try {

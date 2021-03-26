@@ -173,8 +173,8 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void update_subject_rank_no_existing_connections_returns_single_connection() {
-        Topic s = new Topic();
-        Topic t = new Topic();
+        Topic s = new Topic().nodeType(nodeTypeRepository.findByPublicId(URI.create("urn:nodetype:subject")));
+        Topic t = new Topic().nodeType(nodeTypeRepository.findByPublicId(URI.create("urn:nodetype:topic")));
 
         TopicSubtopic st = TopicSubtopic.create(s, t);
         List<TopicSubtopic> rankedList = RankableConnectionUpdater.rank(new ArrayList<>(), st, 99);

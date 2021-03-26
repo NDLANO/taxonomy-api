@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
+import no.ndla.taxonomy.repositories.NodeTypeRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
@@ -27,18 +28,20 @@ import java.util.stream.Collectors;
 @RequestMapping(path = {"/v1/subjects"})
 public class Subjects extends CrudController<Topic> {
     private final TopicRepository topicRepository;
+    private final NodeTypeRepository nodeTypeRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final TopicTreeSorter topicTreeSorter;
     private final SubjectService subjectService;
     private final RecursiveTopicTreeService recursiveTopicTreeService;
 
     public Subjects(TopicRepository topicRepository,
-                    TopicSubtopicRepository topicSubtopicRepository,
+                    NodeTypeRepository nodeTypeRepository, TopicSubtopicRepository topicSubtopicRepository,
                     TopicTreeSorter topicTreeSorter, SubjectService subjectService,
                     CachedUrlUpdaterService cachedUrlUpdaterService, RecursiveTopicTreeService recursiveTopicTreeService) {
         super(topicRepository, cachedUrlUpdaterService);
 
         this.topicRepository = topicRepository;
+        this.nodeTypeRepository = nodeTypeRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicTreeSorter = topicTreeSorter;
         this.subjectService = subjectService;
@@ -55,9 +58,8 @@ public class Subjects extends CrudController<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return topicRepository.findAllIncludingCachedUrlsAndTranslations()
+        return topicRepository.findAllByNodeTypeIncludingCachedUrlsAndTranslations(URI.create("urn:nodetype:subject"))
                 .stream()
-                .filter(topic -> topic.getPublicId() != null && topic.getPublicId().toString().startsWith("urn:subject:"))
                 .map(subject -> new SubjectIndexDocument(subject, language))
                 .collect(Collectors.toList());
     }
@@ -71,8 +73,7 @@ public class Subjects extends CrudController<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        validator.validate(id, "subject");
-        return topicRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
+        return topicRepository.findFirstByPublicIdAndNodeTypeIncludingCachedUrlsAndTranslations(id, URI.create("urn:nodetype:subject"))
                 .map(subject -> new SubjectIndexDocument(subject, language))
                 .orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
     }
@@ -93,6 +94,7 @@ public class Subjects extends CrudController<Topic> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(@ApiParam(name = "subject", value = "The new subject") @RequestBody SubjectCommand command) {
         final var subject = new Topic();
+        subject.setNodeType(nodeTypeRepository.findByPublicId(URI.create("urn:nodetype:subject")));
         subject.setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
         subject.setContext(true);
         return doPost(subject, command);
@@ -118,9 +120,11 @@ public class Subjects extends CrudController<Topic> {
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
                     URI relevance
     ) {
-        validator.validate(id, "subject");
         final var subject = topicRepository.findFirstByPublicId(id)
                 .orElseThrow(() -> new NotFoundException("Subject", id));
+        if (!subject.getNodeType().map(nodeType -> nodeType.getPublicId()).map(URI::toString).filter(nodeType -> "urn:nodetype:subject".equals(nodeType)).isPresent()) {
+            throw new NotFoundException("Subject", id);
+        }
 
         final List<Integer> topicIds;
 
@@ -211,7 +215,6 @@ public class Subjects extends CrudController<Topic> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
-        validator.validate(id, "subject");
         subjectService.delete(id);
     }
 }

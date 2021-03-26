@@ -35,6 +35,9 @@ public abstract class RestTest {
     TopicRepository topicRepository;
 
     @Autowired
+    NodeTypeRepository nodeTypeRepository;
+
+    @Autowired
     TopicResourceRepository topicResourceRepository;
 
     @Autowired
@@ -78,7 +81,7 @@ public abstract class RestTest {
     @SuppressWarnings("unchecked")
     @BeforeEach
     public void restTestSetUp() {
-        builder = new Builder(entityManager, cachedUrlUpdaterService);
+        builder = new Builder(entityManager, cachedUrlUpdaterService, nodeTypeRepository);
 
         when(metadataApiService.getMetadataByPublicId(any(URI.class)))
                 .thenAnswer(invocationOnMock ->
@@ -105,11 +108,12 @@ public abstract class RestTest {
     Topic newSubject() {
         Topic subject = new Topic();
         subject.setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
+        subject.setNodeType(nodeTypeRepository.findByPublicId(URI.create("urn:nodetype:subject")));
         return save(subject);
     }
 
     Topic newTopic() {
-        return save(new Topic());
+        return save(new Topic().nodeType(nodeTypeRepository.findByPublicId(URI.create("urn:nodetype:topic"))));
     }
 
     Resource newResource() {

@@ -30,6 +30,8 @@ public class TopicsWebTest {
     @MockBean
     TopicRepository topicRepository;
     @MockBean
+    NodeTypeRepository nodeTypeRepository;
+    @MockBean
     TopicSubtopicRepository topicSubtopicRepository;
     @MockBean
     JdbcTemplate jdbcTemplate;

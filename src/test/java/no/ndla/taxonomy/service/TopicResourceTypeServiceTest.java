@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicResourceType;
@@ -52,7 +53,9 @@ public class TopicResourceTypeServiceTest {
 
     @Test
     public void testNoResourceTypes() throws URISyntaxException {
-        Topic topic = new Topic();
+        NodeType nodeType = new NodeType();
+        nodeType.setPublicId(URI.create("urn:nodetype:topic"));
+        Topic topic = (new Topic()).nodeType(nodeType);
         given(topicRepository.findByPublicId(new URI("urn:topic:1"))).willReturn(topic);
         assertEquals(List.of(), topicResourceTypeService.getTopicResourceTypes(new URI("urn:topic:1")));
         verify(topicResourceTypeRepository, times(1)).findAllByTopic(topic);
@@ -60,7 +63,9 @@ public class TopicResourceTypeServiceTest {
 
     @Test
     public void testResourceTypes() throws URISyntaxException {
-        Topic topic = new Topic();
+        NodeType nodeType = new NodeType();
+        nodeType.setPublicId(URI.create("urn:nodetype:topic"));
+        Topic topic = (new Topic()).nodeType(nodeType);
         ResourceType resourceType = new ResourceType();
         var topicResourceType = TopicResourceType.create(topic, resourceType);
         given(topicRepository.findByPublicId(new URI("urn:topic:1"))).willReturn(topic);
@@ -96,7 +101,9 @@ public class TopicResourceTypeServiceTest {
 
     @Test
     public void testAddResourceTypeWithResourceTypeNotFound() throws URISyntaxException {
-        Topic topic = new Topic();
+        NodeType nodeType = new NodeType();
+        nodeType.setPublicId(URI.create("urn:nodetype:topic"));
+        Topic topic = (new Topic()).nodeType(nodeType);
         given(topicRepository.findByPublicId(new URI("urn:topic:1"))).willReturn(topic);
 
         assertThrows(NotFoundServiceException.class, () -> topicResourceTypeService.addTopicResourceType(new URI("urn:topic:1"), new URI("urn:resourcetype:1")));
@@ -107,7 +114,9 @@ public class TopicResourceTypeServiceTest {
 
     @Test
     public void testAddResourceType() throws URISyntaxException {
-        Topic topic = spy(new Topic());
+        NodeType nodeType = new NodeType();
+        nodeType.setPublicId(URI.create("urn:nodetype:topic"));
+        Topic topic = spy((new Topic()).nodeType(nodeType));
         given(topicRepository.findByPublicId(new URI("urn:topic:1"))).willReturn(topic);
         ResourceType resourceType = new ResourceType();
         given(resourceTypeRepository.findByPublicId(new URI("urn:resourcetype:1"))).willReturn(resourceType);

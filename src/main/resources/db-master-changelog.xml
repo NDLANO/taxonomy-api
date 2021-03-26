@@ -822,4 +822,44 @@
     <changeSet id="20210317 drop subject columns and relations" author="">
         <dropColumn tableName="cached_path" columnName="subject_id"/>
     </changeSet>
+
+    <changeSet id="20210323 node type" author="Jan-Espen Oversand">
+        <createTable tableName="node_type">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="node_type_public_id" /></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+
+        <createTable tableName="node_type_translation">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="node_type_id" type="integer"><constraints nullable="false" /></column>
+            <column name="language_code" type="varchar(3)"><constraints nullable="false" /></column>
+            <column name="name" type="varchar(255)" />
+        </createTable>
+        <addUniqueConstraint tableName="node_type_translation" columnNames="node_type_id,language_code" constraintName="node_type_language_unique" />
+        <addColumn tableName="topic">
+            <column name="node_type" type="integer"><constraints nullable="true" referencedTableName="node_type" referencedColumnNames="id" foreignKeyName="topic_node_type_fkey" /></column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="20210324 auto increments on node types" author="Jan-Espen Oversand">
+        <addAutoIncrement tableName="node_type" columnName="id" columnDataType="int"/>
+        <addAutoIncrement tableName="node_type_translation" columnName="id" columnDataType="int"/>
+    </changeSet>
+    <changeSet id="20210324 legacy node types" author="Jan-Espen Oversand">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO node_type (public_id, name)
+                VALUES ('urn:nodetype:subject', 'Subject'),
+                       ('urn:nodetype:topic', 'Topic');
+        </sql>
+    </changeSet>
+    <changeSet id="20210324 identify subjects" author="Jan-Espen Oversand">
+        <sql splitStatements="false" stripComments="false">
+            UPDATE topic SET node_type = (SELECT id FROM node_type nt WHERE nt.public_id = 'urn:nodetype:subject') WHERE public_id LIKE 'urn:subject:%';
+        </sql>
+    </changeSet>
+    <changeSet id="20210324 identify topics" author="Jan-Espen Oversand">
+        <sql splitStatements="false" stripComments="false">
+            UPDATE topic SET node_type = (SELECT id FROM node_type nt WHERE nt.public_id = 'urn:nodetype:topic') WHERE public_id LIKE 'urn:topic:%';
+        </sql>
+    </changeSet>
 </databaseChangeLog>

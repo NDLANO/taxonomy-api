@@ -29,8 +29,26 @@ public interface TopicRepository extends TaxonomyRepository<Topic> {
                     "   FROM Topic t" +
                     "   LEFT JOIN FETCH t.cachedPaths" +
                     "   LEFT JOIN FETCH t.translations" +
+                    "   LEFT JOIN FETCH t.nodeType" +
+                    "   WHERE t.nodeType.publicId = :nodeType")
+    List<Topic> findAllByNodeTypeIncludingCachedUrlsAndTranslations(URI nodeType);
+
+    @Query(
+            "SELECT DISTINCT t" +
+                    "   FROM Topic t" +
+                    "   LEFT JOIN FETCH t.cachedPaths" +
+                    "   LEFT JOIN FETCH t.translations" +
                     "   WHERE t.publicId = :publicId")
     Optional<Topic> findFirstByPublicIdIncludingCachedUrlsAndTranslations(URI publicId);
+
+    @Query(
+            "SELECT DISTINCT t" +
+                    "   FROM Topic t" +
+                    "   LEFT JOIN FETCH t.cachedPaths" +
+                    "   LEFT JOIN FETCH t.translations" +
+                    "   LEFT JOIN FETCH t.nodeType" +
+            "   WHERE t.publicId = :publicId AND t.nodeType.publicId = :nodeType")
+    Optional<Topic> findFirstByPublicIdAndNodeTypeIncludingCachedUrlsAndTranslations(URI publicId, URI nodeType);
 
     @Query("SELECT DISTINCT t" +
             "   FROM Topic t" +
@@ -38,6 +56,14 @@ public interface TopicRepository extends TaxonomyRepository<Topic> {
             "   LEFT JOIN FETCH t.translations" +
             "   WHERE t.contentUri = :contentUri")
     List<Topic> findAllByContentUriIncludingCachedUrlsAndTranslations(URI contentUri);
+
+    @Query("SELECT DISTINCT t" +
+            "   FROM Topic t" +
+            "   LEFT JOIN FETCH t.cachedPaths" +
+            "   LEFT JOIN FETCH t.translations" +
+            "   LEFT JOIN FETCH t.nodeType" +
+            "   WHERE t.contentUri = :contentUri AND t.nodeType.publicId = :nodeType")
+    List<Topic> findAllByContentUriAndNodeTypeIncludingCachedUrlsAndTranslations(URI contentUri, URI nodeType);
 
     @Query("SELECT DISTINCT t" +
             "   FROM Topic t" +

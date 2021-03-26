@@ -34,7 +34,7 @@ public class TopicResourceTypeService {
             throw new InvalidArgumentServiceException(new NullPointerException("Topic ID is null"));
         }
         Topic topic = topicRepository.findByPublicId(topicId);
-        if (topic == null) {
+        if (topic == null || !topic.getNodeType().map(nodeType -> nodeType.getPublicId()).map(URI::toString).filter(nodeType -> "urn:nodetype:topic".equals(nodeType)).isPresent()) {
             throw new NotFoundServiceException("Topic not found " + topicId.toString());
         }
         return topicResourceTypeRepository.findAllByTopic(topic);
@@ -45,7 +45,7 @@ public class TopicResourceTypeService {
             throw new InvalidArgumentServiceException(new NullPointerException("Topic or resource type ID is null"));
         }
         Topic topic = topicRepository.findByPublicId(topicId);
-        if (topic == null) {
+        if (topic == null || !topic.getNodeType().map(nodeType -> nodeType.getPublicId()).map(URI::toString).filter(nodeType -> "urn:nodetype:topic".equals(nodeType)).isPresent()) {
             throw new NotFoundServiceException("Topic not found " + topicId.toString());
         }
         ResourceType resourceType = resourceTypeRepository.findByPublicId(resourceTypeId);

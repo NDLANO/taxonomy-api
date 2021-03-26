@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.domain;
 
+import no.ndla.taxonomy.repositories.NodeTypeRepository;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -17,6 +18,7 @@ import java.util.function.Consumer;
 public class Builder {
     private final EntityManager entityManager;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final NodeTypeRepository nodeTypeRepository;
     private final Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();
     private final Map<String, SubjectBuilder> subjects = new HashMap<>();
     private final Map<String, TopicBuilder> topics = new HashMap<>();
@@ -25,9 +27,10 @@ public class Builder {
     private final Map<String, UrlMappingBuilder> cachedUrlOldRigBuilders = new HashMap<>();
     private int keyCounter = 0;
 
-    public Builder(EntityManager entityManager, CachedUrlUpdaterService cachedUrlUpdaterService) {
+    public Builder(EntityManager entityManager, CachedUrlUpdaterService cachedUrlUpdaterService, NodeTypeRepository nodeTypeRepository) {
         this.entityManager = entityManager;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.nodeTypeRepository = nodeTypeRepository;
     }
 
     private String createKey() {
@@ -377,6 +380,7 @@ public class Builder {
         public SubjectBuilder() {
             subject = new Topic();
             subject.setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
+            subject.setNodeType(nodeTypeRepository.findByPublicId(URI.create("urn:nodetype:subject")));
             subject.setContext(true);
             entityManager.persist(subject);
         }
@@ -446,6 +450,7 @@ public class Builder {
 
         public TopicBuilder() {
             topic = new Topic();
+            topic.setNodeType(nodeTypeRepository.findByPublicId(URI.create("urn:nodetype:topic")));
             entityManager.persist(topic);
         }
 

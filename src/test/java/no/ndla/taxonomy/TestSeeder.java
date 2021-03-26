@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 /**
@@ -19,6 +20,7 @@ import java.util.UUID;
 @Component
 public class TestSeeder {
     private final TopicRepository topicRepository;
+    private final NodeTypeRepository nodeTypeRepository;
     private final ResourceRepository resourceRepository;
     private final RelevanceRepository relevanceRepository;
     private final ResourceTypeRepository resourceTypeRepository;
@@ -26,9 +28,10 @@ public class TestSeeder {
     private final TopicResourceRepository topicResourceRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public TestSeeder(TopicRepository topicRepository, ResourceRepository resourceRepository, RelevanceRepository relevanceRepository, ResourceTypeRepository resourceTypeRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository,
+    public TestSeeder(TopicRepository topicRepository, NodeTypeRepository nodeTypeRepository, ResourceRepository resourceRepository, RelevanceRepository relevanceRepository, ResourceTypeRepository resourceTypeRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository,
                       CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.topicRepository = topicRepository;
+        this.nodeTypeRepository = nodeTypeRepository;
         this.resourceRepository = resourceRepository;
         this.relevanceRepository = relevanceRepository;
         this.resourceTypeRepository = resourceTypeRepository;
@@ -41,6 +44,12 @@ public class TestSeeder {
         final var topic = new Topic();
         if (publicId != null) {
             topic.setPublicId(URI.create(publicId));
+        }
+
+        try {
+            topic.setNodeType(nodeTypeRepository.findByPublicId(new URI("urn:nodetype:topic")));
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
 
         if (name != null) {
@@ -65,6 +74,12 @@ public class TestSeeder {
     private Topic createSubject(String publicId, String name) {
         final var subject = new Topic();
         subject.setContext(true);
+
+        try {
+            subject.setNodeType(nodeTypeRepository.findByPublicId(new URI("urn:nodetype:subject")));
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
 
         if (publicId != null) {
             subject.setPublicId(URI.create(publicId));

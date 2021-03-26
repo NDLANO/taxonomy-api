@@ -39,6 +39,10 @@ public class Topic extends EntityWithPath {
     @Column
     private boolean context;
 
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE})
+    @JoinColumn(name = "node_type")
+    private NodeType nodeType;
+
     public Topic() {
         setPublicId(URI.create("urn:topic:" + UUID.randomUUID()));
     }
@@ -67,6 +71,11 @@ public class Topic extends EntityWithPath {
 
     public Topic name(String name) {
         setName(name);
+        return this;
+    }
+
+    public Topic nodeType(NodeType nodeType) {
+        setNodeType(nodeType);
         return this;
     }
 
@@ -273,6 +282,14 @@ public class Topic extends EntityWithPath {
     @Override
     public boolean isContext() {
         return context;
+    }
+
+    public Optional<NodeType> getNodeType() {
+        return Optional.ofNullable(nodeType);
+    }
+
+    public void setNodeType(NodeType nodeType) {
+        this.nodeType = nodeType;
     }
 
     @PreRemove

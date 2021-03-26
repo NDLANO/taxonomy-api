@@ -55,14 +55,14 @@ public class TopicServiceImpl implements TopicService {
         final List<Topic> filteredTopics;
 
         if (contentUriFilter != null) {
-            filteredTopics = topicRepository.findAllByContentUriIncludingCachedUrlsAndTranslations(contentUriFilter);
+            filteredTopics = topicRepository.findAllByContentUriAndNodeTypeIncludingCachedUrlsAndTranslations(contentUriFilter, URI.create("urn:nodetype:topic"));
         } else {
-            filteredTopics = topicRepository.findAllIncludingCachedUrlsAndTranslations();
+            filteredTopics = topicRepository.findAllByNodeTypeIncludingCachedUrlsAndTranslations(URI.create("urn:nodetype:topic"));
         }
 
         return filteredTopics
                 .stream()
-                .filter(topic -> topic.getPublicId() != null && topic.getPublicId().toString().startsWith("urn:topic:"))
+                .filter(topic -> topic.getPublicId() != null)
                 .map(topic -> new TopicDTO(topic, languageCode))
                 .collect(Collectors.toList());
     }
@@ -71,6 +71,9 @@ public class TopicServiceImpl implements TopicService {
     @InjectMetadata
     public List<ConnectionIndexDTO> getAllConnections(URI topicPublicId) {
         final var topic = topicRepository.findFirstByPublicId(topicPublicId).orElseThrow(() -> new NotFoundServiceException("Topic was not found"));
+        if (!topic.getNodeType().map(nodeType -> nodeType.getPublicId()).map(URI::toString).filter(nodeType -> "urn:nodetype:topic".equals(nodeType)).isPresent()) {
+            throw new NotFoundServiceException("Topic was not found");
+        }
 
         return Stream.concat(
                 connectionService.getParentConnections(topic)
