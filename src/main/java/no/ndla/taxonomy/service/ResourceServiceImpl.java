@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.TopicResource;
@@ -68,7 +69,36 @@ public class ResourceServiceImpl implements ResourceService {
         } else if (resourceTypeIds.size() > 0) {
             topicResources = topicResourceRepository.findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, resourceTypeIds, relevance);
         } else {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, relevance);
+            var topicResourcesStream = topicResourceRepository.findAllByTopicIdsIncludingRelationsForResourceDocuments(topicIds)
+                    .stream();
+            if (relevance != null) {
+                final var isRequestingCore = "urn:relevance:core".equals(relevance.toString());
+                topicResourcesStream = topicResourcesStream
+                        .filter(topicResource -> {
+                            final var resource = topicResource.getResource().orElse(null);
+                            if (resource == null) {
+                                return false;
+                            }
+                            final var resourceFilters = resource.getResourceFilters();
+                            if (resourceFilters != null) {
+                                final var relevances = resourceFilters.stream()
+                                        .map(filter -> filter.getRelevance().orElse(null))
+                                        .filter(Objects::nonNull)
+                                        .map(DomainEntity::getPublicId)
+                                        .collect(Collectors.toSet());
+                                if (!relevances.isEmpty()) {
+                                    return relevances.contains(relevance);
+                                }
+                            }
+                            final var rel = topicResource.getRelevance().orElse(null);
+                            if (rel != null) {
+                                return rel.getPublicId().equals(relevance);
+                            } else {
+                                return isRequestingCore;
+                            }
+                        });
+            }
+            topicResources = topicResourcesStream.collect(Collectors.toList());
         }
 
         topicResources.forEach(topicResource -> sortableListToAddTo.add(new TopicResourceTreeSortable(topicResource)));
