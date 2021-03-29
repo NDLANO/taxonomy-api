@@ -24,6 +24,7 @@ public class Builder {
     private final Map<String, TopicBuilder> topics = new HashMap<>();
     private final Map<String, ResourceBuilder> resources = new HashMap<>();
     private final Map<String, RelevanceBuilder> relevances = new HashMap<>();
+    private final Map<String, NodeTypeBuilder> nodeTypes = new HashMap<>();
     private final Map<String, UrlMappingBuilder> cachedUrlOldRigBuilders = new HashMap<>();
     private int keyCounter = 0;
 
@@ -107,6 +108,28 @@ public class Builder {
         }
         relevances.putIfAbsent(key, new RelevanceBuilder());
         return relevances.get(key);
+    }
+
+    public NodeType nodeType(Consumer<NodeTypeBuilder> consumer) {
+        return nodeType(null, consumer);
+    }
+
+    public NodeType nodeType() {
+        return nodeType(null, null);
+    }
+
+    public NodeType nodeType(String key, Consumer<NodeTypeBuilder> consumer) {
+        NodeTypeBuilder nodeTypeBuilder = getNodeTypeBuilder(key);
+        if (null != consumer) consumer.accept(nodeTypeBuilder);
+        return nodeTypeBuilder.nodeType;
+    }
+
+    private NodeTypeBuilder getNodeTypeBuilder(String key) {
+        if (key == null) {
+            key = createKey();
+        }
+        nodeTypes.putIfAbsent(key, new NodeTypeBuilder());
+        return nodeTypes.get(key);
     }
 
     private SubjectBuilder getSubjectBuilder(String key) {
@@ -231,6 +254,26 @@ public class Builder {
 
         public RelevanceBuilder publicId(String id) {
             relevance.setPublicId(URI.create(id));
+            return this;
+        }
+    }
+
+    @Transactional
+    public class NodeTypeBuilder {
+        private final NodeType nodeType;
+
+        public NodeTypeBuilder() {
+            nodeType = new NodeType();
+            entityManager.persist(nodeType);
+        }
+
+        public NodeTypeBuilder name(String name) {
+            nodeType.setName(name);
+            return this;
+        }
+
+        public NodeTypeBuilder publicId(String id) {
+            nodeType.setPublicId(URI.create(id));
             return this;
         }
     }
