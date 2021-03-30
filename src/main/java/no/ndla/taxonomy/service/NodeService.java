@@ -12,7 +12,7 @@ public interface NodeService {
 
     List<ConnectionIndexDTO> getAllConnections(URI nodePublicId);
 
-    List<SubNodeIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId, String languageCode);
+    List<SubNodeIndexDTO> getSubnodeConnections(URI nodePublicId, URI subjectPublicId, String languageCode);
 
-    List<SubNodeIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, String languageCode);
+    List<SubNodeIndexDTO> getSubnodeConnections(URI nodePublicId, String languageCode);
 }

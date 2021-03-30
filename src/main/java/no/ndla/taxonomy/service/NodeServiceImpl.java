@@ -81,17 +81,17 @@ public class NodeServiceImpl implements NodeService {
 
     @Override
     @InjectMetadata
-    public List<SubNodeIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId, String languageCode) {
+    public List<SubNodeIndexDTO> getSubnodeConnections(URI topicPublicId, URI subjectPublicId, String languageCode) {
         // NOTE: Since no filter is specified, it defaults to the same as specifying i list of all filters that exists for the given subject
 
-        return getFilteredSubtopicConnections(
+        return getSubnodeConnections(
                 topicPublicId,
                 languageCode);
     }
 
     @Override
     @InjectMetadata
-    public List<SubNodeIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, String languageCode) {
+    public List<SubNodeIndexDTO> getSubnodeConnections(URI topicPublicId, String languageCode) {
         final List<TopicSubtopic> subtopicConnections;
         subtopicConnections = topicSubtopicRepository.findAllByTopicPublicIdIncludingSubtopicAndSubtopicTranslations(topicPublicId);
 
