@@ -73,6 +73,10 @@ public class NodeDTO {
         return contentUri;
     }
 
+    public URI getNodeType() {
+        return nodeType;
+    }
+
     public String getPath() {
         return path;
     }

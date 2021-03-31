@@ -3,10 +3,16 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.repositories.NodeTypeRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
+import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,17 +25,19 @@ import java.util.stream.Collectors;
 public class Nodes extends CrudController<Topic> {
     private final NodeResourceTypeService nodeResourceTypeService;
     private final TopicRepository topicRepository;
+    private final NodeTypeRepository nodeTypeRepository;
     private final NodeService nodeService;
 
     public Nodes(TopicRepository topicRepository,
                  NodeResourceTypeService nodeResourceTypeService,
                  NodeService nodeService,
-                 CachedUrlUpdaterService cachedUrlUpdaterService) {
+                 CachedUrlUpdaterService cachedUrlUpdaterService, NodeTypeRepository nodeTypeRepository) {
         super(topicRepository, cachedUrlUpdaterService);
 
         this.topicRepository = topicRepository;
         this.nodeResourceTypeService = nodeResourceTypeService;
         this.nodeService = nodeService;
+        this.nodeTypeRepository = nodeTypeRepository;
     }
 
     @GetMapping
@@ -115,5 +123,43 @@ public class Nodes extends CrudController<Topic> {
     @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
     public List<ConnectionIndexDTO> getAllConnections(@PathVariable("id") URI id) {
         return nodeService.getAllConnections(id);
+    }
+
+
+    @DeleteMapping("/{id}")
+    @ApiOperation(value = "Deletes a single entity by id")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable("id") URI id) {
+        validator.validate(id, "topic");
+        nodeService.delete(id);
+    }
+
+    @PostMapping
+    @ApiOperation(value = "Creates a new topic")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
+    public ResponseEntity<Void> post(@ApiParam(name = "connection", value = "The new topic") @RequestBody NodeCommand command) {
+        if (command.nodeType == null) {
+            throw new InvalidArgumentServiceException("Required field nodeType");
+        }
+        command.resolveNodeType(nodeTypeRepository);
+        return doPost(
+                new Topic(),
+                command
+        );
+    }
+
+
+    @PutMapping("/{id}")
+    @ApiOperation(value = "Updates a single topic")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
+    public void put(
+            @PathVariable("id") URI id,
+            @ApiParam(name = "topic", value = "The updated topic. Fields not included will be set to null.") @RequestBody NodeCommand command) {
+        command.resolveNodeType(nodeTypeRepository);
+        doPut(id, command);
     }
 }
