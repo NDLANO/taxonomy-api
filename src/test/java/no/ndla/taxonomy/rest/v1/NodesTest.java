@@ -100,6 +100,46 @@ public class NodesTest extends RestTest {
         }
     }
 
+    @Test
+    public void can_get_nodes_by_contentURI_and_nodeType() throws Exception {
+        builder.subject(s -> s
+                .name("Basic science")
+                .topic(t -> {
+                    t.name("photo synthesis");
+                    t.contentUri(URI.create("urn:test:1"));
+                }));
+        builder.subject(s -> s
+                .name("Maths")
+                .topic(t -> {
+                    t.name("trigonometry");
+                    t.contentUri(URI.create("urn:test:2"));
+                }));
+
+        {
+            final var response = testUtils.getResource("/v1/nodes?contentURI=urn:test:1&nodeType=urn:nodetype:subject");
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(0, nodes.length);
+        }
+        {
+            final var response = testUtils.getResource("/v1/nodes?contentURI=urn:test:1&nodeType=urn:nodetype:topic");
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertEquals("photo synthesis", nodes[0].getName());
+        }
+
+        {
+            final var response = testUtils.getResource("/v1/nodes?contentURI=urn:test:2&nodeType=urn:nodetype:subject");
+            final var nodes = testUtils.getObject(TopicDTO[].class, response);
+            assertEquals(0, nodes.length);
+        }
+        {
+            final var response = testUtils.getResource("/v1/nodes?contentURI=urn:test:2&nodeType=urn:nodetype:topic");
+            final var nodes = testUtils.getObject(TopicDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertEquals("trigonometry", nodes[0].getName());
+        }
+    }
+
 
     @Test
     public void can_get_all_nodes() throws Exception {
@@ -123,6 +163,61 @@ public class NodesTest extends RestTest {
         assertAllTrue(nodes, t -> isValidId(t.getId()));
         assertAllTrue(nodes, t -> t.getPath().contains("subject"));
         assertAnyTrue(nodes, t -> t.getPath().contains("subject") && t.getPath().contains("topic"));
+
+        assertAllTrue(nodes, t -> t.getMetadata() != null);
+        assertAllTrue(nodes, t -> t.getMetadata().isVisible());
+        assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 1);
+    }
+
+
+    @Test
+    public void can_get_all_topic_nodes() throws Exception {
+        builder.subject(s -> s
+                .name("Basic science")
+                .topic(t -> t.name("photo synthesis")));
+        builder.subject(s -> s
+                .name("Maths")
+                .topic(t -> t.name("trigonometry")));
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/nodes?nodeType=urn:nodetype:topic");
+        final var nodes = testUtils.getObject(NodeDTO[].class, response);
+        assertEquals(2, nodes.length);
+
+        assertAllTrue(nodes, t -> !"Basic science".equals(t.getName()));
+        assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
+        assertAllTrue(nodes, t -> !"Maths".equals(t.getName()));
+        assertAnyTrue(nodes, t -> "trigonometry".equals(t.getName()));
+        assertAllTrue(nodes, t -> "urn:nodetype:topic".equals(t.getNodeType().toString()));
+        assertAllTrue(nodes, t -> !"urn:nodetype:subject".equals(t.getNodeType().toString()));
+        assertAllTrue(nodes, t -> isValidId(t.getId()));
+        assertAllTrue(nodes, t -> t.getPath().contains("subject") && t.getPath().contains("topic"));
+
+        assertAllTrue(nodes, t -> t.getMetadata() != null);
+        assertAllTrue(nodes, t -> t.getMetadata().isVisible());
+        assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 1);
+    }
+
+    @Test
+    public void can_get_all_subject_nodes() throws Exception {
+        builder.subject(s -> s
+                .name("Basic science")
+                .topic(t -> t.name("photo synthesis")));
+        builder.subject(s -> s
+                .name("Maths")
+                .topic(t -> t.name("trigonometry")));
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/nodes?nodeType=urn:nodetype:subject");
+        final var nodes = testUtils.getObject(NodeDTO[].class, response);
+        assertEquals(2, nodes.length);
+
+        assertAnyTrue(nodes, t -> "Basic science".equals(t.getName()));
+        assertAllTrue(nodes, t -> !"photo synthesis".equals(t.getName()));
+        assertAnyTrue(nodes, t -> "Maths".equals(t.getName()));
+        assertAllTrue(nodes, t -> !"trigonometry".equals(t.getName()));
+        assertAllTrue(nodes, t -> !"urn:nodetype:topic".equals(t.getNodeType().toString()));
+        assertAllTrue(nodes, t -> "urn:nodetype:subject".equals(t.getNodeType().toString()));
+        assertAllTrue(nodes, t -> isValidId(t.getId()));
+        assertAllTrue(nodes, t -> t.getPath().contains("subject"));
 
         assertAllTrue(nodes, t -> t.getMetadata() != null);
         assertAllTrue(nodes, t -> t.getMetadata().isVisible());

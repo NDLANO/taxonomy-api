@@ -49,14 +49,21 @@ public class Nodes extends CrudController<Topic> {
 
             @ApiParam(value = "Filter by contentUri")
             @RequestParam(value = "contentURI", required = false)
-                    URI contentUriFilter
+                    URI contentUriFilter,
+
+            @ApiParam(value = "Filter by node type")
+            @RequestParam(value = "nodeType", required = false)
+                    URI nodeTypeFilter
     ) {
 
         if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
             contentUriFilter = null;
         }
+        if (nodeTypeFilter != null && nodeTypeFilter.toString().equals("")) {
+            nodeTypeFilter = null;
+        }
 
-        return nodeService.getNodes(language, contentUriFilter);
+        return nodeService.getNodes(language, contentUriFilter, nodeTypeFilter);
     }
 
     @GetMapping("/{id}")

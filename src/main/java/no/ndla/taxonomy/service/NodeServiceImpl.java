@@ -48,11 +48,17 @@ public class NodeServiceImpl implements NodeService {
 
     @Override
     @InjectMetadata
-    public List<NodeDTO> getNodes(String languageCode, URI contentUriFilter) {
+    public List<NodeDTO> getNodes(String languageCode, URI contentUriFilter, URI nodeTypeFilter) {
         final List<Topic> filteredTopics;
 
         if (contentUriFilter != null) {
-            filteredTopics = topicRepository.findAllByContentUriIncludingCachedUrlsAndTranslations(contentUriFilter);
+            if (nodeTypeFilter != null) {
+                filteredTopics = topicRepository.findAllByContentUriAndNodeTypeIncludingCachedUrlsAndTranslations(contentUriFilter, nodeTypeFilter);
+            } else {
+                filteredTopics = topicRepository.findAllByContentUriIncludingCachedUrlsAndTranslations(contentUriFilter);
+            }
+        } else if (nodeTypeFilter != null) {
+            filteredTopics = topicRepository.findAllByNodeTypeIncludingCachedUrlsAndTranslations(nodeTypeFilter);
         } else {
             filteredTopics = topicRepository.findAllIncludingCachedUrlsAndTranslations();
         }

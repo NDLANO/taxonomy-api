@@ -8,7 +8,7 @@ import java.util.List;
 public interface NodeService {
     void delete(URI publicId);
 
-    List<NodeDTO> getNodes(String languageCode, URI contentUriFilter);
+    List<NodeDTO> getNodes(String languageCode, URI contentUriFilter, URI nodeTypeFilter);
 
     List<ConnectionIndexDTO> getAllConnections(URI nodePublicId);
 
