@@ -35,7 +35,7 @@ public class URNValidatorTest {
             urnValidator.validate(new URI("urn:testentity"), new TestEntity());
             fail("Expected IdFormatException");
         } catch (IdFormatException exception) {
-            assertEquals("Id should have id field", exception.getMessage());
+            assertEquals("Id should have type and id field", exception.getMessage());
         }
     }
 

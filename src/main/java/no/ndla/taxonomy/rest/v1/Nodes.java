@@ -38,6 +38,7 @@ public class Nodes extends CrudController<Topic> {
         this.nodeResourceTypeService = nodeResourceTypeService;
         this.nodeService = nodeService;
         this.nodeTypeRepository = nodeTypeRepository;
+        this.validator = new NodeURNValidator();
     }
 
     @GetMapping
@@ -138,7 +139,6 @@ public class Nodes extends CrudController<Topic> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
-        validator.validate(id, "topic");
         nodeService.delete(id);
     }
 
