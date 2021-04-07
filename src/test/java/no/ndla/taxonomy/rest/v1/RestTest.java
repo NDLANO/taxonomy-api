@@ -123,4 +123,19 @@ public abstract class RestTest {
     ResourceType newResourceType() {
         return save(new ResourceType());
     }
+
+    NodeType newNodeType(URI publicId, String name) {
+        NodeType nodeType = new NodeType();
+        nodeType.setPublicId(publicId);
+        nodeType.setName(name);
+        return save(nodeType);
+    }
+
+    Topic newNode(NodeType nodeType, URI publicId, String name) {
+        Topic node = new Topic();
+        node.setNodeType(nodeType);
+        node.setPublicId(publicId);
+        node.setName(name);
+        return save(node);
+    }
 }

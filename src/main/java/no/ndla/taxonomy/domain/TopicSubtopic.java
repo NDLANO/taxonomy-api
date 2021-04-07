@@ -33,8 +33,10 @@ public class TopicSubtopic extends DomainEntity implements EntityWithPathConnect
         }
 
         final var topicSubtopic = new TopicSubtopic();
-        if (parentTopic.getPublicId() != null && parentTopic.getPublicId().toString().startsWith("urn:subject:")) {
+        if (parentTopic.getNodeType().map(NodeType::getPublicId).map(URI::toString).filter("urn:nodetype:subject"::equals).isPresent()) {
             topicSubtopic.setPublicId(URI.create("urn:subject-topic:" + UUID.randomUUID()));
+        } else if (parentTopic.getNodeType().map(NodeType::getPublicId).map(URI::toString).filter("urn:nodetype:topic"::equals).isEmpty()) {
+            topicSubtopic.setPublicId(URI.create("urn:node-subnode:" + UUID.randomUUID()));
         }
 
         topicSubtopic.topic = parentTopic;
