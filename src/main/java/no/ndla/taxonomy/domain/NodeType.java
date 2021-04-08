@@ -22,6 +22,15 @@ public class NodeType extends DomainObject {
         return translations.stream().collect(Collectors.toUnmodifiableSet());
     }
 
+    public NodeTypeTranslation addTranslation(String languageCode) {
+        NodeTypeTranslation nodeTypeTranslation = getTranslation(languageCode).orElse(null);
+        if (nodeTypeTranslation != null) return nodeTypeTranslation;
+
+        nodeTypeTranslation = new NodeTypeTranslation(this, languageCode);
+        translations.add(nodeTypeTranslation);
+        return nodeTypeTranslation;
+    }
+
     public void addTranslation(NodeTypeTranslation nodeTypeTranslation) {
         this.translations.add(nodeTypeTranslation);
         if (nodeTypeTranslation.getNodeType() != this) {
@@ -36,6 +45,10 @@ public class NodeType extends DomainObject {
                 translation.setNodeType(null);
             }
         }
+    }
+
+    public void removeTranslation(String languageCode) {
+        getTranslation(languageCode).ifPresent(this::removeTranslation);
     }
 
     public Optional<NodeTypeTranslation> getTranslation(String languageCode) {

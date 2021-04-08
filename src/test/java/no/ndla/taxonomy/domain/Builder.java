@@ -211,6 +211,20 @@ public class Builder {
     }
 
     @Transactional
+    public static class NodeTypeTranslationBuilder {
+        private NodeTypeTranslation nodeTypeTranslation;
+
+        public NodeTypeTranslationBuilder(NodeTypeTranslation nodeTypeTranslation) {
+            this.nodeTypeTranslation = nodeTypeTranslation;
+        }
+
+        public NodeTypeTranslationBuilder name(String name) {
+            nodeTypeTranslation.setName(name);
+            return this;
+        }
+    }
+
+    @Transactional
     public static class ResourceTranslationBuilder {
         private ResourceTranslation resourceTranslation;
 
@@ -274,6 +288,15 @@ public class Builder {
 
         public NodeTypeBuilder publicId(String id) {
             nodeType.setPublicId(URI.create(id));
+            return this;
+        }
+
+        public NodeTypeBuilder translation(String languageCode, Consumer<NodeTypeTranslationBuilder> consumer) {
+            NodeTypeTranslation topicTranslation = nodeType.addTranslation(languageCode);
+            entityManager.persist(topicTranslation);
+            NodeTypeTranslationBuilder builder = new NodeTypeTranslationBuilder(topicTranslation);
+            consumer.accept(builder);
+
             return this;
         }
     }
