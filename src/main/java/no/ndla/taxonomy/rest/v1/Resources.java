@@ -173,7 +173,7 @@ public class Resources extends CrudController<Resource> {
 
     @GetMapping("/v1/topics/{id}/resources")
     @ApiOperation(value = "Gets all resources for the given topic", tags = {"topics"})
-    public List<ResourceWithTopicConnectionDTO> getResources(
+    public List<ResourceWithTopicConnectionDTO> getTopicResources(
             @ApiParam(value = "id", required = true)
             @PathVariable("id") URI topicId,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
@@ -197,8 +197,39 @@ public class Resources extends CrudController<Resource> {
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
                     URI relevance
     ) {
+        if (filterIds != null && filterIds.length > 0) {
+            return List.of(); // We don't have filters.
+        }
+        return getResources(
+                topicId, language, recursive,
+                resourceTypeIds, subjectId,
+                relevance
+        );
+    }
+
+    @GetMapping("/v1/nodes/{id}/resources")
+    @ApiOperation(value = "Gets all resources for the given node", tags = {"nodes"})
+    public List<ResourceWithTopicConnectionDTO> getResources(
+            @ApiParam(value = "id", required = true)
+            @PathVariable("id") URI nodeId,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
+            @RequestParam(value = "language", required = false)
+                    String language,
+            @RequestParam(value = "recursive", required = false, defaultValue = "false")
+            @ApiParam("If true, resources from subtopics are fetched recursively")
+                    boolean recursive,
+            @RequestParam(value = "type", required = false)
+            @ApiParam(value = "Select by resource type id(s). If not specified, resources of all types will be returned." +
+                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
+                    URI[] resourceTypeIds,
+            @RequestParam(value = "subject", required = false)
+            @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.")
+                    URI subjectId,
+            @RequestParam(value = "relevance", required = false)
+            @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
+                    URI relevance
+    ) {
         final Set<URI> resourceTypeIdSet;
-        final Set<URI> filterIdSet;
 
         if (resourceTypeIds == null) {
             resourceTypeIdSet = Set.of();
@@ -206,18 +237,8 @@ public class Resources extends CrudController<Resource> {
             resourceTypeIdSet = new HashSet<>(Arrays.asList(resourceTypeIds));
         }
 
-        if (filterIds == null) {
-            filterIdSet = Set.of();
-        } else {
-            filterIdSet = new HashSet<>(Arrays.asList(filterIds));
-        }
-
-        if (filterIdSet.isEmpty()) {
-            return resourceService.getResourcesByTopicId(topicId, subjectId, resourceTypeIdSet,
-                    relevance, language, recursive);
-        } else {
-            return List.of(); // We don't have filters.
-        }
+        return resourceService.getResourcesByTopicId(nodeId, subjectId, resourceTypeIdSet,
+                relevance, language, recursive);
     }
 
 }

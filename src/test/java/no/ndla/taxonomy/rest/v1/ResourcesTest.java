@@ -609,6 +609,204 @@ public class ResourcesTest extends RestTest {
     }
 
     @Test
+    public void can_get_nodes_resource_connection_id() throws Exception {
+        Topic topic = builder.topic(t -> t
+                .publicId("urn:topic:1")
+                .resource()
+        );
+        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/resources");
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+
+        assertEquals(first(topic.getTopicResources()).getPublicId(), result[0].getConnectionId());
+    }
+
+    @Test
+    public void can_get_nodes_resource_connections_with_metadata() throws Exception {
+        Topic topic = builder.topic(t -> t
+                .publicId("urn:topic:1")
+                .resource()
+        );
+        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/resources");
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+
+        assertEquals(first(topic.getTopicResources()).getPublicId(), result[0].getConnectionId());
+        assertAllTrue(result, connection -> connection.getMetadata() != null);
+        assertAllTrue(result, connection -> connection.getMetadata().isVisible());
+        assertAllTrue(result, connection -> connection.getMetadata().getGrepCodes().size() == 1);
+    }
+
+    @Test
+    public void can_get_nodes_resource_connection_id_recursively() throws Exception {
+        builder.topic("topic", t -> t
+                .publicId("urn:topic:1343")
+                .resource(r -> r
+                        .name("a")
+                        .publicId("urn:resource:1"))
+                .subtopic("subtopic", st -> st
+                        .publicId("urn:topic:2")
+                        .resource(r -> r.name("b")
+                                .publicId("urn:resource:2")))
+        );
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1343/resources?recursive=true");
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+
+        assertEquals(first(builder.topic("topic").getTopicResources()).getPublicId(), result[0].getConnectionId());
+        assertEquals(first(builder.topic("subtopic").getTopicResources()).getPublicId(), result[1].getConnectionId());
+    }
+
+    @Test
+    public void can_get_nodes_resources_for_a_topic_recursively() throws Exception {
+        builder.subject(s -> s
+                .publicId("urn:subject:1")
+                .name("subject a")
+                .topic(t -> t
+                        .publicId("urn:topic:a")
+                        .name("a")
+                        .resource(true, r -> r
+                                .publicId("urn:resource:1")
+                                .name("resource a").contentUri("urn:article:a"))
+                        .subtopic(st -> st
+                                .publicId("urn:topic:a:1")
+                                .name("aa")
+                                .resource(true, r -> r.name("resource aa").contentUri("urn:article:aa"))
+                                .subtopic(st2 -> st2
+                                        .publicId("urn:topic:a:1:1")
+                                        .name("aaa")
+                                        .resource(true, r -> r.name("resource aaa").contentUri("urn:article:aaa"))
+                                )
+                                .subtopic(st2 -> st2
+                                        .publicId("urn:topic:a:1:2")
+                                        .name("aab")
+                                        .resource(true, r -> r.name("resource aab").contentUri("urn:article:aab"))
+                                )
+                        )
+                ));
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:a/resources?recursive=true");
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+
+        assertEquals(4, result.length);
+        assertAnyTrue(result, r -> "resource a".equals(r.getName()) && "urn:article:a".equals(r.getContentUri().toString()));
+        assertAnyTrue(result, r -> "resource aa".equals(r.getName()) && "urn:article:aa".equals(r.getContentUri().toString()));
+        assertAnyTrue(result, r -> "resource aaa".equals(r.getName()) && "urn:article:aaa".equals(r.getContentUri().toString()));
+        assertAnyTrue(result, r -> "resource aab".equals(r.getName()) && "urn:article:aab".equals(r.getContentUri().toString()));
+        assertAllTrue(result, r -> !r.getPaths().isEmpty());
+        assertAllTrue(result, ResourceWithTopicConnectionDTO::isPrimary);
+    }
+
+    @Test
+    public void nodes_resources_by_topic_id_recursively_are_ordered_by_rank_in_parent() throws Exception {
+        testSeeder.resourcesBySubjectIdTestSetup();
+        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:5/resources?recursive=true");
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+        assertEquals(6, result.length);
+        assertEquals("urn:resource:3", result[0].getId().toString());
+        assertEquals("urn:resource:5", result[1].getId().toString());
+        assertEquals("urn:resource:4", result[2].getId().toString());
+        assertEquals("urn:resource:6", result[3].getId().toString());
+        assertEquals("urn:resource:7", result[4].getId().toString());
+        assertEquals("urn:resource:8", result[5].getId().toString());
+
+    }
+
+    @Test
+    public void primary_status_is_returned_on_nodes_resources() throws Exception {
+        final var resource = builder.resource("r1", rb -> {
+            rb.name("resource 1");
+        });
+
+        builder.topic(tb -> {
+            tb.name("topic 1");
+            tb.publicId("urn:topic:rt:1201");
+            tb.resource(resource, true);
+        });
+
+        builder.topic(tb -> {
+            tb.name("topic 2");
+            tb.publicId("urn:topic:rt:1202");
+            tb.resource(resource, false);
+        });
+
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:rt:1201/resources");
+            final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            assertEquals(1, result.length);
+            assertTrue(result[0].isPrimary());
+        }
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:rt:1202/resources");
+            final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            assertEquals(1, result.length);
+            assertFalse(result[0].isPrimary());
+        }
+    }
+
+    @Test
+    public void can_get_urls_for_nodes_resources_for_a_topic_recursively() throws Exception {
+        builder.subject(s -> s.publicId("urn:subject:1")
+                .topic(t -> t
+                        .publicId("urn:topic:a")
+                        .resource(true, r -> r.publicId("urn:resource:a"))
+                        .subtopic(st -> st
+                                .publicId("urn:topic:aa")
+                                .resource(true, r -> r.publicId("urn:resource:aa"))
+                                .subtopic(st2 -> st2
+                                        .publicId("urn:topic:aaa")
+                                        .resource("aaa", true, r -> r.publicId("urn:resource:aaa"))
+                                )
+                                .subtopic(st2 -> st2
+                                        .publicId("urn:topic:aab")
+                                        .resource(true, r -> r.publicId("urn:resource:aab"))
+                                )
+                        )
+                ));
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:a/resources?recursive=true");
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+
+        assertEquals(4, result.length);
+        assertAnyTrue(result, r -> "/subject:1/topic:a/resource:a".equals(r.getPath()));
+        assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/resource:aa".equals(r.getPath()));
+        assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aaa/resource:aaa".equals(r.getPath()));
+        assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aab/resource:aab".equals(r.getPath()));
+        assertAllTrue(result, ResourceWithTopicConnectionDTO::isPrimary);
+    }
+
+    @Test
+    public void can_get_nodes_resources_for_a_topic_without_child_topic_resources() throws Exception {
+        builder.subject(s -> s
+                .topic(t -> t
+                        .name("a")
+                        .publicId("urn:topic:1")
+                        .subtopic(st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))
+                        .resource(r -> r.name("resource 1"))
+                        .resource(r -> r.name("resource 2"))
+                ));
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/resources");
+        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+
+        assertEquals(2, result.length);
+        assertAnyTrue(result, r -> "resource 1".equals(r.getName()));
+        assertAnyTrue(result, r -> "resource 2".equals(r.getName()));
+    }
+
+    //@Test TODO - relevance filtering is broken after move from filter
+    public void nodes_resources_can_be_filtered_by_relevance() throws Exception {
+        testSeeder.resourceWithFiltersAndRelevancesTestSetup();
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/resources?relevance=urn:relevance:core");
+        final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+        assertEquals(10, resources.length);
+
+        MockHttpServletResponse response2 = testUtils.getResource("/v1/nodes/urn:topic:1/resources?relevance=urn:relevance:supplementary");
+        final var resources2 = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response2);
+        assertEquals(5, resources2.length);
+
+    }
+
+    @Test
     public void resources_are_ordered_relative_to_parent() throws Exception {
         testSeeder.resourcesBySubjectIdTestSetup();
 
