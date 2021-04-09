@@ -27,6 +27,7 @@ public class MetadataController {
             path = {
                     "/v1/subjects/{id}/metadata",
                     "/v1/topics/{id}/metadata",
+                    "/v1/nodes/{id}/metadata",
                     "/v1/resources/{id}/metadata",
                     "/v1/filters/{id}/metadata",
             }
@@ -40,6 +41,7 @@ public class MetadataController {
             path = {
                     "/v1/subjects/{id}/metadata",
                     "/v1/topics/{id}/metadata",
+                    "/v1/nodes/{id}/metadata",
                     "/v1/resources/{id}/metadata",
                     "/v1/filters/{id}/metadata",
             }
@@ -54,6 +56,7 @@ public class MetadataController {
             path = {
                     "/v1/subjects/{id}/metadata-recursive",
                     "/v1/topics/{id}/metadata-recursive",
+                    "/v1/nodes/{id}/metadata-recursive",
                     "/v1/resources/{id}/metadata-recursive"
             }
     )
