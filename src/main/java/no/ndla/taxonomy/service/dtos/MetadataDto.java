@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @ApiModel("Metadata")
@@ -17,6 +19,9 @@ public class MetadataDto {
 
     @ApiModelProperty
     private Boolean visible;
+
+    @ApiModelProperty
+    private Map<String,String> customFields;
 
     public MetadataDto() {
 
@@ -33,6 +38,7 @@ public class MetadataDto {
                             .map(MetadataApiEntity.CompetenceAim::getCode)
                             .forEach(this::addGrepCode);
                 });
+        customFields = metadataApiEntity.getCustomFields().map(HashMap::new).orElse(null);
     }
 
     public static MetadataDto of(MetadataDto metadataDto) {
@@ -40,6 +46,10 @@ public class MetadataDto {
         newMetadataDto.setPublicId(metadataDto.getPublicId());
         newMetadataDto.setGrepCodes(metadataDto.getGrepCodes());
         newMetadataDto.setVisible(metadataDto.isVisible());
+        {
+            final var customFields = metadataDto.getCustomFields();
+            newMetadataDto.setCustomFields(customFields != null ? new HashMap<>(customFields) : null);
+        }
 
         return newMetadataDto;
     }
@@ -74,5 +84,13 @@ public class MetadataDto {
 
     public void setVisible(Boolean visible) {
         this.visible = visible;
+    }
+
+    public Map<String, String> getCustomFields() {
+        return customFields;
+    }
+
+    public void setCustomFields(Map<String, String> customFields) {
+        this.customFields = customFields;
     }
 }
