@@ -4,6 +4,7 @@
 *.iml
 target
 *.backup
+.env
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
