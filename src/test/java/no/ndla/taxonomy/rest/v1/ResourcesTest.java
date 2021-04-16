@@ -523,6 +523,62 @@ public class ResourcesTest extends RestTest {
     }
 
     @Test
+    public void resources_without_filters_can_be_filtered_by_relevance() throws Exception {
+        testSeeder.resourceWithRelevancesButWithoutFiltersTestSetup();
+
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1:1/resources?relevance=urn:relevance:core");
+            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            assertEquals(5, resources.length);
+        }
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:2:1/resources?relevance=urn:relevance:core");
+            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            assertEquals(5, resources.length);
+        }
+
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1:1/resources?relevance=urn:relevance:supplementary");
+            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            assertEquals(0, resources.length);
+        }
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:2:1/resources?relevance=urn:relevance:supplementary");
+            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            assertEquals(5, resources.length);
+        }
+
+    }
+
+    @Test
+    public void resources_without_filters_can_be_filtered_by_relevance_and_core_is_default() throws Exception {
+        testSeeder.resourceWithRelevancesAndOneNullRelevanceButWithoutFiltersTestSetup();
+
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1:1/resources?relevance=urn:relevance:core");
+            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            assertEquals(5, resources.length);
+        }
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:2:1/resources?relevance=urn:relevance:core");
+            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            assertEquals(5, resources.length);
+        }
+
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1:1/resources?relevance=urn:relevance:supplementary");
+            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            assertEquals(0, resources.length);
+        }
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:2:1/resources?relevance=urn:relevance:supplementary");
+            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            assertEquals(5, resources.length);
+        }
+
+    }
+
+    @Test
     public void resources_can_be_filtered_by_filters() throws Exception {
         testSeeder.resourceWithFiltersAndRelevancesTestSetup();
 

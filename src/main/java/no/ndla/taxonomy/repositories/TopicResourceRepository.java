@@ -32,6 +32,24 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
             "   LEFT JOIN FETCH rtFetch.resourceTypeTranslations" +
             "   WHERE " +
+            "       t.id IN :topicIds")
+    List<TopicResource> findAllByTopicIdsIncludingRelationsForResourceDocuments(Collection<Integer> topicIds);
+
+    @Query("SELECT DISTINCT tr" +
+            "   FROM TopicResource tr" +
+            "   LEFT JOIN FETCH tr.topic t" +
+            "   LEFT JOIN FETCH tr.resource r" +
+            "   LEFT JOIN FETCH r.filters rf" +
+            "   LEFT JOIN FETCH rf.filter f" +
+            "   LEFT JOIN FETCH f.translations" +
+            "   LEFT JOIN rf.relevance rel" +
+            "   LEFT JOIN FETCH r.resourceTranslations" +
+            "   LEFT JOIN FETCH r.cachedPaths" +
+            "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
+            "   LEFT JOIN FETCH rf.relevance" +
+            "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
+            "   LEFT JOIN FETCH rtFetch.resourceTypeTranslations" +
+            "   WHERE " +
             "       t.id IN :topicIds AND" +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
     List<TopicResource> doFindAllByTopicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, URI relevancePublicId);

@@ -186,6 +186,10 @@ public class TestSeeder {
     }
 
     private TopicResource createTopicResource(String publicId, Topic topic, Resource resource, Boolean isPrimary, Integer rank) {
+        return createTopicResource(publicId, topic, resource, isPrimary, rank, null);
+    }
+
+    private TopicResource createTopicResource(String publicId, Topic topic, Resource resource, Boolean isPrimary, Integer rank, Relevance relevance) {
         final var topicResource = TopicResource.create(topic, resource);
 
         if (publicId != null) {
@@ -199,6 +203,8 @@ public class TestSeeder {
         if (rank != null) {
             topicResource.setRank(rank);
         }
+
+        topicResource.setRelevance(relevance);
 
         topicResource.getTopic().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
 
@@ -464,6 +470,114 @@ public class TestSeeder {
         createResourceFilter("urn:resource-filter:13", resource3, filter2, relevance2);
         createResourceFilter("urn:resource-filter:14", resource4, filter2, relevance2);
         createResourceFilter("urn:resource-filter:15", resource5, filter2, relevance2);
+    }
+
+    public void resourceWithRelevancesButWithoutFiltersTestSetup() {
+        // create a test structure with subjects, topics, and resources as follows
+        // (S=subject, ST = subject-topic, TST = topic-subtopic, R = resource, F = filter)
+        //
+        // S:1
+        //   - ST:1
+        //      - R:1
+        //      - R:2
+        //
+        // New: Now with 100% less filters!: Split in two subjects based on the filters with
+        // a cloned topic structure, but shared resources.
+
+        clearAll();
+
+        final var filter1 = createSubject("urn:subject:1", "Year 1");
+        final var filter2 = createSubject("urn:subject:2", "Year 2");
+
+        final var f1topic1 = createTopic("urn:topic:1:1", "ST:1", null, false);
+        createSubjectTopic("urn:subject-topic:1", f1topic1, filter1, 1);
+        final var f2topic1 = createTopic("urn:topic:2:1", "ST:1", null, false);
+        createSubjectTopic("urn:subject-topic:2", f2topic1, filter2, 1);
+
+
+        final var resource1 = createResource("urn:resource:1", "R:1", null);
+        final var resource2 = createResource("urn:resource:2", "R:2", null);
+        final var resource3 = createResource("urn:resource:3", "R:3", null);
+        final var resource4 = createResource("urn:resource:4", "R:4", null);
+        final var resource5 = createResource("urn:resource:5", "R:5", null);
+        final var resource6 = createResource("urn:resource:6", "R:6", null);
+        final var resource7 = createResource("urn:resource:7", "R:7", null);
+        final var resource8 = createResource("urn:resource:8", "R:8", null);
+        final var resource9 = createResource("urn:resource:9", "R:9", null);
+        final var resource10 = createResource("urn:resource:10", "R:10", null);
+
+        final var relevance1 = createRelevance("urn:relevance:core", "Core");
+        final var relevance2 = createRelevance("urn:relevance:supplementary", "Supplementary");
+
+        createTopicResource("urn:topic-resource:1", f1topic1, resource1, true, 1, relevance1);
+        createTopicResource("urn:topic-resource:2", f1topic1, resource2, true, 2, relevance1);
+        createTopicResource("urn:topic-resource:3", f1topic1, resource3, true, 3, relevance1);
+        createTopicResource("urn:topic-resource:4", f1topic1, resource4, true, 4, relevance1);
+        createTopicResource("urn:topic-resource:5", f1topic1, resource5, true, 5, relevance1);
+        createTopicResource("urn:topic-resource:6", f2topic1, resource1, true, 1, relevance2);
+        createTopicResource("urn:topic-resource:7", f2topic1, resource2, true, 2, relevance2);
+        createTopicResource("urn:topic-resource:8", f2topic1, resource3, true, 3, relevance2);
+        createTopicResource("urn:topic-resource:9", f2topic1, resource4, true, 4, relevance2);
+        createTopicResource("urn:topic-resource:10", f2topic1, resource5, true, 5, relevance2);
+        createTopicResource("urn:topic-resource:11", f2topic1, resource6, true, 6, relevance1);
+        createTopicResource("urn:topic-resource:12", f2topic1, resource7, true, 7, relevance1);
+        createTopicResource("urn:topic-resource:13", f2topic1, resource8, true, 8, relevance1);
+        createTopicResource("urn:topic-resource:14", f2topic1, resource9, true, 9, relevance1);
+        createTopicResource("urn:topic-resource:15", f2topic1, resource10, true, 10, relevance1);
+    }
+
+    public void resourceWithRelevancesAndOneNullRelevanceButWithoutFiltersTestSetup() {
+        // create a test structure with subjects, topics, and resources as follows
+        // (S=subject, ST = subject-topic, TST = topic-subtopic, R = resource, F = filter)
+        //
+        // S:1
+        //   - ST:1
+        //      - R:1
+        //      - R:2
+        //
+        // New: Now with 100% less filters!: Split in two subjects based on the filters with
+        // a cloned topic structure, but shared resources.
+
+        clearAll();
+
+        final var filter1 = createSubject("urn:subject:1", "Year 1");
+        final var filter2 = createSubject("urn:subject:2", "Year 2");
+
+        final var f1topic1 = createTopic("urn:topic:1:1", "ST:1", null, false);
+        createSubjectTopic("urn:subject-topic:1", f1topic1, filter1, 1);
+        final var f2topic1 = createTopic("urn:topic:2:1", "ST:1", null, false);
+        createSubjectTopic("urn:subject-topic:2", f2topic1, filter2, 1);
+
+
+        final var resource1 = createResource("urn:resource:1", "R:1", null);
+        final var resource2 = createResource("urn:resource:2", "R:2", null);
+        final var resource3 = createResource("urn:resource:3", "R:3", null);
+        final var resource4 = createResource("urn:resource:4", "R:4", null);
+        final var resource5 = createResource("urn:resource:5", "R:5", null);
+        final var resource6 = createResource("urn:resource:6", "R:6", null);
+        final var resource7 = createResource("urn:resource:7", "R:7", null);
+        final var resource8 = createResource("urn:resource:8", "R:8", null);
+        final var resource9 = createResource("urn:resource:9", "R:9", null);
+        final var resource10 = createResource("urn:resource:10", "R:10", null);
+
+        final var relevance1 = createRelevance("urn:relevance:core", "Core");
+        final var relevance2 = createRelevance("urn:relevance:supplementary", "Supplementary");
+
+        createTopicResource("urn:topic-resource:1", f1topic1, resource1, true, 1, relevance1);
+        createTopicResource("urn:topic-resource:2", f1topic1, resource2, true, 2, relevance1);
+        createTopicResource("urn:topic-resource:3", f1topic1, resource3, true, 3, relevance1);
+        createTopicResource("urn:topic-resource:4", f1topic1, resource4, true, 4, relevance1);
+        createTopicResource("urn:topic-resource:5", f1topic1, resource5, true, 5, relevance1);
+        createTopicResource("urn:topic-resource:6", f2topic1, resource1, true, 1, relevance2);
+        createTopicResource("urn:topic-resource:7", f2topic1, resource2, true, 2, relevance2);
+        createTopicResource("urn:topic-resource:8", f2topic1, resource3, true, 3, relevance2);
+        createTopicResource("urn:topic-resource:9", f2topic1, resource4, true, 4, relevance2);
+        createTopicResource("urn:topic-resource:10", f2topic1, resource5, true, 5, relevance2);
+        createTopicResource("urn:topic-resource:11", f2topic1, resource6, true, 6, relevance1);
+        createTopicResource("urn:topic-resource:12", f2topic1, resource7, true, 7, relevance1);
+        createTopicResource("urn:topic-resource:13", f2topic1, resource8, true, 8, relevance1);
+        createTopicResource("urn:topic-resource:14", f2topic1, resource9, true, 9, relevance1);
+        createTopicResource("urn:topic-resource:15", f2topic1, resource10, true, 10, null);
     }
 
     public void resourcesBySubjectIdTestSetup() {
