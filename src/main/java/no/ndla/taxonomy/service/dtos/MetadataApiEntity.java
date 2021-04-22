@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class MetadataApiEntity {
@@ -20,6 +18,10 @@ public class MetadataApiEntity {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Boolean visible;
 
+    @JsonProperty
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Map<String,String> customFields;
+
     public MetadataApiEntity() {
 
     }
@@ -30,6 +32,15 @@ public class MetadataApiEntity {
             entityMetadataObject.getGrepCodes().forEach(aim -> addCompetenceAim(new CompetenceAim(aim)));
         } else {
             competenceAims = null;
+        }
+
+        {
+            final var customFields = entityMetadataObject.getCustomFields();
+            if (customFields != null) {
+                this.customFields = new HashMap<>(customFields);
+            } else {
+                this.customFields = null;
+            }
         }
 
         this.visible = entityMetadataObject.isVisible();
@@ -79,6 +90,15 @@ public class MetadataApiEntity {
         }
 
         this.competenceAims.remove(competenceAim);
+    }
+
+    @JsonIgnore
+    public Optional<Map<String, String>> getCustomFields() {
+        return Optional.ofNullable(customFields != null ? Collections.unmodifiableMap(customFields) : null);
+    }
+
+    public void setCustomFields(Map<String, String> customFields) {
+        this.customFields = customFields;
     }
 
     public static class CompetenceAim {

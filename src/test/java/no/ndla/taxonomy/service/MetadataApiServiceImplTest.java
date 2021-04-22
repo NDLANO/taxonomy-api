@@ -50,6 +50,7 @@ public class MetadataApiServiceImplTest {
             final var returnedEntity = mock(MetadataApiEntity.class);
             when(returnedEntity.getPublicId()).thenReturn("urn:test:1");
             when(returnedEntity.getCompetenceAims()).thenReturn(Optional.of(Set.of(aim1, aim2)));
+            when(returnedEntity.getCustomFields()).thenReturn(Optional.of(Map.of("test", "value")));
 
             return ResponseEntity.ok(returnedEntity);
         });
@@ -57,6 +58,8 @@ public class MetadataApiServiceImplTest {
         final var returnedEntity = metadataApiService.getMetadataByPublicId(URI.create("urn:test:1"));
         assertEquals(2, returnedEntity.getGrepCodes().size());
         assertTrue(returnedEntity.getGrepCodes().containsAll(Set.of("A1", "A2")));
+        assertNotNull(returnedEntity.getCustomFields());
+        assertEquals("value", returnedEntity.getCustomFields().get("test"));
 
     }
 
@@ -102,6 +105,7 @@ public class MetadataApiServiceImplTest {
 
                 when(entityMock.getCompetenceAims()).thenReturn(Optional.of(Set.of(aim)));
                 when(entityMock.isVisible()).thenReturn(Optional.of(false));
+                when(entityMock.getCustomFields()).thenReturn(Optional.of(Map.of("test", "value")));
 
                 entitiesToReturn.add(entityMock);
             });
@@ -118,6 +122,8 @@ public class MetadataApiServiceImplTest {
             assertFalse(metadataDto.isVisible());
             assertEquals(1, metadataDto.getGrepCodes().size());
             assertTrue(metadataDto.getGrepCodes().contains(URI.create(publicId).getSchemeSpecificPart().toUpperCase().replace(":", "")));
+            assertNotNull(metadataDto.getCustomFields());
+            assertEquals("value", metadataDto.getCustomFields().get("test"));
 
             assertTrue(idList.contains(URI.create(publicId)));
         });
@@ -138,6 +144,8 @@ public class MetadataApiServiceImplTest {
                             .collect(Collectors.toSet())
                             .containsAll(Set.of("B1", "B2"))
             );
+            assertTrue(apiEntity.getCustomFields().isPresent());
+            assertEquals("value", apiEntity.getCustomFields().get().get("test"));
 
             return null;
         }).when(restTemplate).put(eq("http://metadata/v1/taxonomy_entities/urn:test:1"), any(MetadataApiEntity.class));
@@ -152,12 +160,14 @@ public class MetadataApiServiceImplTest {
             final var returnedEntity = mock(MetadataApiEntity.class);
             when(returnedEntity.getPublicId()).thenReturn("urn:test:1");
             when(returnedEntity.getCompetenceAims()).thenReturn(Optional.of(Set.of(aim1, aim2)));
+            when(returnedEntity.getCustomFields()).thenReturn(Optional.of(Map.of()));
 
             return ResponseEntity.ok(returnedEntity);
         });
 
         final var requestObject = mock(MetadataDto.class);
         when(requestObject.getGrepCodes()).thenReturn(Set.of("B1", "B2"));
+        when(requestObject.getCustomFields()).thenReturn(Map.of("test", "value"));
 
         final var returnedEntity = metadataApiService.updateMetadataByPublicId(URI.create("urn:test:1"), requestObject);
 
@@ -252,6 +262,7 @@ public class MetadataApiServiceImplTest {
 
                 when(entityMock.getCompetenceAims()).thenReturn(Optional.of(Set.of(aim)));
                 when(entityMock.isVisible()).thenReturn(Optional.of(false));
+                when(entityMock.getCustomFields()).thenReturn(Optional.of(Map.of()));
 
                 entitiesToReturn.add(entityMock);
             });
@@ -285,6 +296,8 @@ public class MetadataApiServiceImplTest {
                 assertFalse(requestObject.isVisible().orElseThrow());
                 assertEquals(1, requestObject.getCompetenceAims().orElseThrow().size());
                 assertTrue(requestObject.getCompetenceAims().orElseThrow().stream().map(MetadataApiEntity.CompetenceAim::getCode).collect(Collectors.toSet()).contains("T1"));
+                assertTrue(requestObject.getCustomFields().isPresent());
+                assertEquals("value", requestObject.getCustomFields().get().get("test"));
 
                 assertFalse(updatedIds.contains(publicId));
                 updatedIds.add(publicId);
@@ -296,6 +309,7 @@ public class MetadataApiServiceImplTest {
         final var requestObject = new MetadataDto();
         requestObject.setVisible(false);
         requestObject.setGrepCodes(Set.of("T1"));
+        requestObject.setCustomFields(Map.of("test", "value"));
 
         final var returned = metadataApiService.updateMetadataByPublicIds(idList, requestObject);
 
