@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public class ResourceCommand implements UpdatableDto<Resource> {
     @JsonProperty
-    @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically. Ignored on update", example = "urn:resource:2")
+    @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:resource:2")
     public URI id;
 
     @JsonProperty
@@ -30,6 +30,8 @@ public class ResourceCommand implements UpdatableDto<Resource> {
 
     @Override
     public void apply(Resource entity) {
+        if(id != null)
+            entity.setPublicId(id);
         entity.setName(name);
         entity.setContentUri(contentUri);
     }

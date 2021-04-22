@@ -151,22 +151,6 @@ public class ResourcesTest extends RestTest {
     }
 
     @Test
-    public void can_update_resource() throws Exception {
-        URI id = newResource().getPublicId();
-
-        final var command = new ResourceCommand() {{
-            name = "The inner planets";
-            contentUri = URI.create("urn:article:1");
-        }};
-
-        testUtils.updateResource("/v1/resources/" + id, command);
-
-        Resource resource = resourceRepository.getByPublicId(id);
-        assertEquals(command.name, resource.getName());
-        assertEquals(command.contentUri, resource.getContentUri());
-    }
-
-    @Test
     public void can_create_resource_with_id() throws Exception {
         final var command = new ResourceCommand() {{
             id = URI.create("urn:resource:1");
@@ -176,6 +160,41 @@ public class ResourcesTest extends RestTest {
         testUtils.createResource("/v1/resources", command);
 
         assertNotNull(resourceRepository.getByPublicId(command.id));
+    }
+
+    @Test
+    public void can_update_resource() throws Exception {
+        URI publicId = newResource().getPublicId();
+
+        final var command = new ResourceCommand() {{
+            id = publicId;
+            name = "The inner planets";
+            contentUri = URI.create("urn:article:1");
+        }};
+
+        testUtils.updateResource("/v1/resources/" + publicId, command);
+
+        Resource resource = resourceRepository.getByPublicId(publicId);
+        assertEquals(command.name, resource.getName());
+        assertEquals(command.contentUri, resource.getContentUri());
+    }
+
+    @Test
+    public void can_update_resource_with_new_id() throws Exception {
+        URI publicId = newResource().getPublicId();
+        URI randomId = URI.create("uri:resource:random");
+
+        final var command = new ResourceCommand() {{
+            id = randomId;
+            name = "The inner planets";
+            contentUri = URI.create("urn:article:1");
+        }};
+
+        testUtils.updateResource("/v1/resources/" + publicId, command);
+
+        Resource resource = resourceRepository.getByPublicId(randomId);
+        assertEquals(command.name, resource.getName());
+        assertEquals(command.contentUri, resource.getContentUri());
     }
 
     @Test

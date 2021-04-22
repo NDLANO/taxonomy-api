@@ -258,14 +258,31 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_update_topic() throws Exception {
-        URI id = builder.topic().getPublicId();
+        URI publicId = builder.topic().getPublicId();
 
-        testUtils.updateResource("/v1/topics/" + id, new TopicCommand() {{
+        testUtils.updateResource("/v1/topics/" + publicId, new TopicCommand() {{
+            id = publicId;
             name = "trigonometry";
             contentUri = URI.create("urn:article:1");
         }});
 
-        Topic topic = topicRepository.getByPublicId(id);
+        Topic topic = topicRepository.getByPublicId(publicId);
+        assertEquals("trigonometry", topic.getName());
+        assertEquals("urn:article:1", topic.getContentUri().toString());
+    }
+
+    @Test
+    public void can_update_topic_with_new_id() throws Exception {
+        URI publicId = builder.topic().getPublicId();
+        URI randomId = URI.create("uri:topic:random");
+
+        testUtils.updateResource("/v1/topics/" + publicId, new TopicCommand() {{
+            id = randomId;
+            name = "trigonometry";
+            contentUri = URI.create("urn:article:1");
+        }});
+
+        Topic topic = topicRepository.getByPublicId(randomId);
         assertEquals("trigonometry", topic.getName());
         assertEquals("urn:article:1", topic.getContentUri().toString());
     }
