@@ -78,22 +78,6 @@ public class SubjectsTest extends RestTest {
     }
 
     @Test
-    public void can_update_subject() throws Exception {
-        URI id = builder.subject().getPublicId();
-
-        final var command = new SubjectCommand() {{
-            name = "physics";
-            contentUri = URI.create("urn:article:1");
-        }};
-
-        testUtils.updateResource("/v1/subjects/" + id, command);
-
-        Subject subject = subjectRepository.getByPublicId(id);
-        assertEquals(command.name, subject.getName());
-        assertEquals(command.contentUri, subject.getContentUri());
-    }
-
-    @Test
     public void can_create_subject_with_id() throws Exception {
         final var command = new SubjectCommand() {{
             id = URI.create("urn:subject:1");
@@ -104,6 +88,41 @@ public class SubjectsTest extends RestTest {
         assertEquals("/v1/subjects/urn:subject:1", response.getHeader("Location"));
 
         assertNotNull(subjectRepository.getByPublicId(command.id));
+    }
+
+    @Test
+    public void can_update_subject() throws Exception {
+        URI publicId = builder.subject().getPublicId();
+
+        final var command = new SubjectCommand() {{
+            id = publicId;
+            name = "physics";
+            contentUri = URI.create("urn:article:1");
+        }};
+
+        testUtils.updateResource("/v1/subjects/" + publicId, command);
+
+        Subject subject = subjectRepository.getByPublicId(publicId);
+        assertEquals(command.name, subject.getName());
+        assertEquals(command.contentUri, subject.getContentUri());
+    }
+
+    @Test
+    public void can_update_subject_with_new_id() throws Exception {
+        URI publicId = builder.subject().getPublicId();
+        URI randomId = URI.create("urn:subject:random");
+
+        final var command = new SubjectCommand() {{
+            id = randomId;
+            name = "random";
+            contentUri = URI.create("urn:article:1");
+        }};
+
+        testUtils.updateResource("/v1/subjects/" + publicId, command);
+
+        Subject subject = subjectRepository.getByPublicId(randomId);
+        assertEquals(command.name, subject.getName());
+        assertEquals(command.contentUri, subject.getContentUri());
     }
 
     @Test

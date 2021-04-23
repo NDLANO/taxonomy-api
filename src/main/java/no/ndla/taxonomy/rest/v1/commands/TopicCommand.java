@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public class TopicCommand implements UpdatableDto<Topic> {
     @JsonProperty
-    @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically. Ignored on update", example = "urn:topic:1")
+    @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:topic:1")
     public URI id;
 
     @JsonProperty
@@ -28,6 +28,8 @@ public class TopicCommand implements UpdatableDto<Topic> {
 
     @Override
     public void apply(Topic topic) {
+        if(getId().isPresent())
+            topic.setPublicId(id);
         topic.setName(name);
         topic.setContentUri(contentUri);
     }
