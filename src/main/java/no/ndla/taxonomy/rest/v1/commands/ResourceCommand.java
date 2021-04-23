@@ -30,7 +30,7 @@ public class ResourceCommand implements UpdatableDto<Resource> {
 
     @Override
     public void apply(Resource entity) {
-        if(id != null)
+        if(getId().isPresent())
             entity.setPublicId(id);
         entity.setName(name);
         entity.setContentUri(contentUri);

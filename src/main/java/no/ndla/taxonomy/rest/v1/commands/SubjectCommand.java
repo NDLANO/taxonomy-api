@@ -28,7 +28,7 @@ public class SubjectCommand implements UpdatableDto<Subject> {
 
     @Override
     public void apply(Subject subject) {
-        if (id != null)
+        if (getId().isPresent())
             subject.setPublicId(id);
         subject.setName(name);
         subject.setContentUri(contentUri);
