@@ -761,4 +761,13 @@
             <column name="relevance_id" type="integer"><constraints nullable="true" /></column>
         </addColumn>
     </changeSet>
+
+    <changeSet id="20210302 unlink filters" author="Jan-Espen Oversand">
+        <!-- incision that disconnects the filters from the rest of the structures -->
+        <dropForeignKeyConstraint baseTableName="resource_filter" constraintName="resource_filter_resource_id_fkey"/>
+        <dropForeignKeyConstraint baseTableName="resource_filter" constraintName="resource_filter_relevance_id_fkey"/>
+        <dropForeignKeyConstraint baseTableName="topic_filter" constraintName="topic_filter_topic_id_fkey"/>
+        <dropForeignKeyConstraint baseTableName="topic_filter" constraintName="topic_filter_relevance_id_fkey"/>
+        <dropForeignKeyConstraint baseTableName="filter" constraintName="filter_subject_id_fkey"/>
+    </changeSet>
 </databaseChangeLog>

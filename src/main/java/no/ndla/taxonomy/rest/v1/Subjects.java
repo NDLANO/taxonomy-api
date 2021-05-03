@@ -178,23 +178,7 @@ public class Subjects extends CrudController<Subject> {
     }
 
     private boolean hasFilterAndRelevanceOrJustFilterIfRelevanceIsNotSet(Topic topic, Collection<URI> filterPublicId, URI relevancePublicId) {
-        final var returnValue = new AtomicBoolean(false);
-
-        topic.getTopicFilters().forEach(topicFilter -> topicFilter.getFilter().ifPresent(filter -> {
-            if (filterPublicId.contains(filter.getPublicId())) {
-                if (relevancePublicId != null) {
-                    topicFilter.getRelevance().ifPresent(relevance -> {
-                        if (relevance.getPublicId().equals(relevancePublicId)) {
-                            returnValue.set(true);
-                        }
-                    });
-                } else {
-                    returnValue.set(true);
-                }
-            }
-        }));
-
-        return returnValue.get();
+        return false;
     }
 
     private boolean searchForFilterOrRelevance(Object connection, Collection<URI> filterPublicId, URI relevancePublicId, Collection<TopicSubtopic> topicSubtopics) {

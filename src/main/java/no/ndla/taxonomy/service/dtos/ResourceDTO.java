@@ -45,8 +45,7 @@ public class ResourceDTO {
 
     @JsonProperty
     @ApiModelProperty(value = "Filters this resource is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
-    @InjectMetadata
-    private Set<FilterWithConnectionDTO> filters = new HashSet<>();
+    private Set<Object> filters = new HashSet<>();
 
     @JsonProperty
     @ApiModelProperty(value = "All paths that lead to this resource", example = "[\"/subject:1/topic:1/resource:1\", \"/subject:2/topic:3/resource:1\"]")
@@ -70,11 +69,6 @@ public class ResourceDTO {
         this.resourceTypes = resource.getResourceResourceTypes()
                 .stream()
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
-                .collect(Collectors.toSet());
-
-        this.filters = resource.getResourceFilters()
-                .stream()
-                .map(resourceFilter -> new FilterWithConnectionDTO(resourceFilter, languageCode))
                 .collect(Collectors.toSet());
 
         this.path = resource.getPrimaryPath().orElse(null);
@@ -109,7 +103,7 @@ public class ResourceDTO {
         return resourceTypes;
     }
 
-    public Set<FilterWithConnectionDTO> getFilters() {
+    public Set<Object> getFilters() {
         return filters;
     }
 

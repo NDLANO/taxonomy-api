@@ -201,120 +201,6 @@ public class ResourceTest {
     }
 
     @Test
-    public void addAndRemoveFilter() {
-        final var filter1 = mock(Filter.class);
-        final var filter2 = mock(Filter.class);
-
-        final var relevance1 = mock(Relevance.class);
-        final var relevance2 = mock(Relevance.class);
-
-        assertEquals(0, resource.getResourceFilters().size());
-
-        doAnswer(invocationOnMock -> {
-            assertEquals(filter1, ((ResourceFilter) invocationOnMock.getArgument(0)).getFilter());
-
-            return null;
-        }).when(filter1).addResourceFilter(any(ResourceFilter.class));
-
-        doAnswer(invocationOnMock -> {
-            assertEquals(filter1, ((ResourceFilter) invocationOnMock.getArgument(0)).getFilter());
-
-            return null;
-        }).when(relevance1).addResourceFilter(any(ResourceFilter.class));
-
-        resource.addFilter(filter1, relevance1);
-
-        assertEquals(1, resource.getResourceFilters().size());
-        assertTrue(resource.getResourceFilters().stream().map(ResourceFilter::getFilter).collect(Collectors.toSet()).contains(filter1));
-
-        resource.addFilter(filter2, relevance2);
-
-        assertEquals(2, resource.getResourceFilters().size());
-        assertTrue(resource.getResourceFilters().stream().map(ResourceFilter::getFilter).collect(Collectors.toSet()).containsAll(Set.of(filter1, filter2)));
-
-        verify(filter1, times(1)).addResourceFilter(any(ResourceFilter.class));
-        verify(relevance1, times(1)).addResourceFilter(any(ResourceFilter.class));
-
-        verify(filter2, times(1)).addResourceFilter(any(ResourceFilter.class));
-        verify(relevance2, times(1)).addResourceFilter(any(ResourceFilter.class));
-
-        final var resourceFilter1 = resource
-                .getResourceFilters()
-                .stream()
-                .filter(resourceFilter -> resourceFilter.getFilter().equals(filter1))
-                .findFirst()
-                .orElse(null);
-
-        final var resourceFilter2 = resource
-                .getResourceFilters()
-                .stream()
-                .filter(resourceFilter -> resourceFilter.getFilter().equals(filter2))
-                .findFirst()
-                .orElse(null);
-
-        resource.removeFilter(filter1);
-
-        assertEquals(1, resource.getResourceFilters().size());
-        assertTrue(resource.getResourceFilters().stream().map(ResourceFilter::getFilter).collect(Collectors.toSet()).contains(filter2));
-
-        verify(filter1).removeResourceFilter(resourceFilter1);
-        verify(relevance1).removeResourceFilter(resourceFilter1);
-
-        resource.removeFilter(filter2);
-
-        assertEquals(0, resource.getResourceFilters().size());
-        verify(filter2).removeResourceFilter(resourceFilter2);
-        verify(relevance2).removeResourceFilter(resourceFilter2);
-    }
-
-    @Test
-    public void addGetAndRemoveResourceFilters() {
-        final var resourceFilter1 = mock(ResourceFilter.class);
-        final var resourceFilter2 = mock(ResourceFilter.class);
-
-        assertEquals(0, resource.getResourceFilters().size());
-
-        try {
-            resource.addResourceFilter(resourceFilter1);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException ignored) {
-        }
-
-        when(resourceFilter1.getResource()).thenReturn(resource);
-        resource.addResourceFilter(resourceFilter1);
-
-        assertEquals(1, resource.getResourceFilters().size());
-        assertTrue(resource.getResourceFilters().contains(resourceFilter1));
-
-        try {
-            resource.addResourceFilter(resourceFilter2);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException ignored) {
-
-        }
-        when(resourceFilter2.getResource()).thenReturn(resource);
-        resource.addResourceFilter(resourceFilter2);
-
-        assertEquals(2, resource.getResourceFilters().size());
-        assertTrue(resource.getResourceFilters().containsAll(Set.of(resourceFilter1, resourceFilter2)));
-
-        when(resourceFilter1.getResource()).thenReturn(resource);
-        when(resourceFilter2.getResource()).thenReturn(resource);
-
-        resource.removeResourceFilter(resourceFilter1);
-
-        verify(resourceFilter1).disassociate();
-
-        assertEquals(1, resource.getResourceFilters().size());
-        assertTrue(resource.getResourceFilters().contains(resourceFilter2));
-
-        resource.removeResourceFilter(resourceFilter2);
-
-        verify(resourceFilter2).disassociate();
-        assertEquals(0, resource.getResourceFilters().size());
-    }
-
-    @Test
     public void addGetAndRemoveTopicResources() {
         final var topicResource1 = mock(TopicResource.class);
         final var topicResource2 = mock(TopicResource.class);
@@ -365,8 +251,6 @@ public class ResourceTest {
     public void preRemove() {
         final var topicResource1 = mock(TopicResource.class);
         final var topicResource2 = mock(TopicResource.class);
-        final var resourceFilter1 = mock(ResourceFilter.class);
-        final var resourceFilter2 = mock(ResourceFilter.class);
 
 
         Set.of(topicResource1, topicResource2).forEach(topicResource -> {
@@ -374,17 +258,10 @@ public class ResourceTest {
             resource.addTopicResource(topicResource);
         });
 
-        Set.of(resourceFilter1, resourceFilter2).forEach(resourceFilter -> {
-            when(resourceFilter.getResource()).thenReturn(resource);
-            resource.addResourceFilter(resourceFilter);
-        });
-
         resource.preRemove();
 
         verify(topicResource1).disassociate();
         verify(topicResource2).disassociate();
-        verify(resourceFilter1).disassociate();
-        verify(resourceFilter2).disassociate();
     }
 
     @Test

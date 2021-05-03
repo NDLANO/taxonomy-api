@@ -16,12 +16,6 @@ public class Relevance extends DomainObject {
     @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<RelevanceTranslation> translations = new HashSet<>();
 
-    @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ResourceFilter> resourceFilters = new HashSet<>();
-
-    @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TopicFilter> topicFilters = new HashSet<>();
-
     public Relevance() {
         setPublicId(URI.create("urn:relevance:" + UUID.randomUUID()));
     }
@@ -64,44 +58,4 @@ public class Relevance extends DomainObject {
     public void removeTranslation(String language) {
         getTranslation(language).ifPresent(this::removeTranslation);
     }
-
-    public Set<TopicFilter> getTopicFilters() {
-        return this.topicFilters.stream().collect(Collectors.toUnmodifiableSet());
-    }
-
-    public void removeTopicFilter(TopicFilter topicFilter) {
-        this.topicFilters.remove(topicFilter);
-        if (topicFilter.getRelevance().orElse(null) == this) {
-            topicFilter.disassociate();
-        }
-    }
-
-    public void addTopicFilter(TopicFilter topicFilter) {
-        if (topicFilter.getRelevance().orElse(null) != this) {
-            throw new IllegalArgumentException("TopicFilter must have Relevance set before associating with Relevance");
-        }
-
-        this.topicFilters.add(topicFilter);
-    }
-
-    public Set<ResourceFilter> getResourceFilters() {
-        return resourceFilters.stream().collect(Collectors.toUnmodifiableSet());
-    }
-
-    public void addResourceFilter(ResourceFilter resourceFilter) {
-        if (resourceFilter.getRelevance().orElse(null) != this) {
-            throw new IllegalArgumentException("ResourceFilter must have Relevance set before associating with Relevance");
-        }
-
-        this.resourceFilters.add(resourceFilter);
-    }
-
-    public void removeResourceFilter(ResourceFilter resourceFilter) {
-        this.resourceFilters.remove(resourceFilter);
-
-        if (resourceFilter.getRelevance().orElse(null) == this) {
-            resourceFilter.disassociate();
-        }
-    }
-
 }

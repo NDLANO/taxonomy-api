@@ -21,14 +21,10 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   FROM TopicResource tr" +
             "   LEFT JOIN FETCH tr.topic t" +
             "   LEFT JOIN FETCH tr.resource r" +
-            "   LEFT JOIN FETCH r.filters rf" +
-            "   LEFT JOIN FETCH rf.filter f" +
-            "   LEFT JOIN FETCH f.translations" +
-            "   LEFT JOIN rf.relevance rel" +
+            "   LEFT JOIN FETCH tr.relevance rel" +
             "   LEFT JOIN FETCH r.resourceTranslations" +
             "   LEFT JOIN FETCH r.cachedPaths" +
             "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
-            "   LEFT JOIN FETCH rf.relevance" +
             "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
             "   LEFT JOIN FETCH rtFetch.resourceTypeTranslations" +
             "   WHERE " +
@@ -39,14 +35,11 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
             "   FROM TopicResource tr" +
             "   LEFT JOIN FETCH tr.topic t" +
             "   LEFT JOIN FETCH tr.resource r" +
-            "   LEFT JOIN FETCH r.filters rf" +
-            "   LEFT JOIN FETCH rf.filter f" +
-            "   LEFT JOIN FETCH f.translations" +
-            "   LEFT JOIN rf.relevance rel" +
+            "   LEFT JOIN tr.relevance rel" +
             "   LEFT JOIN FETCH r.resourceTranslations" +
             "   LEFT JOIN FETCH r.cachedPaths" +
             "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
-            "   LEFT JOIN FETCH rf.relevance" +
+            "   LEFT JOIN FETCH tr.relevance" +
             "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
             "   LEFT JOIN FETCH rtFetch.resourceTypeTranslations" +
             "   WHERE " +
@@ -65,87 +58,67 @@ public interface TopicResourceRepository extends TaxonomyRepository<TopicResourc
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
             "   JOIN FETCH tr.resource r" +
-            "   LEFT JOIN FETCH r.filters rf" +
-            "   LEFT JOIN FETCH rf.filter f" +
-            "   LEFT JOIN FETCH f.translations" +
-            "   JOIN rf.filter f" +
             "   LEFT JOIN FETCH tr.topic t" +
-            "   LEFT JOIN rf.relevance rel" +
+            "   LEFT JOIN tr.relevance rel" +
             "   LEFT JOIN FETCH r.resourceTranslations" +
             "   LEFT JOIN FETCH r.cachedPaths" +
             "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
-            "   LEFT JOIN FETCH rf.relevance" +
             "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
             "   LEFT JOIN FETCH rtFetch.resourceTypeTranslations" +
-            "   WHERE t.id IN :topicIds AND f.publicId IN :filterPublicIds AND " +
+            "   WHERE t.id IN :topicIds AND " +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
-    List<TopicResource> doFindAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Collection<URI> filterPublicIds, URI relevancePublicId);
+    List<TopicResource> doFindAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, URI relevancePublicId);
 
-    default List<TopicResource> findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Collection<URI> filterPublicIds, URI relevancePublicId) {
+    default List<TopicResource> findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, URI relevancePublicId) {
         if (topicIds.size() == 0) {
             topicIds = null;
         }
 
-        if (filterPublicIds.size() == 0) {
-            filterPublicIds = null;
-        }
-
-        return doFindAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, filterPublicIds, relevancePublicId);
+        return doFindAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, relevancePublicId);
     }
 
 
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
             "   INNER JOIN FETCH tr.resource r" +
-            "   LEFT JOIN FETCH r.filters rf" +
-            "   LEFT JOIN FETCH rf.filter f" +
-            "   LEFT JOIN FETCH f.translations" +
-            "   LEFT JOIN rf.filter f" +
             "   LEFT JOIN FETCH tr.topic t" +
-            "   LEFT JOIN rf.relevance rel" +
+            "   LEFT JOIN tr.relevance rel" +
             "   LEFT JOIN r.resourceResourceTypes rrt " +
             "   LEFT JOIN rrt.resourceType rt" +
             "   LEFT JOIN FETCH r.resourceTranslations" +
             "   LEFT JOIN FETCH r.cachedPaths" +
             "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
-            "   LEFT JOIN FETCH rf.relevance" +
+            "   LEFT JOIN FETCH tr.relevance" +
             "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
             "   LEFT JOIN FETCH rtFetch.resourceTypeTranslations" +
-            "   WHERE t.id IN :topicIds AND f.publicId IN :filterPublicIds AND" +
+            "   WHERE t.id IN :topicIds AND" +
             "       (rt.publicId IN :resourceTypePublicIds) AND" +
             "       (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
-    List<TopicResource> doFindAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Collection<URI> filterPublicIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
+    List<TopicResource> doFindAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
 
-    default List<TopicResource> findAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Collection<URI> filterPublicIds, Set<URI> resourceTypePublicIds, URI relevancePublicId) {
+    default List<TopicResource> findAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(Collection<Integer> topicIds, Set<URI> resourceTypePublicIds, URI relevancePublicId) {
         if (topicIds.size() == 0) {
             topicIds = null;
-        }
-
-        if (filterPublicIds.size() == 0) {
-            filterPublicIds = null;
         }
 
         if (resourceTypePublicIds.size() == 0) {
             resourceTypePublicIds = null;
         }
 
-        return doFindAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, filterPublicIds, resourceTypePublicIds, relevancePublicId);
+        return doFindAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, resourceTypePublicIds, relevancePublicId);
     }
 
     @Query("SELECT DISTINCT tr" +
             "   FROM TopicResource tr" +
             "   JOIN FETCH tr.resource r" +
-            "   LEFT JOIN FETCH r.filters rf" +
-            "   LEFT JOIN FETCH rf.filter f" +
-            "   LEFT JOIN FETCH f.translations" +
             "   LEFT JOIN FETCH tr.topic t" +
-            "   LEFT JOIN rf.relevance rel" +
+            "   LEFT JOIN tr.relevance rel" +
             "   LEFT JOIN r.resourceResourceTypes rrt " +
             "   LEFT JOIN rrt.resourceType rt" +
             "   LEFT JOIN FETCH r.resourceTranslations" +
             "   LEFT JOIN FETCH r.cachedPaths" +
             "   LEFT JOIN FETCH r.resourceResourceTypes rrtFetch" +
-            "   LEFT JOIN FETCH rf.relevance" +
+            "   LEFT JOIN FETCH tr.relevance" +
             "   LEFT JOIN FETCH rrtFetch.resourceType rtFetch" +
             "   LEFT JOIN FETCH rtFetch.resourceTypeTranslations" +
             "   WHERE t.id IN :topicIds AND" +

@@ -164,7 +164,11 @@ public class Resources extends CrudController<Resource> {
         // If null is sent to query it will be ignored, otherwise it will filter by relevance
         final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
 
-        return resourceService.getResourcesBySubjectId(subjectId, filterIdSet, resourceTypeIdSet, relevanceArgument, language);
+        if (filterIdSet.isEmpty()) {
+            return resourceService.getResourcesBySubjectId(subjectId, resourceTypeIdSet, relevanceArgument, language);
+        } else {
+            return List.of(); // We don't have filters.
+        }
     }
 
     @GetMapping("/v1/topics/{id}/resources")
@@ -208,8 +212,12 @@ public class Resources extends CrudController<Resource> {
             filterIdSet = new HashSet<>(Arrays.asList(filterIds));
         }
 
-        return resourceService.getResourcesByTopicId(topicId, filterIdSet, subjectId, resourceTypeIdSet,
-                relevance, language, recursive);
+        if (filterIdSet.isEmpty()) {
+            return resourceService.getResourcesByTopicId(topicId, subjectId, resourceTypeIdSet,
+                    relevance, language, recursive);
+        } else {
+            return List.of(); // We don't have filters.
+        }
     }
 
 }

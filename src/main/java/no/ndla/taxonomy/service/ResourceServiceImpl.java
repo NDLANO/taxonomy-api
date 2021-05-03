@@ -1,7 +1,6 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.DomainEntity;
-import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.TopicResource;
 import no.ndla.taxonomy.repositories.ResourceRepository;
@@ -57,16 +56,12 @@ public class ResourceServiceImpl implements ResourceService {
         metadataApiService.deleteMetadataByPublicId(id);
     }
 
-    private List<ResourceWithTopicConnectionDTO> filterTopicResourcesByIdsAndReturn(Set<Integer> topicIds, Set<URI> filterIds, Set<URI> resourceTypeIds, URI relevance,
+    private List<ResourceWithTopicConnectionDTO> filterTopicResourcesByIdsAndReturn(Set<Integer> topicIds, Set<URI> resourceTypeIds, URI relevance,
                                                                                     Set<TopicResourceTreeSortable> sortableListToAddTo,
                                                                                     String languageCode) {
         final List<TopicResource> topicResources;
 
-        if (filterIds.size() > 0 && resourceTypeIds.size() > 0) {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, filterIds, resourceTypeIds, relevance);
-        } else if (filterIds.size() > 0) {
-            topicResources = topicResourceRepository.findAllByTopicIdsAndResourceFilterFilterPublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, filterIds, relevance);
-        } else if (resourceTypeIds.size() > 0) {
+        if (resourceTypeIds.size() > 0) {
             topicResources = topicResourceRepository.findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(topicIds, resourceTypeIds, relevance);
         } else {
             var topicResourcesStream = topicResourceRepository.findAllByTopicIdsIncludingRelationsForResourceDocuments(topicIds)
@@ -78,17 +73,6 @@ public class ResourceServiceImpl implements ResourceService {
                             final var resource = topicResource.getResource().orElse(null);
                             if (resource == null) {
                                 return false;
-                            }
-                            final var resourceFilters = resource.getResourceFilters();
-                            if (resourceFilters != null) {
-                                final var relevances = resourceFilters.stream()
-                                        .map(filter -> filter.getRelevance().orElse(null))
-                                        .filter(Objects::nonNull)
-                                        .map(DomainEntity::getPublicId)
-                                        .collect(Collectors.toSet());
-                                if (!relevances.isEmpty()) {
-                                    return relevances.contains(relevance);
-                                }
                             }
                             final var rel = topicResource.getRelevance().orElse(null);
                             if (rel != null) {
@@ -118,7 +102,7 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Override
     @InjectMetadata
-    public List<ResourceWithTopicConnectionDTO> getResourcesBySubjectId(URI subjectPublicId, Set<URI> filterIds,
+    public List<ResourceWithTopicConnectionDTO> getResourcesBySubjectId(URI subjectPublicId,
                                                                         Set<URI> resourceTypeIds, URI relevance,
                                                                         String language) {
         final var subject = domainEntityHelperService.getSubjectByPublicId(subjectPublicId);
@@ -145,33 +129,21 @@ public class ResourceServiceImpl implements ResourceService {
             }
         });
 
-        return filterTopicResourcesByIdsAndReturn(topicIds, filterIds, resourceTypeIds, relevance, resourcesToSort, language);
+        return filterTopicResourcesByIdsAndReturn(topicIds, resourceTypeIds, relevance, resourcesToSort, language);
     }
 
 
     @Override
     @InjectMetadata
-    public List<ResourceWithTopicConnectionDTO> getResourcesByTopicId(URI topicId, Set<URI> filterIdsRequest, URI filterBySubjectId,
+    public List<ResourceWithTopicConnectionDTO> getResourcesByTopicId(URI topicId, URI filterBySubjectId,
                                                                       Set<URI> resourceTypeIds, URI relevancePublicId, String languageCode,
                                                                       boolean recursive) {
         final var topic = domainEntityHelperService.getTopicByPublicId(topicId);
 
         final Set<Integer> topicIdsToSearchFor;
-        final Set<URI> filterIds;
 
         // Add both topics and resourceTopics to a common list that will be sorted in a tree-structure based on rank at each level
         final Set<TopicResourceTreeSortable> resourcesToSort = new HashSet<>();
-
-        // If subject ID is specified and no filter IDs is specified, the filters are replaced with all filters directly associated with requested subject
-        if (filterIdsRequest.size() == 0 && filterBySubjectId != null) {
-            filterIds = domainEntityHelperService.getSubjectByPublicId(filterBySubjectId)
-                    .getFilters()
-                    .stream()
-                    .map(Filter::getPublicId)
-                    .collect(Collectors.toSet());
-        } else {
-            filterIds = filterIdsRequest;
-        }
 
         // Populate a list of topic IDs we are going to fetch first, and then fetch the actual topics later
         // This allows searching recursively without having to fetch the whole relation tree on each element in the
@@ -188,7 +160,7 @@ public class ResourceServiceImpl implements ResourceService {
             topicIdsToSearchFor = Set.of(topic.getId());
         }
 
-        return filterTopicResourcesByIdsAndReturn(topicIdsToSearchFor, filterIds, resourceTypeIds, relevancePublicId, resourcesToSort, languageCode);
+        return filterTopicResourcesByIdsAndReturn(topicIdsToSearchFor, resourceTypeIds, relevancePublicId, resourcesToSort, languageCode);
     }
 
     @Override

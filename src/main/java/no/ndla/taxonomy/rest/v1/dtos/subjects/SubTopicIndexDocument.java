@@ -9,7 +9,6 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.InjectMetadata;
 import no.ndla.taxonomy.service.MetadataIdField;
 import no.ndla.taxonomy.service.TopicTreeSorter;
-import no.ndla.taxonomy.service.dtos.FilterWithConnectionDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 
 import java.net.URI;
@@ -61,7 +60,7 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
     @JsonProperty
     @ApiModelProperty(value = "Filters this topic is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
     @InjectMetadata
-    public Set<FilterWithConnectionDTO> filters = new HashSet<>();
+    public Set<Object> filters = new HashSet<>();
 
     @JsonIgnore
     public URI topicFilterId, filterPublicId;
@@ -154,11 +153,6 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
                 .map(TopicTranslation::getName)
                 .orElse(topic.getName());
         this.contentUri = topic.getContentUri();
-
-        topic.getTopicFilters().stream()
-                .filter(topicFilter -> topicFilter.getFilter().isPresent())
-                .filter(topicFilter -> topicFilter.getRelevance().isPresent())
-                .forEach(topicFilter -> filters.add(new FilterWithConnectionDTO(topicFilter, this.language)));
     }
 
     @Override

@@ -141,12 +141,10 @@ public class SubjectsTest extends RestTest {
         URI id = builder.subject(s -> s
                 .topic(t -> t.publicId("urn:topic:1"))
                 .translation("nb", tr -> tr.name("fag"))
-                .filter(f -> f.publicId("urn:filter:1"))
         ).getPublicId();
 
         testUtils.deleteResource("/v1/subjects/" + id);
         assertNull(subjectRepository.findByPublicId(id));
-        assertNull(filterRepository.findByPublicId(URI.create("urn:filter:1")));
 
         verify(metadataApiService).deleteMetadataByPublicId(id);
     }
@@ -249,20 +247,11 @@ public class SubjectsTest extends RestTest {
         //test filter 1
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/topics?recursive=true&filter=urn:filter:1");
         SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
-        assertEquals(5, topics.length);
-        assertEquals("urn:topic:1", topics[0].id.toString());
-        assertEquals("urn:topic:2", topics[1].id.toString());
-        assertEquals("urn:topic:5", topics[2].id.toString());
-        assertEquals("urn:topic:6", topics[3].id.toString());
-        assertEquals("urn:topic:7", topics[4].id.toString());
+        assertEquals(0, topics.length); // Filters are removed
 
         //test filter 2
         MockHttpServletResponse response2 = testUtils.getResource("/v1/subjects/urn:subject:1/topics?recursive=true&filter=urn:filter:2");
         SubTopicIndexDocument[] topics2 = testUtils.getObject(SubTopicIndexDocument[].class, response2);
-        assertEquals(4, topics2.length);
-        assertEquals("urn:topic:3", topics2[0].id.toString());
-        assertEquals("urn:topic:4", topics2[1].id.toString());
-        assertEquals("urn:topic:5", topics2[2].id.toString());
-        assertEquals("urn:topic:8", topics2[3].id.toString());
+        assertEquals(0, topics2.length); // Filters are removed
     }
 }

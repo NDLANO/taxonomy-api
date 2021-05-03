@@ -1,15 +1,14 @@
 package no.ndla.taxonomy.rest.v1;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.exceptions.SubjectRequiredException;
-import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.service.FilterService;
-import no.ndla.taxonomy.service.dtos.FilterDTO;
-import no.ndla.taxonomy.service.dtos.FilterWithConnectionDTO;
+import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
+import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,36 +19,32 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-public class Filters extends CrudController<Filter> {
+public class Filters extends ObsoleteCrudController {
     private final SubjectRepository subjectRepository;
-    private final FilterService filterService;
 
-    public Filters(FilterRepository repository, SubjectRepository subjectRepository, FilterService filterService) {
-        super(repository);
-
+    public Filters(SubjectRepository subjectRepository) {
         this.subjectRepository = subjectRepository;
-        this.filterService = filterService;
     }
 
     @GetMapping("/v1/filters")
     @ApiOperation("Gets all filters")
-    public List<FilterDTO> index(
+    public List<Object> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return filterService.getFilters(language);
+        return List.of();
     }
 
     @GetMapping("/v1/filters/{id}")
     @ApiOperation(value = "Gets a single filter", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
-    public FilterDTO get(
+    public Object get(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return filterService.getFilterByPublicId(id, language);
+        throw new NotFoundHttpResponseException("Filter was not found");
     }
 
     @PostMapping("/v1/filters")
@@ -57,12 +52,7 @@ public class Filters extends CrudController<Filter> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(@ApiParam(name = "filter", value = "The new filter") @RequestBody FilterDTO command) {
-        if (command.subjectId == null) throw new SubjectRequiredException();
-
-        Filter filter = new Filter();
-        Subject subject = subjectRepository.getByPublicId(command.subjectId);
-        subject.addFilter(filter);
-        return doPost(filter, command);
+        throw new InvalidArgumentServiceException("Create filter's disabled");
     }
 
     @PutMapping("/v1/filters/{id}")
@@ -74,12 +64,7 @@ public class Filters extends CrudController<Filter> {
             @PathVariable("id") URI id,
             @ApiParam(name = "filter", value = "The updated filter") @RequestBody FilterDTO command
     ) {
-        if (command.subjectId == null) throw new SubjectRequiredException();
-
-        Filter filter = doPut(id, command);
-        filter.setSubject(subjectRepository.getByPublicId(command.subjectId));
-
-        repository.save(filter);
+        throw new NotFoundHttpResponseException("Filter was not found");
     }
 
     @DeleteMapping("/v1/filters/{id}")
@@ -88,33 +73,37 @@ public class Filters extends CrudController<Filter> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
     public void delete(@PathVariable("id") URI id) {
-        repository.deleteByPublicId(id);
+        throw new NotFoundHttpResponseException("Filter was not found");
     }
 
     @GetMapping("/v1/subjects/{subjectId}/filters")
     @ApiOperation(value = "Gets all filters for a subject", tags = {"subjects"})
-    public List<FilterDTO> getFiltersBySubjectId(
+    public List<Object> getFiltersBySubjectId(
             @PathVariable("subjectId") URI subjectId,
 
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
                     String language) {
-        return filterService.getFiltersBySubjectId(subjectId, language);
+        return List.of();
     }
 
     @GetMapping("/v1/resources/{resourceId}/filters")
     @ApiOperation(value = "Gets all filters associated with this resource", tags = {"resources"})
-    public List<FilterWithConnectionDTO> getFiltersByResourceId(
+    public List<Object> getFiltersByResourceId(
             @PathVariable("resourceId")
                     URI resourceId,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return filterService.getFiltersWithConnectionByResourceId(resourceId, language);
+        return List.of();
     }
 
     @Override
     protected String getLocation() {
         return "/v1/filters";
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public class FilterDTO {
     }
 }

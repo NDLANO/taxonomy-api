@@ -43,26 +43,6 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
 
     @Query("SELECT DISTINCT ts" +
             "   FROM TopicSubtopic ts" +
-            "   JOIN ts.topic parentTopic" +
-            "   JOIN FETCH ts.subtopic subTopicTopic" +
-            "   JOIN subTopicTopic.topicFilters subTopic_filter" +
-            "   JOIN subTopic_filter.filter subTopicFilter_filter" +
-            "   LEFT JOIN FETCH subTopicTopic.translations" +
-            "   WHERE" +
-            "       parentTopic.publicId = :publicId AND " +
-            "       subTopicFilter_filter.publicId IN :filterPublicIds")
-    List<TopicSubtopic> doFindAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(URI publicId, Collection<URI> filterPublicIds);
-
-    default List<TopicSubtopic> findAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(URI publicId, Collection<URI> filterPublicIds) {
-        if (filterPublicIds.size() == 0) {
-            return doFindAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(publicId, null);
-        }
-
-        return doFindAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(publicId, filterPublicIds);
-    }
-
-    @Query("SELECT DISTINCT ts" +
-            "   FROM TopicSubtopic ts" +
             "   JOIN FETCH ts.subtopic subTopicTopic" +
             "   JOIN ts.topic parentTopic" +
             "   LEFT JOIN FETCH subTopicTopic.translations" +
@@ -77,9 +57,6 @@ public interface TopicSubtopicRepository extends TaxonomyRepository<TopicSubtopi
             "   LEFT JOIN FETCH t.translations" +
             "   LEFT JOIN FETCH st.translations" +
             "   LEFT JOIN FETCH st.cachedPaths" +
-            "   LEFT JOIN FETCH st.topicFilters tf" +
-            "   LEFT JOIN FETCH tf.filter f" +
-            "   LEFT JOIN FETCH f.translations" +
             "  WHERE ts.subtopic.id IN :subTopicId")
     List<TopicSubtopic> doFindAllBySubtopicIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<Integer> subTopicId);
 

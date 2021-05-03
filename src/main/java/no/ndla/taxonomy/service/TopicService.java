@@ -17,5 +17,5 @@ public interface TopicService {
 
     List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId, String languageCode);
 
-    List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, Collection<URI> filterPublicIds, String languageCode);
+    List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, String languageCode);
 }

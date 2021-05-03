@@ -59,16 +59,7 @@ public abstract class RestTest {
     ResourceTypeRepository resourceTypeRepository;
 
     @Autowired
-    FilterRepository filterRepository;
-
-    @Autowired
     RelevanceRepository relevanceRepository;
-
-    @Autowired
-    ResourceFilterRepository resourceFilterRepository;
-
-    @Autowired
-    TopicFilterRepository topicFilterRepository;
 
     @Autowired
     protected TestUtils testUtils;
