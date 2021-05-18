@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.rest.v1;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
@@ -14,6 +15,9 @@ import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import no.ndla.taxonomy.service.EntityConnectionService;
+import no.ndla.taxonomy.service.InjectMetadata;
+import no.ndla.taxonomy.service.MetadataIdField;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,6 +52,7 @@ public class TopicResources {
     }
 
     @GetMapping
+    @InjectMetadata
     @ApiOperation(value = "Gets all connections between topics and resources")
     public List<TopicResourceIndexDocument> index() {
         return topicResourceRepository
@@ -58,6 +63,7 @@ public class TopicResources {
     }
 
     @GetMapping("/{id}")
+    @InjectMetadata
     @ApiOperation(value = "Gets a specific connection between a topic and a resource")
     public TopicResourceIndexDocument get(@PathVariable("id") URI id) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
@@ -158,6 +164,7 @@ public class TopicResources {
         URI resourceId;
 
         @JsonProperty
+        @MetadataIdField
         @ApiModelProperty(value = "Topic resource connection id", example = "urn:topic-has-resources:123")
         public URI id;
 
@@ -173,6 +180,10 @@ public class TopicResources {
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
+        @ApiModelProperty(value = "Metadata for entity. Read only.")
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private MetadataDto metadata;
+
         TopicResourceIndexDocument() {
         }
 
@@ -183,6 +194,14 @@ public class TopicResources {
             primary = topicResource.isPrimary().orElseThrow();
             rank = topicResource.getRank();
             relevanceId = topicResource.getRelevance().map(Relevance::getPublicId).orElse(null);
+        }
+
+        public MetadataDto getMetadata() {
+            return metadata;
+        }
+
+        public void setMetadata(MetadataDto metadata) {
+            this.metadata = metadata;
         }
     }
 }

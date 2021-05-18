@@ -1,10 +1,13 @@
 package no.ndla.taxonomy.service.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicResource;
+import no.ndla.taxonomy.service.MetadataIdField;
 
 import java.net.URI;
 
@@ -14,6 +17,7 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
     private URI topicId;
 
     @ApiParam
+    @MetadataIdField
     private URI connectionId;
 
     @ApiParam
@@ -24,6 +28,10 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
 
     @ApiParam
     public URI relevanceId;
+
+    @ApiModelProperty(value = "Metadata for entity. Read only.")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private MetadataDto connectionMetadata;
 
     public ResourceWithTopicConnectionDTO() {
 
@@ -59,5 +67,13 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
 
     public boolean isPrimary() {
         return primary;
+    }
+
+    public MetadataDto getConnectionMetadata() {
+        return connectionMetadata;
+    }
+
+    public void setConnectionMetadata(MetadataDto connectionMetadata) {
+        this.connectionMetadata = connectionMetadata;
     }
 }
