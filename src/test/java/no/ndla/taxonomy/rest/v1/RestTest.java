@@ -56,6 +56,9 @@ public abstract class RestTest {
     ResourceRepository resourceRepository;
 
     @Autowired
+    StatusRepository statusRepository;
+
+    @Autowired
     ResourceTypeRepository resourceTypeRepository;
 
     @Autowired

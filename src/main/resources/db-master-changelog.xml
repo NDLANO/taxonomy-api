@@ -770,4 +770,25 @@
         <dropForeignKeyConstraint baseTableName="topic_filter" constraintName="topic_filter_relevance_id_fkey"/>
         <dropForeignKeyConstraint baseTableName="filter" constraintName="filter_subject_id_fkey"/>
     </changeSet>
+
+    <changeSet id="20210518 add status" author="Jan-Espen Oversand">
+        <createTable tableName="status">
+            <column name="id" type="serial"><constraints primaryKey="true" /></column>
+            <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="status_public_id" /></column>
+            <column name="name" type="varchar(255)"/>
+        </createTable>
+        <createTable tableName="status_translation">
+            <column name="id" type="serial"><constraints primaryKey="true" />></column>
+            <column name="status_id" type="integer">
+                <constraints foreignKeyName="fk_status_translation_status_id"
+                             referencedTableName="status"
+                             referencedColumnNames="id"/>
+            </column>
+            <column name="language_code" type="varchar(3)"/>
+            <column name="name" type="varchar(255)"/>
+        </createTable>
+        <addUniqueConstraint tableName="status_translation" columnNames="status_id,language_code" constraintName="uniq_status_translation"/>
+        <addAutoIncrement tableName="status" columnName="id" columnDataType="integer"/>
+        <addAutoIncrement tableName="status_translation" columnName="id" columnDataType="integer"/>
+    </changeSet>
 </databaseChangeLog>

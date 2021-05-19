@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 public class Builder {
     private final EntityManager entityManager;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final Map<String, StatusBuilder> statuses = new HashMap<>();
     private final Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();
     private final Map<String, SubjectBuilder> subjects = new HashMap<>();
     private final Map<String, TopicBuilder> topics = new HashMap<>();
@@ -83,6 +84,16 @@ public class Builder {
         return resourceType.resourceType;
     }
 
+    public Status status(Consumer<StatusBuilder> consumer) {
+        return status(null, consumer);
+    }
+
+    public Status status(String key, Consumer<StatusBuilder> consumer) {
+        StatusBuilder status = getStatusBuilder(key);
+        if (null != consumer) consumer.accept(status);
+        return status.status;
+    }
+
     public Relevance relevance(Consumer<RelevanceBuilder> consumer) {
         return relevance(null, consumer);
     }
@@ -120,6 +131,14 @@ public class Builder {
         }
         topics.putIfAbsent(key, new TopicBuilder());
         return topics.get(key);
+    }
+
+    private StatusBuilder getStatusBuilder(String key) {
+        if (key == null) {
+            key = createKey();
+        }
+        statuses.putIfAbsent(key, new StatusBuilder());
+        return statuses.get(key);
     }
 
     private ResourceTypeBuilder getResourceTypeBuilder(String key) {
@@ -212,6 +231,20 @@ public class Builder {
     }
 
     @Transactional
+    public static class StatusTranslationBuilder {
+        private StatusTranslation statusTranslation;
+
+        public StatusTranslationBuilder(StatusTranslation statusTranslation) {
+            this.statusTranslation = statusTranslation;
+        }
+
+        public StatusTranslationBuilder name(String name) {
+            statusTranslation.setName(name);
+            return this;
+        }
+    }
+
+    @Transactional
     public static class ResourceTypeTranslationBuilder {
         private ResourceTypeTranslation resourceTypeTranslation;
 
@@ -268,6 +301,34 @@ public class Builder {
             return this;
         }
 
+    }
+
+    @Transactional
+    public class StatusBuilder {
+        private final Status status;
+
+        public StatusBuilder() {
+            status = new Status();
+            entityManager.persist(status);
+        }
+
+        public StatusBuilder name(String name) {
+            status.setName(name);
+            return this;
+        }
+
+        public StatusBuilder translation(String languageCode, Consumer<StatusTranslationBuilder> consumer) {
+            StatusTranslation statusTranslation = status.addTranslation(languageCode);
+            entityManager.persist(statusTranslation);
+            StatusTranslationBuilder builder = new StatusTranslationBuilder(statusTranslation);
+            consumer.accept(builder);
+            return this;
+        }
+
+        public StatusBuilder publicId(String id) {
+            status.setPublicId(URI.create(id));
+            return this;
+        }
     }
 
     @Transactional
