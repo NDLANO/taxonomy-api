@@ -11,6 +11,7 @@ import no.ndla.taxonomy.service.InjectMetadata;
 import no.ndla.taxonomy.service.TopicResourceTypeService;
 import no.ndla.taxonomy.service.TopicService;
 import no.ndla.taxonomy.service.dtos.*;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,14 +22,17 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/topics"})
-public class Topics extends CrudController<Topic> {
+public class Topics extends CrudController<Topic> implements DisposableBean {
     private final TopicResourceTypeService topicResourceTypeService;
     private final TopicRepository topicRepository;
     private final TopicService topicService;
+    private final ExecutorService recursiveCopyExecutor = Executors.newSingleThreadExecutor();
 
     public Topics(TopicRepository topicRepository,
                   TopicResourceTypeService topicResourceTypeService,
@@ -39,6 +43,10 @@ public class Topics extends CrudController<Topic> {
         this.topicRepository = topicRepository;
         this.topicResourceTypeService = topicResourceTypeService;
         this.topicService = topicService;
+    }
+
+    public void destroy() {
+        recursiveCopyExecutor.shutdown();
     }
 
     @GetMapping
@@ -71,6 +79,18 @@ public class Topics extends CrudController<Topic> {
                                 String language
     ) {
         return new TopicDTO(topicRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id).orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found")), language);
+    }
+
+    @PostMapping("/{id}/copy")
+    @ApiOperation("Copy topic tree")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @Transactional
+    public TopicDTO copyTree(@PathVariable("id") URI id) {
+        final TopicDTO target = topicService.prepareRecursiveCopy(id);
+        recursiveCopyExecutor.submit(() -> {
+            topicService.runRecursiveCopy(id, target.getId());
+        });
+        return target;
     }
 
     @PostMapping
