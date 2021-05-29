@@ -26,9 +26,6 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
                     "   LEFT JOIN FETCH rrt.resourceType rt" +
                     "   LEFT JOIN FETCH rt.resourceTypeTranslations" +
                     "   LEFT JOIN FETCH r.resourceTranslations" +
-                    "   LEFT JOIN FETCH r.filters rf" +
-                    "   LEFT JOIN FETCH rf.filter f" +
-                    "   LEFT JOIN FETCH f.translations" +
                     "   WHERE r.contentUri = :contentUri"
     )
     List<Resource> findAllByContentUriIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(URI contentUri);
@@ -41,9 +38,6 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
                     "   LEFT JOIN FETCH rrt.resourceType rt" +
                     "   LEFT JOIN FETCH rt.resourceTypeTranslations" +
                     "   LEFT JOIN FETCH r.resourceTranslations" +
-                    "   LEFT JOIN FETCH r.filters rf" +
-                    "   LEFT JOIN FETCH rf.filter f" +
-                    "   LEFT JOIN FETCH f.translations" +
                     "   WHERE r.id IN (:idSet)"
     )
     List<Resource> findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(Collection<Integer> idSet);

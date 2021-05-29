@@ -5,7 +5,6 @@ import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
-import no.ndla.taxonomy.service.dtos.FilterDTO;
 import no.ndla.taxonomy.service.dtos.TopicDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -201,13 +200,15 @@ public class TopicsTest extends RestTest {
         {
             final var response = testUtils.getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:1");
             final var subtopics = testUtils.getObject(TopicDTO[].class, response);
-            assertEquals(3, subtopics.length, "Filter 1 subtopics");
+            // Filters are removed
+            assertEquals(0, subtopics.length, "Filter 1 subtopics");
         }
 
         {
             final var response = testUtils.getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:2");
             final var subtopics = testUtils.getObject(TopicDTO[].class, response);
-            assertEquals(4, subtopics.length, "Filter 2 subtopics");
+            // Filters are removed
+            assertEquals(0, subtopics.length, "Filter 2 subtopics");
         }
     }
 
@@ -346,18 +347,15 @@ public class TopicsTest extends RestTest {
         Resource resource = builder.resource("resource", r -> r
                 .translation("nb", tr -> tr.name("ressurs"))
                 .resourceType(rt -> rt.name("Learning path")));
-        Filter filter = builder.filter(f -> f.publicId("urn:filter:1").name("Vg 1"));
 
         URI parentId = builder.topic(parent -> parent
                 .resource(resource)
-                .filter(filter, builder.relevance(rel -> rel.publicId("urn:relevance:core")))
         ).getPublicId();
 
         testUtils.deleteResource("/v1/topics/" + parentId);
 
         assertNull(topicRepository.findByPublicId(parentId));
         assertNotNull(resourceRepository.findByPublicId(resource.getPublicId()));
-        assertNotNull(filterRepository.findByPublicId(filter.getPublicId()));
 
         verify(metadataApiService).deleteMetadataByPublicId(parentId);
     }
@@ -369,47 +367,27 @@ public class TopicsTest extends RestTest {
         final var topic2 = builder.topic(builder -> builder.publicId("urn:topic:2"));
         builder.topic(builder -> builder.publicId("urn:topic:3"));
 
-        final var filter1 = builder.filter(builder -> builder.publicId("urn:filter:1"));
-        final var filter2 = builder.filter(builder -> builder.publicId("urn:filter:2"));
-        final var filter3 = builder.filter(builder -> builder.publicId("urn:filter:3"));
-
         final var relevance1 = builder.relevance();
         final var relevance2 = builder.relevance();
         final var relevance3 = builder.relevance();
 
-        TopicFilter.create(topic1, filter1, relevance1);
-        TopicFilter.create(topic2, filter1, relevance1);
-        TopicFilter.create(topic2, filter2, relevance2);
-
         final var resource1 = builder.resource();
-        resource1.addFilter(filter3, relevance3);
         TopicResource.create(topic1, resource1);
 
         {
-            final var returnedFilters = Arrays.asList(testUtils.getObject(FilterDTO[].class, testUtils.getResource("/v1/topics/urn:topic:1/filters")));
+            final var returnedFilters = Arrays.asList(testUtils.getObject(Object[].class, testUtils.getResource("/v1/topics/urn:topic:1/filters")));
 
-            assertEquals(1, returnedFilters.size());
-            assertTrue(returnedFilters
-                    .stream()
-                    .map(FilterDTO::getId)
-                    .map(Optional::orElseThrow)
-                    .collect(Collectors.toList())
-                    .contains(new URI("urn:filter:1")));
+            assertEquals(0, returnedFilters.size());
         }
 
         {
-            final var returnedFilters = Arrays.asList(testUtils.getObject(FilterDTO[].class, testUtils.getResource("/v1/topics/urn:topic:2/filters")));
+            final var returnedFilters = Arrays.asList(testUtils.getObject(Object[].class, testUtils.getResource("/v1/topics/urn:topic:2/filters")));
 
-            assertEquals(2, returnedFilters.size());
-            assertTrue(returnedFilters
-                    .stream()
-                    .map(FilterDTO::getId)
-                    .map(Optional::orElseThrow)
-                    .collect(Collectors.toList()).containsAll(Set.of(new URI("urn:filter:1"), new URI("urn:filter:2"))));
+            assertEquals(0, returnedFilters.size());
         }
 
         {
-            final var returnedFilters = Arrays.asList(testUtils.getObject(FilterDTO[].class, testUtils.getResource("/v1/topics/urn:topic:3/filters")));
+            final var returnedFilters = Arrays.asList(testUtils.getObject(Object[].class, testUtils.getResource("/v1/topics/urn:topic:3/filters")));
 
             assertEquals(0, returnedFilters.size());
         }

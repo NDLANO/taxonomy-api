@@ -1,11 +1,9 @@
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
-import no.ndla.taxonomy.service.dtos.FilterDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -16,7 +14,6 @@ import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SubjectFiltersTest extends RestTest {
-    private Filter vg1, vg2;
     private Relevance core, supplementary;
 
     @BeforeEach
@@ -30,8 +27,6 @@ public class SubjectFiltersTest extends RestTest {
     public void before() {
         core = builder.relevance(r -> r.publicId("urn:relevance:core").name("Core material"));
         supplementary = builder.relevance(r -> r.publicId("urn:relevance:supplementary").name("Supplementary material"));
-        vg1 = builder.filter(f -> f.name("VG1").publicId("urn:filter:vg1"));
-        vg2 = builder.filter(f -> f.name("VG2").publicId("urn:filter:vg2"));
     }
 
     @Test
@@ -39,16 +34,13 @@ public class SubjectFiltersTest extends RestTest {
         builder.subject(s -> s
                 .name("Byggfag")
                 .publicId("urn:subject:1")
-                .filter(f -> f.name("Tømrer"))
-                .filter(f -> f.name("Rørlegger"))
         );
 
         final var response = testUtils.getResource("/v1/subjects/urn:subject:1/filters");
-        final var filters = testUtils.getObject(FilterDTO[].class, response);
+        final var filters = testUtils.getObject(Object[].class, response);
 
-        assertEquals(2, filters.length);
-        assertAnyTrue(filters, f -> f.getName().equals("Tømrer"));
-        assertAnyTrue(filters, f -> f.getName().equals("Rørlegger"));
+        // Filters are removed
+        assertEquals(0, filters.length);
     }
 
     @Test
@@ -57,18 +49,17 @@ public class SubjectFiltersTest extends RestTest {
                 .name("subject")
                 .topic(t -> t
                         .name("a")
-                        .subtopic(sub -> sub.name("subtopic").resource(r -> r.name("a lecture in a subtopic").filter(vg1, core)))
-                        .resource(r -> r.name("an assignment").filter(vg1, core))
-                        .resource(r -> r.name("a lecture").filter(vg2, core))
+                        .subtopic(sub -> sub.name("subtopic").resource(r -> r.name("a lecture in a subtopic")))
+                        .resource(r -> r.name("an assignment"))
+                        .resource(r -> r.name("a lecture"))
                 )
         ).getPublicId();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subjectId + "/resources?filter=" + vg1.getPublicId());
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subjectId + "/resources?filter=urn:filter:1:1");
         ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
-        assertEquals(2, result.length);
-        assertAnyTrue(result, r -> "a lecture in a subtopic".equals(r.name));
-        assertAnyTrue(result, r -> "an assignment".equals(r.name));
+        // Filters are removed
+        assertEquals(0, result.length);
     }
 
 
@@ -78,42 +69,16 @@ public class SubjectFiltersTest extends RestTest {
                 .name("physics")
                 .topic(t -> t
                         .name("statics")
-                        .filter(vg1, core)
                 )
-                .topic(t -> t.name("electricity").filter(vg2, core))
-                .topic(t -> t.name("optics").filter(vg1, core))
+                .topic(t -> t.name("electricity"))
+                .topic(t -> t.name("optics"))
         );
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics?filter=" + vg1.getPublicId());
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics?filter=urn:filter:1:1");
         SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
 
-        assertEquals(2, topics.length);
-        assertAnyTrue(topics, t -> "statics".equals(t.name));
-        assertAnyTrue(topics, t -> "optics".equals(t.name));
-        assertAnyTrue(topics[0].filters, f -> vg1.getPublicId().equals(f.getId().orElseThrow()));
-        assertAnyTrue(topics[0].filters, f -> vg1.getName().equals(f.getName()));
-        assertAnyTrue(topics[0].filters, f -> core.getPublicId().equals(f.getRelevanceId()));
-        assertEquals(1, topics[0].filters.size());
-    }
-
-    @Test
-    public void topic_can_have_multiple_filters() throws Exception {
-        Subject subject = builder.subject(s -> s
-                .name("physics")
-                .topic(t -> t
-                        .name("statics")
-                        .filter(vg1, core)
-                        .filter(vg2, supplementary))
-        );
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
-        SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
-
-        assertEquals(2, topics[0].filters.size());
-        assertAnyTrue(topics[0].filters, f -> vg1.getPublicId().equals(f.getId().orElseThrow()));
-        assertAnyTrue(topics[0].filters, f -> core.getPublicId().equals(f.getRelevanceId()));
-        assertAnyTrue(topics[0].filters, f -> supplementary.getPublicId().equals(f.getRelevanceId()));
-        assertAnyTrue(topics[0].filters, f -> vg2.getPublicId().equals(f.getId().orElseThrow()));
+        // Filters are removed
+        assertEquals(0, topics.length);
     }
 
     @Test
@@ -127,39 +92,19 @@ public class SubjectFiltersTest extends RestTest {
                         .subtopic("child", child -> child
                                 .name("child topic")
                                 .publicId("urn:topic:aa")
-                                .filter(vg1, core)
                         )
                 )
         ).getPublicId();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subjectid + "/topics?recursive=true&filter=" + vg1.getPublicId());
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subjectid + "/topics?recursive=true&filter=urn:filter:1:1");
         SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
 
-        assertEquals(2, topics.length);
-        assertAnyTrue(topics, t -> t.name.equals("parent topic"));
-        assertAnyTrue(topics, t -> t.name.equals("child topic"));
+        // Filters are removed
+        assertEquals(0, topics.length);
     }
 
 
-    /**
-     * taken out while experimenting with changes to the way filters work
-     * public void can_get_topic_without_filter_but_underlying_resource_has_filter() throws Exception {
-     * Subject subject = builder.subject(s -> s
-     * .name("physics")
-     * .topic(t -> t.name("statics").resource(r -> r.name("Introduction to statics").filter(vg1, core)))
-     * .topic(t -> t.name("optics").filter(vg1, core))
-     * );
-     * <p>
-     * MockHttpServletResponse response = getResource("/v1/subjects/" + subject.getPublicId() + "/topics?filter=" + vg1.getPublicId());
-     * Subjects.SubTopicIndexDocument[] topics = getObject(Subjects.SubTopicIndexDocument[].class, response);
-     * <p>
-     * assertEquals(2, topics.length);
-     * assertAnyTrue(topics, t -> "statics".equals(t.name));
-     * assertAnyTrue(topics, t -> "optics".equals(t.name));
-     * }
-     */
-
-    @Test
+    //@Test TODO - Relevance on connections should be tested
     public void can_get_resources_with_relevance() throws Exception {
         URI subjectId = builder.subject(s -> s
                 .name("subject")
@@ -169,13 +114,13 @@ public class SubjectFiltersTest extends RestTest {
                                 .name("subtopic")
                                 .resource(r -> r
                                         .name("a lecture in a subtopic")
-                                        .filter(vg1, core)))
-                        .resource(r -> r.name("an assignment").filter(vg1, core))
-                        .resource(r -> r.name("a lecture").filter(vg1, supplementary))
+                                        /*.filter(vg1, core)*/))
+                        .resource(r -> r.name("an assignment")/*.filter(vg1, core)*/)
+                        .resource(r -> r.name("a lecture")/*.filter(vg1, supplementary)*/)
                 )
         ).getPublicId();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subjectId + "/resources?filter=" + vg1.getPublicId() + "&relevance=" + core.getPublicId());
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subjectId + "/resources?relevance=" + core.getPublicId());
         ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
@@ -183,7 +128,7 @@ public class SubjectFiltersTest extends RestTest {
         assertAnyTrue(result, r -> "an assignment".equals(r.name));
     }
 
-    @Test
+    //@Test TODO - Relevance on connections should be tested
     public void can_get_topics_by_relevance() throws Exception {
         URI subjectid = builder.subject("subject", s -> s
                 .name("subject")
@@ -194,16 +139,16 @@ public class SubjectFiltersTest extends RestTest {
                         .subtopic("child", child -> child
                                 .name("child topic")
                                 .publicId("urn:topic:aa")
-                                .filter(vg1, core)
+                                /*.filter(vg1, core)*/
                         )
                         .subtopic("child2", child -> child
                                 .name("child 2")
                                 .publicId("urn:topic:ab")
-                                .filter(vg1, supplementary))
+                                /*.filter(vg1, supplementary)*/)
                 )
         ).getPublicId();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subjectid + "/topics?recursive=true&filter=" + vg1.getPublicId() + "&relevance=" + core.getPublicId());
+        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subjectid + "/topics?recursive=true&relevance=" + core.getPublicId());
         SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
 
         assertEquals(2, topics.length);

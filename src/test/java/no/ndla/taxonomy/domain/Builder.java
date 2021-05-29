@@ -20,7 +20,6 @@ public class Builder {
     private final Map<String, SubjectBuilder> subjects = new HashMap<>();
     private final Map<String, TopicBuilder> topics = new HashMap<>();
     private final Map<String, ResourceBuilder> resources = new HashMap<>();
-    private final Map<String, FilterBuilder> filters = new HashMap<>();
     private final Map<String, RelevanceBuilder> relevances = new HashMap<>();
     private final Map<String, UrlMappingBuilder> cachedUrlOldRigBuilders = new HashMap<>();
     private int keyCounter = 0;
@@ -82,28 +81,6 @@ public class Builder {
         ResourceTypeBuilder resourceType = getResourceTypeBuilder(key);
         if (null != consumer) consumer.accept(resourceType);
         return resourceType.resourceType;
-    }
-
-    public Filter filter(Consumer<FilterBuilder> consumer) {
-        return filter(null, consumer);
-    }
-
-    public Filter filter() {
-        return filter(null, null);
-    }
-
-    public Filter filter(String key, Consumer<FilterBuilder> consumer) {
-        FilterBuilder filter = getFilterBuilder(key);
-        if (null != consumer) consumer.accept(filter);
-        return filter.filter;
-    }
-
-    private FilterBuilder getFilterBuilder(String key) {
-        if (key == null) {
-            key = createKey();
-        }
-        filters.putIfAbsent(key, new FilterBuilder());
-        return filters.get(key);
     }
 
     public Relevance relevance(Consumer<RelevanceBuilder> consumer) {
@@ -221,20 +198,6 @@ public class Builder {
     }
 
     @Transactional
-    public static class FilterTranslationBuilder {
-        private FilterTranslation filterTranslation;
-
-        public FilterTranslationBuilder(FilterTranslation filterTranslation) {
-            this.filterTranslation = filterTranslation;
-        }
-
-        public FilterTranslationBuilder name(String name) {
-            filterTranslation.setName(name);
-            return this;
-        }
-    }
-
-    @Transactional
     public static class ResourceTranslationBuilder {
         private ResourceTranslation resourceTranslation;
 
@@ -244,44 +207,6 @@ public class Builder {
 
         public ResourceTranslationBuilder name(String name) {
             resourceTranslation.setName(name);
-            return this;
-        }
-    }
-
-    @Transactional
-    public class FilterBuilder {
-        private final Filter filter;
-
-        public FilterBuilder() {
-            filter = new Filter();
-            entityManager.persist(filter);
-        }
-
-        public FilterBuilder name(String name) {
-            filter.setName(name);
-            return this;
-        }
-
-        public FilterBuilder publicId(String id) {
-            filter.setPublicId(URI.create(id));
-            return this;
-        }
-
-        public FilterBuilder subject(Subject subject) {
-            filter.setSubject(subject);
-            return this;
-        }
-
-        public FilterBuilder contentUri(URI contentUri) {
-            filter.setContentUri(contentUri);
-            return this;
-        }
-
-        public FilterBuilder translation(String languageCode, Consumer<FilterTranslationBuilder> consumer) {
-            FilterTranslation filterTranslation = filter.addTranslation(languageCode);
-            entityManager.persist(filterTranslation);
-            FilterTranslationBuilder builder = new FilterTranslationBuilder(filterTranslation);
-            consumer.accept(builder);
             return this;
         }
     }
@@ -446,12 +371,6 @@ public class Builder {
 
             return this;
         }
-
-        public ResourceBuilder filter(Filter filter, Relevance relevance) {
-            ResourceFilter resourceFilter = resource.addFilter(filter, relevance);
-            entityManager.persist(resourceFilter);
-            return this;
-        }
     }
 
     public UrlMapping urlMapping(Consumer<UrlMappingBuilder> consumer) {
@@ -503,22 +422,6 @@ public class Builder {
 
             cachedUrlUpdaterService.updateCachedUrls(topic);
 
-            return this;
-        }
-
-        public SubjectBuilder filter(String key, Consumer<FilterBuilder> consumer) {
-            FilterBuilder filterBuilder = getFilterBuilder(key);
-            if (null != consumer) consumer.accept(filterBuilder);
-            filter(filterBuilder.filter);
-            return this;
-        }
-
-        public SubjectBuilder filter(Consumer<FilterBuilder> consumer) {
-            return filter(null, consumer);
-        }
-
-        public SubjectBuilder filter(Filter filter) {
-            subject.addFilter(filter);
             return this;
         }
 
@@ -655,12 +558,6 @@ public class Builder {
 
             cachedUrlUpdaterService.updateCachedUrls(topic);
 
-            return this;
-        }
-
-        public TopicBuilder filter(Filter filter, Relevance relevance) {
-            TopicFilter topicFilter = topic.addFilter(filter, relevance);
-            entityManager.persist(topicFilter);
             return this;
         }
 

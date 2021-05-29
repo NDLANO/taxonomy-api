@@ -5,10 +5,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.Filter;
-import no.ndla.taxonomy.domain.FilterTranslation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
-import no.ndla.taxonomy.repositories.FilterRepository;
+import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -23,28 +21,13 @@ import java.util.List;
 @RequestMapping(path = {"/v1/filters/{id}/translations"})
 @Transactional
 public class FilterTranslations {
-
-    private FilterRepository filterRepository;
-
-    private EntityManager entityManager;
-
-    public FilterTranslations(FilterRepository filterRepository, EntityManager entityManager) {
-        this.filterRepository = filterRepository;
-        this.entityManager = entityManager;
+    public FilterTranslations() {
     }
 
     @GetMapping
     @ApiOperation("Gets all relevanceTranslations for a single filter")
     public List<FilterTranslations.FilterTranslationIndexDocument> index(@PathVariable("id") URI id) {
-        Filter filter = filterRepository.getByPublicId(id);
-        List<FilterTranslations.FilterTranslationIndexDocument> result = new ArrayList<>();
-        filter.getTranslations().forEach(t -> result.add(
-                new FilterTranslations.FilterTranslationIndexDocument() {{
-                    name = t.getName();
-                    language = t.getLanguageCode();
-                }})
-        );
-        return result;
+        throw new NotFoundHttpResponseException("Filter was not found");
     }
 
     @GetMapping("/{language}")
@@ -54,13 +37,7 @@ public class FilterTranslations {
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language
     ) {
-        Filter filter = filterRepository.getByPublicId(id);
-        FilterTranslation translation = filter.getTranslation(language).orElseThrow(() -> new NotFoundException("Translation with language code " + language + " for filter", id));
-
-        return new FilterTranslations.FilterTranslationIndexDocument() {{
-            name = translation.getName();
-            language = translation.getLanguageCode();
-        }};
+        throw new NotFoundHttpResponseException("Filter was not found");
     }
 
     @PutMapping("/{language}")
@@ -74,10 +51,7 @@ public class FilterTranslations {
             @ApiParam(name = "filter", value = "The new or updated translation")
             @RequestBody FilterTranslations.UpdateFilterTranslationCommand command
     ) {
-        Filter filter = filterRepository.getByPublicId(id);
-        FilterTranslation translation = filter.addTranslation(language);
-        entityManager.persist(translation);
-        translation.setName(command.name);
+        throw new NotFoundHttpResponseException("Filter was not found");
     }
 
     @DeleteMapping("/{language}")
@@ -89,11 +63,7 @@ public class FilterTranslations {
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
             @PathVariable("language") String language
     ) {
-        Filter filter = filterRepository.getByPublicId(id);
-        filter.getTranslation(language).ifPresent(translation -> {
-            filter.removeTranslation(language);
-            entityManager.remove(translation);
-        });
+        throw new NotFoundHttpResponseException("Filter was not found");
     }
 
 

@@ -1,9 +1,7 @@
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.Filter;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
-import no.ndla.taxonomy.repositories.FilterRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
@@ -25,16 +23,14 @@ public class TopicServiceImpl implements TopicService {
     private final TopicRepository topicRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final EntityConnectionService connectionService;
-    private final FilterRepository filterRepository;
     private final MetadataApiService metadataApiService;
     private final TopicTreeSorter topicTreeSorter;
 
     public TopicServiceImpl(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository,
-                            FilterRepository filterRepository, EntityConnectionService connectionService,
+                            EntityConnectionService connectionService,
                             MetadataApiService metadataApiService, TopicTreeSorter topicTreeSorter) {
         this.topicRepository = topicRepository;
         this.connectionService = connectionService;
-        this.filterRepository = filterRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.metadataApiService = metadataApiService;
         this.topicTreeSorter = topicTreeSorter;
@@ -93,19 +89,14 @@ public class TopicServiceImpl implements TopicService {
 
         return getFilteredSubtopicConnections(
                 topicPublicId,
-                filterRepository.findAllBySubjectPublicId(subjectPublicId).stream().map(Filter::getPublicId).collect(Collectors.toSet()),
                 languageCode);
     }
 
     @Override
     @InjectMetadata
-    public List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, Collection<URI> filterPublicIds, String languageCode) {
+    public List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, String languageCode) {
         final List<TopicSubtopic> subtopicConnections;
-        if (filterPublicIds != null && filterPublicIds.size() > 0) {
-            subtopicConnections = topicSubtopicRepository.findAllByTopicPublicIdAndFilterPublicIdsIncludingSubtopicAndSubtopicTranslations(topicPublicId, filterPublicIds);
-        } else {
-            subtopicConnections = topicSubtopicRepository.findAllByTopicPublicIdIncludingSubtopicAndSubtopicTranslations(topicPublicId);
-        }
+        subtopicConnections = topicSubtopicRepository.findAllByTopicPublicIdIncludingSubtopicAndSubtopicTranslations(topicPublicId);
 
         final var wrappedList =
                 subtopicConnections.stream()

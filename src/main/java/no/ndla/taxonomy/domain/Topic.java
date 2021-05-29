@@ -30,9 +30,6 @@ public class Topic extends EntityWithPath {
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TopicResourceType> topicResourceTypes = new HashSet<>();
 
-    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TopicFilter> topicFilters = new HashSet<>();
-
     @Column
     private URI contentUri;
 
@@ -275,10 +272,6 @@ public class Topic extends EntityWithPath {
         getTranslation(languageCode).ifPresent(this::removeTranslation);
     }
 
-    public TopicFilter addFilter(Filter filter, Relevance relevance) {
-        return TopicFilter.create(this, filter, relevance);
-    }
-
     public TopicResourceType addResourceType(ResourceType resourceType) {
         return TopicResourceType.create(this, resourceType);
     }
@@ -298,26 +291,6 @@ public class Topic extends EntityWithPath {
         return Optional.empty();
     }
 
-    public void addTopicFilter(TopicFilter topicFilter) {
-        if (topicFilter.getTopic().orElse(null) != this) {
-            throw new IllegalArgumentException("TopicFilter must have Topic set before associating with Topic");
-        }
-
-        this.topicFilters.add(topicFilter);
-    }
-
-    public void removeTopicFilter(TopicFilter topicFilter) {
-        this.topicFilters.remove(topicFilter);
-
-        if (topicFilter.getTopic().orElse(null) == this) {
-            topicFilter.disassociate();
-        }
-    }
-
-    public Set<TopicFilter> getTopicFilters() {
-        return this.topicFilters.stream().collect(Collectors.toUnmodifiableSet());
-    }
-
     public void setContext(boolean context) {
         this.context = context;
     }
@@ -334,6 +307,5 @@ public class Topic extends EntityWithPath {
         Set.copyOf(parentTopicSubtopics).forEach(TopicSubtopic::disassociate);
         Set.copyOf(topicResources).forEach(TopicResource::disassociate);
         Set.copyOf(topicResourceTypes).forEach(TopicResourceType::disassociate);
-        Set.copyOf(topicFilters).forEach(TopicFilter::disassociate);
     }
 }

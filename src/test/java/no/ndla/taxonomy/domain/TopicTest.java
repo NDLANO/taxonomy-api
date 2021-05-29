@@ -293,59 +293,6 @@ public class TopicTest {
     }
 
     @Test
-    public void addFilter() {
-        final var filter1 = mock(Filter.class);
-        final var filter2 = mock(Filter.class);
-        final var filter3 = mock(Filter.class);
-
-        final var relevance1 = mock(Relevance.class);
-        final var relevance2 = mock(Relevance.class);
-        final var relevance3 = mock(Relevance.class);
-
-        assertEquals(0, topic.getTopicFilters().size());
-
-        final var topicFilter1 = topic.addFilter(filter1, relevance1);
-        assertNotNull(topicFilter1);
-
-        assertEquals(1, topic.getTopicFilters().size());
-        assertTrue(topic.getTopicFilters().contains(topicFilter1));
-
-        assertSame(topic, topicFilter1.getTopic().orElse(null));
-        assertSame(filter1, topicFilter1.getFilter().orElse(null));
-        assertSame(relevance1, topicFilter1.getRelevance().orElse(null));
-
-        final var topicFilter2 = topic.addFilter(filter2, relevance2);
-        assertNotNull(topicFilter2);
-
-        assertEquals(2, topic.getTopicFilters().size());
-        assertTrue(topic.getTopicFilters().containsAll(Set.of(topicFilter1, topicFilter2)));
-
-        assertSame(topic, topicFilter2.getTopic().orElse(null));
-        assertSame(filter2, topicFilter2.getFilter().orElse(null));
-        assertSame(relevance2, topicFilter2.getRelevance().orElse(null));
-
-        final var topicFilter3 = topic.addFilter(filter3, relevance2);
-        assertNotNull(topicFilter3);
-
-        assertEquals(3, topic.getTopicFilters().size());
-        assertTrue(topic.getTopicFilters().containsAll(Set.of(topicFilter1, topicFilter2, topicFilter3)));
-
-        assertSame(topic, topicFilter3.getTopic().orElse(null));
-        assertSame(filter3, topicFilter3.getFilter().orElse(null));
-        assertSame(relevance2, topicFilter3.getRelevance().orElse(null));
-
-        final var topicFilter4 = topic.addFilter(filter2, relevance3);
-        assertNotNull(topicFilter4);
-
-        assertEquals(4, topic.getTopicFilters().size());
-        assertTrue(topic.getTopicFilters().containsAll(Set.of(topicFilter1, topicFilter2, topicFilter3, topicFilter4)));
-
-        assertSame(topic, topicFilter4.getTopic().orElse(null));
-        assertSame(filter2, topicFilter4.getFilter().orElse(null));
-        assertSame(relevance3, topicFilter4.getRelevance().orElse(null));
-    }
-
-    @Test
     public void addAndRemoveResourceType() {
         final var resourceType1 = mock(ResourceType.class);
         final var resourceType2 = mock(ResourceType.class);
@@ -385,72 +332,6 @@ public class TopicTest {
         topic.removeResourceType(resourceType2);
         assertEquals(0, topic.getTopicResourceTypes().size());
         assertFalse(topicResourceType2.getTopic().isPresent());
-    }
-
-    @Test
-    public void getAddAndRemoveTopicFilter() {
-        final var topicFilter1 = mock(TopicFilter.class);
-        final var topicFilter2 = mock(TopicFilter.class);
-        final var topicFilter3 = mock(TopicFilter.class);
-
-        assertEquals(0, topic.getTopicFilters().size());
-
-        try {
-            topic.addTopicFilter(topicFilter1);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException ignored) {
-        }
-        when(topicFilter1.getTopic()).thenReturn(Optional.of(topic));
-        topic.addTopicFilter(topicFilter1);
-
-        assertEquals(1, topic.getTopicFilters().size());
-        assertTrue(topic.getTopicFilters().contains(topicFilter1));
-
-        try {
-            topic.addTopicFilter(topicFilter2);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException ignored) {
-        }
-        when(topicFilter2.getTopic()).thenReturn(Optional.of(topic));
-        topic.addTopicFilter(topicFilter2);
-
-        assertEquals(2, topic.getTopicFilters().size());
-        assertTrue(topic.getTopicFilters().containsAll(Set.of(topicFilter1, topicFilter2)));
-
-        try {
-            topic.addTopicFilter(topicFilter3);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException ignored) {
-        }
-        when(topicFilter3.getTopic()).thenReturn(Optional.of(topic));
-        topic.addTopicFilter(topicFilter3);
-
-        assertEquals(3, topic.getTopicFilters().size());
-        assertTrue(topic.getTopicFilters().containsAll(Set.of(topicFilter1, topicFilter2, topicFilter3)));
-
-        final var mockTopic = mock(Topic.class);
-
-        when(topicFilter1.getTopic()).thenReturn(Optional.of(topic));
-        when(topicFilter2.getTopic()).thenReturn(Optional.of(topic));
-        when(topicFilter3.getTopic()).thenReturn(Optional.of(mockTopic));
-
-        clearInvocations(topicFilter1, topicFilter2, topicFilter3);
-
-        topic.removeTopicFilter(topicFilter1);
-        assertEquals(2, topic.getTopicFilters().size());
-        assertTrue(topic.getTopicFilters().containsAll(Set.of(topicFilter2, topicFilter3)));
-
-        verify(topicFilter1).disassociate();
-
-        topic.removeTopicFilter(topicFilter2);
-        assertEquals(1, topic.getTopicFilters().size());
-        assertTrue(topic.getTopicFilters().contains(topicFilter3));
-
-        verify(topicFilter2).disassociate();
-
-        topic.removeTopicFilter(topicFilter3);
-        assertEquals(0, topic.getTopicFilters().size());
-        verify(topicFilter3, never()).disassociate();
     }
 
     @Test
@@ -499,7 +380,6 @@ public class TopicTest {
         final var childTopicSubtopics = Set.of(mock(TopicSubtopic.class), mock(TopicSubtopic.class));
         final var subjectTopics = Set.of(mock(SubjectTopic.class), mock(SubjectTopic.class));
         final var topicResources = Set.of(mock(TopicResource.class), mock(TopicResource.class));
-        final var topicFilters = Set.of(mock(TopicFilter.class), mock(TopicFilter.class));
 
         parentTopicSubtopics.forEach(topicSubtopic -> {
             when(topicSubtopic.getSubtopic()).thenReturn(Optional.of(topic));
@@ -521,18 +401,12 @@ public class TopicTest {
             topic.addTopicResource(topicResource);
         });
 
-        topicFilters.forEach(topicFilter -> {
-            when(topicFilter.getTopic()).thenReturn(Optional.of(topic));
-            topic.addTopicFilter(topicFilter);
-        });
-
         topic.preRemove();
 
         parentTopicSubtopics.forEach(topicSubtopic -> verify(topicSubtopic).disassociate());
         childTopicSubtopics.forEach(topicSubtopic -> verify(topicSubtopic).disassociate());
         subjectTopics.forEach(subjectTopic -> verify(subjectTopic).disassociate());
         topicResources.forEach(topicResource -> verify(topicResource).disassociate());
-        topicFilters.forEach(topicFilter -> verify(topicFilter).disassociate());
     }
 
     @Test

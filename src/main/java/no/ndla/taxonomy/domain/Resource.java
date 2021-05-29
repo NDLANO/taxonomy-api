@@ -24,9 +24,6 @@ public class Resource extends EntityWithPath {
     private Set<TopicResource> topics = new HashSet<>();
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ResourceFilter> filters = new HashSet<>();
-
-    @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     protected Set<CachedPath> cachedPaths = new HashSet<>();
 
     @Override
@@ -160,32 +157,8 @@ public class Resource extends EntityWithPath {
         return null;
     }
 
-    public ResourceFilter addFilter(Filter filter, Relevance relevance) {
-        return ResourceFilter.create(this, filter, relevance);
-    }
-
-    public void removeFilter(Filter filter) {
-        ResourceFilter resourceFilter = getResourceFilter(filter);
-        if (resourceFilter == null) {
-            throw new ChildNotFoundException("Resource with id " + this.getPublicId() + " does not have filter " + filter.getPublicId());
-        }
-
-        removeResourceFilter(resourceFilter);
-    }
-
-    private ResourceFilter getResourceFilter(Filter filter) {
-        for (ResourceFilter rf : filters) {
-            if (rf.getFilter().equals(filter)) return rf;
-        }
-        return null;
-    }
-
     public Set<ResourceResourceType> getResourceResourceTypes() {
         return this.resourceResourceTypes.stream().collect(Collectors.toUnmodifiableSet());
-    }
-
-    public Set<ResourceFilter> getResourceFilters() {
-        return this.filters.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public Set<TopicResource> getTopicResources() {
@@ -197,22 +170,6 @@ public class Resource extends EntityWithPath {
 
         if (topicResource.getResource().orElse(null) == this) {
             topicResource.disassociate();
-        }
-    }
-
-    public void addResourceFilter(ResourceFilter resourceFilter) {
-        this.filters.add(resourceFilter);
-
-        if (resourceFilter.getResource() != this) {
-            throw new IllegalArgumentException("ResourceFilter must have Resource relation set before adding");
-        }
-    }
-
-    public void removeResourceFilter(ResourceFilter resourceFilter) {
-        this.filters.remove(resourceFilter);
-
-        if (resourceFilter.getResource() == this) {
-            resourceFilter.disassociate();
         }
     }
 
@@ -228,7 +185,6 @@ public class Resource extends EntityWithPath {
     void preRemove() {
         Set.copyOf(resourceResourceTypes).forEach(ResourceResourceType::disassociate);
         Set.copyOf(topics).forEach(TopicResource::disassociate);
-        Set.copyOf(filters).forEach(ResourceFilter::disassociate);
     }
 
     @Override

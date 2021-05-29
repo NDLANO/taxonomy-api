@@ -74,35 +74,6 @@ public class SubjectTest {
     }
 
     @Test
-    public void getAddAndRemoveFilter() {
-        final var filter1 = mock(Filter.class);
-        final var filter2 = mock(Filter.class);
-
-        assertEquals(0, subject.getFilters().size());
-
-        subject.addFilter(filter1);
-        verify(filter1).setSubject(subject);
-        assertEquals(1, subject.getFilters().size());
-        assertTrue(subject.getFilters().contains(filter1));
-
-        subject.addFilter(filter2);
-        verify(filter2).setSubject(subject);
-        assertEquals(2, subject.getFilters().size());
-        assertTrue(subject.getFilters().containsAll(Set.of(filter1, filter2)));
-
-        Set.of(filter1, filter2).forEach(filter -> when(filter.getSubject()).thenReturn(Optional.of(subject)));
-
-        subject.removeFilter(filter1);
-        verify(filter1).setSubject(null);
-        assertEquals(1, subject.getFilters().size());
-        assertTrue(subject.getFilters().contains(filter2));
-
-        subject.removeFilter(filter2);
-        verify(filter2).setSubject(null);
-        assertEquals(0, subject.getFilters().size());
-    }
-
-    @Test
     public void addAndGetAndRemoveTranslation() {
         assertEquals(0, subject.getTranslations().size());
 

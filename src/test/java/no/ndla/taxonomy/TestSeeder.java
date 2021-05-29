@@ -20,7 +20,6 @@ public class TestSeeder {
     private final SubjectRepository subjectRepository;
     private final TopicRepository topicRepository;
     private final ResourceRepository resourceRepository;
-    private final FilterRepository filterRepository;
     private final RelevanceRepository relevanceRepository;
     private final ResourceTypeRepository resourceTypeRepository;
     private final SubjectTopicRepository subjectTopicRepository;
@@ -28,12 +27,11 @@ public class TestSeeder {
     private final TopicResourceRepository topicResourceRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public TestSeeder(SubjectRepository subjectRepository, TopicRepository topicRepository, ResourceRepository resourceRepository, FilterRepository filterRepository, RelevanceRepository relevanceRepository, ResourceTypeRepository resourceTypeRepository, SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository,
+    public TestSeeder(SubjectRepository subjectRepository, TopicRepository topicRepository, ResourceRepository resourceRepository, RelevanceRepository relevanceRepository, ResourceTypeRepository resourceTypeRepository, SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository,
                       CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
-        this.filterRepository = filterRepository;
         this.relevanceRepository = relevanceRepository;
         this.resourceTypeRepository = resourceTypeRepository;
         this.subjectTopicRepository = subjectTopicRepository;
@@ -120,24 +118,6 @@ public class TestSeeder {
         return topicSubtopic;
     }
 
-    private Filter createFilter(String publicId, Subject subject, String name) {
-        final var filter = new Filter();
-
-        if (publicId != null) {
-            filter.setPublicId(URI.create(publicId));
-        }
-
-        if (name != null) {
-            filter.setName(name);
-        }
-
-        if (subject != null) {
-            filter.setSubject(subject);
-        }
-
-        return filterRepository.save(filter);
-    }
-
     private Relevance createRelevance(String publicId, String name) {
         final var relevance = new Relevance();
 
@@ -150,16 +130,6 @@ public class TestSeeder {
         }
 
         return relevanceRepository.save(relevance);
-    }
-
-    private TopicFilter createTopicFilter(String publicId, Topic topic, Filter filter, Relevance relevance) {
-        final var topicFilter = TopicFilter.create(topic, filter, relevance);
-
-        if (publicId != null) {
-            topicFilter.setPublicId(URI.create(publicId));
-        }
-
-        return topicFilter;
     }
 
     private Resource createResource(String publicId, String name, String contentUri) {
@@ -211,16 +181,6 @@ public class TestSeeder {
         return topicResourceRepository.saveAndFlush(topicResource);
     }
 
-    private ResourceFilter createResourceFilter(String publicId, Resource resource, Filter filter, Relevance relevance) {
-        final var resourceFilter = ResourceFilter.create(resource, filter, relevance);
-
-        if (publicId != null) {
-            resourceFilter.setPublicId(URI.create(publicId));
-        }
-
-        return resourceFilter;
-    }
-
     private ResourceType createResourceType(ResourceType parent, String publicId, String name) {
         final var resourceType = new ResourceType();
 
@@ -252,7 +212,6 @@ public class TestSeeder {
     private void clearAll() {
         resourceTypeRepository.deleteAllAndFlush();
         relevanceRepository.deleteAllAndFlush();
-        filterRepository.deleteAllAndFlush();
         resourceRepository.deleteAllAndFlush();
         topicRepository.deleteAllAndFlush();
         subjectRepository.deleteAllAndFlush();
@@ -297,20 +256,7 @@ public class TestSeeder {
         createTopicSubtopic("urn:topic-subtopic:4", topic5, topic7, 2);
         createTopicSubtopic("urn:topic-subtopic:5", topic5, topic8, 3);
 
-        final var filter1 = createFilter("urn:filter:1", subject1, "F:1");
-        final var filter2 = createFilter("urn:filter:2", subject1, "F:2");
-
-
         final var relevance1 = createRelevance("urn:relevance:core", "Kjernestoff");
-
-        createTopicFilter("urn:topic-filter:1", topic1, filter1, relevance1);
-        createTopicFilter("urn:topic-filter:2", topic2, filter1, relevance1);
-        createTopicFilter("urn:topic-filter:3", topic3, filter2, relevance1);
-        createTopicFilter("urn:topic-filter:4", topic4, filter2, relevance1);
-        createTopicFilter("urn:topic-filter:5", topic5, filter1, relevance1);
-        createTopicFilter("urn:topic-filter:6", topic6, filter1, relevance1);
-        createTopicFilter("urn:topic-filter:7", topic7, filter1, relevance1);
-        createTopicFilter("urn:topic-filter:8", topic8, filter2, relevance1);
     }
 
     public void recursiveTopicsBySubjectIdTestSetup() {
@@ -393,14 +339,7 @@ public class TestSeeder {
         createTopicResource("urn:topic-resource:2", topic1, resource2, true, 2);
         createTopicResource("urn:topic-resource:3", topic1, resource3, true, 3);
 
-        final var filter1 = createFilter("urn:filter:1", subject1, "Vg1");
-        final var filter2 = createFilter("urn:filter:2", subject1, "Vg2");
-
         final var relevance1 = createRelevance("urn:relevance:core", "Core");
-
-        createResourceFilter("urn:resource-filter:1", resource1, filter1, relevance1);
-        createResourceFilter("urn:resource-filter:2", resource2, filter1, relevance1);
-        createResourceFilter("urn:resource-filter:3", resource3, filter2, relevance1);
 
         final var resourceType1 = createResourceType(null, "urn:resourcetype:video", "Video");
 
@@ -447,29 +386,8 @@ public class TestSeeder {
         createTopicResource("urn:topic-resource:9", topic1, resource9, true, 9);
         createTopicResource("urn:topic-resource:10", topic1, resource10, true, 10);
 
-        final var filter1 = createFilter("urn:filter:1", subject1, "Year 1");
-        final var filter2 = createFilter("urn:filter:2", subject1, "Year 2");
-
         final var relevance1 = createRelevance("urn:relevance:core", "Core");
         final var relevance2 = createRelevance("urn:relevance:supplementary", "Supplementary");
-
-        createResourceFilter("urn:resource-filter:1", resource1, filter1, relevance1); // R 1-5 is core in year 1
-        createResourceFilter("urn:resource-filter:2", resource2, filter1, relevance1);
-        createResourceFilter("urn:resource-filter:3", resource3, filter1, relevance1);
-        createResourceFilter("urn:resource-filter:4", resource4, filter1, relevance1);
-        createResourceFilter("urn:resource-filter:5", resource5, filter1, relevance1);
-
-        createResourceFilter("urn:resource-filter:6", resource6, filter2, relevance1); // R 6-10 is core in year 2
-        createResourceFilter("urn:resource-filter:7", resource7, filter2, relevance1);
-        createResourceFilter("urn:resource-filter:8", resource8, filter2, relevance1);
-        createResourceFilter("urn:resource-filter:9", resource9, filter2, relevance1);
-        createResourceFilter("urn:resource-filter:10", resource10, filter2, relevance1);
-
-        createResourceFilter("urn:resource-filter:11", resource1, filter2, relevance2); // R 1-5 is supplemental in year 2
-        createResourceFilter("urn:resource-filter:12", resource2, filter2, relevance2);
-        createResourceFilter("urn:resource-filter:13", resource3, filter2, relevance2);
-        createResourceFilter("urn:resource-filter:14", resource4, filter2, relevance2);
-        createResourceFilter("urn:resource-filter:15", resource5, filter2, relevance2);
     }
 
     public void resourceWithRelevancesButWithoutFiltersTestSetup() {
@@ -655,22 +573,7 @@ public class TestSeeder {
         createTopicResource("urn:topic-resource:10", topic9, resource10, true, 1);
 
 
-        final var filter1 = createFilter("urn:filter:1", subject1, "F:1");
-        final var filter2 = createFilter("urn:filter:2", subject1, "F:2");
-        createFilter("urn:filter:3", subject1, "F:3");
-
         final var relevance1 = createRelevance("urn:relevance:core", "Core");
-
-        createResourceFilter("urn:resource-filter:1", resource1, filter1, relevance1);
-        createResourceFilter("urn:resource-filter:2", resource3, filter1, relevance1);
-        createResourceFilter("urn:resource-filter:3", resource5, filter1, relevance1);
-        createResourceFilter("urn:resource-filter:4", resource7, filter1, relevance1);
-        createResourceFilter("urn:resource-filter:5", resource9, filter1, relevance1);
-        createResourceFilter("urn:resource-filter:6", resource2, filter2, relevance1);
-        createResourceFilter("urn:resource-filter:7", resource4, filter2, relevance1);
-        createResourceFilter("urn:resource-filter:8", resource6, filter2, relevance1);
-        createResourceFilter("urn:resource-filter:9", resource8, filter2, relevance1);
-        createResourceFilter("urn:resource-filter:10", resource10, filter2, relevance1);
     }
 
     public void subtopicsByTopicIdAndFiltersTestSetup() {
@@ -708,20 +611,7 @@ public class TestSeeder {
         createTopicSubtopic("urn:topic-subtopic:6", topic1, topic7, 6);
         createTopicSubtopic("urn:topic-subtopic:7", topic1, topic8, 7);
 
-        final var filter1 = createFilter("urn:filter:1", subject1, "F:1");
-        final var filter2 = createFilter("urn:filter:2", subject1, "F:2");
-
         final var relevance1 = createRelevance("urn:relevance:core", "Kjernestoff");
-
-        createTopicFilter("urn:topic-filter:1", topic1, filter1, relevance1);
-        createTopicFilter("urn:topic-filter:2", topic1, filter2, relevance1);
-        createTopicFilter("urn:topic-filter:3", topic2, filter1, relevance1);
-        createTopicFilter("urn:topic-filter:4", topic3, filter1, relevance1);
-        createTopicFilter("urn:topic-filter:5", topic4, filter1, relevance1);
-        createTopicFilter("urn:topic-filter:6", topic5, filter2, relevance1);
-        createTopicFilter("urn:topic-filter:7", topic6, filter2, relevance1);
-        createTopicFilter("urn:topic-filter:8", topic7, filter2, relevance1);
-        createTopicFilter("urn:topic-filter:9", topic8, filter2, relevance1);
     }
 
     public void topicConnectionsTestSetup() {

@@ -114,7 +114,7 @@ public class Topics extends CrudController<Topic> {
     @ApiOperation(value = "Gets all filters associated with this topic")
     @Transactional
     @InjectMetadata
-    public List<FilterWithConnectionDTO> getFilters(
+    public List<Object> getFilters(
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
@@ -122,13 +122,7 @@ public class Topics extends CrudController<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return topicRepository.findFirstByPublicIdIncludingFilters(id)
-                .stream()
-                .map(Topic::getTopicFilters)
-                .flatMap(Collection::stream)
-                .filter(topicFilter -> topicFilter.getFilter().isPresent())
-                .map(topicFilter -> new FilterWithConnectionDTO(topicFilter, language))
-                .collect(Collectors.toList());
+        return List.of();
     }
 
     @GetMapping("/{id}/topics")
@@ -159,7 +153,7 @@ public class Topics extends CrudController<Topic> {
             return topicService.getFilteredSubtopicConnections(id, subjectId, language);
         }
 
-        return topicService.getFilteredSubtopicConnections(id, Set.of(filterIds), language);
+        return List.of(); // Requested filtered, we don't have filters.
     }
 
     @GetMapping("/{id}/connections")

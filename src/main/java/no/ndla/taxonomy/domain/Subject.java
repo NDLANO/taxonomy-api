@@ -17,9 +17,6 @@ public class Subject extends EntityWithPath {
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SubjectTranslation> translations = new HashSet<>();
 
-    @OneToMany(mappedBy = "subject", orphanRemoval = true)
-    private Set<Filter> filters = new HashSet<>();
-
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     protected Set<CachedPath> cachedPaths = new HashSet<>();
 
@@ -54,33 +51,11 @@ public class Subject extends EntityWithPath {
         return this.subjectTopics.stream().collect(Collectors.toUnmodifiableSet());
     }
 
-    public void addFilter(Filter filter) {
-        this.filters.add(filter);
-
-        if (filter.getSubject().orElse(null) != this) {
-            filter.setSubject(this);
-        }
-    }
-
     public void removeSubjectTopic(SubjectTopic subjectTopic) {
         this.subjectTopics.remove(subjectTopic);
 
         if (subjectTopic.getSubject().orElse(null) == this) {
             subjectTopic.disassociate();
-        }
-    }
-
-    public Set<Filter> getFilters() {
-        return filters.stream().collect(Collectors.toUnmodifiableSet());
-    }
-
-    public void removeFilter(Filter filter) {
-        if (this.filters.contains(filter)) {
-            this.filters.remove(filter);
-
-            if (filter.getSubject().orElse(null) == this) {
-                filter.setSubject(null);
-            }
         }
     }
 
