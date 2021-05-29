@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 public class MetadataInjectAspect {
     private final MetadataApiService metadataApiService;
 
-    private final Map<Class<?>, Optional<Method>> setMetadataMethods = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Set<Method>> setMetadataMethods = new ConcurrentHashMap<>();
     private final Map<Class<?>, Set<Field>> allFields = new ConcurrentHashMap<>();
     private final Map<Class<?>, Set<Field>> metadataInjectFields = new ConcurrentHashMap<>();
     private final Map<Class<?>, Set<Field>> metadataIdFields = new ConcurrentHashMap<>();
@@ -48,28 +49,29 @@ public class MetadataInjectAspect {
         return allFields.computeIfAbsent(clazz, this::getAllFieldsRecursively);
     }
 
-    private Optional<Method> getSetMetadataMethodRecursively(Class<?> clazz) {
+    private Set<Method> getSetMetadataMethodsRecursively(Class<?> clazz) {
+        Set<Method> methods = new LinkedHashSet<>();
         for (var method : clazz.getDeclaredMethods()) {
             if (method.getParameterCount() == 1) {
                 if (MetadataDto.class.isAssignableFrom(method.getParameterTypes()[0])) {
                     method.setAccessible(true);
-                    return Optional.of(method);
+                    methods.add(method);
                 }
             }
         }
 
         if (clazz.getSuperclass() != null) {
-            return getSetMetadataMethodRecursively(clazz.getSuperclass());
+            methods.addAll(getSetMetadataMethodsRecursively(clazz.getSuperclass()));
         }
 
-        return Optional.empty();
+        return methods;
     }
 
-    private Optional<Method> getSetMetadataMethod(Class<?> clazz) {
+    private Set<Method> getSetMetadataMethods(Class<?> clazz) {
         // Searching for a method taking one argument of type MetadataDto which is assumed to be a setter for
         // the metadata object
 
-        return setMetadataMethods.computeIfAbsent(clazz, this::getSetMetadataMethodRecursively);
+        return setMetadataMethods.computeIfAbsent(clazz, this::getSetMetadataMethodsRecursively);
     }
 
     private Set<Field> getInjectMetadataAnnotatedFields(Class<?> clazz) {
@@ -106,23 +108,23 @@ public class MetadataInjectAspect {
         });
     }
 
-    private Optional<URI> getMetadataIdForSingleObject(Object object) {
+    private Map<Class,URI> getMetadataIdsForSingleObject(Object object) {
 
         return getMetadataIdAnnotatedFields(object.getClass()).stream()
-                .findFirst()
                 .map(field -> {
                     try {
-                        return (URI) field.get(object);
+                        return Map.entry(field.getDeclaringClass(), (URI) field.get(object));
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
-                });
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private Set<URI> getMetadataIds(Object object) {
         // Searches recursively on the object for any metadata IDs (fields with @MetadataIdField) to request for
 
-        final var idList = new HashSet<URI>();
+        final var idList = new LinkedHashSet<URI>();
 
         if (object instanceof Collection<?>) {
 
@@ -133,7 +135,10 @@ public class MetadataInjectAspect {
                     .collect(Collectors.toSet());
         }
 
-        getMetadataIdForSingleObject(object).ifPresent(idList::add);
+        getMetadataIdsForSingleObject(object)
+                .entrySet().stream()
+                .map(Map.Entry::getValue)
+                .forEach(idList::add);
 
 
         getInjectMetadataAnnotatedFields(object.getClass()).forEach(field -> {
@@ -147,7 +152,7 @@ public class MetadataInjectAspect {
         return idList;
     }
 
-    private void injectMetadataIntoDto(Object dto, Map<String, MetadataDto> metadataDtos) {
+    private void injectMultilevelMetadataIntoDto(Object dto, Map<URI, MetadataDto> metadataDtos) {
         // Searches for any field marked with @InjectMetadata and recursively invokes this method on those fields
         // including collections
         for (var field : getInjectMetadataAnnotatedFields(dto.getClass())) {
@@ -156,9 +161,9 @@ public class MetadataInjectAspect {
 
                 if (Collection.class.isAssignableFrom(field.getType())) {
                     // Field is a collection, try to inject into all instances of this collection
-                    ((Collection<?>) value).forEach(i -> injectMetadataIntoDto(i, metadataDtos));
+                    ((Collection<?>) value).forEach(i -> injectMultilevelMetadataIntoDto(i, metadataDtos));
                 } else {
-                    injectMetadataIntoDto(value, metadataDtos);
+                    injectMultilevelMetadataIntoDto(value, metadataDtos);
                 }
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
@@ -166,32 +171,33 @@ public class MetadataInjectAspect {
         }
 
         // Applies metadata to this object if a setMetadata method is found
-        getSetMetadataMethod(dto.getClass()).ifPresent(setMetadata -> {
-            getMetadataIdForSingleObject(dto).ifPresent(id -> {
-                if (metadataDtos.containsKey(id.toString())) {
-                    try {
-                        setMetadata.invoke(dto, metadataDtos.get(id.toString()));
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        throw new RuntimeException(e);
-                    }
+        getSetMetadataMethods(dto.getClass()).forEach(setMetadata -> {
+            final var metadataIds = getMetadataIdsForSingleObject(dto);
+            final URI uri;
+            if (metadataIds.containsKey(setMetadata.getDeclaringClass())) {
+                uri = metadataIds.get(setMetadata.getDeclaringClass());
+            } else {
+                uri = metadataIds.entrySet().iterator().next().getValue();
+            }
+            if (metadataDtos.containsKey(uri)) {
+                try {
+                    setMetadata.invoke(dto, metadataDtos.get(uri));
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
                 }
-            });
-
+            }
         });
     }
 
-    private void injectMetadataIntoDtos(Object dtos, Set<MetadataDto> metadataDtos) {
-        final var metadataMap = metadataDtos.stream()
-                .collect(Collectors.toMap(MetadataDto::getPublicId, metadataDto -> metadataDto));
-
+    private void injectMetadataIntoDtos(Object dtos, Map<URI,MetadataDto> metadataDtos) {
         if (dtos instanceof Collection<?>) {
-            ((Collection<?>) dtos).forEach(dto -> injectMetadataIntoDto(dto, metadataMap));
+            ((Collection<?>) dtos).forEach(dto -> injectMultilevelMetadataIntoDto(dto, metadataDtos));
 
             return;
         }
 
         // Single DTO
-        injectMetadataIntoDto(dtos, metadataMap);
+        injectMultilevelMetadataIntoDto(dtos, metadataDtos);
     }
 
     @AfterReturning(value = "@annotation(no.ndla.taxonomy.service.InjectMetadata)", returning = "returnValue")
@@ -203,6 +209,14 @@ public class MetadataInjectAspect {
         final var metadata = metadataApiService.getMetadataByPublicId(idList);
 
         // Recursively inject metadata into the returning DTO
-        injectMetadataIntoDtos(returnValue, metadata);
+        Map<URI,MetadataDto> metadataMap = new LinkedHashMap<>();
+        for (MetadataDto m : metadata) {
+            try {
+                metadataMap.put(new URI(m.getPublicId()), m);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        injectMetadataIntoDtos(returnValue, metadataMap);
     }
 }
