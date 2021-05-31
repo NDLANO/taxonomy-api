@@ -38,6 +38,10 @@ public class Status extends DomainObject {
         return statusTranslations.stream().collect(Collectors.toUnmodifiableSet());
     }
 
+    public void removeTranslation(String languageCode) {
+        getTranslation(languageCode).ifPresent(this::removeTranslation);
+    }
+
     public void addTranslation(StatusTranslation statusTranslation) {
         this.statusTranslations.add(statusTranslation);
         if (statusTranslation.getStatus() != this) {
