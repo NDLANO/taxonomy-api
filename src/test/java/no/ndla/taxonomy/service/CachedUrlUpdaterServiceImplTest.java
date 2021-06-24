@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,6 +26,7 @@ class CachedUrlUpdaterServiceImplTest {
     private CachedPathRepository cachedPathRepository;
     private CachedUrlUpdaterServiceImpl service;
 
+    private EntityManager entityManager;
     private SubjectRepository subjectRepository;
     private TopicRepository topicRepository;
     private ResourceRepository resourceRepository;
@@ -33,13 +35,15 @@ class CachedUrlUpdaterServiceImplTest {
     void setup(@Autowired CachedPathRepository cachedPathRepository,
                @Autowired SubjectRepository subjectRepository,
                @Autowired TopicRepository topicRepository,
-               @Autowired ResourceRepository resourceRepository) {
+               @Autowired ResourceRepository resourceRepository,
+               @Autowired EntityManager entityManager) {
         this.cachedPathRepository = cachedPathRepository;
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
+        this.entityManager = entityManager;
 
-        service = new CachedUrlUpdaterServiceImpl(cachedPathRepository);
+        service = new CachedUrlUpdaterServiceImpl(cachedPathRepository, entityManager);
     }
 
     @Test
