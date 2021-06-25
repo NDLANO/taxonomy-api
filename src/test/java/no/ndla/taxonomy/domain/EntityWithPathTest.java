@@ -38,6 +38,9 @@ public class EntityWithPathTest {
         when(cachedUrl1.getPath()).thenReturn("/path1");
         when(cachedUrl2.getPath()).thenReturn("/path2");
         when(cachedUrl3.getPath()).thenReturn("/path3");
+        when(cachedUrl1.isActive()).thenReturn(true);
+        when(cachedUrl2.isActive()).thenReturn(true);
+        when(cachedUrl3.isActive()).thenReturn(true);
         when(cachedUrl1.isPrimary()).thenReturn(false);
         when(cachedUrl2.isPrimary()).thenReturn(false);
         when(cachedUrl3.isPrimary()).thenReturn(true);
@@ -95,15 +98,22 @@ public class EntityWithPathTest {
         final var cachedUrl1 = mock(CachedPath.class);
         final var cachedUrl2 = mock(CachedPath.class);
         final var cachedUrl3 = mock(CachedPath.class);
+        final var cachedUrl4 = mock(CachedPath.class);
 
         when(cachedUrl1.getPath()).thenReturn("/path1");
         when(cachedUrl2.getPath()).thenReturn("/path2");
         when(cachedUrl3.getPath()).thenReturn("/path3");
+        when(cachedUrl4.getPath()).thenReturn("/path4");
         when(cachedUrl1.isPrimary()).thenReturn(false);
         when(cachedUrl2.isPrimary()).thenReturn(false);
         when(cachedUrl3.isPrimary()).thenReturn(true);
+        when(cachedUrl4.isPrimary()).thenReturn(true);
+        when(cachedUrl1.isActive()).thenReturn(true);
+        when(cachedUrl2.isActive()).thenReturn(true);
+        when(cachedUrl3.isActive()).thenReturn(true);
+        when(cachedUrl4.isActive()).thenReturn(false);
 
-        when(entityWithPath.getCachedPaths()).thenReturn(Set.of(cachedUrl1, cachedUrl2, cachedUrl3));
+        when(entityWithPath.getCachedPaths()).thenReturn(Set.of(cachedUrl1, cachedUrl2, cachedUrl3, cachedUrl4));
 
         final var allPaths = entityWithPath.getAllPaths();
 

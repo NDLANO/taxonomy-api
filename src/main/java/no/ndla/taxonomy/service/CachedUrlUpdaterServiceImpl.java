@@ -3,12 +3,10 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.CachedPath;
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.repositories.CachedPathRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -16,14 +14,9 @@ import java.util.stream.Collectors;
 @Service
 public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
     private final CachedPathRepository cachedPathRepository;
-    private final EntityManager entityManager;
 
-    @Value("${spring.datasource.url:h2}")
-    private String datasource = "h2";
-
-    public CachedUrlUpdaterServiceImpl(CachedPathRepository cachedPathRepository, EntityManager entityManager) {
+    public CachedUrlUpdaterServiceImpl(CachedPathRepository cachedPathRepository) {
         this.cachedPathRepository = cachedPathRepository;
-        this.entityManager = entityManager;
     }
 
     private Set<PathToEntity> createPathsToEntity(EntityWithPath entity) {
@@ -50,14 +43,9 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void updateCachedUrls(EntityWithPath entity) {
-        // Make the other transactions wait, but not for tests
-        if (!datasource.contains("h2")) {
-            entityManager.createNativeQuery("set local lock_timeout = 5000").executeUpdate();
-            cachedPathRepository.findAllByPublicId(entity.getPublicId());
-        }
-        clearCachedUrls(entity);
-
         Set.copyOf(entity.getChildConnections()).forEach(childEntity -> childEntity.getConnectedChild().ifPresent(this::updateCachedUrls));
+
+        clearCachedUrls(entity);
 
         final var newPathsToEntity = createPathsToEntity(entity);
         final var newCachedPathObjects = newPathsToEntity.stream()
@@ -66,6 +54,7 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
                     cachedPath.setPath(newPath.path);
                     cachedPath.setPrimary(newPath.isPrimary);
                     cachedPath.setOwningEntity(entity);
+                    cachedPath.setActive(true);
 
                     return cachedPath;
                 }).collect(Collectors.toSet());
@@ -77,7 +66,7 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void clearCachedUrls(EntityWithPath entity) {
-        Set.copyOf(entity.getCachedPaths()).forEach(entity::removeCachedPath);
+        Set.copyOf(entity.getCachedPaths()).forEach(CachedPath::disable);
 
         cachedPathRepository.flush();
     }

@@ -26,7 +26,6 @@ class CachedUrlUpdaterServiceImplTest {
     private CachedPathRepository cachedPathRepository;
     private CachedUrlUpdaterServiceImpl service;
 
-    private EntityManager entityManager;
     private SubjectRepository subjectRepository;
     private TopicRepository topicRepository;
     private ResourceRepository resourceRepository;
@@ -35,15 +34,13 @@ class CachedUrlUpdaterServiceImplTest {
     void setup(@Autowired CachedPathRepository cachedPathRepository,
                @Autowired SubjectRepository subjectRepository,
                @Autowired TopicRepository topicRepository,
-               @Autowired ResourceRepository resourceRepository,
-               @Autowired EntityManager entityManager) {
+               @Autowired ResourceRepository resourceRepository) {
         this.cachedPathRepository = cachedPathRepository;
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
-        this.entityManager = entityManager;
 
-        service = new CachedUrlUpdaterServiceImpl(cachedPathRepository, entityManager);
+        service = new CachedUrlUpdaterServiceImpl(cachedPathRepository);
     }
 
     @Test
@@ -179,6 +176,7 @@ class CachedUrlUpdaterServiceImplTest {
 
         service.clearCachedUrls(subject1);
 
-        assertEquals(0, subject1.getCachedPaths().size());
+        assertEquals(1, subject1.getCachedPaths().size());
+        assertEquals(0, subject1.getCachedPaths().stream().filter(CachedPath::isActive).collect(Collectors.toSet()).size());
     }
 }
