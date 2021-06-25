@@ -772,7 +772,7 @@
     </changeSet>
 
     <changeSet id="20210623" author="Gunnar Velle">
-        <!-- Adds active flag used to cached_path to avoid database locks -->
+        <!-- Adds active flag to cached_path to avoid database locks -->
         <addColumn tableName="cached_path">
             <column name="is_active" type="boolean" defaultValue="true">
                 <constraints nullable="false"/>
