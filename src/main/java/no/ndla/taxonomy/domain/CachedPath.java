@@ -24,9 +24,6 @@ public class CachedPath {
     private String path;
 
     @ManyToOne
-    private Subject subject;
-
-    @ManyToOne
     private Topic topic;
 
     @ManyToOne
@@ -70,10 +67,6 @@ public class CachedPath {
     public Optional<EntityWithPath> getOwningEntity() {
         final var entitiesThatCanBeReturned = new HashSet<EntityWithPath>();
 
-        if (subject != null) {
-            entitiesThatCanBeReturned.add(subject);
-        }
-
         if (topic != null) {
             entitiesThatCanBeReturned.add(topic);
         }
@@ -102,9 +95,7 @@ public class CachedPath {
             return;
         }
 
-        if (entity instanceof Subject) {
-            this.setSubject((Subject) entity);
-        } else if (entity instanceof Topic) {
+        if (entity instanceof Topic) {
             this.setTopic((Topic) entity);
         } else if (entity instanceof Resource) {
             this.setResource((Resource) entity);
@@ -116,14 +107,22 @@ public class CachedPath {
     }
 
     public Optional<Topic> getTopic() {
-        return Optional.ofNullable(this.topic);
+        return Optional.ofNullable(this.topic)
+                .filter(topic -> topic.getPublicId() == null || !topic.getPublicId().toString().startsWith("urn:subject:"));
     }
 
     public void setTopic(Topic topic) {
         final var oldTopic = this.topic;
 
-        if (topic == null && oldTopic == null) {
-            return;
+        if (topic == null) {
+            if (oldTopic == null) {
+                return;
+            }
+            final var oldTopicId = oldTopic.getPublicId();
+            if (oldTopicId != null && oldTopicId.toString().startsWith("urn:subject:")) {
+                // The current topic is a subject, so setTopic(null) is a NOP
+                return;
+            }
         }
 
         this.topic = topic;
@@ -137,23 +136,32 @@ public class CachedPath {
         }
 
         if (topic != null) {
-            setSubject(null);
             setResource(null);
         }
     }
 
-    public Optional<Subject> getSubject() {
-        return Optional.ofNullable(this.subject);
+    public Optional<Topic> getSubject() {
+        return Optional.ofNullable(this.topic)
+                .filter(topic -> topic.getPublicId() != null && topic.getPublicId().toString().startsWith("urn:subject:"));
     }
 
-    public void setSubject(Subject subject) {
-        final var oldSubject = this.subject;
+    public void setSubject(Topic subject) {
+        final var oldSubject = this.topic;
 
-        if (subject == null && oldSubject == null) {
-            return;
+        if (subject == null) {
+            if (oldSubject == null) {
+                return;
+            }
+            final var oldSubjectId = oldSubject.getPublicId();
+            if (oldSubjectId == null || !oldSubjectId.toString().startsWith("urn:subject:")) {
+                // The old topic is of type topic, setSubject(null) is a NOP
+                return;
+            }
+        } else if (subject.getPublicId() == null || !subject.getPublicId().toString().startsWith("urn:subject:")) {
+            throw new RuntimeException("The type of topic should be subject");
         }
 
-        this.subject = subject;
+        this.topic = subject;
 
         if (oldSubject != null && oldSubject != subject) {
             oldSubject.removeCachedPath(this);
@@ -164,7 +172,6 @@ public class CachedPath {
         }
 
         if (subject != null) {
-            setTopic(null);
             setResource(null);
         }
     }

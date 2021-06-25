@@ -3,7 +3,6 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
-import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,22 +24,18 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class RecursiveTopicTreeServiceImplTest {
     private TopicRepository topicRepository;
-    private SubjectRepository subjectRepository;
     private TopicSubtopicRepository topicSubtopicRepository;
 
     private RecursiveTopicTreeServiceImpl service;
 
     @BeforeEach
     void setUp(@Autowired TopicSubtopicRepository topicSubtopicRepository,
-               @Autowired SubjectRepository subjectRepository,
                @Autowired TopicRepository topicRepository,
                @Autowired TestSeeder testSeeder) {
-        this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
 
         topicRepository.deleteAllAndFlush();
-        subjectRepository.deleteAllAndFlush();
 
         testSeeder.recursiveTopicsBySubjectIdTestSetup();
 
@@ -49,7 +44,7 @@ class RecursiveTopicTreeServiceImplTest {
 
     @Test
     void getRecursiveTopics_by_subject() {
-        final var subject = subjectRepository.findFirstByPublicId(URI.create("urn:subject:1")).orElseThrow();
+        final var subject = topicRepository.findFirstByPublicId(URI.create("urn:subject:1")).orElseThrow();
         final var topicElements = service.getRecursiveTopics(subject);
 
         final var topicsToFind = new HashSet<>(Set.of("urn:topic:1", "urn:topic:2", "urn:topic:3", "urn:topic:4", "urn:topic:5", "urn:topic:6", "urn:topic:7", "urn:topic:8"));

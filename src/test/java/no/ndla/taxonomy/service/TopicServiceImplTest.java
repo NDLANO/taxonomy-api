@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -60,13 +61,24 @@ public class TopicServiceImplTest {
     public void getAllConnections() {
         final var topicId = builder.topic().getPublicId();
 
-        final var subjectTopic = mock(SubjectTopic.class);
+        final var parentSubject = mock(Topic.class);
+        final var parentTopic = mock(Topic.class);
+        final var subjectTopic = mock(TopicSubtopic.class);
         final var parentTopicSubtopic = mock(TopicSubtopic.class);
         final var childTopicSubtopic = mock(TopicSubtopic.class);
 
+        when(parentSubject.getPublicId()).thenReturn(URI.create("urn:subject:1"));
+        when(parentTopic.getPublicId()).thenReturn(URI.create("urn:topic:1"));
+
+        // The type of the relation is partly determined by the type of parent object
+        // This is a change from the previous model with a Subject type. Topic is now
+        // used for both subjects and topics and types are determined by the public id.
         when(subjectTopic.getPublicId()).thenReturn(URI.create("urn:subject-topic"));
+        when(subjectTopic.getConnectedParent()).thenReturn(Optional.of(parentSubject));
         when(parentTopicSubtopic.getPublicId()).thenReturn(URI.create("urn:parent-topic"));
+        when(parentTopicSubtopic.getConnectedParent()).thenReturn(Optional.of(parentTopic));
         when(childTopicSubtopic.getPublicId()).thenReturn(URI.create("urn:child-topic"));
+        when(childTopicSubtopic.getConnectedParent()).thenReturn(Optional.of(parentTopic));
 
         final var parentConnectionsToReturn = Set.of(subjectTopic);
         final var childConnectionsToReturn = Set.of(childTopicSubtopic);

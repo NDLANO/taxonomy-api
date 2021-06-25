@@ -3,7 +3,6 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.CachedPathRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
-import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,17 +24,14 @@ class CachedUrlUpdaterServiceImplTest {
     private CachedPathRepository cachedPathRepository;
     private CachedUrlUpdaterServiceImpl service;
 
-    private SubjectRepository subjectRepository;
     private TopicRepository topicRepository;
     private ResourceRepository resourceRepository;
 
     @BeforeEach
     void setup(@Autowired CachedPathRepository cachedPathRepository,
-               @Autowired SubjectRepository subjectRepository,
                @Autowired TopicRepository topicRepository,
                @Autowired ResourceRepository resourceRepository) {
         this.cachedPathRepository = cachedPathRepository;
-        this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
 
@@ -45,10 +41,11 @@ class CachedUrlUpdaterServiceImplTest {
     @Test
     @Transactional
     void updateCachedUrls() {
-        final var subject1 = new Subject();
+        final var subject1 = new Topic();
         subject1.setPublicId(URI.create("urn:subject:1"));
+        subject1.setContext(true);
 
-        subjectRepository.save(subject1);
+        topicRepository.save(subject1);
 
         service.updateCachedUrls(subject1);
 
@@ -82,7 +79,7 @@ class CachedUrlUpdaterServiceImplTest {
             assertEquals(1, cachedPathRepository.findAllByPublicId(URI.create("urn:topic:1")).size());
         }
 
-        topic1.addSubjectTopic(SubjectTopic.create(subject1, topic1));
+        topic1.addParentTopicSubtopic(TopicSubtopic.create(subject1, topic1));
 
         service.updateCachedUrls(topic1);
 
@@ -164,10 +161,11 @@ class CachedUrlUpdaterServiceImplTest {
 
     @Test
     void clearCachedUrls() {
-        final var subject1 = new Subject();
+        final var subject1 = new Topic();
         subject1.setPublicId(URI.create("urn:subject:1"));
+        subject1.setContext(true);
 
-        subjectRepository.save(subject1);
+        topicRepository.save(subject1);
 
         service.updateCachedUrls(subject1);
 

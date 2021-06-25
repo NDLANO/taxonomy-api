@@ -62,6 +62,7 @@ public class TopicServiceImpl implements TopicService {
 
         return filteredTopics
                 .stream()
+                .filter(topic -> topic.getPublicId() != null && topic.getPublicId().toString().startsWith("urn:topic:"))
                 .map(topic -> new TopicDTO(topic, languageCode))
                 .collect(Collectors.toList());
     }

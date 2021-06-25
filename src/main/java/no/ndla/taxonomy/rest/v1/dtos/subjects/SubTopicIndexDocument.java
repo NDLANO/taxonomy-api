@@ -74,7 +74,7 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 
-    public SubTopicIndexDocument(Subject subject, DomainEntity domainEntity, String language) {
+    public SubTopicIndexDocument(Topic subject, DomainEntity domainEntity, String language) {
         this.language = language;
 
         if (domainEntity instanceof TopicSubtopic) {
@@ -91,22 +91,6 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
 
             {
                 final Relevance relevance = topicSubtopic.getRelevance().orElse(null);
-                this.relevanceId = relevance != null ? relevance.getPublicId() : null;
-            }
-        } else if (domainEntity instanceof SubjectTopic) {
-            final var subjectTopic = (SubjectTopic) domainEntity;
-
-            subjectTopic.getTopic().ifPresent(topic -> {
-                this.populateFromTopic(topic);
-                this.path = topic.getPathByContext(subject).orElse(null);
-            });
-
-            subjectTopic.getSubject().ifPresent(s -> this.parent = s.getPublicId());
-
-            this.rank = subjectTopic.getRank();
-
-            {
-                final Relevance relevance = subjectTopic.getRelevance().orElse(null);
                 this.relevanceId = relevance != null ? relevance.getPublicId() : null;
             }
         } else {

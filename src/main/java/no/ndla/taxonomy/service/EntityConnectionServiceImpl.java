@@ -1,7 +1,6 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
@@ -19,24 +18,22 @@ import java.util.stream.Stream;
 @Transactional(propagation = Propagation.MANDATORY)
 @Service
 public class EntityConnectionServiceImpl implements EntityConnectionService {
-    private final SubjectTopicRepository subjectTopicRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final TopicResourceRepository topicResourceRepository;
 
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
 
-    public EntityConnectionServiceImpl(SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
-        this.subjectTopicRepository = subjectTopicRepository;
+    public EntityConnectionServiceImpl(TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicResourceRepository = topicResourceRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
 
     @Override
-    public SubjectTopic connectSubjectTopic(Subject subject, Topic topic, Relevance relevance) {
-        final var highestRank = subject.getSubjectTopics().stream()
-                .map(SubjectTopic::getRank)
+    public TopicSubtopic connectSubjectTopic(Topic subject, Topic topic, Relevance relevance) {
+        final var highestRank = subject.getChildrenTopicSubtopics().stream()
+                .map(TopicSubtopic::getRank)
                 .max(Integer::compare);
 
         return connectSubjectTopic(subject, topic, relevance, highestRank.orElse(0) + 1);
@@ -55,9 +52,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
         EntityWithPathConnection connection;
 
-        if (parent instanceof Subject && child instanceof Topic) {
-            connection = SubjectTopic.create((Subject) parent, (Topic) child);
-        } else if (parent instanceof Topic && child instanceof Topic) {
+        if (parent instanceof Topic && child instanceof Topic) {
             connection = TopicSubtopic.create((Topic) parent, (Topic) child);
         } else if (parent instanceof Topic && child instanceof Resource) {
             connection = TopicResource.create((Topic) parent, (Resource) child);
@@ -81,10 +76,6 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         return connection;
     }
 
-    private SubjectTopic createConnection(Subject subject, Topic topic, Relevance relevance, int rank) {
-        return (SubjectTopic) doCreateConnection(subject, topic, true, relevance, rank);
-    }
-
     private TopicSubtopic createConnection(Topic topic, Topic subtopic, Relevance relevance, int rank) {
         return (TopicSubtopic) doCreateConnection(topic, subtopic, true, relevance, rank);
     }
@@ -94,19 +85,19 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public SubjectTopic connectSubjectTopic(Subject subject, Topic topic, Relevance relevance, Integer rank) {
+    public TopicSubtopic connectSubjectTopic(Topic subject, Topic topic, Relevance relevance, Integer rank) {
         if (topic.getParentConnections().size() > 0) {
             throw new DuplicateConnectionException();
         }
 
         if (rank == null) {
-            rank = topic.getSubjectTopics().stream()
-                    .map(SubjectTopic::getRank)
+            rank = subject.getChildrenTopicSubtopics().stream()
+                    .map(TopicSubtopic::getRank)
                     .max(Integer::compare)
                     .orElse(0) + 1;
         }
 
-        return subjectTopicRepository.saveAndFlush(createConnection(subject, topic, relevance, rank));
+        return topicSubtopicRepository.saveAndFlush(createConnection(subject, topic, relevance, rank));
     }
 
     @Override
@@ -186,23 +177,6 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public void disconnectSubjectTopic(Subject subject, Topic topic) {
-        new HashSet<>(subject.getSubjectTopics()).stream()
-                .filter(subjectTopic -> subjectTopic.getTopic().orElse(null) == topic)
-                .forEach(this::disconnectSubjectTopic); // (It will never be more than one record)
-    }
-
-    @Override
-    public void disconnectSubjectTopic(SubjectTopic subjectTopic) {
-        final var topic = subjectTopic.getTopic();
-
-        subjectTopic.disassociate();
-        subjectTopicRepository.delete(subjectTopic);
-
-        topic.ifPresent(cachedUrlUpdaterService::updateCachedUrls);
-    }
-
-    @Override
     public void disconnectTopicResource(Topic topic, Resource resource) {
         new HashSet<>(topic.getTopicResources()).stream()
                 .filter(topicResource -> topicResource.getResource().orElse(null) == resource)
@@ -235,9 +209,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     private void saveConnections(Collection<EntityWithPathConnection> connections) {
         connections.forEach(connectable -> {
-            if (connectable instanceof SubjectTopic) {
-                subjectTopicRepository.save((SubjectTopic) connectable);
-            } else if (connectable instanceof TopicSubtopic) {
+            if (connectable instanceof TopicSubtopic) {
                 topicSubtopicRepository.save((TopicSubtopic) connectable);
             } else if (connectable instanceof TopicResource) {
                 topicResourceRepository.save((TopicResource) connectable);
@@ -246,7 +218,6 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
             }
         });
 
-        subjectTopicRepository.flush();
         topicSubtopicRepository.flush();
         topicResourceRepository.flush();
     }
@@ -314,7 +285,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public void updateSubjectTopic(SubjectTopic subjectTopic, Relevance relevance, Integer newRank) {
+    public void updateSubjectTopic(TopicSubtopic subjectTopic, Relevance relevance, Integer newRank) {
         updateRank(subjectTopic, newRank);
         updateRelevance(subjectTopic, relevance);
     }
@@ -341,13 +312,8 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         // lazy initialized properties of the object
 
         if (entity instanceof Topic) {
-            return Stream.concat(
-                    topicSubtopicRepository
-                            .findAllBySubtopicPublicIdIncludingTopicAndSubtopicAndCachedUrls(entity.getPublicId())
-                            .stream(),
-                    subjectTopicRepository
-                            .findAllByTopicPublicIdIncludingSubjectAndTopicAndCachedUrls(entity.getPublicId())
-                            .stream()).collect(Collectors.toUnmodifiableSet());
+            return new ArrayList<>(topicSubtopicRepository
+                    .findAllBySubtopicPublicIdIncludingTopicAndSubtopicAndCachedUrls(entity.getPublicId()));
         }
 
         return entity.getParentConnections();
@@ -362,9 +328,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     public void disconnectAllChildren(EntityWithPath entity) {
         Set.copyOf(entity.getChildConnections())
                 .forEach(connection -> {
-                    if (connection instanceof SubjectTopic) {
-                        disconnectSubjectTopic((SubjectTopic) connection);
-                    } else if (connection instanceof TopicSubtopic) {
+                    if (connection instanceof TopicSubtopic) {
                         disconnectTopicSubtopic((TopicSubtopic) connection);
                     } else if (connection instanceof TopicResource) {
                         disconnectTopicResource((TopicResource) connection);

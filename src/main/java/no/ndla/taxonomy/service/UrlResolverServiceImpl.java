@@ -4,7 +4,6 @@ import no.ndla.taxonomy.domain.CachedPath;
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.UrlMapping;
 import no.ndla.taxonomy.repositories.ResourceRepository;
-import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.UrlMappingRepository;
 import no.ndla.taxonomy.service.dtos.ResolvedUrl;
@@ -25,19 +24,16 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
     private final OldUrlCanonifier canonifier;
 
-    private final SubjectRepository subjectRepository;
     private final TopicRepository topicRepository;
     private final ResourceRepository resourceRepository;
     private final UrlMappingRepository urlMappingRepository;
 
     @Autowired
-    public UrlResolverServiceImpl(SubjectRepository subjectRepository,
-                                  TopicRepository topicRepository,
+    public UrlResolverServiceImpl(TopicRepository topicRepository,
                                   ResourceRepository resourceRepository,
                                   UrlMappingRepository urlMappingRepository,
                                   OldUrlCanonifier oldUrlCanonifier) {
         this.topicRepository = topicRepository;
-        this.subjectRepository = subjectRepository;
         this.resourceRepository = resourceRepository;
         this.urlMappingRepository = urlMappingRepository;
         this.canonifier = oldUrlCanonifier;
@@ -245,9 +241,8 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
         switch (publicIdParts[0].toLowerCase()) {
             case "topic":
-                return topicRepository.findFirstByPublicIdIncludingCachedUrls(publicId).map(topic -> topic);
             case "subject":
-                return subjectRepository.findFirstByPublicIdIncludingCachedUrls(publicId).map(subject -> subject);
+                return topicRepository.findFirstByPublicIdIncludingCachedUrls(publicId).map(topic -> topic);
             case "resource":
                 return resourceRepository.findFirstByPublicIdIncludingCachedUrls(publicId).map(resource -> resource);
         }

@@ -1,7 +1,7 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
-import no.ndla.taxonomy.repositories.SubjectRepository;
+import no.ndla.taxonomy.repositories.TopicRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +19,7 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(SpringExtension.class)
 public class SubjectServiceImplTest {
     @Autowired
-    private SubjectRepository subjectRepository;
+    private TopicRepository topicRepository;
 
     @Autowired
     private Builder builder;
@@ -33,7 +33,7 @@ public class SubjectServiceImplTest {
         metadataApiService = mock(MetadataApiService.class);
         EntityConnectionService entityConnectionService = mock(EntityConnectionService.class);
 
-        subjectService = new SubjectServiceImpl(subjectRepository, metadataApiService, entityConnectionService);
+        subjectService = new SubjectServiceImpl(topicRepository, metadataApiService, entityConnectionService);
     }
 
     @Test
@@ -41,11 +41,11 @@ public class SubjectServiceImplTest {
     public void delete() {
         final var subjectId = builder.subject().getPublicId();
 
-        assertTrue(subjectRepository.findFirstByPublicId(subjectId).isPresent());
+        assertTrue(topicRepository.findFirstByPublicId(subjectId).isPresent());
 
         subjectService.delete(subjectId);
 
-        assertFalse(subjectRepository.findFirstByPublicId(subjectId).isPresent());
+        assertFalse(topicRepository.findFirstByPublicId(subjectId).isPresent());
 
         verify(metadataApiService).deleteMetadataByPublicId(subjectId);
     }

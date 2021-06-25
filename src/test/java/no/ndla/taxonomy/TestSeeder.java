@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.util.UUID;
 
 /**
  * This class replaces some SQL files that was used to seed the database for various tests. The SQL statements
@@ -17,24 +18,20 @@ import java.net.URI;
 @Transactional
 @Component
 public class TestSeeder {
-    private final SubjectRepository subjectRepository;
     private final TopicRepository topicRepository;
     private final ResourceRepository resourceRepository;
     private final RelevanceRepository relevanceRepository;
     private final ResourceTypeRepository resourceTypeRepository;
-    private final SubjectTopicRepository subjectTopicRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final TopicResourceRepository topicResourceRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public TestSeeder(SubjectRepository subjectRepository, TopicRepository topicRepository, ResourceRepository resourceRepository, RelevanceRepository relevanceRepository, ResourceTypeRepository resourceTypeRepository, SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository,
+    public TestSeeder(TopicRepository topicRepository, ResourceRepository resourceRepository, RelevanceRepository relevanceRepository, ResourceTypeRepository resourceTypeRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository,
                       CachedUrlUpdaterService cachedUrlUpdaterService) {
-        this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
         this.relevanceRepository = relevanceRepository;
         this.resourceTypeRepository = resourceTypeRepository;
-        this.subjectTopicRepository = subjectTopicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicResourceRepository = topicResourceRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
@@ -65,25 +62,29 @@ public class TestSeeder {
         return topic;
     }
 
-    private Subject createSubject(String publicId, String name) {
-        final var subject = new Subject();
+    private Topic createSubject(String publicId, String name) {
+        final var subject = new Topic();
+        subject.setContext(true);
 
         if (publicId != null) {
             subject.setPublicId(URI.create(publicId));
+        } else {
+            subject.setPublicId(URI.create("urn:subject:" + UUID.randomUUID()));
         }
         if (name != null) {
             subject.setName(name);
         }
 
-        subjectRepository.saveAndFlush(subject);
+        topicRepository.saveAndFlush(subject);
 
         cachedUrlUpdaterService.updateCachedUrls(subject);
 
         return subject;
     }
 
-    private SubjectTopic createSubjectTopic(String publicId, Topic topic, Subject subject, Integer rank) {
-        final var subjectTopic = SubjectTopic.create(subject, topic);
+    @Deprecated
+    private TopicSubtopic createSubjectTopic(String publicId, Topic topic, Topic subject, Integer rank) {
+        final var subjectTopic = TopicSubtopic.create(subject, topic);
 
         if (publicId != null) {
             subjectTopic.setPublicId(URI.create(publicId));
@@ -93,9 +94,9 @@ public class TestSeeder {
             subjectTopic.setRank(rank);
         }
 
-        subjectTopicRepository.saveAndFlush(subjectTopic);
+        topicSubtopicRepository.saveAndFlush(subjectTopic);
 
-        subjectTopic.getSubject().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
+        subjectTopic.getTopic().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
 
         return subjectTopic;
     }
@@ -214,7 +215,6 @@ public class TestSeeder {
         relevanceRepository.deleteAllAndFlush();
         resourceRepository.deleteAllAndFlush();
         topicRepository.deleteAllAndFlush();
-        subjectRepository.deleteAllAndFlush();
     }
 
     public void recursiveTopicsBySubjectIdAndFiltersTestSetup() {

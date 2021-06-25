@@ -1,10 +1,8 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
-import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.TopicResource;
 import no.ndla.taxonomy.domain.TopicSubtopic;
-import no.ndla.taxonomy.repositories.SubjectTopicRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
@@ -27,8 +25,6 @@ import static org.mockito.Mockito.*;
 @Transactional
 public class EntityConnectionServiceImplTest {
     @Autowired
-    private SubjectTopicRepository subjectTopicRepository;
-    @Autowired
     private TopicSubtopicRepository topicSubtopicRepository;
     @Autowired
     private TopicResourceRepository topicResourceRepository;
@@ -44,7 +40,7 @@ public class EntityConnectionServiceImplTest {
     public void setUp() throws Exception {
         cachedUrlUpdaterService = mock(CachedUrlUpdaterService.class);
 
-        service = new EntityConnectionServiceImpl(subjectTopicRepository, topicSubtopicRepository, topicResourceRepository, cachedUrlUpdaterService);
+        service = new EntityConnectionServiceImpl(topicSubtopicRepository, topicResourceRepository, cachedUrlUpdaterService);
     }
 
     @Test
@@ -57,8 +53,7 @@ public class EntityConnectionServiceImplTest {
 
         final var relevance = builder.relevance();
 
-        assertFalse(subjectTopicRepository.findFirstBySubjectAndTopic(subject1, topic1).isPresent());
-
+        assertFalse(topicSubtopicRepository.findFirstByTopicAndSubtopic(subject1, topic1).isPresent());
         final var connection1 = service.connectSubjectTopic(subject1, topic1, relevance);
         assertNotNull(connection1);
         assertNotNull(connection1.getId());
@@ -67,7 +62,7 @@ public class EntityConnectionServiceImplTest {
 
         verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(topic1);
 
-        assertTrue(subjectTopicRepository.findFirstBySubjectAndTopic(subject1, topic1).isPresent());
+        assertTrue(topicSubtopicRepository.findFirstByTopicAndSubtopic(subject1, topic1).isPresent());
 
         final var connection2 = service.connectSubjectTopic(subject2, topic2, relevance);
 
@@ -353,22 +348,22 @@ public class EntityConnectionServiceImplTest {
 
         final var topic1 = builder.topic();
 
-        final var subject1topic1 = SubjectTopic.create(subject1, topic1);
+        final var subject1topic1 = TopicSubtopic.create(subject1, topic1);
 
-        assertTrue(subject1.getSubjectTopics().contains(subject1topic1));
-        assertTrue(topic1.getSubjectTopics().contains(subject1topic1));
+        assertTrue(subject1.getChildrenTopicSubtopics().contains(subject1topic1));
+        assertTrue(topic1.getParentTopicSubtopic().orElse(null) == subject1topic1);
 
         reset(cachedUrlUpdaterService);
 
-        service.disconnectSubjectTopic(subject1, topic1);
+        service.disconnectTopicSubtopic(subject1, topic1);
 
         verify(cachedUrlUpdaterService).updateCachedUrls(topic1);
 
+        assertFalse(subject1topic1.getSubtopic().isPresent());
         assertFalse(subject1topic1.getTopic().isPresent());
-        assertFalse(subject1topic1.getSubject().isPresent());
 
-        assertFalse(subject1.getSubjectTopics().contains(subject1topic1));
-        assertFalse(topic1.getSubjectTopics().contains(subject1topic1));
+        assertFalse(subject1.getChildrenTopicSubtopics().contains(subject1topic1));
+        assertFalse(topic1.getParentTopicSubtopic().orElse(null) == subject1topic1);
     }
 
     @Test
@@ -435,7 +430,7 @@ public class EntityConnectionServiceImplTest {
 
         final var relevance = builder.relevance();
 
-        final var subjectTopic = SubjectTopic.create(subject1, subTopic2);
+        final var subjectTopic = TopicSubtopic.create(subject1, subTopic2);
 
         final var connection1 = TopicSubtopic.create(rootTopic1, subTopic1);
 
@@ -458,12 +453,12 @@ public class EntityConnectionServiceImplTest {
         final var subject1 = builder.subject();
         final var subject3 = builder.subject();
 
-        final var subject1topic1 = SubjectTopic.create(subject1, topic1);
-        final var subject1topic2 = SubjectTopic.create(subject1, topic2);
+        final var subject1topic1 = TopicSubtopic.create(subject1, topic1);
+        final var subject1topic2 = TopicSubtopic.create(subject1, topic2);
 
         final var relevance = builder.relevance();
 
-        SubjectTopic.create(subject3, topic3);
+        TopicSubtopic.create(subject3, topic3);
 
         subject1topic1.setRank(1);
         subject1topic2.setRank(2);
@@ -545,7 +540,7 @@ public class EntityConnectionServiceImplTest {
 
         final var resource1 = builder.resource();
 
-        SubjectTopic.create(subject1, topic1);
+        TopicSubtopic.create(subject1, topic1);
 
         final var topic1resource1 = TopicResource.create(topic1, resource1, true);
         final var topic2resource1 = TopicResource.create(topic2, resource1, false);

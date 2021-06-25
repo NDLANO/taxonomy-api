@@ -3,7 +3,6 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.ResourceRepository;
-import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.RecursiveMergeResultDto;
@@ -19,14 +18,12 @@ import java.util.Set;
 @Service
 @Transactional(readOnly = true)
 public class MetadataUpdateServiceImpl implements MetadataUpdateService {
-    private final SubjectRepository subjectRepository;
     private final TopicRepository topicRepository;
     private final ResourceRepository resourceRepository;
 
     private final MetadataApiService apiService;
 
-    public MetadataUpdateServiceImpl(SubjectRepository subjectRepository, TopicRepository topicRepository, ResourceRepository resourceRepository, MetadataApiService apiService) {
-        this.subjectRepository = subjectRepository;
+    public MetadataUpdateServiceImpl(TopicRepository topicRepository, ResourceRepository resourceRepository, MetadataApiService apiService) {
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
         this.apiService = apiService;
@@ -35,9 +32,8 @@ public class MetadataUpdateServiceImpl implements MetadataUpdateService {
     private EntityWithPath getEntityFromPublicId(URI publicId) {
         switch (publicId.getSchemeSpecificPart().split(":")[0]) {
             case "subject":
-                return subjectRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Subject by id was not found"));
             case "topic":
-                return topicRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Topic by id was not found"));
+                return topicRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Subject/Topic by id was not found"));
             case "resource":
                 return resourceRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Resource by id was not found"));
         }

@@ -54,47 +54,47 @@ public class TopicTest {
     public void getAddAndRemoveSubjectTopics() {
         final var topic = spy(this.topic);
 
-        assertEquals(0, topic.getSubjectTopics().size());
+        assertEquals(0, topic.getParentConnections().size());
 
-        final var subjectTopic1 = mock(SubjectTopic.class);
-        final var subjectTopic2 = mock(SubjectTopic.class);
+        final var subjectTopic1 = mock(TopicSubtopic.class);
+        final var subjectTopic2 = mock(TopicSubtopic.class);
 
         try {
-            topic.addSubjectTopic(subjectTopic1);
+            topic.addParentTopicSubtopic(subjectTopic1);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException ignored) {
 
         }
 
-        when(subjectTopic1.getTopic()).thenReturn(Optional.of(topic));
-        topic.addSubjectTopic(subjectTopic1);
+        when(subjectTopic1.getSubtopic()).thenReturn(Optional.of(topic));
+        topic.addParentTopicSubtopic(subjectTopic1);
 
-        when(subjectTopic1.getTopic()).thenReturn(Optional.of(topic));
+        when(subjectTopic1.getSubtopic()).thenReturn(Optional.of(topic));
 
-        assertEquals(1, topic.getSubjectTopics().size());
-        assertTrue(topic.getSubjectTopics().contains(subjectTopic1));
+        assertEquals(1, topic.getParentConnections().size());
+        assertTrue(topic.getParentConnections().contains(subjectTopic1));
 
         try {
-            topic.addSubjectTopic(subjectTopic2);
+            topic.addParentTopicSubtopic(subjectTopic2);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException ignored) {
         }
 
-        when(subjectTopic2.getTopic()).thenReturn(Optional.of(topic));
-        topic.addSubjectTopic(subjectTopic2);
+        when(subjectTopic2.getSubtopic()).thenReturn(Optional.of(topic));
+        topic.addParentTopicSubtopic(subjectTopic2);
 
-        when(subjectTopic2.getTopic()).thenReturn(Optional.of(topic));
+        when(subjectTopic2.getSubtopic()).thenReturn(Optional.of(topic));
 
-        assertEquals(2, topic.getSubjectTopics().size());
-        assertTrue(topic.getSubjectTopics().containsAll(Set.of(subjectTopic1, subjectTopic2)));
+        assertEquals(2, topic.getParentConnections().size());
+        assertTrue(topic.getParentConnections().containsAll(Set.of(subjectTopic1, subjectTopic2)));
 
-        topic.removeSubjectTopic(subjectTopic1);
-        assertEquals(1, topic.getSubjectTopics().size());
-        assertTrue(topic.getSubjectTopics().contains(subjectTopic2));
+        topic.removeParentTopicSubtopic(subjectTopic1);
+        assertEquals(1, topic.getParentConnections().size());
+        assertTrue(topic.getParentConnections().contains(subjectTopic2));
         verify(subjectTopic1).disassociate();
 
-        topic.removeSubjectTopic(subjectTopic2);
-        assertEquals(0, topic.getSubjectTopics().size());
+        topic.removeParentTopicSubtopic(subjectTopic2);
+        assertEquals(0, topic.getParentConnections().size());
         verify(subjectTopic2).disassociate();
     }
 
@@ -378,7 +378,7 @@ public class TopicTest {
     public void preRemove() {
         final var parentTopicSubtopics = Set.of(mock(TopicSubtopic.class), mock(TopicSubtopic.class));
         final var childTopicSubtopics = Set.of(mock(TopicSubtopic.class), mock(TopicSubtopic.class));
-        final var subjectTopics = Set.of(mock(SubjectTopic.class), mock(SubjectTopic.class));
+        final var subjectTopics = Set.of(mock(TopicSubtopic.class), mock(TopicSubtopic.class));
         final var topicResources = Set.of(mock(TopicResource.class), mock(TopicResource.class));
 
         parentTopicSubtopics.forEach(topicSubtopic -> {
@@ -392,8 +392,8 @@ public class TopicTest {
         });
 
         subjectTopics.forEach(subjectTopic -> {
-            when(subjectTopic.getTopic()).thenReturn(Optional.of(topic));
-            topic.addSubjectTopic(subjectTopic);
+            when(subjectTopic.getSubtopic()).thenReturn(Optional.of(topic));
+            topic.addParentTopicSubtopic(subjectTopic);
         });
 
         topicResources.forEach(topicResource -> {

@@ -8,26 +8,26 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 public class SubjectTopicTest {
-    private Subject subject;
+    private Topic subject;
     private Topic topic;
-    private SubjectTopic subjectTopic;
+    private TopicSubtopic subjectTopic;
 
     @BeforeEach
     public void setUp() {
         topic = mock(Topic.class);
-        subject = mock(Subject.class);
+        subject = mock(Topic.class);
 
-        subjectTopic = SubjectTopic.create(subject, topic);
+        subjectTopic = TopicSubtopic.create(subject, topic);
     }
 
     @Test
     public void getSubject() {
-        assertSame(subject, subjectTopic.getSubject().orElse(null));
+        assertSame(subject, subjectTopic.getTopic().orElse(null));
     }
 
     @Test
     public void getTopic() {
-        assertSame(topic, subjectTopic.getTopic().orElse(null));
+        assertSame(topic, subjectTopic.getSubtopic().orElse(null));
     }
 
     @Test
@@ -41,10 +41,10 @@ public class SubjectTopicTest {
     public void preRemove() {
         subjectTopic.preRemove();
 
-        assertFalse(subjectTopic.getSubject().isPresent());
         assertFalse(subjectTopic.getTopic().isPresent());
+        assertFalse(subjectTopic.getSubtopic().isPresent());
 
-        verify(subject).removeSubjectTopic(subjectTopic);
-        verify(topic).removeSubjectTopic(subjectTopic);
+        verify(subject).removeChildTopicSubTopic(subjectTopic);
+        verify(topic).removeParentTopicSubtopic(subjectTopic);
     }
 }
