@@ -770,4 +770,19 @@
         <dropForeignKeyConstraint baseTableName="topic_filter" constraintName="topic_filter_relevance_id_fkey"/>
         <dropForeignKeyConstraint baseTableName="filter" constraintName="filter_subject_id_fkey"/>
     </changeSet>
+
+    <changeSet id="20210623" author="Gunnar Velle">
+        <!-- Adds active flag to cached_path to avoid database locks -->
+        <addColumn tableName="cached_path">
+            <column name="is_active" type="boolean" defaultValue="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20210623_2" author="Gunnar Velle">
+        <!-- remove constraint for unique path in cached_path -->
+        <dropUniqueConstraint tableName="cached_path" constraintName="unique_cached_path_path"/>
+    </changeSet>
+
 </databaseChangeLog>

@@ -175,6 +175,7 @@ class CachedUrlUpdaterServiceImplTest {
 
         service.clearCachedUrls(subject1);
 
-        assertEquals(0, subject1.getCachedPaths().size());
+        assertEquals(1, subject1.getCachedPaths().size());
+        assertEquals(0, subject1.getCachedPaths().stream().filter(CachedPath::isActive).collect(Collectors.toSet()).size());
     }
 }
