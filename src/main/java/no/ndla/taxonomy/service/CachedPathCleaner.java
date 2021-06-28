@@ -9,12 +9,13 @@ import javax.transaction.Transactional;
 @Service
 public class CachedPathCleaner {
     private final CachedPathRepository cachedPathRepository;
+    private final int rate = 5 * 60 * 1000; // Every five minutes
 
     public CachedPathCleaner(CachedPathRepository cachedPathRepository) {
         this.cachedPathRepository = cachedPathRepository;
     }
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = rate)
     @Transactional
     public void removeInactivePaths() {
         cachedPathRepository.deleteByActiveFalse();
