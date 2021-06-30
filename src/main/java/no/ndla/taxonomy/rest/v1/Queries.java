@@ -39,8 +39,17 @@ public class Queries {
     public List<TopicDTO> queryTopics(
             @RequestParam("contentURI") URI contentURI,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "") String language
+            @RequestParam(value = "language", required = false, defaultValue = "") String language,
+
+
+            @ApiParam(value = "Filter by key and value")
+            @RequestParam(value = "key", required = false)
+                    String key,
+
+            @ApiParam(value = "Fitler by key and value")
+            @RequestParam(value = "value", required = false)
+                    String value
     ) {
-        return topicController.index(language, contentURI);
+        return topicController.index(language, contentURI, null, null);
     }
 }

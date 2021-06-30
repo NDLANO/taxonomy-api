@@ -13,6 +13,8 @@ public interface TopicService {
 
     List<TopicDTO> getTopics(String languageCode, URI contentUriFilter);
 
+    List<TopicDTO> getTopics(String languageCode, URI contentUriFilter, MetadataKeyValueQuery metadataKeyValueQuery);
+
     List<ConnectionIndexDTO> getAllConnections(URI topicPublicId);
 
     List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId, String languageCode);

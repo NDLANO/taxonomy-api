@@ -1,7 +1,9 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.service.dtos.MetadataDto;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -204,5 +206,16 @@ public class MetadataInjectAspect {
 
         // Recursively inject metadata into the returning DTO
         injectMetadataIntoDtos(returnValue, metadata);
+    }
+
+    private void postHandling(Object returnValue, MetadataKeyValueQuery metadataKeyValueQuery) {
+        injectMetadataIntoDtos(returnValue, new HashSet<>(metadataKeyValueQuery.getDtos()));
+    }
+    @Around(value = "@annotation(MetadataQuery) && args(.., metadataKeyValueQuery)")
+    public Object metadataQueryAndInject(ProceedingJoinPoint pjp, MetadataKeyValueQuery metadataKeyValueQuery) throws Throwable {
+        metadataKeyValueQuery.setDtos(new ArrayList(metadataApiService.getMetadataByKeyAndValue(metadataKeyValueQuery.getKey(), metadataKeyValueQuery.getValue())));
+        Object returnValue = pjp.proceed();
+        postHandling(returnValue, metadataKeyValueQuery);
+        return returnValue;
     }
 }

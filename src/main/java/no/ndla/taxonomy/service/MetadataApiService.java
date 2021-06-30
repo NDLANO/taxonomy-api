@@ -9,6 +9,8 @@ import java.util.Set;
 public interface MetadataApiService {
     MetadataDto getMetadataByPublicId(URI publicId);
 
+    Set<MetadataDto> getMetadataByKeyAndValue(String key, String value);
+
     Set<MetadataDto> getMetadataByPublicId(Collection<URI> publicIds);
 
     MetadataDto updateMetadataByPublicId(URI publicId, MetadataDto metadataDto);

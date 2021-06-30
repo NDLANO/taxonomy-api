@@ -6,10 +6,7 @@ import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
-import no.ndla.taxonomy.service.InjectMetadata;
-import no.ndla.taxonomy.service.TopicResourceTypeService;
-import no.ndla.taxonomy.service.TopicService;
+import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,14 +47,26 @@ public class Topics extends CrudController<Topic> {
 
             @ApiParam(value = "Filter by contentUri")
             @RequestParam(value = "contentURI", required = false)
-                    URI contentUriFilter
+                    URI contentUriFilter,
+
+            @ApiParam(value = "Filter by key and value")
+            @RequestParam(value = "key", required = false)
+                    String key,
+
+            @ApiParam(value = "Fitler by key and value")
+            @RequestParam(value = "value", required = false)
+                    String value
     ) {
 
         if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
             contentUriFilter = null;
         }
 
-        return topicService.getTopics(language, contentUriFilter);
+        if (key != null || value != null) {
+            return topicService.getTopics(language, contentUriFilter, new MetadataKeyValueQuery(key, value));
+        } else {
+            return topicService.getTopics(language, contentUriFilter);
+        }
     }
 
 

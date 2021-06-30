@@ -5,6 +5,7 @@ import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.TopicDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TopicsTest extends RestTest {
@@ -100,6 +101,56 @@ public class TopicsTest extends RestTest {
             assertEquals(1, topics.length);
             assertEquals("trigonometry", topics[0].getName());
         }
+    }
+
+    @Test
+    public void can_get_topics_by_key_and_value() throws Exception {
+        builder.subject(s -> s
+                .name("Basic science")
+                .topic(t -> {
+                    t.publicId("urn:topic:b8001");
+                    t.name("photo synthesis");
+                    t.contentUri(URI.create("urn:test:1"));
+                }));
+        builder.subject(s -> s
+                .name("Maths")
+                .topic(t -> {
+                    t.publicId("urn:topic:b8003");
+                    t.name("trigonometry");
+                    t.contentUri(URI.create("urn:test:2"));
+                }));
+
+        final var metadata1 = new MetadataDto();
+        metadata1.setPublicId("urn:topic:b8001");
+        metadata1.setGrepCodes(Set.of("GREP1"));
+        final var metadata2 = new MetadataDto();
+        metadata2.setPublicId("urn:topic:b8003");
+        metadata2.setGrepCodes(Set.of("GREP2"));
+        when(metadataApiService.getMetadataByKeyAndValue("test", "value")).thenReturn(Set.of(metadata1));
+        when(metadataApiService.getMetadataByKeyAndValue("test", "value2")).thenReturn(Set.of(metadata2));
+
+        {
+            final var response = testUtils.getResource("/v1/topics?key=test&value=value");
+            final var topics = testUtils.getObject(TopicDTO[].class, response);
+            assertEquals(1, topics.length);
+            assertEquals("photo synthesis", topics[0].getName());
+            assertNotNull(topics[0].getMetadata());
+            assertNotNull(topics[0].getMetadata().getGrepCodes());
+            assertEquals(Set.of("GREP1"), topics[0].getMetadata().getGrepCodes());
+        }
+
+        {
+            final var response = testUtils.getResource("/v1/topics?key=test&value=value2");
+            final var topics = testUtils.getObject(TopicDTO[].class, response);
+            assertEquals(1, topics.length);
+            assertEquals("trigonometry", topics[0].getName());
+            assertNotNull(topics[0].getMetadata());
+            assertNotNull(topics[0].getMetadata().getGrepCodes());
+            assertEquals(Set.of("GREP2"), topics[0].getMetadata().getGrepCodes());
+        }
+
+        verify(metadataApiService, times(1)).getMetadataByKeyAndValue("test", "value");
+        verify(metadataApiService, times(1)).getMetadataByKeyAndValue("test", "value2");
     }
 
 
