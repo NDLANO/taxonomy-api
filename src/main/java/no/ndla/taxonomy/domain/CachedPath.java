@@ -13,6 +13,9 @@ public class CachedPath {
     @Column(name = "is_primary")
     private boolean primary;
 
+    @Column(name = "is_active")
+    private boolean active = true;
+
     @Column
     @Id
     private UUID id;
@@ -65,6 +68,18 @@ public class CachedPath {
 
     public void setPrimary(boolean primary) {
         this.primary = primary;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public void disable() {
+        setActive(false);
     }
 
     public Optional<EntityWithPath> getOwningEntity() {

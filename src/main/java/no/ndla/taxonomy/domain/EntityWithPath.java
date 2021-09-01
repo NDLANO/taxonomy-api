@@ -18,6 +18,7 @@ public abstract class EntityWithPath extends DomainObject {
         }
     }
 
+    @Deprecated
     public void removeCachedPath(CachedPath cachedPath) {
         this.getCachedPaths().remove(cachedPath);
 
@@ -29,6 +30,7 @@ public abstract class EntityWithPath extends DomainObject {
     public Optional<String> getPrimaryPath() {
         return getCachedPaths()
                 .stream()
+                .filter(CachedPath::isActive)
                 .filter(CachedPath::isPrimary)
                 .map(CachedPath::getPath)
                 .findFirst();
@@ -89,7 +91,7 @@ public abstract class EntityWithPath extends DomainObject {
     }
 
     public Set<String> getAllPaths() {
-        return getCachedPaths().stream().map(CachedPath::getPath).collect(Collectors.toSet());
+        return getCachedPaths().stream().filter(CachedPath::isActive).map(CachedPath::getPath).collect(Collectors.toSet());
     }
 
     abstract public URI getContentUri();

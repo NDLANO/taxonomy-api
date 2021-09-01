@@ -5,6 +5,7 @@ import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.SubTopicIndexDTO;
 import no.ndla.taxonomy.service.dtos.TopicDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
@@ -14,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -67,6 +70,38 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
+    @MetadataQuery
+    public List<TopicDTO> getTopics(String languageCode, URI contentUriFilter, MetadataKeyValueQuery metadataKeyValueQuery) {
+        Set<String> publicIds = metadataKeyValueQuery.getDtos().stream()
+                .map(MetadataDto::getPublicId)
+                .collect(Collectors.toSet());
+        return publicIds.stream()
+                .map(topicId -> {
+                    try {
+                        return new URI(topicId);
+                    } catch (Exception e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .map(topicRepository::findByPublicId)
+                .filter(Objects::nonNull)
+                .filter(topic -> {
+                    /*
+                     * I don't think this combination of queries will be normal,
+                     * but it's easy to implement something that probably works.
+                     */
+                    if (contentUriFilter == null) {
+                        return true;
+                    } else {
+                        return contentUriFilter.equals(topic.getContentUri());
+                    }
+                })
+                .map(topic -> new TopicDTO(topic, languageCode))
+                .collect(Collectors.toList());
+    }
+
+        @Override
     @InjectMetadata
     public List<ConnectionIndexDTO> getAllConnections(URI topicPublicId) {
         final var topic = topicRepository.findFirstByPublicId(topicPublicId).orElseThrow(() -> new NotFoundServiceException("Topic was not found"));
