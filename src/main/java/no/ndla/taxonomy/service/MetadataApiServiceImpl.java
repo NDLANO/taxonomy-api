@@ -10,10 +10,9 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -82,15 +81,9 @@ public class MetadataApiServiceImpl implements MetadataApiService {
         }
     }
 
-    private List<MetadataDto> doBulkRead(Collection<URI> publicIds) {
-        if (publicIds.size() > 100) {
-            throw new IllegalArgumentException("More than 100 entities in request");
-        }
-
-        final var publicIdCommaSeparatedList = String.join(",", publicIds.stream().map(URI::toString).collect(Collectors.toSet()));
-
+    private List<MetadataDto> doBulkRead(String uri) {
         try {
-            final var returnedEntities = restTemplate.getForEntity(getServiceUrl() + "/v1/taxonomy_entities/?publicIds=" + publicIdCommaSeparatedList, MetadataApiEntity[].class).getBody();
+            final var returnedEntities = restTemplate.getForEntity(uri, MetadataApiEntity[].class).getBody();
 
             if (returnedEntities == null) {
                 throw new ServiceUnavailableException("No response from service");
@@ -105,9 +98,28 @@ public class MetadataApiServiceImpl implements MetadataApiService {
 
     }
 
+    private List<MetadataDto> doBulkRead(Collection<URI> publicIds) {
+        if (publicIds.size() > 100) {
+            throw new IllegalArgumentException("More than 100 entities in request");
+        }
+
+        final var publicIdCommaSeparatedList = String.join(",", publicIds.stream().map(URI::toString).collect(Collectors.toSet()));
+
+        return doBulkRead(getServiceUrl() + "/v1/taxonomy_entities/?publicIds=" + publicIdCommaSeparatedList);
+    }
+
+    private List<MetadataDto> doBulkRead(String key, String value) {
+        return doBulkRead(getServiceUrl() + "/v1/taxonomy_entities/?key=" + URLEncoder.encode(key, StandardCharsets.UTF_8) + "&value=" + URLEncoder.encode(value, StandardCharsets.UTF_8));
+    }
+
     @Override
     public Set<MetadataDto> getMetadataByPublicId(Collection<URI> publicIds) {
         return doBulkActionAndReturnDtos(publicIds, this::doBulkRead);
+    }
+
+    @Override
+    public Set<MetadataDto> getMetadataByKeyAndValue(String key, String value) {
+        return new HashSet<>(doBulkRead(key, value));
     }
 
     private void doEntitiesPut(Set<MetadataApiEntity> requestObjects) {

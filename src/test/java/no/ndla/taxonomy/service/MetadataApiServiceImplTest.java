@@ -129,6 +129,45 @@ public class MetadataApiServiceImplTest {
         });
     }
 
+    @Test
+    public void getMetadataByPublicId_key_value() {
+        when(restTemplate.getForEntity(any(String.class), eq(MetadataApiEntity[].class))).thenAnswer(invocationOnMock -> {
+            final var requestUrl = (String) invocationOnMock.getArgument(0);
+
+            final var parsedUrl = URI.create(requestUrl);
+
+            assertEquals("/v1/taxonomy_entities/", parsedUrl.getPath());
+            assertEquals("metadata", parsedUrl.getHost());
+            assertEquals("http", parsedUrl.getScheme());
+
+            final var queryMap = UriComponentsBuilder.fromUriString(requestUrl).build().getQueryParams();
+
+            assertTrue(queryMap.containsKey("key"));
+            assertTrue(queryMap.containsKey("value"));
+            final var key = queryMap.getFirst("key");
+            final var value = queryMap.getFirst("value");
+
+            assertEquals("key-v", key);
+            assertEquals("value-v", value);
+
+            final var entity = new MetadataApiEntity();
+            entity.setPublicId("urn:bykeyval:1");
+            entity.setVisible(true);
+
+            return ResponseEntity.ok(new MetadataApiEntity[] {entity});
+        });
+
+        final var returned = metadataApiService.getMetadataByKeyAndValue("key-v", "value-v");
+
+        assertEquals(1, returned.size());
+
+        returned.forEach(metadataDto -> {
+            final var publicId = metadataDto.getPublicId();
+            assertTrue(metadataDto.isVisible());
+            assertEquals("urn:bykeyval:1", publicId);
+        });
+    }
+
 
     @Test
     public void updateMetadataByPublicId() {
