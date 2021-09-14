@@ -11,6 +11,7 @@ import no.ndla.taxonomy.service.MetadataIdField;
 import no.ndla.taxonomy.service.TopicTreeSorter;
 
 import java.net.URI;
+import java.util.Set;
 
 /**
  *
@@ -42,6 +43,14 @@ public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 
+    @JsonProperty
+    @ApiModelProperty(value = "List of all paths to this subtopic")
+    private Set<String> paths;
+
+    @JsonProperty
+    @ApiModelProperty(value = "The primary path for this subtopic", example = "/subject:1/topic:1")
+    private String path;
+
     private int rank;
     private URI parentId;
 
@@ -58,11 +67,14 @@ public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
                     .orElse(topic.getName());
 
             this.contentUri = topic.getContentUri();
+            this.paths = topic.getAllPaths();
+            this.path = topic.getPrimaryPath().orElse(null);
         });
 
         this.isPrimary = true;
 
         this.rank = topicSubtopic.getRank();
+
         topicSubtopic.getTopic().ifPresent(topic -> this.parentId = topic.getPublicId());
 
         {
