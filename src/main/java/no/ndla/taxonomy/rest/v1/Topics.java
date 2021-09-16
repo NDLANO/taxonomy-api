@@ -15,27 +15,31 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/topics"})
-public class Topics extends CrudController<Topic> {
+public class Topics extends CrudControllerWithMetadata<Topic> {
     private final TopicResourceTypeService topicResourceTypeService;
     private final TopicRepository topicRepository;
     private final TopicService topicService;
+    private final ResourceService resourceService;
 
     public Topics(TopicRepository topicRepository,
                   TopicResourceTypeService topicResourceTypeService,
                   TopicService topicService,
-                  CachedUrlUpdaterService cachedUrlUpdaterService) {
-        super(topicRepository, cachedUrlUpdaterService);
+                  CachedUrlUpdaterService cachedUrlUpdaterService,
+                  ResourceService resourceService,
+                  MetadataApiService metadataApiService,
+                  MetadataUpdateService metadataUpdateService
+                  ) {
+        super(topicRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
 
         this.topicRepository = topicRepository;
         this.topicResourceTypeService = topicResourceTypeService;
         this.topicService = topicService;
+        this.resourceService = resourceService;
     }
 
     @GetMapping
@@ -178,5 +182,55 @@ public class Topics extends CrudController<Topic> {
     public void delete(@PathVariable("id") URI id) {
         topicService.delete(id);
     }
+
+    @GetMapping("/{id}/resources")
+    @ApiOperation(value = "Gets all resources for the given topic", tags = {"topics"})
+    public List<ResourceWithTopicConnectionDTO> getResources(
+            @ApiParam(value = "id", required = true)
+            @PathVariable("id") URI topicId,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
+            @RequestParam(value = "language", required = false)
+                    String language,
+            @RequestParam(value = "recursive", required = false, defaultValue = "false")
+            @ApiParam("If true, resources from subtopics are fetched recursively")
+                    boolean recursive,
+            @RequestParam(value = "type", required = false)
+            @ApiParam(value = "Select by resource type id(s). If not specified, resources of all types will be returned." +
+                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
+                    URI[] resourceTypeIds,
+            @RequestParam(value = "subject", required = false)
+            @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.")
+                    URI subjectId,
+            @RequestParam(value = "filter", required = false)
+            @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned." +
+                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
+                    URI[] filterIds,
+            @RequestParam(value = "relevance", required = false)
+            @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
+                    URI relevance
+    ) {
+        final Set<URI> resourceTypeIdSet;
+        final Set<URI> filterIdSet;
+
+        if (resourceTypeIds == null) {
+            resourceTypeIdSet = Set.of();
+        } else {
+            resourceTypeIdSet = new HashSet<>(Arrays.asList(resourceTypeIds));
+        }
+
+        if (filterIds == null) {
+            filterIdSet = Set.of();
+        } else {
+            filterIdSet = new HashSet<>(Arrays.asList(filterIds));
+        }
+
+        if (filterIdSet.isEmpty()) {
+            return resourceService.getResourcesByTopicId(topicId, subjectId, resourceTypeIdSet,
+                    relevance, language, recursive);
+        } else {
+            return List.of(); // We don't have filters.
+        }
+    }
+
 
 }

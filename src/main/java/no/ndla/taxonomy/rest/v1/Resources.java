@@ -7,6 +7,8 @@ import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.MetadataApiService;
+import no.ndla.taxonomy.service.MetadataUpdateService;
 import no.ndla.taxonomy.service.ResourceService;
 import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
@@ -26,15 +28,20 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
-public class Resources extends CrudController<Resource> {
+@RequestMapping(path = "/v1/resources")
+public class Resources extends CrudControllerWithMetadata<Resource> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ResourceService resourceService;
 
-    public Resources(ResourceRepository resourceRepository,
-                     ResourceResourceTypeRepository resourceResourceTypeRepository,
-                     ResourceService resourceService,
-                     CachedUrlUpdaterService cachedUrlUpdaterService) {
-        super(resourceRepository, cachedUrlUpdaterService);
+    public Resources(
+            ResourceRepository resourceRepository,
+            ResourceResourceTypeRepository resourceResourceTypeRepository,
+            ResourceService resourceService,
+            CachedUrlUpdaterService cachedUrlUpdaterService,
+            MetadataApiService metadataApiService,
+            MetadataUpdateService metadataUpdateService
+    ) {
+        super(resourceRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.repository = resourceRepository;
@@ -46,7 +53,7 @@ public class Resources extends CrudController<Resource> {
         return "/v1/resources";
     }
 
-    @GetMapping("/v1/resources")
+    @GetMapping("")
     @ApiOperation(value = "Lists all resources")
     @Transactional(readOnly = true)
     public List<ResourceDTO> index(
@@ -65,7 +72,7 @@ public class Resources extends CrudController<Resource> {
         return resourceService.getResources(language, contentUriFilter);
     }
 
-    @GetMapping("/v1/resources/{id}")
+    @GetMapping("{id}")
     @ApiOperation(value = "Gets a single resource")
     public ResourceDTO get(
             @PathVariable("id")
@@ -79,7 +86,7 @@ public class Resources extends CrudController<Resource> {
         return resourceService.getResourceByPublicId(id, language);
     }
 
-    @PutMapping("/v1/resources/{id}")
+    @PutMapping("{id}")
     @ApiOperation(value = "Updates a resource")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -89,7 +96,7 @@ public class Resources extends CrudController<Resource> {
         doPut(id, command);
     }
 
-    @PostMapping("/v1/resources")
+    @PostMapping("")
     @ApiOperation(value = "Adds a new resource")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
@@ -98,7 +105,7 @@ public class Resources extends CrudController<Resource> {
         return doPost(new Resource(), command);
     }
 
-    @GetMapping("/v1/resources/{id}/resource-types")
+    @GetMapping("{id}/resource-types")
     @ApiOperation(value = "Gets all resource types associated with this resource")
     @Transactional(readOnly = true)
     public List<ResourceTypeWithConnectionDTO> getResourceTypes(
@@ -115,7 +122,7 @@ public class Resources extends CrudController<Resource> {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/v1/resources/{id}/full")
+    @GetMapping("{id}/full")
     @ApiOperation(value = "Gets all parent topics, all filters and resourceTypes for this resource")
     @Transactional(readOnly = true)
     public ResourceWithParentTopicsDTO getResourceFull(
@@ -129,95 +136,12 @@ public class Resources extends CrudController<Resource> {
     }
 
 
-    @DeleteMapping("/v1/resources/{id}")
+    @DeleteMapping("{id}")
     @ApiOperation(value = "Deletes a single entity by id")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
         resourceService.delete(id);
-    }
-
-    @GetMapping("/v1/subjects/{subjectId}/resources")
-    @ApiOperation(value = "Gets all resources for a subject. Searches recursively in all topics belonging to this subject." +
-            "The ordering of resources will be based on the rank of resources relative to the topics they belong to.",
-            tags = {"subjects"})
-    public List<ResourceWithTopicConnectionDTO> getResourcesForSubject(
-            @PathVariable("subjectId") URI subjectId,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language,
-            @RequestParam(value = "type", required = false, defaultValue = "")
-            @ApiParam(value = "Filter by resource type id(s). If not specified, resources of all types will be returned." +
-                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
-                    URI[] resourceTypeIds,
-            @RequestParam(value = "filter", required = false, defaultValue = "")
-            @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned." +
-                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
-                    URI[] filterIds,
-            @RequestParam(value = "relevance", required = false, defaultValue = "")
-            @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
-                    URI relevance
-    ) {
-        final Set<URI> filterIdSet = filterIds != null ? Set.of(filterIds) : Set.of();
-        final Set<URI> resourceTypeIdSet = resourceTypeIds != null ? Set.of(resourceTypeIds) : Set.of();
-
-        // If null is sent to query it will be ignored, otherwise it will filter by relevance
-        final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
-
-        if (filterIdSet.isEmpty()) {
-            return resourceService.getResourcesBySubjectId(subjectId, resourceTypeIdSet, relevanceArgument, language);
-        } else {
-            return List.of(); // We don't have filters.
-        }
-    }
-
-    @GetMapping("/v1/topics/{id}/resources")
-    @ApiOperation(value = "Gets all resources for the given topic", tags = {"topics"})
-    public List<ResourceWithTopicConnectionDTO> getResources(
-            @ApiParam(value = "id", required = true)
-            @PathVariable("id") URI topicId,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false)
-                    String language,
-            @RequestParam(value = "recursive", required = false, defaultValue = "false")
-            @ApiParam("If true, resources from subtopics are fetched recursively")
-                    boolean recursive,
-            @RequestParam(value = "type", required = false)
-            @ApiParam(value = "Select by resource type id(s). If not specified, resources of all types will be returned." +
-                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
-                    URI[] resourceTypeIds,
-            @RequestParam(value = "subject", required = false)
-            @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.")
-                    URI subjectId,
-            @RequestParam(value = "filter", required = false)
-            @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned." +
-                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
-                    URI[] filterIds,
-            @RequestParam(value = "relevance", required = false)
-            @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
-                    URI relevance
-    ) {
-        final Set<URI> resourceTypeIdSet;
-        final Set<URI> filterIdSet;
-
-        if (resourceTypeIds == null) {
-            resourceTypeIdSet = Set.of();
-        } else {
-            resourceTypeIdSet = new HashSet<>(Arrays.asList(resourceTypeIds));
-        }
-
-        if (filterIds == null) {
-            filterIdSet = Set.of();
-        } else {
-            filterIdSet = new HashSet<>(Arrays.asList(filterIds));
-        }
-
-        if (filterIdSet.isEmpty()) {
-            return resourceService.getResourcesByTopicId(topicId, subjectId, resourceTypeIdSet,
-                    relevance, language, recursive);
-        } else {
-            return List.of(); // We don't have filters.
-        }
     }
 
 }
