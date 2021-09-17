@@ -15,6 +15,7 @@ import no.ndla.taxonomy.service.dtos.ResourceTypeDTO;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -37,7 +38,7 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
 
     @JsonProperty
     @ApiModelProperty(value = "Resource type(s)", example = "[{\"id\":\"urn:resourcetype:1\", \"name\":\"lecture\"}]")
-    public Set<ResourceTypeDTO> resourceTypes = new HashSet<>();
+    public Set<ResourceTypeDTO> resourceTypes = new TreeSet<>();
 
     @JsonProperty
     @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
@@ -99,7 +100,7 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
             this.resourceTypes = resource.getResourceResourceTypes().stream()
                     .map(ResourceResourceType::getResourceType)
                     .map(resourceType -> new ResourceTypeDTO(resourceType, language))
-                    .collect(Collectors.toSet());
+                    .collect(Collectors.toCollection(TreeSet::new));
 
             this.contentUri = resource.getContentUri();
             this.path = resource.getPrimaryPath().orElse(null);

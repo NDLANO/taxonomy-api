@@ -55,8 +55,7 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
     @Override
     public int compareTo(ResourceTypeDTO o) {
         // We want to sort resourceTypes without parents first when sorting
-        if(this.parentId == o.parentId) return 0;
-        else if(this.parentId == null) return -1;
+        if(this.parentId == null && o.parentId != null) return -1;
         return 1;
     }
 }
