@@ -96,6 +96,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
         doPut(id, command);
     }
 
+    @PostMapping
     @ApiOperation(value = "Adds a new resource")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
