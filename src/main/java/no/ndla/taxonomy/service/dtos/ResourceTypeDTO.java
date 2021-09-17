@@ -9,7 +9,7 @@ import no.ndla.taxonomy.domain.ResourceTypeTranslation;
 import java.net.URI;
 
 @ApiModel("ResourceType")
-public class ResourceTypeDTO {
+public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
     @JsonProperty
     @ApiModelProperty(example = "urn:resourcetype:2")
     private URI id;
@@ -50,5 +50,13 @@ public class ResourceTypeDTO {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public int compareTo(ResourceTypeDTO o) {
+        // We want to sort resourceTypes without parents first when sorting
+        if(this.parentId == o.parentId) return 0;
+        else if(this.parentId == null) return -1;
+        return 1;
     }
 }
