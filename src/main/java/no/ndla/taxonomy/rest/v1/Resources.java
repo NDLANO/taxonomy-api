@@ -53,7 +53,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
         return "/v1/resources";
     }
 
-    @GetMapping("")
+    @GetMapping
     @ApiOperation(value = "Lists all resources")
     @Transactional(readOnly = true)
     public List<ResourceDTO> index(
