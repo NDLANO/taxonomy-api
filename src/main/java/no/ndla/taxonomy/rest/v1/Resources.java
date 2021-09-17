@@ -74,11 +74,11 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
             contentUriFilter = null;
         }
 
-        if(key != null || value != null) {
+        if (key != null && value != null) {
             return resourceService.getResources(language, contentUriFilter, new MetadataKeyValueQuery(key, value));
-        } else {
-            return resourceService.getResources(language, contentUriFilter);
         }
+        return resourceService.getResources(language, contentUriFilter);
+
     }
 
     @GetMapping("{id}")

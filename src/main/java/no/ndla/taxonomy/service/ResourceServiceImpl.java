@@ -237,8 +237,8 @@ public class ResourceServiceImpl implements ResourceService {
                 .values()
                 .stream()
                 .flatMap(idChunk -> {
-                   final var resources = resourceRepository.findByPublicIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
-                   return createDto(resources, languageCode).stream();
+                    final var resources = resourceRepository.findByPublicIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
+                    return createDto(resources, languageCode).stream();
                 })
                 .filter(Objects::nonNull)
                 .filter(resource -> {
