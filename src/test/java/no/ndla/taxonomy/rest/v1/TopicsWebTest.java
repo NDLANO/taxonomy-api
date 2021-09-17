@@ -53,6 +53,8 @@ public class TopicsWebTest {
     RecursiveTopicTreeService recursiveTopicTreeService;
     @MockBean
     MetadataUpdateService metadataUpdateService;
+    @MockBean
+    ResourceService resourceService;
 
     @Autowired
     private MockMvc mockMvc;

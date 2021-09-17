@@ -12,6 +12,7 @@ import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import no.ndla.taxonomy.service.*;
+import no.ndla.taxonomy.service.dtos.ResourceWithTopicConnectionDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,19 +27,27 @@ import java.util.stream.Collectors;
 @RestController
 @Transactional
 @RequestMapping(path = {"/v1/subjects"})
-public class Subjects extends CrudController<Subject> {
+public class Subjects extends CrudControllerWithMetadata<Subject> {
     private final SubjectRepository subjectRepository;
     private final SubjectTopicRepository subjectTopicRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final TopicTreeSorter topicTreeSorter;
     private final SubjectService subjectService;
     private final RecursiveTopicTreeService recursiveTopicTreeService;
+    private final ResourceService resourceService;
 
     public Subjects(SubjectRepository subjectRepository,
-                    SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository,
-                    TopicTreeSorter topicTreeSorter, SubjectService subjectService,
-                    CachedUrlUpdaterService cachedUrlUpdaterService, RecursiveTopicTreeService recursiveTopicTreeService) {
-        super(subjectRepository, cachedUrlUpdaterService);
+                    SubjectTopicRepository subjectTopicRepository,
+                    TopicSubtopicRepository topicSubtopicRepository,
+                    TopicTreeSorter topicTreeSorter,
+                    SubjectService subjectService,
+                    CachedUrlUpdaterService cachedUrlUpdaterService,
+                    RecursiveTopicTreeService recursiveTopicTreeService,
+                    ResourceService resourceService,
+                    MetadataApiService metadataApiService,
+                    MetadataUpdateService metadataUpdateService
+    ) {
+        super(subjectRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
 
         this.subjectRepository = subjectRepository;
         this.subjectTopicRepository = subjectTopicRepository;
@@ -46,6 +55,7 @@ public class Subjects extends CrudController<Subject> {
         this.topicTreeSorter = topicTreeSorter;
         this.subjectService = subjectService;
         this.recursiveTopicTreeService = recursiveTopicTreeService;
+        this.resourceService = resourceService;
     }
 
     @GetMapping
@@ -200,11 +210,11 @@ public class Subjects extends CrudController<Subject> {
                     .filter(ts -> ts.getTopic().isPresent() && ts.getSubtopic().isPresent())
                     .forEach(topicSubtopicI -> {
                         if (topicSubtopicI.getTopic().get().getId().equals(topicSubtopic.getSubtopic().get().getId())) {
-                    if (searchForFilterOrRelevance(topicSubtopicI, filterPublicId, relevancePublicId, topicSubtopics)) {
-                        foundFilter.set(true);
-                    }
-                }
-            });
+                            if (searchForFilterOrRelevance(topicSubtopicI, filterPublicId, relevancePublicId, topicSubtopics)) {
+                                foundFilter.set(true);
+                            }
+                        }
+                    });
         } else if (connection instanceof SubjectTopic) {
             Topic topic = ((SubjectTopic) connection).getTopic().orElse(null);
 
@@ -237,4 +247,40 @@ public class Subjects extends CrudController<Subject> {
     public void delete(@PathVariable("id") URI id) {
         subjectService.delete(id);
     }
+
+
+    @GetMapping("/{subjectId}/resources")
+    @ApiOperation(value = "Gets all resources for a subject. Searches recursively in all topics belonging to this subject." +
+            "The ordering of resources will be based on the rank of resources relative to the topics they belong to.",
+            tags = {"subjects"})
+    public List<ResourceWithTopicConnectionDTO> getResourcesForSubject(
+            @PathVariable("subjectId") URI subjectId,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb")
+            @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language,
+            @RequestParam(value = "type", required = false, defaultValue = "")
+            @ApiParam(value = "Filter by resource type id(s). If not specified, resources of all types will be returned." +
+                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
+                    URI[] resourceTypeIds,
+            @RequestParam(value = "filter", required = false, defaultValue = "")
+            @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned." +
+                    "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true)
+                    URI[] filterIds,
+            @RequestParam(value = "relevance", required = false, defaultValue = "")
+            @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.")
+                    URI relevance
+    ) {
+        final Set<URI> filterIdSet = filterIds != null ? Set.of(filterIds) : Set.of();
+        final Set<URI> resourceTypeIdSet = resourceTypeIds != null ? Set.of(resourceTypeIds) : Set.of();
+
+        // If null is sent to query it will be ignored, otherwise it will filter by relevance
+        final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
+
+        if (filterIdSet.isEmpty()) {
+            return resourceService.getResourcesBySubjectId(subjectId, resourceTypeIdSet, relevanceArgument, language);
+        } else {
+            return List.of(); // We don't have filters.
+        }
+    }
+
 }
