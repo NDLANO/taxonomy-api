@@ -6,6 +6,7 @@ import no.ndla.taxonomy.domain.TopicResource;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithParentTopicsDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithTopicConnectionDTO;
@@ -212,5 +213,38 @@ public class ResourceServiceImpl implements ResourceService {
         }
 
         return listToReturn;
+    }
+
+    @Override
+    @MetadataQuery
+    public List<ResourceDTO> getResources(String languageCode, URI contentUriFilter, MetadataKeyValueQuery metadataKeyValueQuery) {
+        Set<String> publicIds = metadataKeyValueQuery.getDtos().stream()
+                .map(MetadataDto::getPublicId).collect(Collectors.toSet());
+
+
+        final var counter = new AtomicInteger();
+        return publicIds
+                .stream()
+                .map(resourceId -> {
+                    try {
+                        return new URI(resourceId);
+                    } catch (Exception e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000))
+                .values()
+                .stream()
+                .flatMap(idChunk -> {
+                   final var resources = resourceRepository.findByPublicIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
+                   return createDto(resources, languageCode).stream();
+                })
+                .filter(Objects::nonNull)
+                .filter(resource -> {
+                    if (contentUriFilter == null) return true;
+                    else return contentUriFilter.equals(resource.getContentUri());
+                })
+                .collect(Collectors.toList());
     }
 }

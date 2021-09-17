@@ -42,6 +42,18 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
     )
     List<Resource> findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(Collection<Integer> idSet);
 
+    @Query(
+            "SELECT distinct r" +
+                    "   FROM Resource r" +
+                    "   LEFT JOIN FETCH r.cachedPaths" +
+                    "   LEFT JOIN FETCH r.resourceResourceTypes rrt" +
+                    "   LEFT JOIN FETCH rrt.resourceType rt" +
+                    "   LEFT JOIN FETCH rt.resourceTypeTranslations" +
+                    "   LEFT JOIN FETCH r.resourceTranslations" +
+                    "   WHERE r.publicId IN (:idSet)"
+    )
+    List<Resource> findByPublicIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(Collection<URI> idSet);
+
     @Query("SELECT r.id FROM Resource r")
     List<Integer> getAllResourceIds();
 

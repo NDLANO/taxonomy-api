@@ -26,4 +26,6 @@ public interface ResourceService {
     ResourceWithParentTopicsDTO getResourceWithParentTopicsByPublicId(URI publicId, String languageCode);
 
     List<ResourceDTO> getResources(String languageCode, URI contentUriFilter);
+
+    List<ResourceDTO> getResources(String languageCode, URI contentUriFilter, MetadataKeyValueQuery metadataKeyValueQuery);
 }
