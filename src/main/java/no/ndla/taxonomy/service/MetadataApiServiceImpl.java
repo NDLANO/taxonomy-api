@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -109,7 +110,16 @@ public class MetadataApiServiceImpl implements MetadataApiService {
     }
 
     private List<MetadataDto> doBulkRead(String key, String value) {
-        return doBulkRead(getServiceUrl() + "/v1/taxonomy_entities/?key=" + URLEncoder.encode(key, StandardCharsets.UTF_8) + "&value=" + URLEncoder.encode(value, StandardCharsets.UTF_8));
+        var keyParam = key != null ? URLEncoder.encode(key, StandardCharsets.UTF_8) : null;
+        var valParam = value != null ? URLEncoder.encode(value, StandardCharsets.UTF_8) : null;
+
+        var uriBuilder = UriComponentsBuilder
+                .fromUriString(getServiceUrl() + "/v1/taxonomy_entities/")
+                .queryParam("key", keyParam);
+
+        if (valParam != null) uriBuilder = uriBuilder.queryParam("value", valParam);
+
+        return doBulkRead(uriBuilder.toUriString());
     }
 
     @Override

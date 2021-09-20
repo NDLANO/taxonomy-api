@@ -33,7 +33,7 @@ public class Topics extends CrudControllerWithMetadata<Topic> {
                   ResourceService resourceService,
                   MetadataApiService metadataApiService,
                   MetadataUpdateService metadataUpdateService
-                  ) {
+    ) {
         super(topicRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
 
         this.topicRepository = topicRepository;
@@ -65,12 +65,10 @@ public class Topics extends CrudControllerWithMetadata<Topic> {
         if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
             contentUriFilter = null;
         }
-
-        if (key != null || value != null) {
+        if (key != null) {
             return topicService.getTopics(language, contentUriFilter, new MetadataKeyValueQuery(key, value));
-        } else {
-            return topicService.getTopics(language, contentUriFilter);
         }
+        return topicService.getTopics(language, contentUriFilter);
     }
 
 

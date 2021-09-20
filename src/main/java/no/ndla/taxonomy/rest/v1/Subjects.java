@@ -64,12 +64,21 @@ public class Subjects extends CrudControllerWithMetadata<Subject> {
     public List<SubjectIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
+                    String language,
+
+            @ApiParam(value = "Filter by key and value")
+            @RequestParam(value = "key", required = false)
+                    String key,
+
+            @ApiParam(value = "Fitler by key and value")
+            @RequestParam(value = "value", required = false)
+                    String value
     ) {
-        return subjectRepository.findAllIncludingCachedUrlsAndTranslations()
-                .stream()
-                .map(subject -> new SubjectIndexDocument(subject, language))
-                .collect(Collectors.toList());
+        if (key != null) {
+            return subjectService.getSubjects(language, new MetadataKeyValueQuery(key, value));
+        }
+
+        return subjectService.getSubjects(language);
     }
 
     @GetMapping("/{id}")

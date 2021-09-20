@@ -6,10 +6,7 @@ import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
-import no.ndla.taxonomy.service.MetadataApiService;
-import no.ndla.taxonomy.service.MetadataUpdateService;
-import no.ndla.taxonomy.service.ResourceService;
+import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithParentTopicsDTO;
@@ -63,13 +60,25 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
 
             @RequestParam(value = "contentURI", required = false)
             @ApiParam(value = "Filter by contentUri")
-                    URI contentUriFilter
+                    URI contentUriFilter,
+
+            @ApiParam(value = "Filter by key and value")
+            @RequestParam(value = "key", required = false)
+                    String key,
+
+            @ApiParam(value = "Fitler by key and value")
+            @RequestParam(value = "value", required = false)
+                    String value
     ) {
         if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
             contentUriFilter = null;
         }
 
+        if (key != null) {
+            return resourceService.getResources(language, contentUriFilter, new MetadataKeyValueQuery(key, value));
+        }
         return resourceService.getResources(language, contentUriFilter);
+
     }
 
     @GetMapping("{id}")

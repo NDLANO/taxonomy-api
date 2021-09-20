@@ -12,6 +12,7 @@ import no.ndla.taxonomy.service.MetadataIdField;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @ApiModel("Resource")
@@ -41,7 +42,7 @@ public class ResourceDTO {
 
     @JsonProperty
     @ApiModelProperty(value = "Resource type(s)", example = "[{\"id\": \"urn:resourcetype:1\",\"name\":\"lecture\"}]")
-    private Set<ResourceTypeDTO> resourceTypes = new HashSet<>();
+    private TreeSet<ResourceTypeDTO> resourceTypes = new TreeSet<>();
 
     @JsonProperty
     @ApiModelProperty(value = "Filters this resource is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
@@ -69,7 +70,7 @@ public class ResourceDTO {
         this.resourceTypes = resource.getResourceResourceTypes()
                 .stream()
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(TreeSet::new));
 
         this.path = resource.getPrimaryPath().orElse(null);
         this.paths = resource.getAllPaths();

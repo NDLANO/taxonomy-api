@@ -101,7 +101,7 @@ public class TopicServiceImpl implements TopicService {
                 .collect(Collectors.toList());
     }
 
-        @Override
+    @Override
     @InjectMetadata
     public List<ConnectionIndexDTO> getAllConnections(URI topicPublicId) {
         final var topic = topicRepository.findFirstByPublicId(topicPublicId).orElseThrow(() -> new NotFoundServiceException("Topic was not found"));
