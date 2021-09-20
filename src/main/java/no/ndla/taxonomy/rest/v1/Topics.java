@@ -65,7 +65,7 @@ public class Topics extends CrudControllerWithMetadata<Topic> {
         if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
             contentUriFilter = null;
         }
-        if (key != null && value != null) {
+        if (key != null) {
             return topicService.getTopics(language, contentUriFilter, new MetadataKeyValueQuery(key, value));
         }
         return topicService.getTopics(language, contentUriFilter);

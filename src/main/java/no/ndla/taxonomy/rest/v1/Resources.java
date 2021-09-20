@@ -74,7 +74,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
             contentUriFilter = null;
         }
 
-        if (key != null && value != null) {
+        if (key != null) {
             return resourceService.getResources(language, contentUriFilter, new MetadataKeyValueQuery(key, value));
         }
         return resourceService.getResources(language, contentUriFilter);

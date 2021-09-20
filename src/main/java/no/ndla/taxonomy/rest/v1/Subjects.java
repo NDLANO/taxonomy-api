@@ -74,7 +74,7 @@ public class Subjects extends CrudControllerWithMetadata<Subject> {
             @RequestParam(value = "value", required = false)
                     String value
     ) {
-        if (key != null && value != null) {
+        if (key != null) {
             return subjectService.getSubjects(language, new MetadataKeyValueQuery(key, value));
         }
 
