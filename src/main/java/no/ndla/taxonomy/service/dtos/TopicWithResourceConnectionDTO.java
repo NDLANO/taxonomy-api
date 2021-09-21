@@ -3,6 +3,7 @@ package no.ndla.taxonomy.service.dtos;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.TopicResource;
 
 import java.net.URI;
