@@ -19,12 +19,16 @@ public class TopicWithResourceConnectionDTO extends TopicDTO {
     @ApiParam
     private int rank;
 
+    @ApiParam
+    private URI relevanceId;
+
     public TopicWithResourceConnectionDTO(TopicResource topicResource, String language) {
         super(topicResource.getTopic().orElseThrow(), language);
 
         this.isPrimary = topicResource.isPrimary().orElse(false);
         this.connectionId = topicResource.getPublicId();
         this.rank = topicResource.getRank();
+        this.relevanceId = topicResource.getRelevance().isPresent() ? topicResource.getRelevance().get().getPublicId() : URI.create("urn:relevance:core");
     }
 
     public TopicWithResourceConnectionDTO() {
