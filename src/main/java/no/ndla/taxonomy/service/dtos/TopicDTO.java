@@ -4,11 +4,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.domain.TopicTranslation;
 import no.ndla.taxonomy.service.MetadataIdField;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.Set;
 
 @ApiModel("Topic")
@@ -38,6 +41,10 @@ public class TopicDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 
+    @JsonProperty
+    @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+    public URI relevanceId;
+
     public TopicDTO() {
 
     }
@@ -53,6 +60,9 @@ public class TopicDTO {
         this.name = topic.getTranslation(languageCode)
                 .map(TopicTranslation::getName)
                 .orElse(topic.getName());
+
+        Optional<Relevance> relevance = topic.getParentTopicSubtopic().flatMap(TopicSubtopic::getRelevance);
+        this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
     }
 
     public URI getId() {
