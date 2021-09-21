@@ -89,6 +89,10 @@ public class TopicDTO {
         return metadata;
     }
 
+    public URI getRelevanceId() {
+        return relevanceId;
+    }
+
     protected void setMetadata(MetadataDto metadata) {
         this.metadata = metadata;
     }
