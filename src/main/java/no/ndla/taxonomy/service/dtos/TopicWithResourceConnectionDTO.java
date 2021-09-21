@@ -28,7 +28,7 @@ public class TopicWithResourceConnectionDTO extends TopicDTO {
         this.isPrimary = topicResource.isPrimary().orElse(false);
         this.connectionId = topicResource.getPublicId();
         this.rank = topicResource.getRank();
-        this.relevanceId = topicResource.getRelevance().isPresent() ? topicResource.getRelevance().get().getPublicId() : URI.create("urn:relevance:core");
+        this.relevanceId = topicResource.getRelevance().map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
     }
 
     public TopicWithResourceConnectionDTO() {

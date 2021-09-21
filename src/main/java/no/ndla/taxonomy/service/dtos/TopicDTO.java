@@ -62,7 +62,7 @@ public class TopicDTO {
                 .orElse(topic.getName());
 
         Optional<Relevance> relevance = topic.getParentTopicSubtopic().flatMap(TopicSubtopic::getRelevance);
-        this.relevanceId = relevance.isPresent() ? relevance.get().getPublicId() : URI.create("urn:relevance:core");
+        this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
     }
 
     public URI getId() {
