@@ -42,7 +42,7 @@ public class TopicsWebTest {
     @MockBean
     TopicResourceRepository topicResourceRepository;
     @MockBean
-    TopicTreeSorter topicTreeSorter;
+    TreeSorter topicTreeSorter;
     @MockBean
     TopicService topicService;
     @MockBean

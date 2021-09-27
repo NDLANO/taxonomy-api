@@ -7,11 +7,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Entity
-public class TopicResource extends DomainEntity implements EntityWithPathConnection, SortableResourceConnection<Topic> {
+public class NodeResource extends DomainEntity implements EntityWithPathConnection, SortableResourceConnection<Node> {
 
     @ManyToOne
-    @JoinColumn(name = "topic_id")
-    private Topic topic;
+    @JoinColumn(name = "node_id")
+    private Node node;
 
     @ManyToOne
     @JoinColumn(name = "resource_id")
@@ -27,51 +27,52 @@ public class TopicResource extends DomainEntity implements EntityWithPathConnect
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 
-    private TopicResource() {
-        setPublicId(URI.create("urn:topic-resource:" + UUID.randomUUID()));
+    private NodeResource() {
+        setPublicId(URI.create("urn:node-resource:" + UUID.randomUUID()));
     }
 
-    public static TopicResource create(Topic topic, Resource resource) {
-        return create(topic, resource, false);
+    public static NodeResource create(Node node, Resource resource) {
+        return create(node, resource, false);
     }
 
-    public static TopicResource create(Topic topic, Resource resource, boolean primary) {
-        final var topicResource = new TopicResource();
+    public static NodeResource create(Node node, Resource resource, boolean primary) {
+        final var nodeResource = new NodeResource();
 
-        topicResource.topic = topic;
-        topicResource.resource = resource;
-        topicResource.setPrimary(primary);
+        nodeResource.node = node;
+        nodeResource.resource = resource;
+        nodeResource.setPrimary(primary);
 
-        topic.addTopicResource(topicResource);
-        resource.addTopicResource(topicResource);
+        node.addNodeResource(nodeResource);
+        resource.addNodeResource(nodeResource);
 
-        return topicResource;
+        return nodeResource;
     }
 
     public void disassociate() {
-        final var topic = this.topic;
+        final var node = this.node;
         final var resource = this.resource;
 
         final var wasPrimary = isPrimary();
 
-        this.topic = null;
+        this.node = null;
         this.resource = null;
 
-        if (topic != null) {
-            topic.removeTopicResource(this);
+        if (node != null) {
+            node.removeNodeResource(this);
         }
 
         if (resource != null) {
-            resource.removeTopicResource(this);
+            resource.removeNodeResource(this);
         }
     }
 
-    public Optional<Topic> getParent() {
-        return getTopic();
+    @Override
+    public Optional<Node> getParent() {
+        return getNode();
     }
 
-    public Optional<Topic> getTopic() {
-        return Optional.ofNullable(topic);
+    public Optional<Node> getNode() {
+        return Optional.ofNullable(node);
     }
 
     public Optional<Boolean> isPrimary() {
@@ -96,7 +97,7 @@ public class TopicResource extends DomainEntity implements EntityWithPathConnect
 
     @Override
     public Optional<EntityWithPath> getConnectedParent() {
-        return Optional.ofNullable(topic);
+        return Optional.ofNullable(node);
     }
 
     @Override

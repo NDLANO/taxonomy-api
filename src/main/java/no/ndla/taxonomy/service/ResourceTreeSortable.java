@@ -1,29 +1,31 @@
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.domain.EntityWithPath;
+import no.ndla.taxonomy.domain.SortableResourceConnection;
 import no.ndla.taxonomy.domain.TopicResource;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 
-public class TopicResourceTreeSortable implements TopicTreeSorter.Sortable {
+public class ResourceTreeSortable<T extends EntityWithPath> implements TreeSorter.Sortable {
     private int rank;
     private int id;
     private int parentId;
-    private TopicResource topicResource;
+    private SortableResourceConnection<T> resourceConnection;
     private String parentType;
     private String type;
 
-    public TopicResourceTreeSortable(TopicResource topicResource) {
-        this.id = topicResource.getResource().orElseThrow(() -> new IllegalArgumentException("Resource not set")).getId();
-        this.parentId = topicResource.getTopic().orElseThrow(() -> new IllegalArgumentException("Topic not set")).getId();
-        this.rank = topicResource.getRank();
-        this.topicResource = topicResource;
+    public ResourceTreeSortable(SortableResourceConnection<T> resourceConnection) {
+        this.id = resourceConnection.getResource().orElseThrow(() -> new IllegalArgumentException("Resource not set")).getId();
+        this.parentId = resourceConnection.getParent().orElseThrow(() -> new IllegalArgumentException("Parent not set")).getId();
+        this.rank = resourceConnection.getRank();
+        this.resourceConnection = resourceConnection;
         this.type = "resource";
         this.parentType = "topic";
     }
 
-    public TopicResourceTreeSortable(String type, String parentType, int id, int parentId, int rank) {
+    public ResourceTreeSortable(String type, String parentType, int id, int parentId, int rank) {
         this.id = id;
         this.parentId = parentId;
         this.rank = rank;
@@ -65,7 +67,7 @@ public class TopicResourceTreeSortable implements TopicTreeSorter.Sortable {
         }
     }
 
-    public Optional<TopicResource> getTopicResource() {
-        return Optional.ofNullable(topicResource);
+    public Optional<SortableResourceConnection> getResourceConnection() {
+        return Optional.ofNullable(resourceConnection);
     }
 }

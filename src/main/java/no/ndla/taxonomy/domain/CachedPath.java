@@ -35,6 +35,9 @@ public class CachedPath {
     @ManyToOne
     private Resource resource;
 
+    @ManyToOne
+    private Node node;
+
     @PrePersist
     void prePersist() {
         if (id == null) {
@@ -97,6 +100,10 @@ public class CachedPath {
             entitiesThatCanBeReturned.add(resource);
         }
 
+        if(node != null) {
+            entitiesThatCanBeReturned.add(node);
+        }
+
         if (entitiesThatCanBeReturned.size() > 1) {
             throw new IllegalStateException("CachedPath is owned by multiple entities");
         }
@@ -113,7 +120,7 @@ public class CachedPath {
             this.setSubject(null);
             this.setTopic(null);
             this.setResource(null);
-
+            this.setNode(null);
             return;
         }
 
@@ -123,6 +130,8 @@ public class CachedPath {
             this.setTopic((Topic) entity);
         } else if (entity instanceof Resource) {
             this.setResource((Resource) entity);
+        } else if (entity instanceof Node) {
+            this.setNode((Node) entity);
         } else {
             throw new IllegalArgumentException("Unknown entity of type " + entity.getClass().toString() + " passed as owning entity of CachedPath");
         }
@@ -154,6 +163,7 @@ public class CachedPath {
         if (topic != null) {
             setSubject(null);
             setResource(null);
+            setNode(null);
         }
     }
 
@@ -181,6 +191,7 @@ public class CachedPath {
         if (subject != null) {
             setTopic(null);
             setResource(null);
+            setNode(null);
         }
     }
 
@@ -208,6 +219,36 @@ public class CachedPath {
         if (resource != null) {
             setSubject(null);
             setTopic(null);
+            setNode(null);
         }
     }
+
+    public Optional<Node> getNode() {
+        return Optional.ofNullable(this.node);
+    }
+
+    public void setNode(Node node) {
+        final var oldNode = this.node;
+
+        if (node == null && oldNode == null) {
+            return;
+        }
+
+        this.node = node;
+
+        if (oldNode != null && oldNode != node) {
+            oldNode.removeCachedPath(this);
+        }
+
+        if (node != null && !node.getCachedPaths().contains(this)) {
+            node.addCachedPath(this);
+        }
+
+        if (node != null) {
+            setSubject(null);
+            setTopic(null);
+            setResource(null);
+        }
+    }
+
 }

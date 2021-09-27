@@ -1,6 +1,7 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
+import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,10 +35,12 @@ public class ResourceServiceImplTest {
 
         final var domainEntityHelperService = mock(DomainEntityHelperService.class);
         final var recursiveTopicTreeService = mock(RecursiveTopicTreeService.class);
-        final var topicTreeSorter = mock(TopicTreeSorter.class);
+        final var recursiveNodeTreeService = mock(RecursiveNodeTreeService.class);
+        final var nodeResourceRepository = mock(NodeResourceRepository.class);
+        final var topicTreeSorter = mock(TreeSorter.class);
 
         resourceService = new ResourceServiceImpl(resourceRepository, topicResourceRepository, connectionService,
-                metadataApiService, domainEntityHelperService, recursiveTopicTreeService, topicTreeSorter);
+                metadataApiService, domainEntityHelperService, recursiveTopicTreeService, nodeResourceRepository, recursiveNodeTreeService, topicTreeSorter);
     }
 
     @Test

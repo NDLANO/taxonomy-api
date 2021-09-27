@@ -31,7 +31,7 @@ public class Subjects extends CrudControllerWithMetadata<Subject> {
     private final SubjectRepository subjectRepository;
     private final SubjectTopicRepository subjectTopicRepository;
     private final TopicSubtopicRepository topicSubtopicRepository;
-    private final TopicTreeSorter topicTreeSorter;
+    private final TreeSorter topicTreeSorter;
     private final SubjectService subjectService;
     private final RecursiveTopicTreeService recursiveTopicTreeService;
     private final ResourceService resourceService;
@@ -39,7 +39,7 @@ public class Subjects extends CrudControllerWithMetadata<Subject> {
     public Subjects(SubjectRepository subjectRepository,
                     SubjectTopicRepository subjectTopicRepository,
                     TopicSubtopicRepository topicSubtopicRepository,
-                    TopicTreeSorter topicTreeSorter,
+                    TreeSorter topicTreeSorter,
                     SubjectService subjectService,
                     CachedUrlUpdaterService cachedUrlUpdaterService,
                     RecursiveTopicTreeService recursiveTopicTreeService,
