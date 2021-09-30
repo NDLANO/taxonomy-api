@@ -1,6 +1,6 @@
 # taxonomy-api
 
-[![Build Status](https://travis-ci.org/NDLANO/taxonomy-api.svg?branch=master)](https://travis-ci.org/NDLANO/taxonomy-api)
+![CI](https://github.com/NDLANO/taxonomy-api/workflows/CI/badge.svg)
 
 Rest service and relational database for organizing content.
 
@@ -24,7 +24,7 @@ editors.
 
 This organisation gives us a tree representation of the content, where the subjects are at the roots of the tree, the 
 topics make up the branches, and the resources are the leaves. Note, however, that this is not a strict tree-structure, since
-topics and resources may belong to several parents (see "Multiple parent connections" below). 
+resources may belong to several parents (see "Multiple parent connections" below). 
 
 The taxonomy data model consists of *entities* and *connections* between entities. 
 
@@ -32,7 +32,7 @@ The entities in the taxonomy are Subject, Topic, Resource, and Resource type. Th
 such as name and content URI. Translations of names can also be stored. 
 
 In addition to the entities, the taxonomy stores the connections you make between entities. Each connection also has 
-metadata attached to it, such as which entities are connected, and whether or not this connection is the primary connection 
+metadata attached to it, such as which entities are connected, and whether this connection is the primary connection 
 (see "Multiple parent connections" below). Subjects can be connected to topics, topics to subtopics, topics to resources, 
 resources to resource types, and resource types to parent resources types. The connections can also be labelled with rank. 
 This makes it easy to tell which order all the resources (or topics) is meant to be presented.  
@@ -46,7 +46,7 @@ through the API. For details on the use of each service, please see the Swagger 
 
 First, create a subject with the name Mathematics with a POST call to `/v1/subjects`. When this call returns you'll get a location.
 This location contains the path to this subject within the subjects resource, e.g., `/v1/subjects/urn:subject:342`, where `urn:subject:342` 
-is the ID of the newly created subject. Any time you need to change or retrieve this subject you'll be using this ID. 
+is the ID of the newly created subject. Any time you need to change or retrieve this subject you'll be using this ID.
 
 Next, create two Topic entities for Geometry and Statistics (POST to `/v1/topics`). If you have topic descriptions that you want to use
 as the content for these entities, you can include their content URI. The content URIs can also be added later (PUT to `/v1/subjects` or `/v1/topics`).
@@ -116,12 +116,9 @@ corresponding to the ID of Articles will give you a list of three entities; Sine
 
 
 ### Multiple parent connections
-As some topics such as Statistics may be relevant in several subjects, multiple parent connections are allowed. This enables you to 
-create a structure where Statistics is a topic in Mathematics, but it is also a topic in Social Studies. In this case,
-it makes sense to select Mathematics as the primary topic. This means that if not specified, Statistics belongs to the context of 
-Mathematics. However, if a user is currently browsing the subject of Social Studies, Statistics will still be shown in the context of 
-Social Studies. In this regard, the tree behaves a bit like a Unix filesystem, where you may have symbolic and hard links to the same
-content. 
+Multiple parent connections for topics are not allowed. But as some topics such as Statistics may be relevant in several subjects,
+it is possible to have the same contentURI for several topics. This allows us to create a structure where Statistics is a topic in Mathematics, 
+but it is also a topic in Social Studies. 
 
 ![Figure of content structure for mathematics](doc/multiple-parent-connections.png?raw=true)
 
@@ -143,8 +140,8 @@ in its URL path, which you get by following the primary connections from the res
  
 ## URLs
 
-Entities have URLs (e.g., `https://www.ndla.no/subject:1/topic:1/resource:1`) which consists of a scheme (`https`), 
-a hostname (`www.ndla.no`), and a path (`/subject:1/topic:1/resource:1`). The taxonomy API only contains information about the path, since 
+Entities have URLs (e.g., `https://ndla.no/subject:1/topic:1/resource:1`) which consists of a scheme (`https`), 
+a hostname (`ndla.no`), and a path (`/subject:1/topic:1/resource:1`). The taxonomy API only contains information about the path, since 
 the path is directly derived from the taxonomy itself. The hostname and scheme are determined by factors outside the boundary of the
 taxonomy API. When you perform a GET call on an entity (using the entity ID), you will also get the primary path to the entity along with 
 the name and content URI.
@@ -155,10 +152,10 @@ entities along the way. Entities without connections do not have URLs (except su
 Using the above figure as an example, we can derive the following paths: 
 
 
-| Name                  | ID               | Path(s)                                                                         | 
+| Name                  | ID               | Path(s)                                                                         | 
 |-----------------------|------------------|---------------------------------------------------------------------------------|
-| Mathematics           | `urn:subject:1`  | `/subject:1`                                                                    |
-| Social studies        | `urn:subject:2`  | `/subject:2`                                                                    |
+| Mathematics           | `urn:subject:1`  | `/subject:1`                                                                    |
+| Social studies        | `urn:subject:2`  | `/subject:2`                                                                    |
 | Geometry              | `urn:topic:1`    | `/subject:1/topic:1`                                                            |
 | Statistics            | `urn:topic:2`    | `/subject:1/topic:2` `/subject:2/topic:2`                                       |
 | Calculus              | `urn:topic:3`    | `/subject:1/topic:3`                                                            |
@@ -182,7 +179,7 @@ perhaps a treeview showing the hierarchy below the Social Studies subject. User 
 would fall within the norm of such systems. 
 
 Now, say that the user wants to navigate to Statistics, which is a first-level topic within Social Studies. Its primary parent, 
-however, is Mathematics. If the link were to transport the user from the subejct of Social Studies to Mathematics, they would surely be confused. 
+however, is Mathematics. If the link were to transport the user from the subject of Social Studies to Mathematics, they would surely be confused. 
 So to preserve the current context, the API finds the possible paths to Statistics, and selects the one most closely resembling the 
 user's current position in the hierarchy. In this scenario, the possible paths are `/subject:1/topic:2` and `/subject:2/topic:2`. 
 Since the user's current position (the current context) is `/subject:2`, we select `/subject:2/topic:2` as the preferred path, since it
@@ -207,10 +204,10 @@ If we add Statistics as a root context, it will also be accessible through the p
 sub topics and resources below Statistics:
 
 
-| Name                  | ID               | Path(s)                                                                                                       | 
+| Name                  | ID               | Path(s)                                                                                                       | 
 |-----------------------|------------------|---------------------------------------------------------------------------------------------------------------|
-| Mathematics           | `urn:subject:1`  | `/subject:1`                                                                                                  |
-| Social studies        | `urn:subject:2`  | `/subject:2`                                                                                                  |
+| Mathematics           | `urn:subject:1`  | `/subject:1`                                                                                                  |
+| Social studies        | `urn:subject:2`  | `/subject:2`                                                                                                  |
 | Statistics            | `urn:topic:2`    | `/topic:2` `/subject:1/topic:2` `/subject:2/topic:2`                                                          |
 | Probability           | `urn:topic:5`    | `/topic:2/topic:5` `/subject:1/topic:2/topic:5` `/subject:2/topic:2/topic:5`                                  |
 | What is probability?  | `urn:resource:1` | `/topic:2/topic:5/resource:1` `/subject:1/topic:2/topic:5/resource:1` `/subject:2/topic:2/topic:5/resource:1` |
@@ -243,9 +240,7 @@ You can also get all translations for an entity. Get all available translations 
 
 The topics and learning resources contained in a subject may be organised in a way that spans academic years and 
 academic programs. Mathematics would, for instance, contain a topic called geometry, which contains several learning 
-resources. Some of these are appropriate for first-year students, while some are more advanced and more suited for 
-second-year students. Additionally, some learning resources may be considered *core material* for second-year students, 
-but may be offered as *supplementary material* to first-year students who wish to delve deeper. 
+resources. Some of these are considered *core material* in some subjects, but may be offered as *supplementary material* in other. 
 
 ![Filters in mathematics](doc/filters.png?raw=true)
 
@@ -288,34 +283,3 @@ If a resource is used in several subjects, you can tag it as core or supplementa
 separately. In the example above, trigonometry is tagged as core material in Mathematics R2, and supplementary material
 in Mathematics R1 and Construction VG2. 
  
-### Creating filters
-
-A filter belongs to one and only one subject, and resources must be associated with the filter to be included when listing
-the contents of a subject when the filter is activated. The resources can either be tagged with the filter directly, or
-by tagging a containing topic with the filter. 
-
-To create a filter, first ensure that the subject it will belong to is already created. You can then make a POST request to 
-`/v1/filters`, which must include the subject id. A filter may be modified (or associated with a different subject) later on
-by making a PUT request to `/v1/filters/{id}`. 
-
-When associating a filter with a resource, you must also indicate what relevance that resource has in context of the filter. 
-This is done by first creating an instance of *Relevance* by making a POST request to `/v1/relevances`. It is recommended that 
-you provide a programmer-friendly ID when creating a relevance, e.g., `urn:relevance:core` if the relevance is called 
-"Core material". This will make it easier to distinguish different relevances in display logic. 
- 
-After creating the filter, you can associate a resource to it by making a POST request to `/v1/resource-filters`, including 
-the ids of both the filter, the resource and the relevance. This three-way association can be edited by making a PUT request
-to `/v1/resouce-filters/{id}` later on. Note that you cannot change the filter or the resource, but you can change the 
-relevance. If you need to change the filter this resource is associated with, delete this association and make a new one.  
-
-### Using filters
-
-When listing the contents of a subject, you can use one or more filter ids to limit the results. If you make a GET request
-to either `/v1/subjects/{id}/topics` or `/v1/subjects/{id}/resources`, you will get all topics or resources associated with 
-that subject. To limit the results based on filter, add the query string `?filter={filter id}`. You may repeat the query
-string to include results from several filters, or you may separate ids with comma. 
-
-You can also limit results by relevance by adding `?relevance={relevance id}` to the query string. When combining filters 
-and relevance in the same query, the effect is similar to this: `(filter 1 OR filter 2) AND (relevance 1 OR relevance 2)`.
-If you need more precision, you must make several queries. 
-
