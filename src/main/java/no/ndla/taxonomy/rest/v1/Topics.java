@@ -22,19 +22,19 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping(path = {"/v1/topics"})
 public class Topics extends CrudControllerWithMetadata<Topic> {
-    private final TopicResourceTypeService topicResourceTypeService;
     private final TopicRepository topicRepository;
     private final TopicService topicService;
     private final ResourceService resourceService;
 
     public Topics(TopicRepository topicRepository,
-                  TopicResourceTypeService topicResourceTypeService,
                   TopicService topicService,
                   CachedUrlUpdaterService cachedUrlUpdaterService,
                   ResourceService resourceService,
@@ -44,7 +44,6 @@ public class Topics extends CrudControllerWithMetadata<Topic> {
         super(topicRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
 
         this.topicRepository = topicRepository;
-        this.topicResourceTypeService = topicResourceTypeService;
         this.topicService = topicService;
         this.resourceService = resourceService;
     }
@@ -112,7 +111,7 @@ public class Topics extends CrudControllerWithMetadata<Topic> {
     }
 
     @GetMapping("/{id}/resource-types")
-    @ApiOperation(value = "Gets all resource types associated with this resource")
+    @ApiOperation(value = "Gets all resource types associated with this topic")
     @Transactional
     public List<ResourceTypeDTO> getResourceTypes(
             @PathVariable("id")
@@ -121,11 +120,7 @@ public class Topics extends CrudControllerWithMetadata<Topic> {
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return topicResourceTypeService.getTopicResourceTypes(id)
-                .stream()
-                .filter(topicResourceType -> topicResourceType.getResourceType().isPresent())
-                .map(topicResourceType -> new ResourceTypeWithConnectionDTO(topicResourceType, language))
-                .collect(Collectors.toList());
+        return List.of();
     }
 
     @GetMapping("/{id}/filters")
