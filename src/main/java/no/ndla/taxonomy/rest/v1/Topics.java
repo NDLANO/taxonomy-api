@@ -111,7 +111,8 @@ public class Topics extends CrudControllerWithMetadata<Topic> {
     }
 
     @GetMapping("/{id}/resource-types")
-    @ApiOperation(value = "Gets all resource types associated with this topic")
+    @ApiOperation(value = "Gets all resource types associated with this topic. No longer needed since o topics in database have resource-type")
+    @Deprecated(forRemoval = true)
     @Transactional
     public List<ResourceTypeDTO> getResourceTypes(
             @PathVariable("id")
