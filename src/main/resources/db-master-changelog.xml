@@ -794,4 +794,14 @@
         <dropTable tableName="filter"/>
     </changeSet>
 
+    <changeSet id="20211005 unlink topic resources" author="Gunnar Velle">
+        <dropUniqueConstraint tableName="topic_resource_type" constraintName="topic_resource_type_public_id"/>
+        <dropForeignKeyConstraint baseTableName="topic_resource_type" constraintName="resource_type_topic_id_fkey"/>
+        <dropForeignKeyConstraint baseTableName="topic_resource_type" constraintName="topic_resource_type_id_fkey"/>
+        <dropUniqueConstraint tableName="topic_resource_type" constraintName="topic_resource_type_unique"/>
+    </changeSet>
+    <changeSet id="20211005 drop topic resources" author="Gunnar Velle">
+        <dropTable tableName="topic_resource_type"/>
+    </changeSet>
+
 </databaseChangeLog>

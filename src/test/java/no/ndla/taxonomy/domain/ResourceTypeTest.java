@@ -10,7 +10,6 @@ package no.ndla.taxonomy.domain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,45 +28,6 @@ public class ResourceTypeTest {
         final var createdResourceType = new ResourceType();
         assertNotNull(createdResourceType.getPublicId());
         assertTrue(createdResourceType.getPublicId().toString().length() > 4);
-    }
-
-    @Test
-    public void addGetAndRemoveTopicResourceTypes() {
-        final var topicResourceType1 = mock(TopicResourceType.class);
-        final var topicResourceType2 = mock(TopicResourceType.class);
-
-        assertEquals(0, resourceType.getTopicResourceTypes().size());
-
-        try {
-            resourceType.addTopicResourceType(topicResourceType1);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException ignored) {
-        }
-        when(topicResourceType1.getResourceType()).thenReturn(Optional.of(resourceType));
-        resourceType.addTopicResourceType(topicResourceType1);
-
-        assertEquals(1, resourceType.getTopicResourceTypes().size());
-        assertTrue(resourceType.getTopicResourceTypes().contains(topicResourceType1));
-
-        try {
-            resourceType.addTopicResourceType(topicResourceType2);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException ignored) {
-        }
-        when(topicResourceType2.getResourceType()).thenReturn(Optional.of(resourceType));
-        resourceType.addTopicResourceType(topicResourceType2);
-
-        assertEquals(2, resourceType.getTopicResourceTypes().size());
-        assertTrue(resourceType.getTopicResourceTypes().containsAll(Set.of(topicResourceType1, topicResourceType2)));
-
-        resourceType.removeTopicResourceType(topicResourceType1);
-        assertEquals(1, resourceType.getTopicResourceTypes().size());
-        assertTrue(resourceType.getTopicResourceTypes().contains(topicResourceType2));
-        verify(topicResourceType1).disassociate();
-
-        resourceType.removeTopicResourceType(topicResourceType2);
-        assertEquals(0, resourceType.getTopicResourceTypes().size());
-        verify(topicResourceType2).disassociate();
     }
 
     @Test

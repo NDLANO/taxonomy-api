@@ -8,8 +8,6 @@
 package no.ndla.taxonomy.domain;
 
 
-import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
-
 import javax.persistence.*;
 import java.net.URI;
 import java.util.HashSet;
@@ -33,9 +31,6 @@ public class Topic extends EntityWithPath {
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TopicResource> topicResources = new HashSet<>();
-
-    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TopicResourceType> topicResourceTypes = new HashSet<>();
 
     @Column
     private URI contentUri;
@@ -189,26 +184,6 @@ public class Topic extends EntityWithPath {
         }
     }
 
-    public Set<TopicResourceType> getTopicResourceTypes() {
-        return this.topicResourceTypes.stream().collect(Collectors.toUnmodifiableSet());
-    }
-
-    public void addTopicResourceType(TopicResourceType topicResourceType) {
-        if (topicResourceType.getTopic().orElse(null) != this) {
-            throw new IllegalArgumentException("TopicResourceType must have Topic set before associating with Topic");
-        }
-
-        this.topicResourceTypes.add(topicResourceType);
-    }
-
-    public void removeTopicResourceType(TopicResourceType topicResourceType) {
-        this.topicResourceTypes.remove(topicResourceType);
-
-        if (topicResourceType.getTopic().orElse(null) == this) {
-            topicResourceType.disassociate();
-        }
-    }
-
     public Set<Topic> getSubtopics() {
         return childTopicSubtopics.stream()
                 .map(TopicSubtopic::getSubtopic)
@@ -279,25 +254,6 @@ public class Topic extends EntityWithPath {
         getTranslation(languageCode).ifPresent(this::removeTranslation);
     }
 
-    public TopicResourceType addResourceType(ResourceType resourceType) {
-        return TopicResourceType.create(this, resourceType);
-    }
-
-    public void removeResourceType(ResourceType resourceType) {
-        TopicResourceType topicResourceType = getTopicResourceType(resourceType)
-                .orElseThrow(() -> new ChildNotFoundException("Topic with id " + this.getPublicId() + " is not of type " + resourceType.getPublicId()));
-        removeTopicResourceType(topicResourceType);
-    }
-
-    private Optional<TopicResourceType> getTopicResourceType(ResourceType resourceType) {
-        for (TopicResourceType topicResourceType : topicResourceTypes) {
-            if (resourceType.equals(topicResourceType.getResourceType().orElse(null))) {
-                return Optional.of(topicResourceType);
-            }
-        }
-        return Optional.empty();
-    }
-
     public void setContext(boolean context) {
         this.context = context;
     }
@@ -313,6 +269,5 @@ public class Topic extends EntityWithPath {
         Set.copyOf(childTopicSubtopics).forEach(TopicSubtopic::disassociate);
         Set.copyOf(parentTopicSubtopics).forEach(TopicSubtopic::disassociate);
         Set.copyOf(topicResources).forEach(TopicResource::disassociate);
-        Set.copyOf(topicResourceTypes).forEach(TopicResourceType::disassociate);
     }
 }

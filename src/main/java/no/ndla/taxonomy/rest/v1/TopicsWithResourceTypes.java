@@ -12,9 +12,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.TopicResourceType;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.service.TopicResourceTypeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,50 +21,46 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/topic-resourcetypes"})
 @Transactional
+@Deprecated(forRemoval = true)
 public class TopicsWithResourceTypes {
-    private final TopicResourceTypeService topicResourceTypeService;
 
-    public TopicsWithResourceTypes(TopicResourceTypeService topicResourceTypeService) {
-        this.topicResourceTypeService = topicResourceTypeService;
+    public TopicsWithResourceTypes() {
     }
 
     @PostMapping
     @ApiOperation(value = "Adds a resource type to a topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Deprecated(forRemoval = true)
     public ResponseEntity<Void> post(
             @ApiParam(name = "connection", value = "The new resource/resource type connection") @RequestBody CreateTopicResourceTypeCommand command) {
-
-        URI location = URI.create("/topic-resourcetypes/" + topicResourceTypeService.addTopicResourceType(command.topicId, command.resourceTypeId));
-        return ResponseEntity.created(location).build();
+        throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
     @DeleteMapping({"/{id}"})
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation("Removes a resource type from a topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Deprecated(forRemoval = true)
     public void delete(@PathVariable("id") URI id) {
-        topicResourceTypeService.deleteTopicResourceType(id);
+        throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
     @GetMapping
     @ApiOperation("Gets all connections between topics and resource types")
+    @Deprecated(forRemoval = true)
     public List<TopicResourceTypeIndexDocument> index() {
-        return topicResourceTypeService.findAll()
-                .map(TopicResourceTypeIndexDocument::new)
-                .collect(Collectors.toList());
+        return List.of();
     }
 
     @GetMapping({"/{id}"})
     @ApiOperation("Gets a single connection between topic and resource type")
+    @Deprecated(forRemoval = true)
     public TopicResourceTypeIndexDocument get(@PathVariable("id") URI id) {
-        return new TopicResourceTypeIndexDocument(
-                topicResourceTypeService.findById(id).orElseThrow(() -> new NotFoundHttpResponseException("TopicResourceType not found"))
-        );
+        throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
     public static class CreateTopicResourceTypeCommand {
@@ -92,14 +86,5 @@ public class TopicsWithResourceTypes {
         @JsonProperty
         @ApiModelProperty(required = true, value = "Resource to resource type connection id", example = "urn:resource-has-resourcetypes:12")
         URI id;
-
-        public TopicResourceTypeIndexDocument() {
-        }
-
-        public TopicResourceTypeIndexDocument(TopicResourceType resourceResourceType) {
-            id = resourceResourceType.getPublicId();
-            resourceResourceType.getResourceType().ifPresent(resourceType -> resourceTypeId = resourceType.getPublicId());
-            resourceResourceType.getTopic().ifPresent(topic -> topicId = topic.getPublicId());
-        }
     }
 }
