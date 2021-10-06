@@ -1,3 +1,10 @@
+/*
+ * Part of NDLA taxonomy-api
+ * Copyright (C) 2021 NDLA
+ *
+ * See LICENSE
+ */
+
 package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -55,7 +62,7 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
     @Override
     public int compareTo(ResourceTypeDTO o) {
         // We want to sort resourceTypes without parents first when sorting
-        if(this.parentId == null && o.parentId != null) return -1;
-        return 1;
+        if(this.parentId == null && o.parentId != null) return 1;
+        return -1;
     }
 }

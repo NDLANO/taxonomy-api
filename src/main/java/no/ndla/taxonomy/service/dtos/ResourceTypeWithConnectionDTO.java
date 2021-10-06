@@ -1,10 +1,16 @@
+/*
+ * Part of NDLA taxonomy-api
+ * Copyright (C) 2021 NDLA
+ *
+ * See LICENSE
+ */
+
 package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.ResourceResourceType;
-import no.ndla.taxonomy.domain.TopicResourceType;
 
 import java.net.URI;
 
@@ -22,12 +28,6 @@ public class ResourceTypeWithConnectionDTO extends ResourceTypeDTO {
         super(resourceResourceType.getResourceType(), languageCode);
 
         this.connectionId = resourceResourceType.getPublicId();
-    }
-
-    public ResourceTypeWithConnectionDTO(TopicResourceType topicResourceType, String languageCode) {
-        super(topicResourceType.getResourceType().orElseThrow(), languageCode);
-
-        this.connectionId = topicResourceType.getPublicId();
     }
 
     public URI getConnectionId() {

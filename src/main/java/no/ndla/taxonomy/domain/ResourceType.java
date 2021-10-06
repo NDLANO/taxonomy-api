@@ -1,3 +1,10 @@
+/*
+ * Part of NDLA taxonomy-api
+ * Copyright (C) 2021 NDLA
+ *
+ * See LICENSE
+ */
+
 package no.ndla.taxonomy.domain;
 
 import javax.persistence.*;
@@ -26,30 +33,7 @@ public class ResourceType extends DomainObject {
     private Set<ResourceTypeTranslation> resourceTypeTranslations = new HashSet<>();
 
     @OneToMany(mappedBy = "resourceType", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TopicResourceType> topicResourceTypes = new HashSet<>();
-
-    @OneToMany(mappedBy = "resourceType", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
-
-    public Set<TopicResourceType> getTopicResourceTypes() {
-        return topicResourceTypes;
-    }
-
-    public void addTopicResourceType(TopicResourceType topicResourceType) {
-        if (topicResourceType.getResourceType().orElse(null) != this) {
-            throw new IllegalArgumentException("TopicResourceType must have ResourceType set before associating with ResourceType");
-        }
-
-        this.topicResourceTypes.add(topicResourceType);
-    }
-
-    public void removeTopicResourceType(TopicResourceType topicResourceType) {
-        this.topicResourceTypes.remove(topicResourceType);
-
-        if (topicResourceType.getResourceType().orElse(null) == this) {
-            topicResourceType.disassociate();
-        }
-    }
 
     public ResourceType name(String name) {
         setName(name);
@@ -158,7 +142,6 @@ public class ResourceType extends DomainObject {
     void preRemove() {
         setParent(null);
         new HashSet<>(subtypes).forEach(resourceType -> resourceType.setParent(null));
-        new HashSet<>(topicResourceTypes).forEach(TopicResourceType::disassociate);
         new HashSet<>(resourceResourceTypes).forEach(ResourceResourceType::disassociate);
     }
 }

@@ -1,6 +1,12 @@
+/*
+ * Part of NDLA taxonomy-api
+ * Copyright (C) 2021 NDLA
+ *
+ * See LICENSE
+ */
+
 package no.ndla.taxonomy.domain;
 
-import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -208,45 +214,6 @@ public class TopicTest {
     }
 
     @Test
-    public void addGetAndRemoveTopicResourceTypes() {
-        assertEquals(0, topic.getTopicResourceTypes().size());
-
-        final var topicResourceType1 = mock(TopicResourceType.class);
-        final var topicResourceType2 = mock(TopicResourceType.class);
-
-        try {
-            topic.addTopicResourceType(topicResourceType1);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException ignored) {
-        }
-        when(topicResourceType1.getTopic()).thenReturn(Optional.of(topic));
-        topic.addTopicResourceType(topicResourceType1);
-
-        assertEquals(1, topic.getTopicResourceTypes().size());
-        assertTrue(topic.getTopicResourceTypes().contains(topicResourceType1));
-
-        try {
-            topic.addTopicResourceType(topicResourceType2);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException ignored) {
-        }
-        when(topicResourceType2.getTopic()).thenReturn(Optional.of(topic));
-        topic.addTopicResourceType(topicResourceType2);
-
-        assertEquals(2, topic.getTopicResourceTypes().size());
-        assertTrue(topic.getTopicResourceTypes().containsAll(Set.of(topicResourceType1, topicResourceType2)));
-
-        topic.removeTopicResourceType(topicResourceType1);
-        verify(topicResourceType1).disassociate();
-        assertEquals(1, topic.getTopicResourceTypes().size());
-        assertTrue(topic.getTopicResourceTypes().contains(topicResourceType2));
-
-        topic.removeTopicResourceType(topicResourceType2);
-        verify(topicResourceType2).disassociate();
-        assertEquals(0, topic.getTopicResourceTypes().size());
-    }
-
-    @Test
     public void getParentTopic() {
         final var parentTopic1 = mock(Topic.class);
 
@@ -290,48 +257,6 @@ public class TopicTest {
         assertNull(topic.getContentUri());
         topic.setContentUri(new URI("urn:test1"));
         assertEquals("urn:test1", topic.getContentUri().toString());
-    }
-
-    @Test
-    public void addAndRemoveResourceType() {
-        final var resourceType1 = mock(ResourceType.class);
-        final var resourceType2 = mock(ResourceType.class);
-
-        assertEquals(0, topic.getTopicResourceTypes().size());
-
-        final var topicResourceType1 = topic.addResourceType(resourceType1);
-
-        assertEquals(1, topic.getTopicResourceTypes().size());
-        assertTrue(topic.getTopicResourceTypes().contains(topicResourceType1));
-
-        assertSame(topic, topicResourceType1.getTopic().orElse(null));
-        assertSame(resourceType1, topicResourceType1.getResourceType().orElse(null));
-
-        final var topicResourceType2 = topic.addResourceType(resourceType2);
-
-        assertEquals(2, topic.getTopicResourceTypes().size());
-        assertTrue(topic.getTopicResourceTypes().containsAll(Set.of(topicResourceType1, topicResourceType2)));
-
-        assertSame(topic, topicResourceType2.getTopic().orElse(null));
-        assertSame(resourceType2, topicResourceType2.getResourceType().orElse(null));
-
-        topic.removeResourceType(resourceType1);
-        assertEquals(1, topic.getTopicResourceTypes().size());
-        assertTrue(topic.getTopicResourceTypes().contains(topicResourceType2));
-
-        assertFalse(topicResourceType1.getTopic().isPresent());
-
-        // Trying to remove again triggers exception
-        try {
-            topic.removeResourceType(resourceType1);
-            fail("Expected ChildNotFoundException");
-        } catch (ChildNotFoundException ignored) {
-
-        }
-
-        topic.removeResourceType(resourceType2);
-        assertEquals(0, topic.getTopicResourceTypes().size());
-        assertFalse(topicResourceType2.getTopic().isPresent());
     }
 
     @Test
