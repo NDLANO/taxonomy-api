@@ -7,7 +7,7 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
+import no.ndla.taxonomy.service.dtos.SubjectDTO;
 
 import java.net.URI;
 import java.util.List;
@@ -15,6 +15,6 @@ import java.util.List;
 public interface SubjectService {
     void delete(URI publicId);
 
-    List<SubjectIndexDocument> getSubjects(String languageCode, MetadataKeyValueQuery metadataKeyValueQuery);
-    List<SubjectIndexDocument> getSubjects(String languageCode);
+    List<SubjectDTO> getSubjects(String languageCode, MetadataKeyValueQuery metadataKeyValueQuery);
+    List<SubjectDTO> getSubjects(String languageCode);
 }

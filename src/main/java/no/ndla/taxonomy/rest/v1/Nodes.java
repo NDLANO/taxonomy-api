@@ -48,7 +48,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     @GetMapping
     @ApiOperation("Gets all nodes")
-    public List<NodeDTO> index(
+    public List<EntityWithPathDTO> index(
             @ApiParam(value = "Filter by nodeType")
             @RequestParam(value = "nodeType", required = false)
                     NodeType nodeTypeFilter,

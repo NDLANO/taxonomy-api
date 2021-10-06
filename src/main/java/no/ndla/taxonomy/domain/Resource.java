@@ -118,6 +118,7 @@ public class Resource extends EntityWithPath {
         return resourceTranslation;
     }
 
+    @Override
     public Optional<ResourceTranslation> getTranslation(String languageCode) {
         return resourceTranslations.stream()
                 .filter(resourceTranslation -> resourceTranslation.getLanguageCode().equals(languageCode))

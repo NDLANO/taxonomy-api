@@ -804,7 +804,7 @@
         <dropTable tableName="topic_resource_type"/>
     </changeSet>
     
-    <changeSet id="20210928 01 create tables for node" author="Gunnar Velle">
+    <changeSet id="20211010 01 create tables for node" author="Gunnar Velle">
         <createTable tableName="node">
             <column name="id" type="serial" autoIncrement="true">
                 <constraints primaryKey="true" uniqueConstraintName="node_pkey"/>
@@ -816,7 +816,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="ident" type="varchar(255)">
-                <constraints nullable="false" unique="true"/>
+                <constraints nullable="false" unique="false"/>
             </column>
             <column name="name" type="varchar(255)"/>
             <column name="content_uri" type="varchar(255)"/>
@@ -824,6 +824,7 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+        <addUniqueConstraint tableName="node" columnNames="node_type,ident" constraintName="unique_node_type_ident"/>
 
         <createTable tableName="node_connection">
             <column name="id" type="serial" autoIncrement="true">
@@ -888,9 +889,7 @@
             <column name="language_code" type="varchar(3)">
                 <constraints nullable="false"/>
             </column>
-            <column name="name" type="varchar(255)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="name" type="varchar(255)"/>
         </createTable>
         <addForeignKeyConstraint baseTableName="node_translation" baseColumnNames="node_id"
                                  constraintName="fk_node_translation_node_id"
@@ -907,19 +906,19 @@
 
     </changeSet>
 
-    <changeSet id="20210930 copy subjects to nodes" author="Gunnar Velle">
+    <changeSet id="20211010 copy subjects to nodes" author="Gunnar Velle">
         <sql splitStatements="false" stripComments="false">
             INSERT INTO node (public_id, ident, node_type, name, content_uri, context)
             SELECT public_id, REPLACE(public_id, 'urn:subject:', '') as ident, 'SUBJECT' as node_type, name, content_uri, true AS context FROM subject;
         </sql>
     </changeSet>
-    <changeSet id="20210930 copy topics to nodes" author="Gunnar Velle">
+    <changeSet id="20211010 copy topics to nodes" author="Gunnar Velle">
         <sql splitStatements="false" stripComments="false">
             INSERT INTO node (public_id, ident, node_type, name, content_uri, context)
             SELECT public_id, REPLACE(public_id, 'urn:topic:', '') as ident, 'TOPIC' as node_type, name, content_uri, context FROM topic;
         </sql>
     </changeSet>
-    <changeSet id="20210930 copy subjects to nodes - relations" author="Gunnar Velle">
+    <changeSet id="20211010 copy subjects to nodes - relations" author="Gunnar Velle">
         <sql splitStatements="false" stripComments="false">
             INSERT INTO node_connection (public_id, parent_id, child_id, rank, relevance_id)
             SELECT
@@ -931,7 +930,7 @@
             FROM subject_topic r;
         </sql>
     </changeSet>
-    <changeSet id="20210930 copy topics to nodes - relations" author="Gunnar Velle">
+    <changeSet id="20211010 copy topics to nodes - relations" author="Gunnar Velle">
         <sql splitStatements="false" stripComments="false">
             INSERT INTO node_connection (public_id, parent_id, child_id, rank, relevance_id)
             SELECT
@@ -943,14 +942,14 @@
             FROM topic_subtopic r;
         </sql>
     </changeSet>
-    <changeSet id="20210930 move cached paths from other to node" author="Gunnar Velle">
+    <changeSet id="20211010 move cached paths from other to node" author="Gunnar Velle">
         <sql splitStatements="false" stripComments="false">
             UPDATE cached_path c SET node_id = (SELECT n.id FROM node n WHERE n.public_id = c.public_id);
             UPDATE cached_path c SET subject_id = NULL WHERE c.subject_id IS NOT NULL;
             UPDATE cached_path c SET topic_id = NULL WHERE c.topic_id IS NOT NULL;
         </sql>
     </changeSet>
-    <changeSet id="20210930 copy translations from subjects to nodes" author="Gunnar Velle">
+    <changeSet id="20211010 copy translations from subjects to nodes" author="Gunnar Velle">
         <sql splitStatements="false" stripComments="false">
             INSERT INTO node_translation
             (node_id, language_code, name)
@@ -963,7 +962,7 @@
             FROM subject_translation st;
         </sql>
     </changeSet>
-    <changeSet id="20210930 copy translations from topics to nodes" author="Gunnar Velle">
+    <changeSet id="20211010 copy translations from topics to nodes" author="Gunnar Velle">
         <sql splitStatements="false" stripComments="false">
             INSERT INTO node_translation
             (node_id, language_code, name)
@@ -976,7 +975,7 @@
             FROM topic_translation tt;
         </sql>
     </changeSet>
-    <changeSet id="20210931 copy resources from topics to nodes" author="Gunnar Velle">
+    <changeSet id="20211010 copy resources from topics to nodes" author="Gunnar Velle">
         <sql splitStatements="false" stripComments="false">
             INSERT INTO node_resource
             (node_id, public_id, resource_id, is_primary, rank, relevance_id)

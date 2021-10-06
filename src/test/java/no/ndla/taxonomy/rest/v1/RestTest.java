@@ -69,6 +69,12 @@ public abstract class RestTest {
     RelevanceRepository relevanceRepository;
 
     @Autowired
+    NodeRepository nodeRepository;
+
+    @Autowired
+    NodeConnectionRepository nodeConnectionRepository;
+
+    @Autowired
     protected TestUtils testUtils;
 
     @MockBean
@@ -124,6 +130,13 @@ public abstract class RestTest {
 
     Topic newTopic() {
         return save(new Topic());
+    }
+
+    Node newNode(NodeType nodeType) {
+        Node node = new Node(nodeType);
+        if (nodeType == NodeType.SUBJECT)
+            node.setContext(true);
+        return save(node);
     }
 
     Resource newResource() {

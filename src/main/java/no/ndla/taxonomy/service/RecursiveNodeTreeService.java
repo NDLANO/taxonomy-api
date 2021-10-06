@@ -53,7 +53,7 @@ public class RecursiveNodeTreeService {
         return toReturn;
     }
 
-    static class TreeElement {
+    public static class TreeElement {
         private final int id;
         private final Integer parentId;
         private final int rank;

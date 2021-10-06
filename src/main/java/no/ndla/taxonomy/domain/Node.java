@@ -2,18 +2,15 @@ package no.ndla.taxonomy.domain;
 
 import javax.persistence.*;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
 public class Node extends EntityWithPath {
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<NodeConnection> parentConnections = new HashSet<>();
 
-    @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<NodeConnection> childConnections = new HashSet<>();
 
     @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -42,12 +39,13 @@ public class Node extends EntityWithPath {
     public Node() {}
 
     public Node(NodeType nodeType) {
+        setNodeType(nodeType);
         setIdent(UUID.randomUUID().toString());
         updatePublicID();
     }
 
     private void updatePublicID() {
-        setPublicId(URI.create("urn:" + nodeType.getName() + ":" + getIdent()));
+        super.setPublicId(URI.create("urn:" + nodeType.getName() + ":" + getIdent()));
     }
 
     @Override
@@ -90,19 +88,14 @@ public class Node extends EntityWithPath {
     @Override
     public Set<EntityWithPathConnection> getChildConnections() {
         final var toReturn = new HashSet<EntityWithPathConnection>();
+        final Set<EntityWithPathConnection> children = childConnections.stream()
+                .map(entity -> (EntityWithPathConnection) entity)
+                .collect(Collectors.toUnmodifiableSet());
 
-        toReturn.addAll(getChildrenConnections());
+        toReturn.addAll(children);
         toReturn.addAll(getNodeResources());
 
         return toReturn;
-    }
-
-    public Set<NodeConnection> getChildrenConnections() {
-        return this.childConnections.stream().collect(Collectors.toUnmodifiableSet());
-    }
-
-    public Optional<NodeConnection> getParentConnection() {
-        return this.parentConnections.stream().findFirst();
     }
 
     public void addChildConnection(NodeConnection nodeConnection) {
@@ -182,6 +175,7 @@ public class Node extends EntityWithPath {
 
     public void setIdent(String ident) {
         this.ident = ident;
+        updatePublicID();
     }
 
     public String getIdent() {
@@ -214,6 +208,7 @@ public class Node extends EntityWithPath {
         return nodeTranslation;
     }
 
+    @Override
     public Optional<NodeTranslation> getTranslation(String languageCode) {
         return translations.stream()
                 .filter(translation -> translation.getLanguageCode().equals(languageCode))
@@ -251,6 +246,22 @@ public class Node extends EntityWithPath {
     @Override
     public boolean isContext() {
         return context;
+    }
+
+    @Override
+    public String getEntityName() {
+        return nodeType.getName();
+    }
+
+    @Override
+    public void setPublicId(URI publicId) {
+        final String[] idParts = publicId.toString().split(":");
+        setIdent(String.join(":", Arrays.copyOfRange(idParts, 2, idParts.length)));
+    }
+
+    public Node name(String name) {
+        setName(name);
+        return this;
     }
 
     @PreRemove

@@ -8,6 +8,8 @@
 package no.ndla.taxonomy.rest.v1;
 
 
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
@@ -28,12 +30,13 @@ public class SubjectTranslationsTest extends RestTest {
     @BeforeEach
     void clearAllRepos() {
         subjectRepository.deleteAllAndFlush();
+        nodeRepository.deleteAllAndFlush();
     }
 
     @Test
     public void can_get_all_subjects() throws Exception {
-        builder.subject(s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
-        builder.subject(s -> s.name("Chemistry").translation("nb", l -> l.name("Kjemi")));
+        builder.node(s -> s.nodeType(NodeType.SUBJECT).name("Mathematics").translation("nb", l -> l.name("Matematikk")));
+        builder.node(s -> s.nodeType(NodeType.SUBJECT).name("Chemistry").translation("nb", l -> l.name("Kjemi")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects?language=nb");
         SubjectIndexDocument[] subjects = testUtils.getObject(SubjectIndexDocument[].class, response);
@@ -45,7 +48,8 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_single_subject() throws Exception {
-        URI id = builder.subject(s -> s
+        URI id = builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
                 .name("Mathematics")
                 .translation("nb", l -> l
                         .name("Matematikk")
@@ -58,7 +62,8 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void fallback_to_default_language() throws Exception {
-        URI id = builder.subject(s -> s
+        URI id = builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
                 .name("Mathematics")
         ).getPublicId();
         SubjectIndexDocument subject = getSubject(id, "XX");
@@ -67,7 +72,8 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_default_language() throws Exception {
-        URI id = builder.subject(s -> s
+        URI id = builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
                 .name("Mathematics")
                 .translation("nb", l -> l
                         .name("Matematikk")
@@ -80,7 +86,7 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_add_translation() throws Exception {
-        Subject mathematics = builder.subject(s -> s.name("Mathematics"));
+        Node mathematics = builder.node(s -> s.nodeType(NodeType.SUBJECT).name("Mathematics"));
         URI id = mathematics.getPublicId();
 
         testUtils.updateResource("/v1/subjects/" + id + "/translations/nb", new SubjectTranslations.UpdateSubjectTranslationCommand() {{
@@ -92,7 +98,8 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_delete_translation() throws Exception {
-        Subject subject = builder.subject(s -> s
+        Node subject = builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
                 .name("Mathematics")
                 .translation("nb", l -> l
                         .name("Matematikk")
@@ -107,7 +114,8 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_all_translations() throws Exception {
-        Subject subject = builder.subject(s -> s
+        Node subject = builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
                 .name("Mathematics")
                 .translation("nb", l -> l.name("Matematikk"))
                 .translation("en", l -> l.name("Mathematics"))
@@ -125,7 +133,8 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_single_translation() throws Exception {
-        Subject subject = builder.subject(s -> s
+        Node subject = builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
                 .name("Mathematics")
                 .translation("nb", l -> l.name("Matematikk"))
         );
@@ -139,11 +148,12 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_topics_with_language() throws Exception {
-        Subject subject = builder.subject(s -> s
+        Node subject = builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
                 .name("physics")
-                .topic(t -> t.name("statics").translation("nb", tr -> tr.name("statikk")))
-                .topic(t -> t.name("electricity").translation("nb", tr -> tr.name("elektrisitet")))
-                .topic(t -> t.name("optics").translation("nb", tr -> tr.name("optikk")))
+                .child(t -> t.nodeType(NodeType.TOPIC).name("statics").translation("nb", tr -> tr.name("statikk")))
+                .child(t -> t.nodeType(NodeType.TOPIC).name("electricity").translation("nb", tr -> tr.name("elektrisitet")))
+                .child(t -> t.nodeType(NodeType.TOPIC).name("optics").translation("nb", tr -> tr.name("optikk")))
         );
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics?language=nb");
@@ -163,9 +173,11 @@ public class SubjectTranslationsTest extends RestTest {
                 .translation("nb", tr -> tr.name("Artikkel"))
         );
 
-        URI id = builder.subject(s -> s
+        URI id = builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
                 .name("subject")
-                .topic(t -> t
+                .child(t -> t
+                        .nodeType(NodeType.TOPIC)
                         .name("Trigonometry")
                         .resource(r -> r
                                 .name("Introduction to trigonometry")
@@ -173,7 +185,8 @@ public class SubjectTranslationsTest extends RestTest {
                                 .resourceType("article")
                         )
                 )
-                .topic(t -> t
+                .child(t -> t
+                        .nodeType(NodeType.TOPIC)
                         .name("Calculus")
                         .resource(r -> r
                                 .name("Introduction to calculus")

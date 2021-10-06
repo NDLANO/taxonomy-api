@@ -24,6 +24,10 @@ public interface EntityConnectionService {
 
     TopicResource connectTopicResource(Topic topic, Resource resource, Relevance relevance, boolean isPrimary, Integer rank);
 
+    NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank);
+
+    NodeResource connectNodeResource(Node node, Resource resource, Relevance relevance, boolean isPrimary, Integer rank);
+
     void disconnectTopicSubtopic(Topic topic, Topic subTopic);
 
     void disconnectTopicSubtopic(TopicSubtopic topicSubtopic);
@@ -36,11 +40,21 @@ public interface EntityConnectionService {
 
     void disconnectTopicResource(TopicResource topicResource);
 
+    void disconnectParentChild(Node parent, Node child);
+
+    void disconnectParentChildConnection(NodeConnection nodeConnection);
+
+    void disconnectNodeResource(Node node, Resource resource);
+
+    void disconnectNodeResource(NodeResource topicResource);
+
     void updateTopicSubtopic(TopicSubtopic topicSubtopic, Relevance relevance, Integer newRank);
 
     void updateTopicResource(TopicResource topicResource, Relevance relevance, boolean isPrimary, Integer newRank);
 
     void updateSubjectTopic(SubjectTopic subjectTopic, Relevance relevance, Integer newRank);
+
+    void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank);
 
     void replacePrimaryConnectionsFor(EntityWithPath entity);
 

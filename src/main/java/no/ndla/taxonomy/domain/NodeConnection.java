@@ -35,6 +35,9 @@ public class NodeConnection extends DomainEntity implements EntityWithPathConnec
         nodeConnection.parent = parent;
         nodeConnection.child = child;
 
+        parent.addChildConnection(nodeConnection);
+        child.addParentConnection(nodeConnection);
+
         return nodeConnection;
     }
 
@@ -44,6 +47,13 @@ public class NodeConnection extends DomainEntity implements EntityWithPathConnec
 
         this.parent = null;
         this.child = null;
+
+        if (parent != null) {
+            parent.removeChildConnection(this);
+        }
+        if (child != null) {
+            child.removeParentConnection(this);
+        }
     }
 
     public Optional<Node> getParent() {
@@ -79,7 +89,7 @@ public class NodeConnection extends DomainEntity implements EntityWithPathConnec
 
     @Override
     public Optional<Boolean> isPrimary() {
-        return Optional.empty();
+        return Optional.of(true);
     }
 
     @Override

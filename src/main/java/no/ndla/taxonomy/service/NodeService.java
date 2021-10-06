@@ -49,7 +49,7 @@ public class NodeService {
     }
 
     @InjectMetadata
-    public List<NodeDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter) {
+    public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter) {
         final List<Node> filtered;
 
         if (contentUriFilter != null && nodeTypeFilter != null) {
@@ -69,7 +69,7 @@ public class NodeService {
     }
 
     @MetadataQuery
-    public List<NodeDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter, MetadataKeyValueQuery metadataKeyValueQuery) {
+    public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter, MetadataKeyValueQuery metadataKeyValueQuery) {
         Set<String> publicIds = metadataKeyValueQuery.getDtos().stream()
                 .map(MetadataDto::getPublicId)
                 .collect(Collectors.toSet());
@@ -103,7 +103,7 @@ public class NodeService {
                     if (nodeTypeFilter == null) {
                         return true;
                     } else {
-                        return nodeTypeFilter.equals(node.getNodeType().getName());
+                        return nodeTypeFilter.equals(node.getNodeType());
                     }
                 })
                 .map(node -> new NodeDTO(node, languageCode))

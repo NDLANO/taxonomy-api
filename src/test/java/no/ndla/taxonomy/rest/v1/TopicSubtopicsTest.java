@@ -8,10 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 
-import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.domain.SubjectTopic;
-import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.domain.TopicSubtopic;
+import no.ndla.taxonomy.domain.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -125,15 +122,18 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void subtopics_can_be_created_with_rank() throws Exception {
-        Subject subject = builder.subject(s -> s.name("Subject").publicId("urn:subject:1"));
-        Topic electricity = builder.topic(s -> s
+        Node subject = builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).name("Subject").publicId("urn:subject:1"));
+        Node electricity = builder.node(s -> s
+                .nodeType(NodeType.TOPIC)
                 .name("Electricity")
                 .publicId("urn:topic:1"));
-        save(SubjectTopic.create(subject, electricity));
-        Topic alternatingCurrents = builder.topic(t -> t
+        save(NodeConnection.create(subject, electricity));
+        Node alternatingCurrents = builder.node(t -> t
+                .nodeType(NodeType.TOPIC)
                 .name("Alternating currents")
                 .publicId("urn:topic:11"));
-        Topic wiring = builder.topic(t -> t
+        Node wiring = builder.node(t -> t
+                .nodeType(NodeType.TOPIC)
                 .name("Wiring")
                 .publicId("urn:topic:12"));
 

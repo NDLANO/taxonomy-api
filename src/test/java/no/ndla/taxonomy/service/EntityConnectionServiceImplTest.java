@@ -11,9 +11,7 @@ import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.TopicResource;
 import no.ndla.taxonomy.domain.TopicSubtopic;
-import no.ndla.taxonomy.repositories.SubjectTopicRepository;
-import no.ndla.taxonomy.repositories.TopicResourceRepository;
-import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
+import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +37,10 @@ public class EntityConnectionServiceImplTest {
     private TopicSubtopicRepository topicSubtopicRepository;
     @Autowired
     private TopicResourceRepository topicResourceRepository;
+    @Autowired
+    private NodeConnectionRepository nodeConnectionRepository;
+    @Autowired
+    private NodeResourceRepository nodeResourceRepository;
 
     private CachedUrlUpdaterService cachedUrlUpdaterService;
 
@@ -51,7 +53,7 @@ public class EntityConnectionServiceImplTest {
     public void setUp() throws Exception {
         cachedUrlUpdaterService = mock(CachedUrlUpdaterService.class);
 
-        service = new EntityConnectionServiceImpl(subjectTopicRepository, topicSubtopicRepository, topicResourceRepository, cachedUrlUpdaterService);
+        service = new EntityConnectionServiceImpl(subjectTopicRepository, topicSubtopicRepository, topicResourceRepository, nodeConnectionRepository, nodeResourceRepository, cachedUrlUpdaterService);
     }
 
     @Test

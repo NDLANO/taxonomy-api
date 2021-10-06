@@ -31,4 +31,12 @@ public class DomainEntity implements Serializable {
     public void setPublicId(URI publicId) {
         this.publicId = publicId;
     }
+
+    /**
+     * Defaults to class name, but can be overrided
+     * @return
+     */
+    public String getEntityName() {
+        return getClass().getSimpleName().toLowerCase();
+    }
 }
