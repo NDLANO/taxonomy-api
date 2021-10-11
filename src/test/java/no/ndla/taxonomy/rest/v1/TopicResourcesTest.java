@@ -29,7 +29,7 @@ public class TopicResourcesTest extends RestTest {
     @Test
     public void can_add_resource_to_topic() throws Exception {
         URI integrationId, calculusId;
-        calculusId = newNode(NodeType.TOPIC).name("calculus").getPublicId();
+        calculusId = newTopic().name("calculus").getPublicId();
         var resource = newResource();
         resource.setName("Introduction to integration");
         integrationId = resource.getPublicId();
@@ -53,12 +53,12 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void can_add_secondary_resource_to_topic() throws Exception {
-        final var calculusId = newNode(NodeType.TOPIC).name("calculus").getPublicId();
+        final var calculusId = newTopic().name("calculus").getPublicId();
         var resource = newResource();
         resource.setName("Introduction to integration");
         final var integrationId = resource.getPublicId();
 
-        final var topic2 = newNode(NodeType.TOPIC);
+        final var topic2 = newTopic();
         final var topic2Id = topic2.getPublicId();
 
         // 20190819 JEP@Cerpus: Behavior change: It was possible to create a non-primary resource when no resource existed
@@ -102,7 +102,7 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void cannot_add_existing_resource_to_topic() throws Exception {
-        final var calculus = newNode(NodeType.TOPIC).name("calculus");
+        final var calculus = newTopic().name("calculus");
         final var integration = newResource();
         integration.setName("Introduction to integration");
         NodeResource.create(calculus, integration);
@@ -124,14 +124,14 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void can_delete_topic_resource() throws Exception {
-        URI id = save(NodeResource.create(newNode(NodeType.TOPIC), newResource())).getPublicId();
+        URI id = save(NodeResource.create(newTopic(), newResource())).getPublicId();
         testUtils.deleteResource("/v1/topic-resources/" + id);
         assertNull(nodeRepository.findByPublicId(id));
     }
 
     @Test
     public void can_update_topic_resource() throws Exception {
-        URI id = save(NodeResource.create(newNode(NodeType.TOPIC), newResource())).getPublicId();
+        URI id = save(NodeResource.create(newTopic(), newResource())).getPublicId();
 
         testUtils.updateResource("/v1/topic-resources/" + id, new TopicResources.UpdateTopicResourceCommand() {{
             primary = true;
@@ -142,7 +142,7 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void cannot_unset_primary_topic() throws Exception {
-        URI id = save(NodeResource.create(newNode(NodeType.TOPIC), newResource(), true)).getPublicId();
+        URI id = save(NodeResource.create(newTopic(), newResource(), true)).getPublicId();
 
         testUtils.updateResource("/v1/topic-resources/" + id, new TopicResources.UpdateTopicResourceCommand() {{
             primary = false;
@@ -162,12 +162,12 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void can_get_resources() throws Exception {
-        Node electricity = newNode(NodeType.TOPIC).name("electricity");
+        Node electricity = newTopic().name("electricity");
         Resource alternatingCurrent = newResource();
         alternatingCurrent.setName("How alternating current works");
         save(NodeResource.create(electricity, alternatingCurrent));
 
-        Node calculus = newNode(NodeType.TOPIC).name("calculus");
+        Node calculus = newTopic().name("calculus");
         Resource integration = newResource();
         integration.setName("Introduction to integration");
         save(NodeResource.create(calculus, integration));
@@ -183,7 +183,7 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void can_get_topic_resource() throws Exception {
-        Node electricity = newNode(NodeType.TOPIC).name("electricity");
+        Node electricity = newTopic().name("electricity");
         Resource alternatingCurrent = newResource();
         alternatingCurrent.setName("How alternating current works");
         NodeResource topicResource = save(NodeResource.create(electricity, alternatingCurrent));
@@ -396,7 +396,7 @@ public class TopicResourcesTest extends RestTest {
 
     private List<NodeResource> createTenContiguousRankedConnections() {
         List<NodeResource> connections = new ArrayList<>();
-        Node parent = newNode(NodeType.TOPIC);
+        Node parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Resource sub = newResource();
             NodeResource topicResource = NodeResource.create(parent, sub);
@@ -409,7 +409,7 @@ public class TopicResourcesTest extends RestTest {
 
     private List<NodeResource> createTenNonContiguousRankedConnections() {
         List<NodeResource> connections = new ArrayList<>();
-        Node parent = newNode(NodeType.TOPIC);
+        Node parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Resource sub = newResource();
             NodeResource topicSubtopic = NodeResource.create(parent, sub);

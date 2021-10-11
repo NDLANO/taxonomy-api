@@ -9,7 +9,10 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.TestSeeder;
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeResource;
+import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDto;

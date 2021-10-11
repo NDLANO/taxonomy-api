@@ -10,7 +10,6 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import no.ndla.taxonomy.service.dtos.ResourceDTO;
@@ -29,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class SubjectTranslationsTest extends RestTest {
     @BeforeEach
     void clearAllRepos() {
-        subjectRepository.deleteAllAndFlush();
         nodeRepository.deleteAllAndFlush();
     }
 

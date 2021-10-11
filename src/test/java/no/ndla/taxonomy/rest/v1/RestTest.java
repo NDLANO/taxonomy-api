@@ -42,21 +42,6 @@ public abstract class RestTest {
     EntityManager entityManager;
 
     @Autowired
-    SubjectRepository subjectRepository;
-
-    @Autowired
-    TopicRepository topicRepository;
-
-    @Autowired
-    TopicResourceRepository topicResourceRepository;
-
-    @Autowired
-    SubjectTopicRepository subjectTopicRepository;
-
-    @Autowired
-    TopicSubtopicRepository topicSubtopicRepository;
-
-    @Autowired
     ResourceResourceTypeRepository resourceResourceTypeRepository;
 
     @Autowired
@@ -127,18 +112,14 @@ public abstract class RestTest {
         return entity;
     }
 
-    Subject newSubject() {
-        return save(new Subject());
+    Node newSubject() {
+        Node node = new Node(NodeType.SUBJECT);
+        node.setContext(true);
+        return save(node);
     }
 
-    Topic newTopic() {
-        return save(new Topic());
-    }
-
-    Node newNode(NodeType nodeType) {
-        Node node = new Node(nodeType);
-        if (nodeType == NodeType.SUBJECT)
-            node.setContext(true);
+    Node newTopic() {
+        Node node = new Node(NodeType.TOPIC);
         return save(node);
     }
 

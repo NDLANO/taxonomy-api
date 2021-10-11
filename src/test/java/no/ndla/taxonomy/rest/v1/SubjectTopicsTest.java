@@ -37,8 +37,8 @@ public class SubjectTopicsTest extends RestTest {
     @Test
     public void can_add_topic_to_subject() throws Exception {
         URI subjectId, topicId;
-        subjectId = newNode(NodeType.SUBJECT).name("physics").getPublicId();
-        topicId = newNode(NodeType.TOPIC).name("trigonometry").getPublicId();
+        subjectId = newSubject().name("physics").getPublicId();
+        topicId = newTopic().name("trigonometry").getPublicId();
 
         URI id = getId(
                 testUtils.createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {{
@@ -57,8 +57,8 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void cannot_add_existing_topic_to_subject() throws Exception {
-        Node physics = newNode(NodeType.SUBJECT).name("physics");
-        Node trigonometry = newNode(NodeType.TOPIC).name("trigonometry");
+        Node physics = newSubject().name("physics");
+        Node trigonometry = newTopic().name("trigonometry");
         NodeConnection.create(physics, trigonometry);
 
         URI subjectId = physics.getPublicId();
@@ -74,14 +74,14 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_delete_subject_topic() throws Exception {
-        URI id = save(NodeConnection.create(newNode(NodeType.SUBJECT), newNode(NodeType.TOPIC))).getPublicId();
+        URI id = save(NodeConnection.create(newSubject(), newTopic())).getPublicId();
         testUtils.deleteResource("/v1/subject-topics/" + id);
         assertNull(nodeRepository.findByPublicId(id));
     }
 
     @Test
     public void can_update_subject_rank() throws Exception {
-        URI id = save(NodeConnection.create(newNode(NodeType.SUBJECT), newNode(NodeType.TOPIC))).getPublicId();
+        URI id = save(NodeConnection.create(newSubject(), newTopic())).getPublicId();
 
         MockHttpServletResponse responseBefore = testUtils.getResource("/v1/subject-topics/" + id.toString());
         SubjectTopics.SubjectTopicIndexDocument connection = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument.class, responseBefore);
@@ -92,7 +92,7 @@ public class SubjectTopicsTest extends RestTest {
             rank = 12;
         }});
 
-        MockHttpServletResponse responseAfter = testUtils.getResource("/v1/subject-topics/" + id.toString());
+        MockHttpServletResponse responseAfter = testUtils.getResource("/v1/subject-topics/" + id);
         SubjectTopics.SubjectTopicIndexDocument connectionAfter = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument.class, responseAfter);
 
         assertEquals(12, connectionAfter.rank);
@@ -193,12 +193,12 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_get_topics() throws Exception {
-        Node physics = newNode(NodeType.SUBJECT).name("physics");
-        Node electricity = newNode(NodeType.TOPIC).name("electricity");
+        Node physics = newSubject().name("physics");
+        Node electricity = newTopic().name("electricity");
         save(NodeConnection.create(physics, electricity));
 
-        Node mathematics = newNode(NodeType.SUBJECT).name("mathematics");
-        Node trigonometry = newNode(NodeType.TOPIC).name("trigonometry");
+        Node mathematics = newSubject().name("mathematics");
+        Node trigonometry = newTopic().name("trigonometry");
         save(NodeConnection.create(mathematics, trigonometry));
 
         URI physicsId = physics.getPublicId();
@@ -217,8 +217,8 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_get_subject_topic() throws Exception {
-        Node physics = newNode(NodeType.SUBJECT).name("physics");
-        Node electricity = newNode(NodeType.TOPIC).name("electricity");
+        Node physics = newSubject().name("physics");
+        Node electricity = newTopic().name("electricity");
         NodeConnection subjectTopic = save(NodeConnection.create(physics, electricity));
 
         URI subjectid = physics.getPublicId();
@@ -324,7 +324,7 @@ public class SubjectTopicsTest extends RestTest {
             rank = 1;
         }});
 
-        /*testUtils.updateResource("/v1/topic-subtopics/" + tst1.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
+        testUtils.updateResource("/v1/topic-subtopics/" + tst1.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
             rank = 2;
         }});
@@ -332,14 +332,14 @@ public class SubjectTopicsTest extends RestTest {
         testUtils.updateResource("/v1/topic-subtopics/" + tst2.getPublicId(), new SubjectTopics.UpdateSubjectTopicCommand() {{
             primary = true;
             rank = 1;
-        }});*/
+        }});
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/topics?recursive=true");
         SubjectTopics.SubjectTopicIndexDocument[] topics = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
 
         assertEquals(statistics.getPublicId(), topics[0].id);
         assertEquals(geometry.getPublicId(), topics[1].id);
-        //assertEquals(subtopic2.getPublicId(), topics[2].id);
-        //assertEquals(subtopic1.getPublicId(), topics[3].id);
+        assertEquals(subtopic2.getPublicId(), topics[2].id);
+        assertEquals(subtopic1.getPublicId(), topics[3].id);
     }
 
     @Test
@@ -386,9 +386,9 @@ public class SubjectTopicsTest extends RestTest {
 
     private List<NodeConnection> createTenContiguousRankedNodeConnections() {
         List<NodeConnection> connections = new ArrayList<>();
-        Node subject = newNode(NodeType.SUBJECT);
+        Node subject = newSubject();
         for (int i = 1; i < 11; i++) {
-            Node topic = newNode(NodeType.TOPIC);
+            Node topic = newTopic();
             NodeConnection subjectTopic = NodeConnection.create(subject, topic);
             subjectTopic.setRank(i);
             connections.add(subjectTopic);
@@ -399,9 +399,9 @@ public class SubjectTopicsTest extends RestTest {
 
     private List<NodeConnection> createTenNonContiguousRankedNodeConnections() {
         List<NodeConnection> connections = new ArrayList<>();
-        Node subject = newNode(NodeType.SUBJECT);
+        Node subject = newSubject();
         for (int i = 1; i < 11; i++) {
-            Node topic = newNode(NodeType.TOPIC);
+            Node topic = newTopic();
             NodeConnection subjectTopic = NodeConnection.create(subject, topic);
             if (i <= 5) {
                 subjectTopic.setRank(i);

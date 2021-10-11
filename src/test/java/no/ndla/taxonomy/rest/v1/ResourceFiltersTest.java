@@ -9,16 +9,10 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.Resource;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import java.net.URI;
-
-import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ResourceFiltersTest extends RestTest {
 

@@ -67,7 +67,7 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void can_delete_topic_subtopic() throws Exception {
-        URI id = save(NodeConnection.create(newNode(NodeType.TOPIC), newNode(NodeType.TOPIC))).getPublicId();
+        URI id = save(NodeConnection.create(newTopic(), newTopic())).getPublicId();
         testUtils.deleteResource("/v1/topic-subtopics/" + id);
         assertNull(nodeRepository.findByPublicId(id));
     }
@@ -91,8 +91,8 @@ public class TopicSubtopicsTest extends RestTest {
     @Test
     public void can_get_topic_subtopic() throws Exception {
         URI topicid, subtopicid, id;
-        Node electricity = newNode(NodeType.TOPIC).name("electricity");
-        Node alternatingCurrent = newNode(NodeType.TOPIC).name("alternating current");
+        Node electricity = newTopic().name("electricity");
+        Node alternatingCurrent = newTopic().name("alternating current");
         NodeConnection topicSubtopic = save(NodeConnection.create(electricity, alternatingCurrent));
 
         topicid = electricity.getPublicId();
@@ -163,7 +163,7 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void can_update_subtopic_rank() throws Exception {
-        URI id = save(NodeConnection.create(newNode(NodeType.TOPIC), newNode(NodeType.TOPIC))).getPublicId();
+        URI id = save(NodeConnection.create(newTopic(), newTopic())).getPublicId();
 
         testUtils.updateResource("/v1/topic-subtopics/" + id, new TopicSubtopics.UpdateTopicSubtopicCommand() {{
             primary = true;
@@ -266,9 +266,9 @@ public class TopicSubtopicsTest extends RestTest {
 
     private List<NodeConnection> createTenContiguousRankedConnections() {
         List<NodeConnection> connections = new ArrayList<>();
-        Node parent = newNode(NodeType.TOPIC);
+        Node parent = newTopic();
         for (int i = 1; i < 11; i++) {
-            Node sub = newNode(NodeType.TOPIC);
+            Node sub = newTopic();
             NodeConnection topicSubtopic = NodeConnection.create(parent, sub);
             topicSubtopic.setRank(i);
             connections.add(topicSubtopic);
@@ -279,9 +279,9 @@ public class TopicSubtopicsTest extends RestTest {
 
     private List<NodeConnection> createTenNonContiguousRankedConnections() {
         List<NodeConnection> connections = new ArrayList<>();
-        Node parent = newNode(NodeType.TOPIC);
+        Node parent = newTopic();
         for (int i = 1; i < 11; i++) {
-            Node sub = newNode(NodeType.TOPIC);
+            Node sub = newTopic();
             NodeConnection topicSubtopic = NodeConnection.create(parent, sub);
             if (i <= 5) {
                 topicSubtopic.setRank(i);
