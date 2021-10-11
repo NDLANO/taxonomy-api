@@ -9,10 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 
 import no.ndla.taxonomy.TestSeeder;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.domain.ResourceType;
-import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
 import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,15 +31,17 @@ public class ResourcesTest extends RestTest {
     @BeforeEach
     void clearAllRepos() {
         resourceRepository.deleteAllAndFlush();
-        topicRepository.deleteAllAndFlush();
-        subjectRepository.deleteAllAndFlush();
+        nodeRepository.deleteAllAndFlush();
     }
 
     @Test
     public void can_get_single_resource() throws Exception {
-        builder.subject(s -> s
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
                 .publicId("urn:subject:1")
-                .topic(t -> t
+                .child(t -> t
+                        .nodeType(NodeType.TOPIC)
                         .publicId("urn:topic:1")
                         .resource(true, r -> r
                                 .name("introduction to trigonometry")
@@ -63,16 +62,22 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void primary_url_is_return_when_getting_single_resource() throws Exception {
-        builder.subject(s -> s
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
                 .publicId("urn:subject:1")
-                .topic(t -> t
+                .child(t -> t
+                        .nodeType(NodeType.TOPIC)
                         .publicId("urn:topic:1")
                         .resource("resource", r -> r
                                 .publicId("urn:resource:1")
                         )));
-        builder.subject(s -> s
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
                 .publicId("urn:subject:2")
-                .topic("primary", t -> t
+                .child("primary", t -> t
+                        .nodeType(NodeType.TOPIC)
                         .publicId("urn:topic:2")
                         .resource("resource", true)
                 )
@@ -98,8 +103,8 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_all_resources() throws Exception {
-        builder.subject(s -> s.topic(t -> t.resource(true, r -> r.name("The inner planets"))));
-        builder.subject(s -> s.topic(t -> t.resource(true, r -> r.name("Gas giants"))));
+        builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).child(t -> t.nodeType(NodeType.TOPIC).resource(true, r -> r.name("The inner planets"))));
+        builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).child(t -> t.nodeType(NodeType.TOPIC).resource(true, r -> r.name("Gas giants"))));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources");
         final var resources = testUtils.getObject(ResourceDTO[].class, response);
@@ -117,16 +122,23 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_resources_by_contentURI() throws Exception {
-        builder.subject(s -> s.topic(t -> t.resource(true, r -> {
-            r.name("The inner planets");
-            r.contentUri("urn:test:1");
-        })));
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
+                .child(t -> t.resource(true, r -> {
+                    r.name("The inner planets");
+                    r.contentUri("urn:test:1");
+                }))
+        );
 
-        builder.subject(s -> s.topic(t -> t.resource(true, r -> {
-            r.name("Gas giants");
-            r.contentUri("urn:test:2");
-        })));
-
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
+                .child(t -> t.resource(true, r -> {
+                    r.name("Gas giants");
+                    r.contentUri("urn:test:2");
+            }))
+        );
 
         {
             final var response = testUtils.getResource("/v1/resources?contentURI=urn:test:1");
@@ -222,7 +234,8 @@ public class ResourcesTest extends RestTest {
                 .resourceType(rt -> rt.name("Learning path")));
         resource.getTranslation("nb");
 
-        builder.topic(t -> t
+        builder.node(t -> t
+                .nodeType(NodeType.TOPIC)
                 .resource(resource));
 
         URI id = builder.resource("resource").getPublicId();
@@ -236,8 +249,8 @@ public class ResourcesTest extends RestTest {
     public void can_delete_resource_with_two_parent_topics() throws Exception {
         Resource resource = builder.resource("resource");
 
-        builder.topic(child -> child.resource(resource)).name("DELETE EDGE TO ME");
-        builder.topic(child -> child.resource(resource)).name("DELETE EDGE TO ME ALSO");
+        builder.node(child -> child.nodeType(NodeType.TOPIC).resource(resource)).name("DELETE EDGE TO ME");
+        builder.node(child -> child.nodeType(NodeType.TOPIC).resource(resource)).name("DELETE EDGE TO ME ALSO");
 
         final var publicId = resource.getPublicId();
 
@@ -306,22 +319,23 @@ public class ResourcesTest extends RestTest {
         final Resource resource = builder.resource(r -> r
                 .publicId("urn:resource:1")
                 .resourceType(resourceType));
-        final Topic topic = builder.topic("primary", t -> t
+        final Node topic = builder.node("primary", t -> t
+                .nodeType(NodeType.TOPIC)
                 .name("Philosophy and Mind")
                 .publicId("urn:topic:1")
                 .contentUri(URI.create("urn:article:6662"))
                 .resource(resource, true));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/" + resource.getPublicId() + "/full");
-        final var result = testUtils.getObject(ResourceWithParentTopicsDTO.class, response);
+        final var result = testUtils.getObject(ResourceWithParentNodesDTO.class, response);
 
         assertEquals(resource.getPublicId(), result.getId());
         assertEquals(resource.getName(), result.getName());
         assertEquals(1, result.getResourceTypes().size());
         assertEquals(resourceType.getName(), result.getResourceTypes().iterator().next().getName());
         assertEquals(0, result.getFilters().size());
-        assertEquals(1, result.getParentTopics().size());
-        final TopicWithResourceConnectionDTO t = result.getParentTopics().iterator().next();
+        assertEquals(1, result.getParentNodes().size());
+        final NodeWithResourceConnectionDTO t = result.getParentNodes().iterator().next();
         assertEquals(topic.getName(), t.getName());
         assertTrue(t.isPrimary());
         assertEquals(URI.create("urn:article:6662"), t.getContentUri());
@@ -349,26 +363,28 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_resource_connection_id() throws Exception {
-        Topic topic = builder.topic(t -> t
+        Node topic = builder.node(t -> t
+                .nodeType(NodeType.TOPIC)
                 .publicId("urn:topic:1")
                 .resource()
         );
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources");
         final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
-        assertEquals(first(topic.getTopicResources()).getPublicId(), result[0].getConnectionId());
+        assertEquals(first(topic.getNodeResources()).getPublicId(), result[0].getConnectionId());
     }
 
     @Test
     public void can_get_resource_connections_with_metadata() throws Exception {
-        Topic topic = builder.topic(t -> t
+        Node topic = builder.node(t -> t
+                .nodeType(NodeType.TOPIC)
                 .publicId("urn:topic:1")
                 .resource()
         );
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources");
         final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
-        assertEquals(first(topic.getTopicResources()).getPublicId(), result[0].getConnectionId());
+        assertEquals(first(topic.getNodeResources()).getPublicId(), result[0].getConnectionId());
         assertAllTrue(result, connection -> connection.getMetadata() != null);
         assertAllTrue(result, connection -> connection.getMetadata().isVisible());
         assertAllTrue(result, connection -> connection.getMetadata().getGrepCodes().size() == 1);
@@ -376,12 +392,14 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_resource_connection_id_recursively() throws Exception {
-        builder.topic("topic", t -> t
+        builder.node("topic", t -> t
+                .nodeType(NodeType.TOPIC)
                 .publicId("urn:topic:1343")
                 .resource(r -> r
                         .name("a")
                         .publicId("urn:resource:1"))
-                .subtopic("subtopic", st -> st
+                .child("subtopic", st -> st
+                        .nodeType(NodeType.TOPIC)
                         .publicId("urn:topic:2")
                         .resource(r -> r.name("b")
                                 .publicId("urn:resource:2")))
@@ -390,31 +408,37 @@ public class ResourcesTest extends RestTest {
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1343/resources?recursive=true");
         final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
 
-        assertEquals(first(builder.topic("topic").getTopicResources()).getPublicId(), result[0].getConnectionId());
-        assertEquals(first(builder.topic("subtopic").getTopicResources()).getPublicId(), result[1].getConnectionId());
+        assertEquals(first(builder.node("topic").getNodeResources()).getPublicId(), result[0].getConnectionId());
+        assertEquals(first(builder.node("subtopic").getNodeResources()).getPublicId(), result[1].getConnectionId());
     }
 
     @Test
     public void can_get_resources_for_a_topic_recursively() throws Exception {
-        builder.subject(s -> s
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
                 .publicId("urn:subject:1")
                 .name("subject a")
-                .topic(t -> t
+                .child(t -> t
+                        .nodeType(NodeType.TOPIC)
                         .publicId("urn:topic:a")
                         .name("a")
                         .resource(true, r -> r
                                 .publicId("urn:resource:1")
                                 .name("resource a").contentUri("urn:article:a"))
-                        .subtopic(st -> st
+                        .child(st -> st
+                                .nodeType(NodeType.TOPIC)
                                 .publicId("urn:topic:a:1")
                                 .name("aa")
                                 .resource(true, r -> r.name("resource aa").contentUri("urn:article:aa"))
-                                .subtopic(st2 -> st2
+                                .child(st2 -> st2
+                                        .nodeType(NodeType.TOPIC)
                                         .publicId("urn:topic:a:1:1")
                                         .name("aaa")
                                         .resource(true, r -> r.name("resource aaa").contentUri("urn:article:aaa"))
                                 )
-                                .subtopic(st2 -> st2
+                                .child(st2 -> st2
+                                        .nodeType(NodeType.TOPIC)
                                         .publicId("urn:topic:a:1:2")
                                         .name("aab")
                                         .resource(true, r -> r.name("resource aab").contentUri("urn:article:aab"))
@@ -455,13 +479,15 @@ public class ResourcesTest extends RestTest {
             rb.name("resource 1");
         });
 
-        builder.topic(tb -> {
+        builder.node(tb -> {
+            tb.nodeType(NodeType.TOPIC);
             tb.name("topic 1");
             tb.publicId("urn:topic:rt:1201");
             tb.resource(resource, true);
         });
 
-        builder.topic(tb -> {
+        builder.node(tb -> {
+            tb.nodeType(NodeType.TOPIC);
             tb.name("topic 2");
             tb.publicId("urn:topic:rt:1202");
             tb.resource(resource, false);
@@ -483,18 +509,24 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_urls_for_resources_for_a_topic_recursively() throws Exception {
-        builder.subject(s -> s.publicId("urn:subject:1")
-                .topic(t -> t
+        builder.node(s -> s.publicId("urn:subject:1")
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
+                .child(t -> t
+                        .nodeType(NodeType.TOPIC)
                         .publicId("urn:topic:a")
                         .resource(true, r -> r.publicId("urn:resource:a"))
-                        .subtopic(st -> st
+                        .child(st -> st
+                                .nodeType(NodeType.TOPIC)
                                 .publicId("urn:topic:aa")
                                 .resource(true, r -> r.publicId("urn:resource:aa"))
-                                .subtopic(st2 -> st2
+                                .child(st2 -> st2
+                                        .nodeType(NodeType.TOPIC)
                                         .publicId("urn:topic:aaa")
                                         .resource("aaa", true, r -> r.publicId("urn:resource:aaa"))
                                 )
-                                .subtopic(st2 -> st2
+                                .child(st2 -> st2
+                                        .nodeType(NodeType.TOPIC)
                                         .publicId("urn:topic:aab")
                                         .resource(true, r -> r.publicId("urn:resource:aab"))
                                 )
@@ -514,11 +546,14 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_resources_for_a_topic_without_child_topic_resources() throws Exception {
-        builder.subject(s -> s
-                .topic(t -> t
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
+                .child(t -> t
+                        .nodeType(NodeType.TOPIC)
                         .name("a")
                         .publicId("urn:topic:1")
-                        .subtopic(st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))
+                        .child(st -> st.nodeType(NodeType.TOPIC).name("subtopic").resource(r -> r.name("subtopic resource")))
                         .resource(r -> r.name("resource 1"))
                         .resource(r -> r.name("resource 2"))
                 ));
@@ -608,12 +643,12 @@ public class ResourcesTest extends RestTest {
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?filter=urn:filter:1");
         final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
         // Filters are removed
-        assertEquals(0, resources.length);
+        assertEquals(10, resources.length);
 
         MockHttpServletResponse response2 = testUtils.getResource("/v1/topics/urn:topic:1/resources?filter=urn:filter:1,urn:filter:2");
         final var resources2 = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response2);
         // Filters are removed
-        assertEquals(0, resources2.length);
+        assertEquals(10, resources2.length);
     }
 
     @Test
@@ -700,22 +735,6 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_urls_for_all_resources() throws Exception {
-        /*builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .topic(t -> t
-                        .publicId("urn:topic:1")
-                        .resource(true, r -> r.publicId("urn:resource:1"))
-                )
-                .topic(t -> t
-                        .publicId("urn:topic:2")
-                        .resource(true, r -> r.publicId("urn:resource:2"))
-                        .subtopic(st -> st
-                                .publicId("urn:topic:21")
-                                .resource(true, r -> r.publicId("urn:resource:3"))
-                        )
-                )
-        );*/
-
         builder.node(n -> n
                 .nodeType(NodeType.SUBJECT)
                 .isContext(true)

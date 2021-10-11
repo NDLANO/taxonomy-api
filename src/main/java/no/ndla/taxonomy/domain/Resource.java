@@ -156,6 +156,13 @@ public class Resource extends EntityWithPath {
         return Optional.empty();
     }
 
+    public Optional<Node> getPrimaryNode() {
+        for (NodeResource node : nodes) {
+            if (node.isPrimary().orElseThrow()) return node.getNode();
+        }
+        return Optional.empty();
+    }
+
     public void removeResourceType(ResourceType resourceType) {
         ResourceResourceType resourceResourceType = getResourceType(resourceType);
         if (resourceResourceType == null)
@@ -219,6 +226,7 @@ public class Resource extends EntityWithPath {
     void preRemove() {
         Set.copyOf(resourceResourceTypes).forEach(ResourceResourceType::disassociate);
         Set.copyOf(topics).forEach(TopicResource::disassociate);
+        Set.copyOf(nodes).forEach(NodeResource::disassociate);
     }
 
     @Override

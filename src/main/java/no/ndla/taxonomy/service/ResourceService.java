@@ -7,10 +7,7 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.service.dtos.ResourceDTO;
-import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
-import no.ndla.taxonomy.service.dtos.ResourceWithParentTopicsDTO;
-import no.ndla.taxonomy.service.dtos.ResourceWithTopicConnectionDTO;
+import no.ndla.taxonomy.service.dtos.*;
 
 import java.net.URI;
 import java.util.List;
@@ -37,6 +34,8 @@ public interface ResourceService {
     ResourceDTO getResourceByPublicId(URI publicId, String languageCode);
 
     ResourceWithParentTopicsDTO getResourceWithParentTopicsByPublicId(URI publicId, String languageCode);
+
+    ResourceWithParentNodesDTO getResourceWithParentNodesByPublicId(URI publicId, String languageCode);
 
     List<ResourceDTO> getResources(String languageCode, URI contentUriFilter);
 

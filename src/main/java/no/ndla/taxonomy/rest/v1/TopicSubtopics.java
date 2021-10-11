@@ -11,12 +11,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.domain.TopicSubtopic;
+import no.ndla.taxonomy.repositories.NodeConnectionRepository;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.repositories.TopicRepository;
-import no.ndla.taxonomy.repositories.TopicSubtopicRepository;
 import no.ndla.taxonomy.service.EntityConnectionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,19 +32,19 @@ import java.util.stream.Collectors;
 @RequestMapping(path = {"/v1/topic-subtopics"})
 @Transactional
 public class TopicSubtopics {
-    private final TopicRepository topicRepository;
-    private final TopicSubtopicRepository topicSubtopicRepository;
+    private final NodeRepository nodeRepository;
+    private final NodeConnectionRepository nodeConnectionRepository;
     private final EntityConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
 
     public TopicSubtopics(
-            TopicRepository topicRepository,
-            TopicSubtopicRepository topicSubtopicRepository,
+            NodeRepository nodeRepository,
+            NodeConnectionRepository nodeConnectionRepository,
             EntityConnectionService connectionService,
             RelevanceRepository relevanceRepository
     ) {
-        this.topicRepository = topicRepository;
-        this.topicSubtopicRepository = topicSubtopicRepository;
+        this.nodeRepository = nodeRepository;
+        this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
         this.relevanceRepository = relevanceRepository;
     }
@@ -52,8 +52,8 @@ public class TopicSubtopics {
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and subtopics")
     public List<TopicSubtopicIndexDocument> index() {
-        return topicSubtopicRepository
-                .findAllIncludingTopicAndSubtopic()
+        return nodeConnectionRepository
+                .findAllIncludingParentAndChild()
                 .stream()
                 .map(TopicSubtopicIndexDocument::new)
                 .collect(Collectors.toList());
@@ -62,7 +62,7 @@ public class TopicSubtopics {
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single connection between a topic and a subtopic")
     public TopicSubtopicIndexDocument get(@PathVariable("id") URI id) {
-        TopicSubtopic topicSubtopic = topicSubtopicRepository.getByPublicId(id);
+        NodeConnection topicSubtopic = nodeConnectionRepository.getByPublicId(id);
         return new TopicSubtopicIndexDocument(topicSubtopic);
     }
 
@@ -72,11 +72,11 @@ public class TopicSubtopics {
     public ResponseEntity<Void> post(
             @ApiParam(name = "connection", value = "The new connection") @RequestBody AddSubtopicToTopicCommand command) {
 
-        Topic topic = topicRepository.getByPublicId(command.topicid);
-        Topic subtopic = topicRepository.getByPublicId(command.subtopicid);
+        Node topic = nodeRepository.getByPublicId(command.topicid);
+        Node subtopic = nodeRepository.getByPublicId(command.subtopicid);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
 
-        final var topicSubtopic = connectionService.connectTopicSubtopic(topic, subtopic, relevance, command.rank == 0 ? null : command.rank);
+        final var topicSubtopic = connectionService.connectParentChild(topic, subtopic, relevance, command.rank == 0 ? null : command.rank);
 
         URI location = URI.create("/topic-subtopics/" + topicSubtopic.getPublicId());
         return ResponseEntity.created(location).build();
@@ -87,7 +87,7 @@ public class TopicSubtopics {
     @ApiOperation(value = "Removes a connection between a topic and a subtopic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
-        connectionService.disconnectTopicSubtopic(topicSubtopicRepository.getByPublicId(id));
+        connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id));
     }
 
     @PutMapping("/{id}")
@@ -96,10 +96,10 @@ public class TopicSubtopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
-        final var topicSubtopic = topicSubtopicRepository.getByPublicId(id);
+        final var topicSubtopic = nodeConnectionRepository.getByPublicId(id);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
 
-        connectionService.updateTopicSubtopic(topicSubtopic, relevance, command.rank > 0 ? command.rank : null);
+        connectionService.updateParentChild(topicSubtopic, relevance, command.rank > 0 ? command.rank : null);
     }
 
     public static class AddSubtopicToTopicCommand {
@@ -170,13 +170,13 @@ public class TopicSubtopics {
         TopicSubtopicIndexDocument() {
         }
 
-        TopicSubtopicIndexDocument(TopicSubtopic topicSubtopic) {
-            id = topicSubtopic.getPublicId();
-            topicSubtopic.getTopic().ifPresent(topic -> topicid = topic.getPublicId());
-            topicSubtopic.getSubtopic().ifPresent(subtopic -> subtopicid = subtopic.getPublicId());
-            relevanceId = topicSubtopic.getRelevance().map(Relevance::getPublicId).orElse(null);
+        TopicSubtopicIndexDocument(NodeConnection nodeConnection) {
+            id = nodeConnection.getPublicId();
+            nodeConnection.getParent().ifPresent(topic -> topicid = topic.getPublicId());
+            nodeConnection.getChild().ifPresent(subtopic -> subtopicid = subtopic.getPublicId());
+            relevanceId = nodeConnection.getRelevance().map(Relevance::getPublicId).orElse(null);
             primary = true;
-            rank = topicSubtopic.getRank();
+            rank = nodeConnection.getRank();
         }
     }
 }

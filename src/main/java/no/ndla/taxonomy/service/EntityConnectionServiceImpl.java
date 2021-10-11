@@ -446,6 +446,12 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
+    public void updateNodeResource(NodeResource nodeResource, Relevance relevance, boolean isPrimary, Integer newRank) {
+        updateRankableConnection(nodeResource, isPrimary, newRank);
+        updateRelevance(nodeResource, relevance);
+    }
+
+    @Override
     public void updateSubjectTopic(SubjectTopic subjectTopic, Relevance relevance, Integer newRank) {
         updateRank(subjectTopic, newRank);
         updateRelevance(subjectTopic, relevance);

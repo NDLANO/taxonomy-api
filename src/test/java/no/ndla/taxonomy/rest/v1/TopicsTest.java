@@ -23,9 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,15 +40,17 @@ public class TopicsTest extends RestTest {
     @BeforeEach
     void clearAllRepos() {
         resourceRepository.deleteAllAndFlush();
-        topicRepository.deleteAllAndFlush();
-        subjectRepository.deleteAllAndFlush();
+        nodeRepository.deleteAllAndFlush();
     }
 
     @Test
     public void can_get_single_topic() throws Exception {
-        builder.subject(s -> s
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
                 .publicId("urn:subject:1")
-                .topic(t -> t
+                .child(t -> t
+                        .nodeType(NodeType.TOPIC)
                         .name("trigonometry")
                         .contentUri("urn:article:1")
                         .publicId("urn:topic:1")
@@ -70,7 +70,8 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void topic_without_subject_has_no_url() throws Exception {
-        builder.topic(t -> t
+        builder.node(t -> t
+                .nodeType(NodeType.TOPIC)
                 .publicId("urn:topic:1")
         );
 
@@ -82,15 +83,21 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_topics_by_contentURI() throws Exception {
-        builder.subject(s -> s
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
                 .name("Basic science")
-                .topic(t -> {
+                .child(t -> {
+                    t.nodeType(NodeType.TOPIC);
                     t.name("photo synthesis");
                     t.contentUri(URI.create("urn:test:1"));
                 }));
-        builder.subject(s -> s
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
                 .name("Maths")
-                .topic(t -> {
+                .child(t -> {
+                    t.nodeType(NodeType.TOPIC);
                     t.name("trigonometry");
                     t.contentUri(URI.create("urn:test:2"));
                 }));
@@ -112,16 +119,22 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_topics_by_key_and_value() throws Exception {
-        builder.subject(s -> s
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
                 .name("Basic science")
-                .topic(t -> {
+                .child(t -> {
+                    t.nodeType(NodeType.TOPIC);
                     t.publicId("urn:topic:b8001");
                     t.name("photo synthesis");
                     t.contentUri(URI.create("urn:test:1"));
                 }));
-        builder.subject(s -> s
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
                 .name("Maths")
-                .topic(t -> {
+                .child(t -> {
+                    t.nodeType(NodeType.TOPIC);
                     t.publicId("urn:topic:b8003");
                     t.name("trigonometry");
                     t.contentUri(URI.create("urn:test:2"));
@@ -163,12 +176,16 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_all_topics() throws Exception {
-        builder.subject(s -> s
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
                 .name("Basic science")
-                .topic(t -> t.name("photo synthesis")));
-        builder.subject(s -> s
+                .child(t -> t.nodeType(NodeType.TOPIC).name("photo synthesis")));
+        builder.node(s -> s
+                .nodeType(NodeType.SUBJECT)
+                .isContext(true)
                 .name("Maths")
-                .topic(t -> t.name("trigonometry")));
+                .child(t -> t.nodeType(NodeType.TOPIC).name("trigonometry")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics");
         final var topics = testUtils.getObject(TopicDTO[].class, response);
@@ -210,7 +227,7 @@ public class TopicsTest extends RestTest {
      */
     @Test
     public void can_get_all_connections() throws Exception {
-        testSeeder.topicConnectionsTestSetup();
+        testSeeder.topicNodeConnectionsTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:2000/connections");
         ConnectionIndexDTO[] connections = testUtils.getObject(ConnectionIndexDTO[].class, response);
@@ -223,7 +240,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void subtopics_are_sorted_by_rank() throws Exception {
-        testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
+        testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
         final var subtopics = testUtils.getObject(TopicDTO[].class, response);
@@ -239,7 +256,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_unfiltered_subtopics() throws Exception {
-        testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
+        testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
         final var subtopics = testUtils.getObject(TopicDTO[].class, response);
@@ -248,26 +265,6 @@ public class TopicsTest extends RestTest {
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() != null);
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().isVisible());
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().getGrepCodes().size() == 1);
-    }
-
-
-    @Test
-    public void can_get_filtered_subtopics() throws Exception {
-        testSeeder.subtopicsByTopicIdAndFiltersTestSetup();
-
-        {
-            final var response = testUtils.getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:1");
-            final var subtopics = testUtils.getObject(TopicDTO[].class, response);
-            // Filters are removed
-            assertEquals(0, subtopics.length, "Filter 1 subtopics");
-        }
-
-        {
-            final var response = testUtils.getResource("/v1/topics/urn:topic:1/topics?filter=urn:filter:2");
-            final var subtopics = testUtils.getObject(TopicDTO[].class, response);
-            // Filters are removed
-            assertEquals(0, subtopics.length, "Filter 2 subtopics");
-        }
     }
 
     private void connectionsHaveCorrectTypes(ConnectionIndexDTO[] connections) {
@@ -286,7 +283,7 @@ public class TopicsTest extends RestTest {
         MockHttpServletResponse response = testUtils.createResource("/v1/topics", createTopicCommand);
         URI id = getId(response);
 
-        Topic topic = topicRepository.getByPublicId(id);
+        Node topic = nodeRepository.getByPublicId(id);
         assertEquals(createTopicCommand.name, topic.getName());
         assertEquals(createTopicCommand.contentUri, topic.getContentUri());
     }
@@ -300,7 +297,7 @@ public class TopicsTest extends RestTest {
 
         testUtils.createResource("/v1/topics", createTopicCommand);
 
-        Topic topic = topicRepository.getByPublicId(createTopicCommand.id);
+        Node topic = nodeRepository.getByPublicId(createTopicCommand.id);
         assertEquals(createTopicCommand.name, topic.getName());
     }
 
@@ -317,7 +314,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_update_topic() throws Exception {
-        URI publicId = builder.topic().getPublicId();
+        URI publicId = builder.node().getPublicId();
 
         testUtils.updateResource("/v1/topics/" + publicId, new TopicCommand() {{
             id = publicId;
@@ -325,15 +322,15 @@ public class TopicsTest extends RestTest {
             contentUri = URI.create("urn:article:1");
         }});
 
-        Topic topic = topicRepository.getByPublicId(publicId);
+        Node topic = nodeRepository.getByPublicId(publicId);
         assertEquals("trigonometry", topic.getName());
         assertEquals("urn:article:1", topic.getContentUri().toString());
     }
 
     @Test
     public void can_update_topic_with_new_id() throws Exception {
-        URI publicId = builder.topic().getPublicId();
-        URI randomId = URI.create("uri:topic:random");
+        URI publicId = builder.node(t -> t.nodeType(NodeType.TOPIC)).getPublicId();
+        URI randomId = URI.create("urn:topic:random");
 
         testUtils.updateResource("/v1/topics/" + publicId, new TopicCommand() {{
             id = randomId;
@@ -341,31 +338,33 @@ public class TopicsTest extends RestTest {
             contentUri = URI.create("urn:article:1");
         }});
 
-        Topic topic = topicRepository.getByPublicId(randomId);
+        Node topic = nodeRepository.getByPublicId(randomId);
         assertEquals("trigonometry", topic.getName());
         assertEquals("urn:article:1", topic.getContentUri().toString());
     }
 
     @Test
     public void can_delete_topic_with_2_subtopics() throws Exception {
-        Topic childTopic1 = builder.topic(child -> child.name("DELETE EDGE TO ME"));
-        Topic childTopic2 = builder.topic(child -> child.name("DELETE EDGE TO ME ALSO"));
+        Node childTopic1 = builder.node(child -> child.nodeType(NodeType.TOPIC).name("DELETE EDGE TO ME"));
+        Node childTopic2 = builder.node(child -> child.nodeType(NodeType.TOPIC).name("DELETE EDGE TO ME ALSO"));
 
-        URI parentId = builder.topic(parent -> parent
-                .subtopic(childTopic1)
-                .subtopic(childTopic2)
+        URI parentId = builder.node(parent -> parent
+                .nodeType(NodeType.TOPIC)
+                .child(childTopic1)
+                .child(childTopic2)
         ).getPublicId();
 
         testUtils.deleteResource("/v1/topics/" + parentId);
 
-        assertNull(topicRepository.findByPublicId(parentId));
+        assertNull(nodeRepository.findByPublicId(parentId));
 
         verify(metadataApiService).deleteMetadataByPublicId(parentId);
     }
 
     @Test
     public void can_delete_topic_with_2_resources() throws Exception {
-        Topic topic = builder.topic(child -> child
+        Node topic = builder.node(child -> child
+                .nodeType(NodeType.TOPIC)
                 .name("MAIN TOPIC")
                 .translation("nb", tr -> tr.name("HovedEmne"))
                 .resource(r -> r.publicId("urn:resource:1"))
@@ -375,27 +374,29 @@ public class TopicsTest extends RestTest {
 
         testUtils.deleteResource("/v1/topics/" + topicId);
 
-        assertNull(topicRepository.findByPublicId(topicId));
+        assertNull(nodeRepository.findByPublicId(topicId));
 
         verify(metadataApiService).deleteMetadataByPublicId(topicId);
     }
 
     @Test
     public void can_delete_topic_but_subtopics_remain() throws Exception {
-        Topic childTopic = builder.topic(child -> child
+        Node childTopic = builder.node(child -> child
+                .nodeType(NodeType.TOPIC)
                 .name("DELETE EDGE TO ME")
                 .translation("nb", tr -> tr.name("emne"))
-                .subtopic(sub -> sub.publicId("urn:topic:1"))
+                .child(sub -> sub.nodeType(NodeType.TOPIC).publicId("urn:topic:1"))
                 .resource(r -> r.publicId("urn:resource:1")));
 
-        URI parentId = builder.topic(parent -> parent
-                .subtopic(childTopic)
+        URI parentId = builder.node(parent -> parent
+                .nodeType(NodeType.TOPIC)
+                .child(childTopic)
         ).getPublicId();
 
         testUtils.deleteResource("/v1/topics/" + parentId);
 
-        assertNull(topicRepository.findByPublicId(parentId));
-        assertNotNull(topicRepository.findByPublicId(childTopic.getPublicId()));
+        assertNull(nodeRepository.findByPublicId(parentId));
+        assertNotNull(nodeRepository.findByPublicId(childTopic.getPublicId()));
 
         verify(metadataApiService).deleteMetadataByPublicId(parentId);
     }
@@ -406,13 +407,14 @@ public class TopicsTest extends RestTest {
                 .translation("nb", tr -> tr.name("ressurs"))
                 .resourceType(rt -> rt.name("Learning path")));
 
-        URI parentId = builder.topic(parent -> parent
+        URI parentId = builder.node(parent -> parent
+                .nodeType(NodeType.TOPIC)
                 .resource(resource)
         ).getPublicId();
 
         testUtils.deleteResource("/v1/topics/" + parentId);
 
-        assertNull(topicRepository.findByPublicId(parentId));
+        assertNull(nodeRepository.findByPublicId(parentId));
         assertNotNull(resourceRepository.findByPublicId(resource.getPublicId()));
 
         verify(metadataApiService).deleteMetadataByPublicId(parentId);
@@ -421,16 +423,16 @@ public class TopicsTest extends RestTest {
     @Test
     @Transactional
     public void can_get_filters_for_topic() throws Exception {
-        final var topic1 = builder.topic(builder -> builder.publicId("urn:topic:1"));
-        final var topic2 = builder.topic(builder -> builder.publicId("urn:topic:2"));
-        builder.topic(builder -> builder.publicId("urn:topic:3"));
+        final var topic1 = builder.node(builder -> builder.nodeType(NodeType.TOPIC).publicId("urn:topic:1"));
+        final var topic2 = builder.node(builder -> builder.nodeType(NodeType.TOPIC).publicId("urn:topic:2"));
+        builder.node(builder -> builder.nodeType(NodeType.TOPIC).publicId("urn:topic:3"));
 
         final var relevance1 = builder.relevance();
         final var relevance2 = builder.relevance();
         final var relevance3 = builder.relevance();
 
         final var resource1 = builder.resource();
-        TopicResource.create(topic1, resource1);
+        NodeResource.create(topic1, resource1);
 
         {
             final var returnedFilters = Arrays.asList(testUtils.getObject(Object[].class, testUtils.getResource("/v1/topics/urn:topic:1/filters")));

@@ -11,15 +11,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.domain.TopicResource;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
-import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.repositories.ResourceRepository;
-import no.ndla.taxonomy.repositories.TopicRepository;
-import no.ndla.taxonomy.repositories.TopicResourceRepository;
+import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.EntityConnectionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,20 +30,20 @@ import java.util.stream.Collectors;
 @Transactional
 public class TopicResources {
 
-    private final TopicRepository topicRepository;
+    private final NodeRepository nodeRepository;
     private final ResourceRepository resourceRepository;
-    private final TopicResourceRepository topicResourceRepository;
+    private final NodeResourceRepository nodeResourceRepository;
     private final EntityConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
 
-    public TopicResources(TopicRepository topicRepository,
+    public TopicResources(NodeRepository nodeRepository,
                           ResourceRepository resourceRepository,
-                          TopicResourceRepository topicResourceRepository,
+                          NodeResourceRepository nodeResourceRepository,
                           EntityConnectionService connectionService,
                           RelevanceRepository relevanceRepository) {
-        this.topicRepository = topicRepository;
+        this.nodeRepository = nodeRepository;
         this.resourceRepository = resourceRepository;
-        this.topicResourceRepository = topicResourceRepository;
+        this.nodeResourceRepository = nodeResourceRepository;
         this.connectionService = connectionService;
         this.relevanceRepository = relevanceRepository;
     }
@@ -57,8 +51,8 @@ public class TopicResources {
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and resources")
     public List<TopicResourceIndexDocument> index() {
-        return topicResourceRepository
-                .findAllIncludingTopicAndResource()
+        return nodeResourceRepository
+                .findAllIncludingNodeAndResource()
                 .stream()
                 .map(TopicResourceIndexDocument::new)
                 .collect(Collectors.toList());
@@ -67,7 +61,7 @@ public class TopicResources {
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a specific connection between a topic and a resource")
     public TopicResourceIndexDocument get(@PathVariable("id") URI id) {
-        TopicResource topicResource = topicResourceRepository.getByPublicId(id);
+        NodeResource topicResource = nodeResourceRepository.getByPublicId(id);
         return new TopicResourceIndexDocument(topicResource);
     }
 
@@ -77,12 +71,12 @@ public class TopicResources {
     public ResponseEntity<Void> post(
             @ApiParam(name = "connection", value = "new topic/resource connection ") @RequestBody AddResourceToTopicCommand command) {
 
-        Topic topic = topicRepository.getByPublicId(command.topicid);
+        Node topic = nodeRepository.getByPublicId(command.topicid);
         Resource resource = resourceRepository.getByPublicId(command.resourceId);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
 
-        final TopicResource topicResource;
-        topicResource = connectionService.connectTopicResource(topic, resource, relevance, command.primary, command.rank == 0 ? null : command.rank);
+        final NodeResource topicResource;
+        topicResource = connectionService.connectNodeResource(topic, resource, relevance, command.primary, command.rank == 0 ? null : command.rank);
 
         URI location = URI.create("/topic-resources/" + topicResource.getPublicId());
         return ResponseEntity.created(location).build();
@@ -94,7 +88,7 @@ public class TopicResources {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
-        connectionService.disconnectTopicResource(topicResourceRepository.getByPublicId(id));
+        connectionService.disconnectNodeResource(nodeResourceRepository.getByPublicId(id));
     }
 
     @PutMapping("/{id}")
@@ -104,14 +98,14 @@ public class TopicResources {
     public void put(@PathVariable("id") URI id,
                     @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand
                             command) {
-        TopicResource topicResource = topicResourceRepository.getByPublicId(id);
+        NodeResource topicResource = nodeResourceRepository.getByPublicId(id);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
 
         if (topicResource.isPrimary().orElseThrow() && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
 
-        connectionService.updateTopicResource(topicResource, relevance, command.primary, command.rank > 0 ? command.rank : null);
+        connectionService.updateNodeResource(topicResource, relevance, command.primary, command.rank > 0 ? command.rank : null);
     }
 
     public static class AddResourceToTopicCommand {
@@ -183,9 +177,9 @@ public class TopicResources {
         TopicResourceIndexDocument() {
         }
 
-        TopicResourceIndexDocument(TopicResource topicResource) {
+        TopicResourceIndexDocument(NodeResource topicResource) {
             id = topicResource.getPublicId();
-            topicResource.getTopic().ifPresent(topic -> topicid = topic.getPublicId());
+            topicResource.getNode().ifPresent(topic -> topicid = topic.getPublicId());
             topicResource.getResource().ifPresent(resource -> resourceId = resource.getPublicId());
             primary = topicResource.isPrimary().orElseThrow();
             rank = topicResource.getRank();

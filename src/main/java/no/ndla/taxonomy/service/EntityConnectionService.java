@@ -52,6 +52,8 @@ public interface EntityConnectionService {
 
     void updateTopicResource(TopicResource topicResource, Relevance relevance, boolean isPrimary, Integer newRank);
 
+    void updateNodeResource(NodeResource topicResource, Relevance relevance, boolean isPrimary, Integer newRank);
+
     void updateSubjectTopic(SubjectTopic subjectTopic, Relevance relevance, Integer newRank);
 
     void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank);

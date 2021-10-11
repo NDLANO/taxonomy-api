@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.EntityWithPathConnection;
+import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.SubjectTopic;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 
@@ -65,6 +66,12 @@ public class ConnectionIndexDTO {
                 this.type = "parent-subject";
             } else {
                 this.type = "topic";
+            }
+        } else if (connection instanceof NodeConnection) {
+            if (isParentConnection) {
+                this.type = "parent-topic";
+            } else {
+                this.type = "subtopic";
             }
         }
     }

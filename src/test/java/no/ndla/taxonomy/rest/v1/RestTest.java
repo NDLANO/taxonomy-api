@@ -75,6 +75,9 @@ public abstract class RestTest {
     NodeConnectionRepository nodeConnectionRepository;
 
     @Autowired
+    NodeResourceRepository nodeResourceRepository;
+
+    @Autowired
     protected TestUtils testUtils;
 
     @MockBean

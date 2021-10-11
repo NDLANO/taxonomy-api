@@ -23,9 +23,7 @@ import java.net.URI;
  */
 @ApiModel("Subject")
 public class SubjectDTO extends EntityWithPathDTO {
-    public SubjectDTO() {
-
-    }
+    public SubjectDTO() {}
 
     public SubjectDTO(Subject subject, String languageCode) {
         super(subject, languageCode);

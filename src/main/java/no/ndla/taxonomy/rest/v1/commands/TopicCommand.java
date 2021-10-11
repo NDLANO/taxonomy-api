@@ -9,13 +9,14 @@ package no.ndla.taxonomy.rest.v1.commands;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.service.UpdatableDto;
 
 import java.net.URI;
 import java.util.Optional;
 
-public class TopicCommand implements UpdatableDto<Topic> {
+public class TopicCommand implements UpdatableDto<Node> {
     @JsonProperty
     @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:topic:1")
     public URI id;
@@ -34,8 +35,8 @@ public class TopicCommand implements UpdatableDto<Topic> {
     }
 
     @Override
-    public void apply(Topic topic) {
-        if(getId().isPresent())
+    public void apply(Node topic) {
+        if (getId().isPresent())
             topic.setPublicId(id);
         topic.setName(name);
         topic.setContentUri(contentUri);
