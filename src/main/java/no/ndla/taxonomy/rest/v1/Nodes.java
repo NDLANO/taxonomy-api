@@ -4,12 +4,9 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
-import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.http.HttpStatus;
@@ -23,7 +20,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/nodes"})
@@ -61,6 +57,10 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @RequestParam(value = "contentURI", required = false)
             URI contentUriFilter,
 
+            @ApiParam(value = "Only root level")
+            @RequestParam(value = "isRoot", required = false)
+                    boolean isRoot,
+
             @ApiParam(value = "Filter by key and value")
             @RequestParam(value = "key", required = false)
                     String key,
@@ -76,7 +76,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         if (key != null) {
             return nodeService.getNodes(language, nodeTypeFilter, contentUriFilter, new MetadataKeyValueQuery(key, value));
         }
-        return nodeService.getNodes(language, nodeTypeFilter, contentUriFilter);
+        return nodeService.getNodes(language, nodeTypeFilter, contentUriFilter, isRoot);
     }
 
 
@@ -89,7 +89,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                         @RequestParam(value = "language", required = false, defaultValue = "")
                                 String language
     ) {
-        return new NodeDTO(nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id).orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found")), language);
+        return new NodeDTO(nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id).orElseThrow(() -> new NotFoundHttpResponseException("Node was not found")), language);
     }
 
     @PostMapping

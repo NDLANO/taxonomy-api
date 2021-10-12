@@ -102,8 +102,7 @@ public class QueryTest extends RestTest {
                 .resourceType(rt -> rt.name("Subject material"))
         );
 
-        builder.node(r -> r
-                .nodeType(NodeType.TOPIC)
+        builder.node(NodeType.TOPIC, r -> r
                 .publicId("urn:topic:2")
                 .contentUri("urn:article:345"));
 
@@ -116,13 +115,11 @@ public class QueryTest extends RestTest {
 
     @Test
     public void can_get_all_topics_matching_contentURI() throws Exception {
-        builder.node(r -> r
-                .nodeType(NodeType.TOPIC)
+        builder.node(NodeType.TOPIC, r -> r
                 .publicId("urn:topic:2")
                 .contentUri("urn:article:345"));
 
-        builder.node(r -> r
-                .nodeType(NodeType.TOPIC)
+        builder.node(NodeType.TOPIC, r -> r
                 .publicId("urn:topic:3")
                 .contentUri("urn:article:345"));
 
@@ -144,8 +141,7 @@ public class QueryTest extends RestTest {
 
     @Test
     public void can_get_translated_name_for_topic() throws Exception {
-        builder.node(r -> r
-                .nodeType(NodeType.TOPIC)
+        builder.node(NodeType.TOPIC, r -> r
                 .publicId("urn:topic:2")
                 .name("topic")
                 .translation("nb", tr -> tr.name("Emne"))

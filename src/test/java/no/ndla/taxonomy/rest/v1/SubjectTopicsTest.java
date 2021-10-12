@@ -126,7 +126,6 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void update_subject_rank_modifies_other_noncontiguous_ranks() throws Exception {
-
         List<NodeConnection> subjectTopics = createTenNonContiguousRankedNodeConnections(); //creates ranks 1, 2, 3, 4, 5, 60, 70, 80, 90, 100
         Map<String, Integer> mappedRanks = mapNodeConnectionRanks(subjectTopics);
 
@@ -233,13 +232,10 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void topic_has_default_rank() throws Exception {
-        builder.node(s -> s
-                .nodeType(NodeType.SUBJECT)
+        builder.node(NodeType.SUBJECT, s -> s
                 .isContext(true)
                 .name("Mathematics")
-                .child(t -> t
-                        .nodeType(NodeType.TOPIC)
-                        .name("Geometry")));
+                .child(NodeType.TOPIC, t -> t.name("Geometry")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subject-topics");
         SubjectTopics.SubjectTopicIndexDocument[] topics = testUtils.getObject(SubjectTopics.SubjectTopicIndexDocument[].class, response);
@@ -249,17 +245,14 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_change_sorting_order_for_topics() throws Exception {
-        Node mathematics = builder.node(s -> s
-                .nodeType(NodeType.SUBJECT)
+        Node mathematics = builder.node(NodeType.SUBJECT, s -> s
                 .isContext(true)
                 .name("Mathematics")
                 .publicId("urn:subject:1"));
-        Node geometry = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        Node geometry = builder.node(NodeType.TOPIC, t -> t
                 .name("Geometry")
                 .publicId("urn:topic:1"));
-        Node statistics = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        Node statistics = builder.node(NodeType.TOPIC, t -> t
                 .name("Statistics")
                 .publicId("urn:topic:2"));
         NodeConnection geometryMaths = save(NodeConnection.create(mathematics, geometry));
@@ -286,25 +279,20 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_change_sorting_order_for_subtopics() throws Exception {
-        Node mathematics = builder.node(s -> s
-                .nodeType(NodeType.SUBJECT)
+        Node mathematics = builder.node(NodeType.SUBJECT, s -> s
                 .isContext(true)
                 .name("Mathematics")
                 .publicId("urn:subject:1"));
-        Node geometry = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        Node geometry = builder.node(NodeType.TOPIC, t -> t
                 .name("Geometry")
                 .publicId("urn:topic:1"));
-        Node statistics = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        Node statistics = builder.node(NodeType.TOPIC, t -> t
                 .name("Statistics")
                 .publicId("urn:topic:2"));
-        Node subtopic1 = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        Node subtopic1 = builder.node(NodeType.TOPIC, t -> t
                 .name("Subtopic 1")
                 .publicId("urn:topic:aa"));
-        Node subtopic2 = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        Node subtopic2 = builder.node(NodeType.TOPIC, t -> t
                 .name("Subtopic 2")
                 .publicId("urn:topic:ab"));
         NodeConnection geometryMaths = save(NodeConnection.create(mathematics, geometry));
@@ -344,17 +332,14 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_create_topic_with_rank() throws Exception {
-        Node mathematics = builder.node(s -> s
-                .nodeType(NodeType.SUBJECT)
+        Node mathematics = builder.node(NodeType.SUBJECT, s -> s
                 .isContext(true)
                 .name("Mathematics")
                 .publicId("urn:subject:1"));
-        Node geometry = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        Node geometry = builder.node(NodeType.TOPIC, t -> t
                 .name("Geometry")
                 .publicId("urn:topic:1"));
-        Node statistics = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        Node statistics = builder.node(NodeType.TOPIC, t -> t
                 .name("Statistics")
                 .publicId("urn:topic:2"));
 

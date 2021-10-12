@@ -75,7 +75,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         if (key != null) {
             return nodeService.getNodes(language, NodeType.TOPIC, contentUriFilter, new MetadataKeyValueQuery(key, value));
         }
-        return nodeService.getNodes(language, NodeType.TOPIC, contentUriFilter);
+        return nodeService.getNodes(language, NodeType.TOPIC, contentUriFilter, false);
     }
 
 

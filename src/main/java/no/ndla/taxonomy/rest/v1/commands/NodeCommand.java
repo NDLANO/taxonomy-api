@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.rest.v1.commands;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Node;
@@ -8,8 +9,10 @@ import no.ndla.taxonomy.service.UpdatableDto;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.Transient;
 import java.net.URI;
 import java.util.Optional;
+import java.util.UUID;
 
 public class NodeCommand implements UpdatableDto<Node> {
     @JsonProperty
@@ -33,11 +36,20 @@ public class NodeCommand implements UpdatableDto<Node> {
         return Optional.ofNullable(nodeId);
     }
 
+    @JsonIgnore
+    public URI getPublicId() {
+        return URI.create("urn:" + nodeType.getName() + ":" + nodeId);
+    }
+
     @Override
     public void apply(Node node) {
-        if(getNodeId().isPresent())
-            node.setPublicId(URI.create("urn:" + nodeType.getName() + ":" + getNodeId()));
         node.setIdent(nodeId);
+        if(getNodeId().isPresent()) {
+            node.setPublicId(getPublicId());
+        }
+        if (node.getIdent() == null) {
+            node.setIdent(UUID.randomUUID().toString());
+        }
         node.setNodeType(nodeType);
         node.setName(name);
         node.setContentUri(contentUri);

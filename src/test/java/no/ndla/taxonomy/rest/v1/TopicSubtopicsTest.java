@@ -27,8 +27,8 @@ public class TopicSubtopicsTest extends RestTest {
     @Test
     public void can_add_subtopic_to_topic() throws Exception {
         URI integrationId, calculusId;
-        calculusId = builder.node(t -> t.nodeType(NodeType.TOPIC).name("calculus")).getPublicId();
-        integrationId = builder.node(t -> t.nodeType(NodeType.TOPIC).name("integration")).getPublicId();
+        calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus")).getPublicId();
+        integrationId = builder.node(NodeType.TOPIC, t -> t.name("integration")).getPublicId();
 
         URI id = getId(
                 testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {{
@@ -48,9 +48,8 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void cannot_add_existing_subtopic_to_topic() throws Exception {
-        URI integrationId = builder.node("integration", t -> t.nodeType(NodeType.TOPIC).name("integration")).getPublicId();
-        URI calculusId = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        URI integrationId = builder.node("integration", NodeType.TOPIC, t -> t.name("integration")).getPublicId();
+        URI calculusId = builder.node(NodeType.TOPIC, t -> t
                 .name("calculus")
                 .child("integration")
         ).getPublicId();
@@ -74,10 +73,10 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void can_get_topics() throws Exception {
-        URI alternatingCurrentId = builder.node("ac", t -> t.nodeType(NodeType.TOPIC).name("alternating current")).getPublicId();
-        URI electricityId = builder.node(t -> t.nodeType(NodeType.TOPIC).name("electricity").child("ac", c -> c.nodeType(NodeType.TOPIC))).getPublicId();
-        URI integrationId = builder.node("integration", t -> t.nodeType(NodeType.TOPIC).name("integration")).getPublicId();
-        URI calculusId = builder.node(t -> t.nodeType(NodeType.TOPIC).name("calculus").child("integration", c -> c.nodeType(NodeType.TOPIC))).getPublicId();
+        URI alternatingCurrentId = builder.node("ac", NodeType.TOPIC, t -> t.name("alternating current")).getPublicId();
+        URI electricityId = builder.node(NodeType.TOPIC, t -> t.name("electricity").child("ac", NodeType.TOPIC)).getPublicId();
+        URI integrationId = builder.node("integration", NodeType.TOPIC, t -> t.name("integration")).getPublicId();
+        URI calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus").child("integration", NodeType.TOPIC)).getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topic-subtopics");
         TopicSubtopics.TopicSubtopicIndexDocument[] topicSubtopics = testUtils.getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);
@@ -109,15 +108,10 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void subtopics_have_default_rank() throws Exception {
-        builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        builder.node(NodeType.TOPIC, t -> t
                 .name("electricity")
-                .child(st -> st
-                        .nodeType(NodeType.TOPIC)
-                        .name("alternating currents"))
-                .child(st -> st
-                        .nodeType(NodeType.TOPIC)
-                        .name("wiring")));
+                .child(NodeType.TOPIC, st -> st.name("alternating currents"))
+                .child(NodeType.TOPIC, st -> st.name("wiring")));
         MockHttpServletResponse response = testUtils.getResource(("/v1/topic-subtopics"));
         TopicSubtopics.TopicSubtopicIndexDocument[] subtopics = testUtils.getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);
 
@@ -126,18 +120,15 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void subtopics_can_be_created_with_rank() throws Exception {
-        Node subject = builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).name("Subject").publicId("urn:subject:1"));
-        Node electricity = builder.node(s -> s
-                .nodeType(NodeType.TOPIC)
+        Node subject = builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Subject").publicId("urn:subject:1"));
+        Node electricity = builder.node(NodeType.TOPIC, s -> s
                 .name("Electricity")
                 .publicId("urn:topic:1"));
         save(NodeConnection.create(subject, electricity));
-        Node alternatingCurrents = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        Node alternatingCurrents = builder.node(NodeType.TOPIC, t -> t
                 .name("Alternating currents")
                 .publicId("urn:topic:11"));
-        Node wiring = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        Node wiring = builder.node(NodeType.TOPIC, t -> t
                 .name("Wiring")
                 .publicId("urn:topic:12"));
 

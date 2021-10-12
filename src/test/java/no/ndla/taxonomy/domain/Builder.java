@@ -130,11 +130,14 @@ public class Builder {
         return topics.get(key);
     }
 
-    private NodeBuilder getNodeBuilder(String key) {
+    private NodeBuilder getNodeBuilder(String key, NodeType nodeType) {
         if (key == null) {
             key = createKey();
         }
-        nodes.putIfAbsent(key, new NodeBuilder(NodeType.SUBJECT));
+        if (nodeType == null) {
+            nodeType = NodeType.NODE;
+        }
+        nodes.putIfAbsent(key, new NodeBuilder(nodeType));
         return nodes.get(key);
     }
 
@@ -178,15 +181,27 @@ public class Builder {
     }
 
     public Node node() {
-        return node(null, null);
+        return node(null, null, null);
     }
 
     public Node node(String key) {
-        return node(key, null);
+        return node(key, null, null);
     }
 
-    public Node node(String key, Consumer<NodeBuilder> consumer) {
-        NodeBuilder node = getNodeBuilder(key);
+    public Node node(NodeType nodeType) {
+        return node(null, nodeType, null);
+    }
+
+    public Node node(Consumer<NodeBuilder> consumer) {
+        return node(null, null, consumer);
+    }
+
+    public Node node(NodeType nodeType, Consumer<NodeBuilder> consumer) {
+        return node(null, nodeType, consumer);
+    }
+
+    public Node node(String key, NodeType nodeType, Consumer<NodeBuilder> consumer) {
+        NodeBuilder node = getNodeBuilder(key, nodeType);
         if (null != consumer) consumer.accept(node);
 
         entityManager.persist(node.node);
@@ -194,10 +209,6 @@ public class Builder {
         cachedUrlUpdaterService.updateCachedUrls(node.node);
 
         return node.node;
-    }
-
-    public Node node(Consumer<NodeBuilder> consumer) {
-        return node(null, consumer);
     }
 
 
@@ -667,15 +678,23 @@ public class Builder {
         }
 
         public NodeBuilder child(String nodeKey) {
-            return child(nodeKey, null);
+            return child(nodeKey, null, null);
+        }
+
+        public NodeBuilder child(String nodeKey, NodeType nodeType) {
+            return child(nodeKey, nodeType, null);
         }
 
         public NodeBuilder child(Consumer<NodeBuilder> consumer) {
-            return child(null, consumer);
+            return child(null, null, consumer);
         }
 
-        public NodeBuilder child(String key, Consumer<NodeBuilder> consumer) {
-            NodeBuilder nodeBuilder = getNodeBuilder(key);
+        public NodeBuilder child(NodeType nodeType, Consumer<NodeBuilder> consumer) {
+            return child(null, nodeType, consumer);
+        }
+
+        public NodeBuilder child(String key, NodeType nodeType, Consumer<NodeBuilder> consumer) {
+            NodeBuilder nodeBuilder = getNodeBuilder(key, nodeType);
             if (null != consumer) consumer.accept(nodeBuilder);
             child(nodeBuilder.node);
             return this;

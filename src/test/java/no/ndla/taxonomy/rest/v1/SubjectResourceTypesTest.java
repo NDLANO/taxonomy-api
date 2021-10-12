@@ -21,15 +21,11 @@ public class SubjectResourceTypesTest extends RestTest {
 
     @Test
     public void can_have_several_resource_types_recursively() throws Exception {
-        URI id = builder.node(s -> s
-                .nodeType(NodeType.SUBJECT)
+        URI id = builder.node(NodeType.SUBJECT, s -> s
                 .isContext(true)
-                .child(t -> t
-
-                        .nodeType(NodeType.TOPIC)
+                .child(NodeType.TOPIC, t -> t
                         .name("topic")
-                        .child(st -> st
-                                .nodeType(NodeType.TOPIC)
+                        .child(NodeType.TOPIC, st -> st
                                 .resource(r -> r
                                         .name("resource 1")
                                         .resourceType(rt -> rt.name("lecure"))
@@ -54,15 +50,12 @@ public class SubjectResourceTypesTest extends RestTest {
 
     @Test
     public void can_have_no_resource_type() throws Exception {
-        URI id = builder.node(n -> n
-                .nodeType(NodeType.SUBJECT)
+        URI id = builder.node(NodeType.SUBJECT, n -> n
                 .isContext(true)
                 .name("subject")
-                .child(t -> t
-                        .nodeType(NodeType.TOPIC)
+                .child(NodeType.TOPIC, t -> t
                         .name("topic")
-                        .child(st -> st
-                                .nodeType(NodeType.TOPIC)
+                        .child(NodeType.TOPIC, st -> st
                                 .resource(r -> r.name("resource 1"))
                         )
                 )
@@ -80,12 +73,11 @@ public class SubjectResourceTypesTest extends RestTest {
         builder.resourceType("assignment").getPublicId();
         URI lecture = builder.resourceType("lecture").getPublicId();
 
-        URI id = builder.node(n -> n
-                .nodeType(NodeType.SUBJECT)
+        URI id = builder.node(NodeType.SUBJECT, n -> n
                 .isContext(true)
                 .child(t -> t
                         .name("a")
-                        .child(sub -> sub.name("subtopic").resource(r -> r.name("a lecture in a subtopic").resourceType("lecture")))
+                        .child(NodeType.TOPIC, sub -> sub.name("subtopic").resource(r -> r.name("a lecture in a subtopic").resourceType("lecture")))
                         .resource(r -> r.name("an assignment").resourceType("assignment"))
                         .resource(r -> r.name("a lecture").resourceType("lecture"))
                 )

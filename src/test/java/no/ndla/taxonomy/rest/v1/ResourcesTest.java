@@ -65,22 +65,18 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void primary_url_is_return_when_getting_single_resource() throws Exception {
-        builder.node(s -> s
-                .nodeType(NodeType.SUBJECT)
+        builder.node(NodeType.SUBJECT, s -> s
                 .isContext(true)
                 .publicId("urn:subject:1")
-                .child(t -> t
-                        .nodeType(NodeType.TOPIC)
+                .child(NodeType.TOPIC, t -> t
                         .publicId("urn:topic:1")
                         .resource("resource", r -> r
                                 .publicId("urn:resource:1")
                         )));
-        builder.node(s -> s
-                .nodeType(NodeType.SUBJECT)
+        builder.node(NodeType.SUBJECT, s -> s
                 .isContext(true)
                 .publicId("urn:subject:2")
-                .child("primary", t -> t
-                        .nodeType(NodeType.TOPIC)
+                .child("primary", NodeType.TOPIC, t -> t
                         .publicId("urn:topic:2")
                         .resource("resource", true)
                 )
@@ -322,8 +318,7 @@ public class ResourcesTest extends RestTest {
         final Resource resource = builder.resource(r -> r
                 .publicId("urn:resource:1")
                 .resourceType(resourceType));
-        final Node topic = builder.node("primary", t -> t
-                .nodeType(NodeType.TOPIC)
+        final Node topic = builder.node("primary", NodeType.TOPIC, t -> t
                 .name("Philosophy and Mind")
                 .publicId("urn:topic:1")
                 .contentUri(URI.create("urn:article:6662"))
@@ -395,14 +390,12 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_resource_connection_id_recursively() throws Exception {
-        builder.node("topic", t -> t
-                .nodeType(NodeType.TOPIC)
+        builder.node("topic", NodeType.TOPIC, t -> t
                 .publicId("urn:topic:1343")
                 .resource(r -> r
                         .name("a")
                         .publicId("urn:resource:1"))
-                .child("subtopic", st -> st
-                        .nodeType(NodeType.TOPIC)
+                .child("subtopic", NodeType.TOPIC, st -> st
                         .publicId("urn:topic:2")
                         .resource(r -> r.name("b")
                                 .publicId("urn:resource:2")))
@@ -699,23 +692,19 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_get_resources_for_a_subject_and_its_topics_recursively_with_metadata() throws Exception {
-        URI id = builder.node(n -> n
-                .nodeType(NodeType.SUBJECT)
+        URI id = builder.node(NodeType.SUBJECT, n -> n
                 .isContext(true)
                 .publicId("urn:subject:1")
                 .name("Subject")
-                .child("topic a", t -> t
-                        .nodeType(NodeType.TOPIC)
+                .child("topic a", NodeType.TOPIC, t -> t
                         .name("topic a")
                         .publicId("urn:topic:1")
                         .resource(r -> r.name("resource a").resourceType(rt -> rt.name("assignment"))))
-                .child("topic b", t -> t
-                        .nodeType(NodeType.TOPIC)
+                .child("topic b", NodeType.TOPIC, t -> t
                         .name("topic b")
                         .publicId("urn:topic:2")
                         .resource(r -> r.name("resource b").resourceType(rt -> rt.name("lecture")))
-                        .child("subtopic", s -> s
-                                .nodeType(NodeType.TOPIC)
+                        .child("subtopic", NodeType.TOPIC, s -> s
                                 .name("subtopic")
                                 .publicId("urn:topic:3")
                                 .resource(r -> r.name("sub resource")))

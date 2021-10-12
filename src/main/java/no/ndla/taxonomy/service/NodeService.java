@@ -49,7 +49,7 @@ public class NodeService {
     }
 
     @InjectMetadata
-    public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter) {
+    public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter, boolean isRoot) {
         final List<Node> filtered;
 
         if (contentUriFilter != null && nodeTypeFilter != null) {
@@ -64,6 +64,7 @@ public class NodeService {
 
         return filtered
                 .stream()
+                .filter(node -> !isRoot || node.getParentNode().isEmpty())
                 .map(node -> new NodeDTO(node, languageCode))
                 .collect(Collectors.toList());
     }

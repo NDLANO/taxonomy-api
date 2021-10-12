@@ -152,8 +152,8 @@ public class TopicResourcesTest extends RestTest {
     @Test
     public void deleted_primary_topic_is_replaced() throws Exception {
         Resource resource = builder.resource(r -> r.name("resource"));
-        Node primary = builder.node(t -> t.nodeType(NodeType.TOPIC).name("primary").resource(resource));
-        builder.node(t -> t.nodeType(NodeType.TOPIC).name("other").resource(resource, true));
+        Node primary = builder.node(NodeType.TOPIC, t -> t.name("primary").resource(resource));
+        builder.node(NodeType.TOPIC, t -> t.name("other").resource(resource, true));
 
         testUtils.deleteResource("/v1/topics/" + primary.getPublicId());
 
@@ -198,15 +198,12 @@ public class TopicResourcesTest extends RestTest {
     public void resource_can_only_have_one_primary_topic() throws Exception {
         Resource graphs = builder.resource(r -> r.name("graphs"));
 
-        builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        builder.node(NodeType.TOPIC, t -> t
                 .name("elementary maths")
                 .resource(graphs)
         );
 
-        Node graphTheory = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
-                .name("graph theory"));
+        Node graphTheory = builder.node(NodeType.TOPIC, t -> t.name("graph theory"));
 
         testUtils.createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {{
             topicid = graphTheory.getPublicId();
@@ -225,8 +222,7 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void can_order_resources() throws Exception {
-        Node geometry = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        Node geometry = builder.node(NodeType.TOPIC, t -> t
                 .name("Geometry")
                 .publicId("urn:topic:1"));
         Resource squares = builder.resource(r -> r
@@ -258,8 +254,7 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void resources_can_have_default_rank() throws Exception {
-        builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        builder.node(NodeType.TOPIC, t -> t
                 .name("elementary maths")
                 .resource(r -> r.name("graphs"))
                 .resource(r -> r.name("sets"))
@@ -272,8 +267,7 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void can_create_resources_with_rank() throws Exception {
-        Node geometry = builder.node(t -> t
-                .nodeType(NodeType.TOPIC)
+        Node geometry = builder.node(NodeType.TOPIC, t -> t
                 .name("Geometry")
                 .publicId("urn:topic:1"));
         Resource squares = builder.resource(r -> r

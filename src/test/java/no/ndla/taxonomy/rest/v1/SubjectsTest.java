@@ -31,8 +31,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_single_subject() throws Exception {
-        builder.node(s -> s
-                .nodeType(NodeType.SUBJECT)
+        builder.node(NodeType.SUBJECT, s -> s
                 .isContext(true)
                 .name("english")
                 .contentUri("urn:article:1")
@@ -53,8 +52,8 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_all_subjects() throws Exception {
-        builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).name("english"));
-        builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).name("mathematics"));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("english"));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("mathematics"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects");
         SubjectIndexDocument[] subjects = testUtils.getObject(SubjectIndexDocument[].class, response);
@@ -101,7 +100,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_update_subject() throws Exception {
-        URI publicId = builder.node().getPublicId();
+        URI publicId = builder.node(NodeType.SUBJECT).getPublicId();
 
         final var command = new SubjectCommand() {{
             id = publicId;
@@ -118,7 +117,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_update_subject_with_new_id() throws Exception {
-        URI publicId = builder.node().getPublicId();
+        URI publicId = builder.node(NodeType.SUBJECT).getPublicId();
         URI randomId = URI.create("urn:subject:random");
 
         final var command = new SubjectCommand() {{
@@ -147,9 +146,8 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_delete_subject() throws Exception {
-        URI id = builder.node(s -> s
-                .nodeType(NodeType.SUBJECT)
-                .child(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1"))
+        URI id = builder.node(NodeType.SUBJECT, s -> s
+                .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1"))
                 .translation("nb", tr -> tr.name("fag"))
         ).getPublicId();
 
@@ -161,13 +159,12 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_topics() throws Exception {
-        Node subject = builder.node(s -> s
-                .nodeType(NodeType.SUBJECT)
+        Node subject = builder.node(NodeType.SUBJECT, s -> s
                 .isContext(true)
                 .name("physics")
-                .child(t -> t.name("statics").contentUri("urn:article:1"))
-                .child(t -> t.name("electricity").contentUri("urn:article:2"))
-                .child(t -> t.name("optics").contentUri("urn:article:3"))
+                .child(NodeType.TOPIC, t -> t.name("statics").contentUri("urn:article:1"))
+                .child(NodeType.TOPIC, t -> t.name("electricity").contentUri("urn:article:2"))
+                .child(NodeType.TOPIC, t -> t.name("optics").contentUri("urn:article:3"))
         );
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
@@ -191,21 +188,17 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_topics_recursively() throws Exception {
-        URI subjectId = builder.node("subject", s -> s
-                .nodeType(NodeType.SUBJECT)
+        URI subjectId = builder.node("subject", NodeType.SUBJECT,  s -> s
                 .isContext(true)
                 .name("subject")
                 .publicId("urn:subject:1")
-                .child("parent", parent -> parent
-                        .nodeType(NodeType.TOPIC)
+                .child("parent", NodeType.TOPIC, parent -> parent
                         .name("parent topic")
                         .publicId("urn:topic:a")
-                        .child("child", child -> child
-                                .nodeType(NodeType.TOPIC)
+                        .child("child", NodeType.TOPIC, child -> child
                                 .name("child topic")
                                 .publicId("urn:topic:aa")
-                                .child("grandchild", grandchild -> grandchild
-                                        .nodeType(NodeType.TOPIC)
+                                .child("grandchild", NodeType.TOPIC, grandchild -> grandchild
                                         .name("grandchild topic")
                                         .publicId("urn:topic:aaa")
                                 )

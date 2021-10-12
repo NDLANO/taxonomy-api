@@ -78,7 +78,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         if (key != null) {
             return nodeService.getNodes(language, NodeType.SUBJECT, null, new MetadataKeyValueQuery(key, value));
         }
-        return nodeService.getNodes(language, NodeType.SUBJECT, null);
+        return nodeService.getNodes(language, NodeType.SUBJECT, null, false);
     }
 
     @GetMapping("/{id}")
