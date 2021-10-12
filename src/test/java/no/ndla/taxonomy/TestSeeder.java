@@ -524,14 +524,22 @@ public class TestSeeder {
         createResourceResourceType("urn:resource-resourcetype:1", resource1, resourceType1);
     }
 
-    public void resourceWithFiltersAndRelevancesTestSetup() {
+    public void resourceWithRelevancesTestSetup() {
         // create a test structure with subjects, topics, and resources as follows
-        // (S=subject, ST = subject-topic, TST = topic-subtopic, R = resource, F = filter)
+        // (S=subject, ST = subject-topic, R = resource, RC = core, RS = supplementary)
         //
         // S:1
         //   - ST:1
-        //      - R:1
-        //      - R:2
+        //      - R:1 RC
+        //      - R:2 RC
+        //      - R:3 RC
+        //      - R:4 RC
+        //      - R:5 RC
+        //      - R:6 RC
+        //      - R:7 RC
+        //      - R:8 RC
+        //      - R:9 RC
+        //      - R:10 RS
         //
 
         clearAll();
@@ -565,9 +573,7 @@ public class TestSeeder {
         createNodeResource("urn:topic-resource:7", topic1, resource7, true, 7, core);
         createNodeResource("urn:topic-resource:8", topic1, resource8, true, 8, core);
         createNodeResource("urn:topic-resource:9", topic1, resource9, true, 9, core);
-        createNodeResource("urn:topic-resource:10", topic1, resource10, true, 10, core);
-
-
+        createNodeResource("urn:topic-resource:10", topic1, resource10, true, 10, supp);
     }
 
     public void resourceWithRelevancesButWithoutFiltersTestSetup() {

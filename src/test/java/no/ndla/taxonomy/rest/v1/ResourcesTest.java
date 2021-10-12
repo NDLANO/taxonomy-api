@@ -562,17 +562,17 @@ public class ResourcesTest extends RestTest {
         assertAnyTrue(result, r -> "resource 2".equals(r.getName()));
     }
 
-    //@Test TODO - relevance filtering is broken after move from filter
+    @Test
     public void resources_can_be_filtered_by_relevance() throws Exception {
-        testSeeder.resourceWithFiltersAndRelevancesTestSetup();
+        testSeeder.resourceWithRelevancesTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?relevance=urn:relevance:core");
         final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
-        assertEquals(10, resources.length);
+        assertEquals(9, resources.length);
 
         MockHttpServletResponse response2 = testUtils.getResource("/v1/topics/urn:topic:1/resources?relevance=urn:relevance:supplementary");
         final var resources2 = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response2);
-        assertEquals(5, resources2.length);
+        assertEquals(1, resources2.length);
 
     }
 
@@ -630,21 +630,6 @@ public class ResourcesTest extends RestTest {
             assertEquals(5, resources.length);
         }
 
-    }
-
-    @Test
-    public void resources_can_be_filtered_by_filters() throws Exception {
-        testSeeder.resourceWithFiltersAndRelevancesTestSetup();
-
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?filter=urn:filter:1");
-        final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
-        // Filters are removed
-        assertEquals(10, resources.length);
-
-        MockHttpServletResponse response2 = testUtils.getResource("/v1/topics/urn:topic:1/resources?filter=urn:filter:1,urn:filter:2");
-        final var resources2 = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response2);
-        // Filters are removed
-        assertEquals(10, resources2.length);
     }
 
     @Test

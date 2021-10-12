@@ -9,7 +9,6 @@ package no.ndla.taxonomy.domain;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
-import java.net.URI;
 import java.util.Optional;
 
 @MappedSuperclass
