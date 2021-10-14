@@ -201,6 +201,11 @@ public class NodesTest extends RestTest {
                 .isContext(true)
                 .name("Maths")
                 .child(NodeType.TOPIC, t -> t.name("trigonometry")));
+        builder.node(NodeType.SUBJECT, s -> s
+                .isContext(true)
+                .name("Arts and crafts"));
+        builder.node(NodeType.NODE, n -> n
+                .name("Random node"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes?isRoot=true");
         final var nodes = testUtils.getObject(NodeDTO[].class, response);

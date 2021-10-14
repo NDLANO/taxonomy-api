@@ -30,6 +30,15 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
                     "   FROM Node n" +
                     "   LEFT JOIN FETCH n.cachedPaths" +
                     "   LEFT JOIN FETCH n.translations" +
+                    "   WHERE n.id IN (SELECT DISTINCT nc.parent.id from NodeConnection nc)" +
+                    "   AND n.id NOT IN (SELECT DISTINCT nc.child.id from NodeConnection nc)")
+    List<Node> findAllRootsIncludingCachedUrlsAndTranslations();
+
+    @Query(
+            "SELECT DISTINCT n" +
+                    "   FROM Node n" +
+                    "   LEFT JOIN FETCH n.cachedPaths" +
+                    "   LEFT JOIN FETCH n.translations" +
                     "   WHERE n.nodeType = :nodeType")
     List<Node> findAllByNodeTypeIncludingCachedUrlsAndTranslations(NodeType nodeType);
 

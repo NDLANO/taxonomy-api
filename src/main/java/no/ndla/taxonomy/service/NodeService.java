@@ -52,14 +52,18 @@ public class NodeService {
     public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter, boolean isRoot) {
         final List<Node> filtered;
 
-        if (contentUriFilter != null && nodeTypeFilter != null) {
-            filtered = nodeRepository.findAllByContentUriAndNodeTypeIncludingCachedUrlsAndTranslations(contentUriFilter, nodeTypeFilter);
-        } else if (contentUriFilter != null) {
-            filtered = nodeRepository.findAllByContentUriIncludingCachedUrlsAndTranslations(contentUriFilter);
-        } else if (nodeTypeFilter != null) {
-            filtered = nodeRepository.findAllByNodeTypeIncludingCachedUrlsAndTranslations(nodeTypeFilter);
+        if (isRoot) {
+            filtered = nodeRepository.findAllRootsIncludingCachedUrlsAndTranslations();
         } else {
-            filtered = nodeRepository.findAllIncludingCachedUrlsAndTranslations();
+            if (contentUriFilter != null && nodeTypeFilter != null) {
+                filtered = nodeRepository.findAllByContentUriAndNodeTypeIncludingCachedUrlsAndTranslations(contentUriFilter, nodeTypeFilter);
+            } else if (contentUriFilter != null) {
+                filtered = nodeRepository.findAllByContentUriIncludingCachedUrlsAndTranslations(contentUriFilter);
+            } else if (nodeTypeFilter != null) {
+                filtered = nodeRepository.findAllByNodeTypeIncludingCachedUrlsAndTranslations(nodeTypeFilter);
+            } else {
+                filtered = nodeRepository.findAllIncludingCachedUrlsAndTranslations();
+            }
         }
 
         return filtered
