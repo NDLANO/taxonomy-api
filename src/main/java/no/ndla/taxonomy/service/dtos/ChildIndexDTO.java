@@ -50,6 +50,7 @@ public class ChildIndexDTO implements TreeSorter.Sortable {
     private String path;
 
     private int rank;
+
     private URI parentId;
 
     public ChildIndexDTO() {

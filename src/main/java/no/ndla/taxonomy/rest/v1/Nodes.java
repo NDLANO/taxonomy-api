@@ -2,8 +2,12 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.domain.EntityWithPath;
+import no.ndla.taxonomy.domain.EntityWithPathConnection;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.exceptions.NotFoundException;
+import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
@@ -16,30 +20,37 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = {"/v1/nodes"})
 public class Nodes extends CrudControllerWithMetadata<Node> {
     private final NodeRepository nodeRepository;
+    private final NodeConnectionRepository nodeConnectionRepository;
     private final NodeService nodeService;
     private final ResourceService resourceService;
+    private final RecursiveNodeTreeService recursiveNodeTreeService;
+    private final TreeSorter treeSorter;
 
     public Nodes(NodeRepository nodeRepository,
+                 NodeConnectionRepository nodeConnectionRepository,
                  NodeService nodeService,
                  CachedUrlUpdaterService cachedUrlUpdaterService,
                  ResourceService resourceService,
+                 RecursiveNodeTreeService recursiveNodeTreeService,
+                 TreeSorter treeSorter,
                  MetadataApiService metadataApiService,
                  MetadataUpdateService metadataUpdateService
     ) {
         super(nodeRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
 
         this.nodeRepository = nodeRepository;
+        this.nodeConnectionRepository = nodeConnectionRepository;
         this.nodeService = nodeService;
+        this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.resourceService = resourceService;
+        this.treeSorter = treeSorter;
     }
 
     @GetMapping
@@ -114,16 +125,46 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}/nodes")
     @ApiOperation(value = "Gets all children for this node")
-    public List<ChildIndexDTO> getChildren(
+    @InjectMetadata
+    public List<EntityWithPathChildDTO> getChildren(
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,
+
+            @RequestParam(value = "recursive", required = false, defaultValue = "false")
+            @ApiParam("If true, children are fetched recursively")
+                    boolean recursive,
 
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
             @RequestParam(value = "language", required = false, defaultValue = "")
                     String language
     ) {
-        return nodeService.getFilteredChildConnections(id, language);
+        final var node = nodeRepository.findFirstByPublicId(id)
+                .orElseThrow(() -> new NotFoundException("Node", id));
+
+        final List<Integer> childrenIds;
+        if (recursive) {
+            childrenIds = recursiveNodeTreeService.getRecursiveNodes(node)
+                    .stream()
+                    .map(RecursiveNodeTreeService.TreeElement::getId)
+                    .collect(Collectors.toList());
+        } else {
+            childrenIds = node.getChildConnections().stream()
+                    .map(EntityWithPathConnection::getConnectedChild)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .map(EntityWithPath::getId)
+                    .collect(Collectors.toList());
+        }
+        final var children = nodeConnectionRepository.findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(childrenIds);
+
+        final var returnList = new ArrayList<EntityWithPathChildDTO>();
+
+        children.stream()
+                .map(nodeConnection -> new NodeChildDTO(node, nodeConnection, language))
+                .forEach(returnList::add);
+
+        return treeSorter.sortList(returnList).stream().distinct().collect(Collectors.toList());
     }
 
     @GetMapping("/{id}/connections")

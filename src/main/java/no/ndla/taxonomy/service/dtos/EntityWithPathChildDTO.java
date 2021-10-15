@@ -9,6 +9,7 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
@@ -20,6 +21,7 @@ import no.ndla.taxonomy.service.TreeSorter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -38,6 +40,9 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
 
     @ApiModelProperty(value = "The primary path to this node.", example = "/subject:1/topic:1")
     public String path;
+
+    @ApiModelProperty(value = "List of all paths to this node")
+    private Set<String> paths;
 
     @ApiModelProperty(value = "The id of the node connection which causes this node to be included in the result set.", example = "urn:node-connection:1")
     public URI connectionId;
@@ -66,6 +71,7 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
         nodeConnection.getChild().ifPresent(child -> {
             this.populateFromNode(child);
             this.path = child.getPathByContext(node).orElse(null);
+            this.paths = child.getAllPaths();
         });
 
         nodeConnection.getParent().ifPresent(parent -> this.parent = parent.getPublicId());
@@ -134,6 +140,10 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
 
     public String getPath() {
         return path;
+    }
+
+    public Set<String> getPaths() {
+        return paths;
     }
 
     public URI getConnectionId() {

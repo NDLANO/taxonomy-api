@@ -143,7 +143,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}/topics")
     @ApiOperation(value = "Gets all subtopics for this topic")
-    public List<ChildIndexDTO> getSubTopics(
+    public List<TopicChildDTO> getSubTopics(
             @ApiParam(value = "id", required = true)
             @PathVariable("id")
                     URI id,

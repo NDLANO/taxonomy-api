@@ -13,10 +13,7 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
-import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
-import no.ndla.taxonomy.service.dtos.MetadataDto;
-import no.ndla.taxonomy.service.dtos.NodeDTO;
-import no.ndla.taxonomy.service.dtos.TopicDTO;
+import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -205,16 +202,18 @@ public class NodesTest extends RestTest {
                 .isContext(true)
                 .name("Arts and crafts"));
         builder.node(NodeType.NODE, n -> n
-                .name("Random node"));
+                .name("Random node")
+                .child(NodeType.NODE, c -> c.name("Subnode")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes?isRoot=true");
         final var nodes = testUtils.getObject(NodeDTO[].class, response);
-        assertEquals(2, nodes.length);
+        assertEquals(3, nodes.length);
 
         assertAnyTrue(nodes, t -> "Basic science".equals(t.getName()));
         assertAnyTrue(nodes, t -> "Maths".equals(t.getName()));
+        assertAnyTrue(nodes, t -> "Random node".equals(t.getName()));
+        assertAnyTrue(nodes, t -> t.getPath().contains("subject"));
         assertAllTrue(nodes, t -> isValidId(t.getId()));
-        assertAllTrue(nodes, t -> t.getPath().contains("subject"));
 
         assertAllTrue(nodes, t -> t.getMetadata() != null);
         assertAllTrue(nodes, t -> t.getMetadata().isVisible());
@@ -302,7 +301,7 @@ public class NodesTest extends RestTest {
         testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes");
-        final var subtopics = testUtils.getObject(TopicDTO[].class, response);
+        final var subtopics = testUtils.getObject(TopicChildDTO[].class, response);
         assertEquals(7, subtopics.length, "Unfiltered subtopics");
 
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() != null);

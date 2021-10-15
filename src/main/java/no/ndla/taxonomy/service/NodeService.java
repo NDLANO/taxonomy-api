@@ -131,13 +131,13 @@ public class NodeService {
     }
 
     @InjectMetadata
-    public List<ChildIndexDTO> getFilteredChildConnections(URI nodePublicId, String languageCode) {
-        final List<NodeConnection> childConnections;
-        childConnections = nodeConnectionRepository.findAllByParentPublicIdIncludingChildAndChildTranslations(nodePublicId);
+    public List<TopicChildDTO> getFilteredChildConnections(URI nodePublicId, String languageCode) {
+        final var node = nodeRepository.findFirstByPublicId(nodePublicId).orElseThrow(() -> new NotFoundServiceException("Node was not found"));
+        final List<NodeConnection> childConnections = nodeConnectionRepository.findAllByParentPublicIdIncludingChildAndChildTranslations(nodePublicId);
 
         final var wrappedList =
                 childConnections.stream()
-                        .map(nodeConnection -> new ChildIndexDTO(nodeConnection, languageCode))
+                        .map(nodeConnection -> new TopicChildDTO(node, nodeConnection, languageCode))
                         .collect(Collectors.toUnmodifiableList());
 
         return topicTreeSorter.sortList(wrappedList);
