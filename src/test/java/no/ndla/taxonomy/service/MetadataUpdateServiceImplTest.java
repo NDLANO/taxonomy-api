@@ -43,10 +43,8 @@ class MetadataUpdateServiceImplTest {
     private MetadataUpdateServiceImpl metadataUpdateService;
 
     @BeforeEach
-    void setUp(@Autowired SubjectRepository subjectRepository,
-               @Autowired TopicRepository topicRepository,
-               @Autowired Builder builder,
-               @Autowired ResourceRepository resourceRepository) {
+    void setUp(@Autowired SubjectRepository subjectRepository, @Autowired TopicRepository topicRepository,
+            @Autowired Builder builder, @Autowired ResourceRepository resourceRepository) {
 
         metadataApiService = mock(MetadataApiService.class);
 
@@ -86,7 +84,8 @@ class MetadataUpdateServiceImplTest {
             });
         });
 
-        metadataUpdateService = new MetadataUpdateServiceImpl(subjectRepository, topicRepository, resourceRepository, metadataApiService);
+        metadataUpdateService = new MetadataUpdateServiceImpl(subjectRepository, topicRepository, resourceRepository,
+                metadataApiService);
     }
 
     @Test
@@ -112,22 +111,22 @@ class MetadataUpdateServiceImplTest {
                     actuallyUpdated.add(publicId);
                 });
 
-                return updatePublicIds.stream()
-                        .map(publicId -> {
-                            final var returnDto = new MetadataDto();
-                            returnDto.setVisible(true);
-                            returnDto.setGrepCodes(new HashSet<>());
-                            returnDto.setPublicId(publicId.toString());
+                return updatePublicIds.stream().map(publicId -> {
+                    final var returnDto = new MetadataDto();
+                    returnDto.setVisible(true);
+                    returnDto.setGrepCodes(new HashSet<>());
+                    returnDto.setPublicId(publicId.toString());
 
-                            return returnDto;
-                        })
-                        .collect(Collectors.toSet());
+                    return returnDto;
+                }).collect(Collectors.toSet());
             }).when(metadataApiService).updateMetadataByPublicIds(anySet(), any(MetadataDto.class));
 
-            final var result = metadataUpdateService.updateMetadataRecursivelyByPublicId(URI.create("urn:subject:mdup:1"), metadataDto, false);
+            final var result = metadataUpdateService
+                    .updateMetadataRecursivelyByPublicId(URI.create("urn:subject:mdup:1"), metadataDto, false);
             assertEquals(3, result.getUpdatedCount());
             assertEquals(3, result.getUpdated().size());
-            assertTrue(result.getUpdated().stream().map(URI::toString).collect(Collectors.toSet()).containsAll(expectedUpdated));
+            assertTrue(result.getUpdated().stream().map(URI::toString).collect(Collectors.toSet())
+                    .containsAll(expectedUpdated));
         }
 
         {
@@ -142,7 +141,8 @@ class MetadataUpdateServiceImplTest {
                 final MetadataDto metadataObject = invocation.getArgument(1);
 
                 assertNull(metadataObject.isVisible());
-                assertTrue(metadataObject.getGrepCodes().size() == 2 && metadataObject.getGrepCodes().containsAll(Set.of("T1", "T2")));
+                assertTrue(metadataObject.getGrepCodes().size() == 2
+                        && metadataObject.getGrepCodes().containsAll(Set.of("T1", "T2")));
 
                 updatePublicIds.forEach(publicId -> {
                     assertTrue(expectedUpdated.contains(publicId.toString()));
@@ -151,29 +151,30 @@ class MetadataUpdateServiceImplTest {
                     actuallyUpdated.add(publicId);
                 });
 
-                return updatePublicIds.stream()
-                        .map(publicId -> {
-                            final var returnDto = new MetadataDto();
-                            returnDto.setVisible(true);
-                            returnDto.setGrepCodes(new HashSet<>());
-                            returnDto.setPublicId(publicId.toString());
+                return updatePublicIds.stream().map(publicId -> {
+                    final var returnDto = new MetadataDto();
+                    returnDto.setVisible(true);
+                    returnDto.setGrepCodes(new HashSet<>());
+                    returnDto.setPublicId(publicId.toString());
 
-                            return returnDto;
-                        })
-                        .collect(Collectors.toSet());
+                    return returnDto;
+                }).collect(Collectors.toSet());
             }).when(metadataApiService).updateMetadataByPublicIds(anySet(), any(MetadataDto.class));
 
-            final var result = metadataUpdateService.updateMetadataRecursivelyByPublicId(URI.create("urn:subject:mdup:2"), metadataDto, false);
+            final var result = metadataUpdateService
+                    .updateMetadataRecursivelyByPublicId(URI.create("urn:subject:mdup:2"), metadataDto, false);
             assertEquals(3, result.getUpdatedCount());
             assertEquals(3, result.getUpdated().size());
-            assertTrue(result.getUpdated().stream().map(URI::toString).collect(Collectors.toSet()).containsAll(expectedUpdated));
+            assertTrue(result.getUpdated().stream().map(URI::toString).collect(Collectors.toSet())
+                    .containsAll(expectedUpdated));
         }
 
         {
             final var metadataDto = new MetadataDto();
             metadataDto.setGrepCodes(Set.of("T1", "T2"));
 
-            final var expectedUpdated = Set.of("urn:subject:mdup:2", "urn:topic:mdup:21", "urn:topic:mdup:22", "urn:resource:mdup:211", "urn:resource:mdup:212", "urn:resource:mdup:221", "urn:resource:mdup:222");
+            final var expectedUpdated = Set.of("urn:subject:mdup:2", "urn:topic:mdup:21", "urn:topic:mdup:22",
+                    "urn:resource:mdup:211", "urn:resource:mdup:212", "urn:resource:mdup:221", "urn:resource:mdup:222");
             final var actuallyUpdated = new ArrayList<>();
 
             doAnswer(invocation -> {
@@ -181,7 +182,8 @@ class MetadataUpdateServiceImplTest {
                 final MetadataDto metadataObject = invocation.getArgument(1);
 
                 assertNull(metadataObject.isVisible());
-                assertTrue(metadataObject.getGrepCodes().size() == 2 && metadataObject.getGrepCodes().containsAll(Set.of("T1", "T2")));
+                assertTrue(metadataObject.getGrepCodes().size() == 2
+                        && metadataObject.getGrepCodes().containsAll(Set.of("T1", "T2")));
 
                 updatePublicIds.forEach(publicId -> {
                     assertTrue(expectedUpdated.contains(publicId.toString()));
@@ -190,22 +192,22 @@ class MetadataUpdateServiceImplTest {
                     actuallyUpdated.add(publicId);
                 });
 
-                return updatePublicIds.stream()
-                        .map(publicId -> {
-                            final var returnDto = new MetadataDto();
-                            returnDto.setVisible(true);
-                            returnDto.setGrepCodes(new HashSet<>());
-                            returnDto.setPublicId(publicId.toString());
+                return updatePublicIds.stream().map(publicId -> {
+                    final var returnDto = new MetadataDto();
+                    returnDto.setVisible(true);
+                    returnDto.setGrepCodes(new HashSet<>());
+                    returnDto.setPublicId(publicId.toString());
 
-                            return returnDto;
-                        })
-                        .collect(Collectors.toSet());
+                    return returnDto;
+                }).collect(Collectors.toSet());
             }).when(metadataApiService).updateMetadataByPublicIds(anySet(), any(MetadataDto.class));
 
-            final var result = metadataUpdateService.updateMetadataRecursivelyByPublicId(URI.create("urn:subject:mdup:2"), metadataDto, true);
+            final var result = metadataUpdateService
+                    .updateMetadataRecursivelyByPublicId(URI.create("urn:subject:mdup:2"), metadataDto, true);
             assertEquals(7, result.getUpdatedCount());
             assertEquals(7, result.getUpdated().size());
-            assertTrue(result.getUpdated().stream().map(URI::toString).collect(Collectors.toSet()).containsAll(expectedUpdated));
+            assertTrue(result.getUpdated().stream().map(URI::toString).collect(Collectors.toSet())
+                    .containsAll(expectedUpdated));
         }
 
         {
@@ -220,7 +222,8 @@ class MetadataUpdateServiceImplTest {
                 final MetadataDto metadataObject = invocation.getArgument(1);
 
                 assertNull(metadataObject.isVisible());
-                assertTrue(metadataObject.getGrepCodes().size() == 2 && metadataObject.getGrepCodes().containsAll(Set.of("T1", "T2")));
+                assertTrue(metadataObject.getGrepCodes().size() == 2
+                        && metadataObject.getGrepCodes().containsAll(Set.of("T1", "T2")));
 
                 updatePublicIds.forEach(publicId -> {
                     assertTrue(expectedUpdated.contains(publicId.toString()));
@@ -229,22 +232,22 @@ class MetadataUpdateServiceImplTest {
                     actuallyUpdated.add(publicId);
                 });
 
-                return updatePublicIds.stream()
-                        .map(publicId -> {
-                            final var returnDto = new MetadataDto();
-                            returnDto.setVisible(true);
-                            returnDto.setGrepCodes(new HashSet<>());
-                            returnDto.setPublicId(publicId.toString());
+                return updatePublicIds.stream().map(publicId -> {
+                    final var returnDto = new MetadataDto();
+                    returnDto.setVisible(true);
+                    returnDto.setGrepCodes(new HashSet<>());
+                    returnDto.setPublicId(publicId.toString());
 
-                            return returnDto;
-                        })
-                        .collect(Collectors.toSet());
+                    return returnDto;
+                }).collect(Collectors.toSet());
             }).when(metadataApiService).updateMetadataByPublicIds(anySet(), any(MetadataDto.class));
 
-            final var result = metadataUpdateService.updateMetadataRecursivelyByPublicId(URI.create("urn:topic:mdup:21"), metadataDto, true);
+            final var result = metadataUpdateService
+                    .updateMetadataRecursivelyByPublicId(URI.create("urn:topic:mdup:21"), metadataDto, true);
             assertEquals(3, result.getUpdatedCount());
             assertEquals(3, result.getUpdated().size());
-            assertTrue(result.getUpdated().stream().map(URI::toString).collect(Collectors.toSet()).containsAll(expectedUpdated));
+            assertTrue(result.getUpdated().stream().map(URI::toString).collect(Collectors.toSet())
+                    .containsAll(expectedUpdated));
         }
 
         {
@@ -259,7 +262,8 @@ class MetadataUpdateServiceImplTest {
                 final MetadataDto metadataObject = invocation.getArgument(1);
 
                 assertNull(metadataObject.isVisible());
-                assertTrue(metadataObject.getGrepCodes().size() == 2 && metadataObject.getGrepCodes().containsAll(Set.of("T1", "T2")));
+                assertTrue(metadataObject.getGrepCodes().size() == 2
+                        && metadataObject.getGrepCodes().containsAll(Set.of("T1", "T2")));
 
                 updatePublicIds.forEach(publicId -> {
                     assertTrue(expectedUpdated.contains(publicId.toString()));
@@ -268,22 +272,22 @@ class MetadataUpdateServiceImplTest {
                     actuallyUpdated.add(publicId);
                 });
 
-                return updatePublicIds.stream()
-                        .map(publicId -> {
-                            final var returnDto = new MetadataDto();
-                            returnDto.setVisible(true);
-                            returnDto.setGrepCodes(new HashSet<>());
-                            returnDto.setPublicId(publicId.toString());
+                return updatePublicIds.stream().map(publicId -> {
+                    final var returnDto = new MetadataDto();
+                    returnDto.setVisible(true);
+                    returnDto.setGrepCodes(new HashSet<>());
+                    returnDto.setPublicId(publicId.toString());
 
-                            return returnDto;
-                        })
-                        .collect(Collectors.toSet());
+                    return returnDto;
+                }).collect(Collectors.toSet());
             }).when(metadataApiService).updateMetadataByPublicIds(anySet(), any(MetadataDto.class));
 
-            final var result = metadataUpdateService.updateMetadataRecursivelyByPublicId(URI.create("urn:resource:mdup:212"), metadataDto, true);
+            final var result = metadataUpdateService
+                    .updateMetadataRecursivelyByPublicId(URI.create("urn:resource:mdup:212"), metadataDto, true);
             assertEquals(1, result.getUpdatedCount());
             assertEquals(1, result.getUpdated().size());
-            assertTrue(result.getUpdated().stream().map(URI::toString).collect(Collectors.toSet()).containsAll(expectedUpdated));
+            assertTrue(result.getUpdated().stream().map(URI::toString).collect(Collectors.toSet())
+                    .containsAll(expectedUpdated));
         }
     }
 }

@@ -131,7 +131,8 @@ public class CachedPath {
         } else if (entity instanceof Resource) {
             this.setResource((Resource) entity);
         } else {
-            throw new IllegalArgumentException("Unknown entity of type " + entity.getClass().toString() + " passed as owning entity of CachedPath");
+            throw new IllegalArgumentException("Unknown entity of type " + entity.getClass().toString()
+                    + " passed as owning entity of CachedPath");
         }
 
         setPublicId(entity.getPublicId());

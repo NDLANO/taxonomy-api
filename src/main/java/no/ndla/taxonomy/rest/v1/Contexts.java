@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.SubjectTranslation;
@@ -28,44 +27,40 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @RestController
-@RequestMapping(path = {"/v1/contexts"})
+@RequestMapping(path = { "/v1/contexts" })
 @Transactional(readOnly = true)
 public class Contexts {
     private final TopicRepository topicRepository;
     private final SubjectRepository subjectRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public Contexts(TopicRepository topicRepository, SubjectRepository subjectRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
+    public Contexts(TopicRepository topicRepository, SubjectRepository subjectRepository,
+            CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.topicRepository = topicRepository;
         this.subjectRepository = subjectRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
-
     }
 
     @GetMapping
     public List<ContextIndexDocument> get(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
-    ) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
         final var subjects = subjectRepository.findAllIncludingCachedUrlsAndTranslations();
         final var topics = topicRepository.findAllByContextIncludingCachedUrlsAndTranslations(true);
 
         final var contextDocuments = new ArrayList<ContextIndexDocument>();
 
-        contextDocuments.addAll(subjects.stream()
-                .map(subject -> new ContextIndexDocument(
-                        subject.getPublicId(),
-                        subject.getTranslation(language).map(SubjectTranslation::getName).orElse(subject.getName()),
-                        subject.getPrimaryPath().orElse(null)))
-                .collect(Collectors.toList()));
+        contextDocuments
+                .addAll(subjects.stream()
+                        .map(subject -> new ContextIndexDocument(subject.getPublicId(),
+                                subject.getTranslation(language).map(SubjectTranslation::getName)
+                                        .orElse(subject.getName()),
+                                subject.getPrimaryPath().orElse(null)))
+                        .collect(Collectors.toList()));
 
         contextDocuments.addAll(topics.stream()
-                .map(topic -> new ContextIndexDocument(
-                        topic.getPublicId(),
+                .map(topic -> new ContextIndexDocument(topic.getPublicId(),
                         topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName()),
                         topic.getPrimaryPath().orElse(null)))
                 .collect(Collectors.toList()));

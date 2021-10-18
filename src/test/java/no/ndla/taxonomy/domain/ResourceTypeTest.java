@@ -151,7 +151,8 @@ public class ResourceTypeTest {
         resourceType.addResourceResourceType(resourceResourceType2);
 
         assertEquals(2, resourceType.getResourceResourceTypes().size());
-        assertTrue(resourceType.getResourceResourceTypes().containsAll(Set.of(resourceResourceType1, resourceResourceType2)));
+        assertTrue(resourceType.getResourceResourceTypes()
+                .containsAll(Set.of(resourceResourceType1, resourceResourceType2)));
 
         resourceType.removeResourceResourceType(resourceResourceType1);
         assertEquals(1, resourceType.getResourceResourceTypes().size());

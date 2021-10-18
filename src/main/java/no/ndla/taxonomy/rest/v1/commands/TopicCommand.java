@@ -35,7 +35,7 @@ public class TopicCommand implements UpdatableDto<Topic> {
 
     @Override
     public void apply(Topic topic) {
-        if(getId().isPresent())
+        if (getId().isPresent())
             topic.setPublicId(id);
         topic.setName(name);
         topic.setContentUri(contentUri);

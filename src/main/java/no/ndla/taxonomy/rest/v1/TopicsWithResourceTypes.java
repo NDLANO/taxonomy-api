@@ -23,7 +23,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = {"/v1/topic-resourcetypes"})
+@RequestMapping(path = { "/v1/topic-resourcetypes" })
 @Transactional
 @Deprecated(forRemoval = true)
 public class TopicsWithResourceTypes {
@@ -40,7 +40,7 @@ public class TopicsWithResourceTypes {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
-    @DeleteMapping({"/{id}"})
+    @DeleteMapping({ "/{id}" })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation("Removes a resource type from a topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -56,7 +56,7 @@ public class TopicsWithResourceTypes {
         return List.of();
     }
 
-    @GetMapping({"/{id}"})
+    @GetMapping({ "/{id}" })
     @ApiOperation("Gets a single connection between topic and resource type")
     @Deprecated(forRemoval = true)
     public TopicResourceTypeIndexDocument get(@PathVariable("id") URI id) {

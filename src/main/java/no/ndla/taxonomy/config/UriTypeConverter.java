@@ -12,8 +12,8 @@ import javax.persistence.Converter;
 import java.net.URI;
 
 /*
-  Auto converts URI data types used in domain objects to/from string type used in database
- */
+ Auto converts URI data types used in domain objects to/from string type used in database
+*/
 @SuppressWarnings("unused")
 @Converter(autoApply = true)
 public class UriTypeConverter implements AttributeConverter<URI, String> {

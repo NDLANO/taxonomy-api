@@ -33,10 +33,8 @@ public class ResourceIndexDocument {
     public Set<ResourceTypeIndexDocument> resourceTypes;
 
     @JsonProperty
-    @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
-            notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
-                    "for the system, and <id> is the id of this content in that system.",
-            example = "urn:article:1")
+    @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ", notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier "
+            + "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
     public URI contentUri;
 
     @JsonProperty
@@ -48,17 +46,13 @@ public class ResourceIndexDocument {
     public Set<String> paths;
 
     public ResourceIndexDocument() {
-
     }
 
     public ResourceIndexDocument(Resource resource, String languageCode) {
         this.id = resource.getPublicId();
         this.name = resource.getTranslation(languageCode).map(ResourceTranslation::getName).orElse(resource.getName());
 
-        this.resourceTypes = resource
-                .getResourceResourceTypes()
-                .stream()
-                .map(ResourceResourceType::getResourceType)
+        this.resourceTypes = resource.getResourceResourceTypes().stream().map(ResourceResourceType::getResourceType)
                 .map(resourceType -> new ResourceTypeIndexDocument(resourceType, languageCode))
                 .collect(Collectors.toSet());
 

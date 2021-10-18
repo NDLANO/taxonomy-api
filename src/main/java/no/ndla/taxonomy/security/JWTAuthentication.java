@@ -36,11 +36,13 @@ public class JWTAuthentication implements Authentication {
         tmp.add(new SimpleGrantedAuthority("READONLY"));
 
         try {
-            if(appMetadata != null && appMetadata.asString() != null) {
+            if (appMetadata != null && appMetadata.asString() != null) {
                 final String[] allPermissions = appMetadata.asString().split(" ");
                 for (String jwtPermissionString : allPermissions) {
                     final JWTPermission jwtPermission = new JWTPermission(jwtPermissionString);
-                    if (jwtPermission.getApi() != null && jwtPermission.getPermission() != null && jwtPermission.getApi().equals(TAXONOMY_API) && jwtPermission.getPermission().equals(WRITE_PERMISSION)) {
+                    if (jwtPermission.getApi() != null && jwtPermission.getPermission() != null
+                            && jwtPermission.getApi().equals(TAXONOMY_API)
+                            && jwtPermission.getPermission().equals(WRITE_PERMISSION)) {
                         tmp.add(new SimpleGrantedAuthority("TAXONOMY_WRITE"));
                     }
                 }
@@ -88,5 +90,4 @@ public class JWTAuthentication implements Authentication {
     public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
         this.authenticated = isAuthenticated;
     }
-
 }

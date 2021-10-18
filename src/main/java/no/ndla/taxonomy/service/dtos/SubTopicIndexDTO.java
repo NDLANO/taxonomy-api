@@ -20,9 +20,7 @@ import no.ndla.taxonomy.service.TopicTreeSorter;
 import java.net.URI;
 import java.util.Set;
 
-/**
- *
- */
+/** */
 @ApiModel("SubTopicIndexDocument")
 public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
     @JsonProperty
@@ -62,16 +60,13 @@ public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
     private URI parentId;
 
     public SubTopicIndexDTO() {
-
     }
 
     public SubTopicIndexDTO(TopicSubtopic topicSubtopic, String language) {
         topicSubtopic.getSubtopic().ifPresent(topic -> {
             this.id = topic.getPublicId();
 
-            this.name = topic.getTranslation(language)
-                    .map(TopicTranslation::getName)
-                    .orElse(topic.getName());
+            this.name = topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName());
 
             this.contentUri = topic.getContentUri();
             this.paths = topic.getAllPaths();

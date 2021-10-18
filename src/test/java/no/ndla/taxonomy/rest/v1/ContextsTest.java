@@ -34,10 +34,7 @@ public class ContextsTest extends RestTest {
         subjectRepository.flush();
         topicRepository.flush();
 
-        builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .name("Subject 1")
-        );
+        builder.subject(s -> s.publicId("urn:subject:1").name("Subject 1"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/contexts");
         Contexts.ContextIndexDocument[] contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
@@ -48,14 +45,9 @@ public class ContextsTest extends RestTest {
         assertEquals("Subject 1", contexts[0].name);
     }
 
-
     @Test
     public void topics_can_be_contexts() throws Exception {
-        builder.topic(t -> t
-                .publicId("urn:topic:1")
-                .name("Topic 1")
-                .isContext(true)
-        );
+        builder.topic(t -> t.publicId("urn:topic:1").name("Topic 1").isContext(true));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/contexts");
         Contexts.ContextIndexDocument[] contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
@@ -68,47 +60,34 @@ public class ContextsTest extends RestTest {
 
     @Test
     public void can_add_topic_as_context() throws Exception {
-        Topic topic = builder.topic(t -> t
-                .publicId("urn:topic:ct:2")
-        );
+        Topic topic = builder.topic(t -> t.publicId("urn:topic:ct:2"));
 
-        testUtils.createResource("/v1/contexts", new Contexts.CreateContextCommand() {{
-            id = topic.getPublicId();
-        }});
+        testUtils.createResource("/v1/contexts", new Contexts.CreateContextCommand() {
+            {
+                id = topic.getPublicId();
+            }
+        });
 
         assertTrue(topic.isContext());
     }
 
-
     @Test
     public void can_remove_topic_as_context() throws Exception {
-        Topic topic = builder.topic(t -> t
-                .publicId("urn:topic:1")
-                .isContext(true)
-        );
+        Topic topic = builder.topic(t -> t.publicId("urn:topic:1").isContext(true));
 
         testUtils.deleteResource("/v1/contexts/urn:topic:1");
         assertFalse(topic.isContext());
     }
-
 
     @Test
     public void can_get_translated_contexts() throws Exception {
         subjectRepository.deleteAllAndFlush();
         topicRepository.deleteAllAndFlush();
 
-        builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .name("Subject 1")
-                .translation("nb", tr -> tr.name("Fag 1"))
-        );
+        builder.subject(s -> s.publicId("urn:subject:1").name("Subject 1").translation("nb", tr -> tr.name("Fag 1")));
 
-        builder.topic(t -> t
-                .publicId("urn:topic:1")
-                .name("Topic 1")
-                .translation("nb", tr -> tr.name("Emne 1"))
-                .isContext(true)
-        );
+        builder.topic(t -> t.publicId("urn:topic:1").name("Topic 1").translation("nb", tr -> tr.name("Emne 1"))
+                .isContext(true));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/contexts?language=nb");
         Contexts.ContextIndexDocument[] contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
@@ -121,14 +100,9 @@ public class ContextsTest extends RestTest {
 
     @Test
     public void root_context_is_more_important_than_primary_parent() throws Exception {
-        Topic topic = builder.topic(t -> t
-                .publicId("urn:topic:1")
-        );
+        Topic topic = builder.topic(t -> t.publicId("urn:topic:1"));
 
-        Subject subject = builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .topic(topic)
-        );
+        Subject subject = builder.subject(s -> s.publicId("urn:subject:1").topic(topic));
 
         topic.setContext(true);
         topicRepository.saveAndFlush(topic);

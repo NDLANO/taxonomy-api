@@ -20,7 +20,8 @@ public interface TaxonomyRepository<T> extends JpaRepository<T, Integer> {
 
     default T getByPublicId(URI id) {
         T entity = findByPublicId(id);
-        if (null == entity) throw new NotFoundException("entity", id);
+        if (null == entity)
+            throw new NotFoundException("entity", id);
         return entity;
     }
 

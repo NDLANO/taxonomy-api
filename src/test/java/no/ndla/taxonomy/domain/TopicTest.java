@@ -158,7 +158,6 @@ public class TopicTest {
         when(topicSubtopic1.getSubtopic()).thenReturn(Optional.of(topic));
         topic.addParentTopicSubtopic(topicSubtopic1);
 
-
         assertTrue(topic.getParentTopicSubtopic().isPresent());
         assertSame(topicSubtopic1, topic.getParentTopicSubtopic().orElseThrow());
 
@@ -239,7 +238,8 @@ public class TopicTest {
         final var topicResource2 = mock(TopicResource.class);
         final var topicResource3 = mock(TopicResource.class);
 
-        Set.of(topicResource1, topicResource2, topicResource3).forEach(topicResource -> when(topicResource.getTopic()).thenReturn(Optional.of(topic)));
+        Set.of(topicResource1, topicResource2, topicResource3)
+                .forEach(topicResource -> when(topicResource.getTopic()).thenReturn(Optional.of(topic)));
         when(topicResource1.getResource()).thenReturn(Optional.of(resource1));
         when(topicResource2.getResource()).thenReturn(Optional.of(resource2));
 

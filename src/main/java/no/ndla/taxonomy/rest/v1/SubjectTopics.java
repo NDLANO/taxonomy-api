@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = {"/v1/subject-topics"})
+@RequestMapping(path = { "/v1/subject-topics" })
 @Transactional
 public class SubjectTopics {
     private final TopicRepository topicRepository;
@@ -40,11 +40,9 @@ public class SubjectTopics {
     private final EntityConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
 
-    public SubjectTopics(SubjectRepository subjectRepository,
-                         TopicRepository topicRepository,
-                         SubjectTopicRepository subjectTopicRepository,
-                         EntityConnectionService connectionService,
-                         RelevanceRepository relevanceRepository) {
+    public SubjectTopics(SubjectRepository subjectRepository, TopicRepository topicRepository,
+            SubjectTopicRepository subjectTopicRepository, EntityConnectionService connectionService,
+            RelevanceRepository relevanceRepository) {
         this.subjectRepository = subjectRepository;
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicRepository = topicRepository;
@@ -52,14 +50,10 @@ public class SubjectTopics {
         this.relevanceRepository = relevanceRepository;
     }
 
-
     @GetMapping
     @ApiOperation("Gets all connections between subjects and topics")
     public List<SubjectTopicIndexDocument> index() {
-        return subjectTopicRepository
-                .findAllIncludingSubjectAndTopic()
-                .stream()
-                .map(SubjectTopicIndexDocument::new)
+        return subjectTopicRepository.findAllIncludingSubjectAndTopic().stream().map(SubjectTopicIndexDocument::new)
                 .collect(Collectors.toList());
     }
 
@@ -78,10 +72,12 @@ public class SubjectTopics {
 
         Subject subject = subjectRepository.getByPublicId(command.subjectid);
         Topic topic = topicRepository.getByPublicId(command.topicid);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
+        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
+                : null;
 
         final SubjectTopic subjectTopic;
-        subjectTopic = connectionService.connectSubjectTopic(subject, topic, relevance, command.rank == 0 ? null : command.rank);
+        subjectTopic = connectionService.connectSubjectTopic(subject, topic, relevance,
+                command.rank == 0 ? null : command.rank);
 
         URI location = URI.create("/subject-topics/" + subjectTopic.getPublicId());
         return ResponseEntity.created(location).build();
@@ -100,13 +96,13 @@ public class SubjectTopics {
     @ApiOperation(value = "Updates a connection between subject and topic", notes = "Use to update which subject is primary to a topic or to change sorting order.")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) {
+            @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) {
         SubjectTopic subjectTopic = subjectTopicRepository.getByPublicId(id);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
+        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
+                : null;
 
         connectionService.updateSubjectTopic(subjectTopic, relevance, command.rank > 0 ? command.rank : null);
     }
-
 
     public static class AddTopicToSubjectCommand {
         @JsonProperty
@@ -136,8 +132,7 @@ public class SubjectTopics {
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(value = "If true, set this subject as the primary subject for this topic", example = "true",
-                notes = "This will replace any other primary subject for this topic. You must have one primary subject, so it is not allowed to set the currently primary subject to not be primary any more.")
+        @ApiModelProperty(value = "If true, set this subject as the primary subject for this topic", example = "true", notes = "This will replace any other primary subject for this topic. You must have one primary subject, so it is not allowed to set the currently primary subject to not be primary any more.")
         public boolean primary;
 
         @JsonProperty
@@ -180,13 +175,9 @@ public class SubjectTopics {
         SubjectTopicIndexDocument(SubjectTopic subjectTopic) {
             id = subjectTopic.getPublicId();
 
-            subjectid = subjectTopic.getSubject()
-                    .map(Subject::getPublicId)
-                    .orElse(null);
+            subjectid = subjectTopic.getSubject().map(Subject::getPublicId).orElse(null);
 
-            topicid = subjectTopic.getTopic()
-                    .map(Topic::getPublicId)
-                    .orElse(null);
+            topicid = subjectTopic.getTopic().map(Topic::getPublicId).orElse(null);
 
             primary = true;
             rank = subjectTopic.getRank();

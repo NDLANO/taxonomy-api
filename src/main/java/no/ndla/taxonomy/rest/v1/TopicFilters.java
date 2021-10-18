@@ -23,7 +23,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = {"/v1/topic-filters"})
+@RequestMapping(path = { "/v1/topic-filters" })
 @Transactional
 @Deprecated(forRemoval = true)
 public class TopicFilters {
@@ -34,7 +34,8 @@ public class TopicFilters {
     @ApiOperation(value = "Adds a filter to a topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
-    public ResponseEntity<Void> post(@ApiParam(name = "topic filter", value = "The new topic filter") @RequestBody AddFilterToTopicCommand command) {
+    public ResponseEntity<Void> post(
+            @ApiParam(name = "topic filter", value = "The new topic filter") @RequestBody AddFilterToTopicCommand command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
@@ -43,7 +44,8 @@ public class TopicFilters {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
-    public void put(@PathVariable("id") URI id, @ApiParam(name = "topic filter", value = "The updated topic filter", required = true) @RequestBody UpdateTopicFilterCommand command) {
+    public void put(@PathVariable("id") URI id,
+            @ApiParam(name = "topic filter", value = "The updated topic filter", required = true) @RequestBody UpdateTopicFilterCommand command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
@@ -52,7 +54,8 @@ public class TopicFilters {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
-    public void delete(@ApiParam(name = "id", value = "The id of the connection to delete", required = true) @PathVariable String id) {
+    public void delete(
+            @ApiParam(name = "id", value = "The id of the connection to delete", required = true) @PathVariable String id) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
@@ -62,7 +65,6 @@ public class TopicFilters {
     public List<TopicFilterIndexDocument> index() {
         return List.of();
     }
-
 
     public static class AddFilterToTopicCommand {
         @JsonProperty

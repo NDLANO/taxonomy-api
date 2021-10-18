@@ -25,9 +25,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-/**
- *
- */
+/** */
 @ApiModel("TopicResourceIndexDocument")
 public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     @JsonProperty
@@ -48,10 +46,8 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     public Set<ResourceTypeDTO> resourceTypes = new TreeSet<>();
 
     @JsonProperty
-    @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
-            notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
-                    "for the system, and <id> is the id of this content in that system.",
-            example = "urn:article:1")
+    @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ", notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier "
+            + "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
     public URI contentUri;
 
     @JsonProperty
@@ -91,7 +87,6 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     }
 
     public ResourceIndexDocument() {
-
     }
 
     public ResourceIndexDocument(TopicResource topicResource, String language) {
@@ -100,12 +95,9 @@ public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
         topicResource.getResource().ifPresent(resource -> {
             this.id = resource.getPublicId();
 
-            this.name = resource.getTranslation(language)
-                    .map(ResourceTranslation::getName)
-                    .orElse(resource.getName());
+            this.name = resource.getTranslation(language).map(ResourceTranslation::getName).orElse(resource.getName());
 
-            this.resourceTypes = resource.getResourceResourceTypes().stream()
-                    .map(ResourceResourceType::getResourceType)
+            this.resourceTypes = resource.getResourceResourceTypes().stream().map(ResourceResourceType::getResourceType)
                     .map(resourceType -> new ResourceTypeDTO(resourceType, language))
                     .collect(Collectors.toCollection(TreeSet::new));
 

@@ -33,15 +33,12 @@ public class ResourceWithTopicConnectionDTO extends ResourceDTO {
     public URI relevanceId;
 
     public ResourceWithTopicConnectionDTO() {
-
     }
 
     public ResourceWithTopicConnectionDTO(TopicResource topicResource, String language) {
         super(topicResource.getResource().orElseThrow(), language);
 
-        this.topicId = topicResource.getTopic()
-                .map(Topic::getPublicId)
-                .orElse(null);
+        this.topicId = topicResource.getTopic().map(Topic::getPublicId).orElse(null);
 
         this.connectionId = topicResource.getPublicId();
         this.rank = topicResource.getRank();

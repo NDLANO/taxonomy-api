@@ -21,7 +21,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class FilterTranslationsTest extends RestTest {
 
-
     @Test
     public void can_get_single_filter() throws Exception {
         assert404(new URI("urn:filter:1:1"), "nn");
@@ -29,7 +28,8 @@ public class FilterTranslationsTest extends RestTest {
 
     private void assert404(URI id, String language) throws Exception {
         String path = "/v1/filters/" + id;
-        if (isNotEmpty(language)) path = path + "?language=" + language;
+        if (isNotEmpty(language))
+            path = path + "?language=" + language;
         testUtils.getResource(path, status().isNotFound());
     }
 

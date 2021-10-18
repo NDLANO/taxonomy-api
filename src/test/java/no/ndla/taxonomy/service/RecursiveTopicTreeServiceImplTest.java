@@ -39,9 +39,8 @@ class RecursiveTopicTreeServiceImplTest {
 
     @BeforeEach
     void setUp(@Autowired TopicSubtopicRepository topicSubtopicRepository,
-               @Autowired SubjectRepository subjectRepository,
-               @Autowired TopicRepository topicRepository,
-               @Autowired TestSeeder testSeeder) {
+            @Autowired SubjectRepository subjectRepository, @Autowired TopicRepository topicRepository,
+            @Autowired TestSeeder testSeeder) {
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
@@ -59,7 +58,8 @@ class RecursiveTopicTreeServiceImplTest {
         final var subject = subjectRepository.findFirstByPublicId(URI.create("urn:subject:1")).orElseThrow();
         final var topicElements = service.getRecursiveTopics(subject);
 
-        final var topicsToFind = new HashSet<>(Set.of("urn:topic:1", "urn:topic:2", "urn:topic:3", "urn:topic:4", "urn:topic:5", "urn:topic:6", "urn:topic:7", "urn:topic:8"));
+        final var topicsToFind = new HashSet<>(Set.of("urn:topic:1", "urn:topic:2", "urn:topic:3", "urn:topic:4",
+                "urn:topic:5", "urn:topic:6", "urn:topic:7", "urn:topic:8"));
 
         final var topic1 = topicRepository.findFirstByPublicId(URI.create("urn:topic:1")).orElseThrow();
         final var topic3 = topicRepository.findFirstByPublicId(URI.create("urn:topic:3")).orElseThrow();
@@ -73,56 +73,56 @@ class RecursiveTopicTreeServiceImplTest {
             }
 
             switch (topic.getPublicId().toString()) {
-                case "urn:topic:1":
-                    // Child if subject
-                    assertEquals(subject.getId(), topicTreeElement.getParentSubjectId().orElseThrow());
-                    assertFalse(topicTreeElement.getParentTopicId().isPresent());
-                    assertEquals(1, topicTreeElement.getRank());
-                    break;
-                case "urn:topic:2":
-                    // Child of topic 1
-                    assertFalse(topicTreeElement.getParentSubjectId().isPresent());
-                    assertEquals(topic1.getId(), topicTreeElement.getParentTopicId().orElseThrow());
-                    assertEquals(1, topicTreeElement.getRank());
-                    break;
-                case "urn:topic:3":
-                    // Child if subject
-                    assertEquals(subject.getId(), topicTreeElement.getParentSubjectId().orElseThrow());
-                    assertFalse(topicTreeElement.getParentTopicId().isPresent());
-                    assertEquals(2, topicTreeElement.getRank());
-                    break;
-                case "urn:topic:4":
-                    // Child of topic 3
-                    assertFalse(topicTreeElement.getParentSubjectId().isPresent());
-                    assertEquals(topic3.getId(), topicTreeElement.getParentTopicId().orElseThrow());
-                    assertEquals(1, topicTreeElement.getRank());
-                    break;
-                case "urn:topic:5":
-                    // Child if subject
-                    assertEquals(subject.getId(), topicTreeElement.getParentSubjectId().orElseThrow());
-                    assertFalse(topicTreeElement.getParentTopicId().isPresent());
-                    assertEquals(3, topicTreeElement.getRank());
-                    break;
-                case "urn:topic:6":
-                    // Child of topic 5
-                    assertFalse(topicTreeElement.getParentSubjectId().isPresent());
-                    assertEquals(topic5.getId(), topicTreeElement.getParentTopicId().orElseThrow());
-                    assertEquals(1, topicTreeElement.getRank());
-                    break;
-                case "urn:topic:7":
-                    // Child of topic 5
-                    assertFalse(topicTreeElement.getParentSubjectId().isPresent());
-                    assertEquals(topic5.getId(), topicTreeElement.getParentTopicId().orElseThrow());
-                    assertEquals(2, topicTreeElement.getRank());
-                    break;
-                case "urn:topic:8":
-                    // Child of topic 5
-                    assertFalse(topicTreeElement.getParentSubjectId().isPresent());
-                    assertEquals(topic5.getId(), topicTreeElement.getParentTopicId().orElseThrow());
-                    assertEquals(3, topicTreeElement.getRank());
-                    break;
-                default:
-                    fail();
+            case "urn:topic:1":
+                // Child if subject
+                assertEquals(subject.getId(), topicTreeElement.getParentSubjectId().orElseThrow());
+                assertFalse(topicTreeElement.getParentTopicId().isPresent());
+                assertEquals(1, topicTreeElement.getRank());
+                break;
+            case "urn:topic:2":
+                // Child of topic 1
+                assertFalse(topicTreeElement.getParentSubjectId().isPresent());
+                assertEquals(topic1.getId(), topicTreeElement.getParentTopicId().orElseThrow());
+                assertEquals(1, topicTreeElement.getRank());
+                break;
+            case "urn:topic:3":
+                // Child if subject
+                assertEquals(subject.getId(), topicTreeElement.getParentSubjectId().orElseThrow());
+                assertFalse(topicTreeElement.getParentTopicId().isPresent());
+                assertEquals(2, topicTreeElement.getRank());
+                break;
+            case "urn:topic:4":
+                // Child of topic 3
+                assertFalse(topicTreeElement.getParentSubjectId().isPresent());
+                assertEquals(topic3.getId(), topicTreeElement.getParentTopicId().orElseThrow());
+                assertEquals(1, topicTreeElement.getRank());
+                break;
+            case "urn:topic:5":
+                // Child if subject
+                assertEquals(subject.getId(), topicTreeElement.getParentSubjectId().orElseThrow());
+                assertFalse(topicTreeElement.getParentTopicId().isPresent());
+                assertEquals(3, topicTreeElement.getRank());
+                break;
+            case "urn:topic:6":
+                // Child of topic 5
+                assertFalse(topicTreeElement.getParentSubjectId().isPresent());
+                assertEquals(topic5.getId(), topicTreeElement.getParentTopicId().orElseThrow());
+                assertEquals(1, topicTreeElement.getRank());
+                break;
+            case "urn:topic:7":
+                // Child of topic 5
+                assertFalse(topicTreeElement.getParentSubjectId().isPresent());
+                assertEquals(topic5.getId(), topicTreeElement.getParentTopicId().orElseThrow());
+                assertEquals(2, topicTreeElement.getRank());
+                break;
+            case "urn:topic:8":
+                // Child of topic 5
+                assertFalse(topicTreeElement.getParentSubjectId().isPresent());
+                assertEquals(topic5.getId(), topicTreeElement.getParentTopicId().orElseThrow());
+                assertEquals(3, topicTreeElement.getRank());
+                break;
+            default:
+                fail();
             }
 
             topicsToFind.remove(topic.getPublicId().toString());
@@ -151,17 +151,17 @@ class RecursiveTopicTreeServiceImplTest {
                 }
 
                 switch (topic.getPublicId().toString()) {
-                    case "urn:topic:1":
-                        assertFalse(topicTreeElement.getParentTopicId().isPresent());
-                        assertEquals(0, topicTreeElement.getRank());
-                        break;
-                    case "urn:topic:2":
-                        assertFalse(topicTreeElement.getParentSubjectId().isPresent());
-                        assertEquals(topic1.getId(), topicTreeElement.getParentTopicId().orElseThrow());
-                        assertEquals(1, topicTreeElement.getRank());
-                        break;
-                    default:
-                        fail();
+                case "urn:topic:1":
+                    assertFalse(topicTreeElement.getParentTopicId().isPresent());
+                    assertEquals(0, topicTreeElement.getRank());
+                    break;
+                case "urn:topic:2":
+                    assertFalse(topicTreeElement.getParentSubjectId().isPresent());
+                    assertEquals(topic1.getId(), topicTreeElement.getParentTopicId().orElseThrow());
+                    assertEquals(1, topicTreeElement.getRank());
+                    break;
+                default:
+                    fail();
                 }
 
                 topicsToFind.remove(topic.getPublicId().toString());
@@ -183,17 +183,17 @@ class RecursiveTopicTreeServiceImplTest {
                 }
 
                 switch (topic.getPublicId().toString()) {
-                    case "urn:topic:3":
-                        assertFalse(topicTreeElement.getParentTopicId().isPresent());
-                        assertEquals(0, topicTreeElement.getRank());
-                        break;
-                    case "urn:topic:4":
-                        assertFalse(topicTreeElement.getParentSubjectId().isPresent());
-                        assertEquals(topic3.getId(), topicTreeElement.getParentTopicId().orElseThrow());
-                        assertEquals(1, topicTreeElement.getRank());
-                        break;
-                    default:
-                        fail();
+                case "urn:topic:3":
+                    assertFalse(topicTreeElement.getParentTopicId().isPresent());
+                    assertEquals(0, topicTreeElement.getRank());
+                    break;
+                case "urn:topic:4":
+                    assertFalse(topicTreeElement.getParentSubjectId().isPresent());
+                    assertEquals(topic3.getId(), topicTreeElement.getParentTopicId().orElseThrow());
+                    assertEquals(1, topicTreeElement.getRank());
+                    break;
+                default:
+                    fail();
                 }
 
                 topicsToFind.remove(topic.getPublicId().toString());
@@ -215,27 +215,27 @@ class RecursiveTopicTreeServiceImplTest {
                 }
 
                 switch (topic.getPublicId().toString()) {
-                    case "urn:topic:5":
-                        assertFalse(topicTreeElement.getParentTopicId().isPresent());
-                        assertEquals(0, topicTreeElement.getRank());
-                        break;
-                    case "urn:topic:6":
-                        assertFalse(topicTreeElement.getParentSubjectId().isPresent());
-                        assertEquals(topic5.getId(), topicTreeElement.getParentTopicId().orElseThrow());
-                        assertEquals(1, topicTreeElement.getRank());
-                        break;
-                    case "urn:topic:7":
-                        assertFalse(topicTreeElement.getParentSubjectId().isPresent());
-                        assertEquals(topic5.getId(), topicTreeElement.getParentTopicId().orElseThrow());
-                        assertEquals(2, topicTreeElement.getRank());
-                        break;
-                    case "urn:topic:8":
-                        assertFalse(topicTreeElement.getParentSubjectId().isPresent());
-                        assertEquals(topic5.getId(), topicTreeElement.getParentTopicId().orElseThrow());
-                        assertEquals(3, topicTreeElement.getRank());
-                        break;
-                    default:
-                        fail();
+                case "urn:topic:5":
+                    assertFalse(topicTreeElement.getParentTopicId().isPresent());
+                    assertEquals(0, topicTreeElement.getRank());
+                    break;
+                case "urn:topic:6":
+                    assertFalse(topicTreeElement.getParentSubjectId().isPresent());
+                    assertEquals(topic5.getId(), topicTreeElement.getParentTopicId().orElseThrow());
+                    assertEquals(1, topicTreeElement.getRank());
+                    break;
+                case "urn:topic:7":
+                    assertFalse(topicTreeElement.getParentSubjectId().isPresent());
+                    assertEquals(topic5.getId(), topicTreeElement.getParentTopicId().orElseThrow());
+                    assertEquals(2, topicTreeElement.getRank());
+                    break;
+                case "urn:topic:8":
+                    assertFalse(topicTreeElement.getParentSubjectId().isPresent());
+                    assertEquals(topic5.getId(), topicTreeElement.getParentTopicId().orElseThrow());
+                    assertEquals(3, topicTreeElement.getRank());
+                    break;
+                default:
+                    fail();
                 }
 
                 topicsToFind.remove(topic.getPublicId().toString());
@@ -247,8 +247,10 @@ class RecursiveTopicTreeServiceImplTest {
 
     @Test
     void getRecursiveTopics_with_infinite_loop() {
-        // This condition should not be possible as validation when inserting should prevent it, this tests
-        // tests that the breaker works in case it happens, for example by manual editing. Otherwise it would
+        // This condition should not be possible as validation when inserting should prevent it,
+        // this tests
+        // tests that the breaker works in case it happens, for example by manual editing. Otherwise
+        // it would
         // result in a StackOverflowError at some point
 
         final var topic1 = new Topic();
@@ -262,12 +264,9 @@ class RecursiveTopicTreeServiceImplTest {
         // → topic 1 → topic 2 ↓
         // ↑ topic 4 ← topic 3 ←
 
-        topicSubtopicRepository.saveAll(Set.of(
-                TopicSubtopic.create(topic1, topic2),
-                TopicSubtopic.create(topic2, topic3),
-                TopicSubtopic.create(topic3, topic4),
-                TopicSubtopic.create(topic4, topic1)
-        ));
+        topicSubtopicRepository
+                .saveAll(Set.of(TopicSubtopic.create(topic1, topic2), TopicSubtopic.create(topic2, topic3),
+                        TopicSubtopic.create(topic3, topic4), TopicSubtopic.create(topic4, topic1)));
 
         assertThrows(IllegalStateException.class, () -> service.getRecursiveTopics(topic1));
         assertThrows(IllegalStateException.class, () -> service.getRecursiveTopics(topic2));

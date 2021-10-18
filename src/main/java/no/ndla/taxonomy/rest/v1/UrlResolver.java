@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
@@ -38,13 +37,14 @@ public class UrlResolver {
 
     @GetMapping("/resolve")
     public ResolvedUrl resolve(@RequestParam String path) {
-        return urlResolverService.resolveUrl(path).orElseThrow(() -> new NotFoundHttpResponseException("Element with path was not found"));
+        return urlResolverService.resolveUrl(path)
+                .orElseThrow(() -> new NotFoundHttpResponseException("Element with path was not found"));
     }
-
 
     @GetMapping("/mapping")
     @ApiOperation(value = "Returns path for an url or HTTP 404")
-    public ResolvedOldUrl getTaxonomyPathForUrl(@ApiParam(value = "url in old rig except 'https://'", example = "ndla.no/nb/node/142542?fag=52253") @RequestParam String url) {
+    public ResolvedOldUrl getTaxonomyPathForUrl(
+            @ApiParam(value = "url in old rig except 'https://'", example = "ndla.no/nb/node/142542?fag=52253") @RequestParam String url) {
         ResolvedOldUrl resolvedOldUrl = new ResolvedOldUrl();
         resolvedOldUrl.path = urlResolverService.resolveOldUrl(url).orElseThrow(() -> new NotFoundException(url));
         return resolvedOldUrl;
@@ -56,7 +56,8 @@ public class UrlResolver {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void putTaxonomyNodeAndSubjectForOldUrl(@RequestBody UrlMapping urlMapping) {
         try {
-            urlResolverService.putUrlMapping(urlMapping.url, URI.create(urlMapping.nodeId), URI.create(urlMapping.subjectId));
+            urlResolverService.putUrlMapping(urlMapping.url, URI.create(urlMapping.nodeId),
+                    URI.create(urlMapping.subjectId));
         } catch (UrlResolverService.NodeIdNotFoundExeption ex) {
             throw new NotFoundHttpResponseException(ex.getMessage());
         }
@@ -67,7 +68,6 @@ public class UrlResolver {
         @ApiModelProperty(value = "URL path for resource", example = "'/subject:1/topic:12/resource:12'")
         public String path;
     }
-
 
     public static class UrlMapping {
         @ApiModelProperty(value = "URL for resource in old system", example = "ndla.no/nb/node/183926?fag=127013")

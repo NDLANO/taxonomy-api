@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = {"/v1/resource-resourcetypes"})
+@RequestMapping(path = { "/v1/resource-resourcetypes" })
 @Transactional
 public class ResourceResourceTypes {
 
@@ -37,7 +37,8 @@ public class ResourceResourceTypes {
     private final ResourceTypeRepository resourceTypeRepository;
     private final ResourceRepository resourceRepository;
 
-    public ResourceResourceTypes(ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceTypeRepository resourceTypeRepository, ResourceRepository resourceRepository) {
+    public ResourceResourceTypes(ResourceResourceTypeRepository resourceResourceTypeRepository,
+            ResourceTypeRepository resourceTypeRepository, ResourceRepository resourceRepository) {
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceTypeRepository = resourceTypeRepository;
         this.resourceRepository = resourceRepository;
@@ -59,7 +60,7 @@ public class ResourceResourceTypes {
         return ResponseEntity.created(location).build();
     }
 
-    @DeleteMapping({"/{id}"})
+    @DeleteMapping({ "/{id}" })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation("Removes a resource type from a resource")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -71,14 +72,11 @@ public class ResourceResourceTypes {
     @GetMapping
     @ApiOperation("Gets all connections between resources and resource types")
     public List<ResourceResourceTypeIndexDocument> index() {
-        return resourceResourceTypeRepository
-                .findAllIncludingResourceAndResourceType()
-                .stream()
-                .map(ResourceResourceTypeIndexDocument::new)
-                .collect(Collectors.toList());
+        return resourceResourceTypeRepository.findAllIncludingResourceAndResourceType().stream()
+                .map(ResourceResourceTypeIndexDocument::new).collect(Collectors.toList());
     }
 
-    @GetMapping({"/{id}"})
+    @GetMapping({ "/{id}" })
     @ApiOperation("Gets a single connection between resource and resource type")
     public ResourceResourceTypeIndexDocument get(@PathVariable("id") URI id) {
         ResourceResourceType result = resourceResourceTypeRepository.getByPublicId(id);

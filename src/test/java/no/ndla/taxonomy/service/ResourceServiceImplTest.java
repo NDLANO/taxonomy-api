@@ -32,8 +32,7 @@ public class ResourceServiceImplTest {
 
     @BeforeEach
     public void setUp(@Autowired ResourceRepository resourceRepository,
-                      @Autowired TopicResourceRepository topicResourceRepository,
-                      @Autowired Builder builder) {
+            @Autowired TopicResourceRepository topicResourceRepository, @Autowired Builder builder) {
         this.builder = builder;
 
         connectionService = mock(EntityConnectionService.class);

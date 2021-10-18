@@ -45,17 +45,10 @@ class MetadataControllerTest {
         resourceService = mock(ResourceService.class);
         cachedUrlUpdaterService = mock(CachedUrlUpdaterService.class);
 
-
         when(metadataUpdateService.getMetadataApiService()).thenReturn(metadataApiService);
 
-        controller = new Resources(
-                resourceRepository,
-                resourceResourceTypeRepository,
-                resourceService,
-                cachedUrlUpdaterService,
-                metadataApiService,
-                metadataUpdateService
-        );
+        controller = new Resources(resourceRepository, resourceResourceTypeRepository, resourceService,
+                cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
     }
 
     @Test
@@ -74,12 +67,13 @@ class MetadataControllerTest {
 
     @Test
     public void putMetadata() {
-        when(metadataApiService.updateMetadataByPublicId(eq(URI.create(("urn:test:1"))), any(MetadataDto.class))).thenAnswer(invocationOnMock -> {
-            final var toReturn = mock(MetadataDto.class);
-            when(toReturn.getGrepCodes()).thenReturn(Set.of("A", "B"));
+        when(metadataApiService.updateMetadataByPublicId(eq(URI.create(("urn:test:1"))), any(MetadataDto.class)))
+                .thenAnswer(invocationOnMock -> {
+                    final var toReturn = mock(MetadataDto.class);
+                    when(toReturn.getGrepCodes()).thenReturn(Set.of("A", "B"));
 
-            return toReturn;
-        });
+                    return toReturn;
+                });
 
         final var requestObject = new MetadataDto();
         requestObject.setGrepCodes(Set.of("C", "D"));
@@ -98,7 +92,8 @@ class MetadataControllerTest {
             final var returnObject = mock(RecursiveMergeResultDto.class);
             final var entityToUpdate = mock(MetadataDto.class);
 
-            when(metadataUpdateService.updateMetadataRecursivelyByPublicId(eq(URI.create("urn:test:1")), same(entityToUpdate), eq(true))).thenReturn(returnObject);
+            when(metadataUpdateService.updateMetadataRecursivelyByPublicId(eq(URI.create("urn:test:1")),
+                    same(entityToUpdate), eq(true))).thenReturn(returnObject);
             assertSame(returnObject, controller.updateRecursively(URI.create("urn:test:1"), true, entityToUpdate));
         }
 
@@ -106,7 +101,8 @@ class MetadataControllerTest {
             final var returnObject = mock(RecursiveMergeResultDto.class);
             final var entityToUpdate = mock(MetadataDto.class);
 
-            when(metadataUpdateService.updateMetadataRecursivelyByPublicId(eq(URI.create("urn:test:2")), same(entityToUpdate), eq(false))).thenReturn(returnObject);
+            when(metadataUpdateService.updateMetadataRecursivelyByPublicId(eq(URI.create("urn:test:2")),
+                    same(entityToUpdate), eq(false))).thenReturn(returnObject);
 
             assertSame(returnObject, controller.updateRecursively(URI.create("urn:test:2"), false, entityToUpdate));
         }

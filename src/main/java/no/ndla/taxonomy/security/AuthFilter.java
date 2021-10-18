@@ -64,7 +64,8 @@ public class AuthFilter extends GenericFilterBean {
     }
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException {
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException {
         try {
             parseWebToken((HttpServletRequest) servletRequest);
             filterChain.doFilter(servletRequest, servletResponse);
@@ -80,7 +81,8 @@ public class AuthFilter extends GenericFilterBean {
     private void parseWebToken(HttpServletRequest request) {
         String authorizationHeader = request.getHeader("authorization");
         if (!isBlank(authorizationHeader) && (authorizationHeader.startsWith("Bearer"))) {
-            SecurityContextHolder.getContext().setAuthentication(new JWTAuthentication(verifyWebToken(authorizationHeader.substring(6).trim())));
+            SecurityContextHolder.getContext()
+                    .setAuthentication(new JWTAuthentication(verifyWebToken(authorizationHeader.substring(6).trim())));
         }
     }
 
@@ -89,5 +91,4 @@ public class AuthFilter extends GenericFilterBean {
         JWTVerifier verifier = JWT.require(algorithm).withIssuer(issuer).build();
         return verifier.verify(token);
     }
-
 }

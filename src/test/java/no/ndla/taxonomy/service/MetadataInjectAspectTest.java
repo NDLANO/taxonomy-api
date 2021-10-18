@@ -44,18 +44,17 @@ public class MetadataInjectAspectTest {
         /*
          * injector will run the metadata query before handing off to the api handler.
          *
-         * Lifecycle of metadata dtos:
-         * Then the metadata dtos are made available to the api handler, then after handler
-         * returns the injector will match pairs of api-entity <-> metadata-dto and do the
-         * injection.
+         * Lifecycle of metadata dtos: Then the metadata dtos are made available to the api handler, then after handler
+         * returns the injector will match pairs of api-entity <-> metadata-dto and do the injection.
          */
-        when(metadataApiService.getMetadataByKeyAndValue("key-v", "value-v"))
-                .thenReturn(Set.of(metadata1));
+        when(metadataApiService.getMetadataByKeyAndValue("key-v", "value-v")).thenReturn(Set.of(metadata1));
 
-        final var topic1 = new TopicDTO(new Topic() {{
-            /* metadata aspect will match by public ID between metadata entity and api entity */
-            setPublicId(URI.create("urn:test:1"));
-        }}, null);
+        final var topic1 = new TopicDTO(new Topic() {
+            {
+                /* metadata aspect will match by public ID between metadata entity and api entity */
+                setPublicId(URI.create("urn:test:1"));
+            }
+        }, null);
         /* Check that the topic dto has no metadata object */
         assertNull(topic1.getMetadata());
 

@@ -30,20 +30,14 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
     private String name;
 
     public ResourceTypeDTO() {
-
     }
 
     public ResourceTypeDTO(ResourceType resourceType, String languageCode) {
         this.id = resourceType.getPublicId();
 
-        resourceType
-                .getParent()
-                .map(ResourceType::getPublicId)
-                .ifPresent(publicId -> this.parentId = publicId);
+        resourceType.getParent().map(ResourceType::getPublicId).ifPresent(publicId -> this.parentId = publicId);
 
-        this.name = resourceType
-                .getTranslation(languageCode)
-                .map(ResourceTypeTranslation::getName)
+        this.name = resourceType.getTranslation(languageCode).map(ResourceTypeTranslation::getName)
                 .orElse(resourceType.getName());
     }
 
@@ -62,7 +56,8 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
     @Override
     public int compareTo(ResourceTypeDTO o) {
         // We want to sort resourceTypes without parents first when sorting
-        if(this.parentId == null && o.parentId != null) return 1;
+        if (this.parentId == null && o.parentId != null)
+            return 1;
         return -1;
     }
 }

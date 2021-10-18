@@ -44,17 +44,17 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.SERVICE_UNAVAILABLE);
     }
 
-    @ExceptionHandler({NotFoundServiceException.class, NotFoundHttpResponseException.class})
+    @ExceptionHandler({ NotFoundServiceException.class, NotFoundHttpResponseException.class })
     protected ResponseEntity<String> handleNotFoundServiceException(RuntimeException exception) {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler({DuplicateConnectionException.class})
+    @ExceptionHandler({ DuplicateConnectionException.class })
     protected ResponseEntity<String> handleConflictExceptions(RuntimeException exception) {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler({InvalidArgumentServiceException.class, IllegalArgumentException.class})
+    @ExceptionHandler({ InvalidArgumentServiceException.class, IllegalArgumentException.class })
     protected ResponseEntity<String> handleInvalidArgumentExceptions(RuntimeException exception) {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.BAD_REQUEST);
     }

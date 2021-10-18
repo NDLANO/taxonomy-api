@@ -28,23 +28,19 @@ public class MetadataDto {
     private Boolean visible;
 
     @ApiModelProperty
-    private Map<String,String> customFields;
+    private Map<String, String> customFields;
 
     public MetadataDto() {
-
     }
 
     public MetadataDto(MetadataApiEntity metadataApiEntity) {
         this.publicId = metadataApiEntity.getPublicId();
         this.visible = metadataApiEntity.isVisible().orElse(null);
 
-        metadataApiEntity.getCompetenceAims()
-                .ifPresent(competenceAims -> {
-                    grepCodes = new HashSet<>();
-                    competenceAims.stream()
-                            .map(MetadataApiEntity.CompetenceAim::getCode)
-                            .forEach(this::addGrepCode);
-                });
+        metadataApiEntity.getCompetenceAims().ifPresent(competenceAims -> {
+            grepCodes = new HashSet<>();
+            competenceAims.stream().map(MetadataApiEntity.CompetenceAim::getCode).forEach(this::addGrepCode);
+        });
         customFields = metadataApiEntity.getCustomFields().map(HashMap::new).orElse(null);
     }
 

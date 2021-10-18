@@ -23,6 +23,7 @@ public class JWTPermissionsTest {
         assertEquals("staging", jwtPermission.getEnvironment());
         assertEquals("write", jwtPermission.getPermission());
     }
+
     @Test
     public void can_parse_permission_with_no_dash() {
         String scope = "drafts:write";

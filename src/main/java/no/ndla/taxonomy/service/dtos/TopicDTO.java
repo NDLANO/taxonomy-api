@@ -53,7 +53,6 @@ public class TopicDTO {
     public URI relevanceId;
 
     public TopicDTO() {
-
     }
 
     public TopicDTO(Topic topic, String languageCode) {
@@ -61,12 +60,9 @@ public class TopicDTO {
         this.contentUri = topic.getContentUri();
         this.paths = topic.getAllPaths();
 
-        this.path = topic.getPrimaryPath()
-                .orElse(null);
+        this.path = topic.getPrimaryPath().orElse(null);
 
-        this.name = topic.getTranslation(languageCode)
-                .map(TopicTranslation::getName)
-                .orElse(topic.getName());
+        this.name = topic.getTranslation(languageCode).map(TopicTranslation::getName).orElse(topic.getName());
 
         Optional<Relevance> relevance = topic.getParentTopicSubtopic().flatMap(TopicSubtopic::getRelevance);
         this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));

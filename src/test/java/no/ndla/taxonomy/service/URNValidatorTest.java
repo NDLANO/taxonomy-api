@@ -47,6 +47,5 @@ public class URNValidatorTest {
     }
 
     private static class TestEntity extends DomainEntity {
-
     }
 }

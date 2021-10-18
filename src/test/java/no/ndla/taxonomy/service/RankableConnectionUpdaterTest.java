@@ -145,7 +145,6 @@ public class RankableConnectionUpdaterTest {
 
         @Override
         public void setPrimary(boolean isPrimary) {
-
         }
 
         @Override

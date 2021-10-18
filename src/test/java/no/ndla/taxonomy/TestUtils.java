@@ -42,11 +42,10 @@ public class TestUtils {
     private final MockMvc mockMvc;
 
     @Autowired
-    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext, EntityManager entityManager) {
+    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext,
+            EntityManager entityManager) {
         mappingJackson2HttpMessageConverter = Arrays.stream(converters)
-                .filter(hmc -> hmc instanceof MappingJackson2HttpMessageConverter)
-                .findAny()
-                .orElse(null);
+                .filter(hmc -> hmc instanceof MappingJackson2HttpMessageConverter).findAny().orElse(null);
 
         this.entityManager = entityManager;
 
@@ -64,24 +63,16 @@ public class TestUtils {
         return createResource(path, command, status().isCreated());
     }
 
-    public MockHttpServletResponse createResource(String path, Object command, ResultMatcher resultMatcher) throws Exception {
+    public MockHttpServletResponse createResource(String path, Object command, ResultMatcher resultMatcher)
+            throws Exception {
         entityManager.flush();
-        return mockMvc.perform(
-                post(path)
-                        .contentType(APPLICATION_JSON_UTF8)
-                        .content(json(command)))
-                .andExpect(resultMatcher)
-                .andReturn()
-                .getResponse();
+        return mockMvc.perform(post(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
+                .andExpect(resultMatcher).andReturn().getResponse();
     }
 
     public MockHttpServletResponse getResource(String path, ResultMatcher resultMatcher) throws Exception {
         entityManager.flush();
-        return mockMvc.perform(
-                get(path)
-                        .accept(APPLICATION_JSON_UTF8))
-                .andExpect(resultMatcher)
-                .andReturn()
+        return mockMvc.perform(get(path).accept(APPLICATION_JSON_UTF8)).andExpect(resultMatcher).andReturn()
                 .getResponse();
     }
 
@@ -91,26 +82,18 @@ public class TestUtils {
 
     public MockHttpServletResponse deleteResource(String path) throws Exception {
         entityManager.flush();
-        return mockMvc.perform(
-                delete(path))
-                .andExpect(status().isNoContent())
-                .andReturn()
-                .getResponse();
+        return mockMvc.perform(delete(path)).andExpect(status().isNoContent()).andReturn().getResponse();
     }
 
     public MockHttpServletResponse updateResource(String path, Object command) throws Exception {
         return updateResource(path, command, status().isNoContent());
     }
 
-    public MockHttpServletResponse updateResource(String path, Object command, ResultMatcher resultMatcher) throws Exception {
+    public MockHttpServletResponse updateResource(String path, Object command, ResultMatcher resultMatcher)
+            throws Exception {
         entityManager.flush();
-        return mockMvc.perform(
-                put(path)
-                        .contentType(APPLICATION_JSON_UTF8)
-                        .content(json(command)))
-                .andExpect(resultMatcher)
-                .andReturn()
-                .getResponse();
+        return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
+                .andExpect(resultMatcher).andReturn().getResponse();
     }
 
     public static URI getId(MockHttpServletResponse response) {
@@ -140,10 +123,12 @@ public class TestUtils {
         while (objects.hasNext()) {
             V next = objects.next();
             className = next.getClass().getSimpleName();
-            if (predicate.test(next)) return;
+            if (predicate.test(next))
+                return;
         }
 
-        if (null == className) fail("Empty collection");
+        if (null == className)
+            fail("Empty collection");
         fail("No " + className + " matching predicate found.");
     }
 

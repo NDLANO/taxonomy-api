@@ -31,13 +31,14 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public Subject getSubjectByPublicId(URI publicId) {
-        return subjectRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Subject", publicId));
+        return subjectRepository.findFirstByPublicId(publicId)
+                .orElseThrow(() -> new NotFoundServiceException("Subject", publicId));
     }
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public Topic getTopicByPublicId(URI publicId) {
-        return topicRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Topic", publicId));
+        return topicRepository.findFirstByPublicId(publicId)
+                .orElseThrow(() -> new NotFoundServiceException("Topic", publicId));
     }
-
 }

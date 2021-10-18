@@ -32,8 +32,9 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-
-    public EntityConnectionServiceImpl(SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
+    public EntityConnectionServiceImpl(SubjectTopicRepository subjectTopicRepository,
+            TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository,
+            CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.subjectTopicRepository = subjectTopicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.topicResourceRepository = topicResourceRepository;
@@ -42,9 +43,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     @Override
     public SubjectTopic connectSubjectTopic(Subject subject, Topic topic, Relevance relevance) {
-        final var highestRank = subject.getSubjectTopics().stream()
-                .map(SubjectTopic::getRank)
-                .max(Integer::compare);
+        final var highestRank = subject.getSubjectTopics().stream().map(SubjectTopic::getRank).max(Integer::compare);
 
         return connectSubjectTopic(subject, topic, relevance, highestRank.orElse(0) + 1);
     }
@@ -54,7 +53,8 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         return connectTopicResource(topic, resource, relevance, true, null);
     }
 
-    private EntityWithPathConnection doCreateConnection(EntityWithPath parent, EntityWithPath child, boolean requestedPrimary, Relevance relevance, int rank) {
+    private EntityWithPathConnection doCreateConnection(EntityWithPath parent, EntityWithPath child,
+            boolean requestedPrimary, Relevance relevance, int rank) {
         if (child.getParentConnections().size() == 0) {
             // First connected is always primary regardless of request
             requestedPrimary = true;
@@ -96,7 +96,8 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         return (TopicSubtopic) doCreateConnection(topic, subtopic, true, relevance, rank);
     }
 
-    private TopicResource createConnection(Topic topic, Resource resource, Relevance relevance, boolean primary, int rank) {
+    private TopicResource createConnection(Topic topic, Resource resource, Relevance relevance, boolean primary,
+            int rank) {
         return (TopicResource) doCreateConnection(topic, resource, primary, relevance, rank);
     }
 
@@ -107,10 +108,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         }
 
         if (rank == null) {
-            rank = topic.getSubjectTopics().stream()
-                    .map(SubjectTopic::getRank)
-                    .max(Integer::compare)
-                    .orElse(0) + 1;
+            rank = topic.getSubjectTopics().stream().map(SubjectTopic::getRank).max(Integer::compare).orElse(0) + 1;
         }
 
         return subjectTopicRepository.saveAndFlush(createConnection(subject, topic, relevance, rank));
@@ -134,9 +132,11 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         EntityWithPath parentConnected = topic;
 
         var ttl = 100;
-        while (parentConnected.getParentConnections().stream().findFirst().map(EntityWithPathConnection::getConnectedParent).isPresent()) {
+        while (parentConnected.getParentConnections().stream().findFirst()
+                .map(EntityWithPathConnection::getConnectedParent).isPresent()) {
             Logger.getLogger(this.getClass().toString()).info(parentConnected.getPublicId().toString());
-            parentConnected = parentConnected.getParentConnections().stream().findFirst().orElseThrow().getConnectedParent().orElseThrow();
+            parentConnected = parentConnected.getParentConnections().stream().findFirst().orElseThrow()
+                    .getConnectedParent().orElseThrow();
 
             if (ttl-- < 0) {
                 throw new InvalidArgumentServiceException("Too many levels to get top level object");
@@ -147,9 +147,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         }
 
         if (rank == null) {
-            rank = topic.getChildrenTopicSubtopics().stream()
-                    .map(TopicSubtopic::getRank)
-                    .max(Integer::compare)
+            rank = topic.getChildrenTopicSubtopics().stream().map(TopicSubtopic::getRank).max(Integer::compare)
                     .orElse(0) + 1;
         }
 
@@ -157,17 +155,15 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public TopicResource connectTopicResource(Topic topic, Resource resource, Relevance relevance, boolean isPrimary, Integer rank) {
+    public TopicResource connectTopicResource(Topic topic, Resource resource, Relevance relevance, boolean isPrimary,
+            Integer rank) {
         if (topic.getTopicResources().stream()
                 .anyMatch(topicResource -> topicResource.getResource().orElse(null) == resource)) {
             throw new DuplicateConnectionException();
         }
 
         if (rank == null) {
-            rank = topic.getTopicResources().stream()
-                    .map(TopicResource::getRank)
-                    .max(Integer::compare)
-                    .orElse(0) + 1;
+            rank = topic.getTopicResources().stream().map(TopicResource::getRank).max(Integer::compare).orElse(0) + 1;
         }
 
         return topicResourceRepository.saveAndFlush(createConnection(topic, resource, relevance, isPrimary, rank));
@@ -177,7 +173,8 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     public void disconnectTopicSubtopic(Topic topic, Topic subTopic) {
         new HashSet<>(topic.getChildrenTopicSubtopics()).stream()
                 .filter(topicSubtopic -> topicSubtopic.getSubtopic().orElse(null) == subTopic)
-                .forEach(this::disconnectTopicSubtopic); // (It will never be more than one record)
+                .forEach(this::disconnectTopicSubtopic); // (It will never be more than
+        // one record)
     }
 
     @Override
@@ -196,7 +193,8 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     public void disconnectSubjectTopic(Subject subject, Topic topic) {
         new HashSet<>(subject.getSubjectTopics()).stream()
                 .filter(subjectTopic -> subjectTopic.getTopic().orElse(null) == topic)
-                .forEach(this::disconnectSubjectTopic); // (It will never be more than one record)
+                .forEach(this::disconnectSubjectTopic); // (It will never be more than
+        // one record)
     }
 
     @Override
@@ -213,7 +211,8 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     public void disconnectTopicResource(Topic topic, Resource resource) {
         new HashSet<>(topic.getTopicResources()).stream()
                 .filter(topicResource -> topicResource.getResource().orElse(null) == resource)
-                .forEach(this::disconnectTopicResource); // (It will never be more than one record)
+                .forEach(this::disconnectTopicResource); // (It will never be more than
+        // one record)
     }
 
     @Override
@@ -249,7 +248,8 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
             } else if (connectable instanceof TopicResource) {
                 topicResourceRepository.save((TopicResource) connectable);
             } else {
-                throw new IllegalArgumentException("Unknown instance of PrimaryPathConnectable: " + connectable.getClass().toString());
+                throw new IllegalArgumentException(
+                        "Unknown instance of PrimaryPathConnectable: " + connectable.getClass().toString());
             }
         });
 
@@ -264,10 +264,8 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
         // Updates all other nodes connected to this parent
         final var foundNewPrimary = new AtomicBoolean(false);
-        connectable.getConnectedChild().ifPresent(entityWithPath -> entityWithPath.getParentConnections()
-                .stream()
-                .filter(connectable1 -> connectable1 != connectable)
-                .forEachOrdered(connectable1 -> {
+        connectable.getConnectedChild().ifPresent(entityWithPath -> entityWithPath.getParentConnections().stream()
+                .filter(connectable1 -> connectable1 != connectable).forEachOrdered(connectable1 -> {
                     if (!setPrimaryTo && !foundNewPrimary.get()) {
                         connectable1.setPrimary(true);
                         foundNewPrimary.set(true);
@@ -282,15 +280,19 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
         saveConnections(updatedConnectables);
 
-        updatedConnectables.forEach(updatedConnectable -> updatedConnectable.getConnectedChild().ifPresent(cachedUrlUpdaterService::updateCachedUrls));
+        updatedConnectables.forEach(updatedConnectable -> updatedConnectable.getConnectedChild()
+                .ifPresent(cachedUrlUpdaterService::updateCachedUrls));
 
         if (!setPrimaryTo && !foundNewPrimary.get()) {
-            throw new InvalidArgumentServiceException("Requested to set non-primary, but cannot find another node to set primary");
+            throw new InvalidArgumentServiceException(
+                    "Requested to set non-primary, but cannot find another node to set primary");
         }
     }
 
     private void updateRank(EntityWithPathConnection rankable, int newRank) {
-        final var updatedConnections = RankableConnectionUpdater.rank(new ArrayList<>(rankable.getConnectedParent().orElseThrow(() -> new IllegalStateException("Rankable parent not found")).getChildConnections()), rankable, newRank);
+        final var updatedConnections = RankableConnectionUpdater.rank(new ArrayList<>(rankable.getConnectedParent()
+                .orElseThrow(() -> new IllegalStateException("Rankable parent not found")).getChildConnections()),
+                rankable, newRank);
         saveConnections(updatedConnections);
     }
 
@@ -315,7 +317,8 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public void updateTopicResource(TopicResource topicResource, Relevance relevance, boolean isPrimary, Integer newRank) {
+    public void updateTopicResource(TopicResource topicResource, Relevance relevance, boolean isPrimary,
+            Integer newRank) {
         updateRankableConnection(topicResource, isPrimary, newRank);
         updateRelevance(topicResource, relevance);
     }
@@ -328,33 +331,31 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     @Override
     public void replacePrimaryConnectionsFor(EntityWithPath entity) {
-        entity.getChildConnections().stream()
-                .filter(connection -> connection.isPrimary().orElse(false))
+        entity.getChildConnections().stream().filter(connection -> connection.isPrimary().orElse(false))
                 .forEach(connection -> {
                     try {
                         updatePrimaryConnection(connection, false);
                     } catch (InvalidArgumentServiceException ignored) {
                     }
                 });
-
     }
 
     @Override
     public Collection<EntityWithPathConnection> getParentConnections(EntityWithPath entity) {
         // (applies to both getChildConnections and getParentConnections)
         //
-        // While this method will work on any objects implementing the EntityWithPath interface there is an
-        // optimized path for Topic objects that will perform better than just reading from the probably
+        // While this method will work on any objects implementing the EntityWithPath interface
+        // there is an
+        // optimized path for Topic objects that will perform better than just reading from the
+        // probably
         // lazy initialized properties of the object
 
         if (entity instanceof Topic) {
-            return Stream.concat(
-                    topicSubtopicRepository
-                            .findAllBySubtopicPublicIdIncludingTopicAndSubtopicAndCachedUrls(entity.getPublicId())
-                            .stream(),
+            return Stream.concat(topicSubtopicRepository
+                    .findAllBySubtopicPublicIdIncludingTopicAndSubtopicAndCachedUrls(entity.getPublicId()).stream(),
                     subjectTopicRepository
-                            .findAllByTopicPublicIdIncludingSubjectAndTopicAndCachedUrls(entity.getPublicId())
-                            .stream()).collect(Collectors.toUnmodifiableSet());
+                            .findAllByTopicPublicIdIncludingSubjectAndTopicAndCachedUrls(entity.getPublicId()).stream())
+                    .collect(Collectors.toUnmodifiableSet());
         }
 
         return entity.getParentConnections();
@@ -367,17 +368,16 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     @Override
     public void disconnectAllChildren(EntityWithPath entity) {
-        Set.copyOf(entity.getChildConnections())
-                .forEach(connection -> {
-                    if (connection instanceof SubjectTopic) {
-                        disconnectSubjectTopic((SubjectTopic) connection);
-                    } else if (connection instanceof TopicSubtopic) {
-                        disconnectTopicSubtopic((TopicSubtopic) connection);
-                    } else if (connection instanceof TopicResource) {
-                        disconnectTopicResource((TopicResource) connection);
-                    } else {
-                        throw new IllegalStateException("Unknown child object on entity trying to disconnect children from");
-                    }
-                });
+        Set.copyOf(entity.getChildConnections()).forEach(connection -> {
+            if (connection instanceof SubjectTopic) {
+                disconnectSubjectTopic((SubjectTopic) connection);
+            } else if (connection instanceof TopicSubtopic) {
+                disconnectTopicSubtopic((TopicSubtopic) connection);
+            } else if (connection instanceof TopicResource) {
+                disconnectTopicResource((TopicResource) connection);
+            } else {
+                throw new IllegalStateException("Unknown child object on entity trying to disconnect children from");
+            }
+        });
     }
 }

@@ -18,15 +18,11 @@ import java.util.Set;
 public interface ResourceService {
     void delete(URI id);
 
-    List<ResourceWithTopicConnectionDTO> getResourcesByTopicId(URI topicPublicId,
-                                                               URI filterBySubjectId,
-                                                               Set<URI> resourceTypeIds,
-                                                               URI relevancePublicId,
-                                                               String languageCode, boolean recursive);
+    List<ResourceWithTopicConnectionDTO> getResourcesByTopicId(URI topicPublicId, URI filterBySubjectId,
+            Set<URI> resourceTypeIds, URI relevancePublicId, String languageCode, boolean recursive);
 
-    List<ResourceWithTopicConnectionDTO> getResourcesBySubjectId(URI subjectPublicId,
-                                                                 Set<URI> resourceTypeIds, URI relevancePublicId,
-                                                                 String languageCode);
+    List<ResourceWithTopicConnectionDTO> getResourcesBySubjectId(URI subjectPublicId, Set<URI> resourceTypeIds,
+            URI relevancePublicId, String languageCode);
 
     ResourceDTO getResourceByPublicId(URI publicId, String languageCode);
 
@@ -34,5 +30,6 @@ public interface ResourceService {
 
     List<ResourceDTO> getResources(String languageCode, URI contentUriFilter);
 
-    List<ResourceDTO> getResources(String languageCode, URI contentUriFilter, MetadataKeyValueQuery metadataKeyValueQuery);
+    List<ResourceDTO> getResources(String languageCode, URI contentUriFilter,
+            MetadataKeyValueQuery metadataKeyValueQuery);
 }

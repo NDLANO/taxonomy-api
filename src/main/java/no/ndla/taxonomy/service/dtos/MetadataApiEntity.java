@@ -27,10 +27,9 @@ public class MetadataApiEntity {
 
     @JsonProperty
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Map<String,String> customFields;
+    private Map<String, String> customFields;
 
     public MetadataApiEntity() {
-
     }
 
     public MetadataApiEntity(MetadataDto entityMetadataObject) {
@@ -112,7 +111,6 @@ public class MetadataApiEntity {
         private String code;
 
         CompetenceAim() {
-
         }
 
         CompetenceAim(String code) {

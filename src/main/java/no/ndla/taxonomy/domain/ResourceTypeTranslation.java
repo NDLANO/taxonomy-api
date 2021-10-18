@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.domain;
 
-
 import javax.persistence.*;
 
 @Entity
@@ -39,7 +38,8 @@ public class ResourceTypeTranslation {
     }
 
     public void setResourceType(ResourceType resourceType) {
-        if (resourceType != this.resourceType && this.resourceType != null && this.resourceType.getTranslations().contains(this)) {
+        if (resourceType != this.resourceType && this.resourceType != null
+                && this.resourceType.getTranslations().contains(this)) {
             this.resourceType.removeTranslation(this);
         }
         this.resourceType = resourceType;
