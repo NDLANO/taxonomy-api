@@ -40,24 +40,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 /*
-Test controller only
-*/
+ * Test controller only
+ */
 public class UrlResolverMockTest {
-    @MockBean UrlResolverService urlResolverService;
+    @MockBean
+    UrlResolverService urlResolverService;
 
-    @MockBean JdbcTemplate jdbcTemplate;
+    @MockBean
+    JdbcTemplate jdbcTemplate;
 
-    @Autowired private MockMvc mvc;
+    @Autowired
+    private MockMvc mvc;
 
-    @Autowired private TestUtils testUtils;
+    @Autowired
+    private TestUtils testUtils;
 
     @Test
     public void resolveOldUrl404WhenNotImported() throws Exception {
         String oldUrl = "no/such/path";
 
         given(this.urlResolverService.resolveOldUrl(oldUrl)).willReturn(Optional.empty());
-        ResultActions result =
-                mvc.perform(get("/v1/url/mapping?url=" + oldUrl).accept(APPLICATION_JSON_UTF8));
+        ResultActions result = mvc.perform(get("/v1/url/mapping?url=" + oldUrl).accept(APPLICATION_JSON_UTF8));
 
         result.andExpect(status().isNotFound());
     }
@@ -68,13 +71,11 @@ public class UrlResolverMockTest {
         String newPath = "subject:11/topic:1:183926";
 
         given(this.urlResolverService.resolveOldUrl(oldUrl)).willReturn(Optional.of(newPath));
-        ResultActions result =
-                mvc.perform(get("/v1/url/mapping?url=" + oldUrl).accept(APPLICATION_JSON_UTF8));
+        ResultActions result = mvc.perform(get("/v1/url/mapping?url=" + oldUrl).accept(APPLICATION_JSON_UTF8));
 
         result.andExpect(status().isOk());
-        UrlResolver.ResolvedOldUrl resolvedOldUrl =
-                testUtils.getObject(
-                        UrlResolver.ResolvedOldUrl.class, result.andReturn().getResponse());
+        UrlResolver.ResolvedOldUrl resolvedOldUrl = testUtils.getObject(UrlResolver.ResolvedOldUrl.class,
+                result.andReturn().getResponse());
         assertEquals(newPath, resolvedOldUrl.path);
     }
 
@@ -84,15 +85,9 @@ public class UrlResolverMockTest {
         URI nodeId = new URI("urn:topic:1:183926");
         URI subjectId = new URI("urn:subject:11");
 
-        ResultActions result =
-                mvc.perform(
-                        put("/v1/url/mapping")
-                                .content(
-                                        new ObjectMapper()
-                                                .writeValueAsString(
-                                                        new UrlResolver.UrlMapping(
-                                                                oldUrl, nodeId, subjectId)))
-                                .contentType(MediaType.APPLICATION_JSON_UTF8));
+        ResultActions result = mvc.perform(put("/v1/url/mapping")
+                .content(new ObjectMapper().writeValueAsString(new UrlResolver.UrlMapping(oldUrl, nodeId, subjectId)))
+                .contentType(MediaType.APPLICATION_JSON_UTF8));
 
         result.andExpect(status().isNoContent());
         verify(this.urlResolverService, times(1)).putUrlMapping(oldUrl, nodeId, subjectId);
@@ -105,11 +100,9 @@ public class UrlResolverMockTest {
         urlMapping.nodeId = "b a d";
         urlMapping.subjectId = "b a d";
 
-        ResultActions result =
-                mvc.perform(
-                        put("/v1/url/mapping")
-                                .content(new ObjectMapper().writeValueAsString(urlMapping))
-                                .contentType(MediaType.APPLICATION_JSON_UTF8));
+        ResultActions result = mvc
+                .perform(put("/v1/url/mapping").content(new ObjectMapper().writeValueAsString(urlMapping))
+                        .contentType(MediaType.APPLICATION_JSON_UTF8));
 
         result.andExpect(status().isBadRequest());
     }
@@ -120,19 +113,12 @@ public class UrlResolverMockTest {
         URI nodeId = new URI("urn:topic:1:183926");
         URI subjectId = new URI("urn:subject:11");
 
-        doThrow(new UrlResolverService.NodeIdNotFoundExeption(""))
-                .when(this.urlResolverService)
-                .putUrlMapping(any(), any(), any());
+        doThrow(new UrlResolverService.NodeIdNotFoundExeption("")).when(this.urlResolverService).putUrlMapping(any(),
+                any(), any());
 
-        ResultActions result =
-                mvc.perform(
-                        put("/v1/url/mapping")
-                                .content(
-                                        new ObjectMapper()
-                                                .writeValueAsString(
-                                                        new UrlResolver.UrlMapping(
-                                                                oldUrl, nodeId, subjectId)))
-                                .contentType(MediaType.APPLICATION_JSON_UTF8));
+        ResultActions result = mvc.perform(put("/v1/url/mapping")
+                .content(new ObjectMapper().writeValueAsString(new UrlResolver.UrlMapping(oldUrl, nodeId, subjectId)))
+                .contentType(MediaType.APPLICATION_JSON_UTF8));
 
         result.andExpect(status().isNotFound());
     }

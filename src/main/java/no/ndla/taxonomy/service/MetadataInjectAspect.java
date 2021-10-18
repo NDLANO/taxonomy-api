@@ -43,7 +43,7 @@ public class MetadataInjectAspect {
     private Set<Field> getAllFieldsRecursively(Class<?> clazz) {
         final var fields = new HashSet<Field>();
 
-        //noinspection CollectionAddAllCanBeReplacedWithConstructor
+        // noinspection CollectionAddAllCanBeReplacedWithConstructor
         fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
 
         if (clazz.getSuperclass() != null) {
@@ -83,55 +83,48 @@ public class MetadataInjectAspect {
     }
 
     private Set<Field> getInjectMetadataAnnotatedFields(Class<?> clazz) {
-        return metadataInjectFields.computeIfAbsent(
-                clazz,
-                n -> {
-                    final var fields = new HashSet<Field>();
+        return metadataInjectFields.computeIfAbsent(clazz, n -> {
+            final var fields = new HashSet<Field>();
 
-                    for (var field : getAllFields(clazz)) {
-                        if (field.isAnnotationPresent(InjectMetadata.class)) {
-                            field.setAccessible(true);
-                            fields.add(field);
-                        }
-                    }
+            for (var field : getAllFields(clazz)) {
+                if (field.isAnnotationPresent(InjectMetadata.class)) {
+                    field.setAccessible(true);
+                    fields.add(field);
+                }
+            }
 
-                    return fields;
-                });
+            return fields;
+        });
     }
 
     private Set<Field> getMetadataIdAnnotatedFields(Class<?> clazz) {
-        return metadataIdFields.computeIfAbsent(
-                clazz,
-                n -> {
-                    final var fields = new HashSet<Field>();
+        return metadataIdFields.computeIfAbsent(clazz, n -> {
+            final var fields = new HashSet<Field>();
 
-                    for (var field : getAllFields(clazz)) {
-                        if (field.isAnnotationPresent(MetadataIdField.class)) {
-                            if (field.getType().equals(URI.class)) {
-                                field.setAccessible(true);
-                                fields.add(field);
-                            } else {
-                                log.warn("Metadata ID mapped field is not an URI");
-                            }
-                        }
+            for (var field : getAllFields(clazz)) {
+                if (field.isAnnotationPresent(MetadataIdField.class)) {
+                    if (field.getType().equals(URI.class)) {
+                        field.setAccessible(true);
+                        fields.add(field);
+                    } else {
+                        log.warn("Metadata ID mapped field is not an URI");
                     }
+                }
+            }
 
-                    return fields;
-                });
+            return fields;
+        });
     }
 
     private Optional<URI> getMetadataIdForSingleObject(Object object) {
 
-        return getMetadataIdAnnotatedFields(object.getClass()).stream()
-                .findFirst()
-                .map(
-                        field -> {
-                            try {
-                                return (URI) field.get(object);
-                            } catch (IllegalAccessException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
+        return getMetadataIdAnnotatedFields(object.getClass()).stream().findFirst().map(field -> {
+            try {
+                return (URI) field.get(object);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     private Set<URI> getMetadataIds(Object object) {
@@ -142,24 +135,19 @@ public class MetadataInjectAspect {
 
         if (object instanceof Collection<?>) {
 
-            return ((Collection<?>) object)
-                    .stream()
-                            .map(this::getMetadataIds)
-                            .flatMap(Collection::stream)
-                            .collect(Collectors.toSet());
+            return ((Collection<?>) object).stream().map(this::getMetadataIds).flatMap(Collection::stream)
+                    .collect(Collectors.toSet());
         }
 
         getMetadataIdForSingleObject(object).ifPresent(idList::add);
 
-        getInjectMetadataAnnotatedFields(object.getClass())
-                .forEach(
-                        field -> {
-                            try {
-                                idList.addAll(getMetadataIds(field.get(object)));
-                            } catch (IllegalAccessException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
+        getInjectMetadataAnnotatedFields(object.getClass()).forEach(field -> {
+            try {
+                idList.addAll(getMetadataIds(field.get(object)));
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         return idList;
     }
@@ -184,32 +172,22 @@ public class MetadataInjectAspect {
         }
 
         // Applies metadata to this object if a setMetadata method is found
-        getSetMetadataMethod(dto.getClass())
-                .ifPresent(
-                        setMetadata -> {
-                            getMetadataIdForSingleObject(dto)
-                                    .ifPresent(
-                                            id -> {
-                                                if (metadataDtos.containsKey(id.toString())) {
-                                                    try {
-                                                        setMetadata.invoke(
-                                                                dto,
-                                                                metadataDtos.get(id.toString()));
-                                                    } catch (IllegalAccessException
-                                                            | InvocationTargetException e) {
-                                                        throw new RuntimeException(e);
-                                                    }
-                                                }
-                                            });
-                        });
+        getSetMetadataMethod(dto.getClass()).ifPresent(setMetadata -> {
+            getMetadataIdForSingleObject(dto).ifPresent(id -> {
+                if (metadataDtos.containsKey(id.toString())) {
+                    try {
+                        setMetadata.invoke(dto, metadataDtos.get(id.toString()));
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+        });
     }
 
     private void injectMetadataIntoDtos(Object dtos, Set<MetadataDto> metadataDtos) {
-        final var metadataMap =
-                metadataDtos.stream()
-                        .collect(
-                                Collectors.toMap(
-                                        MetadataDto::getPublicId, metadataDto -> metadataDto));
+        final var metadataMap = metadataDtos.stream()
+                .collect(Collectors.toMap(MetadataDto::getPublicId, metadataDto -> metadataDto));
 
         if (dtos instanceof Collection<?>) {
             ((Collection<?>) dtos).forEach(dto -> injectMetadataIntoDto(dto, metadataMap));
@@ -221,9 +199,7 @@ public class MetadataInjectAspect {
         injectMetadataIntoDto(dtos, metadataMap);
     }
 
-    @AfterReturning(
-            value = "@annotation(no.ndla.taxonomy.service.InjectMetadata)",
-            returning = "returnValue")
+    @AfterReturning(value = "@annotation(no.ndla.taxonomy.service.InjectMetadata)", returning = "returnValue")
     public void injectMetadata(Object returnValue) {
         // First collect ALL ids we need to fetch metadata for
         final var idList = getMetadataIds(returnValue);
@@ -240,12 +216,10 @@ public class MetadataInjectAspect {
     }
 
     @Around(value = "@annotation(MetadataQuery) && args(.., metadataKeyValueQuery)")
-    public Object metadataQueryAndInject(
-            ProceedingJoinPoint pjp, MetadataKeyValueQuery metadataKeyValueQuery) throws Throwable {
-        metadataKeyValueQuery.setDtos(
-                new ArrayList(
-                        metadataApiService.getMetadataByKeyAndValue(
-                                metadataKeyValueQuery.getKey(), metadataKeyValueQuery.getValue())));
+    public Object metadataQueryAndInject(ProceedingJoinPoint pjp, MetadataKeyValueQuery metadataKeyValueQuery)
+            throws Throwable {
+        metadataKeyValueQuery.setDtos(new ArrayList(metadataApiService
+                .getMetadataByKeyAndValue(metadataKeyValueQuery.getKey(), metadataKeyValueQuery.getValue())));
         Object returnValue = pjp.proceed();
         postHandling(returnValue, metadataKeyValueQuery);
         return returnValue;

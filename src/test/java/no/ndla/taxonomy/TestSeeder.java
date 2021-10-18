@@ -16,10 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.net.URI;
 
 /**
- * This class replaces some SQL files that was used to seed the database for various tests. The SQL
- * statements has been rewritten as JPA so any in-application triggers can run.
+ * This class replaces some SQL files that was used to seed the database for various tests. The SQL statements has been
+ * rewritten as JPA so any in-application triggers can run.
  *
- * <p>Method names refers to the old SQL file name
+ * <p>
+ * Method names refers to the old SQL file name
  */
 @Transactional
 @Component
@@ -34,15 +35,10 @@ public class TestSeeder {
     private final TopicResourceRepository topicResourceRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public TestSeeder(
-            SubjectRepository subjectRepository,
-            TopicRepository topicRepository,
-            ResourceRepository resourceRepository,
-            RelevanceRepository relevanceRepository,
-            ResourceTypeRepository resourceTypeRepository,
-            SubjectTopicRepository subjectTopicRepository,
-            TopicSubtopicRepository topicSubtopicRepository,
-            TopicResourceRepository topicResourceRepository,
+    public TestSeeder(SubjectRepository subjectRepository, TopicRepository topicRepository,
+            ResourceRepository resourceRepository, RelevanceRepository relevanceRepository,
+            ResourceTypeRepository resourceTypeRepository, SubjectTopicRepository subjectTopicRepository,
+            TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository,
             CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
@@ -97,8 +93,7 @@ public class TestSeeder {
         return subject;
     }
 
-    private SubjectTopic createSubjectTopic(
-            String publicId, Topic topic, Subject subject, Integer rank) {
+    private SubjectTopic createSubjectTopic(String publicId, Topic topic, Subject subject, Integer rank) {
         final var subjectTopic = SubjectTopic.create(subject, topic);
 
         if (publicId != null) {
@@ -116,8 +111,7 @@ public class TestSeeder {
         return subjectTopic;
     }
 
-    private TopicSubtopic createTopicSubtopic(
-            String publicId, Topic topic, Topic subTopic, Integer rank) {
+    private TopicSubtopic createTopicSubtopic(String publicId, Topic topic, Topic subTopic, Integer rank) {
         final var topicSubtopic = TopicSubtopic.create(topic, subTopic);
 
         if (publicId != null) {
@@ -171,18 +165,13 @@ public class TestSeeder {
         return resource;
     }
 
-    private TopicResource createTopicResource(
-            String publicId, Topic topic, Resource resource, Boolean isPrimary, Integer rank) {
+    private TopicResource createTopicResource(String publicId, Topic topic, Resource resource, Boolean isPrimary,
+            Integer rank) {
         return createTopicResource(publicId, topic, resource, isPrimary, rank, null);
     }
 
-    private TopicResource createTopicResource(
-            String publicId,
-            Topic topic,
-            Resource resource,
-            Boolean isPrimary,
-            Integer rank,
-            Relevance relevance) {
+    private TopicResource createTopicResource(String publicId, Topic topic, Resource resource, Boolean isPrimary,
+            Integer rank, Relevance relevance) {
         final var topicResource = TopicResource.create(topic, resource);
 
         if (publicId != null) {
@@ -222,8 +211,8 @@ public class TestSeeder {
         return resourceTypeRepository.save(resourceType);
     }
 
-    private ResourceResourceType createResourceResourceType(
-            String publicId, Resource resource, ResourceType resourceType) {
+    private ResourceResourceType createResourceResourceType(String publicId, Resource resource,
+            ResourceType resourceType) {
         final var resourceResourceType = ResourceResourceType.create(resource, resourceType);
 
         if (publicId != null) {
@@ -246,14 +235,14 @@ public class TestSeeder {
         // (S=subject, ST = subject-topic, TST = topic-subtopic, F=Filter)
 
         // S:1
-        //   - ST:1 (F:1)
-        //        - TST: 1-1 (F:1)
-        //   - ST:2 (F:2)
-        //        - TST:2-1 (F:2)
-        //   - ST:3 (F:1)
-        //        - TST:3-1 (F:1)
-        //        - TST:3-2 (F:1)
-        //        - TST:3-3 (F:2)
+        // - ST:1 (F:1)
+        // - TST: 1-1 (F:1)
+        // - ST:2 (F:2)
+        // - TST:2-1 (F:2)
+        // - ST:3 (F:1)
+        // - TST:3-1 (F:1)
+        // - TST:3-2 (F:1)
+        // - TST:3-3 (F:2)
 
         // NOTE ST:3 does not have F:2 but should "inherit" it because one of the subtopics has F:2
 
@@ -288,14 +277,14 @@ public class TestSeeder {
         // (S=subject, ST = subject-topic, TST = topic-subtopic)
 
         // S:1
-        //   - ST:1
-        //        - TST: 1-1
-        //   - ST:2
-        //        - TST:2-1
-        //   - ST:3
-        //        - TST:3-1
-        //        - TST:3-2
-        //        - TST:3-3
+        // - ST:1
+        // - TST: 1-1
+        // - ST:2
+        // - TST:2-1
+        // - ST:3
+        // - TST:3-1
+        // - TST:3-2
+        // - TST:3-3
 
         clearAll();
 
@@ -340,13 +329,13 @@ public class TestSeeder {
     }
 
     public void resourceWithFilterAndTypeTestSetup() {
-        //  create a test structure with subjects, topics, and resources as follows
+        // create a test structure with subjects, topics, and resources as follows
         // (S=subject, ST = subject-topic, TST = topic-subtopic, R = resource, F = filter)
         //
         // S:1
-        //   - ST:1
-        //      - R:1
-        //      - R:2
+        // - ST:1
+        // - R:1
+        // - R:2
 
         clearAll();
 
@@ -375,9 +364,9 @@ public class TestSeeder {
         // (S=subject, ST = subject-topic, TST = topic-subtopic, R = resource, F = filter)
         //
         // S:1
-        //   - ST:1
-        //      - R:1
-        //      - R:2
+        // - ST:1
+        // - R:1
+        // - R:2
         //
 
         clearAll();
@@ -418,9 +407,9 @@ public class TestSeeder {
         // (S=subject, ST = subject-topic, TST = topic-subtopic, R = resource, F = filter)
         //
         // S:1
-        //   - ST:1
-        //      - R:1
-        //      - R:2
+        // - ST:1
+        // - R:1
+        // - R:2
         //
         // New: Now with 100% less filters!: Split in two subjects based on the filters with
         // a cloned topic structure, but shared resources.
@@ -471,9 +460,9 @@ public class TestSeeder {
         // (S=subject, ST = subject-topic, TST = topic-subtopic, R = resource, F = filter)
         //
         // S:1
-        //   - ST:1
-        //      - R:1
-        //      - R:2
+        // - ST:1
+        // - R:1
+        // - R:2
         //
         // New: Now with 100% less filters!: Split in two subjects based on the filters with
         // a cloned topic structure, but shared resources.
@@ -524,25 +513,25 @@ public class TestSeeder {
         // (S=subject, ST = subject-topic, TST = topic-subtopic, R = resource, F = filter)
         //
         // S:1
-        //   - ST:1
-        //      - R:9 (F:1)
-        //        - TST: 1-1
-        //            - R:1 (F:1)
-        //   - ST:2
-        //        - TST:2-1
-        //            - R:2 (F:2)
-        //            - TST: 2-1-1
-        //                  - R:10 (F:2)
-        //   - ST:3
-        //        - TST:3-1
-        //            - R:3 (F:1)
-        //            - R:5 (F:1)
-        //            - R:4 (F:2)
-        //        - TST:3-2
-        //            - R:6 (F:2)
-        //        - TST:3-3
-        //            - R:7 (F:1)
-        //            - R:8 (F:2)
+        // - ST:1
+        // - R:9 (F:1)
+        // - TST: 1-1
+        // - R:1 (F:1)
+        // - ST:2
+        // - TST:2-1
+        // - R:2 (F:2)
+        // - TST: 2-1-1
+        // - R:10 (F:2)
+        // - ST:3
+        // - TST:3-1
+        // - R:3 (F:1)
+        // - R:5 (F:1)
+        // - R:4 (F:2)
+        // - TST:3-2
+        // - R:6 (F:2)
+        // - TST:3-3
+        // - R:7 (F:1)
+        // - R:8 (F:2)
         //
 
         clearAll();
@@ -598,13 +587,13 @@ public class TestSeeder {
     public void subtopicsByTopicIdAndFiltersTestSetup() {
         // Creates subtopics with different filters
         //
-        // Subjects       S:1
-        //                   \
-        //                    \
-        // Parent topic       T1 (has filter F:1 and F:2)
-        //                     |
-        // Subtopics     T1-1, T1-2, T1-3 (have filter F:1),
-        //               T1-4, T1-5, T1-6, T1-7 (have filter F:2)
+        // Subjects S:1
+        // \
+        // \
+        // Parent topic T1 (has filter F:1 and F:2)
+        // |
+        // Subtopics T1-1, T1-2, T1-3 (have filter F:1),
+        // T1-4, T1-5, T1-6, T1-7 (have filter F:2)
         //
 
         clearAll();
@@ -636,13 +625,13 @@ public class TestSeeder {
     public void topicConnectionsTestSetup() {
         // create a test structure with subjects, topics and subtopics as follows
         //
-        //         S:1
-        //           \
-        //            T:1
-        //              \
-        //                T:2
-        //                /  \
-        //             T:3   T:4
+        // S:1
+        // \
+        // T:1
+        // \
+        // T:2
+        // / \
+        // T:3 T:4
         //
 
         clearAll();

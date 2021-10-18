@@ -37,8 +37,7 @@ public abstract class CrudController<T extends DomainObject> {
     private static final Map<Class<?>, String> locations = new HashMap<>();
     private final URNValidator validator = new URNValidator();
 
-    protected CrudController(
-            TaxonomyRepository<T> repository, CachedUrlUpdaterService cachedUrlUpdaterService) {
+    protected CrudController(TaxonomyRepository<T> repository, CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.repository = repository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
@@ -72,12 +71,10 @@ public abstract class CrudController<T extends DomainObject> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     protected ResponseEntity<Void> doPost(T entity, UpdatableDto<T> command) {
         try {
-            command.getId()
-                    .ifPresent(
-                            id -> {
-                                validator.validate(id, entity);
-                                entity.setPublicId(id);
-                            });
+            command.getId().ifPresent(id -> {
+                validator.validate(id, entity);
+                entity.setPublicId(id);
+            });
 
             command.apply(entity);
             URI location = URI.create(getLocation() + "/" + entity.getPublicId());
@@ -89,18 +86,15 @@ public abstract class CrudController<T extends DomainObject> {
 
             return ResponseEntity.created(location).build();
         } catch (DataIntegrityViolationException e) {
-            command.getId()
-                    .ifPresent(
-                            id -> {
-                                throw new DuplicateIdException(id.toString());
-                            });
+            command.getId().ifPresent(id -> {
+                throw new DuplicateIdException(id.toString());
+            });
 
             throw new DuplicateIdException();
         }
     }
 
     protected String getLocation() {
-        return locations.computeIfAbsent(
-                getClass(), aClass -> aClass.getAnnotation(RequestMapping.class).path()[0]);
+        return locations.computeIfAbsent(getClass(), aClass -> aClass.getAnnotation(RequestMapping.class).path()[0]);
     }
 }

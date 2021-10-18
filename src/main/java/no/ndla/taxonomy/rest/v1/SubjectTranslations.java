@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = {"/v1/subjects/{id}/translations"})
+@RequestMapping(path = { "/v1/subjects/{id}/translations" })
 @Transactional
 public class SubjectTranslations {
     private final SubjectRepository subjectRepository;
@@ -43,36 +43,22 @@ public class SubjectTranslations {
     public List<SubjectTranslationIndexDocument> index(@PathVariable("id") URI id) {
         Subject subject = subjectRepository.getByPublicId(id);
         List<SubjectTranslationIndexDocument> result = new ArrayList<>();
-        subject.getTranslations()
-                .forEach(
-                        t ->
-                                result.add(
-                                        new SubjectTranslationIndexDocument() {
-                                            {
-                                                name = t.getName();
-                                                language = t.getLanguageCode();
-                                            }
-                                        }));
+        subject.getTranslations().forEach(t -> result.add(new SubjectTranslationIndexDocument() {
+            {
+                name = t.getName();
+                language = t.getLanguageCode();
+            }
+        }));
         return result;
     }
 
     @GetMapping("/{language}")
     @ApiOperation("Gets a single translation for a single subject")
-    public SubjectTranslationIndexDocument get(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-                    @PathVariable("language")
-                    String language) {
+    public SubjectTranslationIndexDocument get(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Subject subject = subjectRepository.getByPublicId(id);
-        SubjectTranslation translation =
-                subject.getTranslation(language)
-                        .orElseThrow(
-                                () ->
-                                        new NotFoundException(
-                                                "translation with language code "
-                                                        + language
-                                                        + " for subject",
-                                                id));
+        SubjectTranslation translation = subject.getTranslation(language).orElseThrow(
+                () -> new NotFoundException("translation with language code " + language + " for subject", id));
 
         return new SubjectTranslationIndexDocument() {
             {
@@ -86,31 +72,22 @@ public class SubjectTranslations {
     @ApiOperation("Deletes a translation")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void delete(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-                    @PathVariable("language")
-                    String language) {
+    public void delete(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Subject subject = subjectRepository.getByPublicId(id);
-        subject.getTranslation(language)
-                .ifPresent(
-                        (translation) -> {
-                            subject.removeTranslation(language);
-                            entityManager.remove(translation);
-                        });
+        subject.getTranslation(language).ifPresent((translation) -> {
+            subject.removeTranslation(language);
+            entityManager.remove(translation);
+        });
     }
 
     @PutMapping("/{language}")
     @ApiOperation("Creates or updates a translation of a subject")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void put(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-                    @PathVariable("language")
-                    String language,
-            @ApiParam(name = "subject", value = "The new or updated translation") @RequestBody
-                    UpdateSubjectTranslationCommand command) {
+    public void put(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
+            @ApiParam(name = "subject", value = "The new or updated translation") @RequestBody UpdateSubjectTranslationCommand command) {
         Subject subject = subjectRepository.getByPublicId(id);
         SubjectTranslation translation = subject.addTranslation(language);
         entityManager.persist(translation);

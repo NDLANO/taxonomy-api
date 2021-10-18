@@ -39,10 +39,7 @@ public class RelevanceTest {
         var returnedTranslation2 = relevance.addTranslation("en");
         assertEquals(2, ((Collection) getField(relevance, "translations")).size());
         assertEquals("en", returnedTranslation2.getLanguageCode());
-        assertTrue(
-                relevance
-                        .getTranslations()
-                        .containsAll(Set.of(returnedTranslation, returnedTranslation2)));
+        assertTrue(relevance.getTranslations().containsAll(Set.of(returnedTranslation, returnedTranslation2)));
         assertEquals(relevance, returnedTranslation2.getRelevance());
 
         relevance.removeTranslation("nb");

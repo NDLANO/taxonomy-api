@@ -37,18 +37,11 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ResourceService resourceService;
 
-    public Resources(
-            ResourceRepository resourceRepository,
-            ResourceResourceTypeRepository resourceResourceTypeRepository,
-            ResourceService resourceService,
-            CachedUrlUpdaterService cachedUrlUpdaterService,
-            MetadataApiService metadataApiService,
+    public Resources(ResourceRepository resourceRepository,
+            ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceService resourceService,
+            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataApiService metadataApiService,
             MetadataUpdateService metadataUpdateService) {
-        super(
-                resourceRepository,
-                cachedUrlUpdaterService,
-                metadataApiService,
-                metadataUpdateService);
+        super(resourceRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.repository = resourceRepository;
@@ -64,36 +57,24 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @ApiOperation(value = "Lists all resources")
     @Transactional(readOnly = true)
     public List<ResourceDTO> index(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb")
-                    @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language,
-            @RequestParam(value = "contentURI", required = false)
-                    @ApiParam(value = "Filter by contentUri")
-                    URI contentUriFilter,
-            @ApiParam(value = "Filter by key and value")
-                    @RequestParam(value = "key", required = false)
-                    String key,
-            @ApiParam(value = "Fitler by key and value")
-                    @RequestParam(value = "value", required = false)
-                    String value) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
+            @RequestParam(value = "contentURI", required = false) @ApiParam(value = "Filter by contentUri") URI contentUriFilter,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
+            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) String value) {
         if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
             contentUriFilter = null;
         }
 
         if (key != null) {
-            return resourceService.getResources(
-                    language, contentUriFilter, new MetadataKeyValueQuery(key, value));
+            return resourceService.getResources(language, contentUriFilter, new MetadataKeyValueQuery(key, value));
         }
         return resourceService.getResources(language, contentUriFilter);
     }
 
     @GetMapping("{id}")
     @ApiOperation(value = "Gets a single resource")
-    public ResourceDTO get(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb")
-                    @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language) {
+    public ResourceDTO get(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
         return resourceService.getResourceByPublicId(id, language);
     }
@@ -103,14 +84,8 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(
-            @PathVariable("id") URI id,
-            @ApiParam(
-                            name = "resource",
-                            value =
-                                    "the updated resource. Fields not included will be set to null.")
-                    @RequestBody
-                    ResourceCommand command) {
+    public void put(@PathVariable("id") URI id,
+            @ApiParam(name = "resource", value = "the updated resource. Fields not included will be set to null.") @RequestBody ResourceCommand command) {
         doPut(id, command);
     }
 
@@ -119,37 +94,27 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @ApiParam(name = "resource", value = "the new resource") @RequestBody
-                    ResourceCommand command) {
+            @ApiParam(name = "resource", value = "the new resource") @RequestBody ResourceCommand command) {
         return doPost(new Resource(), command);
     }
 
     @GetMapping("{id}/resource-types")
     @ApiOperation(value = "Gets all resource types associated with this resource")
     @Transactional(readOnly = true)
-    public List<ResourceTypeWithConnectionDTO> getResourceTypes(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb")
-                    @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language) {
+    public List<ResourceTypeWithConnectionDTO> getResourceTypes(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
         return resourceResourceTypeRepository
-                .findAllByResourcePublicIdIncludingResourceAndResourceTypeAndResourceTypeParent(id)
-                .stream()
-                .map(
-                        resourceResourceType ->
-                                new ResourceTypeWithConnectionDTO(resourceResourceType, language))
+                .findAllByResourcePublicIdIncludingResourceAndResourceTypeAndResourceTypeParent(id).stream()
+                .map(resourceResourceType -> new ResourceTypeWithConnectionDTO(resourceResourceType, language))
                 .collect(Collectors.toList());
     }
 
     @GetMapping("{id}/full")
     @ApiOperation(value = "Gets all parent topics, all filters and resourceTypes for this resource")
     @Transactional(readOnly = true)
-    public ResourceWithParentTopicsDTO getResourceFull(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb")
-                    @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language) {
+    public ResourceWithParentTopicsDTO getResourceFull(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return resourceService.getResourceWithParentTopicsByPublicId(id, language);
     }
 

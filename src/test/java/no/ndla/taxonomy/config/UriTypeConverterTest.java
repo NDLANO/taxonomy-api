@@ -26,14 +26,12 @@ class UriTypeConverterTest {
     @Test
     void convertToDatabaseColumn() {
         assertNull(uriTypeConverter.convertToDatabaseColumn(null));
-        assertEquals(
-                "urn:test:1", uriTypeConverter.convertToDatabaseColumn(URI.create("urn:test:1")));
+        assertEquals("urn:test:1", uriTypeConverter.convertToDatabaseColumn(URI.create("urn:test:1")));
     }
 
     @Test
     void convertToEntityAttribute() {
         assertNull(uriTypeConverter.convertToEntityAttribute(null));
-        assertEquals(
-                URI.create("urn:test:1"), uriTypeConverter.convertToEntityAttribute("urn:test:1"));
+        assertEquals(URI.create("urn:test:1"), uriTypeConverter.convertToEntityAttribute("urn:test:1"));
     }
 }

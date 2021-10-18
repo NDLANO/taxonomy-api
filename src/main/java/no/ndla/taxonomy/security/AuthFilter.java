@@ -64,20 +64,17 @@ public class AuthFilter extends GenericFilterBean {
     }
 
     @Override
-    public void doFilter(
-            ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException {
         try {
             parseWebToken((HttpServletRequest) servletRequest);
             filterChain.doFilter(servletRequest, servletResponse);
         } catch (TokenExpiredException ex) {
             LOGGER.error("Remote host: " + servletRequest.getRemoteAddr() + " " + ex.getMessage());
-            ((HttpServletResponse) servletResponse)
-                    .sendError(HttpServletResponse.SC_UNAUTHORIZED, ex.getMessage());
+            ((HttpServletResponse) servletResponse).sendError(HttpServletResponse.SC_UNAUTHORIZED, ex.getMessage());
         } catch (Exception ex) {
             LOGGER.error("Remote host: " + servletRequest.getRemoteAddr() + " " + ex.getMessage());
-            ((HttpServletResponse) servletResponse)
-                    .sendError(HttpServletResponse.SC_BAD_REQUEST, ex.getMessage());
+            ((HttpServletResponse) servletResponse).sendError(HttpServletResponse.SC_BAD_REQUEST, ex.getMessage());
         }
     }
 
@@ -85,9 +82,7 @@ public class AuthFilter extends GenericFilterBean {
         String authorizationHeader = request.getHeader("authorization");
         if (!isBlank(authorizationHeader) && (authorizationHeader.startsWith("Bearer"))) {
             SecurityContextHolder.getContext()
-                    .setAuthentication(
-                            new JWTAuthentication(
-                                    verifyWebToken(authorizationHeader.substring(6).trim())));
+                    .setAuthentication(new JWTAuthentication(verifyWebToken(authorizationHeader.substring(6).trim())));
         }
     }
 

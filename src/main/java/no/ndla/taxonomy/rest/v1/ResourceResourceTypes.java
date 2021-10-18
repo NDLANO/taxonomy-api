@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = {"/v1/resource-resourcetypes"})
+@RequestMapping(path = { "/v1/resource-resourcetypes" })
 @Transactional
 public class ResourceResourceTypes {
 
@@ -37,10 +37,8 @@ public class ResourceResourceTypes {
     private final ResourceTypeRepository resourceTypeRepository;
     private final ResourceRepository resourceRepository;
 
-    public ResourceResourceTypes(
-            ResourceResourceTypeRepository resourceResourceTypeRepository,
-            ResourceTypeRepository resourceTypeRepository,
-            ResourceRepository resourceRepository) {
+    public ResourceResourceTypes(ResourceResourceTypeRepository resourceResourceTypeRepository,
+            ResourceTypeRepository resourceTypeRepository, ResourceRepository resourceRepository) {
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceTypeRepository = resourceTypeRepository;
         this.resourceRepository = resourceRepository;
@@ -50,9 +48,7 @@ public class ResourceResourceTypes {
     @ApiOperation(value = "Adds a resource type to a resource")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "connection", value = "The new resource/resource type connection")
-                    @RequestBody
-                    CreateResourceResourceTypeCommand command) {
+            @ApiParam(name = "connection", value = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) {
 
         Resource resource = resourceRepository.getByPublicId(command.resourceId);
         ResourceType resourceType = resourceTypeRepository.getByPublicId(command.resourceTypeId);
@@ -64,7 +60,7 @@ public class ResourceResourceTypes {
         return ResponseEntity.created(location).build();
     }
 
-    @DeleteMapping({"/{id}"})
+    @DeleteMapping({ "/{id}" })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation("Removes a resource type from a resource")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -77,11 +73,10 @@ public class ResourceResourceTypes {
     @ApiOperation("Gets all connections between resources and resource types")
     public List<ResourceResourceTypeIndexDocument> index() {
         return resourceResourceTypeRepository.findAllIncludingResourceAndResourceType().stream()
-                .map(ResourceResourceTypeIndexDocument::new)
-                .collect(Collectors.toList());
+                .map(ResourceResourceTypeIndexDocument::new).collect(Collectors.toList());
     }
 
-    @GetMapping({"/{id}"})
+    @GetMapping({ "/{id}" })
     @ApiOperation("Gets a single connection between resource and resource type")
     public ResourceResourceTypeIndexDocument get(@PathVariable("id") URI id) {
         ResourceResourceType result = resourceResourceTypeRepository.getByPublicId(id);
@@ -94,10 +89,7 @@ public class ResourceResourceTypes {
         URI resourceId;
 
         @JsonProperty
-        @ApiModelProperty(
-                required = true,
-                value = "Resource type id",
-                example = "urn:resourcetype:234")
+        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resourcetype:234")
         URI resourceTypeId;
     }
 
@@ -108,20 +100,15 @@ public class ResourceResourceTypes {
         URI resourceId;
 
         @JsonProperty
-        @ApiModelProperty(
-                required = true,
-                value = "Resource type id",
-                example = "urn:resourcetype:234")
+        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resourcetype:234")
         URI resourceTypeId;
 
         @JsonProperty
-        @ApiModelProperty(
-                required = true,
-                value = "Resource to resource type connection id",
-                example = "urn:resource-has-resourcetypes:12")
+        @ApiModelProperty(required = true, value = "Resource to resource type connection id", example = "urn:resource-has-resourcetypes:12")
         URI id;
 
-        public ResourceResourceTypeIndexDocument() {}
+        public ResourceResourceTypeIndexDocument() {
+        }
 
         public ResourceResourceTypeIndexDocument(ResourceResourceType resourceResourceType) {
             id = resourceResourceType.getPublicId();

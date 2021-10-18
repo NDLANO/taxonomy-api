@@ -18,10 +18,6 @@ public interface RelevanceRepository extends TaxonomyRepository<Relevance> {
     @Query("SELECT r" + "   FROM Relevance r" + "   LEFT JOIN FETCH r.translations")
     Set<Relevance> findAllIncludingTranslations();
 
-    @Query(
-            "SELECT r"
-                    + "   FROM Relevance r"
-                    + "   LEFT JOIN FETCH r.translations"
-                    + "   WHERE r.publicId = :publicId")
+    @Query("SELECT r" + "   FROM Relevance r" + "   LEFT JOIN FETCH r.translations" + "   WHERE r.publicId = :publicId")
     Optional<Relevance> findFirstByPublicIdIncludingTranslations(URI publicId);
 }

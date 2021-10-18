@@ -26,7 +26,7 @@ public class SubjectTopic extends DomainEntity implements EntityWithPathConnecti
     @Column(name = "rank")
     private int rank;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE})
+    @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE })
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 

@@ -14,7 +14,8 @@ import java.util.stream.Collectors;
 
 @Entity
 public class Subject extends EntityWithPath {
-    @Column private URI contentUri;
+    @Column
+    private URI contentUri;
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SubjectTopic> subjectTopics = new HashSet<>();
@@ -48,8 +49,7 @@ public class Subject extends EntityWithPath {
         this.subjectTopics.add(subjectTopic);
 
         if (subjectTopic.getSubject().orElse(null) != this) {
-            throw new IllegalArgumentException(
-                    "Subject must be set on SubjectTopic before associating with Subject");
+            throw new IllegalArgumentException("Subject must be set on SubjectTopic before associating with Subject");
         }
     }
 
@@ -66,16 +66,14 @@ public class Subject extends EntityWithPath {
     }
 
     public Collection<Topic> getTopics() {
-        return subjectTopics.stream()
-                .map(SubjectTopic::getTopic)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+        return subjectTopics.stream().map(SubjectTopic::getTopic).filter(Optional::isPresent).map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     public SubjectTranslation addTranslation(String languageCode) {
         SubjectTranslation subjectTranslation = getTranslation(languageCode).orElse(null);
-        if (subjectTranslation != null) return subjectTranslation;
+        if (subjectTranslation != null)
+            return subjectTranslation;
 
         subjectTranslation = new SubjectTranslation(this, languageCode);
         translations.add(subjectTranslation);
@@ -84,10 +82,7 @@ public class Subject extends EntityWithPath {
 
     public Optional<SubjectTranslation> getTranslation(String languageCode) {
         return translations.stream()
-                .filter(
-                        subjectTranslation ->
-                                subjectTranslation.getLanguageCode().equals(languageCode))
-                .findFirst();
+                .filter(subjectTranslation -> subjectTranslation.getLanguageCode().equals(languageCode)).findFirst();
     }
 
     public Set<SubjectTranslation> getTranslations() {

@@ -19,8 +19,7 @@ public class MetadataApiConfig {
     private final String serviceUrl;
     private final int clientPoolSize;
 
-    public MetadataApiConfig(
-            @Value("${ndla.taxonomy-metadata.url}") String serviceUrl,
+    public MetadataApiConfig(@Value("${ndla.taxonomy-metadata.url}") String serviceUrl,
             @Value("${ndla.taxonomy-metadata.client-pool-size:10}") int clientPoolSize) {
         this.serviceUrl = serviceUrl;
         this.clientPoolSize = clientPoolSize;

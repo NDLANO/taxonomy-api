@@ -30,10 +30,12 @@ public class V21__RecanonifyUrlMap implements CustomSqlChange {
     }
 
     @Override
-    public void setUp() {}
+    public void setUp() {
+    }
 
     @Override
-    public void setFileOpener(ResourceAccessor resourceAccessor) {}
+    public void setFileOpener(ResourceAccessor resourceAccessor) {
+    }
 
     @Override
     public ValidationErrors validate(Database database) {
@@ -49,19 +51,15 @@ public class V21__RecanonifyUrlMap implements CustomSqlChange {
         JdbcConnection connection = (JdbcConnection) database.getConnection();
 
         try {
-            ResultSet result =
-                    connection.prepareStatement("SELECT old_url from URL_MAP").executeQuery();
+            ResultSet result = connection.prepareStatement("SELECT old_url from URL_MAP").executeQuery();
             if (result != null) {
                 while (result.next()) {
                     String oldUrl = result.getString(1);
                     String canonified = canonifier.canonify(oldUrl);
 
-                    String updateQuery =
-                            "update URL_MAP"
-                                    + "               set old_url = "
-                                    + database.escapeStringForDatabase(canonified)
-                                    + "               where old_url = "
-                                    + database.escapeStringForDatabase(oldUrl);
+                    String updateQuery = "update URL_MAP" + "               set old_url = "
+                            + database.escapeStringForDatabase(canonified) + "               where old_url = "
+                            + database.escapeStringForDatabase(oldUrl);
 
                     statementsToReturn.add(new RawSqlStatement(updateQuery));
                 }

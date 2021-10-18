@@ -29,7 +29,8 @@ public class Relevance extends DomainObject {
 
     public RelevanceTranslation addTranslation(String languageCode) {
         RelevanceTranslation relevanceTranslation = getTranslation(languageCode).orElse(null);
-        if (relevanceTranslation != null) return relevanceTranslation;
+        if (relevanceTranslation != null)
+            return relevanceTranslation;
 
         relevanceTranslation = new RelevanceTranslation(this, languageCode);
         translations.add(relevanceTranslation);
@@ -42,9 +43,7 @@ public class Relevance extends DomainObject {
 
     public Optional<RelevanceTranslation> getTranslation(String languageCode) {
         return translations.stream()
-                .filter(
-                        relevanceTranslation ->
-                                relevanceTranslation.getLanguageCode().equals(languageCode))
+                .filter(relevanceTranslation -> relevanceTranslation.getLanguageCode().equals(languageCode))
                 .findFirst();
     }
 

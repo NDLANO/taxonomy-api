@@ -54,8 +54,7 @@ public class EntityWithPathTest {
 
         when(entityWithPath.getCachedPaths()).thenReturn(Set.of(cachedUrl1, cachedUrl2));
         assertFalse(entityWithPath.getPrimaryPath().isPresent());
-        when(entityWithPath.getCachedPaths())
-                .thenReturn(Set.of(cachedUrl1, cachedUrl2, cachedUrl3));
+        when(entityWithPath.getCachedPaths()).thenReturn(Set.of(cachedUrl1, cachedUrl2, cachedUrl3));
         assertTrue(entityWithPath.getPrimaryPath().isPresent());
         assertEquals("/path3", entityWithPath.getPrimaryPath().get());
     }
@@ -99,8 +98,7 @@ public class EntityWithPathTest {
         assertEquals("/context3/path1", entityWithPath.getPathByContext(context3).get());
         assertEquals("/context4/path1", entityWithPath.getPathByContext(context4).get());
         assertTrue(
-                Set.of("/context2/path1", "/context3/path1")
-                        .contains(entityWithPath.getPathByContext(context5).get()));
+                Set.of("/context2/path1", "/context3/path1").contains(entityWithPath.getPathByContext(context5).get()));
     }
 
     @Test
@@ -123,8 +121,7 @@ public class EntityWithPathTest {
         when(cachedUrl3.isActive()).thenReturn(true);
         when(cachedUrl4.isActive()).thenReturn(false);
 
-        when(entityWithPath.getCachedPaths())
-                .thenReturn(Set.of(cachedUrl1, cachedUrl2, cachedUrl3, cachedUrl4));
+        when(entityWithPath.getCachedPaths()).thenReturn(Set.of(cachedUrl1, cachedUrl2, cachedUrl3, cachedUrl4));
 
         final var allPaths = entityWithPath.getAllPaths();
 

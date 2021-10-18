@@ -18,7 +18,8 @@ import java.util.stream.Collectors;
 @Entity
 public class Resource extends EntityWithPath {
 
-    @Column private URI contentUri;
+    @Column
+    private URI contentUri;
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
@@ -52,25 +53,19 @@ public class Resource extends EntityWithPath {
     }
 
     public Collection<Topic> getTopics() {
-        return getTopicResources().stream()
-                .map(TopicResource::getTopic)
-                .map(Optional::get)
+        return getTopicResources().stream().map(TopicResource::getTopic).map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     public Collection<ResourceType> getResourceTypes() {
-        return getResourceResourceTypes().stream()
-                .map(ResourceResourceType::getResourceType)
+        return getResourceResourceTypes().stream().map(ResourceResourceType::getResourceType)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     public ResourceResourceType addResourceType(ResourceType resourceType) {
         if (getResourceTypes().contains(resourceType)) {
-            throw new DuplicateIdException(
-                    "Resource with id "
-                            + getPublicId()
-                            + " is already marked with resource type with id "
-                            + resourceType.getPublicId());
+            throw new DuplicateIdException("Resource with id " + getPublicId()
+                    + " is already marked with resource type with id " + resourceType.getPublicId());
         }
 
         ResourceResourceType resourceResourceType = ResourceResourceType.create(this, resourceType);
@@ -105,7 +100,8 @@ public class Resource extends EntityWithPath {
 
     public ResourceTranslation addTranslation(String languageCode) {
         ResourceTranslation resourceTranslation = getTranslation(languageCode).orElse(null);
-        if (resourceTranslation != null) return resourceTranslation;
+        if (resourceTranslation != null)
+            return resourceTranslation;
 
         resourceTranslation = new ResourceTranslation(this, languageCode);
         resourceTranslations.add(resourceTranslation);
@@ -114,10 +110,7 @@ public class Resource extends EntityWithPath {
 
     public Optional<ResourceTranslation> getTranslation(String languageCode) {
         return resourceTranslations.stream()
-                .filter(
-                        resourceTranslation ->
-                                resourceTranslation.getLanguageCode().equals(languageCode))
-                .findFirst();
+                .filter(resourceTranslation -> resourceTranslation.getLanguageCode().equals(languageCode)).findFirst();
     }
 
     public Set<ResourceTranslation> getTranslations() {
@@ -146,7 +139,8 @@ public class Resource extends EntityWithPath {
 
     public Optional<Topic> getPrimaryTopic() {
         for (TopicResource topic : topics) {
-            if (topic.isPrimary().orElseThrow()) return topic.getTopic();
+            if (topic.isPrimary().orElseThrow())
+                return topic.getTopic();
         }
         return Optional.empty();
     }
@@ -155,10 +149,7 @@ public class Resource extends EntityWithPath {
         ResourceResourceType resourceResourceType = getResourceType(resourceType);
         if (resourceResourceType == null)
             throw new ChildNotFoundException(
-                    "Resource with id "
-                            + this.getPublicId()
-                            + " is not of type "
-                            + resourceType.getPublicId());
+                    "Resource with id " + this.getPublicId() + " is not of type " + resourceType.getPublicId());
 
         resourceResourceTypes.remove(resourceResourceType);
     }
@@ -191,8 +182,7 @@ public class Resource extends EntityWithPath {
         this.topics.add(topicResource);
 
         if (topicResource.getResource().orElse(null) != this) {
-            throw new IllegalArgumentException(
-                    "TopicResource must have Resource relation set before adding");
+            throw new IllegalArgumentException("TopicResource must have Resource relation set before adding");
         }
     }
 

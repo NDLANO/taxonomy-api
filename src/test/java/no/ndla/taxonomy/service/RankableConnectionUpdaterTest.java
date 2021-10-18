@@ -61,14 +61,10 @@ public class RankableConnectionUpdaterTest {
         assertEquals(100, rankable7.getRank());
         assertEquals(1000, rankable8.getRank());
 
-        verifyOrder(
-                rankableList,
-                List.of("urn:1", "urn:2", "urn:3", "urn:4", "urn:5", "urn:6", "urn:7"));
+        verifyOrder(rankableList, List.of("urn:1", "urn:2", "urn:3", "urn:4", "urn:5", "urn:6", "urn:7"));
 
         RankableConnectionUpdater.rank(rankableList, rankable3, 0);
-        verifyOrder(
-                rankableList,
-                List.of("urn:3", "urn:1", "urn:2", "urn:4", "urn:5", "urn:6", "urn:7"));
+        verifyOrder(rankableList, List.of("urn:3", "urn:1", "urn:2", "urn:4", "urn:5", "urn:6", "urn:7"));
 
         assertEquals(1, rankable1.getRank());
         assertEquals(2, rankable2.getRank());
@@ -80,9 +76,7 @@ public class RankableConnectionUpdaterTest {
         assertEquals(1000, rankable8.getRank());
 
         RankableConnectionUpdater.rank(rankableList, rankable2, 200);
-        verifyOrder(
-                rankableList,
-                List.of("urn:3", "urn:1", "urn:4", "urn:5", "urn:6", "urn:7", "urn:2"));
+        verifyOrder(rankableList, List.of("urn:3", "urn:1", "urn:4", "urn:5", "urn:6", "urn:7", "urn:2"));
 
         assertEquals(1, rankable1.getRank());
         assertEquals(200, rankable2.getRank());
@@ -94,9 +88,7 @@ public class RankableConnectionUpdaterTest {
         assertEquals(1000, rankable8.getRank());
 
         RankableConnectionUpdater.rank(rankableList, rankable2, 11);
-        verifyOrder(
-                rankableList,
-                List.of("urn:3", "urn:1", "urn:2", "urn:4", "urn:5", "urn:6", "urn:7"));
+        verifyOrder(rankableList, List.of("urn:3", "urn:1", "urn:2", "urn:4", "urn:5", "urn:6", "urn:7"));
 
         assertEquals(1, rankable1.getRank());
         assertEquals(11, rankable2.getRank());
@@ -108,9 +100,7 @@ public class RankableConnectionUpdaterTest {
         assertEquals(1000, rankable8.getRank());
 
         RankableConnectionUpdater.rank(rankableList, rankable8, 11);
-        verifyOrder(
-                rankableList,
-                List.of("urn:3", "urn:1", "urn:8", "urn:2", "urn:4", "urn:5", "urn:6", "urn:7"));
+        verifyOrder(rankableList, List.of("urn:3", "urn:1", "urn:8", "urn:2", "urn:4", "urn:5", "urn:6", "urn:7"));
 
         assertEquals(1, rankable1.getRank());
         assertEquals(12, rankable2.getRank());
@@ -127,8 +117,7 @@ public class RankableConnectionUpdaterTest {
         private int rank;
         private Relevance relevance;
 
-        private TestRankable(String publicId, Relevance relevance, int rank)
-                throws URISyntaxException {
+        private TestRankable(String publicId, Relevance relevance, int rank) throws URISyntaxException {
             this.publicId = new URI(publicId);
             this.rank = rank;
             this.relevance = relevance;
@@ -155,7 +144,8 @@ public class RankableConnectionUpdaterTest {
         }
 
         @Override
-        public void setPrimary(boolean isPrimary) {}
+        public void setPrimary(boolean isPrimary) {
+        }
 
         @Override
         public Optional<EntityWithPath> getConnectedParent() {

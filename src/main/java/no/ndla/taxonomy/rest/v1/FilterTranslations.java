@@ -25,28 +25,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = {"/v1/filters/{id}/translations"})
+@RequestMapping(path = { "/v1/filters/{id}/translations" })
 @Transactional
 @Deprecated(forRemoval = true)
 public class FilterTranslations {
-    public FilterTranslations() {}
+    public FilterTranslations() {
+    }
 
     @GetMapping
     @ApiOperation("Gets all relevanceTranslations for a single filter")
     @Deprecated(forRemoval = true)
-    public List<FilterTranslations.FilterTranslationIndexDocument> index(
-            @PathVariable("id") URI id) {
+    public List<FilterTranslations.FilterTranslationIndexDocument> index(@PathVariable("id") URI id) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
     @GetMapping("/{language}")
     @ApiOperation("Gets a single translation for a single filter")
     @Deprecated(forRemoval = true)
-    public FilterTranslations.FilterTranslationIndexDocument get(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-                    @PathVariable("language")
-                    String language) {
+    public FilterTranslations.FilterTranslationIndexDocument get(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
@@ -55,13 +52,9 @@ public class FilterTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
-    public void put(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-                    @PathVariable("language")
-                    String language,
-            @ApiParam(name = "filter", value = "The new or updated translation") @RequestBody
-                    FilterTranslations.UpdateFilterTranslationCommand command) {
+    public void put(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
+            @ApiParam(name = "filter", value = "The new or updated translation") @RequestBody FilterTranslations.UpdateFilterTranslationCommand command) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
@@ -70,11 +63,8 @@ public class FilterTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
-    public void delete(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-                    @PathVariable("language")
-                    String language) {
+    public void delete(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 

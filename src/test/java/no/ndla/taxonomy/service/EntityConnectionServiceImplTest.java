@@ -33,26 +33,26 @@ import static org.mockito.Mockito.*;
 @ExtendWith(SpringExtension.class)
 @Transactional
 public class EntityConnectionServiceImplTest {
-    @Autowired private SubjectTopicRepository subjectTopicRepository;
-    @Autowired private TopicSubtopicRepository topicSubtopicRepository;
-    @Autowired private TopicResourceRepository topicResourceRepository;
+    @Autowired
+    private SubjectTopicRepository subjectTopicRepository;
+    @Autowired
+    private TopicSubtopicRepository topicSubtopicRepository;
+    @Autowired
+    private TopicResourceRepository topicResourceRepository;
 
     private CachedUrlUpdaterService cachedUrlUpdaterService;
 
     private EntityConnectionServiceImpl service;
 
-    @Autowired private Builder builder;
+    @Autowired
+    private Builder builder;
 
     @BeforeEach
     public void setUp() throws Exception {
         cachedUrlUpdaterService = mock(CachedUrlUpdaterService.class);
 
-        service =
-                new EntityConnectionServiceImpl(
-                        subjectTopicRepository,
-                        topicSubtopicRepository,
-                        topicResourceRepository,
-                        cachedUrlUpdaterService);
+        service = new EntityConnectionServiceImpl(subjectTopicRepository, topicSubtopicRepository,
+                topicResourceRepository, cachedUrlUpdaterService);
     }
 
     @Test
@@ -65,8 +65,7 @@ public class EntityConnectionServiceImplTest {
 
         final var relevance = builder.relevance();
 
-        assertFalse(
-                subjectTopicRepository.findFirstBySubjectAndTopic(subject1, topic1).isPresent());
+        assertFalse(subjectTopicRepository.findFirstBySubjectAndTopic(subject1, topic1).isPresent());
 
         final var connection1 = service.connectSubjectTopic(subject1, topic1, relevance);
         assertNotNull(connection1);
@@ -239,8 +238,7 @@ public class EntityConnectionServiceImplTest {
 
         final var relevance = builder.relevance();
 
-        final var connection1 =
-                service.connectTopicResource(topic1, resource1, relevance, true, null);
+        final var connection1 = service.connectTopicResource(topic1, resource1, relevance, true, null);
         assertNotNull(connection1);
         assertSame(topic1, connection1.getTopic().orElse(null));
         assertSame(resource1, connection1.getResource().orElse(null));
@@ -249,8 +247,7 @@ public class EntityConnectionServiceImplTest {
 
         verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(resource1);
 
-        final var connection2 =
-                service.connectTopicResource(topic1, resource2, relevance, true, null);
+        final var connection2 = service.connectTopicResource(topic1, resource2, relevance, true, null);
         assertNotNull(connection2);
         assertSame(topic1, connection2.getTopic().orElse(null));
         assertSame(resource2, connection2.getResource().orElse(null));
@@ -260,8 +257,7 @@ public class EntityConnectionServiceImplTest {
         assertTrue(connection1.isPrimary().orElseThrow());
         assertEquals(1, connection1.getRank());
 
-        final var connection3 =
-                service.connectTopicResource(topic2, resource2, relevance, false, null);
+        final var connection3 = service.connectTopicResource(topic2, resource2, relevance, false, null);
         assertFalse(connection3.isPrimary().orElseThrow());
         assertEquals(1, connection3.getRank());
 
@@ -269,8 +265,7 @@ public class EntityConnectionServiceImplTest {
         assertTrue(connection2.isPrimary().orElseThrow());
 
         // Test setting primary, should set old primary to non-primary
-        final var connection4 =
-                service.connectTopicResource(topic3, resource2, relevance, true, null);
+        final var connection4 = service.connectTopicResource(topic3, resource2, relevance, true, null);
         assertTrue(connection4.isPrimary().orElseThrow());
         assertEquals(1, connection4.getRank());
 
@@ -278,8 +273,7 @@ public class EntityConnectionServiceImplTest {
         assertFalse(connection2.isPrimary().orElseThrow());
 
         // Test ranking
-        final var connection5 =
-                service.connectTopicResource(topic4, resource1, relevance, true, null);
+        final var connection5 = service.connectTopicResource(topic4, resource1, relevance, true, null);
         assertEquals(1, connection5.getRank());
 
         final var connection6 = service.connectTopicResource(topic4, resource2, relevance);
@@ -305,11 +299,9 @@ public class EntityConnectionServiceImplTest {
         assertEquals(5, connection9.getRank());
 
         // First topic connection for a resource will be primary regardless of request
-        final var forcedPrimaryConnection1 =
-                service.connectTopicResource(topic4, resource6, relevance);
+        final var forcedPrimaryConnection1 = service.connectTopicResource(topic4, resource6, relevance);
         assertTrue(forcedPrimaryConnection1.isPrimary().orElseThrow());
-        final var forcedPrimaryConnection2 =
-                service.connectTopicResource(topic4, resource7, relevance, false, 1);
+        final var forcedPrimaryConnection2 = service.connectTopicResource(topic4, resource7, relevance, false, 1);
         assertTrue(forcedPrimaryConnection2.isPrimary().orElseThrow());
 
         // Trying to add duplicate connection
@@ -332,9 +324,8 @@ public class EntityConnectionServiceImplTest {
         final var topic1subtopic3 = TopicSubtopic.create(topic1, subtopic3);
 
         // Just verifies the pre-conditions of the created objects that is used for the test
-        assertTrue(
-                topic1.getChildrenTopicSubtopics()
-                        .containsAll(Set.of(topic1subtopic1, topic1subtopic2, topic1subtopic3)));
+        assertTrue(topic1.getChildrenTopicSubtopics()
+                .containsAll(Set.of(topic1subtopic1, topic1subtopic2, topic1subtopic3)));
         assertSame(topic1subtopic1, subtopic1.getParentTopicSubtopic().orElseThrow());
         assertSame(topic1subtopic2, subtopic2.getParentTopicSubtopic().orElseThrow());
         assertSame(topic1subtopic3, subtopic3.getParentTopicSubtopic().orElseThrow());
@@ -420,9 +411,7 @@ public class EntityConnectionServiceImplTest {
 
         verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(resource1);
 
-        assertTrue(
-                topic2resource1.isPrimary().orElseThrow()
-                        ^ topic3resource1.isPrimary().orElseThrow());
+        assertTrue(topic2resource1.isPrimary().orElseThrow() ^ topic3resource1.isPrimary().orElseThrow());
         assertFalse(topic1resource1.getResource().isPresent());
         assertFalse(topic1resource1.getTopic().isPresent());
         assertFalse(topic1.getTopicResources().contains(topic1resource1));

@@ -8,7 +8,8 @@
 package no.ndla.taxonomy.service.exceptions;
 
 public class InvalidArgumentServiceException extends RuntimeException {
-    public InvalidArgumentServiceException() {}
+    public InvalidArgumentServiceException() {
+    }
 
     public InvalidArgumentServiceException(String message) {
         super(message);

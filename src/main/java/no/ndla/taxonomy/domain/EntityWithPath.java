@@ -35,11 +35,8 @@ public abstract class EntityWithPath extends DomainObject {
     }
 
     public Optional<String> getPrimaryPath() {
-        return getCachedPaths().stream()
-                .filter(CachedPath::isActive)
-                .filter(CachedPath::isPrimary)
-                .map(CachedPath::getPath)
-                .findFirst();
+        return getCachedPaths().stream().filter(CachedPath::isActive).filter(CachedPath::isPrimary)
+                .map(CachedPath::getPath).findFirst();
     }
 
     public abstract Set<EntityWithPathConnection> getParentConnections();
@@ -49,61 +46,50 @@ public abstract class EntityWithPath extends DomainObject {
     public Optional<String> getPathByContext(DomainEntity context) {
         final var contextPublicId = context.getPublicId();
 
-        return getCachedPaths().stream()
-                .sorted(
-                        (cachedUrl1, cachedUrl2) -> {
-                            final var path1 = cachedUrl1.getPath();
-                            final var path2 = cachedUrl2.getPath();
+        return getCachedPaths().stream().sorted((cachedUrl1, cachedUrl2) -> {
+            final var path1 = cachedUrl1.getPath();
+            final var path2 = cachedUrl2.getPath();
 
-                            final var path1MatchesContext =
-                                    path1.startsWith("/" + contextPublicId.getSchemeSpecificPart());
-                            final var path2MatchesContext =
-                                    path2.startsWith("/" + contextPublicId.getSchemeSpecificPart());
+            final var path1MatchesContext = path1.startsWith("/" + contextPublicId.getSchemeSpecificPart());
+            final var path2MatchesContext = path2.startsWith("/" + contextPublicId.getSchemeSpecificPart());
 
-                            final var path1IsPrimary = cachedUrl1.isPrimary();
-                            final var path2IsPrimary = cachedUrl2.isPrimary();
+            final var path1IsPrimary = cachedUrl1.isPrimary();
+            final var path2IsPrimary = cachedUrl2.isPrimary();
 
-                            if (path1IsPrimary
-                                    && path2IsPrimary
-                                    && path1MatchesContext
-                                    && path2MatchesContext) {
-                                return 0;
-                            }
+            if (path1IsPrimary && path2IsPrimary && path1MatchesContext && path2MatchesContext) {
+                return 0;
+            }
 
-                            if (path1MatchesContext && path2MatchesContext && path1IsPrimary) {
-                                return -1;
-                            }
+            if (path1MatchesContext && path2MatchesContext && path1IsPrimary) {
+                return -1;
+            }
 
-                            if (path1MatchesContext && path2MatchesContext && path2IsPrimary) {
-                                return 1;
-                            }
+            if (path1MatchesContext && path2MatchesContext && path2IsPrimary) {
+                return 1;
+            }
 
-                            if (path1MatchesContext && !path2MatchesContext) {
-                                return -1;
-                            }
+            if (path1MatchesContext && !path2MatchesContext) {
+                return -1;
+            }
 
-                            if (path2MatchesContext && !path1MatchesContext) {
-                                return 1;
-                            }
+            if (path2MatchesContext && !path1MatchesContext) {
+                return 1;
+            }
 
-                            if (path1IsPrimary && !path2IsPrimary) {
-                                return -1;
-                            }
+            if (path1IsPrimary && !path2IsPrimary) {
+                return -1;
+            }
 
-                            if (path2IsPrimary && !path1IsPrimary) {
-                                return 1;
-                            }
+            if (path2IsPrimary && !path1IsPrimary) {
+                return 1;
+            }
 
-                            return 0;
-                        })
-                .map(CachedPath::getPath)
-                .findFirst();
+            return 0;
+        }).map(CachedPath::getPath).findFirst();
     }
 
     public Set<String> getAllPaths() {
-        return getCachedPaths().stream()
-                .filter(CachedPath::isActive)
-                .map(CachedPath::getPath)
+        return getCachedPaths().stream().filter(CachedPath::isActive).map(CachedPath::getPath)
                 .collect(Collectors.toSet());
     }
 

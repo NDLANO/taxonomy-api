@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = {"/v1/resource-types/{id}/translations"})
+@RequestMapping(path = { "/v1/resource-types/{id}/translations" })
 @Transactional
 public class ResourceTypeTranslations {
 
@@ -34,52 +34,33 @@ public class ResourceTypeTranslations {
 
     private final EntityManager entityManager;
 
-    public ResourceTypeTranslations(
-            ResourceTypeRepository resourceTypeRepository, EntityManager entityManager) {
+    public ResourceTypeTranslations(ResourceTypeRepository resourceTypeRepository, EntityManager entityManager) {
         this.resourceTypeRepository = resourceTypeRepository;
         this.entityManager = entityManager;
     }
 
     @GetMapping
     @ApiOperation("Gets all relevanceTranslations for a single resource type")
-    public List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> index(
-            @PathVariable("id") URI id) {
+    public List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> index(@PathVariable("id") URI id) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
-        List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> result =
-                new ArrayList<>();
-        resourceType
-                .getTranslations()
-                .forEach(
-                        t ->
-                                result.add(
-                                        new ResourceTypeTranslations
-                                                .ResourceTypeTranslationIndexDocument() {
-                                            {
-                                                name = t.getName();
-                                                language = t.getLanguageCode();
-                                            }
-                                        }));
+        List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> result = new ArrayList<>();
+        resourceType.getTranslations()
+                .forEach(t -> result.add(new ResourceTypeTranslations.ResourceTypeTranslationIndexDocument() {
+                    {
+                        name = t.getName();
+                        language = t.getLanguageCode();
+                    }
+                }));
         return result;
     }
 
     @GetMapping("/{language}")
     @ApiOperation("Gets a single translation for a single resource type")
-    public ResourceTypeTranslations.ResourceTypeTranslationIndexDocument get(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-                    @PathVariable("language")
-                    String language) {
+    public ResourceTypeTranslations.ResourceTypeTranslationIndexDocument get(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
-        ResourceTypeTranslation translation =
-                resourceType
-                        .getTranslation(language)
-                        .orElseThrow(
-                                () ->
-                                        new NotFoundException(
-                                                "translation with language code "
-                                                        + language
-                                                        + " for resource type",
-                                                id));
+        ResourceTypeTranslation translation = resourceType.getTranslation(language).orElseThrow(
+                () -> new NotFoundException("translation with language code " + language + " for resource type", id));
 
         return new ResourceTypeTranslations.ResourceTypeTranslationIndexDocument() {
             {
@@ -93,13 +74,9 @@ public class ResourceTypeTranslations {
     @ApiOperation("Creates or updates a translation of a resource type")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void put(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-                    @PathVariable("language")
-                    String language,
-            @ApiParam(name = "resourceType", value = "The new or updated translation") @RequestBody
-                    ResourceTypeTranslations.UpdateResourceTypeTranslationCommand command) {
+    public void put(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
+            @ApiParam(name = "resourceType", value = "The new or updated translation") @RequestBody ResourceTypeTranslations.UpdateResourceTypeTranslationCommand command) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         ResourceTypeTranslation translation = resourceType.addTranslation(language);
         entityManager.persist(translation);
@@ -110,19 +87,13 @@ public class ResourceTypeTranslations {
     @ApiOperation("Deletes a translation")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void delete(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-                    @PathVariable("language")
-                    String language) {
+    public void delete(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
-        resourceType
-                .getTranslation(language)
-                .ifPresent(
-                        (translation) -> {
-                            resourceType.removeTranslation(language);
-                            entityManager.remove(translation);
-                        });
+        resourceType.getTranslation(language).ifPresent((translation) -> {
+            resourceType.removeTranslation(language);
+            entityManager.remove(translation);
+        });
     }
 
     public static class ResourceTypeTranslationIndexDocument {

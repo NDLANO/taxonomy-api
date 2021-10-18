@@ -28,7 +28,8 @@ public class FilterTranslationsTest extends RestTest {
 
     private void assert404(URI id, String language) throws Exception {
         String path = "/v1/filters/" + id;
-        if (isNotEmpty(language)) path = path + "?language=" + language;
+        if (isNotEmpty(language))
+            path = path + "?language=" + language;
         testUtils.getResource(path, status().isNotFound());
     }
 

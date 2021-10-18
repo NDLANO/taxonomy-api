@@ -18,29 +18,29 @@ import java.util.Set;
 
 @ApiModel("Metadata")
 public class MetadataDto {
-    @JsonIgnore private String publicId;
+    @JsonIgnore
+    private String publicId;
 
-    @ApiModelProperty private Set<String> grepCodes;
+    @ApiModelProperty
+    private Set<String> grepCodes;
 
-    @ApiModelProperty private Boolean visible;
+    @ApiModelProperty
+    private Boolean visible;
 
-    @ApiModelProperty private Map<String, String> customFields;
+    @ApiModelProperty
+    private Map<String, String> customFields;
 
-    public MetadataDto() {}
+    public MetadataDto() {
+    }
 
     public MetadataDto(MetadataApiEntity metadataApiEntity) {
         this.publicId = metadataApiEntity.getPublicId();
         this.visible = metadataApiEntity.isVisible().orElse(null);
 
-        metadataApiEntity
-                .getCompetenceAims()
-                .ifPresent(
-                        competenceAims -> {
-                            grepCodes = new HashSet<>();
-                            competenceAims.stream()
-                                    .map(MetadataApiEntity.CompetenceAim::getCode)
-                                    .forEach(this::addGrepCode);
-                        });
+        metadataApiEntity.getCompetenceAims().ifPresent(competenceAims -> {
+            grepCodes = new HashSet<>();
+            competenceAims.stream().map(MetadataApiEntity.CompetenceAim::getCode).forEach(this::addGrepCode);
+        });
         customFields = metadataApiEntity.getCustomFields().map(HashMap::new).orElse(null);
     }
 
@@ -51,8 +51,7 @@ public class MetadataDto {
         newMetadataDto.setVisible(metadataDto.isVisible());
         {
             final var customFields = metadataDto.getCustomFields();
-            newMetadataDto.setCustomFields(
-                    customFields != null ? new HashMap<>(customFields) : null);
+            newMetadataDto.setCustomFields(customFields != null ? new HashMap<>(customFields) : null);
         }
 
         return newMetadataDto;

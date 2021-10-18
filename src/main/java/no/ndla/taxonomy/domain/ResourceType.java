@@ -26,14 +26,8 @@ public class ResourceType extends DomainObject {
     @JoinColumn(name = "parent_id")
     private ResourceType parent;
 
-    @OneToMany(
-            mappedBy = "parent",
-            cascade = {
-                CascadeType.DETACH,
-                CascadeType.MERGE,
-                CascadeType.REFRESH,
-                CascadeType.PERSIST
-            })
+    @OneToMany(mappedBy = "parent", cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH,
+            CascadeType.PERSIST })
     private Set<ResourceType> subtypes = new HashSet<>();
 
     @OneToMany(mappedBy = "resourceType", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -87,7 +81,8 @@ public class ResourceType extends DomainObject {
 
     public ResourceTypeTranslation addTranslation(String languageCode) {
         ResourceTypeTranslation resourceTypeTranslation = getTranslation(languageCode).orElse(null);
-        if (resourceTypeTranslation != null) return resourceTypeTranslation;
+        if (resourceTypeTranslation != null)
+            return resourceTypeTranslation;
 
         resourceTypeTranslation = new ResourceTypeTranslation(this, languageCode);
         resourceTypeTranslations.add(resourceTypeTranslation);
@@ -96,9 +91,7 @@ public class ResourceType extends DomainObject {
 
     public Optional<ResourceTypeTranslation> getTranslation(String languageCode) {
         return resourceTypeTranslations.stream()
-                .filter(
-                        resourceTypeTranslation ->
-                                resourceTypeTranslation.getLanguageCode().equals(languageCode))
+                .filter(resourceTypeTranslation -> resourceTypeTranslation.getLanguageCode().equals(languageCode))
                 .findFirst();
     }
 

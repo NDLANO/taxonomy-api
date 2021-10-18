@@ -131,9 +131,7 @@ public class TopicTest {
         topic.addChildTopicSubtopic(topicSubtopic2);
 
         assertEquals(2, topic.getChildrenTopicSubtopics().size());
-        assertTrue(
-                topic.getChildrenTopicSubtopics()
-                        .containsAll(Set.of(topicSubtopic1, topicSubtopic2)));
+        assertTrue(topic.getChildrenTopicSubtopics().containsAll(Set.of(topicSubtopic1, topicSubtopic2)));
 
         topic.removeChildTopicSubTopic(topicSubtopic1);
         verify(topicSubtopic1).disassociate();
@@ -241,9 +239,7 @@ public class TopicTest {
         final var topicResource3 = mock(TopicResource.class);
 
         Set.of(topicResource1, topicResource2, topicResource3)
-                .forEach(
-                        topicResource ->
-                                when(topicResource.getTopic()).thenReturn(Optional.of(topic)));
+                .forEach(topicResource -> when(topicResource.getTopic()).thenReturn(Optional.of(topic)));
         when(topicResource1.getResource()).thenReturn(Optional.of(resource1));
         when(topicResource2.getResource()).thenReturn(Optional.of(resource2));
 
@@ -285,9 +281,7 @@ public class TopicTest {
         var returnedTranslation2 = topic.addTranslation("en");
         assertEquals(2, topic.getTranslations().size());
         assertEquals("en", returnedTranslation2.getLanguageCode());
-        assertTrue(
-                topic.getTranslations()
-                        .containsAll(Set.of(returnedTranslation, returnedTranslation2)));
+        assertTrue(topic.getTranslations().containsAll(Set.of(returnedTranslation, returnedTranslation2)));
         assertEquals(topic, returnedTranslation2.getTopic());
 
         topic.removeTranslation("nb");
@@ -307,36 +301,30 @@ public class TopicTest {
 
     @Test
     public void preRemove() {
-        final var parentTopicSubtopics =
-                Set.of(mock(TopicSubtopic.class), mock(TopicSubtopic.class));
-        final var childTopicSubtopics =
-                Set.of(mock(TopicSubtopic.class), mock(TopicSubtopic.class));
+        final var parentTopicSubtopics = Set.of(mock(TopicSubtopic.class), mock(TopicSubtopic.class));
+        final var childTopicSubtopics = Set.of(mock(TopicSubtopic.class), mock(TopicSubtopic.class));
         final var subjectTopics = Set.of(mock(SubjectTopic.class), mock(SubjectTopic.class));
         final var topicResources = Set.of(mock(TopicResource.class), mock(TopicResource.class));
 
-        parentTopicSubtopics.forEach(
-                topicSubtopic -> {
-                    when(topicSubtopic.getSubtopic()).thenReturn(Optional.of(topic));
-                    topic.addParentTopicSubtopic(topicSubtopic);
-                });
+        parentTopicSubtopics.forEach(topicSubtopic -> {
+            when(topicSubtopic.getSubtopic()).thenReturn(Optional.of(topic));
+            topic.addParentTopicSubtopic(topicSubtopic);
+        });
 
-        childTopicSubtopics.forEach(
-                topicSubtopic -> {
-                    when(topicSubtopic.getTopic()).thenReturn(Optional.of(topic));
-                    topic.addChildTopicSubtopic(topicSubtopic);
-                });
+        childTopicSubtopics.forEach(topicSubtopic -> {
+            when(topicSubtopic.getTopic()).thenReturn(Optional.of(topic));
+            topic.addChildTopicSubtopic(topicSubtopic);
+        });
 
-        subjectTopics.forEach(
-                subjectTopic -> {
-                    when(subjectTopic.getTopic()).thenReturn(Optional.of(topic));
-                    topic.addSubjectTopic(subjectTopic);
-                });
+        subjectTopics.forEach(subjectTopic -> {
+            when(subjectTopic.getTopic()).thenReturn(Optional.of(topic));
+            topic.addSubjectTopic(subjectTopic);
+        });
 
-        topicResources.forEach(
-                topicResource -> {
-                    when(topicResource.getTopic()).thenReturn(Optional.of(topic));
-                    topic.addTopicResource(topicResource);
-                });
+        topicResources.forEach(topicResource -> {
+            when(topicResource.getTopic()).thenReturn(Optional.of(topic));
+            topic.addTopicResource(topicResource);
+        });
 
         topic.preRemove();
 

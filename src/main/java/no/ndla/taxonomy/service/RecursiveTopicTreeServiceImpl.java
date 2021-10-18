@@ -33,8 +33,7 @@ public class RecursiveTopicTreeServiceImpl implements RecursiveTopicTreeService 
         this.topicSubtopicRepository = topicSubtopicRepository;
     }
 
-    private void addSubTopicIdsRecursively(
-            Set<TopicTreeElement> topics, Set<Integer> topicIds, int ttl) {
+    private void addSubTopicIdsRecursively(Set<TopicTreeElement> topics, Set<Integer> topicIds, int ttl) {
         // Method just takes the list of topicIds provided and add each of the subtopics it finds to
         // the list,
         // and then recursively runs the same method on each of the found subtopic IDs, once for
@@ -47,18 +46,11 @@ public class RecursiveTopicTreeServiceImpl implements RecursiveTopicTreeService 
 
         final var topicIdsThisLevel = new HashSet<Integer>();
 
-        topicSubtopicRepository
-                .findAllByTopicIdInIncludingTopicAndSubtopic(topicIds)
-                .forEach(
-                        topicSubtopic -> {
-                            topics.add(
-                                    new TopicTreeElement(
-                                            topicSubtopic.getSubtopicId(),
-                                            null,
-                                            topicSubtopic.getTopicId(),
-                                            topicSubtopic.getRank()));
-                            topicIdsThisLevel.add(topicSubtopic.getSubtopicId());
-                        });
+        topicSubtopicRepository.findAllByTopicIdInIncludingTopicAndSubtopic(topicIds).forEach(topicSubtopic -> {
+            topics.add(new TopicTreeElement(topicSubtopic.getSubtopicId(), null, topicSubtopic.getTopicId(),
+                    topicSubtopic.getRank()));
+            topicIdsThisLevel.add(topicSubtopic.getSubtopicId());
+        });
 
         if (topicIdsThisLevel.size() > 0) {
             addSubTopicIdsRecursively(topics, topicIdsThisLevel, ttl);
@@ -79,29 +71,19 @@ public class RecursiveTopicTreeServiceImpl implements RecursiveTopicTreeService 
     public Set<TopicTreeElement> getRecursiveTopics(Subject subject) {
         final var toReturn = new HashSet<TopicTreeElement>();
 
-        final var subjectTopics =
-                subject.getSubjectTopics().stream()
-                        .filter(st -> st.getTopic().isPresent())
-                        .filter(st -> st.getSubject().isPresent())
-                        .collect(Collectors.toSet());
+        final var subjectTopics = subject.getSubjectTopics().stream().filter(st -> st.getTopic().isPresent())
+                .filter(st -> st.getSubject().isPresent()).collect(Collectors.toSet());
 
         // The actual integer IDs of each of the subtopics of this subject
-        final var subtopicIds =
-                subjectTopics.stream()
-                        .map(SubjectTopic::getTopic)
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .map(Topic::getId)
-                        .collect(Collectors.toSet());
+        final var subtopicIds = subjectTopics.stream().map(SubjectTopic::getTopic).filter(Optional::isPresent)
+                .map(Optional::get).map(Topic::getId).collect(Collectors.toSet());
 
-        subjectTopics.forEach(
-                subjectTopic -> {
-                    final var topicId = subjectTopic.getTopic().orElseThrow().getId();
-                    final var subjectId = subjectTopic.getSubject().orElseThrow().getId();
+        subjectTopics.forEach(subjectTopic -> {
+            final var topicId = subjectTopic.getTopic().orElseThrow().getId();
+            final var subjectId = subjectTopic.getSubject().orElseThrow().getId();
 
-                    toReturn.add(
-                            new TopicTreeElement(topicId, subjectId, null, subjectTopic.getRank()));
-                });
+            toReturn.add(new TopicTreeElement(topicId, subjectId, null, subjectTopic.getRank()));
+        });
 
         addSubTopicIdsRecursively(toReturn, subtopicIds, 1000);
 

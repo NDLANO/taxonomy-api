@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = {"/v1/resources/{id}/translations"})
+@RequestMapping(path = { "/v1/resources/{id}/translations" })
 @Transactional
 public class ResourceTranslations {
 
@@ -34,49 +34,32 @@ public class ResourceTranslations {
 
     private final EntityManager entityManager;
 
-    public ResourceTranslations(
-            ResourceRepository resourceRepository, EntityManager entityManager) {
+    public ResourceTranslations(ResourceRepository resourceRepository, EntityManager entityManager) {
         this.resourceRepository = resourceRepository;
         this.entityManager = entityManager;
     }
 
     @GetMapping
     @ApiOperation("Gets all relevanceTranslations for a single resource")
-    public List<ResourceTranslations.ResourceTranslationIndexDocument> index(
-            @PathVariable("id") URI id) {
+    public List<ResourceTranslations.ResourceTranslationIndexDocument> index(@PathVariable("id") URI id) {
         Resource resource = resourceRepository.getByPublicId(id);
         List<ResourceTranslations.ResourceTranslationIndexDocument> result = new ArrayList<>();
-        resource.getTranslations()
-                .forEach(
-                        t ->
-                                result.add(
-                                        new ResourceTranslations
-                                                .ResourceTranslationIndexDocument() {
-                                            {
-                                                name = t.getName();
-                                                language = t.getLanguageCode();
-                                            }
-                                        }));
+        resource.getTranslations().forEach(t -> result.add(new ResourceTranslations.ResourceTranslationIndexDocument() {
+            {
+                name = t.getName();
+                language = t.getLanguageCode();
+            }
+        }));
         return result;
     }
 
     @GetMapping("/{language}")
     @ApiOperation("Gets a single translation for a single resource")
-    public ResourceTranslations.ResourceTranslationIndexDocument get(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-                    @PathVariable("language")
-                    String language) {
+    public ResourceTranslations.ResourceTranslationIndexDocument get(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Resource resource = resourceRepository.getByPublicId(id);
-        ResourceTranslation translation =
-                resource.getTranslation(language)
-                        .orElseThrow(
-                                () ->
-                                        new NotFoundException(
-                                                "translation with language code "
-                                                        + language
-                                                        + " for resource",
-                                                id));
+        ResourceTranslation translation = resource.getTranslation(language).orElseThrow(
+                () -> new NotFoundException("translation with language code " + language + " for resource", id));
         return new ResourceTranslations.ResourceTranslationIndexDocument() {
             {
                 name = translation.getName();
@@ -89,13 +72,9 @@ public class ResourceTranslations {
     @ApiOperation("Creates or updates a translation of a resource")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void put(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-                    @PathVariable("language")
-                    String language,
-            @ApiParam(name = "resource", value = "The new or updated translation") @RequestBody
-                    ResourceTranslations.UpdateResourceTranslationCommand command) {
+    public void put(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
+            @ApiParam(name = "resource", value = "The new or updated translation") @RequestBody ResourceTranslations.UpdateResourceTranslationCommand command) {
         Resource resource = resourceRepository.getByPublicId(id);
         ResourceTranslation translation = resource.addTranslation(language);
         entityManager.persist(translation);
@@ -106,25 +85,18 @@ public class ResourceTranslations {
     @ApiOperation("Deletes a translation")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void delete(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-                    @PathVariable("language")
-                    String language) {
+    public void delete(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         final var resource = resourceRepository.getByPublicId(id);
-        resource.getTranslation(language)
-                .ifPresent(
-                        (translation) -> {
-                            resource.removeTranslation(language);
-                            resourceRepository.save(resource);
-                        });
+        resource.getTranslation(language).ifPresent((translation) -> {
+            resource.removeTranslation(language);
+            resourceRepository.save(resource);
+        });
     }
 
     public static class ResourceTranslationIndexDocument {
         @JsonProperty
-        @ApiModelProperty(
-                value = "The translated name of the resource",
-                example = "Introduction to algebra")
+        @ApiModelProperty(value = "The translated name of the resource", example = "Introduction to algebra")
         public String name;
 
         @JsonProperty
@@ -134,9 +106,7 @@ public class ResourceTranslations {
 
     public static class UpdateResourceTranslationCommand {
         @JsonProperty
-        @ApiModelProperty(
-                value = "The translated name of the resource",
-                example = "Introduction to algebra")
+        @ApiModelProperty(value = "The translated name of the resource", example = "Introduction to algebra")
         public String name;
     }
 }

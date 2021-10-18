@@ -31,7 +31,8 @@ public class Topic extends EntityWithPath {
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TopicResource> topicResources = new HashSet<>();
 
-    @Column private URI contentUri;
+    @Column
+    private URI contentUri;
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TopicTranslation> translations = new HashSet<>();
@@ -39,7 +40,8 @@ public class Topic extends EntityWithPath {
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     protected Set<CachedPath> cachedPaths = new HashSet<>();
 
-    @Column private boolean context;
+    @Column
+    private boolean context;
 
     public Topic() {
         setPublicId(URI.create("urn:topic:" + UUID.randomUUID()));
@@ -53,8 +55,7 @@ public class Topic extends EntityWithPath {
     @Override
     public Set<EntityWithPathConnection> getParentConnections() {
         return Stream.concat(parentTopicSubtopics.stream(), subjectTopics.stream())
-                .map(entity -> (EntityWithPathConnection) entity)
-                .collect(Collectors.toUnmodifiableSet());
+                .map(entity -> (EntityWithPathConnection) entity).collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
@@ -73,31 +74,28 @@ public class Topic extends EntityWithPath {
     }
 
     /*
-
-       In the old code the primary URL for topics was special since it would try to return
-       a context URL (a topic behaving as a subject) rather than a subject URL if that is available.
-       Trying to re-implement it by sorting the context URLs first by the same path comparing as the old code
-
-    */
+     * 
+     * In the old code the primary URL for topics was special since it would try to return a context URL (a topic
+     * behaving as a subject) rather than a subject URL if that is available. Trying to re-implement it by sorting the
+     * context URLs first by the same path comparing as the old code
+     * 
+     */
     public Optional<String> getPrimaryPath() {
-        return getCachedPaths().stream()
-                .map(CachedPath::getPath)
-                .min(
-                        (path1, path2) -> {
-                            if (path1.startsWith("/topic") && path2.startsWith("/topic")) {
-                                return 0;
-                            }
+        return getCachedPaths().stream().map(CachedPath::getPath).min((path1, path2) -> {
+            if (path1.startsWith("/topic") && path2.startsWith("/topic")) {
+                return 0;
+            }
 
-                            if (path1.startsWith("/topic")) {
-                                return -1;
-                            }
+            if (path1.startsWith("/topic")) {
+                return -1;
+            }
 
-                            if (path2.startsWith("/topic")) {
-                                return 1;
-                            }
+            if (path2.startsWith("/topic")) {
+                return 1;
+            }
 
-                            return 0;
-                        });
+            return 0;
+        });
     }
 
     public Set<SubjectTopic> getSubjectTopics() {
@@ -106,8 +104,7 @@ public class Topic extends EntityWithPath {
 
     public void addSubjectTopic(SubjectTopic subjectTopic) {
         if (subjectTopic.getTopic().orElse(null) != this) {
-            throw new IllegalArgumentException(
-                    "Topic must be set on SubjectTopic before associating with Topic");
+            throw new IllegalArgumentException("Topic must be set on SubjectTopic before associating with Topic");
         }
 
         this.subjectTopics.add(subjectTopic);
@@ -148,8 +145,7 @@ public class Topic extends EntityWithPath {
 
     public void addParentTopicSubtopic(TopicSubtopic topicSubtopic) {
         if (topicSubtopic.getSubtopic().orElse(null) != this) {
-            throw new IllegalArgumentException(
-                    "Subtopic must be set on TopicSubtopic before associating with Topic");
+            throw new IllegalArgumentException("Subtopic must be set on TopicSubtopic before associating with Topic");
         }
 
         this.parentTopicSubtopics.add(topicSubtopic);
@@ -185,25 +181,17 @@ public class Topic extends EntityWithPath {
     }
 
     public Set<Topic> getSubtopics() {
-        return childTopicSubtopics.stream()
-                .map(TopicSubtopic::getSubtopic)
-                .map(Optional::get)
+        return childTopicSubtopics.stream().map(TopicSubtopic::getSubtopic).map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     public Optional<Topic> getParentTopic() {
-        return parentTopicSubtopics.stream()
-                .map(TopicSubtopic::getTopic)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+        return parentTopicSubtopics.stream().map(TopicSubtopic::getTopic).filter(Optional::isPresent).map(Optional::get)
                 .findFirst();
     }
 
     public Set<Resource> getResources() {
-        return topicResources.stream()
-                .map(TopicResource::getResource)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+        return topicResources.stream().map(TopicResource::getResource).filter(Optional::isPresent).map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -217,7 +205,8 @@ public class Topic extends EntityWithPath {
 
     public TopicTranslation addTranslation(String languageCode) {
         TopicTranslation topicTranslation = getTranslation(languageCode).orElse(null);
-        if (topicTranslation != null) return topicTranslation;
+        if (topicTranslation != null)
+            return topicTranslation;
 
         topicTranslation = new TopicTranslation(this, languageCode);
         translations.add(topicTranslation);
@@ -225,8 +214,7 @@ public class Topic extends EntityWithPath {
     }
 
     public Optional<TopicTranslation> getTranslation(String languageCode) {
-        return translations.stream()
-                .filter(translation -> translation.getLanguageCode().equals(languageCode))
+        return translations.stream().filter(translation -> translation.getLanguageCode().equals(languageCode))
                 .findFirst();
     }
 

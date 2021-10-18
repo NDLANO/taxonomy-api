@@ -19,11 +19,14 @@ public class RelevanceTranslation {
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 
-    @Column private String name;
+    @Column
+    private String name;
 
-    @Column private String languageCode;
+    @Column
+    private String languageCode;
 
-    RelevanceTranslation() {}
+    RelevanceTranslation() {
+    }
 
     public RelevanceTranslation(Relevance relevance, String languageCode) {
         setRelevance(relevance);
@@ -35,9 +38,7 @@ public class RelevanceTranslation {
     }
 
     public void setRelevance(Relevance relevance) {
-        if (relevance != this.relevance
-                && this.relevance != null
-                && this.relevance.getTranslations().contains(this)) {
+        if (relevance != this.relevance && this.relevance != null && this.relevance.getTranslations().contains(this)) {
             this.relevance.removeTranslation(this);
         }
         this.relevance = relevance;

@@ -16,11 +16,15 @@ import java.net.URI;
 @Entity
 @Table(name = "url_map")
 public class UrlMapping {
-    @Id @Column private String oldUrl;
+    @Id
+    @Column
+    private String oldUrl;
 
-    @Column private String public_id;
+    @Column
+    private String public_id;
 
-    @Column private String subject_id;
+    @Column
+    private String subject_id;
 
     public String getOldUrl() {
         return oldUrl;
@@ -39,9 +43,7 @@ public class UrlMapping {
     }
 
     public void setPublic_id(String public_id) {
-        this.public_id =
-                URI.create(public_id)
-                        .toString(); // if not valid URI - will force an IllegalArgumentException
+        this.public_id = URI.create(public_id).toString(); // if not valid URI - will force an IllegalArgumentException
     }
 
     public URI getSubject_id() {
@@ -53,8 +55,7 @@ public class UrlMapping {
     }
 
     public void setSubject_id(String subject_id) {
-        this.subject_id =
-                URI.create(subject_id)
-                        .toString(); // if not valid URI - will force an IllegalArgumentException
+        this.subject_id = URI.create(subject_id).toString(); // if not valid URI - will force an
+                                                             // IllegalArgumentException
     }
 }

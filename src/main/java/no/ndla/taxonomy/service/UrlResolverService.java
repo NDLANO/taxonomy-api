@@ -14,7 +14,9 @@ import java.util.Optional;
 
 public interface UrlResolverService {
     /**
-     * @param oldUrl url previously imported into taxonomy with taxonomy-import
+     * @param oldUrl
+     *            url previously imported into taxonomy with taxonomy-import
+     * 
      * @return return a resolved URL or null
      */
     Optional<String> resolveOldUrl(String oldUrl);

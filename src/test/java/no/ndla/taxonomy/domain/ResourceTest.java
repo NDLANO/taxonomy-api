@@ -42,9 +42,7 @@ public class ResourceTest {
         var returnedTranslation2 = resource.addTranslation("en");
         assertEquals(2, resource.getTranslations().size());
         assertEquals("en", returnedTranslation2.getLanguageCode());
-        assertTrue(
-                resource.getTranslations()
-                        .containsAll(Set.of(returnedTranslation, returnedTranslation2)));
+        assertTrue(resource.getTranslations().containsAll(Set.of(returnedTranslation, returnedTranslation2)));
         assertEquals(resource, returnedTranslation2.getResource());
 
         resource.removeTranslation("nb");
@@ -150,8 +148,7 @@ public class ResourceTest {
 
         assertEquals(2, resource.getResourceResourceTypes().size());
         assertTrue(
-                resource.getResourceResourceTypes()
-                        .containsAll(Set.of(resourceResourceType1, resourceResourceType2)));
+                resource.getResourceResourceTypes().containsAll(Set.of(resourceResourceType1, resourceResourceType2)));
 
         reset(resourceResourceType1);
         reset(resourceResourceType2);
@@ -236,8 +233,7 @@ public class ResourceTest {
         resource.addTopicResource(topicResource2);
 
         assertEquals(2, resource.getTopicResources().size());
-        assertTrue(
-                resource.getTopicResources().containsAll(Set.of(topicResource1, topicResource2)));
+        assertTrue(resource.getTopicResources().containsAll(Set.of(topicResource1, topicResource2)));
 
         when(topicResource1.getResource()).thenReturn(Optional.of(resource));
         when(topicResource2.getResource()).thenReturn(Optional.of(resource));
@@ -260,12 +256,10 @@ public class ResourceTest {
         final var topicResource1 = mock(TopicResource.class);
         final var topicResource2 = mock(TopicResource.class);
 
-        Set.of(topicResource1, topicResource2)
-                .forEach(
-                        topicResource -> {
-                            when(topicResource.getResource()).thenReturn(Optional.of(resource));
-                            resource.addTopicResource(topicResource);
-                        });
+        Set.of(topicResource1, topicResource2).forEach(topicResource -> {
+            when(topicResource.getResource()).thenReturn(Optional.of(resource));
+            resource.addTopicResource(topicResource);
+        });
 
         resource.preRemove();
 

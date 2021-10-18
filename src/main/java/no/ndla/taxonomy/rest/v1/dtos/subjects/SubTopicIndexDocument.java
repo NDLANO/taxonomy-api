@@ -27,15 +27,15 @@ import java.util.Set;
 /** */
 @ApiModel("SubTopicIndexDocument")
 public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
-    @JsonProperty @MetadataIdField public URI id;
-
-    @JsonProperty public String name;
+    @JsonProperty
+    @MetadataIdField
+    public URI id;
 
     @JsonProperty
-    @ApiModelProperty(
-            value =
-                    "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.",
-            example = "urn:article:1")
+    public String name;
+
+    @JsonProperty
+    @ApiModelProperty(value = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
     public URI contentUri;
 
     @JsonProperty
@@ -47,10 +47,7 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
     public String path;
 
     @JsonProperty
-    @ApiModelProperty(
-            value =
-                    "The id of the subject-topics or topic-subtopics connection which causes this topic to be included in the result set.",
-            example = "urn:subject-topic:1")
+    @ApiModelProperty(value = "The id of the subject-topics or topic-subtopics connection which causes this topic to be included in the result set.", example = "urn:subject-topic:1")
     public URI connectionId;
 
     @JsonProperty
@@ -58,9 +55,7 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
     public boolean isPrimary;
 
     @JsonProperty
-    @ApiModelProperty(
-            value = "The order in which to sort the topic within it's level.",
-            example = "1")
+    @ApiModelProperty(value = "The order in which to sort the topic within it's level.", example = "1")
     public int rank;
 
     @JsonProperty
@@ -68,15 +63,15 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
     public URI relevanceId;
 
     @JsonProperty
-    @ApiModelProperty(
-            value = "Filters this topic is associated with, directly or by inheritance",
-            example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
+    @ApiModelProperty(value = "Filters this topic is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
     @InjectMetadata
     public Set<Object> filters = new HashSet<>();
 
-    @JsonIgnore public URI topicFilterId, filterPublicId;
+    @JsonIgnore
+    public URI topicFilterId, filterPublicId;
 
-    @JsonIgnore public List<SubTopicIndexDocument> children = new ArrayList<>();
+    @JsonIgnore
+    public List<SubTopicIndexDocument> children = new ArrayList<>();
 
     private String language;
 
@@ -90,13 +85,10 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
         if (domainEntity instanceof TopicSubtopic) {
             final var topicSubtopic = (TopicSubtopic) domainEntity;
 
-            topicSubtopic
-                    .getSubtopic()
-                    .ifPresent(
-                            subtopic -> {
-                                this.populateFromTopic(subtopic);
-                                this.path = subtopic.getPathByContext(subject).orElse(null);
-                            });
+            topicSubtopic.getSubtopic().ifPresent(subtopic -> {
+                this.populateFromTopic(subtopic);
+                this.path = subtopic.getPathByContext(subject).orElse(null);
+            });
 
             topicSubtopic.getTopic().ifPresent(topic -> this.parent = topic.getPublicId());
 
@@ -109,13 +101,10 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
         } else if (domainEntity instanceof SubjectTopic) {
             final var subjectTopic = (SubjectTopic) domainEntity;
 
-            subjectTopic
-                    .getTopic()
-                    .ifPresent(
-                            topic -> {
-                                this.populateFromTopic(topic);
-                                this.path = topic.getPathByContext(subject).orElse(null);
-                            });
+            subjectTopic.getTopic().ifPresent(topic -> {
+                this.populateFromTopic(topic);
+                this.path = topic.getPathByContext(subject).orElse(null);
+            });
 
             subjectTopic.getSubject().ifPresent(s -> this.parent = s.getPublicId());
 
@@ -126,8 +115,7 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
                 this.relevanceId = relevance != null ? relevance.getPublicId() : null;
             }
         } else {
-            throw new IllegalArgumentException(
-                    "Wrapped entity must be either a SubjectTopic or TopicSubtopic");
+            throw new IllegalArgumentException("Wrapped entity must be either a SubjectTopic or TopicSubtopic");
         }
 
         this.connectionId = domainEntity.getPublicId();
@@ -142,8 +130,10 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
     @Override
     @JsonIgnore
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof SubTopicIndexDocument)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof SubTopicIndexDocument))
+            return false;
 
         SubTopicIndexDocument that = (SubTopicIndexDocument) o;
 
@@ -156,7 +146,8 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
         return id.hashCode();
     }
 
-    public SubTopicIndexDocument() {}
+    public SubTopicIndexDocument() {
+    }
 
     public void setMetadata(MetadataDto metadata) {
         this.metadata = metadata;
@@ -164,10 +155,7 @@ public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
 
     private void populateFromTopic(Topic topic) {
         this.id = topic.getPublicId();
-        this.name =
-                topic.getTranslation(this.language)
-                        .map(TopicTranslation::getName)
-                        .orElse(topic.getName());
+        this.name = topic.getTranslation(this.language).map(TopicTranslation::getName).orElse(topic.getName());
         this.contentUri = topic.getContentUri();
     }
 

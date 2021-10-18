@@ -30,52 +30,34 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
 
     private JdbcConnection connection;
 
-    private void cloneTranslations(String type, int fromId, int toId)
-            throws DatabaseException, SQLException {
+    private void cloneTranslations(String type, int fromId, int toId) throws DatabaseException, SQLException {
         final String tableName;
         final String relationColumnName;
 
         switch (type) {
-            case "topic":
-                tableName = "topic_translation";
-                relationColumnName = "topic_id";
-                break;
-            case "resource":
-                tableName = "resource_translation";
-                relationColumnName = "resource_id";
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown translation type " + type);
+        case "topic":
+            tableName = "topic_translation";
+            relationColumnName = "topic_id";
+            break;
+        case "resource":
+            tableName = "resource_translation";
+            relationColumnName = "resource_id";
+            break;
+        default:
+            throw new IllegalArgumentException("Unknown translation type " + type);
         }
 
-        try (var query =
-                        connection.prepareStatement(
-                                "SELECT language_code, name FROM "
-                                        + tableName
-                                        + " WHERE "
-                                        + relationColumnName
-                                        + " = "
-                                        + fromId);
+        try (var query = connection.prepareStatement(
+                "SELECT language_code, name FROM " + tableName + " WHERE " + relationColumnName + " = " + fromId);
                 var translationQueryResult = query.executeQuery()) {
             while (translationQueryResult.next()) {
                 final var languageCode = translationQueryResult.getString("language_code");
                 final var name = translationQueryResult.getString("name");
 
-                logger.debug(
-                        "Adding translation for "
-                                + type
-                                + " "
-                                + fromId
-                                + " languagecode "
-                                + languageCode);
+                logger.debug("Adding translation for " + type + " " + fromId + " languagecode " + languageCode);
 
-                try (var insertQuery =
-                        connection.prepareStatement(
-                                "INSERT INTO "
-                                        + tableName
-                                        + " ("
-                                        + relationColumnName
-                                        + ", language_code, name) VALUES(?, ?, ?)")) {
+                try (var insertQuery = connection.prepareStatement("INSERT INTO " + tableName + " ("
+                        + relationColumnName + ", language_code, name) VALUES(?, ?, ?)")) {
                     insertQuery.setInt(1, toId);
                     insertQuery.setString(2, languageCode);
                     insertQuery.setString(3, name);
@@ -88,60 +70,40 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
         }
     }
 
-    private void cloneFilterConnections(String type, int fromId, int toId)
-            throws DatabaseException, SQLException {
+    private void cloneFilterConnections(String type, int fromId, int toId) throws DatabaseException, SQLException {
         final String tableName;
         final String relationColumnName;
         final String publicIdPrefix;
 
         switch (type) {
-            case "topic":
-                tableName = "topic_filter";
-                relationColumnName = "topic_id";
-                publicIdPrefix = "urn:topic-filter:";
-                break;
-            case "resource":
-                tableName = "resource_filter";
-                relationColumnName = "resource_id";
-                publicIdPrefix = "urn:resource-filter:";
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown translation type " + type);
+        case "topic":
+            tableName = "topic_filter";
+            relationColumnName = "topic_id";
+            publicIdPrefix = "urn:topic-filter:";
+            break;
+        case "resource":
+            tableName = "resource_filter";
+            relationColumnName = "resource_id";
+            publicIdPrefix = "urn:resource-filter:";
+            break;
+        default:
+            throw new IllegalArgumentException("Unknown translation type " + type);
         }
 
-        try (var filterQueryResult =
-                connection
-                        .prepareStatement(
-                                "SELECT filter_id, relevance_id FROM "
-                                        + tableName
-                                        + " WHERE "
-                                        + relationColumnName
-                                        + " = "
-                                        + fromId)
-                        .executeQuery()) {
+        try (var filterQueryResult = connection.prepareStatement(
+                "SELECT filter_id, relevance_id FROM " + tableName + " WHERE " + relationColumnName + " = " + fromId)
+                .executeQuery()) {
             while (filterQueryResult.next()) {
                 final var filterId = filterQueryResult.getInt(1);
                 final var relevanceId = filterQueryResult.getInt(2);
 
                 final var newPublicId = publicIdPrefix + randomUUID();
 
-                logger.debug(
-                        "Adding filter for "
-                                + type
-                                + " "
-                                + fromId
-                                + " filterId "
-                                + filterId
-                                + " relevanceId "
-                                + relevanceId);
+                logger.debug("Adding filter for " + type + " " + fromId + " filterId " + filterId + " relevanceId "
+                        + relevanceId);
 
-                try (var insertQuery =
-                        connection.prepareStatement(
-                                "INSERT INTO "
-                                        + tableName
-                                        + " ("
-                                        + relationColumnName
-                                        + ", public_id, filter_id, relevance_id) VALUES(?, ?, ?, ?)")) {
+                try (var insertQuery = connection.prepareStatement("INSERT INTO " + tableName + " ("
+                        + relationColumnName + ", public_id, filter_id, relevance_id) VALUES(?, ?, ?, ?)")) {
                     insertQuery.setInt(1, toId);
                     insertQuery.setString(2, newPublicId);
                     insertQuery.setInt(3, filterId);
@@ -162,50 +124,33 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
         final String publicIdPrefix;
 
         switch (type) {
-            case "topic":
-                tableName = "topic_resource_type";
-                relationColumnName = "topic_id";
-                publicIdPrefix = "urn:topic-resourcetype:";
-                break;
-            case "resource":
-                tableName = "resource_resource_type";
-                relationColumnName = "resource_id";
-                publicIdPrefix = "urn:resource-resourcetype:";
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown translation type " + type);
+        case "topic":
+            tableName = "topic_resource_type";
+            relationColumnName = "topic_id";
+            publicIdPrefix = "urn:topic-resourcetype:";
+            break;
+        case "resource":
+            tableName = "resource_resource_type";
+            relationColumnName = "resource_id";
+            publicIdPrefix = "urn:resource-resourcetype:";
+            break;
+        default:
+            throw new IllegalArgumentException("Unknown translation type " + type);
         }
 
-        try (var filterQueryResult =
-                connection
-                        .prepareStatement(
-                                "SELECT resource_type_id FROM "
-                                        + tableName
-                                        + " WHERE "
-                                        + relationColumnName
-                                        + " = "
-                                        + fromId)
-                        .executeQuery()) {
+        try (var filterQueryResult = connection
+                .prepareStatement(
+                        "SELECT resource_type_id FROM " + tableName + " WHERE " + relationColumnName + " = " + fromId)
+                .executeQuery()) {
             while (filterQueryResult.next()) {
                 final var resourceTypeId = filterQueryResult.getInt(1);
 
                 final var newPublicId = publicIdPrefix + randomUUID();
 
-                logger.debug(
-                        "Adding resourceType for "
-                                + type
-                                + " "
-                                + fromId
-                                + " resourceTypeId "
-                                + resourceTypeId);
+                logger.debug("Adding resourceType for " + type + " " + fromId + " resourceTypeId " + resourceTypeId);
 
-                try (var insertQuery =
-                        connection.prepareStatement(
-                                "INSERT INTO "
-                                        + tableName
-                                        + " ("
-                                        + relationColumnName
-                                        + ", public_id, resource_type_id) VALUES(?, ?, ?)")) {
+                try (var insertQuery = connection.prepareStatement("INSERT INTO " + tableName + " ("
+                        + relationColumnName + ", public_id, resource_type_id) VALUES(?, ?, ?)")) {
                     insertQuery.setInt(1, toId);
                     insertQuery.setString(2, newPublicId);
                     insertQuery.setInt(3, resourceTypeId);
@@ -218,14 +163,10 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
         }
     }
 
-    private void connectTopicResources(int fromId, int toId)
-            throws DatabaseException, SQLException {
-        try (var topicResourceQueryResult =
-                connection
-                        .prepareStatement(
-                                "SELECT resource_id, rank FROM topic_resource WHERE topic_id = "
-                                        + fromId)
-                        .executeQuery()) {
+    private void connectTopicResources(int fromId, int toId) throws DatabaseException, SQLException {
+        try (var topicResourceQueryResult = connection
+                .prepareStatement("SELECT resource_id, rank FROM topic_resource WHERE topic_id = " + fromId)
+                .executeQuery()) {
             while (topicResourceQueryResult.next()) {
                 final var resourceId = topicResourceQueryResult.getInt(1);
                 final var rank = topicResourceQueryResult.getInt(2);
@@ -234,9 +175,8 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
 
                 logger.debug("Connecting resource " + resourceId + " to topic " + toId);
 
-                try (var insertQuery =
-                        connection.prepareStatement(
-                                "INSERT INTO topic_resource (topic_id, public_id, resource_id, rank, is_primary) VALUES(?, ?, ?, ?, false)")) {
+                try (var insertQuery = connection.prepareStatement(
+                        "INSERT INTO topic_resource (topic_id, public_id, resource_id, rank, is_primary) VALUES(?, ?, ?, ?, false)")) {
                     insertQuery.setInt(1, toId);
                     insertQuery.setString(2, newPublicId);
                     insertQuery.setInt(3, resourceId);
@@ -251,12 +191,9 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
     }
 
     private void connectSubtopics(int fromId, int toId) throws DatabaseException, SQLException {
-        try (var topicSubtopicQueryResult =
-                connection
-                        .prepareStatement(
-                                "SELECT subtopic_id, rank FROM topic_subtopic WHERE topic_id = "
-                                        + fromId)
-                        .executeQuery()) {
+        try (var topicSubtopicQueryResult = connection
+                .prepareStatement("SELECT subtopic_id, rank FROM topic_subtopic WHERE topic_id = " + fromId)
+                .executeQuery()) {
             while (topicSubtopicQueryResult.next()) {
                 final var subtopicId = topicSubtopicQueryResult.getInt(1);
                 final var rank = topicSubtopicQueryResult.getInt(2);
@@ -265,9 +202,8 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
 
                 logger.debug("Connecting subtopic " + subtopicId + " to topic " + toId);
 
-                try (var insertQuery =
-                        connection.prepareStatement(
-                                "INSERT INTO topic_subtopic (topic_id, public_id, subtopic_id, rank, is_primary) VALUES(?, ?, ?, ?, false)")) {
+                try (var insertQuery = connection.prepareStatement(
+                        "INSERT INTO topic_subtopic (topic_id, public_id, subtopic_id, rank, is_primary) VALUES(?, ?, ?, ?, false)")) {
                     insertQuery.setInt(1, toId);
                     insertQuery.setString(2, newPublicId);
                     insertQuery.setInt(3, subtopicId);
@@ -296,38 +232,37 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
 
         final var remainingParts = new StringBuilder();
         switch (parts.length) {
-            case 4:
-                for (int i = 2; i < parts.length; i++) {
-                    remainingParts.append(":").append(parts[i]);
-                }
+        case 4:
+            for (int i = 2; i < parts.length; i++) {
+                remainingParts.append(":").append(parts[i]);
+            }
 
-                return createNewPublicId("urn:" + type + ":" + 0 + remainingParts.toString());
-            case 5:
-                if (!NumberUtils.isNumber(parts[2])) {
-                    break;
-                }
+            return createNewPublicId("urn:" + type + ":" + 0 + remainingParts.toString());
+        case 5:
+            if (!NumberUtils.isNumber(parts[2])) {
+                break;
+            }
 
-                var newSerial = Integer.parseInt(parts[2]);
-                var newPublicId = "";
+            var newSerial = Integer.parseInt(parts[2]);
+            var newPublicId = "";
 
-                for (int i = 3; i < parts.length; i++) {
-                    remainingParts.append(":").append(parts[i]);
-                }
+            for (int i = 3; i < parts.length; i++) {
+                remainingParts.append(":").append(parts[i]);
+            }
 
-                do {
-                    newPublicId = "urn:" + type + ":" + ++newSerial + remainingParts.toString();
-                } while (publicIdExists(newPublicId));
+            do {
+                newPublicId = "urn:" + type + ":" + ++newSerial + remainingParts.toString();
+            } while (publicIdExists(newPublicId));
 
-                return newPublicId;
+            return newPublicId;
         }
 
         return "urn:" + type + ":" + randomUUID();
     }
 
     private boolean publicIdExists(String newPublicId) throws DatabaseException, SQLException {
-        try (var query =
-                connection.prepareStatement(
-                        "SELECT COUNT(*) FROM (SELECT public_id FROM topic UNION SELECT public_id FROM resource UNION SELECT public_id FROM resource) public_ids WHERE public_ids.public_id = ?")) {
+        try (var query = connection.prepareStatement(
+                "SELECT COUNT(*) FROM (SELECT public_id FROM topic UNION SELECT public_id FROM resource UNION SELECT public_id FROM resource) public_ids WHERE public_ids.public_id = ?")) {
             query.setString(1, newPublicId);
             final var resultSet = query.executeQuery();
             if (resultSet.next()) {
@@ -341,12 +276,9 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
     private int cloneTopic(int topicId) throws SQLException, DatabaseException {
         logger.info("Cloning topic with id " + topicId);
 
-        try (var topicQueryResult =
-                connection
-                        .prepareStatement(
-                                "SELECT public_id, name, content_uri, context FROM topic WHERE id="
-                                        + topicId)
-                        .executeQuery()) {
+        try (var topicQueryResult = connection
+                .prepareStatement("SELECT public_id, name, content_uri, context FROM topic WHERE id=" + topicId)
+                .executeQuery()) {
 
             if (!topicQueryResult.next()) {
                 throw new RuntimeException("Topic not found");
@@ -359,9 +291,8 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
 
             final var newPublicId = createNewPublicId(publicId);
 
-            try (var newTopicStatement =
-                    connection.prepareStatement(
-                            "INSERT INTO topic (public_id, name, content_uri, context) VALUES(?, ?, ?, ?) RETURNING id")) {
+            try (var newTopicStatement = connection.prepareStatement(
+                    "INSERT INTO topic (public_id, name, content_uri, context) VALUES(?, ?, ?, ?) RETURNING id")) {
                 newTopicStatement.setString(1, newPublicId);
                 newTopicStatement.setString(2, name);
                 newTopicStatement.setString(3, content_uri);
@@ -389,12 +320,9 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
     private int cloneResource(int resourceId) throws SQLException, DatabaseException {
         logger.info("Cloning resource with id " + resourceId);
 
-        try (var resourceQueryResult =
-                connection
-                        .prepareStatement(
-                                "SELECT public_id, name, content_uri FROM resource WHERE id = "
-                                        + resourceId)
-                        .executeQuery()) {
+        try (var resourceQueryResult = connection
+                .prepareStatement("SELECT public_id, name, content_uri FROM resource WHERE id = " + resourceId)
+                .executeQuery()) {
 
             if (!resourceQueryResult.next()) {
                 throw new RuntimeException("Resource not found");
@@ -406,9 +334,8 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
 
             final var newPublicId = createNewPublicId(publicId);
 
-            try (var newResourceStatement =
-                    connection.prepareStatement(
-                            "INSERT INTO resource (public_id, name, content_uri) VALUES(?, ?, ?) RETURNING id")) {
+            try (var newResourceStatement = connection.prepareStatement(
+                    "INSERT INTO resource (public_id, name, content_uri) VALUES(?, ?, ?) RETURNING id")) {
                 newResourceStatement.setString(1, newPublicId);
                 newResourceStatement.setString(2, name);
                 newResourceStatement.setString(3, content_uri);
@@ -447,30 +374,23 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
             }
         }
 
-        try (var query =
-                connection.prepareStatement(
-                        "SELECT 'topic' as type, id, topic_id AS parent_id, subtopic_id AS topic_id, rank FROM topic_subtopic WHERE subtopic_id = "
-                                + topicId
-                                + " UNION SELECT 'subject' as type, id, subject_id AS parent_id, topic_id AS topic_id, rank FROM subject_topic WHERE topic_id = "
-                                + topicId)) {
+        try (var query = connection.prepareStatement(
+                "SELECT 'topic' as type, id, topic_id AS parent_id, subtopic_id AS topic_id, rank FROM topic_subtopic WHERE subtopic_id = "
+                        + topicId
+                        + " UNION SELECT 'subject' as type, id, subject_id AS parent_id, topic_id AS topic_id, rank FROM subject_topic WHERE topic_id = "
+                        + topicId)) {
             final var result = query.executeQuery();
 
             final var rows = new ArrayList<TopicConnection>();
 
             while (result.next()) {
-                rows.add(
-                        new TopicConnection(
-                                result.getString("type"),
-                                result.getInt("id"),
-                                result.getInt("parent_id"),
-                                result.getInt("topic_id"),
-                                result.getInt("rank")));
+                rows.add(new TopicConnection(result.getString("type"), result.getInt("id"), result.getInt("parent_id"),
+                        result.getInt("topic_id"), result.getInt("rank")));
             }
 
             if (rows.size() < 2) {
                 throw new IllegalArgumentException(
-                        "Could not get two or more parent topic/subject connections for topic with id "
-                                + topicId);
+                        "Could not get two or more parent topic/subject connections for topic with id " + topicId);
             }
 
             // Keep one connection
@@ -479,22 +399,18 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
             for (final var connectionToClone : rows) {
                 String tableToDeleteFrom;
                 switch (connectionToClone.type) {
-                    case "subject":
-                        tableToDeleteFrom = "subject_topic";
-                        break;
-                    case "topic":
-                        tableToDeleteFrom = "topic_subtopic";
-                        break;
-                    default:
-                        throw new RuntimeException();
+                case "subject":
+                    tableToDeleteFrom = "subject_topic";
+                    break;
+                case "topic":
+                    tableToDeleteFrom = "topic_subtopic";
+                    break;
+                default:
+                    throw new RuntimeException();
                 }
 
-                try (var deleteSubTopicsQuery =
-                        connection.prepareStatement(
-                                "DELETE FROM "
-                                        + tableToDeleteFrom
-                                        + " WHERE id = "
-                                        + connectionToClone.id)) {
+                try (var deleteSubTopicsQuery = connection
+                        .prepareStatement("DELETE FROM " + tableToDeleteFrom + " WHERE id = " + connectionToClone.id)) {
                     if (deleteSubTopicsQuery.executeUpdate() != 1) {
                         throw new IllegalStateException("Got wrong deleted rows count from delete");
                     }
@@ -503,63 +419,48 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
                 final var newTopicId = cloneTopic(topicId);
 
                 switch (connectionToClone.type) {
-                    case "topic":
-                        {
-                            final var newPublicId = "urn:topic-subtopic:" + randomUUID();
+                case "topic": {
+                    final var newPublicId = "urn:topic-subtopic:" + randomUUID();
 
-                            logger.info(
-                                    "Connecting parent topic "
-                                            + connectionToClone.parentId
-                                            + " to subtopic "
-                                            + newTopicId);
-                            try (var createConnectionQuery =
-                                    connection.prepareStatement(
-                                            "INSERT INTO topic_subtopic (public_id, topic_id, subtopic_id, rank, is_primary) VALUES(?, ?, ?, ?, true)")) {
-                                createConnectionQuery.setString(1, newPublicId);
-                                createConnectionQuery.setInt(2, connectionToClone.parentId);
-                                createConnectionQuery.setInt(3, newTopicId);
-                                createConnectionQuery.setInt(4, connectionToClone.rank);
+                    logger.info("Connecting parent topic " + connectionToClone.parentId + " to subtopic " + newTopicId);
+                    try (var createConnectionQuery = connection.prepareStatement(
+                            "INSERT INTO topic_subtopic (public_id, topic_id, subtopic_id, rank, is_primary) VALUES(?, ?, ?, ?, true)")) {
+                        createConnectionQuery.setString(1, newPublicId);
+                        createConnectionQuery.setInt(2, connectionToClone.parentId);
+                        createConnectionQuery.setInt(3, newTopicId);
+                        createConnectionQuery.setInt(4, connectionToClone.rank);
 
-                                if (createConnectionQuery.executeUpdate() != 1) {
-                                    throw new RuntimeException(
-                                            "Unable to create new parent topic connection");
-                                }
-                            }
-                            break;
+                        if (createConnectionQuery.executeUpdate() != 1) {
+                            throw new RuntimeException("Unable to create new parent topic connection");
                         }
-                    case "subject":
-                        {
-                            final var newPublicId = "urn:subject-topic:" + randomUUID();
+                    }
+                    break;
+                }
+                case "subject": {
+                    final var newPublicId = "urn:subject-topic:" + randomUUID();
 
-                            logger.info(
-                                    "Connecting parent subject "
-                                            + connectionToClone.parentId
-                                            + " to topic "
-                                            + newTopicId);
-                            try (var createConnectionQuery =
-                                    connection.prepareStatement(
-                                            "INSERT INTO subject_topic (public_id, subject_id, topic_id, rank, is_primary) VALUES(?, ?, ?, ?, true)")) {
-                                createConnectionQuery.setString(1, newPublicId);
-                                createConnectionQuery.setInt(2, connectionToClone.parentId);
-                                createConnectionQuery.setInt(3, newTopicId);
-                                createConnectionQuery.setInt(4, connectionToClone.rank);
+                    logger.info("Connecting parent subject " + connectionToClone.parentId + " to topic " + newTopicId);
+                    try (var createConnectionQuery = connection.prepareStatement(
+                            "INSERT INTO subject_topic (public_id, subject_id, topic_id, rank, is_primary) VALUES(?, ?, ?, ?, true)")) {
+                        createConnectionQuery.setString(1, newPublicId);
+                        createConnectionQuery.setInt(2, connectionToClone.parentId);
+                        createConnectionQuery.setInt(3, newTopicId);
+                        createConnectionQuery.setInt(4, connectionToClone.rank);
 
-                                if (createConnectionQuery.executeUpdate() != 1) {
-                                    throw new RuntimeException(
-                                            "Unable to create new parent subject connection");
-                                }
-                            }
-                            break;
+                        if (createConnectionQuery.executeUpdate() != 1) {
+                            throw new RuntimeException("Unable to create new parent subject connection");
                         }
-                    default:
-                        throw new IllegalArgumentException("Unknown type");
+                    }
+                    break;
+                }
+                default:
+                    throw new IllegalArgumentException("Unknown type");
                 }
             }
         }
     }
 
-    private void cloneAndDisconnectTopicResource(int resourceId)
-            throws DatabaseException, SQLException {
+    private void cloneAndDisconnectTopicResource(int resourceId) throws DatabaseException, SQLException {
         final class TopicResourceConnection {
             private int id;
             private int topicId;
@@ -574,93 +475,71 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
             }
         }
 
-        try (var query =
-                        connection.prepareStatement(
-                                "SELECT id, topic_id, resource_id, rank FROM topic_resource WHERE resource_id = "
-                                        + resourceId);
+        try (var query = connection.prepareStatement(
+                "SELECT id, topic_id, resource_id, rank FROM topic_resource WHERE resource_id = " + resourceId);
                 var result = query.executeQuery()) {
 
             final var rows = new ArrayList<TopicResourceConnection>();
 
             while (result.next()) {
-                rows.add(
-                        new TopicResourceConnection(
-                                result.getInt("id"),
-                                result.getInt("topic_id"),
-                                result.getInt("resource_id"),
-                                result.getInt("rank")));
+                rows.add(new TopicResourceConnection(result.getInt("id"), result.getInt("topic_id"),
+                        result.getInt("resource_id"), result.getInt("rank")));
             }
 
             if (rows.size() < 2) {
                 throw new IllegalArgumentException(
-                        "Could not get two or more parent topic connections for resource with id"
-                                + resourceId);
+                        "Could not get two or more parent topic connections for resource with id" + resourceId);
             }
 
             // Keep one connection
             rows.remove(0);
 
             for (final var connectionToClone : rows) {
-                try (var topicResourceDeleteQuery =
-                        connection.prepareStatement(
-                                "DELETE FROM topic_resource WHERE id = " + connectionToClone.id)) {
+                try (var topicResourceDeleteQuery = connection
+                        .prepareStatement("DELETE FROM topic_resource WHERE id = " + connectionToClone.id)) {
                     if (topicResourceDeleteQuery.executeUpdate() != 1) {
-                        throw new IllegalStateException(
-                                "Got wrong delete row count when deleting one connection");
+                        throw new IllegalStateException("Got wrong delete row count when deleting one connection");
                     }
                 }
 
                 final var newResourceId = cloneResource(resourceId);
                 final var newPublicId = "urn:topic-resource:" + randomUUID();
 
-                logger.info(
-                        "Connecting parent topic "
-                                + connectionToClone.topicId
-                                + " to resource "
-                                + newResourceId);
-                try (var createConnectionQuery =
-                        connection.prepareStatement(
-                                "INSERT INTO topic_resource (public_id, topic_id, resource_id, rank, is_primary) VALUES(?, ?, ?, ?, true)")) {
+                logger.info("Connecting parent topic " + connectionToClone.topicId + " to resource " + newResourceId);
+                try (var createConnectionQuery = connection.prepareStatement(
+                        "INSERT INTO topic_resource (public_id, topic_id, resource_id, rank, is_primary) VALUES(?, ?, ?, ?, true)")) {
                     createConnectionQuery.setString(1, newPublicId);
                     createConnectionQuery.setInt(2, connectionToClone.topicId);
                     createConnectionQuery.setInt(3, newResourceId);
                     createConnectionQuery.setInt(4, connectionToClone.rank);
 
                     if (createConnectionQuery.executeUpdate() != 1) {
-                        throw new RuntimeException(
-                                "Unable to create new parent topic connection for resource");
+                        throw new RuntimeException("Unable to create new parent topic connection for resource");
                     }
                 }
             }
         }
     }
 
-    private void verifyNoSharedEntitiesExists()
-            throws DatabaseException, SQLException, CustomChangeException {
-        try (var topicQuery =
-                connection.prepareStatement(
-                        "SELECT COUNT(parent), child FROM (SELECT topic_id as parent, subtopic_id as child FROM topic_subtopic UNION SELECT subject_id as parent, topic_id AS child FROM subject_topic) connections GROUP by child")) {
+    private void verifyNoSharedEntitiesExists() throws DatabaseException, SQLException, CustomChangeException {
+        try (var topicQuery = connection.prepareStatement(
+                "SELECT COUNT(parent), child FROM (SELECT topic_id as parent, subtopic_id as child FROM topic_subtopic UNION SELECT subject_id as parent, topic_id AS child FROM subject_topic) connections GROUP by child")) {
             final var result = topicQuery.executeQuery();
             while (result.next()) {
                 if (result.getInt(1) > 1) {
                     throw new CustomChangeException(
-                            "Topic with ID "
-                                    + result.getInt(2)
-                                    + " still has more than one parent connection");
+                            "Topic with ID " + result.getInt(2) + " still has more than one parent connection");
                 }
             }
         }
 
-        try (var resourceQuery =
-                connection.prepareStatement(
-                        "SELECT COUNT(parent), child FROM (SELECT topic_id as parent, resource_id as child FROM topic_resource) connections GROUP by child")) {
+        try (var resourceQuery = connection.prepareStatement(
+                "SELECT COUNT(parent), child FROM (SELECT topic_id as parent, resource_id as child FROM topic_resource) connections GROUP by child")) {
             final var result = resourceQuery.executeQuery();
             while (result.next()) {
                 if (result.getInt(1) > 1) {
                     throw new CustomChangeException(
-                            "Resource with ID "
-                                    + result.getInt(2)
-                                    + " still has more than one parent connection");
+                            "Resource with ID " + result.getInt(2) + " still has more than one parent connection");
                 }
             }
         }
@@ -673,8 +552,7 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
         try {
             connection.setAutoCommit(false);
         } catch (DatabaseException e) {
-            throw new CustomChangeException(
-                    "Error starting transaction. No changes made. Error:" + e.getMessage(), e);
+            throw new CustomChangeException("Error starting transaction. No changes made. Error:" + e.getMessage(), e);
         }
 
         try {
@@ -690,11 +568,9 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
                 countSharedTopics = 0;
                 countSharedResources = 0;
 
-                try (var findSharedTopicSubtopicsQuery =
-                        connection.prepareStatement(
-                                "SELECT child_id FROM (SELECT ts.topic_id AS parent_id, ts.subtopic_id AS child_id FROM topic_subtopic AS ts UNION SELECT st.subject_id AS parent_id, st.topic_id AS child_id FROM subject_topic AS st) AS connections GROUP BY child_id HAVING COUNT(parent_id) > 1")) {
-                    final var sharedTopicsQueryResult =
-                            findSharedTopicSubtopicsQuery.executeQuery();
+                try (var findSharedTopicSubtopicsQuery = connection.prepareStatement(
+                        "SELECT child_id FROM (SELECT ts.topic_id AS parent_id, ts.subtopic_id AS child_id FROM topic_subtopic AS ts UNION SELECT st.subject_id AS parent_id, st.topic_id AS child_id FROM subject_topic AS st) AS connections GROUP BY child_id HAVING COUNT(parent_id) > 1")) {
+                    final var sharedTopicsQueryResult = findSharedTopicSubtopicsQuery.executeQuery();
 
                     while (sharedTopicsQueryResult.next()) {
                         countSharedTopics++;
@@ -704,17 +580,14 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
                     }
                 }
 
-                try (var findSharedTopicResourcesQuery =
-                        connection.prepareStatement(
-                                "SELECT resource_id FROM topic_resource GROUP BY resource_id HAVING COUNT(id) > 1")) {
-                    final var sharedResourcesQueryResult =
-                            findSharedTopicResourcesQuery.executeQuery();
+                try (var findSharedTopicResourcesQuery = connection.prepareStatement(
+                        "SELECT resource_id FROM topic_resource GROUP BY resource_id HAVING COUNT(id) > 1")) {
+                    final var sharedResourcesQueryResult = findSharedTopicResourcesQuery.executeQuery();
 
                     while (sharedResourcesQueryResult.next()) {
                         countSharedResources++;
 
-                        cloneAndDisconnectTopicResource(
-                                sharedResourcesQueryResult.getInt("resource_id"));
+                        cloneAndDisconnectTopicResource(sharedResourcesQueryResult.getInt("resource_id"));
                     }
                 }
 
@@ -726,19 +599,11 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
         } catch (Exception e) {
             try {
                 connection.rollback();
-                throw new CustomChangeException(
-                        e.getClass().toString()
-                                + " while doing migration. Transaction rolled back. Error: "
-                                + e.getMessage(),
-                        e);
+                throw new CustomChangeException(e.getClass().toString()
+                        + " while doing migration. Transaction rolled back. Error: " + e.getMessage(), e);
             } catch (DatabaseException e2) {
-                throw new CustomChangeException(
-                        e.getClass().toString()
-                                + " while doing migration. Error "
-                                + e.getMessage()
-                                + " Error rolling back transaction: "
-                                + e2.getMessage(),
-                        e2);
+                throw new CustomChangeException(e.getClass().toString() + " while doing migration. Error "
+                        + e.getMessage() + " Error rolling back transaction: " + e2.getMessage(), e2);
             }
         }
     }
@@ -749,10 +614,12 @@ public class RemoveSharedTopicsSqlChange implements CustomSqlChange {
     }
 
     @Override
-    public void setUp() throws SetupException {}
+    public void setUp() throws SetupException {
+    }
 
     @Override
-    public void setFileOpener(ResourceAccessor resourceAccessor) {}
+    public void setFileOpener(ResourceAccessor resourceAccessor) {
+    }
 
     @Override
     public ValidationErrors validate(Database database) {

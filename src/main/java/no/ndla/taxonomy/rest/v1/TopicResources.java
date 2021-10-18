@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = {"/v1/topic-resources"})
+@RequestMapping(path = { "/v1/topic-resources" })
 @Transactional
 public class TopicResources {
 
@@ -42,11 +42,8 @@ public class TopicResources {
     private final EntityConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
 
-    public TopicResources(
-            TopicRepository topicRepository,
-            ResourceRepository resourceRepository,
-            TopicResourceRepository topicResourceRepository,
-            EntityConnectionService connectionService,
+    public TopicResources(TopicRepository topicRepository, ResourceRepository resourceRepository,
+            TopicResourceRepository topicResourceRepository, EntityConnectionService connectionService,
             RelevanceRepository relevanceRepository) {
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
@@ -58,8 +55,7 @@ public class TopicResources {
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and resources")
     public List<TopicResourceIndexDocument> index() {
-        return topicResourceRepository.findAllIncludingTopicAndResource().stream()
-                .map(TopicResourceIndexDocument::new)
+        return topicResourceRepository.findAllIncludingTopicAndResource().stream().map(TopicResourceIndexDocument::new)
                 .collect(Collectors.toList());
     }
 
@@ -74,24 +70,16 @@ public class TopicResources {
     @ApiOperation(value = "Adds a resource to a topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "connection", value = "new topic/resource connection ") @RequestBody
-                    AddResourceToTopicCommand command) {
+            @ApiParam(name = "connection", value = "new topic/resource connection ") @RequestBody AddResourceToTopicCommand command) {
 
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Resource resource = resourceRepository.getByPublicId(command.resourceId);
-        Relevance relevance =
-                command.relevanceId != null
-                        ? relevanceRepository.getByPublicId(command.relevanceId)
-                        : null;
+        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
+                : null;
 
         final TopicResource topicResource;
-        topicResource =
-                connectionService.connectTopicResource(
-                        topic,
-                        resource,
-                        relevance,
-                        command.primary,
-                        command.rank == 0 ? null : command.rank);
+        topicResource = connectionService.connectTopicResource(topic, resource, relevance, command.primary,
+                command.rank == 0 ? null : command.rank);
 
         URI location = URI.create("/topic-resources/" + topicResource.getPublicId());
         return ResponseEntity.created(location).build();
@@ -106,28 +94,21 @@ public class TopicResources {
     }
 
     @PutMapping("/{id}")
-    @ApiOperation(
-            value = "Updates a connection between a topic and a resource",
-            notes =
-                    "Use to update which topic is primary to the resource or to change sorting order.")
+    @ApiOperation(value = "Updates a connection between a topic and a resource", notes = "Use to update which topic is primary to the resource or to change sorting order.")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void put(
-            @PathVariable("id") URI id,
-            @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody
-                    UpdateTopicResourceCommand command) {
+    public void put(@PathVariable("id") URI id,
+            @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand command) {
         TopicResource topicResource = topicResourceRepository.getByPublicId(id);
-        Relevance relevance =
-                command.relevanceId != null
-                        ? relevanceRepository.getByPublicId(command.relevanceId)
-                        : null;
+        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
+                : null;
 
         if (topicResource.isPrimary().orElseThrow() && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
 
-        connectionService.updateTopicResource(
-                topicResource, relevance, command.primary, command.rank > 0 ? command.rank : null);
+        connectionService.updateTopicResource(topicResource, relevance, command.primary,
+                command.rank > 0 ? command.rank : null);
     }
 
     public static class AddResourceToTopicCommand {
@@ -154,9 +135,7 @@ public class TopicResources {
 
     public static class UpdateTopicResourceCommand {
         @JsonProperty
-        @ApiModelProperty(
-                value = "Topic resource connection id",
-                example = "urn:topic-has-resources:123")
+        @ApiModelProperty(value = "Topic resource connection id", example = "urn:topic-has-resources:123")
         public URI id;
 
         @JsonProperty
@@ -164,9 +143,7 @@ public class TopicResources {
         public boolean primary;
 
         @JsonProperty
-        @ApiModelProperty(
-                value = "Order in which the resource will be sorted for this topic.",
-                example = "1")
+        @ApiModelProperty(value = "Order in which the resource will be sorted for this topic.", example = "1")
         public int rank;
 
         @JsonProperty
@@ -185,9 +162,7 @@ public class TopicResources {
         URI resourceId;
 
         @JsonProperty
-        @ApiModelProperty(
-                value = "Topic resource connection id",
-                example = "urn:topic-has-resources:123")
+        @ApiModelProperty(value = "Topic resource connection id", example = "urn:topic-has-resources:123")
         public URI id;
 
         @JsonProperty
@@ -195,16 +170,15 @@ public class TopicResources {
         public boolean primary;
 
         @JsonProperty
-        @ApiModelProperty(
-                value = "Order in which the resource is sorted for the topic",
-                example = "1")
+        @ApiModelProperty(value = "Order in which the resource is sorted for the topic", example = "1")
         public int rank;
 
         @JsonProperty
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
-        TopicResourceIndexDocument() {}
+        TopicResourceIndexDocument() {
+        }
 
         TopicResourceIndexDocument(TopicResource topicResource) {
             id = topicResource.getPublicId();

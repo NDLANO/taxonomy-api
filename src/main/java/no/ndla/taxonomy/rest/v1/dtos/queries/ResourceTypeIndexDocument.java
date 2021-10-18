@@ -29,8 +29,10 @@ public class ResourceTypeIndexDocument {
     @Override
     @JsonIgnore
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ResourceTypeIndexDocument)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof ResourceTypeIndexDocument))
+            return false;
         ResourceTypeIndexDocument that = (ResourceTypeIndexDocument) o;
         return id.equals(that.id);
     }
@@ -41,14 +43,12 @@ public class ResourceTypeIndexDocument {
         return id.hashCode();
     }
 
-    public ResourceTypeIndexDocument() {}
+    public ResourceTypeIndexDocument() {
+    }
 
     public ResourceTypeIndexDocument(ResourceType resourceType, String languageCode) {
         this.id = resourceType.getPublicId();
-        this.name =
-                resourceType
-                        .getTranslation(languageCode)
-                        .map(ResourceTypeTranslation::getName)
-                        .orElse(resourceType.getName());
+        this.name = resourceType.getTranslation(languageCode).map(ResourceTypeTranslation::getName)
+                .orElse(resourceType.getName());
     }
 }

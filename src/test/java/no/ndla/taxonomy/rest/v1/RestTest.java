@@ -38,31 +38,44 @@ import static org.mockito.Mockito.when;
 @Transactional
 public abstract class RestTest {
 
-    @Autowired EntityManager entityManager;
+    @Autowired
+    EntityManager entityManager;
 
-    @Autowired SubjectRepository subjectRepository;
+    @Autowired
+    SubjectRepository subjectRepository;
 
-    @Autowired TopicRepository topicRepository;
+    @Autowired
+    TopicRepository topicRepository;
 
-    @Autowired TopicResourceRepository topicResourceRepository;
+    @Autowired
+    TopicResourceRepository topicResourceRepository;
 
-    @Autowired SubjectTopicRepository subjectTopicRepository;
+    @Autowired
+    SubjectTopicRepository subjectTopicRepository;
 
-    @Autowired TopicSubtopicRepository topicSubtopicRepository;
+    @Autowired
+    TopicSubtopicRepository topicSubtopicRepository;
 
-    @Autowired ResourceResourceTypeRepository resourceResourceTypeRepository;
+    @Autowired
+    ResourceResourceTypeRepository resourceResourceTypeRepository;
 
-    @Autowired ResourceRepository resourceRepository;
+    @Autowired
+    ResourceRepository resourceRepository;
 
-    @Autowired ResourceTypeRepository resourceTypeRepository;
+    @Autowired
+    ResourceTypeRepository resourceTypeRepository;
 
-    @Autowired RelevanceRepository relevanceRepository;
+    @Autowired
+    RelevanceRepository relevanceRepository;
 
-    @Autowired protected TestUtils testUtils;
+    @Autowired
+    protected TestUtils testUtils;
 
-    @MockBean protected MetadataApiService metadataApiService;
+    @MockBean
+    protected MetadataApiService metadataApiService;
 
-    @Autowired protected CachedUrlUpdaterService cachedUrlUpdaterService;
+    @Autowired
+    protected CachedUrlUpdaterService cachedUrlUpdaterService;
 
     protected Builder builder;
 
@@ -71,8 +84,7 @@ public abstract class RestTest {
         metadata.setPublicId(publicId.toString());
 
         // Can search for RESOURCE1 where publicId is urn:resource:1 in the test
-        metadata.setGrepCodes(
-                Set.of(publicId.getSchemeSpecificPart().replace(":", "").toUpperCase()));
+        metadata.setGrepCodes(Set.of(publicId.getSchemeSpecificPart().replace(":", "").toUpperCase()));
 
         metadata.setVisible(true);
 
@@ -84,29 +96,21 @@ public abstract class RestTest {
     public void restTestSetUp() {
         builder = new Builder(entityManager, cachedUrlUpdaterService);
 
-        when(metadataApiService.getMetadataByPublicId(any(URI.class)))
-                .thenAnswer(
-                        invocationOnMock ->
-                                metadataApiService
-                                        .getMetadataByPublicId(
-                                                List.of((URI) invocationOnMock.getArgument(0)))
-                                        .stream()
-                                        .findFirst()
-                                        .orElseThrow());
+        when(metadataApiService.getMetadataByPublicId(any(URI.class))).thenAnswer(invocationOnMock -> metadataApiService
+                .getMetadataByPublicId(List.of((URI) invocationOnMock.getArgument(0))).stream().findFirst()
+                .orElseThrow());
 
-        when(metadataApiService.getMetadataByPublicId(any(Collection.class)))
-                .thenAnswer(
-                        invocationOnMock -> {
-                            final var idList = (Collection<URI>) invocationOnMock.getArgument(0);
+        when(metadataApiService.getMetadataByPublicId(any(Collection.class))).thenAnswer(invocationOnMock -> {
+            final var idList = (Collection<URI>) invocationOnMock.getArgument(0);
 
-                            final var returnList = new HashSet<MetadataDto>();
+            final var returnList = new HashSet<MetadataDto>();
 
-                            for (var publicId : idList) {
-                                returnList.add(createMetadataObject(publicId));
-                            }
+            for (var publicId : idList) {
+                returnList.add(createMetadataObject(publicId));
+            }
 
-                            return returnList;
-                        });
+            return returnList;
+        });
     }
 
     <T> T save(T entity) {

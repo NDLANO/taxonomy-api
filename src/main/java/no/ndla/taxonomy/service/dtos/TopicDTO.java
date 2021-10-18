@@ -33,10 +33,7 @@ public class TopicDTO {
     private String name;
 
     @JsonProperty
-    @ApiModelProperty(
-            value =
-                    "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.",
-            example = "urn:article:1")
+    @ApiModelProperty(value = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
     private URI contentUri;
 
     @JsonProperty
@@ -55,7 +52,8 @@ public class TopicDTO {
     @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
     public URI relevanceId;
 
-    public TopicDTO() {}
+    public TopicDTO() {
+    }
 
     public TopicDTO(Topic topic, String languageCode) {
         this.id = topic.getPublicId();
@@ -64,15 +62,10 @@ public class TopicDTO {
 
         this.path = topic.getPrimaryPath().orElse(null);
 
-        this.name =
-                topic.getTranslation(languageCode)
-                        .map(TopicTranslation::getName)
-                        .orElse(topic.getName());
+        this.name = topic.getTranslation(languageCode).map(TopicTranslation::getName).orElse(topic.getName());
 
-        Optional<Relevance> relevance =
-                topic.getParentTopicSubtopic().flatMap(TopicSubtopic::getRelevance);
-        this.relevanceId =
-                relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
+        Optional<Relevance> relevance = topic.getParentTopicSubtopic().flatMap(TopicSubtopic::getRelevance);
+        this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
     }
 
     public URI getId() {

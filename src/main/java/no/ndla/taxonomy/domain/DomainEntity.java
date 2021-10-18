@@ -17,7 +17,8 @@ public class DomainEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column private URI publicId;
+    @Column
+    private URI publicId;
 
     public Integer getId() {
         return id;

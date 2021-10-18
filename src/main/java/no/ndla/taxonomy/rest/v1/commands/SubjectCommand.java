@@ -17,17 +17,11 @@ import java.util.Optional;
 
 public class SubjectCommand implements UpdatableDto<Subject> {
     @JsonProperty
-    @ApiModelProperty(
-            notes =
-                    "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.",
-            example = "urn:subject:1")
+    @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:subject:1")
     public URI id;
 
     @JsonProperty
-    @ApiModelProperty(
-            value =
-                    "ID of article introducing this subject. Must be a valid URI, but preferably not a URL.",
-            example = "urn:article:1")
+    @ApiModelProperty(value = "ID of article introducing this subject. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
     public URI contentUri;
 
     @JsonProperty
@@ -41,7 +35,8 @@ public class SubjectCommand implements UpdatableDto<Subject> {
 
     @Override
     public void apply(Subject subject) {
-        if (getId().isPresent()) subject.setPublicId(id);
+        if (getId().isPresent())
+            subject.setPublicId(id);
         subject.setName(name);
         subject.setContentUri(contentUri);
     }

@@ -19,11 +19,14 @@ public class ResourceTypeTranslation {
     @JoinColumn(name = "resource_type_id")
     private ResourceType resourceType;
 
-    @Column private String name;
+    @Column
+    private String name;
 
-    @Column private String languageCode;
+    @Column
+    private String languageCode;
 
-    ResourceTypeTranslation() {}
+    ResourceTypeTranslation() {
+    }
 
     public ResourceTypeTranslation(ResourceType resourceType, String languageCode) {
         setResourceType(resourceType);
@@ -35,8 +38,7 @@ public class ResourceTypeTranslation {
     }
 
     public void setResourceType(ResourceType resourceType) {
-        if (resourceType != this.resourceType
-                && this.resourceType != null
+        if (resourceType != this.resourceType && this.resourceType != null
                 && this.resourceType.getTranslations().contains(this)) {
             this.resourceType.removeTranslation(this);
         }

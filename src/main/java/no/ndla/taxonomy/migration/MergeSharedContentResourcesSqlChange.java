@@ -27,45 +27,33 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
 
     private JdbcConnection connection;
 
-    private void mergeResourceRelations(int destinationId, int sourceId)
-            throws CustomChangeException {
+    private void mergeResourceRelations(int destinationId, int sourceId) throws CustomChangeException {
         try {
-            try (var filtersQuery =
-                    connection.prepareStatement(
-                            "SELECT id, filter_id FROM resource_filter rf1 WHERE resource_id = "
-                                    + sourceId)) {
+            try (var filtersQuery = connection.prepareStatement(
+                    "SELECT id, filter_id FROM resource_filter rf1 WHERE resource_id = " + sourceId)) {
                 final var filtersResult = filtersQuery.executeQuery();
 
                 while (filtersResult.next()) {
                     final var connectionId = filtersResult.getInt(1);
                     final var filterId = filtersResult.getInt(2);
 
-                    try (var filterExistsOnDestinationQuery =
-                            connection.prepareStatement(
-                                    "SELECT COUNT(*) FROM resource_filter WHERE filter_id = "
-                                            + filterId
-                                            + " AND resource_id = "
-                                            + destinationId)) {
-                        final var filterExistsResult =
-                                filterExistsOnDestinationQuery.executeQuery();
+                    try (var filterExistsOnDestinationQuery = connection
+                            .prepareStatement("SELECT COUNT(*) FROM resource_filter WHERE filter_id = " + filterId
+                                    + " AND resource_id = " + destinationId)) {
+                        final var filterExistsResult = filterExistsOnDestinationQuery.executeQuery();
                         filterExistsResult.next();
 
                         final var existsCount = filterExistsResult.getInt(1);
 
                         if (existsCount == 0) {
-                            try (final var updateQuery =
-                                    connection.prepareStatement(
-                                            "UPDATE resource_filter SET resource_id = "
-                                                    + destinationId
-                                                    + " WHERE id = "
-                                                    + connectionId)) {
+                            try (final var updateQuery = connection
+                                    .prepareStatement("UPDATE resource_filter SET resource_id = " + destinationId
+                                            + " WHERE id = " + connectionId)) {
                                 updateQuery.executeUpdate();
                             }
                         } else {
-                            try (final var deleteQuery =
-                                    connection.prepareStatement(
-                                            "DELETE FROM resource_filter WHERE id = "
-                                                    + connectionId)) {
+                            try (final var deleteQuery = connection
+                                    .prepareStatement("DELETE FROM resource_filter WHERE id = " + connectionId)) {
                                 deleteQuery.executeUpdate();
                             }
                         }
@@ -73,42 +61,31 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
                 }
             }
 
-            try (var resourceTypeQuery =
-                    connection.prepareStatement(
-                            "SELECT id, resource_type_id FROM resource_resource_type WHERE resource_id = "
-                                    + sourceId)) {
+            try (var resourceTypeQuery = connection.prepareStatement(
+                    "SELECT id, resource_type_id FROM resource_resource_type WHERE resource_id = " + sourceId)) {
                 final var resourceTypeResult = resourceTypeQuery.executeQuery();
 
                 while (resourceTypeResult.next()) {
                     final var connectionId = resourceTypeResult.getInt(1);
                     final var resourceTypeId = resourceTypeResult.getInt(2);
 
-                    try (var existsOnDestinationQuery =
-                            connection.prepareStatement(
-                                    "SELECT COUNT(*) FROM resource_resource_type WHERE resource_type_id = "
-                                            + resourceTypeId
-                                            + " AND resource_id = "
-                                            + destinationId)) {
-                        final var existsOnDestinationResult =
-                                existsOnDestinationQuery.executeQuery();
+                    try (var existsOnDestinationQuery = connection
+                            .prepareStatement("SELECT COUNT(*) FROM resource_resource_type WHERE resource_type_id = "
+                                    + resourceTypeId + " AND resource_id = " + destinationId)) {
+                        final var existsOnDestinationResult = existsOnDestinationQuery.executeQuery();
                         existsOnDestinationResult.next();
 
                         final var existsCount = existsOnDestinationResult.getInt(1);
 
                         if (existsCount == 0) {
-                            try (final var updateQuery =
-                                    connection.prepareStatement(
-                                            "UPDATE resource_resource_type SET resource_id = "
-                                                    + destinationId
-                                                    + " WHERE id = "
-                                                    + connectionId)) {
+                            try (final var updateQuery = connection
+                                    .prepareStatement("UPDATE resource_resource_type SET resource_id = " + destinationId
+                                            + " WHERE id = " + connectionId)) {
                                 updateQuery.executeUpdate();
                             }
                         } else {
-                            try (final var deleteQuery =
-                                    connection.prepareStatement(
-                                            "DELETE FROM resource_resource_type WHERE id = "
-                                                    + connectionId)) {
+                            try (final var deleteQuery = connection.prepareStatement(
+                                    "DELETE FROM resource_resource_type WHERE id = " + connectionId)) {
                                 deleteQuery.executeUpdate();
                             }
                         }
@@ -116,42 +93,31 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
                 }
             }
 
-            try (var resourceTypeQuery =
-                    connection.prepareStatement(
-                            "SELECT id, resource_type_id FROM resource_resource_type WHERE resource_id = "
-                                    + sourceId)) {
+            try (var resourceTypeQuery = connection.prepareStatement(
+                    "SELECT id, resource_type_id FROM resource_resource_type WHERE resource_id = " + sourceId)) {
                 final var resourceTypeResult = resourceTypeQuery.executeQuery();
 
                 while (resourceTypeResult.next()) {
                     final var connectionId = resourceTypeResult.getInt(1);
                     final var resourceTypeId = resourceTypeResult.getInt(2);
 
-                    try (var existsOnDestinationQuery =
-                            connection.prepareStatement(
-                                    "SELECT COUNT(*) FROM resource_resource_type WHERE resource_type_id = "
-                                            + resourceTypeId
-                                            + " AND resource_id = "
-                                            + destinationId)) {
-                        final var existsOnDestinationResult =
-                                existsOnDestinationQuery.executeQuery();
+                    try (var existsOnDestinationQuery = connection
+                            .prepareStatement("SELECT COUNT(*) FROM resource_resource_type WHERE resource_type_id = "
+                                    + resourceTypeId + " AND resource_id = " + destinationId)) {
+                        final var existsOnDestinationResult = existsOnDestinationQuery.executeQuery();
                         existsOnDestinationResult.next();
 
                         final var existsCount = existsOnDestinationResult.getInt(1);
 
                         if (existsCount == 0) {
-                            try (final var updateQuery =
-                                    connection.prepareStatement(
-                                            "UPDATE resource_resource_type SET resource_id = "
-                                                    + destinationId
-                                                    + " WHERE id = "
-                                                    + connectionId)) {
+                            try (final var updateQuery = connection
+                                    .prepareStatement("UPDATE resource_resource_type SET resource_id = " + destinationId
+                                            + " WHERE id = " + connectionId)) {
                                 updateQuery.executeUpdate();
                             }
                         } else {
-                            try (final var deleteQuery =
-                                    connection.prepareStatement(
-                                            "DELETE FROM resource_resource_type WHERE id = "
-                                                    + connectionId)) {
+                            try (final var deleteQuery = connection.prepareStatement(
+                                    "DELETE FROM resource_resource_type WHERE id = " + connectionId)) {
                                 deleteQuery.executeUpdate();
                             }
                         }
@@ -164,12 +130,9 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
     }
 
     private void mergeResources(int destinationResourceId) throws CustomChangeException {
-        try (var sharedContentQuery =
-                connection.prepareStatement(
-                        "SELECT r1.id FROM resource r1 WHERE r1.content_uri = (SELECT content_uri FROM resource r2 WHERE r2.id = "
-                                + destinationResourceId
-                                + ") AND r1.id != "
-                                + destinationResourceId)) {
+        try (var sharedContentQuery = connection.prepareStatement(
+                "SELECT r1.id FROM resource r1 WHERE r1.content_uri = (SELECT content_uri FROM resource r2 WHERE r2.id = "
+                        + destinationResourceId + ") AND r1.id != " + destinationResourceId)) {
             final var sharedContentResult = sharedContentQuery.executeQuery();
 
             while (sharedContentResult.next()) {
@@ -181,42 +144,32 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
 
                 mergeResourceRelations(destinationResourceId, sourceResourceId);
 
-                try (var updateSelectQuery =
-                        connection.prepareStatement(
-                                "SELECT id, topic_id FROM topic_resource WHERE resource_id = "
-                                        + sourceResourceId)) {
+                try (var updateSelectQuery = connection.prepareStatement(
+                        "SELECT id, topic_id FROM topic_resource WHERE resource_id = " + sourceResourceId)) {
                     final var updateSelectResult = updateSelectQuery.executeQuery();
 
                     while (updateSelectResult.next()) {
                         final var id = updateSelectResult.getInt(1);
                         final var topicId = updateSelectResult.getInt(2);
 
-                        try (var existsQuery =
-                                connection.prepareStatement(
-                                        "SELECT COUNT(*) FROM topic_resource WHERE topic_id = "
-                                                + topicId
-                                                + " AND resource_id = "
-                                                + destinationResourceId)) {
+                        try (var existsQuery = connection
+                                .prepareStatement("SELECT COUNT(*) FROM topic_resource WHERE topic_id = " + topicId
+                                        + " AND resource_id = " + destinationResourceId)) {
                             final var existsResult = existsQuery.executeQuery();
 
                             if (!existsResult.next()) {
-                                throw new CustomChangeException(
-                                        "No result set returned from count query");
+                                throw new CustomChangeException("No result set returned from count query");
                             }
 
                             if (existsResult.getInt(1) == 0) {
-                                try (var updateConnectionsQuery =
-                                        connection.prepareStatement(
-                                                "UPDATE topic_resource SET resource_id =  "
-                                                        + destinationResourceId
-                                                        + " WHERE id = "
-                                                        + id)) {
+                                try (var updateConnectionsQuery = connection
+                                        .prepareStatement("UPDATE topic_resource SET resource_id =  "
+                                                + destinationResourceId + " WHERE id = " + id)) {
                                     updateConnectionsQuery.executeUpdate();
                                 }
                             } else {
-                                try (var deleteConnectionQuery =
-                                        connection.prepareStatement(
-                                                "DELETE FROM topic_resource WHERE id = " + id)) {
+                                try (var deleteConnectionQuery = connection
+                                        .prepareStatement("DELETE FROM topic_resource WHERE id = " + id)) {
                                     if (deleteConnectionQuery.executeUpdate() != 1) {
                                         throw new CustomChangeException(
                                                 "Unexpected change rows from delete topic_resource query");
@@ -227,16 +180,13 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
                     }
                 }
 
-                try (var removeTranslationsQuery =
-                        connection.prepareStatement(
-                                "DELETE FROM resource_translation WHERE resource_id = "
-                                        + sourceResourceId)) {
+                try (var removeTranslationsQuery = connection
+                        .prepareStatement("DELETE FROM resource_translation WHERE resource_id = " + sourceResourceId)) {
                     removeTranslationsQuery.executeUpdate();
                 }
 
-                try (var deleteResourceQuery =
-                        connection.prepareStatement(
-                                "DELETE FROM resource WHERE id = " + sourceResourceId)) {
+                try (var deleteResourceQuery = connection
+                        .prepareStatement("DELETE FROM resource WHERE id = " + sourceResourceId)) {
                     deleteResourceQuery.executeUpdate();
                 }
             }
@@ -252,17 +202,15 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
         try {
             connection.setAutoCommit(false);
         } catch (DatabaseException e) {
-            throw new CustomChangeException(
-                    "Error starting transaction. No changes made. Error:" + e.getMessage(), e);
+            throw new CustomChangeException("Error starting transaction. No changes made. Error:" + e.getMessage(), e);
         }
 
         try {
             final var resourceIdsToMerge = new ArrayList<Integer>();
 
             try {
-                try (var findSharedContentQuery =
-                        connection.prepareStatement(
-                                "SELECT id FROM resource r1 WHERE r1.content_uri IN (SELECT content_uri FROM resource WHERE content_uri IS NOT NULL GROUP BY content_uri HAVING COUNT(id) > 1) ORDER BY id")) {
+                try (var findSharedContentQuery = connection.prepareStatement(
+                        "SELECT id FROM resource r1 WHERE r1.content_uri IN (SELECT content_uri FROM resource WHERE content_uri IS NOT NULL GROUP BY content_uri HAVING COUNT(id) > 1) ORDER BY id")) {
                     final var findSharedContentResult = findSharedContentQuery.executeQuery();
 
                     while (findSharedContentResult.next()) {
@@ -281,17 +229,11 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
                 mergedResources++;
 
                 if (mergedResources % 100 == 0) {
-                    logger.info(
-                            "Merged "
-                                    + mergedResources
-                                    + "/"
-                                    + resourceIdsToMerge.size()
-                                    + " resources");
+                    logger.info("Merged " + mergedResources + "/" + resourceIdsToMerge.size() + " resources");
                 }
             }
 
-            logger.info(
-                    "Merged " + mergedResources + "/" + resourceIdsToMerge.size() + " resources");
+            logger.info("Merged " + mergedResources + "/" + resourceIdsToMerge.size() + " resources");
         } catch (RuntimeException | CustomChangeException exception) {
             try {
                 connection.rollback();
@@ -310,10 +252,12 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
     }
 
     @Override
-    public void setUp() throws SetupException {}
+    public void setUp() throws SetupException {
+    }
 
     @Override
-    public void setFileOpener(ResourceAccessor resourceAccessor) {}
+    public void setFileOpener(ResourceAccessor resourceAccessor) {
+    }
 
     @Override
     public ValidationErrors validate(Database database) {

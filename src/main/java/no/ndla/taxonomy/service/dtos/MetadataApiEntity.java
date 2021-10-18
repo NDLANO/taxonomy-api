@@ -29,14 +29,13 @@ public class MetadataApiEntity {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, String> customFields;
 
-    public MetadataApiEntity() {}
+    public MetadataApiEntity() {
+    }
 
     public MetadataApiEntity(MetadataDto entityMetadataObject) {
         if (entityMetadataObject.getGrepCodes() != null) {
             this.competenceAims = new HashSet<>();
-            entityMetadataObject
-                    .getGrepCodes()
-                    .forEach(aim -> addCompetenceAim(new CompetenceAim(aim)));
+            entityMetadataObject.getGrepCodes().forEach(aim -> addCompetenceAim(new CompetenceAim(aim)));
         } else {
             competenceAims = null;
         }
@@ -101,8 +100,7 @@ public class MetadataApiEntity {
 
     @JsonIgnore
     public Optional<Map<String, String>> getCustomFields() {
-        return Optional.ofNullable(
-                customFields != null ? Collections.unmodifiableMap(customFields) : null);
+        return Optional.ofNullable(customFields != null ? Collections.unmodifiableMap(customFields) : null);
     }
 
     public void setCustomFields(Map<String, String> customFields) {
@@ -112,7 +110,8 @@ public class MetadataApiEntity {
     public static class CompetenceAim {
         private String code;
 
-        CompetenceAim() {}
+        CompetenceAim() {
+        }
 
         CompetenceAim(String code) {
             this.code = code;
