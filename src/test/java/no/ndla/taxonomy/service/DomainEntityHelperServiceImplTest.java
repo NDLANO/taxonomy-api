@@ -37,7 +37,9 @@ class DomainEntityHelperServiceImplTest {
     private DomainEntityHelperServiceImpl service;
 
     @BeforeEach
-    void setUp(@Autowired TopicRepository topicRepository, @Autowired SubjectRepository subjectRepository) {
+    void setUp(
+            @Autowired TopicRepository topicRepository,
+            @Autowired SubjectRepository subjectRepository) {
         service = new DomainEntityHelperServiceImpl(subjectRepository, topicRepository);
 
         topic1 = new Topic();
@@ -62,7 +64,9 @@ class DomainEntityHelperServiceImplTest {
         assertSame(subject1, service.getSubjectByPublicId(URI.create("urn:subject:dehsit:1")));
         assertSame(subject2, service.getSubjectByPublicId(URI.create("urn:subject:dehsit:2")));
 
-        assertThrows(NotFoundServiceException.class, () -> service.getSubjectByPublicId(URI.create("urn:topic:dehsit:3")));
+        assertThrows(
+                NotFoundServiceException.class,
+                () -> service.getSubjectByPublicId(URI.create("urn:topic:dehsit:3")));
     }
 
     @Test
@@ -70,6 +74,8 @@ class DomainEntityHelperServiceImplTest {
         assertSame(topic1, service.getTopicByPublicId(URI.create("urn:topic:dehsit:1")));
         assertSame(topic2, service.getTopicByPublicId(URI.create("urn:topic:dehsit:2")));
 
-        assertThrows(NotFoundServiceException.class, () -> service.getTopicByPublicId(URI.create("urn:topic:dehsit:3")));
+        assertThrows(
+                NotFoundServiceException.class,
+                () -> service.getTopicByPublicId(URI.create("urn:topic:dehsit:3")));
     }
 }

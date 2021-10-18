@@ -29,13 +29,13 @@ import java.util.List;
 @Transactional
 @Deprecated(forRemoval = true)
 public class FilterTranslations {
-    public FilterTranslations() {
-    }
+    public FilterTranslations() {}
 
     @GetMapping
     @ApiOperation("Gets all relevanceTranslations for a single filter")
     @Deprecated(forRemoval = true)
-    public List<FilterTranslations.FilterTranslationIndexDocument> index(@PathVariable("id") URI id) {
+    public List<FilterTranslations.FilterTranslationIndexDocument> index(
+            @PathVariable("id") URI id) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
@@ -45,8 +45,8 @@ public class FilterTranslations {
     public FilterTranslations.FilterTranslationIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-            @PathVariable("language") String language
-    ) {
+                    @PathVariable("language")
+                    String language) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
@@ -58,10 +58,10 @@ public class FilterTranslations {
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-            @PathVariable("language") String language,
-            @ApiParam(name = "filter", value = "The new or updated translation")
-            @RequestBody FilterTranslations.UpdateFilterTranslationCommand command
-    ) {
+                    @PathVariable("language")
+                    String language,
+            @ApiParam(name = "filter", value = "The new or updated translation") @RequestBody
+                    FilterTranslations.UpdateFilterTranslationCommand command) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
@@ -73,11 +73,10 @@ public class FilterTranslations {
     public void delete(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-            @PathVariable("language") String language
-    ) {
+                    @PathVariable("language")
+                    String language) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
-
 
     @ApiModel("FilterTranslationIndexDocument")
     public static class FilterTranslationIndexDocument {
@@ -89,7 +88,6 @@ public class FilterTranslations {
         @ApiModelProperty(value = "ISO 639-1 language code", example = "en")
         public String language;
     }
-
 
     public static class UpdateFilterTranslationCommand {
         @JsonProperty

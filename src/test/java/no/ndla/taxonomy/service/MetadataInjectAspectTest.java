@@ -52,10 +52,15 @@ public class MetadataInjectAspectTest {
         when(metadataApiService.getMetadataByKeyAndValue("key-v", "value-v"))
                 .thenReturn(Set.of(metadata1));
 
-        final var topic1 = new TopicDTO(new Topic() {{
-            /* metadata aspect will match by public ID between metadata entity and api entity */
-            setPublicId(URI.create("urn:test:1"));
-        }}, null);
+        final var topic1 =
+                new TopicDTO(
+                        new Topic() {
+                            {
+                                /* metadata aspect will match by public ID between metadata entity and api entity */
+                                setPublicId(URI.create("urn:test:1"));
+                            }
+                        },
+                        null);
         /* Check that the topic dto has no metadata object */
         assertNull(topic1.getMetadata());
 
@@ -73,7 +78,8 @@ public class MetadataInjectAspectTest {
          * Try running the clockwork..
          */
         try {
-            assertSame(nodes, metadataInjectAspect.metadataQueryAndInject(pjp, metadataKeyValueQuery));
+            assertSame(
+                    nodes, metadataInjectAspect.metadataQueryAndInject(pjp, metadataKeyValueQuery));
         } catch (Throwable throwable) {
             assertFalse(true);
         }

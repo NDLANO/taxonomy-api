@@ -44,24 +44,25 @@ public class Relevances extends CrudController<Relevance> {
     @ApiOperation("Gets all relevances")
     public List<RelevanceIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
-    ) {
-        return relevanceRepository.findAllIncludingTranslations()
-                .stream()
+                    @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language) {
+        return relevanceRepository.findAllIncludingTranslations().stream()
                 .map(relevance -> new RelevanceIndexDocument(relevance, language))
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    @ApiOperation(value = "Gets a single relevance", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
+    @ApiOperation(
+            value = "Gets a single relevance",
+            notes =
+                    "Default language will be returned if desired language not found or if parameter is omitted.")
     public RelevanceIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
-    ) {
-        return relevanceRepository.findFirstByPublicIdIncludingTranslations(id)
+                    @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language) {
+        return relevanceRepository
+                .findFirstByPublicIdIncludingTranslations(id)
                 .map(relevance -> new RelevanceIndexDocument(relevance, language))
                 .orElseThrow(() -> new NotFoundException("Relevance", id));
     }
@@ -69,7 +70,9 @@ public class Relevances extends CrudController<Relevance> {
     @PostMapping
     @ApiOperation(value = "Creates a new relevance")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public ResponseEntity<Void> post(@ApiParam(name = "relevance", value = "The new relevance") @RequestBody RelevanceCommand command) {
+    public ResponseEntity<Void> post(
+            @ApiParam(name = "relevance", value = "The new relevance") @RequestBody
+                    RelevanceCommand command) {
         return doPost(new Relevance(), command);
     }
 
@@ -79,8 +82,12 @@ public class Relevances extends CrudController<Relevance> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable("id") URI id,
-            @ApiParam(name = "relevance", value = "The updated relevance. Fields not included will be set to null.") @RequestBody RelevanceCommand command
-    ) {
+            @ApiParam(
+                            name = "relevance",
+                            value =
+                                    "The updated relevance. Fields not included will be set to null.")
+                    @RequestBody
+                    RelevanceCommand command) {
         doPut(id, command);
     }
 
@@ -94,25 +101,31 @@ public class Relevances extends CrudController<Relevance> {
         @ApiModelProperty(value = "The name of the relevance", example = "Core")
         public String name;
 
-        public RelevanceIndexDocument() {
-
-        }
+        public RelevanceIndexDocument() {}
 
         public RelevanceIndexDocument(Relevance relevance, String language) {
             this.id = relevance.getPublicId();
-            this.name = relevance.getTranslation(language)
-                    .map(RelevanceTranslation::getName)
-                    .orElse(relevance.getName());
+            this.name =
+                    relevance
+                            .getTranslation(language)
+                            .map(RelevanceTranslation::getName)
+                            .orElse(relevance.getName());
         }
     }
 
     public static class RelevanceCommand implements UpdatableDto<Relevance> {
         @JsonProperty
-        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:relevance: and be a valid URI. If ommitted, an id will be assigned automatically. Ignored on update", example = "urn:relevance:supplementary")
+        @ApiModelProperty(
+                notes =
+                        "If specified, set the id to this value. Must start with urn:relevance: and be a valid URI. If ommitted, an id will be assigned automatically. Ignored on update",
+                example = "urn:relevance:supplementary")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "The name of the relevance", example = "Supplementary")
+        @ApiModelProperty(
+                required = true,
+                value = "The name of the relevance",
+                example = "Supplementary")
         public String name;
 
         @Override

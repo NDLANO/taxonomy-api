@@ -12,8 +12,7 @@ import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public abstract class DomainObject extends DomainEntity {
-    @Column
-    private String name;
+    @Column private String name;
 
     public String getName() {
         return name;

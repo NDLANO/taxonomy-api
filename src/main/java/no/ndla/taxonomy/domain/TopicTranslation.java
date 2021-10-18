@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.domain;
 
-
 import javax.persistence.*;
 
 @Entity
@@ -20,27 +19,25 @@ public class TopicTranslation {
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
-    @Column
-    private String name;
+    @Column private String name;
 
-    @Column
-    private String languageCode;
+    @Column private String languageCode;
 
-    TopicTranslation() {
-    }
+    TopicTranslation() {}
 
     public TopicTranslation(Topic topic, String languageCode) {
         setTopic(topic);
         this.languageCode = languageCode;
     }
 
-
     public Topic getTopic() {
         return topic;
     }
 
     public void setTopic(Topic topic) {
-        if (topic != this.topic && this.topic != null && this.topic.getTranslations().contains(this)) {
+        if (topic != this.topic
+                && this.topic != null
+                && this.topic.getTranslations().contains(this)) {
             this.topic.removeTranslation(this);
         }
         this.topic = topic;

@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.domain;
 
-
 import javax.persistence.*;
 import java.net.URI;
 import java.util.HashSet;
@@ -32,8 +31,7 @@ public class Topic extends EntityWithPath {
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TopicResource> topicResources = new HashSet<>();
 
-    @Column
-    private URI contentUri;
+    @Column private URI contentUri;
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TopicTranslation> translations = new HashSet<>();
@@ -41,8 +39,7 @@ public class Topic extends EntityWithPath {
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
     protected Set<CachedPath> cachedPaths = new HashSet<>();
 
-    @Column
-    private boolean context;
+    @Column private boolean context;
 
     public Topic() {
         setPublicId(URI.create("urn:topic:" + UUID.randomUUID()));
@@ -77,29 +74,30 @@ public class Topic extends EntityWithPath {
 
     /*
 
-            In the old code the primary URL for topics was special since it would try to return
-            a context URL (a topic behaving as a subject) rather than a subject URL if that is available.
-            Trying to re-implement it by sorting the context URLs first by the same path comparing as the old code
+       In the old code the primary URL for topics was special since it would try to return
+       a context URL (a topic behaving as a subject) rather than a subject URL if that is available.
+       Trying to re-implement it by sorting the context URLs first by the same path comparing as the old code
 
-         */
+    */
     public Optional<String> getPrimaryPath() {
-        return getCachedPaths()
-                .stream()
-                .map(CachedPath::getPath).min((path1, path2) -> {
-                    if (path1.startsWith("/topic") && path2.startsWith("/topic")) {
-                        return 0;
-                    }
+        return getCachedPaths().stream()
+                .map(CachedPath::getPath)
+                .min(
+                        (path1, path2) -> {
+                            if (path1.startsWith("/topic") && path2.startsWith("/topic")) {
+                                return 0;
+                            }
 
-                    if (path1.startsWith("/topic")) {
-                        return -1;
-                    }
+                            if (path1.startsWith("/topic")) {
+                                return -1;
+                            }
 
-                    if (path2.startsWith("/topic")) {
-                        return 1;
-                    }
+                            if (path2.startsWith("/topic")) {
+                                return 1;
+                            }
 
-                    return 0;
-                });
+                            return 0;
+                        });
     }
 
     public Set<SubjectTopic> getSubjectTopics() {
@@ -108,7 +106,8 @@ public class Topic extends EntityWithPath {
 
     public void addSubjectTopic(SubjectTopic subjectTopic) {
         if (subjectTopic.getTopic().orElse(null) != this) {
-            throw new IllegalArgumentException("Topic must be set on SubjectTopic before associating with Topic");
+            throw new IllegalArgumentException(
+                    "Topic must be set on SubjectTopic before associating with Topic");
         }
 
         this.subjectTopics.add(subjectTopic);
@@ -134,7 +133,8 @@ public class Topic extends EntityWithPath {
 
     public void addChildTopicSubtopic(TopicSubtopic topicSubtopic) {
         if (topicSubtopic.getTopic().orElse(null) != this) {
-            throw new IllegalArgumentException("Parent topic must be set on TopicSubtopic before associating with Topic");
+            throw new IllegalArgumentException(
+                    "Parent topic must be set on TopicSubtopic before associating with Topic");
         }
 
         this.childTopicSubtopics.add(topicSubtopic);
@@ -148,7 +148,8 @@ public class Topic extends EntityWithPath {
 
     public void addParentTopicSubtopic(TopicSubtopic topicSubtopic) {
         if (topicSubtopic.getSubtopic().orElse(null) != this) {
-            throw new IllegalArgumentException("Subtopic must be set on TopicSubtopic before associating with Topic");
+            throw new IllegalArgumentException(
+                    "Subtopic must be set on TopicSubtopic before associating with Topic");
         }
 
         this.parentTopicSubtopics.add(topicSubtopic);
@@ -161,14 +162,13 @@ public class Topic extends EntityWithPath {
     }
 
     public Set<TopicResource> getTopicResources() {
-        return this.topicResources
-                .stream()
-                .collect(Collectors.toUnmodifiableSet());
+        return this.topicResources.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void addTopicResource(TopicResource topicResource) {
         if (topicResource.getTopic().orElse(null) != this) {
-            throw new IllegalArgumentException("TopicResource must have Topic set before it can be associated with Topic");
+            throw new IllegalArgumentException(
+                    "TopicResource must have Topic set before it can be associated with Topic");
         }
 
         this.topicResources.add(topicResource);

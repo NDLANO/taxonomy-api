@@ -41,15 +41,14 @@ public class ResourceTypeIndexDocument {
         return id.hashCode();
     }
 
-    public ResourceTypeIndexDocument() {
-
-    }
+    public ResourceTypeIndexDocument() {}
 
     public ResourceTypeIndexDocument(ResourceType resourceType, String languageCode) {
         this.id = resourceType.getPublicId();
-        this.name = resourceType
-                .getTranslation(languageCode)
-                .map(ResourceTypeTranslation::getName)
-                .orElse(resourceType.getName());
+        this.name =
+                resourceType
+                        .getTranslation(languageCode)
+                        .map(ResourceTypeTranslation::getName)
+                        .orElse(resourceType.getName());
     }
 }

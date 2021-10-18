@@ -21,7 +21,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class FilterTranslationsTest extends RestTest {
 
-
     @Test
     public void can_get_single_filter() throws Exception {
         assert404(new URI("urn:filter:1:1"), "nn");

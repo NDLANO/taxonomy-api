@@ -28,15 +28,16 @@ import java.util.List;
 @Deprecated(forRemoval = true)
 public class TopicsWithResourceTypes {
 
-    public TopicsWithResourceTypes() {
-    }
+    public TopicsWithResourceTypes() {}
 
     @PostMapping
     @ApiOperation(value = "Adds a resource type to a topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public ResponseEntity<Void> post(
-            @ApiParam(name = "connection", value = "The new resource/resource type connection") @RequestBody CreateTopicResourceTypeCommand command) {
+            @ApiParam(name = "connection", value = "The new resource/resource type connection")
+                    @RequestBody
+                    CreateTopicResourceTypeCommand command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
@@ -69,7 +70,10 @@ public class TopicsWithResourceTypes {
         URI topicId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resourcetype:234")
+        @ApiModelProperty(
+                required = true,
+                value = "Resource type id",
+                example = "urn:resourcetype:234")
         URI resourceTypeId;
     }
 
@@ -80,11 +84,17 @@ public class TopicsWithResourceTypes {
         URI topicId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resourcetype:234")
+        @ApiModelProperty(
+                required = true,
+                value = "Resource type id",
+                example = "urn:resourcetype:234")
         URI resourceTypeId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource to resource type connection id", example = "urn:resource-has-resourcetypes:12")
+        @ApiModelProperty(
+                required = true,
+                value = "Resource to resource type connection id",
+                example = "urn:resource-has-resourcetypes:12")
         URI id;
     }
 }

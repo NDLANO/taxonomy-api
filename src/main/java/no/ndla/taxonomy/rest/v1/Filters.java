@@ -24,29 +24,29 @@ import java.util.List;
 @RestController
 @Deprecated(forRemoval = true)
 public class Filters extends ObsoleteCrudController {
-    public Filters() {
-    }
+    public Filters() {}
 
     @GetMapping("/v1/filters")
     @ApiOperation("Gets all filters")
     @Deprecated(forRemoval = true)
     public List<Object> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
-    ) {
+                    @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language) {
         return List.of();
     }
 
     @GetMapping("/v1/filters/{id}")
-    @ApiOperation(value = "Gets a single filter", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
+    @ApiOperation(
+            value = "Gets a single filter",
+            notes =
+                    "Default language will be returned if desired language not found or if parameter is omitted.")
     @Deprecated(forRemoval = true)
     public Object get(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
-    ) {
+                    @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
@@ -55,7 +55,8 @@ public class Filters extends ObsoleteCrudController {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     @Deprecated(forRemoval = true)
-    public ResponseEntity<Void> post(@ApiParam(name = "filter", value = "The new filter") @RequestBody FilterDTO command) {
+    public ResponseEntity<Void> post(
+            @ApiParam(name = "filter", value = "The new filter") @RequestBody FilterDTO command) {
         throw new InvalidArgumentServiceException("Create filter's disabled");
     }
 
@@ -67,8 +68,8 @@ public class Filters extends ObsoleteCrudController {
     @Deprecated(forRemoval = true)
     public void put(
             @PathVariable("id") URI id,
-            @ApiParam(name = "filter", value = "The updated filter") @RequestBody FilterDTO command
-    ) {
+            @ApiParam(name = "filter", value = "The updated filter") @RequestBody
+                    FilterDTO command) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
@@ -83,26 +84,26 @@ public class Filters extends ObsoleteCrudController {
     }
 
     @GetMapping("/v1/subjects/{subjectId}/filters")
-    @ApiOperation(value = "Gets all filters for a subject", tags = {"subjects"})
+    @ApiOperation(
+            value = "Gets all filters for a subject",
+            tags = {"subjects"})
     @Deprecated(forRemoval = true)
     public List<Object> getFiltersBySubjectId(
             @PathVariable("subjectId") URI subjectId,
-
-            @ApiParam(value = "ISO-639-1 language code", example = "nb")
-                    String language) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") String language) {
         return List.of();
     }
 
     @GetMapping("/v1/resources/{resourceId}/filters")
-    @ApiOperation(value = "Gets all filters associated with this resource", tags = {"resources"})
+    @ApiOperation(
+            value = "Gets all filters associated with this resource",
+            tags = {"resources"})
     @Deprecated(forRemoval = true)
     public List<Object> getFiltersByResourceId(
-            @PathVariable("resourceId")
-                    URI resourceId,
+            @PathVariable("resourceId") URI resourceId,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
-    ) {
+                    @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language) {
         return List.of();
     }
 
@@ -112,6 +113,5 @@ public class Filters extends ObsoleteCrudController {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public class FilterDTO {
-    }
+    public class FilterDTO {}
 }

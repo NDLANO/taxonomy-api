@@ -25,11 +25,9 @@ import static org.mockito.Mockito.verify;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 public class SubjectServiceImplTest {
-    @Autowired
-    private SubjectRepository subjectRepository;
+    @Autowired private SubjectRepository subjectRepository;
 
-    @Autowired
-    private Builder builder;
+    @Autowired private Builder builder;
 
     private SubjectServiceImpl subjectService;
 
@@ -40,7 +38,9 @@ public class SubjectServiceImplTest {
         metadataApiService = mock(MetadataApiService.class);
         EntityConnectionService entityConnectionService = mock(EntityConnectionService.class);
 
-        subjectService = new SubjectServiceImpl(subjectRepository, metadataApiService, entityConnectionService);
+        subjectService =
+                new SubjectServiceImpl(
+                        subjectRepository, metadataApiService, entityConnectionService);
     }
 
     @Test

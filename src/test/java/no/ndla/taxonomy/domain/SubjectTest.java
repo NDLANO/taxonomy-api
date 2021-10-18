@@ -93,7 +93,9 @@ public class SubjectTest {
         var returnedTranslation2 = subject.addTranslation("en");
         assertEquals(2, subject.getTranslations().size());
         assertEquals("en", returnedTranslation2.getLanguageCode());
-        assertTrue(subject.getTranslations().containsAll(Set.of(returnedTranslation, returnedTranslation2)));
+        assertTrue(
+                subject.getTranslations()
+                        .containsAll(Set.of(returnedTranslation, returnedTranslation2)));
         assertEquals(subject, returnedTranslation2.getSubject());
 
         subject.removeTranslation("nb");
@@ -129,17 +131,20 @@ public class SubjectTest {
         final var subjectTopic1 = mock(SubjectTopic.class);
         final var subjectTopic2 = mock(SubjectTopic.class);
 
-        Set.of(subjectTopic1, subjectTopic2).forEach(subjectTopic -> {
-            when(subjectTopic.getSubject()).thenReturn(Optional.of(subject));
-            subject.addSubjectTopic(subjectTopic);
-            when(subjectTopic.getSubject()).thenReturn(Optional.of(subject));
-        });
+        Set.of(subjectTopic1, subjectTopic2)
+                .forEach(
+                        subjectTopic -> {
+                            when(subjectTopic.getSubject()).thenReturn(Optional.of(subject));
+                            subject.addSubjectTopic(subjectTopic);
+                            when(subjectTopic.getSubject()).thenReturn(Optional.of(subject));
+                        });
 
         assertEquals(2, subject.getSubjectTopics().size());
 
         subject.preRemove();
 
-        Set.of(subjectTopic1, subjectTopic2).forEach(subjectTopic -> verify(subjectTopic).disassociate());
+        Set.of(subjectTopic1, subjectTopic2)
+                .forEach(subjectTopic -> verify(subjectTopic).disassociate());
     }
 
     @Test

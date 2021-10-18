@@ -106,7 +106,10 @@ public class ResourceTypeTest {
         var returnedTranslation2 = resourceType.addTranslation("en");
         assertEquals(2, resourceType.getTranslations().size());
         assertEquals("en", returnedTranslation2.getLanguageCode());
-        assertTrue(resourceType.getTranslations().containsAll(Set.of(returnedTranslation, returnedTranslation2)));
+        assertTrue(
+                resourceType
+                        .getTranslations()
+                        .containsAll(Set.of(returnedTranslation, returnedTranslation2)));
         assertEquals(resourceType, returnedTranslation2.getResourceType());
 
         resourceType.removeTranslation("nb");
@@ -151,7 +154,10 @@ public class ResourceTypeTest {
         resourceType.addResourceResourceType(resourceResourceType2);
 
         assertEquals(2, resourceType.getResourceResourceTypes().size());
-        assertTrue(resourceType.getResourceResourceTypes().containsAll(Set.of(resourceResourceType1, resourceResourceType2)));
+        assertTrue(
+                resourceType
+                        .getResourceResourceTypes()
+                        .containsAll(Set.of(resourceResourceType1, resourceResourceType2)));
 
         resourceType.removeResourceResourceType(resourceResourceType1);
         assertEquals(1, resourceType.getResourceResourceTypes().size());

@@ -24,7 +24,8 @@ public interface RecursiveTopicTreeService {
         private final Integer parentTopicId;
         private final int rank;
 
-        public TopicTreeElement(int topicId, Integer parentSubjectId, Integer parentTopicId, int rank) {
+        public TopicTreeElement(
+                int topicId, Integer parentSubjectId, Integer parentTopicId, int rank) {
             this.topicId = topicId;
             this.parentSubjectId = parentSubjectId;
             this.parentTopicId = parentTopicId;

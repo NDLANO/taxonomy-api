@@ -17,31 +17,22 @@ import java.net.URI;
 
 @ApiModel("ResourceWithTopicConnection")
 public class ResourceWithTopicConnectionDTO extends ResourceDTO {
-    @ApiParam
-    private URI topicId;
+    @ApiParam private URI topicId;
 
-    @ApiParam
-    private URI connectionId;
+    @ApiParam private URI connectionId;
 
-    @ApiParam
-    private int rank;
+    @ApiParam private int rank;
 
-    @ApiParam
-    private boolean primary;
+    @ApiParam private boolean primary;
 
-    @ApiParam
-    public URI relevanceId;
+    @ApiParam public URI relevanceId;
 
-    public ResourceWithTopicConnectionDTO() {
-
-    }
+    public ResourceWithTopicConnectionDTO() {}
 
     public ResourceWithTopicConnectionDTO(TopicResource topicResource, String language) {
         super(topicResource.getResource().orElseThrow(), language);
 
-        this.topicId = topicResource.getTopic()
-                .map(Topic::getPublicId)
-                .orElse(null);
+        this.topicId = topicResource.getTopic().map(Topic::getPublicId).orElse(null);
 
         this.connectionId = topicResource.getPublicId();
         this.rank = topicResource.getRank();

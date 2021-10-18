@@ -26,7 +26,14 @@ public class ResourceType extends DomainObject {
     @JoinColumn(name = "parent_id")
     private ResourceType parent;
 
-    @OneToMany(mappedBy = "parent", cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST})
+    @OneToMany(
+            mappedBy = "parent",
+            cascade = {
+                CascadeType.DETACH,
+                CascadeType.MERGE,
+                CascadeType.REFRESH,
+                CascadeType.PERSIST
+            })
     private Set<ResourceType> subtypes = new HashSet<>();
 
     @OneToMany(mappedBy = "resourceType", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -74,7 +81,6 @@ public class ResourceType extends DomainObject {
         }
     }
 
-
     public Set<ResourceType> getSubtypes() {
         return this.subtypes.stream().collect(Collectors.toUnmodifiableSet());
     }
@@ -90,7 +96,9 @@ public class ResourceType extends DomainObject {
 
     public Optional<ResourceTypeTranslation> getTranslation(String languageCode) {
         return resourceTypeTranslations.stream()
-                .filter(resourceTypeTranslation -> resourceTypeTranslation.getLanguageCode().equals(languageCode))
+                .filter(
+                        resourceTypeTranslation ->
+                                resourceTypeTranslation.getLanguageCode().equals(languageCode))
                 .findFirst();
     }
 
@@ -124,7 +132,8 @@ public class ResourceType extends DomainObject {
 
     public void addResourceResourceType(ResourceResourceType resourceResourceType) {
         if (resourceResourceType.getResourceType() != this) {
-            throw new IllegalArgumentException("ResourceResourceType must have ResourceType set before associating with ResourceType");
+            throw new IllegalArgumentException(
+                    "ResourceResourceType must have ResourceType set before associating with ResourceType");
         }
 
         this.resourceResourceTypes.add(resourceResourceType);

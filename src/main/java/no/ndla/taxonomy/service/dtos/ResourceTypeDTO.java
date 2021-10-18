@@ -29,9 +29,7 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
     @ApiModelProperty(value = "The name of the resource type", example = "Lecture")
     private String name;
 
-    public ResourceTypeDTO() {
-
-    }
+    public ResourceTypeDTO() {}
 
     public ResourceTypeDTO(ResourceType resourceType, String languageCode) {
         this.id = resourceType.getPublicId();
@@ -41,10 +39,11 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
                 .map(ResourceType::getPublicId)
                 .ifPresent(publicId -> this.parentId = publicId);
 
-        this.name = resourceType
-                .getTranslation(languageCode)
-                .map(ResourceTypeTranslation::getName)
-                .orElse(resourceType.getName());
+        this.name =
+                resourceType
+                        .getTranslation(languageCode)
+                        .map(ResourceTypeTranslation::getName)
+                        .orElse(resourceType.getName());
     }
 
     public URI getId() {
@@ -62,7 +61,7 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
     @Override
     public int compareTo(ResourceTypeDTO o) {
         // We want to sort resourceTypes without parents first when sorting
-        if(this.parentId == null && o.parentId != null) return 1;
+        if (this.parentId == null && o.parentId != null) return 1;
         return -1;
     }
 }

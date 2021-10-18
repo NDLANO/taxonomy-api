@@ -165,7 +165,6 @@ public class CachedPathTest {
         assertSame(resource, cachedPath.getOwningEntity().orElseThrow());
     }
 
-
     @Test
     public void getTopic() {
         assertFalse(cachedPath.getTopic().isPresent());

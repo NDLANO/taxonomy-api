@@ -16,9 +16,7 @@ import no.ndla.taxonomy.domain.ResourceTypeTranslation;
 
 import java.net.URI;
 
-/**
- *
- */
+/** */
 @ApiModel("SubjectResourceTypeIndexDocument")
 public class ResourceTypeIndexDocument {
     @JsonProperty
@@ -46,12 +44,14 @@ public class ResourceTypeIndexDocument {
         return id.hashCode();
     }
 
-    public ResourceTypeIndexDocument() {
-
-    }
+    public ResourceTypeIndexDocument() {}
 
     public ResourceTypeIndexDocument(ResourceType resourceType, String language) {
         this.id = resourceType.getPublicId();
-        this.name = resourceType.getTranslation(language).map(ResourceTypeTranslation::getName).orElse(resourceType.getName());
+        this.name =
+                resourceType
+                        .getTranslation(language)
+                        .map(ResourceTypeTranslation::getName)
+                        .orElse(resourceType.getName());
     }
 }

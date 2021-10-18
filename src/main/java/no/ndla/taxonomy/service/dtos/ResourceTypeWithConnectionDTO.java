@@ -17,14 +17,17 @@ import java.net.URI;
 @ApiModel("ResourceTypeWithConnection")
 public class ResourceTypeWithConnectionDTO extends ResourceTypeDTO {
     @JsonProperty
-    @ApiModelProperty(value = "The id of the resource resource type connection", example = "urn:resource-resourcetype:1")
+    @ApiModelProperty(
+            value = "The id of the resource resource type connection",
+            example = "urn:resource-resourcetype:1")
     private URI connectionId;
 
     public ResourceTypeWithConnectionDTO() {
         super();
     }
 
-    public ResourceTypeWithConnectionDTO(ResourceResourceType resourceResourceType, String languageCode) {
+    public ResourceTypeWithConnectionDTO(
+            ResourceResourceType resourceResourceType, String languageCode) {
         super(resourceResourceType.getResourceType(), languageCode);
 
         this.connectionId = resourceResourceType.getPublicId();

@@ -29,8 +29,7 @@ public abstract class CrudControllerWithMetadata<T extends DomainObject> extends
             TaxonomyRepository<T> repository,
             CachedUrlUpdaterService cachedUrlUpdaterService,
             MetadataApiService metadataApiService,
-            MetadataUpdateService metadataUpdateService
-    ) {
+            MetadataUpdateService metadataUpdateService) {
         super(repository, cachedUrlUpdaterService);
 
         this.metadataApiService = metadataApiService;
@@ -46,17 +45,27 @@ public abstract class CrudControllerWithMetadata<T extends DomainObject> extends
     @PutMapping(path = "/{id}/metadata")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ApiOperation(value = "Updates metadata for entity")
-    public MetadataDto putMetadata(@PathVariable("id") URI id, @RequestBody MetadataDto entityToUpdate) {
+    public MetadataDto putMetadata(
+            @PathVariable("id") URI id, @RequestBody MetadataDto entityToUpdate) {
         return metadataApiService.updateMetadataByPublicId(id, entityToUpdate);
     }
 
     @PutMapping("/{id}/metadata-recursive")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ApiOperation(value = "Updates metadata for entity recursively")
-    public RecursiveMergeResultDto updateRecursively(@PathVariable("id") URI id,
-                                                     @ApiParam(value = "Apply also to resources (even if having multiple topics as parent)", defaultValue = "false")
-                                                     @RequestParam(value = "applyToResources", required = false, defaultValue = "false") boolean applyToResources,
-                                                     @RequestBody MetadataDto metadataToMerge) {
-        return metadataUpdateService.updateMetadataRecursivelyByPublicId(id, metadataToMerge, applyToResources);
+    public RecursiveMergeResultDto updateRecursively(
+            @PathVariable("id") URI id,
+            @ApiParam(
+                            value =
+                                    "Apply also to resources (even if having multiple topics as parent)",
+                            defaultValue = "false")
+                    @RequestParam(
+                            value = "applyToResources",
+                            required = false,
+                            defaultValue = "false")
+                    boolean applyToResources,
+            @RequestBody MetadataDto metadataToMerge) {
+        return metadataUpdateService.updateMetadataRecursivelyByPublicId(
+                id, metadataToMerge, applyToResources);
     }
 }

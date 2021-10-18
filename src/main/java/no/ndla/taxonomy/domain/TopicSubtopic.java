@@ -115,7 +115,7 @@ public class TopicSubtopic extends DomainEntity implements EntityWithPathConnect
     public Optional<Relevance> getRelevance() {
         return Optional.ofNullable(relevance);
     }
-    
+
     @Override
     public void setRelevance(Relevance relevance) {
         this.relevance = relevance;

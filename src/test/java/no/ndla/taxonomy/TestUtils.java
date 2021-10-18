@@ -42,21 +42,27 @@ public class TestUtils {
     private final MockMvc mockMvc;
 
     @Autowired
-    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext, EntityManager entityManager) {
-        mappingJackson2HttpMessageConverter = Arrays.stream(converters)
-                .filter(hmc -> hmc instanceof MappingJackson2HttpMessageConverter)
-                .findAny()
-                .orElse(null);
+    public TestUtils(
+            HttpMessageConverter<?>[] converters,
+            WebApplicationContext webApplicationContext,
+            EntityManager entityManager) {
+        mappingJackson2HttpMessageConverter =
+                Arrays.stream(converters)
+                        .filter(hmc -> hmc instanceof MappingJackson2HttpMessageConverter)
+                        .findAny()
+                        .orElse(null);
 
         this.entityManager = entityManager;
 
-        assertNotNull("the JSON message converter must not be null", mappingJackson2HttpMessageConverter);
+        assertNotNull(
+                "the JSON message converter must not be null", mappingJackson2HttpMessageConverter);
         mockMvc = webAppContextSetup(webApplicationContext).build();
     }
 
     public String json(Object o) throws IOException {
         MockHttpOutputMessage mockHttpOutputMessage = new MockHttpOutputMessage();
-        mappingJackson2HttpMessageConverter.write(o, MediaType.APPLICATION_JSON, mockHttpOutputMessage);
+        mappingJackson2HttpMessageConverter.write(
+                o, MediaType.APPLICATION_JSON, mockHttpOutputMessage);
         return mockHttpOutputMessage.getBodyAsString();
     }
 
@@ -64,22 +70,19 @@ public class TestUtils {
         return createResource(path, command, status().isCreated());
     }
 
-    public MockHttpServletResponse createResource(String path, Object command, ResultMatcher resultMatcher) throws Exception {
+    public MockHttpServletResponse createResource(
+            String path, Object command, ResultMatcher resultMatcher) throws Exception {
         entityManager.flush();
-        return mockMvc.perform(
-                post(path)
-                        .contentType(APPLICATION_JSON_UTF8)
-                        .content(json(command)))
+        return mockMvc.perform(post(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
                 .andExpect(resultMatcher)
                 .andReturn()
                 .getResponse();
     }
 
-    public MockHttpServletResponse getResource(String path, ResultMatcher resultMatcher) throws Exception {
+    public MockHttpServletResponse getResource(String path, ResultMatcher resultMatcher)
+            throws Exception {
         entityManager.flush();
-        return mockMvc.perform(
-                get(path)
-                        .accept(APPLICATION_JSON_UTF8))
+        return mockMvc.perform(get(path).accept(APPLICATION_JSON_UTF8))
                 .andExpect(resultMatcher)
                 .andReturn()
                 .getResponse();
@@ -91,8 +94,7 @@ public class TestUtils {
 
     public MockHttpServletResponse deleteResource(String path) throws Exception {
         entityManager.flush();
-        return mockMvc.perform(
-                delete(path))
+        return mockMvc.perform(delete(path))
                 .andExpect(status().isNoContent())
                 .andReturn()
                 .getResponse();
@@ -102,12 +104,10 @@ public class TestUtils {
         return updateResource(path, command, status().isNoContent());
     }
 
-    public MockHttpServletResponse updateResource(String path, Object command, ResultMatcher resultMatcher) throws Exception {
+    public MockHttpServletResponse updateResource(
+            String path, Object command, ResultMatcher resultMatcher) throws Exception {
         entityManager.flush();
-        return mockMvc.perform(
-                put(path)
-                        .contentType(APPLICATION_JSON_UTF8)
-                        .content(json(command)))
+        return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
                 .andExpect(resultMatcher)
                 .andReturn()
                 .getResponse();
@@ -119,14 +119,17 @@ public class TestUtils {
     }
 
     public <V> V getObject(Class<V> theClass, MockHttpServletResponse response) throws Exception {
-        MockHttpInputMessage mockHttpInputMessage = new MockHttpInputMessage(response.getContentAsByteArray());
+        MockHttpInputMessage mockHttpInputMessage =
+                new MockHttpInputMessage(response.getContentAsByteArray());
         return (V) mappingJackson2HttpMessageConverter.read(theClass, mockHttpInputMessage);
     }
 
     public static <V> void assertAnyTrue(V[] objects, Predicate<V> predicate) {
         assertTrue(objects.length > 0, "Array was empty");
         String className = objects[0].getClass().getSimpleName();
-        assertTrue(Arrays.stream(objects).anyMatch(predicate), "No " + className + " matching predicate found.");
+        assertTrue(
+                Arrays.stream(objects).anyMatch(predicate),
+                "No " + className + " matching predicate found.");
     }
 
     public static <V> void assertAnyTrue(Iterable<V> objects, Predicate<V> predicate) {

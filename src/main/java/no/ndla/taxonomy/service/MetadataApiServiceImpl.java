@@ -36,8 +36,10 @@ public class MetadataApiServiceImpl implements MetadataApiService {
 
     private final Logger logger = Logger.getLogger(this.getClass().toString());
 
-    public MetadataApiServiceImpl(MetadataApiConfig metadataApiConfig, RestTemplate restTemplate,
-                                  @Qualifier("metadataApiExecutor") ThreadPoolExecutor metadataApiExecutor) {
+    public MetadataApiServiceImpl(
+            MetadataApiConfig metadataApiConfig,
+            RestTemplate restTemplate,
+            @Qualifier("metadataApiExecutor") ThreadPoolExecutor metadataApiExecutor) {
         this.serviceUrl = metadataApiConfig.getServiceUrl();
         this.restTemplate = restTemplate;
         this.executor = metadataApiExecutor;
@@ -55,7 +57,12 @@ public class MetadataApiServiceImpl implements MetadataApiService {
     public MetadataDto getMetadataByPublicId(URI publicId) {
 
         try {
-            final var returnedEntity = restTemplate.getForEntity(getServiceUrl() + "/v1/taxonomy_entities/" + publicId, MetadataApiEntity.class).getBody();
+            final var returnedEntity =
+                    restTemplate
+                            .getForEntity(
+                                    getServiceUrl() + "/v1/taxonomy_entities/" + publicId,
+                                    MetadataApiEntity.class)
+                            .getBody();
 
             if (returnedEntity == null) {
                 throw new ServiceUnavailableException("No response from service");
@@ -91,7 +98,8 @@ public class MetadataApiServiceImpl implements MetadataApiService {
 
     private List<MetadataDto> doBulkRead(String uri) {
         try {
-            final var returnedEntities = restTemplate.getForEntity(uri, MetadataApiEntity[].class).getBody();
+            final var returnedEntities =
+                    restTemplate.getForEntity(uri, MetadataApiEntity[].class).getBody();
 
             if (returnedEntities == null) {
                 throw new ServiceUnavailableException("No response from service");
@@ -103,7 +111,6 @@ public class MetadataApiServiceImpl implements MetadataApiService {
         } catch (RestClientException exception) {
             throw new ServiceUnavailableException(exception);
         }
-
     }
 
     private List<MetadataDto> doBulkRead(Collection<URI> publicIds) {
@@ -111,18 +118,20 @@ public class MetadataApiServiceImpl implements MetadataApiService {
             throw new IllegalArgumentException("More than 100 entities in request");
         }
 
-        final var publicIdCommaSeparatedList = String.join(",", publicIds.stream().map(URI::toString).collect(Collectors.toSet()));
+        final var publicIdCommaSeparatedList =
+                String.join(",", publicIds.stream().map(URI::toString).collect(Collectors.toSet()));
 
-        return doBulkRead(getServiceUrl() + "/v1/taxonomy_entities/?publicIds=" + publicIdCommaSeparatedList);
+        return doBulkRead(
+                getServiceUrl() + "/v1/taxonomy_entities/?publicIds=" + publicIdCommaSeparatedList);
     }
 
     private List<MetadataDto> doBulkRead(String key, String value) {
         var keyParam = key != null ? URLEncoder.encode(key, StandardCharsets.UTF_8) : null;
         var valParam = value != null ? URLEncoder.encode(value, StandardCharsets.UTF_8) : null;
 
-        var uriBuilder = UriComponentsBuilder
-                .fromUriString(getServiceUrl() + "/v1/taxonomy_entities/")
-                .queryParam("key", keyParam);
+        var uriBuilder =
+                UriComponentsBuilder.fromUriString(getServiceUrl() + "/v1/taxonomy_entities/")
+                        .queryParam("key", keyParam);
 
         if (valParam != null) uriBuilder = uriBuilder.queryParam("value", valParam);
 
@@ -148,7 +157,12 @@ public class MetadataApiServiceImpl implements MetadataApiService {
 
                 return;
             } catch (RestClientException exception) {
-                logger.warning("Error bulk updating metadata: " + exception.getMessage() + " Will retry " + retryTtl + " more times");
+                logger.warning(
+                        "Error bulk updating metadata: "
+                                + exception.getMessage()
+                                + " Will retry "
+                                + retryTtl
+                                + " more times");
 
                 if (--retryTtl < 1) {
                     throw exception;
@@ -163,14 +177,16 @@ public class MetadataApiServiceImpl implements MetadataApiService {
         }
 
         // Clones the request DTO into one object for each publicId to update
-        final var requestObjects = publicIds.stream()
-                .map(publicId -> {
-                    final var clonedMetadataDto = MetadataDto.of(metadataDto);
-                    clonedMetadataDto.setPublicId(publicId.toString());
-                    return clonedMetadataDto;
-                })
-                .map(MetadataApiEntity::new)
-                .collect(Collectors.toSet());
+        final var requestObjects =
+                publicIds.stream()
+                        .map(
+                                publicId -> {
+                                    final var clonedMetadataDto = MetadataDto.of(metadataDto);
+                                    clonedMetadataDto.setPublicId(publicId.toString());
+                                    return clonedMetadataDto;
+                                })
+                        .map(MetadataApiEntity::new)
+                        .collect(Collectors.toSet());
 
         try {
             doEntitiesPut(requestObjects);
@@ -181,31 +197,34 @@ public class MetadataApiServiceImpl implements MetadataApiService {
         }
     }
 
-    private Set<MetadataDto> doBulkActionAndReturnDtos(Collection<URI> publicIds, Function<Collection<URI>, List<MetadataDto>> action) {
+    private Set<MetadataDto> doBulkActionAndReturnDtos(
+            Collection<URI> publicIds, Function<Collection<URI>, List<MetadataDto>> action) {
         // Splits the collection of IDs into lists of maximum 100 entries each
         final var counter = new AtomicInteger(0);
-        final var chunks = publicIds.stream()
-                .collect(Collectors.groupingBy(iterator -> counter.getAndIncrement() / 100))
-                .values();
+        final var chunks =
+                publicIds.stream()
+                        .collect(Collectors.groupingBy(iterator -> counter.getAndIncrement() / 100))
+                        .values();
 
         // Do action and return on each of the 100 entry chunks
-        final var metadataFutureEntries = chunks.stream()
-                .map(list -> executor.submit(() -> action.apply(list)))
-                .collect(Collectors.toSet());
+        final var metadataFutureEntries =
+                chunks.stream()
+                        .map(list -> executor.submit(() -> action.apply(list)))
+                        .collect(Collectors.toSet());
 
         // Converts the list of futures into flat list of DTOs to return
         return metadataFutureEntries.stream()
-                .map(futureSet -> {
-                    try {
-                        return futureSet.get();
-                    } catch (InterruptedException | ExecutionException e) {
-                        throw new ServiceUnavailableException(e.getMessage(), e);
-                    }
-                })
+                .map(
+                        futureSet -> {
+                            try {
+                                return futureSet.get();
+                            } catch (InterruptedException | ExecutionException e) {
+                                throw new ServiceUnavailableException(e.getMessage(), e);
+                            }
+                        })
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
     }
-
 
     @Override
     public Set<MetadataDto> updateMetadataByPublicIds(Set<URI> publicIds, MetadataDto metaDataDto) {

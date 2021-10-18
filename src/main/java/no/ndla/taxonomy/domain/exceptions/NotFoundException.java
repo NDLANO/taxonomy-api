@@ -19,5 +19,4 @@ public class NotFoundException extends RuntimeException {
     public NotFoundException(String url) {
         super("Element with url " + url + " not found");
     }
-
 }

@@ -20,9 +20,7 @@ import no.ndla.taxonomy.service.TopicTreeSorter;
 import java.net.URI;
 import java.util.Set;
 
-/**
- *
- */
+/** */
 @ApiModel("SubTopicIndexDocument")
 public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
     @JsonProperty
@@ -35,11 +33,16 @@ public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
     private String name;
 
     @JsonProperty
-    @ApiModelProperty(value = "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+    @ApiModelProperty(
+            value =
+                    "ID of article introducing this topic. Must be a valid URI, but preferably not a URL.",
+            example = "urn:article:1")
     private URI contentUri;
 
     @JsonProperty
-    @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
+    @ApiModelProperty(
+            value = "True if owned by this topic, false if it has its primary connection elsewhere",
+            example = "true")
     private Boolean isPrimary;
 
     @JsonProperty
@@ -61,22 +64,24 @@ public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
     private int rank;
     private URI parentId;
 
-    public SubTopicIndexDTO() {
-
-    }
+    public SubTopicIndexDTO() {}
 
     public SubTopicIndexDTO(TopicSubtopic topicSubtopic, String language) {
-        topicSubtopic.getSubtopic().ifPresent(topic -> {
-            this.id = topic.getPublicId();
+        topicSubtopic
+                .getSubtopic()
+                .ifPresent(
+                        topic -> {
+                            this.id = topic.getPublicId();
 
-            this.name = topic.getTranslation(language)
-                    .map(TopicTranslation::getName)
-                    .orElse(topic.getName());
+                            this.name =
+                                    topic.getTranslation(language)
+                                            .map(TopicTranslation::getName)
+                                            .orElse(topic.getName());
 
-            this.contentUri = topic.getContentUri();
-            this.paths = topic.getAllPaths();
-            this.path = topic.getPrimaryPath().orElse(null);
-        });
+                            this.contentUri = topic.getContentUri();
+                            this.paths = topic.getAllPaths();
+                            this.path = topic.getPrimaryPath().orElse(null);
+                        });
 
         this.isPrimary = true;
 

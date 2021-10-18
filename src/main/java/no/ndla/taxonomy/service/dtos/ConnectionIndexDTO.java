@@ -18,41 +18,52 @@ import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- *
- */
+/** */
 @ApiModel("Connections")
 public class ConnectionIndexDTO {
 
     @JsonProperty
-    @ApiModelProperty(value = "The id of the subject-topic or topic-subtopic connection", example = "urn:subject-topic:1")
+    @ApiModelProperty(
+            value = "The id of the subject-topic or topic-subtopic connection",
+            example = "urn:subject-topic:1")
     private URI connectionId;
+
     @JsonProperty
     @ApiModelProperty(value = "The id of the connected subject or topic", example = "urn:subject:1")
     private URI targetId;
+
     @JsonProperty
-    @ApiModelProperty(value = "The path part of the url for the subject or subtopic connected to this topic", example = "/subject:1/topic:1")
+    @ApiModelProperty(
+            value = "The path part of the url for the subject or subtopic connected to this topic",
+            example = "/subject:1/topic:1")
     private Set<String> paths = new HashSet<>();
+
     @JsonProperty
     @ApiModelProperty(value = "The type of connection (parent subject, parent topic or subtopic")
     private String type;
+
     @JsonProperty
-    @ApiModelProperty(value = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
+    @ApiModelProperty(
+            value = "True if owned by this topic, false if it has its primary connection elsewhere",
+            example = "true")
     private Boolean isPrimary;
 
-    public ConnectionIndexDTO() {
-    }
+    public ConnectionIndexDTO() {}
 
     private ConnectionIndexDTO(EntityWithPathConnection connection, boolean isParentConnection) {
         this.connectionId = connection.getPublicId();
         this.isPrimary = true;
 
-        final var connectedObject = isParentConnection ? connection.getConnectedParent() : connection.getConnectedChild();
+        final var connectedObject =
+                isParentConnection
+                        ? connection.getConnectedParent()
+                        : connection.getConnectedChild();
 
-        connectedObject.ifPresent(connected -> {
-            this.targetId = connected.getPublicId();
-            this.paths = Set.copyOf(connected.getAllPaths());
-        });
+        connectedObject.ifPresent(
+                connected -> {
+                    this.targetId = connected.getPublicId();
+                    this.paths = Set.copyOf(connected.getAllPaths());
+                });
 
         if (connection instanceof TopicSubtopic) {
             if (isParentConnection) {

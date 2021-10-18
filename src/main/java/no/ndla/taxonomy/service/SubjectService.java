@@ -15,6 +15,8 @@ import java.util.List;
 public interface SubjectService {
     void delete(URI publicId);
 
-    List<SubjectIndexDocument> getSubjects(String languageCode, MetadataKeyValueQuery metadataKeyValueQuery);
+    List<SubjectIndexDocument> getSubjects(
+            String languageCode, MetadataKeyValueQuery metadataKeyValueQuery);
+
     List<SubjectIndexDocument> getSubjects(String languageCode);
 }

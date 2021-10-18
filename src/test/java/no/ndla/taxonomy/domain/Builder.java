@@ -274,7 +274,6 @@ public class Builder {
             urlMapping.setSubject_id(s);
             return this;
         }
-
     }
 
     @Transactional
@@ -291,10 +290,13 @@ public class Builder {
             return this;
         }
 
-        public ResourceTypeBuilder translation(String languageCode, Consumer<ResourceTypeTranslationBuilder> consumer) {
-            ResourceTypeTranslation resourceTypeTranslation = resourceType.addTranslation(languageCode);
+        public ResourceTypeBuilder translation(
+                String languageCode, Consumer<ResourceTypeTranslationBuilder> consumer) {
+            ResourceTypeTranslation resourceTypeTranslation =
+                    resourceType.addTranslation(languageCode);
             entityManager.persist(resourceTypeTranslation);
-            ResourceTypeTranslationBuilder builder = new ResourceTypeTranslationBuilder(resourceTypeTranslation);
+            ResourceTypeTranslationBuilder builder =
+                    new ResourceTypeTranslationBuilder(resourceTypeTranslation);
             consumer.accept(builder);
             return this;
         }
@@ -344,7 +346,8 @@ public class Builder {
             return resourceType(null, consumer);
         }
 
-        public ResourceBuilder resourceType(String resourceTypeKey, Consumer<ResourceTypeBuilder> consumer) {
+        public ResourceBuilder resourceType(
+                String resourceTypeKey, Consumer<ResourceTypeBuilder> consumer) {
             ResourceTypeBuilder resourceTypeBuilder = getResourceTypeBuilder(resourceTypeKey);
             if (null != consumer) consumer.accept(resourceTypeBuilder);
             return resourceType(resourceTypeBuilder.resourceType);
@@ -363,10 +366,12 @@ public class Builder {
             return this;
         }
 
-        public ResourceBuilder translation(String languageCode, Consumer<ResourceTranslationBuilder> consumer) {
+        public ResourceBuilder translation(
+                String languageCode, Consumer<ResourceTranslationBuilder> consumer) {
             ResourceTranslation resourceTranslation = resource.addTranslation(languageCode);
             entityManager.persist(resourceTranslation);
-            ResourceTranslationBuilder builder = new ResourceTranslationBuilder(resourceTranslation);
+            ResourceTranslationBuilder builder =
+                    new ResourceTranslationBuilder(resourceTranslation);
             consumer.accept(builder);
             return this;
         }
@@ -418,7 +423,6 @@ public class Builder {
             return this;
         }
 
-
         public SubjectBuilder topic(Consumer<TopicBuilder> consumer) {
             return topic(null, consumer);
         }
@@ -441,7 +445,8 @@ public class Builder {
             return this;
         }
 
-        public SubjectBuilder translation(String languageCode, Consumer<SubjectTranslationBuilder> consumer) {
+        public SubjectBuilder translation(
+                String languageCode, Consumer<SubjectTranslationBuilder> consumer) {
             SubjectTranslation subjectTranslation = subject.addTranslation(languageCode);
             entityManager.persist(subjectTranslation);
             SubjectTranslationBuilder builder = new SubjectTranslationBuilder(subjectTranslation);
@@ -515,7 +520,8 @@ public class Builder {
             return resource(resourceKey, false, consumer);
         }
 
-        public TopicBuilder resource(String resourceKey, boolean primary, Consumer<ResourceBuilder> consumer) {
+        public TopicBuilder resource(
+                String resourceKey, boolean primary, Consumer<ResourceBuilder> consumer) {
             ResourceBuilder resource = getResourceBuilder(resourceKey);
             if (null != consumer) consumer.accept(resource);
 
@@ -551,7 +557,8 @@ public class Builder {
             return this;
         }
 
-        public TopicBuilder translation(String languageCode, Consumer<TopicTranslationBuilder> consumer) {
+        public TopicBuilder translation(
+                String languageCode, Consumer<TopicTranslationBuilder> consumer) {
             TopicTranslation topicTranslation = topic.addTranslation(languageCode);
             entityManager.persist(topicTranslation);
             TopicTranslationBuilder builder = new TopicTranslationBuilder(topicTranslation);
@@ -573,6 +580,5 @@ public class Builder {
 
             cachedUrlUpdaterService.updateCachedUrls(topic);
         }
-
     }
 }

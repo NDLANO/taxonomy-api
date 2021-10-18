@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.domain;
 
-
 import javax.persistence.*;
 import java.net.URI;
 import java.util.Optional;

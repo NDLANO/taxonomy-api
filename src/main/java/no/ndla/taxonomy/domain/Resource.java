@@ -18,8 +18,7 @@ import java.util.stream.Collectors;
 @Entity
 public class Resource extends EntityWithPath {
 
-    @Column
-    private URI contentUri;
+    @Column private URI contentUri;
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
@@ -53,25 +52,26 @@ public class Resource extends EntityWithPath {
     }
 
     public Collection<Topic> getTopics() {
-        return getTopicResources()
-                .stream()
+        return getTopicResources().stream()
                 .map(TopicResource::getTopic)
                 .map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     public Collection<ResourceType> getResourceTypes() {
-        return getResourceResourceTypes()
-                .stream()
+        return getResourceResourceTypes().stream()
                 .map(ResourceResourceType::getResourceType)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     public ResourceResourceType addResourceType(ResourceType resourceType) {
         if (getResourceTypes().contains(resourceType)) {
-            throw new DuplicateIdException("Resource with id " + getPublicId() + " is already marked with resource type with id " + resourceType.getPublicId());
+            throw new DuplicateIdException(
+                    "Resource with id "
+                            + getPublicId()
+                            + " is already marked with resource type with id "
+                            + resourceType.getPublicId());
         }
-
 
         ResourceResourceType resourceResourceType = ResourceResourceType.create(this, resourceType);
         addResourceResourceType(resourceResourceType);
@@ -82,7 +82,8 @@ public class Resource extends EntityWithPath {
         this.resourceResourceTypes.add(resourceResourceType);
 
         if (resourceResourceType.getResource() != this) {
-            throw new IllegalArgumentException("ResourceResourceType must have Resource set before being associated with Resource");
+            throw new IllegalArgumentException(
+                    "ResourceResourceType must have Resource set before being associated with Resource");
         }
     }
 
@@ -102,7 +103,6 @@ public class Resource extends EntityWithPath {
         this.contentUri = contentUri;
     }
 
-
     public ResourceTranslation addTranslation(String languageCode) {
         ResourceTranslation resourceTranslation = getTranslation(languageCode).orElse(null);
         if (resourceTranslation != null) return resourceTranslation;
@@ -114,7 +114,9 @@ public class Resource extends EntityWithPath {
 
     public Optional<ResourceTranslation> getTranslation(String languageCode) {
         return resourceTranslations.stream()
-                .filter(resourceTranslation -> resourceTranslation.getLanguageCode().equals(languageCode))
+                .filter(
+                        resourceTranslation ->
+                                resourceTranslation.getLanguageCode().equals(languageCode))
                 .findFirst();
     }
 
@@ -152,14 +154,19 @@ public class Resource extends EntityWithPath {
     public void removeResourceType(ResourceType resourceType) {
         ResourceResourceType resourceResourceType = getResourceType(resourceType);
         if (resourceResourceType == null)
-            throw new ChildNotFoundException("Resource with id " + this.getPublicId() + " is not of type " + resourceType.getPublicId());
+            throw new ChildNotFoundException(
+                    "Resource with id "
+                            + this.getPublicId()
+                            + " is not of type "
+                            + resourceType.getPublicId());
 
         resourceResourceTypes.remove(resourceResourceType);
     }
 
     private ResourceResourceType getResourceType(ResourceType resourceType) {
         for (ResourceResourceType resourceResourceType : resourceResourceTypes) {
-            if (resourceResourceType.getResourceType().equals(resourceType)) return resourceResourceType;
+            if (resourceResourceType.getResourceType().equals(resourceType))
+                return resourceResourceType;
         }
         return null;
     }
@@ -184,7 +191,8 @@ public class Resource extends EntityWithPath {
         this.topics.add(topicResource);
 
         if (topicResource.getResource().orElse(null) != this) {
-            throw new IllegalArgumentException("TopicResource must have Resource relation set before adding");
+            throw new IllegalArgumentException(
+                    "TopicResource must have Resource relation set before adding");
         }
     }
 

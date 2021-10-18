@@ -60,40 +60,38 @@ public class OldUrlCanonifierTest {
         assertEquals("ndla.no/node/63920", result3);
     }
 
-
     @Test
-    public void canonificationHandlesPrintPdfPrefix(){
+    public void canonificationHandlesPrintPdfPrefix() {
         String pathWithPrintPdf = "ndla.no/nn/printpdf/50625";
         String canonifiedResult = canonifier.canonify(pathWithPrintPdf);
         assertEquals("ndla.no/node/50625", canonifiedResult);
     }
 
     @Test
-    public void canonificationHandlesEasyReaderPrefix(){
+    public void canonificationHandlesEasyReaderPrefix() {
         String pathWithPrintPdf = "ndla.no/nb/easyreader/8984";
         String canonifiedResult = canonifier.canonify(pathWithPrintPdf);
         assertEquals("ndla.no/node/8984", canonifiedResult);
     }
 
     @Test
-    public void canonificationHandlesH5PEmbedPrefix(){
+    public void canonificationHandlesH5PEmbedPrefix() {
         String pathWithPrintPdf = "ndla.no/nb/h5p/embed/6124";
         String canonifiedResult = canonifier.canonify(pathWithPrintPdf);
         assertEquals("ndla.no/node/6124", canonifiedResult);
     }
 
     @Test
-    public void canonificationHandlesH5PPrefix(){
+    public void canonificationHandlesH5PPrefix() {
         String pathWithPrintPdf = "ndla.no/nb/h5pcontent/132127";
         String canonifiedResult = canonifier.canonify(pathWithPrintPdf);
         assertEquals("ndla.no/node/132127", canonifiedResult);
     }
 
     @Test
-    public void canonificationHandlesOtherParams(){
+    public void canonificationHandlesOtherParams() {
         String pathWithMenyParam = "ndla.no/nb/node/133111?fag=130693&meny=313944";
         String canonifiedResult = canonifier.canonify(pathWithMenyParam);
         assertEquals("ndla.no/node/133111?fag=130693", canonifiedResult);
     }
-
 }

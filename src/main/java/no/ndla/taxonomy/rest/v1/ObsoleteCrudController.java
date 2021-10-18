@@ -41,6 +41,7 @@ public class ObsoleteCrudController {
     }
 
     protected String getLocation() {
-        return locations.computeIfAbsent(getClass(), aClass -> aClass.getAnnotation(RequestMapping.class).path()[0]);
+        return locations.computeIfAbsent(
+                getClass(), aClass -> aClass.getAnnotation(RequestMapping.class).path()[0]);
     }
 }

@@ -39,35 +39,32 @@ public class TopicTranslationsTest extends RestTest {
 
     @Test
     public void can_get_single_topic() throws Exception {
-        URI id = builder.topic(t -> t
-                .name("Trigonometry")
-                .translation("nb", l -> l
-                        .name("Trigonometri")
-                )
-        ).getPublicId();
+        URI id =
+                builder.topic(
+                                t ->
+                                        t.name("Trigonometry")
+                                                .translation("nb", l -> l.name("Trigonometri")))
+                        .getPublicId();
 
         final var topic = getTopic(id, "nb");
         assertEquals("Trigonometri", topic.getName());
     }
 
-
     @Test
     public void fallback_to_default_language() throws Exception {
-        URI id = builder.topic(t -> t
-                .name("Trigonometry")
-        ).getPublicId();
+        URI id = builder.topic(t -> t.name("Trigonometry")).getPublicId();
         final var topic = getTopic(id, "XX");
         assertEquals("Trigonometry", topic.getName());
     }
 
     @Test
     public void can_get_default_language() throws Exception {
-        URI id = builder.topic(t -> t
-                .name("Trigonometry")
-                .translation("nb", l -> l
-                        .name("Trigonometri")
-                )
-        ).getPublicId();
+        URI id =
+                builder.topic(
+                                t ->
+                                        t.name("Trigonometry")
+                                                .translation("nb", l -> l.name("Trigonometri")))
+                        .getPublicId();
 
         final var topic = getTopic(id, null);
         assertEquals("Trigonometry", topic.getName());
@@ -78,21 +75,22 @@ public class TopicTranslationsTest extends RestTest {
         Topic trigonometry = builder.topic(t -> t.name("Trigonometry"));
         URI id = trigonometry.getPublicId();
 
-        testUtils.updateResource("/v1/topics/" + id + "/translations/nb", new TopicTranslations.UpdateTopicTranslationCommand() {{
-            name = "Trigonometri";
-        }});
+        testUtils.updateResource(
+                "/v1/topics/" + id + "/translations/nb",
+                new TopicTranslations.UpdateTopicTranslationCommand() {
+                    {
+                        name = "Trigonometri";
+                    }
+                });
 
         assertEquals("Trigonometri", trigonometry.getTranslation("nb").get().getName());
     }
 
     @Test
     public void can_delete_translation() throws Exception {
-        Topic topic = builder.topic(t -> t
-                .name("Trigonometry")
-                .translation("nb", l -> l
-                        .name("Trigonometri")
-                )
-        );
+        Topic topic =
+                builder.topic(
+                        t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")));
         URI id = topic.getPublicId();
 
         testUtils.deleteResource("/v1/topics/" + id + "/translations/nb");
@@ -102,15 +100,19 @@ public class TopicTranslationsTest extends RestTest {
 
     @Test
     public void can_get_all_translations() throws Exception {
-        Topic topic = builder.topic(t -> t
-                .name("Trigonometry")
-                .translation("nb", l -> l.name("Trigonometri"))
-                .translation("en", l -> l.name("Trigonometry"))
-                .translation("de", l -> l.name("Trigonometrie"))
-        );
+        Topic topic =
+                builder.topic(
+                        t ->
+                                t.name("Trigonometry")
+                                        .translation("nb", l -> l.name("Trigonometri"))
+                                        .translation("en", l -> l.name("Trigonometry"))
+                                        .translation("de", l -> l.name("Trigonometrie")));
         URI id = topic.getPublicId();
 
-        TopicTranslations.TopicTranslationIndexDocument[] translations = testUtils.getObject(TopicTranslations.TopicTranslationIndexDocument[].class, testUtils.getResource("/v1/topics/" + id + "/translations"));
+        TopicTranslations.TopicTranslationIndexDocument[] translations =
+                testUtils.getObject(
+                        TopicTranslations.TopicTranslationIndexDocument[].class,
+                        testUtils.getResource("/v1/topics/" + id + "/translations"));
 
         assertEquals(3, translations.length);
         assertAnyTrue(translations, t -> t.name.equals("Trigonometri") && t.language.equals("nb"));
@@ -120,40 +122,56 @@ public class TopicTranslationsTest extends RestTest {
 
     @Test
     public void can_get_single_translation() throws Exception {
-        Topic topic = builder.topic(t -> t
-                .name("Trigonometry")
-                .translation("nb", l -> l.name("Trigonometri"))
-        );
+        Topic topic =
+                builder.topic(
+                        t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")));
         URI id = topic.getPublicId();
 
-        TopicTranslations.TopicTranslationIndexDocument translation = testUtils.getObject(TopicTranslations.TopicTranslationIndexDocument.class,
-                testUtils.getResource("/v1/topics/" + id + "/translations/nb"));
+        TopicTranslations.TopicTranslationIndexDocument translation =
+                testUtils.getObject(
+                        TopicTranslations.TopicTranslationIndexDocument.class,
+                        testUtils.getResource("/v1/topics/" + id + "/translations/nb"));
         assertEquals("Trigonometri", translation.name);
         assertEquals("nb", translation.language);
     }
 
-
     @Test
     public void can_get_resources_for_a_topic_recursively_with_translation() throws Exception {
-        builder.resourceType("article", rt -> rt.name("Article").translation("nb", tr -> tr.name("Artikkel")));
+        builder.resourceType(
+                "article", rt -> rt.name("Article").translation("nb", tr -> tr.name("Artikkel")));
 
-        URI a = builder.topic(t -> t
-                .resource(r -> r
-                        .name("Introduction to calculus")
-                        .translation("nb", tr -> tr.name("Introduksjon til calculus"))
-                        .resourceType("article")
-                )
-                .subtopic(st -> st
-                        .resource(r -> r
-                                .name("Introduction to integration")
-                                .translation("nb", tr -> tr.name("Introduksjon til integrasjon"))
-                                .resourceType("article")
-                        )
-                )
-        ).getPublicId();
+        URI a =
+                builder.topic(
+                                t ->
+                                        t.resource(
+                                                        r ->
+                                                                r.name("Introduction to calculus")
+                                                                        .translation(
+                                                                                "nb",
+                                                                                tr ->
+                                                                                        tr.name(
+                                                                                                "Introduksjon til calculus"))
+                                                                        .resourceType("article"))
+                                                .subtopic(
+                                                        st ->
+                                                                st.resource(
+                                                                        r ->
+                                                                                r.name(
+                                                                                                "Introduction to integration")
+                                                                                        .translation(
+                                                                                                "nb",
+                                                                                                tr ->
+                                                                                                        tr
+                                                                                                                .name(
+                                                                                                                        "Introduksjon til integrasjon"))
+                                                                                        .resourceType(
+                                                                                                "article"))))
+                        .getPublicId();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/" + a + "/resources?recursive=true&language=nb");
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response =
+                testUtils.getResource("/v1/topics/" + a + "/resources?recursive=true&language=nb");
+        ResourceIndexDocument[] result =
+                testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "Introduksjon til calculus".equals(r.name));
@@ -162,27 +180,46 @@ public class TopicTranslationsTest extends RestTest {
     }
 
     @Test
-    public void can_get_resources_for_a_topic_without_child_topic_resources_with_translation() throws Exception {
-        builder.resourceType("article", rt -> rt.name("Article").translation("nb", tr -> tr.name("Artikkel")));
+    public void can_get_resources_for_a_topic_without_child_topic_resources_with_translation()
+            throws Exception {
+        builder.resourceType(
+                "article", rt -> rt.name("Article").translation("nb", tr -> tr.name("Artikkel")));
 
-        builder.subject(s -> s
-                .topic(t -> t
-                        .publicId("urn:topic:1")
-                        .resource(r -> r
-                                .name("resource 1")
-                                .translation("nb", tr -> tr.name("ressurs 1"))
-                                .resourceType("article")
-                        )
-                        .resource(r -> r
-                                .name("resource 2")
-                                .translation("nb", tr -> tr.name("ressurs 2"))
-                                .resourceType("article")
-                        )
-                        .subtopic(st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))
-                ));
+        builder.subject(
+                s ->
+                        s.topic(
+                                t ->
+                                        t.publicId("urn:topic:1")
+                                                .resource(
+                                                        r ->
+                                                                r.name("resource 1")
+                                                                        .translation(
+                                                                                "nb",
+                                                                                tr ->
+                                                                                        tr.name(
+                                                                                                "ressurs 1"))
+                                                                        .resourceType("article"))
+                                                .resource(
+                                                        r ->
+                                                                r.name("resource 2")
+                                                                        .translation(
+                                                                                "nb",
+                                                                                tr ->
+                                                                                        tr.name(
+                                                                                                "ressurs 2"))
+                                                                        .resourceType("article"))
+                                                .subtopic(
+                                                        st ->
+                                                                st.name("subtopic")
+                                                                        .resource(
+                                                                                r ->
+                                                                                        r.name(
+                                                                                                "subtopic resource")))));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?language=nb");
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        MockHttpServletResponse response =
+                testUtils.getResource("/v1/topics/urn:topic:1/resources?language=nb");
+        ResourceIndexDocument[] result =
+                testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "ressurs 1".equals(r.name));
@@ -195,5 +232,4 @@ public class TopicTranslationsTest extends RestTest {
         if (isNotEmpty(language)) path = path + "?language=" + language;
         return testUtils.getObject(TopicDTO.class, testUtils.getResource(path));
     }
-
 }

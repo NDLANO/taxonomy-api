@@ -32,23 +32,17 @@ import static org.mockito.Mockito.*;
 @ExtendWith(SpringExtension.class)
 @Transactional
 public class TopicServiceImplTest {
-    @Autowired
-    private TopicRepository topicRepository;
+    @Autowired private TopicRepository topicRepository;
 
-    @Autowired
-    private Builder builder;
+    @Autowired private Builder builder;
 
-    @MockBean
-    private MetadataApiService metadataApiService;
+    @MockBean private MetadataApiService metadataApiService;
 
-    @MockBean
-    private EntityConnectionService entityConnectionService;
+    @MockBean private EntityConnectionService entityConnectionService;
 
-    @Autowired
-    private TopicServiceImpl topicService;
+    @Autowired private TopicServiceImpl topicService;
 
-    @MockBean
-    private TopicTreeSorter topicTreeSorter;
+    @MockBean private TopicTreeSorter topicTreeSorter;
 
     @Test
     public void delete() {
@@ -78,31 +72,36 @@ public class TopicServiceImplTest {
         final var parentConnectionsToReturn = Set.of(subjectTopic);
         final var childConnectionsToReturn = Set.of(childTopicSubtopic);
 
-        when(entityConnectionService.getParentConnections(any(Topic.class))).thenAnswer(invocationOnMock -> {
-            final var topic = (Topic) invocationOnMock.getArgument(0);
-            assertEquals(topicId, topic.getPublicId());
+        when(entityConnectionService.getParentConnections(any(Topic.class)))
+                .thenAnswer(
+                        invocationOnMock -> {
+                            final var topic = (Topic) invocationOnMock.getArgument(0);
+                            assertEquals(topicId, topic.getPublicId());
 
-            return parentConnectionsToReturn;
-        });
-        when(entityConnectionService.getChildConnections(any(Topic.class))).thenAnswer(invocationOnMock -> {
-            final var topic = (Topic) invocationOnMock.getArgument(0);
-            assertEquals(topicId, topic.getPublicId());
+                            return parentConnectionsToReturn;
+                        });
+        when(entityConnectionService.getChildConnections(any(Topic.class)))
+                .thenAnswer(
+                        invocationOnMock -> {
+                            final var topic = (Topic) invocationOnMock.getArgument(0);
+                            assertEquals(topicId, topic.getPublicId());
 
-            return childConnectionsToReturn;
-        });
+                            return childConnectionsToReturn;
+                        });
 
         final var returnedConnections = topicService.getAllConnections(topicId);
 
         assertEquals(2, returnedConnections.size());
-        returnedConnections.forEach(connection -> {
-            if (connection.getConnectionId().equals(URI.create("urn:subject-topic"))) {
-                assertEquals("parent-subject", connection.getType());
-            } else if (connection.getConnectionId().equals(URI.create("urn:child-topic"))) {
-                assertEquals("subtopic", connection.getType());
-            } else {
-                fail();
-            }
-        });
+        returnedConnections.forEach(
+                connection -> {
+                    if (connection.getConnectionId().equals(URI.create("urn:subject-topic"))) {
+                        assertEquals("parent-subject", connection.getType());
+                    } else if (connection.getConnectionId().equals(URI.create("urn:child-topic"))) {
+                        assertEquals("subtopic", connection.getType());
+                    } else {
+                        fail();
+                    }
+                });
     }
 
     static class MockedSortedArrayList<E> extends ArrayList<E> {

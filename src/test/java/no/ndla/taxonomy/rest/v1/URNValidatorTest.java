@@ -33,21 +33,30 @@ public class URNValidatorTest {
     public void urnWithOutURNIsRejected() {
         URI id = URI.create("resourcetype:1");
 
-        assertThrows(IdFormatException.class, () -> validator.validate(id, entity), "Id should start with urn:");
+        assertThrows(
+                IdFormatException.class,
+                () -> validator.validate(id, entity),
+                "Id should start with urn:");
     }
 
     @Test
     public void urnWithoutEntityIsRejected() {
         URI id = URI.create("urn:wrong:1");
 
-        assertThrows(IdFormatException.class, () -> validator.validate(id, entity), "Id should have entity name");
+        assertThrows(
+                IdFormatException.class,
+                () -> validator.validate(id, entity),
+                "Id should have entity name");
     }
 
     @Test
     public void urnMustHaveID() {
         URI id = URI.create("urn:resourcetype");
 
-        assertThrows(IdFormatException.class, () -> validator.validate(id, entity), "Id should have id field");
+        assertThrows(
+                IdFormatException.class,
+                () -> validator.validate(id, entity),
+                "Id should have id field");
     }
 
     @Test

@@ -42,7 +42,9 @@ public class Relevance extends DomainObject {
 
     public Optional<RelevanceTranslation> getTranslation(String languageCode) {
         return translations.stream()
-                .filter(relevanceTranslation -> relevanceTranslation.getLanguageCode().equals(languageCode))
+                .filter(
+                        relevanceTranslation ->
+                                relevanceTranslation.getLanguageCode().equals(languageCode))
                 .findFirst();
     }
 

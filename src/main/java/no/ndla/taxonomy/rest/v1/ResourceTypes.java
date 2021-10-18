@@ -47,12 +47,11 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @ApiOperation("Gets a list of all resource types")
     public List<ResourceTypeIndexDocument> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
-    ) {
+                    @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language) {
         // Returns all resource types that is NOT a subtype
-        return resourceTypeRepository.findAllByParentIncludingTranslationsAndFirstLevelSubtypes(null)
-                .stream()
+        return resourceTypeRepository
+                .findAllByParentIncludingTranslationsAndFirstLevelSubtypes(null).stream()
                 .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language, 100))
                 .collect(Collectors.toList());
     }
@@ -62,10 +61,10 @@ public class ResourceTypes extends CrudController<ResourceType> {
     public ResourceTypeIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
-    ) {
-        return resourceTypeRepository.findFirstByPublicIdIncludingTranslations(id)
+                    @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language) {
+        return resourceTypeRepository
+                .findFirstByPublicIdIncludingTranslations(id)
                 .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language, 0))
                 .orElseThrow(() -> new NotFoundException("ResourceType", id));
     }
@@ -74,9 +73,8 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @ApiOperation(value = "Adds a new resource type")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "resourceType", value = "The new resource type")
-            @RequestBody ResourceTypeCommand command
-    ) {
+            @ApiParam(name = "resourceType", value = "The new resource type") @RequestBody
+                    ResourceTypeCommand command) {
         ResourceType resourceType = new ResourceType();
         if (null != command.parentId) {
             ResourceType parent = resourceTypeRepository.getByPublicId(command.parentId);
@@ -86,15 +84,19 @@ public class ResourceTypes extends CrudController<ResourceType> {
     }
 
     @PutMapping("/{id}")
-    @ApiOperation(value = "Updates a resource type. Use to update which resource type is parent. You can also update the id, take care!")
+    @ApiOperation(
+            value =
+                    "Updates a resource type. Use to update which resource type is parent. You can also update the id, take care!")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(
             @PathVariable URI id,
-            @ApiParam(name = "resourceType", value = "The updated resource type. Fields not included will be set to null.")
-            @RequestBody ResourceTypeCommand
-                    command
-    ) {
+            @ApiParam(
+                            name = "resourceType",
+                            value =
+                                    "The updated resource type. Fields not included will be set to null.")
+                    @RequestBody
+                    ResourceTypeCommand command) {
         ResourceType resourceType = doPut(id, command);
 
         ResourceType parent = null;
@@ -107,20 +109,18 @@ public class ResourceTypes extends CrudController<ResourceType> {
         }
     }
 
-
     @GetMapping("/{id}/subtypes")
     @ApiOperation(value = "Gets subtypes of one resource type")
     public List<ResourceTypeIndexDocument> getSubtypes(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
+                    @RequestParam(value = "language", required = false, defaultValue = "")
                     String language,
             @RequestParam(value = "recursive", required = false, defaultValue = "false")
-            @ApiParam("If true, sub resource types are fetched recursively")
-                    boolean recursive
-    ) {
-        return resourceTypeRepository.findAllByParentPublicIdIncludingTranslationsAndFirstLevelSubtypes(id)
-                .stream()
+                    @ApiParam("If true, sub resource types are fetched recursively")
+                    boolean recursive) {
+        return resourceTypeRepository
+                .findAllByParentPublicIdIncludingTranslationsAndFirstLevelSubtypes(id).stream()
                 .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language, 100))
                 .collect(Collectors.toList());
     }
@@ -140,36 +140,50 @@ public class ResourceTypes extends CrudController<ResourceType> {
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public List<ResourceTypeIndexDocument> subtypes = new ArrayList<>();
 
-        public ResourceTypeIndexDocument() {
+        public ResourceTypeIndexDocument() {}
 
-        }
-
-        public ResourceTypeIndexDocument(ResourceType resourceType, String language, int recursionLevels) {
+        public ResourceTypeIndexDocument(
+                ResourceType resourceType, String language, int recursionLevels) {
             this.id = resourceType.getPublicId();
-            this.name = resourceType.getTranslation(language)
-                    .map(ResourceTypeTranslation::getName)
-                    .orElse(resourceType.getName());
+            this.name =
+                    resourceType
+                            .getTranslation(language)
+                            .map(ResourceTypeTranslation::getName)
+                            .orElse(resourceType.getName());
 
             if (recursionLevels > 0) {
-                this.subtypes = resourceType.getSubtypes()
-                        .stream()
-                        .map(resourceType1 -> new ResourceTypeIndexDocument(resourceType1, language, recursionLevels - 1))
-                        .collect(Collectors.toList());
+                this.subtypes =
+                        resourceType.getSubtypes().stream()
+                                .map(
+                                        resourceType1 ->
+                                                new ResourceTypeIndexDocument(
+                                                        resourceType1,
+                                                        language,
+                                                        recursionLevels - 1))
+                                .collect(Collectors.toList());
             }
         }
     }
 
     public static class ResourceTypeCommand implements UpdatableDto<ResourceType> {
         @JsonProperty
-        @ApiModelProperty(value = "If specified, the new resource type will be a child of the mentioned resource type.")
+        @ApiModelProperty(
+                value =
+                        "If specified, the new resource type will be a child of the mentioned resource type.")
         public URI parentId;
 
         @JsonProperty
-        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:resourcetype: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:resourcetype:1")
+        @ApiModelProperty(
+                notes =
+                        "If specified, set the id to this value. Must start with urn:resourcetype: and be a valid URI. If omitted, an id will be assigned automatically.",
+                example = "urn:resourcetype:1")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "The name of the resource type", example = "Lecture")
+        @ApiModelProperty(
+                required = true,
+                value = "The name of the resource type",
+                example = "Lecture")
         public String name;
 
         @Override

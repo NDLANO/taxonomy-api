@@ -16,10 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.net.URI;
 
 /**
- * This class replaces some SQL files that was used to seed the database for various tests. The SQL statements
- * has been rewritten as JPA so any in-application triggers can run.
- * <p>
- * Method names refers to the old SQL file name
+ * This class replaces some SQL files that was used to seed the database for various tests. The SQL
+ * statements has been rewritten as JPA so any in-application triggers can run.
+ *
+ * <p>Method names refers to the old SQL file name
  */
 @Transactional
 @Component
@@ -34,8 +34,16 @@ public class TestSeeder {
     private final TopicResourceRepository topicResourceRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public TestSeeder(SubjectRepository subjectRepository, TopicRepository topicRepository, ResourceRepository resourceRepository, RelevanceRepository relevanceRepository, ResourceTypeRepository resourceTypeRepository, SubjectTopicRepository subjectTopicRepository, TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository,
-                      CachedUrlUpdaterService cachedUrlUpdaterService) {
+    public TestSeeder(
+            SubjectRepository subjectRepository,
+            TopicRepository topicRepository,
+            ResourceRepository resourceRepository,
+            RelevanceRepository relevanceRepository,
+            ResourceTypeRepository resourceTypeRepository,
+            SubjectTopicRepository subjectTopicRepository,
+            TopicSubtopicRepository topicSubtopicRepository,
+            TopicResourceRepository topicResourceRepository,
+            CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
@@ -89,7 +97,8 @@ public class TestSeeder {
         return subject;
     }
 
-    private SubjectTopic createSubjectTopic(String publicId, Topic topic, Subject subject, Integer rank) {
+    private SubjectTopic createSubjectTopic(
+            String publicId, Topic topic, Subject subject, Integer rank) {
         final var subjectTopic = SubjectTopic.create(subject, topic);
 
         if (publicId != null) {
@@ -107,7 +116,8 @@ public class TestSeeder {
         return subjectTopic;
     }
 
-    private TopicSubtopic createTopicSubtopic(String publicId, Topic topic, Topic subTopic, Integer rank) {
+    private TopicSubtopic createTopicSubtopic(
+            String publicId, Topic topic, Topic subTopic, Integer rank) {
         final var topicSubtopic = TopicSubtopic.create(topic, subTopic);
 
         if (publicId != null) {
@@ -158,15 +168,21 @@ public class TestSeeder {
 
         cachedUrlUpdaterService.updateCachedUrls(resource);
 
-
         return resource;
     }
 
-    private TopicResource createTopicResource(String publicId, Topic topic, Resource resource, Boolean isPrimary, Integer rank) {
+    private TopicResource createTopicResource(
+            String publicId, Topic topic, Resource resource, Boolean isPrimary, Integer rank) {
         return createTopicResource(publicId, topic, resource, isPrimary, rank, null);
     }
 
-    private TopicResource createTopicResource(String publicId, Topic topic, Resource resource, Boolean isPrimary, Integer rank, Relevance relevance) {
+    private TopicResource createTopicResource(
+            String publicId,
+            Topic topic,
+            Resource resource,
+            Boolean isPrimary,
+            Integer rank,
+            Relevance relevance) {
         final var topicResource = TopicResource.create(topic, resource);
 
         if (publicId != null) {
@@ -206,7 +222,8 @@ public class TestSeeder {
         return resourceTypeRepository.save(resourceType);
     }
 
-    private ResourceResourceType createResourceResourceType(String publicId, Resource resource, ResourceType resourceType) {
+    private ResourceResourceType createResourceResourceType(
+            String publicId, Resource resource, ResourceType resourceType) {
         final var resourceResourceType = ResourceResourceType.create(resource, resourceType);
 
         if (publicId != null) {
@@ -370,7 +387,6 @@ public class TestSeeder {
         final var topic1 = createTopic("urn:topic:1", "ST:1", null, false);
         createSubjectTopic("urn:subject-topic:1", topic1, subject1, 1);
 
-
         final var resource1 = createResource("urn:resource:1", "R:1", null);
         final var resource2 = createResource("urn:resource:2", "R:2", null);
         final var resource3 = createResource("urn:resource:3", "R:3", null);
@@ -418,7 +434,6 @@ public class TestSeeder {
         createSubjectTopic("urn:subject-topic:1", f1topic1, filter1, 1);
         final var f2topic1 = createTopic("urn:topic:2:1", "ST:1", null, false);
         createSubjectTopic("urn:subject-topic:2", f2topic1, filter2, 1);
-
 
         final var resource1 = createResource("urn:resource:1", "R:1", null);
         final var resource2 = createResource("urn:resource:2", "R:2", null);
@@ -472,7 +487,6 @@ public class TestSeeder {
         createSubjectTopic("urn:subject-topic:1", f1topic1, filter1, 1);
         final var f2topic1 = createTopic("urn:topic:2:1", "ST:1", null, false);
         createSubjectTopic("urn:subject-topic:2", f2topic1, filter2, 1);
-
 
         final var resource1 = createResource("urn:resource:1", "R:1", null);
         final var resource2 = createResource("urn:resource:2", "R:2", null);
@@ -545,7 +559,6 @@ public class TestSeeder {
         final var topic8 = createTopic("urn:topic:8", "TST:3-3", null, false);
         final var topic9 = createTopic("urn:topic:9", "TST:2-1-1", null, false);
 
-
         createSubjectTopic("urn:subject-topic:1", topic1, subject1, 1);
         createSubjectTopic("urn:subject-topic:2", topic3, subject1, 2);
         createSubjectTopic("urn:subject-topic-3", topic5, subject1, 3);
@@ -578,7 +591,6 @@ public class TestSeeder {
         createTopicResource("urn:topic-resource:8", topic8, resource8, true, 2);
         createTopicResource("urn:topic-resource:9", topic1, resource9, true, 1);
         createTopicResource("urn:topic-resource:10", topic9, resource10, true, 1);
-
 
         final var relevance1 = createRelevance("urn:relevance:core", "Core");
     }

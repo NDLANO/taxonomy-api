@@ -31,9 +31,10 @@ public class ResourceServiceImplTest {
     private MetadataApiService metadataApiService;
 
     @BeforeEach
-    public void setUp(@Autowired ResourceRepository resourceRepository,
-                      @Autowired TopicResourceRepository topicResourceRepository,
-                      @Autowired Builder builder) {
+    public void setUp(
+            @Autowired ResourceRepository resourceRepository,
+            @Autowired TopicResourceRepository topicResourceRepository,
+            @Autowired Builder builder) {
         this.builder = builder;
 
         connectionService = mock(EntityConnectionService.class);
@@ -43,8 +44,15 @@ public class ResourceServiceImplTest {
         final var recursiveTopicTreeService = mock(RecursiveTopicTreeService.class);
         final var topicTreeSorter = mock(TopicTreeSorter.class);
 
-        resourceService = new ResourceServiceImpl(resourceRepository, topicResourceRepository, connectionService,
-                metadataApiService, domainEntityHelperService, recursiveTopicTreeService, topicTreeSorter);
+        resourceService =
+                new ResourceServiceImpl(
+                        resourceRepository,
+                        topicResourceRepository,
+                        connectionService,
+                        metadataApiService,
+                        domainEntityHelperService,
+                        recursiveTopicTreeService,
+                        topicTreeSorter);
     }
 
     @Test

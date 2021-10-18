@@ -32,7 +32,11 @@ public class MetadataUpdateServiceImpl implements MetadataUpdateService {
 
     private final MetadataApiService apiService;
 
-    public MetadataUpdateServiceImpl(SubjectRepository subjectRepository, TopicRepository topicRepository, ResourceRepository resourceRepository, MetadataApiService apiService) {
+    public MetadataUpdateServiceImpl(
+            SubjectRepository subjectRepository,
+            TopicRepository topicRepository,
+            ResourceRepository resourceRepository,
+            MetadataApiService apiService) {
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
@@ -42,34 +46,54 @@ public class MetadataUpdateServiceImpl implements MetadataUpdateService {
     private EntityWithPath getEntityFromPublicId(URI publicId) {
         switch (publicId.getSchemeSpecificPart().split(":")[0]) {
             case "subject":
-                return subjectRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Subject by id was not found"));
+                return subjectRepository
+                        .findFirstByPublicId(publicId)
+                        .orElseThrow(
+                                () -> new NotFoundServiceException("Subject by id was not found"));
             case "topic":
-                return topicRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Topic by id was not found"));
+                return topicRepository
+                        .findFirstByPublicId(publicId)
+                        .orElseThrow(
+                                () -> new NotFoundServiceException("Topic by id was not found"));
             case "resource":
-                return resourceRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Resource by id was not found"));
+                return resourceRepository
+                        .findFirstByPublicId(publicId)
+                        .orElseThrow(
+                                () -> new NotFoundServiceException("Resource by id was not found"));
         }
 
         throw new NotFoundServiceException("Unknown entity requested");
     }
 
-    private Set<URI> getEntityPublicIdsToUpdateRecursively(EntityWithPath entity, boolean applyToResources) {
+    private Set<URI> getEntityPublicIdsToUpdateRecursively(
+            EntityWithPath entity, boolean applyToResources) {
         final var entitiesToUpdate = new HashSet<>(Set.of(entity.getPublicId()));
 
-        // Retrieves all publicIds recursively for the requested entity, ignoring Resources if applyToResources = false
+        // Retrieves all publicIds recursively for the requested entity, ignoring Resources if
+        // applyToResources = false
 
         entity.getChildConnections().stream()
                 .map(connection -> connection.getConnectedChild().orElse(null))
                 .filter(Objects::nonNull)
                 .filter(e -> applyToResources || !(e instanceof Resource))
-                .flatMap(entityToUpdate -> getEntityPublicIdsToUpdateRecursively(entityToUpdate, applyToResources).stream())
+                .flatMap(
+                        entityToUpdate ->
+                                getEntityPublicIdsToUpdateRecursively(
+                                        entityToUpdate, applyToResources)
+                                        .stream())
                 .forEach(entitiesToUpdate::add);
 
         return entitiesToUpdate;
     }
 
     @Override
-    public RecursiveMergeResultDto updateMetadataRecursivelyByPublicId(URI publicId, MetadataDto metadataApiEntity, boolean applyToResources) {
-        return new RecursiveMergeResultDto(apiService.updateMetadataByPublicIds(getEntityPublicIdsToUpdateRecursively(getEntityFromPublicId(publicId), applyToResources), metadataApiEntity));
+    public RecursiveMergeResultDto updateMetadataRecursivelyByPublicId(
+            URI publicId, MetadataDto metadataApiEntity, boolean applyToResources) {
+        return new RecursiveMergeResultDto(
+                apiService.updateMetadataByPublicIds(
+                        getEntityPublicIdsToUpdateRecursively(
+                                getEntityFromPublicId(publicId), applyToResources),
+                        metadataApiEntity));
     }
 
     @Override

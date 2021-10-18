@@ -15,15 +15,15 @@ public class RecursiveMergeResultDto {
     private int updatedCount;
     private Set<URI> updated;
 
-    public RecursiveMergeResultDto() {
-    }
+    public RecursiveMergeResultDto() {}
 
     public RecursiveMergeResultDto(Set<MetadataDto> metadataDtos) {
         updatedCount = metadataDtos.size();
-        updated = metadataDtos.stream()
-                .map(MetadataDto::getPublicId)
-                .map(URI::create)
-                .collect(Collectors.toSet());
+        updated =
+                metadataDtos.stream()
+                        .map(MetadataDto::getPublicId)
+                        .map(URI::create)
+                        .collect(Collectors.toSet());
     }
 
     public int getUpdatedCount() {

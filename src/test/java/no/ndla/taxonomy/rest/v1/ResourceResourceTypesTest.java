@@ -30,10 +30,16 @@ public class ResourceResourceTypesTest extends RestTest {
 
         URI textTypeId = newResourceType().name("text").getPublicId();
 
-        URI id = getId(testUtils.createResource("/v1/resource-resourcetypes", new ResourceResourceTypes.CreateResourceResourceTypeCommand() {{
-            resourceId = integrationResourceId;
-            resourceTypeId = textTypeId;
-        }}));
+        URI id =
+                getId(
+                        testUtils.createResource(
+                                "/v1/resource-resourcetypes",
+                                new ResourceResourceTypes.CreateResourceResourceTypeCommand() {
+                                    {
+                                        resourceId = integrationResourceId;
+                                        resourceTypeId = textTypeId;
+                                    }
+                                }));
 
         Resource resource = resourceRepository.getByPublicId(integrationResourceId);
         assertEquals(1, resource.getResourceTypes().size());
@@ -49,10 +55,15 @@ public class ResourceResourceTypesTest extends RestTest {
         ResourceType resourceType = newResourceType().name("text");
         save(integrationResource.addResourceType(resourceType));
 
-        testUtils.createResource("/v1/resource-resourcetypes", new ResourceResourceTypes.CreateResourceResourceTypeCommand() {{
-            resourceId = integrationResource.getPublicId();
-            resourceTypeId = resourceType.getPublicId();
-        }}, status().isConflict());
+        testUtils.createResource(
+                "/v1/resource-resourcetypes",
+                new ResourceResourceTypes.CreateResourceResourceTypeCommand() {
+                    {
+                        resourceId = integrationResource.getPublicId();
+                        resourceTypeId = resourceType.getPublicId();
+                    }
+                },
+                status().isConflict());
     }
 
     @Test
@@ -78,10 +89,20 @@ public class ResourceResourceTypesTest extends RestTest {
         save(integration.addResourceType(text));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resource-resourcetypes");
-        ResourceResourceTypes.ResourceResourceTypeIndexDocument[] resourceResourcetypes = testUtils.getObject(ResourceResourceTypes.ResourceResourceTypeIndexDocument[].class, response);
+        ResourceResourceTypes.ResourceResourceTypeIndexDocument[] resourceResourcetypes =
+                testUtils.getObject(
+                        ResourceResourceTypes.ResourceResourceTypeIndexDocument[].class, response);
         assertEquals(2, resourceResourcetypes.length);
-        assertAnyTrue(resourceResourcetypes, t -> trigonometry.getPublicId().equals(t.resourceId) && article.getPublicId().equals(t.resourceTypeId));
-        assertAnyTrue(resourceResourcetypes, t -> integration.getPublicId().equals(t.resourceId) && text.getPublicId().equals(t.resourceTypeId));
+        assertAnyTrue(
+                resourceResourcetypes,
+                t ->
+                        trigonometry.getPublicId().equals(t.resourceId)
+                                && article.getPublicId().equals(t.resourceTypeId));
+        assertAnyTrue(
+                resourceResourcetypes,
+                t ->
+                        integration.getPublicId().equals(t.resourceId)
+                                && text.getPublicId().equals(t.resourceTypeId));
     }
 
     @Test
@@ -92,8 +113,11 @@ public class ResourceResourceTypesTest extends RestTest {
         ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);
         URI id = save(resourceResourceType).getPublicId();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/resource-resourcetypes/" + id);
-        ResourceResourceTypes.ResourceResourceTypeIndexDocument result = testUtils.getObject(ResourceResourceTypes.ResourceResourceTypeIndexDocument.class, response);
+        MockHttpServletResponse response =
+                testUtils.getResource("/v1/resource-resourcetypes/" + id);
+        ResourceResourceTypes.ResourceResourceTypeIndexDocument result =
+                testUtils.getObject(
+                        ResourceResourceTypes.ResourceResourceTypeIndexDocument.class, response);
 
         assertEquals(resource.getPublicId(), result.resourceId);
         assertEquals(resourceType.getPublicId(), result.resourceTypeId);
@@ -109,8 +133,11 @@ public class ResourceResourceTypesTest extends RestTest {
 
         resourceType.setPublicId(URI.create("urn:resourcetype:article"));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/resource-resourcetypes/" + id);
-        ResourceResourceTypes.ResourceResourceTypeIndexDocument result = testUtils.getObject(ResourceResourceTypes.ResourceResourceTypeIndexDocument.class, response);
+        MockHttpServletResponse response =
+                testUtils.getResource("/v1/resource-resourcetypes/" + id);
+        ResourceResourceTypes.ResourceResourceTypeIndexDocument result =
+                testUtils.getObject(
+                        ResourceResourceTypes.ResourceResourceTypeIndexDocument.class, response);
 
         assertEquals(resource.getPublicId(), result.resourceId);
         assertEquals(URI.create("urn:resourcetype:article"), result.resourceTypeId);

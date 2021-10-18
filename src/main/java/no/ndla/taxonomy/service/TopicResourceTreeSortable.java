@@ -22,22 +22,30 @@ public class TopicResourceTreeSortable implements TopicTreeSorter.Sortable {
     private String type;
 
     public TopicResourceTreeSortable(TopicResource topicResource) {
-        this.id = topicResource.getResource().orElseThrow(() -> new IllegalArgumentException("Resource not set")).getId();
-        this.parentId = topicResource.getTopic().orElseThrow(() -> new IllegalArgumentException("Topic not set")).getId();
+        this.id =
+                topicResource
+                        .getResource()
+                        .orElseThrow(() -> new IllegalArgumentException("Resource not set"))
+                        .getId();
+        this.parentId =
+                topicResource
+                        .getTopic()
+                        .orElseThrow(() -> new IllegalArgumentException("Topic not set"))
+                        .getId();
         this.rank = topicResource.getRank();
         this.topicResource = topicResource;
         this.type = "resource";
         this.parentType = "topic";
     }
 
-    public TopicResourceTreeSortable(String type, String parentType, int id, int parentId, int rank) {
+    public TopicResourceTreeSortable(
+            String type, String parentType, int id, int parentId, int rank) {
         this.id = id;
         this.parentId = parentId;
         this.rank = rank;
         this.type = type;
         this.parentType = parentType;
     }
-
 
     @Override
     public int getSortableRank() {

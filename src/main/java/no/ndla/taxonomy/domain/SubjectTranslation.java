@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.domain;
 
-
 import javax.persistence.*;
 
 @Entity
@@ -20,14 +19,11 @@ public class SubjectTranslation {
     @JoinColumn(name = "subject_id")
     private Subject subject;
 
-    @Column
-    private String name;
+    @Column private String name;
 
-    @Column
-    private String languageCode;
+    @Column private String languageCode;
 
-    SubjectTranslation() {
-    }
+    SubjectTranslation() {}
 
     public SubjectTranslation(Subject subject, String languageCode) {
         setSubject(subject);
@@ -39,7 +35,9 @@ public class SubjectTranslation {
     }
 
     public void setSubject(Subject subject) {
-        if (subject != this.subject && this.subject != null && this.subject.getTranslations().contains(this)) {
+        if (subject != this.subject
+                && this.subject != null
+                && this.subject.getTranslations().contains(this)) {
             this.subject.removeTranslation(this);
         }
         this.subject = subject;

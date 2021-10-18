@@ -42,5 +42,4 @@ public class JWTPermission {
     public String getPermission() {
         return permission;
     }
-
 }

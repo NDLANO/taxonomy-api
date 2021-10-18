@@ -34,13 +34,18 @@ public class ResourceDTO {
     private String name;
 
     @JsonProperty
-    @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
-            notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
-                    "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
+    @ApiModelProperty(
+            value = "The ID of this resource in the system where the content is stored. ",
+            notes =
+                    "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier "
+                            + "for the system, and <id> is the id of this content in that system.",
+            example = "urn:article:1")
     private URI contentUri;
 
     @JsonProperty
-    @ApiModelProperty(value = "The path part of the url to this resource", example = "/subject:1/topic:1/resource:1")
+    @ApiModelProperty(
+            value = "The path part of the url to this resource",
+            example = "/subject:1/topic:1/resource:1")
     private String path;
 
     @ApiModelProperty(value = "Metadata for entity. Read only.")
@@ -48,19 +53,24 @@ public class ResourceDTO {
     private MetadataDto metadata;
 
     @JsonProperty
-    @ApiModelProperty(value = "Resource type(s)", example = "[{\"id\": \"urn:resourcetype:1\",\"name\":\"lecture\"}]")
+    @ApiModelProperty(
+            value = "Resource type(s)",
+            example = "[{\"id\": \"urn:resourcetype:1\",\"name\":\"lecture\"}]")
     private TreeSet<ResourceTypeDTO> resourceTypes = new TreeSet<>();
 
     @JsonProperty
-    @ApiModelProperty(value = "Filters this resource is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
+    @ApiModelProperty(
+            value = "Filters this resource is associated with, directly or by inheritance",
+            example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
     private Set<Object> filters = new HashSet<>();
 
     @JsonProperty
-    @ApiModelProperty(value = "All paths that lead to this resource", example = "[\"/subject:1/topic:1/resource:1\", \"/subject:2/topic:3/resource:1\"]")
+    @ApiModelProperty(
+            value = "All paths that lead to this resource",
+            example = "[\"/subject:1/topic:1/resource:1\", \"/subject:2/topic:3/resource:1\"]")
     private Set<String> paths;
 
-    public ResourceDTO() {
-    }
+    public ResourceDTO() {}
 
     protected void setMetadata(MetadataDto metadata) {
         this.metadata = metadata;
@@ -69,15 +79,18 @@ public class ResourceDTO {
     public ResourceDTO(Resource resource, String languageCode) {
         this.id = resource.getPublicId();
         this.contentUri = resource.getContentUri();
-        this.name = resource
-                .getTranslation(languageCode)
-                .map(ResourceTranslation::getName)
-                .orElse(resource.getName());
+        this.name =
+                resource.getTranslation(languageCode)
+                        .map(ResourceTranslation::getName)
+                        .orElse(resource.getName());
 
-        this.resourceTypes = resource.getResourceResourceTypes()
-                .stream()
-                .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
-                .collect(Collectors.toCollection(TreeSet::new));
+        this.resourceTypes =
+                resource.getResourceResourceTypes().stream()
+                        .map(
+                                resourceType ->
+                                        new ResourceTypeWithConnectionDTO(
+                                                resourceType, languageCode))
+                        .collect(Collectors.toCollection(TreeSet::new));
 
         this.path = resource.getPrimaryPath().orElse(null);
         this.paths = resource.getAllPaths();
@@ -118,6 +131,4 @@ public class ResourceDTO {
     public Set<String> getPaths() {
         return paths;
     }
-
-
 }

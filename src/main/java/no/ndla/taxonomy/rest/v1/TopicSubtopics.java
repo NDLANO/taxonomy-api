@@ -41,8 +41,7 @@ public class TopicSubtopics {
             TopicRepository topicRepository,
             TopicSubtopicRepository topicSubtopicRepository,
             EntityConnectionService connectionService,
-            RelevanceRepository relevanceRepository
-    ) {
+            RelevanceRepository relevanceRepository) {
         this.topicRepository = topicRepository;
         this.topicSubtopicRepository = topicSubtopicRepository;
         this.connectionService = connectionService;
@@ -52,9 +51,7 @@ public class TopicSubtopics {
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and subtopics")
     public List<TopicSubtopicIndexDocument> index() {
-        return topicSubtopicRepository
-                .findAllIncludingTopicAndSubtopic()
-                .stream()
+        return topicSubtopicRepository.findAllIncludingTopicAndSubtopic().stream()
                 .map(TopicSubtopicIndexDocument::new)
                 .collect(Collectors.toList());
     }
@@ -70,13 +67,19 @@ public class TopicSubtopics {
     @ApiOperation(value = "Adds a subtopic to a topic")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "connection", value = "The new connection") @RequestBody AddSubtopicToTopicCommand command) {
+            @ApiParam(name = "connection", value = "The new connection") @RequestBody
+                    AddSubtopicToTopicCommand command) {
 
         Topic topic = topicRepository.getByPublicId(command.topicid);
         Topic subtopic = topicRepository.getByPublicId(command.subtopicid);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
+        Relevance relevance =
+                command.relevanceId != null
+                        ? relevanceRepository.getByPublicId(command.relevanceId)
+                        : null;
 
-        final var topicSubtopic = connectionService.connectTopicSubtopic(topic, subtopic, relevance, command.rank == 0 ? null : command.rank);
+        final var topicSubtopic =
+                connectionService.connectTopicSubtopic(
+                        topic, subtopic, relevance, command.rank == 0 ? null : command.rank);
 
         URI location = URI.create("/topic-subtopics/" + topicSubtopic.getPublicId());
         return ResponseEntity.created(location).build();
@@ -92,14 +95,22 @@ public class TopicSubtopics {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation(value = "Updates a connection between a topic and a subtopic", notes = "Use to update which topic is primary to a subtopic or to alter sorting order")
+    @ApiOperation(
+            value = "Updates a connection between a topic and a subtopic",
+            notes = "Use to update which topic is primary to a subtopic or to alter sorting order")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
+    public void put(
+            @PathVariable("id") URI id,
+            @ApiParam(name = "connection", value = "The updated connection") @RequestBody
+                    UpdateTopicSubtopicCommand command) {
         final var topicSubtopic = topicSubtopicRepository.getByPublicId(id);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
+        Relevance relevance =
+                command.relevanceId != null
+                        ? relevanceRepository.getByPublicId(command.relevanceId)
+                        : null;
 
-        connectionService.updateTopicSubtopic(topicSubtopic, relevance, command.rank > 0 ? command.rank : null);
+        connectionService.updateTopicSubtopic(
+                topicSubtopic, relevance, command.rank > 0 ? command.rank : null);
     }
 
     public static class AddSubtopicToTopicCommand {
@@ -112,11 +123,15 @@ public class TopicSubtopics {
         public URI subtopicid;
 
         @JsonProperty
-        @ApiModelProperty(value = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
+        @ApiModelProperty(
+                value = "Backwards compatibility: Always true. Ignored on insert/update",
+                example = "true")
         public boolean primary = true;
 
         @JsonProperty
-        @ApiModelProperty(value = "Order in which to sort the subtopic for the topic", example = "1")
+        @ApiModelProperty(
+                value = "Order in which to sort the subtopic for the topic",
+                example = "1")
         public int rank;
 
         @JsonProperty
@@ -130,7 +145,9 @@ public class TopicSubtopics {
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(value = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
+        @ApiModelProperty(
+                value = "Backwards compatibility: Always true. Ignored on insert/update",
+                example = "true")
         public boolean primary;
 
         @JsonProperty
@@ -156,7 +173,9 @@ public class TopicSubtopics {
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(value = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
+        @ApiModelProperty(
+                value = "Backwards compatibility: Always true. Ignored on insert/update",
+                example = "true")
         public boolean primary;
 
         @JsonProperty
@@ -167,8 +186,7 @@ public class TopicSubtopics {
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
-        TopicSubtopicIndexDocument() {
-        }
+        TopicSubtopicIndexDocument() {}
 
         TopicSubtopicIndexDocument(TopicSubtopic topicSubtopic) {
             id = topicSubtopic.getPublicId();

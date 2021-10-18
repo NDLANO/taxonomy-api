@@ -23,24 +23,17 @@ public class CachedPath {
     @Column(name = "is_active")
     private boolean active = true;
 
-    @Column
-    @Id
-    private UUID id;
+    @Column @Id private UUID id;
 
-    @Column
-    private URI publicId;
+    @Column private URI publicId;
 
-    @Column
-    private String path;
+    @Column private String path;
 
-    @ManyToOne
-    private Subject subject;
+    @ManyToOne private Subject subject;
 
-    @ManyToOne
-    private Topic topic;
+    @ManyToOne private Topic topic;
 
-    @ManyToOne
-    private Resource resource;
+    @ManyToOne private Resource resource;
 
     @PrePersist
     void prePersist() {
@@ -131,7 +124,10 @@ public class CachedPath {
         } else if (entity instanceof Resource) {
             this.setResource((Resource) entity);
         } else {
-            throw new IllegalArgumentException("Unknown entity of type " + entity.getClass().toString() + " passed as owning entity of CachedPath");
+            throw new IllegalArgumentException(
+                    "Unknown entity of type "
+                            + entity.getClass().toString()
+                            + " passed as owning entity of CachedPath");
         }
 
         setPublicId(entity.getPublicId());

@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.domain;
 
-
 import javax.persistence.*;
 import java.net.URI;
 import java.util.*;
@@ -15,8 +14,7 @@ import java.util.stream.Collectors;
 
 @Entity
 public class Subject extends EntityWithPath {
-    @Column
-    private URI contentUri;
+    @Column private URI contentUri;
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SubjectTopic> subjectTopics = new HashSet<>();
@@ -50,7 +48,8 @@ public class Subject extends EntityWithPath {
         this.subjectTopics.add(subjectTopic);
 
         if (subjectTopic.getSubject().orElse(null) != this) {
-            throw new IllegalArgumentException("Subject must be set on SubjectTopic before associating with Subject");
+            throw new IllegalArgumentException(
+                    "Subject must be set on SubjectTopic before associating with Subject");
         }
     }
 
@@ -85,7 +84,9 @@ public class Subject extends EntityWithPath {
 
     public Optional<SubjectTranslation> getTranslation(String languageCode) {
         return translations.stream()
-                .filter(subjectTranslation -> subjectTranslation.getLanguageCode().equals(languageCode))
+                .filter(
+                        subjectTranslation ->
+                                subjectTranslation.getLanguageCode().equals(languageCode))
                 .findFirst();
     }
 
@@ -112,7 +113,6 @@ public class Subject extends EntityWithPath {
             }
         }
     }
-
 
     public Subject name(String name) {
         setName(name);

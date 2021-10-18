@@ -44,12 +44,16 @@ public class TopicTranslations {
     public List<TopicTranslations.TopicTranslationIndexDocument> index(@PathVariable("id") URI id) {
         Topic topic = topicRepository.getByPublicId(id);
         List<TopicTranslations.TopicTranslationIndexDocument> result = new ArrayList<>();
-        topic.getTranslations().forEach(t -> result.add(
-                new TopicTranslations.TopicTranslationIndexDocument() {{
-                    name = t.getName();
-                    language = t.getLanguageCode();
-                }})
-        );
+        topic.getTranslations()
+                .forEach(
+                        t ->
+                                result.add(
+                                        new TopicTranslations.TopicTranslationIndexDocument() {
+                                            {
+                                                name = t.getName();
+                                                language = t.getLanguageCode();
+                                            }
+                                        }));
         return result;
     }
 
@@ -58,14 +62,24 @@ public class TopicTranslations {
     public TopicTranslations.TopicTranslationIndexDocument get(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-            @PathVariable("language") String language
-    ) {
+                    @PathVariable("language")
+                    String language) {
         Topic topic = topicRepository.getByPublicId(id);
-        TopicTranslation translation = topic.getTranslation(language).orElseThrow(() -> new NotFoundException("translation with language code " + language + " for topic", id));
-        return new TopicTranslations.TopicTranslationIndexDocument() {{
-            name = translation.getName();
-            language = translation.getLanguageCode();
-        }};
+        TopicTranslation translation =
+                topic.getTranslation(language)
+                        .orElseThrow(
+                                () ->
+                                        new NotFoundException(
+                                                "translation with language code "
+                                                        + language
+                                                        + " for topic",
+                                                id));
+        return new TopicTranslations.TopicTranslationIndexDocument() {
+            {
+                name = translation.getName();
+                language = translation.getLanguageCode();
+            }
+        };
     }
 
     @PutMapping("/{language}")
@@ -75,10 +89,10 @@ public class TopicTranslations {
     public void put(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-            @PathVariable("language") String language,
-            @ApiParam(name = "topic", value = "The new or updated translation")
-            @RequestBody TopicTranslations.UpdateTopicTranslationCommand command
-    ) {
+                    @PathVariable("language")
+                    String language,
+            @ApiParam(name = "topic", value = "The new or updated translation") @RequestBody
+                    TopicTranslations.UpdateTopicTranslationCommand command) {
         Topic topic = topicRepository.getByPublicId(id);
         TopicTranslation translation = topic.addTranslation(language);
         entityManager.persist(translation);
@@ -92,13 +106,15 @@ public class TopicTranslations {
     public void delete(
             @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-            @PathVariable("language") String language
-    ) {
+                    @PathVariable("language")
+                    String language) {
         Topic topic = topicRepository.getByPublicId(id);
-        topic.getTranslation(language).ifPresent(topicTranslation -> {
-            topic.removeTranslation(language);
-            entityManager.remove(topicTranslation);
-        });
+        topic.getTranslation(language)
+                .ifPresent(
+                        topicTranslation -> {
+                            topic.removeTranslation(language);
+                            entityManager.remove(topicTranslation);
+                        });
     }
 
     public static class TopicTranslationIndexDocument {
