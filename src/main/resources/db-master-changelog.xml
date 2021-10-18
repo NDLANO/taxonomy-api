@@ -804,4 +804,12 @@
         <dropTable tableName="topic_resource_type"/>
     </changeSet>
 
+    <changeSet id="20211018 change language-code length" author="Gunnar Velle">
+        <modifyDataType tableName="relevance_translation" columnName="language_code" newDataType="varchar(7)"/>
+        <modifyDataType tableName="resource_translation" columnName="language_code" newDataType="varchar(7)"/>
+        <modifyDataType tableName="resource_type_translation" columnName="language_code" newDataType="varchar(7)"/>
+        <modifyDataType tableName="subject_translation" columnName="language_code" newDataType="varchar(7)"/>
+        <modifyDataType tableName="topic_translation" columnName="language_code" newDataType="varchar(7)"/>
+    </changeSet>
+
 </databaseChangeLog>
