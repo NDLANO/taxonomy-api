@@ -24,9 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- *
- */
+/** */
 @ApiModel("SubTopicIndexDocument")
 public class SubTopicIndexDocument implements TreeSorter.Sortable {
     @JsonProperty
@@ -132,8 +130,10 @@ public class SubTopicIndexDocument implements TreeSorter.Sortable {
     @Override
     @JsonIgnore
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof SubTopicIndexDocument)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof SubTopicIndexDocument))
+            return false;
 
         SubTopicIndexDocument that = (SubTopicIndexDocument) o;
 
@@ -147,7 +147,6 @@ public class SubTopicIndexDocument implements TreeSorter.Sortable {
     }
 
     public SubTopicIndexDocument() {
-
     }
 
     public void setMetadata(MetadataDto metadata) {
@@ -156,9 +155,7 @@ public class SubTopicIndexDocument implements TreeSorter.Sortable {
 
     private void populateFromTopic(Topic topic) {
         this.id = topic.getPublicId();
-        this.name = topic.getTranslation(this.language)
-                .map(TopicTranslation::getName)
-                .orElse(topic.getName());
+        this.name = topic.getTranslation(this.language).map(TopicTranslation::getName).orElse(topic.getName());
         this.contentUri = topic.getContentUri();
     }
 

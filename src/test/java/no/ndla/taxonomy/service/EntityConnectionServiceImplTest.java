@@ -53,7 +53,8 @@ public class EntityConnectionServiceImplTest {
     public void setUp() throws Exception {
         cachedUrlUpdaterService = mock(CachedUrlUpdaterService.class);
 
-        service = new EntityConnectionServiceImpl(subjectTopicRepository, topicSubtopicRepository, topicResourceRepository, nodeConnectionRepository, nodeResourceRepository, cachedUrlUpdaterService);
+        service = new EntityConnectionServiceImpl(subjectTopicRepository, topicSubtopicRepository,
+                topicResourceRepository, nodeConnectionRepository, nodeResourceRepository, cachedUrlUpdaterService);
     }
 
     @Test
@@ -325,7 +326,8 @@ public class EntityConnectionServiceImplTest {
         final var topic1subtopic3 = TopicSubtopic.create(topic1, subtopic3);
 
         // Just verifies the pre-conditions of the created objects that is used for the test
-        assertTrue(topic1.getChildrenTopicSubtopics().containsAll(Set.of(topic1subtopic1, topic1subtopic2, topic1subtopic3)));
+        assertTrue(topic1.getChildrenTopicSubtopics()
+                .containsAll(Set.of(topic1subtopic1, topic1subtopic2, topic1subtopic3)));
         assertSame(topic1subtopic1, subtopic1.getParentTopicSubtopic().orElseThrow());
         assertSame(topic1subtopic2, subtopic2.getParentTopicSubtopic().orElseThrow());
         assertSame(topic1subtopic3, subtopic3.getParentTopicSubtopic().orElseThrow());
@@ -344,7 +346,6 @@ public class EntityConnectionServiceImplTest {
         assertFalse(subtopic1.getParentTopicSubtopic().isPresent());
         assertSame(topic1subtopic2, subtopic2.getParentTopicSubtopic().orElseThrow());
         assertSame(topic1subtopic3, subtopic3.getParentTopicSubtopic().orElseThrow());
-
 
         service.disconnectTopicSubtopic(topic1, subtopic2);
         assertFalse(topic1subtopic2.getTopic().isPresent());
@@ -480,7 +481,6 @@ public class EntityConnectionServiceImplTest {
         service.updateSubjectTopic(subject1topic2, relevance, 1);
         assertEquals(2, subject1topic1.getRank());
         assertEquals(1, subject1topic2.getRank());
-
     }
 
     @Test

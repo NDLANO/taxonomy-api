@@ -59,7 +59,6 @@ public class ResourceTest {
         assertEquals(returnedTranslation2, resource.getTranslation("en").get());
     }
 
-
     @Test
     public void getAndSetName() {
         assertNull(resource.getName());
@@ -147,10 +146,8 @@ public class ResourceTest {
         resource.addResourceResourceType(resourceResourceType2);
 
         assertEquals(2, resource.getResourceResourceTypes().size());
-        assertTrue(resource
-                .getResourceResourceTypes()
-                .containsAll(Set.of(resourceResourceType1, resourceResourceType2))
-        );
+        assertTrue(
+                resource.getResourceResourceTypes().containsAll(Set.of(resourceResourceType1, resourceResourceType2)));
 
         reset(resourceResourceType1);
         reset(resourceResourceType2);
@@ -257,7 +254,6 @@ public class ResourceTest {
     public void preRemove() {
         final var topicResource1 = mock(TopicResource.class);
         final var topicResource2 = mock(TopicResource.class);
-
 
         Set.of(topicResource1, topicResource2).forEach(topicResource -> {
             when(topicResource.getResource()).thenReturn(Optional.of(resource));

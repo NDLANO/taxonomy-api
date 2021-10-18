@@ -33,8 +33,10 @@ public class TopicTreeSorterTest {
         final var l1c2b3a = new TestSortable(new URI("urn:l1c2b"), new URI("urn:l1c2b3a"), 1);
         final var l1c2b3b = new TestSortable(new URI("urn:l1c2b"), new URI("urn:l1c2b3b"), 2);
 
-        // Adding in any order to a collection (sorted or not) and sending for sorting must return a sorted list
-        final var sortedList = sorter.sortList(Set.of(l1c2b3b, l1a2b, l1c, l1c2b, l1c2b3a, l1a, l1b, l1c2a, l1d, l1a2a));
+        // Adding in any order to a collection (sorted or not) and sending for sorting must return a
+        // sorted list
+        final var sortedList = sorter
+                .sortList(Set.of(l1c2b3b, l1a2b, l1c, l1c2b, l1c2b3a, l1a, l1b, l1c2a, l1d, l1a2a));
 
         assertEquals(10, sortedList.size());
         assertEquals("urn:l1a", sortedList.get(0).getSortableId().toString());

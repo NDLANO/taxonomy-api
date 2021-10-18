@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = {"/v1/nodes/{id}/translations"})
+@RequestMapping(path = { "/v1/nodes/{id}/translations" })
 @Transactional
 public class NodeTranslations {
 
@@ -44,41 +44,37 @@ public class NodeTranslations {
     public List<TranslationDTO> index(@PathVariable("id") URI id) {
         Node node = nodeRepository.getByPublicId(id);
         List<TranslationDTO> result = new ArrayList<>();
-        node.getTranslations().forEach(t -> result.add(
-                new TranslationDTO() {{
-                    name = t.getName();
-                    language = t.getLanguageCode();
-                }})
-        );
+        node.getTranslations().forEach(t -> result.add(new TranslationDTO() {
+            {
+                name = t.getName();
+                language = t.getLanguageCode();
+            }
+        }));
         return result;
     }
 
     @GetMapping("/{language}")
     @ApiOperation("Gets a single translation for a single node")
-    public TranslationDTO get(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-            @PathVariable("language") String language
-    ) {
+    public TranslationDTO get(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node node = nodeRepository.getByPublicId(id);
-        NodeTranslation translation = node.getTranslation(language).orElseThrow(() -> new NotFoundException("translation with language code " + language + " for node", id));
-        return new TranslationDTO() {{
-            name = translation.getName();
-            language = translation.getLanguageCode();
-        }};
+        NodeTranslation translation = node.getTranslation(language).orElseThrow(
+                () -> new NotFoundException("translation with language code " + language + " for node", id));
+        return new TranslationDTO() {
+            {
+                name = translation.getName();
+                language = translation.getLanguageCode();
+            }
+        };
     }
 
     @PutMapping("/{language}")
     @ApiOperation("Creates or updates a translation of a node")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void put(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-            @PathVariable("language") String language,
-            @ApiParam(name = "command", value = "The new or updated translation")
-            @RequestBody UpdateTranslationCommand command
-    ) {
+    public void put(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
+            @ApiParam(name = "command", value = "The new or updated translation") @RequestBody UpdateTranslationCommand command) {
         Node node = nodeRepository.getByPublicId(id);
         NodeTranslation translation = node.addTranslation(language);
         entityManager.persist(translation);
@@ -89,11 +85,8 @@ public class NodeTranslations {
     @ApiOperation("Deletes a translation")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void delete(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-            @PathVariable("language") String language
-    ) {
+    public void delete(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node node = nodeRepository.getByPublicId(id);
         node.getTranslation(language).ifPresent(translation -> {
             node.removeTranslation(language);

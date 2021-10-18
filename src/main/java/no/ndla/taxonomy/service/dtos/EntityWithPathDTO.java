@@ -51,12 +51,9 @@ public abstract class EntityWithPathDTO {
         this.contentUri = entity.getContentUri();
         this.paths = entity.getAllPaths();
 
-        this.path = entity.getPrimaryPath()
-                .orElse(null);
+        this.path = entity.getPrimaryPath().orElse(null);
 
-        this.name = entity.getTranslation(languageCode)
-                .map(Translation::getName)
-                .orElse(entity.getName());
+        this.name = entity.getTranslation(languageCode).map(Translation::getName).orElse(entity.getName());
 
         Optional<Relevance> relevance = entity.getParentConnection().flatMap(EntityWithPathConnection::getRelevance);
         this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));

@@ -37,10 +37,8 @@ class CachedUrlUpdaterServiceImplTest {
     private ResourceRepository resourceRepository;
 
     @BeforeEach
-    void setup(@Autowired CachedPathRepository cachedPathRepository,
-               @Autowired SubjectRepository subjectRepository,
-               @Autowired TopicRepository topicRepository,
-               @Autowired ResourceRepository resourceRepository) {
+    void setup(@Autowired CachedPathRepository cachedPathRepository, @Autowired SubjectRepository subjectRepository,
+            @Autowired TopicRepository topicRepository, @Autowired ResourceRepository resourceRepository) {
         this.cachedPathRepository = cachedPathRepository;
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
@@ -95,7 +93,9 @@ class CachedUrlUpdaterServiceImplTest {
 
         {
             assertEquals(2, cachedPathRepository.findAllByPublicId(URI.create("urn:topic:1")).size());
-            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:topic:1")).stream().map(CachedPath::getPath).collect(Collectors.toList()).containsAll(Set.of("/topic:1", "/subject:1/topic:1")));
+            assertTrue(
+                    cachedPathRepository.findAllByPublicId(URI.create("urn:topic:1")).stream().map(CachedPath::getPath)
+                            .collect(Collectors.toList()).containsAll(Set.of("/topic:1", "/subject:1/topic:1")));
         }
 
         topic1.setContext(false);
@@ -103,7 +103,8 @@ class CachedUrlUpdaterServiceImplTest {
         service.updateCachedUrls(topic1);
         {
             assertEquals(1, cachedPathRepository.findAllByPublicId(URI.create("urn:topic:1")).size());
-            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:topic:1")).stream().map(CachedPath::getPath).collect(Collectors.toList()).contains("/subject:1/topic:1"));
+            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:topic:1")).stream()
+                    .map(CachedPath::getPath).collect(Collectors.toList()).contains("/subject:1/topic:1"));
         }
 
         final var topic2 = new Topic();
@@ -122,7 +123,8 @@ class CachedUrlUpdaterServiceImplTest {
 
         {
             assertEquals(1, cachedPathRepository.findAllByPublicId(URI.create("urn:topic:2")).size());
-            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:topic:2")).stream().map(CachedPath::getPath).collect(Collectors.toList()).contains("/subject:1/topic:1/topic:2"));
+            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:topic:2")).stream()
+                    .map(CachedPath::getPath).collect(Collectors.toList()).contains("/subject:1/topic:1/topic:2"));
         }
 
         topic1.setContext(true);
@@ -131,7 +133,9 @@ class CachedUrlUpdaterServiceImplTest {
 
         {
             assertEquals(2, cachedPathRepository.findAllByPublicId(URI.create("urn:topic:2")).size());
-            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:topic:2")).stream().map(CachedPath::getPath).collect(Collectors.toList()).containsAll(Set.of("/subject:1/topic:1/topic:2", "/topic:1/topic:2")));
+            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:topic:2")).stream()
+                    .map(CachedPath::getPath).collect(Collectors.toList())
+                    .containsAll(Set.of("/subject:1/topic:1/topic:2", "/topic:1/topic:2")));
         }
 
         final var resource1 = new Resource();
@@ -150,7 +154,9 @@ class CachedUrlUpdaterServiceImplTest {
 
         {
             assertEquals(2, cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).size());
-            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).stream().map(CachedPath::getPath).collect(Collectors.toList()).containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1")));
+            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).stream()
+                    .map(CachedPath::getPath).collect(Collectors.toList())
+                    .containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1")));
         }
 
         topic2.addTopicResource(TopicResource.create(topic2, resource1));
@@ -159,7 +165,10 @@ class CachedUrlUpdaterServiceImplTest {
 
         {
             assertEquals(4, cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).size());
-            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).stream().map(CachedPath::getPath).collect(Collectors.toList()).containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1", "/subject:1/topic:1/topic:2/resource:1", "/topic:1/topic:2/resource:1")));
+            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).stream()
+                    .map(CachedPath::getPath).collect(Collectors.toList())
+                    .containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1",
+                            "/subject:1/topic:1/topic:2/resource:1", "/topic:1/topic:2/resource:1")));
         }
 
         resourceRepository.delete(resource1);
@@ -183,6 +192,7 @@ class CachedUrlUpdaterServiceImplTest {
         service.clearCachedUrls(subject1);
 
         assertEquals(1, subject1.getCachedPaths().size());
-        assertEquals(0, subject1.getCachedPaths().stream().filter(CachedPath::isActive).collect(Collectors.toSet()).size());
+        assertEquals(0,
+                subject1.getCachedPaths().stream().filter(CachedPath::isActive).collect(Collectors.toSet()).size());
     }
 }

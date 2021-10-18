@@ -90,9 +90,9 @@ public abstract class RestTest {
     public void restTestSetUp() {
         builder = new Builder(entityManager, cachedUrlUpdaterService);
 
-        when(metadataApiService.getMetadataByPublicId(any(URI.class)))
-                .thenAnswer(invocationOnMock ->
-                        metadataApiService.getMetadataByPublicId(List.of((URI) invocationOnMock.getArgument(0))).stream().findFirst().orElseThrow());
+        when(metadataApiService.getMetadataByPublicId(any(URI.class))).thenAnswer(invocationOnMock -> metadataApiService
+                .getMetadataByPublicId(List.of((URI) invocationOnMock.getArgument(0))).stream().findFirst()
+                .orElseThrow());
 
         when(metadataApiService.getMetadataByPublicId(any(Collection.class))).thenAnswer(invocationOnMock -> {
             final var idList = (Collection<URI>) invocationOnMock.getArgument(0);

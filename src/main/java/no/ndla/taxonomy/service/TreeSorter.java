@@ -19,8 +19,7 @@ public class TreeSorter {
         final var itemsToAdd = new ArrayList<T>();
 
         elementsToAddFrom.getOrDefault(parentId, List.of()).stream()
-                .sorted(Comparator.comparingInt(Sortable::getSortableRank))
-                .forEachOrdered(element -> {
+                .sorted(Comparator.comparingInt(Sortable::getSortableRank)).forEachOrdered(element -> {
                     itemsToAdd.add(element);
                     itemsToAdd.addAll(addElements(elementsToAddFrom, element.getSortableId()));
                 });
@@ -30,25 +29,20 @@ public class TreeSorter {
 
     /**
      * Sorts all elements by tree structure and rank at each level
+     *
      * <p>
-     * 1 (rank 2)
-     * - 1:2-1 (rank 0)
-     * - 1:2:3-1 (rank 2)
-     * - 1:2:3-2 (rank 1)
-     * - 1:2-2 (rank 1)
-     * 2 (rank 1)
+     * 1 (rank 2) - 1:2-1 (rank 0) - 1:2:3-1 (rank 2) - 1:2:3-2 (rank 1) - 1:2-2 (rank 1) 2 (rank 1)
+     *
      * <p>
      * Becomes a flat list of
-     * <p>
-     * 2
-     * 1
-     * 1:2-1
-     * 1:2:3-2
-     * 1:2:3-1
-     * 1:2-2
      *
-     * @param elements Elements to sort
+     * <p>
+     * 2 1 1:2-1 1:2:3-2 1:2:3-1 1:2-2
+     *
+     * @param elements
+     *            Elements to sort
      * @param <T>
+     * 
      * @return sorted flat list
      */
     public <T extends Sortable> List<T> sortList(Collection<T> elements) {

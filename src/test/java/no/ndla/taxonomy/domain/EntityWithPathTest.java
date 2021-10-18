@@ -90,14 +90,15 @@ public class EntityWithPathTest {
         when(context4.getPublicId()).thenReturn(new URI("urn:context4"));
         when(context5.getPublicId()).thenReturn(new URI("urn:context5"));
 
-
-        when(entityWithPath.getCachedPaths()).thenReturn(Set.of(cachedUrl1, cachedUrl2, cachedUrl31, cachedUrl3, cachedUrl4));
+        when(entityWithPath.getCachedPaths())
+                .thenReturn(Set.of(cachedUrl1, cachedUrl2, cachedUrl31, cachedUrl3, cachedUrl4));
 
         assertEquals("/context1/path1", entityWithPath.getPathByContext(context1).get());
         assertEquals("/context2/path1", entityWithPath.getPathByContext(context2).get());
         assertEquals("/context3/path1", entityWithPath.getPathByContext(context3).get());
         assertEquals("/context4/path1", entityWithPath.getPathByContext(context4).get());
-        assertTrue(Set.of("/context2/path1", "/context3/path1").contains(entityWithPath.getPathByContext(context5).get()));
+        assertTrue(
+                Set.of("/context2/path1", "/context3/path1").contains(entityWithPath.getPathByContext(context5).get()));
     }
 
     @Test

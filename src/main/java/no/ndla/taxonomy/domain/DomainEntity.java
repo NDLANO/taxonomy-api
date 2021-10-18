@@ -34,6 +34,7 @@ public class DomainEntity implements Serializable {
 
     /**
      * Defaults to class name, but can be overrided
+     * 
      * @return
      */
     public String getEntityName() {

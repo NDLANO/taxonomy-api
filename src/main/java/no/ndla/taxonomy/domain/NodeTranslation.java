@@ -1,6 +1,5 @@
 package no.ndla.taxonomy.domain;
 
-
 import javax.persistence.*;
 
 @Entity
@@ -26,7 +25,6 @@ public class NodeTranslation implements Translation {
         setNode(node);
         this.languageCode = languageCode;
     }
-
 
     public Node getNode() {
         return node;

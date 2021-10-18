@@ -49,7 +49,8 @@ public class JWTTokenTest {
 
         final DecodedJWT mockDecodedJWT = Mockito.mock(DecodedJWT.class);
         Claim claim = Mockito.mock(Claim.class);
-        when(claim.asString()).thenReturn("taxonomy-prod:write drafts-staging:write articles-test:publish images-prod:write listing-test:write articles-brukertest:write listing-prod:write articles-test:write articles-staging:write listing-brukertest:write images-staging:write images-test:write articles-prod:publish articles-brukertest:publish drafts-test:set_to_publish listing-staging:write audio-brukertest:write drafts-prod:write images-brukertest:write drafts-test:write audio-prod:write audio-test:write articles-staging:publish articles-prod:write drafts-staging:set_to_publish audio-staging:write drafts-brukertest:set_to_publish drafts-prod:set_to_publish drafts-brukertest:write drafts-taxonomy:write ");
+        when(claim.asString()).thenReturn(
+                "taxonomy-prod:write drafts-staging:write articles-test:publish images-prod:write listing-test:write articles-brukertest:write listing-prod:write articles-test:write articles-staging:write listing-brukertest:write images-staging:write images-test:write articles-prod:publish articles-brukertest:publish drafts-test:set_to_publish listing-staging:write audio-brukertest:write drafts-prod:write images-brukertest:write drafts-test:write audio-prod:write audio-test:write articles-staging:publish articles-prod:write drafts-staging:set_to_publish audio-staging:write drafts-brukertest:set_to_publish drafts-prod:set_to_publish drafts-brukertest:write drafts-taxonomy:write ");
         when(mockDecodedJWT.getClaim("scope")).thenReturn(claim);
         JWTAuthentication token = new JWTAuthentication(mockDecodedJWT);
         assertEquals(2, token.getAuthorities().size());

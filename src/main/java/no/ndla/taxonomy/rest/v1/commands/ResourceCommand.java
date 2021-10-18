@@ -21,9 +21,8 @@ public class ResourceCommand implements UpdatableDto<Resource> {
     public URI id;
 
     @JsonProperty
-    @ApiModelProperty(value = "The ID of this resource in the system where the content is stored.",
-            notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
-                    "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
+    @ApiModelProperty(value = "The ID of this resource in the system where the content is stored.", notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier "
+            + "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
     public URI contentUri;
 
     @JsonProperty
@@ -37,7 +36,7 @@ public class ResourceCommand implements UpdatableDto<Resource> {
 
     @Override
     public void apply(Resource entity) {
-        if(getId().isPresent())
+        if (getId().isPresent())
             entity.setPublicId(id);
         entity.setName(name);
         entity.setContentUri(contentUri);

@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.*;
@@ -27,9 +26,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @RestController
-@RequestMapping(path = {"/v1/contexts"})
+@RequestMapping(path = { "/v1/contexts" })
 @Transactional(readOnly = true)
 public class Contexts {
     private final NodeRepository nodeRepository;
@@ -42,18 +40,14 @@ public class Contexts {
 
     @GetMapping
     public List<ContextIndexDocument> get(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb")
-            @RequestParam(value = "language", required = false, defaultValue = "")
-                    String language
-    ) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
         final var nodes = nodeRepository.findAllByContextIncludingCachedUrlsAndTranslations(true);
 
         final var contextDocuments = new ArrayList<ContextIndexDocument>();
 
         contextDocuments.addAll(nodes.stream()
-                .map(topic -> new ContextIndexDocument(
-                        topic.getPublicId(),
+                .map(topic -> new ContextIndexDocument(topic.getPublicId(),
                         topic.getTranslation(language).map(Translation::getName).orElse(topic.getName()),
                         topic.getPrimaryPath().orElse(null)))
                 .collect(Collectors.toList()));

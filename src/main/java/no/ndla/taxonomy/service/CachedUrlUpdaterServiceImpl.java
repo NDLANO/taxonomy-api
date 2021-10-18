@@ -34,37 +34,42 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
             returnedPaths.add(new PathToEntity("/" + entity.getPublicId().getSchemeSpecificPart(), true));
         }
 
-        // Get all parent paths, append this entity publicId to the end of the actual path and add all to the list to return
-        entity.getParentConnections().forEach(parentConnection -> parentConnection.getConnectedParent().ifPresent(parent -> {
-            createPathsToEntity(parent).stream()
-                    .map(parentPath -> new PathToEntity(parentPath.path + "/" + entity.getPublicId().getSchemeSpecificPart(), parentConnection.isPrimary().orElse(true)))
-                    .forEach(returnedPaths::add);
-        }));
+        // Get all parent paths, append this entity publicId to the end of the actual path and add
+        // all to the list to return
+        entity.getParentConnections()
+                .forEach(parentConnection -> parentConnection.getConnectedParent().ifPresent(parent -> {
+                    createPathsToEntity(parent).stream()
+                            .map(parentPath -> new PathToEntity(
+                                    parentPath.path + "/" + entity.getPublicId().getSchemeSpecificPart(),
+                                    parentConnection.isPrimary().orElse(true)))
+                            .forEach(returnedPaths::add);
+                }));
 
         return returnedPaths;
     }
 
     /*
-    Method recursively re-creates all CachedPath entries for the entity by removing old entities and creating new ones
+     * Method recursively re-creates all CachedPath entries for the entity by removing old entities and creating new
+     * ones
      */
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void updateCachedUrls(EntityWithPath entity) {
-        Set.copyOf(entity.getChildConnections()).forEach(childEntity -> childEntity.getConnectedChild().ifPresent(this::updateCachedUrls));
+        Set.copyOf(entity.getChildConnections())
+                .forEach(childEntity -> childEntity.getConnectedChild().ifPresent(this::updateCachedUrls));
 
         clearCachedUrls(entity);
 
         final var newPathsToEntity = createPathsToEntity(entity);
-        final var newCachedPathObjects = newPathsToEntity.stream()
-                .map(newPath -> {
-                    final var cachedPath = new CachedPath();
-                    cachedPath.setPath(newPath.path);
-                    cachedPath.setPrimary(newPath.isPrimary);
-                    cachedPath.setOwningEntity(entity);
-                    cachedPath.setActive(true);
+        final var newCachedPathObjects = newPathsToEntity.stream().map(newPath -> {
+            final var cachedPath = new CachedPath();
+            cachedPath.setPath(newPath.path);
+            cachedPath.setPrimary(newPath.isPrimary);
+            cachedPath.setOwningEntity(entity);
+            cachedPath.setActive(true);
 
-                    return cachedPath;
-                }).collect(Collectors.toSet());
+            return cachedPath;
+        }).collect(Collectors.toSet());
 
         cachedPathRepository.saveAll(newCachedPathObjects);
         cachedPathRepository.flush();

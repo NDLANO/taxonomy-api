@@ -18,7 +18,7 @@ public class NodeConnection extends DomainEntity implements EntityWithPathConnec
     @Column(name = "rank")
     private int rank;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE})
+    @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE })
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 

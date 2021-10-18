@@ -33,11 +33,11 @@ public class RecursiveNodeTreeService {
 
         final var idsThisLevel = new HashSet<Integer>();
 
-        nodeConnectionRepository.findAllByNodeIdInIncludingTopicAndSubtopic(ids)
-                .forEach(nodeConnection -> {
-                    elements.add(new TreeElement(nodeConnection.getChildId(), nodeConnection.getParentId(), nodeConnection.getRank()));
-                    idsThisLevel.add(nodeConnection.getChildId());
-                });
+        nodeConnectionRepository.findAllByNodeIdInIncludingTopicAndSubtopic(ids).forEach(nodeConnection -> {
+            elements.add(new TreeElement(nodeConnection.getChildId(), nodeConnection.getParentId(),
+                    nodeConnection.getRank()));
+            idsThisLevel.add(nodeConnection.getChildId());
+        });
 
         if (idsThisLevel.size() > 0) {
             addChildIdsRecursively(elements, idsThisLevel, ttl);

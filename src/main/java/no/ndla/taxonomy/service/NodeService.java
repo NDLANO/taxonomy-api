@@ -27,8 +27,8 @@ public class NodeService {
     private final TreeSorter topicTreeSorter;
 
     public NodeService(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-                       EntityConnectionService connectionService,
-                       MetadataApiService metadataApiService, TreeSorter topicTreeSorter) {
+            EntityConnectionService connectionService, MetadataApiService metadataApiService,
+            TreeSorter topicTreeSorter) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -38,7 +38,8 @@ public class NodeService {
 
     @Transactional
     public void delete(URI publicId) {
-        final var nodeToDelete = nodeRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Node was not found"));
+        final var nodeToDelete = nodeRepository.findFirstByPublicId(publicId)
+                .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
 
         connectionService.disconnectAllChildren(nodeToDelete);
 
@@ -49,14 +50,16 @@ public class NodeService {
     }
 
     @InjectMetadata
-    public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter, boolean isRoot) {
+    public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter,
+            boolean isRoot) {
         final List<Node> filtered;
 
         if (isRoot) {
             filtered = nodeRepository.findAllRootsIncludingCachedUrlsAndTranslations();
         } else {
             if (contentUriFilter != null && nodeTypeFilter != null) {
-                filtered = nodeRepository.findAllByContentUriAndNodeTypeIncludingCachedUrlsAndTranslations(contentUriFilter, nodeTypeFilter);
+                filtered = nodeRepository.findAllByContentUriAndNodeTypeIncludingCachedUrlsAndTranslations(
+                        contentUriFilter, nodeTypeFilter);
             } else if (contentUriFilter != null) {
                 filtered = nodeRepository.findAllByContentUriIncludingCachedUrlsAndTranslations(contentUriFilter);
             } else if (nodeTypeFilter != null) {
@@ -66,79 +69,67 @@ public class NodeService {
             }
         }
 
-        return filtered
-                .stream()
-                .filter(node -> !isRoot || node.getParentNode().isEmpty())
-                .map(node -> new NodeDTO(node, languageCode))
-                .collect(Collectors.toList());
+        return filtered.stream().filter(node -> !isRoot || node.getParentNode().isEmpty())
+                .map(node -> new NodeDTO(node, languageCode)).collect(Collectors.toList());
     }
 
     @MetadataQuery
-    public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter, MetadataKeyValueQuery metadataKeyValueQuery) {
-        Set<String> publicIds = metadataKeyValueQuery.getDtos().stream()
-                .map(MetadataDto::getPublicId)
+    public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter,
+            MetadataKeyValueQuery metadataKeyValueQuery) {
+        Set<String> publicIds = metadataKeyValueQuery.getDtos().stream().map(MetadataDto::getPublicId)
                 .collect(Collectors.toSet());
-        return publicIds.stream()
-                .map(topicId -> {
-                    try {
-                        return new URI(topicId);
-                    } catch (Exception e) {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .map(nodeRepository::findByPublicId)
-                .filter(Objects::nonNull)
-                .filter(node -> {
-                    /*
-                     * I don't think this combination of queries will be normal,
-                     * but it's easy to implement something that probably works.
-                     */
-                    if (contentUriFilter == null) {
-                        return true;
-                    } else {
-                        return contentUriFilter.equals(node.getContentUri());
-                    }
-                })
-                .filter(node -> {
-                    /*
-                     * I don't think this combination of queries will be normal,
-                     * but it's easy to implement something that probably works.
-                     */
-                    if (nodeTypeFilter == null) {
-                        return true;
-                    } else {
-                        return nodeTypeFilter.equals(node.getNodeType());
-                    }
-                })
-                .map(node -> new NodeDTO(node, languageCode))
-                .collect(Collectors.toList());
+        return publicIds.stream().map(topicId -> {
+            try {
+                return new URI(topicId);
+            } catch (Exception e) {
+                return null;
+            }
+        }).filter(Objects::nonNull).map(nodeRepository::findByPublicId).filter(Objects::nonNull).filter(node -> {
+            /*
+             * I don't think this combination of queries will be normal, but it's easy to implement something that
+             * probably works.
+             */
+            if (contentUriFilter == null) {
+                return true;
+            } else {
+                return contentUriFilter.equals(node.getContentUri());
+            }
+        }).filter(node -> {
+            /*
+             * I don't think this combination of queries will be normal, but it's easy to implement something that
+             * probably works.
+             */
+            if (nodeTypeFilter == null) {
+                return true;
+            } else {
+                return nodeTypeFilter.equals(node.getNodeType());
+            }
+        }).map(node -> new NodeDTO(node, languageCode)).collect(Collectors.toList());
     }
 
     @InjectMetadata
     public List<ConnectionIndexDTO> getAllConnections(URI nodePublicId) {
-        final var node = nodeRepository.findFirstByPublicId(nodePublicId).orElseThrow(() -> new NotFoundServiceException("Node was not found"));
+        final var node = nodeRepository.findFirstByPublicId(nodePublicId)
+                .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
 
-        return Stream.concat(
-                connectionService.getParentConnections(node)
-                        .stream()
-                        .map(ConnectionIndexDTO::parentConnection),
-                connectionService.getChildConnections(node)
-                        .stream()
-                        .filter(entity -> entity instanceof NodeConnection)
-                        .map(ConnectionIndexDTO::childConnection)
-        ).collect(Collectors.toUnmodifiableList());
+        return Stream
+                .concat(connectionService.getParentConnections(node).stream().map(ConnectionIndexDTO::parentConnection),
+                        connectionService.getChildConnections(node).stream()
+                                .filter(entity -> entity instanceof NodeConnection)
+                                .map(ConnectionIndexDTO::childConnection))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @InjectMetadata
     public List<TopicChildDTO> getFilteredChildConnections(URI nodePublicId, String languageCode) {
-        final var node = nodeRepository.findFirstByPublicId(nodePublicId).orElseThrow(() -> new NotFoundServiceException("Node was not found"));
-        final List<NodeConnection> childConnections = nodeConnectionRepository.findAllByParentPublicIdIncludingChildAndChildTranslations(nodePublicId);
+        final var node = nodeRepository.findFirstByPublicId(nodePublicId)
+                .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
+        final List<NodeConnection> childConnections = nodeConnectionRepository
+                .findAllByParentPublicIdIncludingChildAndChildTranslations(nodePublicId);
 
-        final var wrappedList =
-                childConnections.stream()
-                        .map(nodeConnection -> new TopicChildDTO(node, nodeConnection, languageCode))
-                        .collect(Collectors.toUnmodifiableList());
+        final var wrappedList = childConnections.stream()
+                .map(nodeConnection -> new TopicChildDTO(node, nodeConnection, languageCode))
+                .collect(Collectors.toUnmodifiableList());
 
         return topicTreeSorter.sortList(wrappedList);
     }

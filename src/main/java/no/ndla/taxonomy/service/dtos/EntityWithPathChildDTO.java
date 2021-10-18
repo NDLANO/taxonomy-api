@@ -89,8 +89,10 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
     @Override
     @JsonIgnore
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof EntityWithPathChildDTO)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof EntityWithPathChildDTO))
+            return false;
 
         EntityWithPathChildDTO that = (EntityWithPathChildDTO) o;
 
@@ -116,9 +118,7 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
 
     private void populateFromNode(Node node) {
         this.id = node.getPublicId();
-        this.name = node.getTranslation(this.language)
-                .map(Translation::getName)
-                .orElse(node.getName());
+        this.name = node.getTranslation(this.language).map(Translation::getName).orElse(node.getName());
         this.contentUri = node.getContentUri();
     }
 

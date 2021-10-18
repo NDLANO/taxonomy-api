@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.domain;
 
-
 import javax.persistence.*;
 
 @Entity
@@ -33,7 +32,6 @@ public class TopicTranslation implements Translation {
         setTopic(topic);
         this.languageCode = languageCode;
     }
-
 
     public Topic getTopic() {
         return topic;

@@ -43,7 +43,7 @@ public class MetadataInjectAspect {
     private Set<Field> getAllFieldsRecursively(Class<?> clazz) {
         final var fields = new HashSet<Field>();
 
-        //noinspection CollectionAddAllCanBeReplacedWithConstructor
+        // noinspection CollectionAddAllCanBeReplacedWithConstructor
         fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
 
         if (clazz.getSuperclass() != null) {
@@ -75,7 +75,8 @@ public class MetadataInjectAspect {
     }
 
     private Optional<Method> getSetMetadataMethod(Class<?> clazz) {
-        // Searching for a method taking one argument of type MetadataDto which is assumed to be a setter for
+        // Searching for a method taking one argument of type MetadataDto which is assumed to be a
+        // setter for
         // the metadata object
 
         return setMetadataMethods.computeIfAbsent(clazz, this::getSetMetadataMethodRecursively);
@@ -117,33 +118,28 @@ public class MetadataInjectAspect {
 
     private Optional<URI> getMetadataIdForSingleObject(Object object) {
 
-        return getMetadataIdAnnotatedFields(object.getClass()).stream()
-                .findFirst()
-                .map(field -> {
-                    try {
-                        return (URI) field.get(object);
-                    } catch (IllegalAccessException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+        return getMetadataIdAnnotatedFields(object.getClass()).stream().findFirst().map(field -> {
+            try {
+                return (URI) field.get(object);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     private Set<URI> getMetadataIds(Object object) {
-        // Searches recursively on the object for any metadata IDs (fields with @MetadataIdField) to request for
+        // Searches recursively on the object for any metadata IDs (fields with @MetadataIdField) to
+        // request for
 
         final var idList = new HashSet<URI>();
 
         if (object instanceof Collection<?>) {
 
-            return ((Collection<?>) object)
-                    .stream()
-                    .map(this::getMetadataIds)
-                    .flatMap(Collection::stream)
+            return ((Collection<?>) object).stream().map(this::getMetadataIds).flatMap(Collection::stream)
                     .collect(Collectors.toSet());
         }
 
         getMetadataIdForSingleObject(object).ifPresent(idList::add);
-
 
         getInjectMetadataAnnotatedFields(object.getClass()).forEach(field -> {
             try {
@@ -157,7 +153,8 @@ public class MetadataInjectAspect {
     }
 
     private void injectMetadataIntoDto(Object dto, Map<String, MetadataDto> metadataDtos) {
-        // Searches for any field marked with @InjectMetadata and recursively invokes this method on those fields
+        // Searches for any field marked with @InjectMetadata and recursively invokes this method on
+        // those fields
         // including collections
         for (var field : getInjectMetadataAnnotatedFields(dto.getClass())) {
             try {
@@ -185,7 +182,6 @@ public class MetadataInjectAspect {
                     }
                 }
             });
-
         });
     }
 
@@ -218,9 +214,12 @@ public class MetadataInjectAspect {
     private void postHandling(Object returnValue, MetadataKeyValueQuery metadataKeyValueQuery) {
         injectMetadataIntoDtos(returnValue, new HashSet<>(metadataKeyValueQuery.getDtos()));
     }
+
     @Around(value = "@annotation(MetadataQuery) && args(.., metadataKeyValueQuery)")
-    public Object metadataQueryAndInject(ProceedingJoinPoint pjp, MetadataKeyValueQuery metadataKeyValueQuery) throws Throwable {
-        metadataKeyValueQuery.setDtos(new ArrayList(metadataApiService.getMetadataByKeyAndValue(metadataKeyValueQuery.getKey(), metadataKeyValueQuery.getValue())));
+    public Object metadataQueryAndInject(ProceedingJoinPoint pjp, MetadataKeyValueQuery metadataKeyValueQuery)
+            throws Throwable {
+        metadataKeyValueQuery.setDtos(new ArrayList(metadataApiService
+                .getMetadataByKeyAndValue(metadataKeyValueQuery.getKey(), metadataKeyValueQuery.getValue())));
         Object returnValue = pjp.proceed();
         postHandling(returnValue, metadataKeyValueQuery);
         return returnValue;

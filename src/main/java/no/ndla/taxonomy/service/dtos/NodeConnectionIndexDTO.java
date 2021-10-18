@@ -60,9 +60,7 @@ public class NodeConnectionIndexDTO implements TreeSorter.Sortable {
         nodeConnection.getChild().ifPresent(topic -> {
             this.id = topic.getPublicId();
 
-            this.name = topic.getTranslation(language)
-                    .map(NodeTranslation::getName)
-                    .orElse(topic.getName());
+            this.name = topic.getTranslation(language).map(NodeTranslation::getName).orElse(topic.getName());
 
             this.contentUri = topic.getContentUri();
             this.paths = topic.getAllPaths();

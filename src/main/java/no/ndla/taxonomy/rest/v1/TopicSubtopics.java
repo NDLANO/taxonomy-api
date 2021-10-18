@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = {"/v1/topic-subtopics"})
+@RequestMapping(path = { "/v1/topic-subtopics" })
 @Transactional
 public class TopicSubtopics {
     private final NodeRepository nodeRepository;
@@ -37,12 +37,8 @@ public class TopicSubtopics {
     private final EntityConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
 
-    public TopicSubtopics(
-            NodeRepository nodeRepository,
-            NodeConnectionRepository nodeConnectionRepository,
-            EntityConnectionService connectionService,
-            RelevanceRepository relevanceRepository
-    ) {
+    public TopicSubtopics(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
+            EntityConnectionService connectionService, RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -52,10 +48,7 @@ public class TopicSubtopics {
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and subtopics")
     public List<TopicSubtopicIndexDocument> index() {
-        return nodeConnectionRepository
-                .findAllIncludingParentAndChild()
-                .stream()
-                .map(TopicSubtopicIndexDocument::new)
+        return nodeConnectionRepository.findAllIncludingParentAndChild().stream().map(TopicSubtopicIndexDocument::new)
                 .collect(Collectors.toList());
     }
 
@@ -71,12 +64,13 @@ public class TopicSubtopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "connection", value = "The new connection") @RequestBody AddSubtopicToTopicCommand command) {
-
         Node topic = nodeRepository.getByPublicId(command.topicid);
         Node subtopic = nodeRepository.getByPublicId(command.subtopicid);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
+        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
+                : null;
 
-        final var topicSubtopic = connectionService.connectParentChild(topic, subtopic, relevance, command.rank == 0 ? null : command.rank);
+        final var topicSubtopic = connectionService.connectParentChild(topic, subtopic, relevance,
+                command.rank == 0 ? null : command.rank);
 
         URI location = URI.create("/topic-subtopics/" + topicSubtopic.getPublicId());
         return ResponseEntity.created(location).build();
@@ -95,9 +89,10 @@ public class TopicSubtopics {
     @ApiOperation(value = "Updates a connection between a topic and a subtopic", notes = "Use to update which topic is primary to a subtopic or to alter sorting order")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
+            @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
         final var topicSubtopic = nodeConnectionRepository.getByPublicId(id);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
+        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
+                : null;
 
         connectionService.updateParentChild(topicSubtopic, relevance, command.rank > 0 ? command.rank : null);
     }

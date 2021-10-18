@@ -12,7 +12,8 @@ import no.ndla.taxonomy.domain.Topic;
 
 @ApiModel("Topic")
 public class TopicDTO extends EntityWithPathDTO {
-    public TopicDTO() {}
+    public TopicDTO() {
+    }
 
     public TopicDTO(Topic topic, String languageCode) {
         super(topic, languageCode);

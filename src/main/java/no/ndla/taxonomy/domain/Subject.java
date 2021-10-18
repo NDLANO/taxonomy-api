@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.domain;
 
-
 import javax.persistence.*;
 import java.net.URI;
 import java.util.*;
@@ -67,16 +66,14 @@ public class Subject extends EntityWithPath {
     }
 
     public Collection<Topic> getTopics() {
-        return subjectTopics.stream()
-                .map(SubjectTopic::getTopic)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+        return subjectTopics.stream().map(SubjectTopic::getTopic).filter(Optional::isPresent).map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     public SubjectTranslation addTranslation(String languageCode) {
         SubjectTranslation subjectTranslation = getTranslation(languageCode).orElse(null);
-        if (subjectTranslation != null) return subjectTranslation;
+        if (subjectTranslation != null)
+            return subjectTranslation;
 
         subjectTranslation = new SubjectTranslation(this, languageCode);
         translations.add(subjectTranslation);
@@ -86,8 +83,7 @@ public class Subject extends EntityWithPath {
     @Override
     public Optional<SubjectTranslation> getTranslation(String languageCode) {
         return translations.stream()
-                .filter(subjectTranslation -> subjectTranslation.getLanguageCode().equals(languageCode))
-                .findFirst();
+                .filter(subjectTranslation -> subjectTranslation.getLanguageCode().equals(languageCode)).findFirst();
     }
 
     public Set<SubjectTranslation> getTranslations() {

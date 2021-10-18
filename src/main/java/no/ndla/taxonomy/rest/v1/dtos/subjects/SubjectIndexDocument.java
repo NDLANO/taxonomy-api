@@ -18,9 +18,7 @@ import no.ndla.taxonomy.service.dtos.MetadataDto;
 
 import java.net.URI;
 
-/**
- *
- */
+/** */
 @ApiModel("SubjectIndexDocument")
 public class SubjectIndexDocument {
     @JsonProperty
@@ -45,7 +43,6 @@ public class SubjectIndexDocument {
     private MetadataDto metadata;
 
     public SubjectIndexDocument() {
-
     }
 
     public MetadataDto getMetadata() {
@@ -59,12 +56,7 @@ public class SubjectIndexDocument {
     public SubjectIndexDocument(Subject subject, String languageCode) {
         this.id = subject.getPublicId();
         this.contentUri = subject.getContentUri();
-        this.name = subject
-                .getTranslation(languageCode)
-                .map(SubjectTranslation::getName)
-                .orElse(subject.getName());
-        this.path = subject
-                .getPrimaryPath()
-                .orElse(null);
+        this.name = subject.getTranslation(languageCode).map(SubjectTranslation::getName).orElse(subject.getName());
+        this.path = subject.getPrimaryPath().orElse(null);
     }
 }

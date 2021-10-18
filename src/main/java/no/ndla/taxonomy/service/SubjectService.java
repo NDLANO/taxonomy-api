@@ -16,5 +16,6 @@ public interface SubjectService {
     void delete(URI publicId);
 
     List<SubjectDTO> getSubjects(String languageCode, MetadataKeyValueQuery metadataKeyValueQuery);
+
     List<SubjectDTO> getSubjects(String languageCode);
 }

@@ -44,7 +44,7 @@ public class NodeCommand implements UpdatableDto<Node> {
     @Override
     public void apply(Node node) {
         node.setIdent(nodeId);
-        if(getNodeId().isPresent()) {
+        if (getNodeId().isPresent()) {
             node.setPublicId(getPublicId());
         }
         if (node.getIdent() == null) {

@@ -107,7 +107,7 @@ public class CachedPath {
             entitiesThatCanBeReturned.add(resource);
         }
 
-        if(node != null) {
+        if (node != null) {
             entitiesThatCanBeReturned.add(node);
         }
 
@@ -140,7 +140,8 @@ public class CachedPath {
         } else if (entity instanceof Node) {
             this.setNode((Node) entity);
         } else {
-            throw new IllegalArgumentException("Unknown entity of type " + entity.getClass().toString() + " passed as owning entity of CachedPath");
+            throw new IllegalArgumentException("Unknown entity of type " + entity.getClass().toString()
+                    + " passed as owning entity of CachedPath");
         }
 
         setPublicId(entity.getPublicId());

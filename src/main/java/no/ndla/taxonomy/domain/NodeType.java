@@ -1,9 +1,7 @@
 package no.ndla.taxonomy.domain;
 
 public enum NodeType {
-    NODE("node"),
-    SUBJECT("subject"),
-    TOPIC("topic");
+    NODE("node"), SUBJECT("subject"), TOPIC("topic");
 
     private String name;
 

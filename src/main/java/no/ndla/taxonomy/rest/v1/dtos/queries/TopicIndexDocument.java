@@ -16,7 +16,6 @@ import no.ndla.taxonomy.domain.TopicTranslation;
 import java.net.URI;
 import java.util.Set;
 
-
 @ApiModel("QueryTopicIndexDocument")
 public class TopicIndexDocument {
     @JsonProperty
@@ -40,19 +39,13 @@ public class TopicIndexDocument {
     public Set<String> paths;
 
     public TopicIndexDocument() {
-
     }
 
     public TopicIndexDocument(Topic topic, String languageCode) {
         this.id = topic.getPublicId();
-        this.name = topic
-                .getTranslation(languageCode)
-                .map(TopicTranslation::getName)
-                .orElse(topic.getName());
+        this.name = topic.getTranslation(languageCode).map(TopicTranslation::getName).orElse(topic.getName());
         this.contentUri = topic.getContentUri();
-        this.path = topic
-                .getPrimaryPath()
-                .orElse(null);
+        this.path = topic.getPrimaryPath().orElse(null);
         this.paths = topic.getAllPaths();
     }
 }

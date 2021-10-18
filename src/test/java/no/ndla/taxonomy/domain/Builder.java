@@ -55,7 +55,8 @@ public class Builder {
 
     public Topic topic(String key, Consumer<TopicBuilder> consumer) {
         TopicBuilder topic = getTopicBuilder(key);
-        if (null != consumer) consumer.accept(topic);
+        if (null != consumer)
+            consumer.accept(topic);
         return topic.topic;
     }
 
@@ -73,7 +74,8 @@ public class Builder {
 
     public Resource resource(String key, Consumer<ResourceBuilder> consumer) {
         ResourceBuilder resource = getResourceBuilder(key);
-        if (null != consumer) consumer.accept(resource);
+        if (null != consumer)
+            consumer.accept(resource);
         return resource.resource;
     }
 
@@ -87,7 +89,8 @@ public class Builder {
 
     public ResourceType resourceType(String key, Consumer<ResourceTypeBuilder> consumer) {
         ResourceTypeBuilder resourceType = getResourceTypeBuilder(key);
-        if (null != consumer) consumer.accept(resourceType);
+        if (null != consumer)
+            consumer.accept(resourceType);
         return resourceType.resourceType;
     }
 
@@ -101,7 +104,8 @@ public class Builder {
 
     public Relevance relevance(String key, Consumer<RelevanceBuilder> consumer) {
         RelevanceBuilder relevance = getRelevanceBuilder(key);
-        if (null != consumer) consumer.accept(relevance);
+        if (null != consumer)
+            consumer.accept(relevance);
         return relevance.relevance;
     }
 
@@ -167,7 +171,8 @@ public class Builder {
 
     public Subject subject(String key, Consumer<SubjectBuilder> consumer) {
         SubjectBuilder subject = getSubjectBuilder(key);
-        if (null != consumer) consumer.accept(subject);
+        if (null != consumer)
+            consumer.accept(subject);
 
         entityManager.persist(subject.subject);
 
@@ -202,7 +207,8 @@ public class Builder {
 
     public Node node(String key, NodeType nodeType, Consumer<NodeBuilder> consumer) {
         NodeBuilder node = getNodeBuilder(key, nodeType);
-        if (null != consumer) consumer.accept(node);
+        if (null != consumer)
+            consumer.accept(node);
 
         entityManager.persist(node.node);
 
@@ -210,7 +216,6 @@ public class Builder {
 
         return node.node;
     }
-
 
     private UrlMappingBuilder getUrlMappingBuilder(String key) {
         if (key == null) {
@@ -332,7 +337,6 @@ public class Builder {
             urlMapping.setSubject_id(s);
             return this;
         }
-
     }
 
     @Transactional
@@ -363,7 +367,8 @@ public class Builder {
 
         public ResourceTypeBuilder subtype(String key, Consumer<ResourceTypeBuilder> consumer) {
             ResourceTypeBuilder resourceTypeBuilder = getResourceTypeBuilder(key);
-            if (null != consumer) consumer.accept(resourceTypeBuilder);
+            if (null != consumer)
+                consumer.accept(resourceTypeBuilder);
             subtype(resourceTypeBuilder.resourceType);
             return this;
         }
@@ -404,7 +409,8 @@ public class Builder {
 
         public ResourceBuilder resourceType(String resourceTypeKey, Consumer<ResourceTypeBuilder> consumer) {
             ResourceTypeBuilder resourceTypeBuilder = getResourceTypeBuilder(resourceTypeKey);
-            if (null != consumer) consumer.accept(resourceTypeBuilder);
+            if (null != consumer)
+                consumer.accept(resourceTypeBuilder);
             return resourceType(resourceTypeBuilder.resourceType);
         }
 
@@ -444,7 +450,8 @@ public class Builder {
 
     public UrlMapping urlMapping(String key, Consumer<UrlMappingBuilder> consumer) {
         UrlMappingBuilder urlMapping = getUrlMappingBuilder(key);
-        if (null != consumer) consumer.accept(urlMapping);
+        if (null != consumer)
+            consumer.accept(urlMapping);
         return urlMapping.urlMapping;
     }
 
@@ -468,14 +475,14 @@ public class Builder {
 
         public SubjectBuilder topic(String key, Consumer<TopicBuilder> consumer) {
             TopicBuilder topicBuilder = getTopicBuilder(key);
-            if (null != consumer) consumer.accept(topicBuilder);
+            if (null != consumer)
+                consumer.accept(topicBuilder);
             topic(topicBuilder.topic);
 
             cachedUrlUpdaterService.updateCachedUrls(topicBuilder.topic);
 
             return this;
         }
-
 
         public SubjectBuilder topic(Consumer<TopicBuilder> consumer) {
             return topic(null, consumer);
@@ -540,7 +547,8 @@ public class Builder {
 
         public TopicBuilder subtopic(String key, Consumer<TopicBuilder> consumer) {
             TopicBuilder topicBuilder = getTopicBuilder(key);
-            if (null != consumer) consumer.accept(topicBuilder);
+            if (null != consumer)
+                consumer.accept(topicBuilder);
             subtopic(topicBuilder.topic);
             return this;
         }
@@ -575,7 +583,8 @@ public class Builder {
 
         public TopicBuilder resource(String resourceKey, boolean primary, Consumer<ResourceBuilder> consumer) {
             ResourceBuilder resource = getResourceBuilder(resourceKey);
-            if (null != consumer) consumer.accept(resource);
+            if (null != consumer)
+                consumer.accept(resource);
 
             return resource(resource.resource, primary);
         }
@@ -631,7 +640,6 @@ public class Builder {
 
             cachedUrlUpdaterService.updateCachedUrls(topic);
         }
-
     }
 
     @Transactional
@@ -695,7 +703,8 @@ public class Builder {
 
         public NodeBuilder child(String key, NodeType nodeType, Consumer<NodeBuilder> consumer) {
             NodeBuilder nodeBuilder = getNodeBuilder(key, nodeType);
-            if (null != consumer) consumer.accept(nodeBuilder);
+            if (null != consumer)
+                consumer.accept(nodeBuilder);
             child(nodeBuilder.node);
             return this;
         }
@@ -730,7 +739,8 @@ public class Builder {
 
         public NodeBuilder resource(String resourceKey, boolean primary, Consumer<ResourceBuilder> consumer) {
             ResourceBuilder resource = getResourceBuilder(resourceKey);
-            if (null != consumer) consumer.accept(resource);
+            if (null != consumer)
+                consumer.accept(resource);
 
             return resource(resource.resource, primary);
         }

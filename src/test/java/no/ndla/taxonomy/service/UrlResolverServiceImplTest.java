@@ -61,7 +61,8 @@ public class UrlResolverServiceImplTest {
 
     @BeforeEach
     public void restTestSetUp() {
-        urlResolverService = new UrlResolverServiceImpl(subjectRepository, topicRepository, resourceRepository, urlMappingRepository, oldUrlCanonifier);
+        urlResolverService = new UrlResolverServiceImpl(subjectRepository, topicRepository, resourceRepository,
+                urlMappingRepository, oldUrlCanonifier);
     }
 
     @Test
@@ -69,12 +70,7 @@ public class UrlResolverServiceImplTest {
     public void resolveOldUrl() {
         final String subjectId = "urn:subject:11";
         final String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s
-                .publicId(subjectId)
-                .topic(t -> t
-                        .publicId(nodeId)
-                )
-        );
+        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
         final String oldUrl = "ndla.no/node/183926?fag=127013";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
         entityManager.persist(urlMapping);
@@ -85,7 +81,6 @@ public class UrlResolverServiceImplTest {
         assertEquals("/subject:11/topic:1:183926", path);
     }
 
-
     @Test
     @Transactional
     public void queryForNonExistingNodeShouldNotMatchSimilarNodeId() {
@@ -94,31 +89,21 @@ public class UrlResolverServiceImplTest {
         String otherTopicId = "urn:topic:1:54321";
         String otherTopicUrl = "ndla.no/node/54321";
 
-        //create another topic and mapping that should NOT match the query for the url above
-        builder.subject(s -> s
-                .publicId(otherSubjectId)
-                .topic(t -> t
-                        .publicId("urn:topic:1:54321")
-                )
-        );
-        entityManager.persist(builder.urlMapping(c -> c.oldUrl(otherTopicUrl).public_id(otherTopicId).subject_id(otherSubjectId)));
+        // create another topic and mapping that should NOT match the query for the url above
+        builder.subject(s -> s.publicId(otherSubjectId).topic(t -> t.publicId("urn:topic:1:54321")));
+        entityManager.persist(
+                builder.urlMapping(c -> c.oldUrl(otherTopicUrl).public_id(otherTopicId).subject_id(otherSubjectId)));
         entityManager.flush();
 
         assertFalse(urlResolverService.resolveOldUrl(oldUrl).isPresent());
     }
-
 
     @Test
     @Transactional
     public void resolveOldUrlWithLanguage() {
         final String subjectId = "urn:subject:11";
         final String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s
-                .publicId(subjectId)
-                .topic(t -> t
-                        .publicId(nodeId)
-                )
-        );
+        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
         final String oldUrl = "ndla.no/node/183926?fag=127013";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
         entityManager.persist(urlMapping);
@@ -133,12 +118,7 @@ public class UrlResolverServiceImplTest {
     @Transactional
     public void resolveOldUrlWhenNoSubjectImportedToPrimaryPath() {
         String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s
-                .publicId("urn:subject:2")
-                .topic(t -> t
-                        .publicId(nodeId)
-                )
-        );
+        builder.subject(s -> s.publicId("urn:subject:2").topic(t -> t.publicId(nodeId)));
         String oldUrl = "ndla.no/node/183926?fag=127013";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId));
         entityManager.persist(urlMapping);
@@ -153,12 +133,7 @@ public class UrlResolverServiceImplTest {
     @Transactional
     public void resolveOldUrlWhenNoSubjectImportedOrQueriedToPrimaryPath() {
         String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s
-                .publicId("urn:subject:2")
-                .topic(t -> t
-                        .publicId(nodeId)
-                )
-        );
+        builder.subject(s -> s.publicId("urn:subject:2").topic(t -> t.publicId(nodeId)));
         String oldUrl = "ndla.no/node/183926";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId));
         entityManager.persist(urlMapping);
@@ -174,12 +149,7 @@ public class UrlResolverServiceImplTest {
     public void resolveOldUrlWhenSubjectImportedButNotQueriedToPrimaryPath() {
         final String subjectId = "urn:subject:11";
         String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s
-                .publicId(subjectId)
-                .topic(t -> t
-                        .publicId(nodeId)
-                )
-        );
+        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
         String oldUrl = "ndla.no/node/183926?fag=127013";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
         entityManager.persist(urlMapping);
@@ -193,14 +163,10 @@ public class UrlResolverServiceImplTest {
     @Test
     @Transactional
     public void resolveOldUrlBadSubjectPrimaryPath() {
-        builder.subject(s -> s
-                .publicId("urn:subject:2")
-                .topic(t -> t
-                        .publicId("urn:topic:1:183926")
-                )
-        );
+        builder.subject(s -> s.publicId("urn:subject:2").topic(t -> t.publicId("urn:topic:1:183926")));
         String oldUrl = "ndla.no/node/183926?fag=127013";
-        UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id("urn:topic:1:183926").subject_id("urn:subject:11"));
+        UrlMapping urlMapping = builder
+                .urlMapping(c -> c.oldUrl(oldUrl).public_id("urn:topic:1:183926").subject_id("urn:subject:11"));
         entityManager.persist(urlMapping);
         entityManager.flush();
 
@@ -212,7 +178,8 @@ public class UrlResolverServiceImplTest {
     @Test
     @Transactional
     public void putOldUrlForNonexistentResource() {
-        assertThrows(Exception.class, () -> urlResolverService.putUrlMapping("abc", URI.create("urn:topic:1:12"), URI.create("urn:subject:12")));
+        assertThrows(Exception.class, () -> urlResolverService.putUrlMapping("abc", URI.create("urn:topic:1:12"),
+                URI.create("urn:subject:12")));
     }
 
     @Test
@@ -220,12 +187,7 @@ public class UrlResolverServiceImplTest {
     public void putOldUrl() throws Exception {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s
-                .publicId(subjectId)
-                .topic(t -> t
-                        .publicId(nodeId)
-                )
-        );
+        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
         entityManager.flush();
 
         final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
@@ -241,12 +203,7 @@ public class UrlResolverServiceImplTest {
     public void putOldUrlTwice() throws Exception {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s
-                .publicId(subjectId)
-                .topic(t -> t
-                        .publicId(nodeId)
-                )
-        );
+        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
         entityManager.flush();
 
         final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
@@ -263,12 +220,7 @@ public class UrlResolverServiceImplTest {
     public void putOldUrlWithNoPaths() throws Exception {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s
-                .publicId(subjectId)
-                .topic(t -> t
-                        .publicId(nodeId)
-                )
-        );
+        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
         entityManager.flush();
 
         final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
@@ -285,12 +237,7 @@ public class UrlResolverServiceImplTest {
     public void putOldUrlWithSubjectQueryWithoutSubject() throws Exception {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s
-                .publicId(subjectId)
-                .topic(t -> t
-                        .publicId(nodeId)
-                )
-        );
+        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
         entityManager.flush();
 
         final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
@@ -305,35 +252,19 @@ public class UrlResolverServiceImplTest {
     @Test
     @Transactional
     public void resolveEntitiesFromPath() {
-        builder.subject(s -> s
-                .publicId("urn:subject:1")
-                .topic(t -> t
-                        .publicId("urn:topic:1")
-                        .resource("resource", resourceBuilder -> {
-                            resourceBuilder.publicId("urn:resource:1")
-                                    .name("Resource Name")
-                                    .contentUri(URI.create("urn:test:1"));
-                        })
-                )
-        );
+        builder.subject(s -> s.publicId("urn:subject:1")
+                .topic(t -> t.publicId("urn:topic:1").resource("resource", resourceBuilder -> {
+                    resourceBuilder.publicId("urn:resource:1").name("Resource Name")
+                            .contentUri(URI.create("urn:test:1"));
+                })));
 
-        builder.subject(s -> s
-                .publicId("urn:subject:2")
-                .topic(t -> t
-                        .publicId("urn:topic:2")
-                        .resource("resource")
-                )
-        );
+        builder.subject(s -> s.publicId("urn:subject:2").topic(t -> t.publicId("urn:topic:2").resource("resource")));
 
-        builder.subject(s -> s
-                .publicId("urn:subject:3")
-                .topic(t -> {
-                            t.publicId("urn:topic:3");
-                            t.isContext(true);
-                            t.resource("resource");
-                        }
-                )
-        );
+        builder.subject(s -> s.publicId("urn:subject:3").topic(t -> {
+            t.publicId("urn:topic:3");
+            t.isContext(true);
+            t.resource("resource");
+        }));
 
         // Four paths exists to the same resource:
         // /subject:1/topic:1/resource:1
@@ -345,9 +276,7 @@ public class UrlResolverServiceImplTest {
             final var resolvedUrl = urlResolverService.resolveUrl("/subject:1/topic:1/resource:1").orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents()
-                    .stream()
-                    .map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
@@ -363,9 +292,7 @@ public class UrlResolverServiceImplTest {
             final var resolvedUrl = urlResolverService.resolveUrl("/subject:2/topic:2/resource:1").orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents()
-                    .stream()
-                    .map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
@@ -381,9 +308,7 @@ public class UrlResolverServiceImplTest {
             final var resolvedUrl = urlResolverService.resolveUrl("/subject:2/topic:2").orElseThrow();
             assertEquals(1, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents()
-                    .stream()
-                    .map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("topic:2", resolvedUrl.getId().getSchemeSpecificPart());
@@ -424,9 +349,7 @@ public class UrlResolverServiceImplTest {
             final var resolvedUrl = urlResolverService.resolveUrl("/topic:3/resource:1").orElseThrow();
             assertEquals(1, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents()
-                    .stream()
-                    .map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
@@ -442,9 +365,7 @@ public class UrlResolverServiceImplTest {
             final var resolvedUrl = urlResolverService.resolveUrl("/subject:3/topic:3/resource:1").orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents()
-                    .stream()
-                    .map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
@@ -458,12 +379,11 @@ public class UrlResolverServiceImplTest {
 
         // Additional slashes should make no difference
         {
-            final var resolvedUrl = urlResolverService.resolveUrl("////subject:3///topic:3//////resource:1///").orElseThrow();
+            final var resolvedUrl = urlResolverService.resolveUrl("////subject:3///topic:3//////resource:1///")
+                    .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents()
-                    .stream()
-                    .map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
@@ -477,12 +397,11 @@ public class UrlResolverServiceImplTest {
 
         // No leading slash should make no difference
         {
-            final var resolvedUrl = urlResolverService.resolveUrl("subject:3///topic:3//////resource:1///").orElseThrow();
+            final var resolvedUrl = urlResolverService.resolveUrl("subject:3///topic:3//////resource:1///")
+                    .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents()
-                    .stream()
-                    .map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());

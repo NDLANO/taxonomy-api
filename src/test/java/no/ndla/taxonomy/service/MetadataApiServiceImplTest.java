@@ -47,27 +47,27 @@ public class MetadataApiServiceImplTest {
 
     @Test
     public void getMetadataByPublicId_single() {
-        when(restTemplate.getForEntity(eq("http://metadata/v1/taxonomy_entities/urn:test:1"), any(Class.class))).thenAnswer(invocationOnMock -> {
-            final var aim1 = mock(MetadataApiEntity.CompetenceAim.class);
-            final var aim2 = mock(MetadataApiEntity.CompetenceAim.class);
+        when(restTemplate.getForEntity(eq("http://metadata/v1/taxonomy_entities/urn:test:1"), any(Class.class)))
+                .thenAnswer(invocationOnMock -> {
+                    final var aim1 = mock(MetadataApiEntity.CompetenceAim.class);
+                    final var aim2 = mock(MetadataApiEntity.CompetenceAim.class);
 
-            when(aim1.getCode()).thenReturn("A1");
-            when(aim2.getCode()).thenReturn("A2");
+                    when(aim1.getCode()).thenReturn("A1");
+                    when(aim2.getCode()).thenReturn("A2");
 
-            final var returnedEntity = mock(MetadataApiEntity.class);
-            when(returnedEntity.getPublicId()).thenReturn("urn:test:1");
-            when(returnedEntity.getCompetenceAims()).thenReturn(Optional.of(Set.of(aim1, aim2)));
-            when(returnedEntity.getCustomFields()).thenReturn(Optional.of(Map.of("test", "value")));
+                    final var returnedEntity = mock(MetadataApiEntity.class);
+                    when(returnedEntity.getPublicId()).thenReturn("urn:test:1");
+                    when(returnedEntity.getCompetenceAims()).thenReturn(Optional.of(Set.of(aim1, aim2)));
+                    when(returnedEntity.getCustomFields()).thenReturn(Optional.of(Map.of("test", "value")));
 
-            return ResponseEntity.ok(returnedEntity);
-        });
+                    return ResponseEntity.ok(returnedEntity);
+                });
 
         final var returnedEntity = metadataApiService.getMetadataByPublicId(URI.create("urn:test:1"));
         assertEquals(2, returnedEntity.getGrepCodes().size());
         assertTrue(returnedEntity.getGrepCodes().containsAll(Set.of("A1", "A2")));
         assertNotNull(returnedEntity.getCustomFields());
         assertEquals("value", returnedEntity.getCustomFields().get("test"));
-
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -79,46 +79,47 @@ public class MetadataApiServiceImplTest {
             idList.add(URI.create("urn:test:" + i));
         }
 
-        when(restTemplate.getForEntity(any(String.class), eq(MetadataApiEntity[].class))).thenAnswer(invocationOnMock -> {
-            final var requestUrl = (String) invocationOnMock.getArgument(0);
+        when(restTemplate.getForEntity(any(String.class), eq(MetadataApiEntity[].class)))
+                .thenAnswer(invocationOnMock -> {
+                    final var requestUrl = (String) invocationOnMock.getArgument(0);
 
-            final var parsedUrl = URI.create(requestUrl);
+                    final var parsedUrl = URI.create(requestUrl);
 
-            assertEquals("/v1/taxonomy_entities/", parsedUrl.getPath());
-            assertEquals("metadata", parsedUrl.getHost());
-            assertEquals("http", parsedUrl.getScheme());
+                    assertEquals("/v1/taxonomy_entities/", parsedUrl.getPath());
+                    assertEquals("metadata", parsedUrl.getHost());
+                    assertEquals("http", parsedUrl.getScheme());
 
-            final var queryMap = UriComponentsBuilder.fromUriString(requestUrl).build().getQueryParams();
+                    final var queryMap = UriComponentsBuilder.fromUriString(requestUrl).build().getQueryParams();
 
-            assertTrue(queryMap.containsKey("publicIds"));
-            final var publicIdListString = queryMap.getFirst("publicIds");
+                    assertTrue(queryMap.containsKey("publicIds"));
+                    final var publicIdListString = queryMap.getFirst("publicIds");
 
-            final var publicIdList = Arrays.stream(publicIdListString.split(",")).map(URI::create).collect(Collectors.toSet());
+                    final var publicIdList = Arrays.stream(publicIdListString.split(",")).map(URI::create)
+                            .collect(Collectors.toSet());
 
-            assertTrue(publicIdList.size() <= 100);
-            assertTrue(publicIdList.size() > 0);
+                    assertTrue(publicIdList.size() <= 100);
+                    assertTrue(publicIdList.size() > 0);
 
-            assertTrue(idList.containsAll(publicIdList));
+                    assertTrue(idList.containsAll(publicIdList));
 
-            final var entitiesToReturn = new ArrayList<MetadataApiEntity>();
+                    final var entitiesToReturn = new ArrayList<MetadataApiEntity>();
 
+                    publicIdList.forEach(publicId -> {
+                        final var entityMock = mock(MetadataApiEntity.class);
+                        when(entityMock.getPublicId()).thenReturn(publicId.toString());
 
-            publicIdList.forEach(publicId -> {
-                final var entityMock = mock(MetadataApiEntity.class);
-                when(entityMock.getPublicId()).thenReturn(publicId.toString());
+                        final var aim = mock(MetadataApiEntity.CompetenceAim.class);
+                        when(aim.getCode()).thenReturn(publicId.getSchemeSpecificPart().toUpperCase().replace(":", ""));
 
-                final var aim = mock(MetadataApiEntity.CompetenceAim.class);
-                when(aim.getCode()).thenReturn(publicId.getSchemeSpecificPart().toUpperCase().replace(":", ""));
+                        when(entityMock.getCompetenceAims()).thenReturn(Optional.of(Set.of(aim)));
+                        when(entityMock.isVisible()).thenReturn(Optional.of(false));
+                        when(entityMock.getCustomFields()).thenReturn(Optional.of(Map.of("test", "value")));
 
-                when(entityMock.getCompetenceAims()).thenReturn(Optional.of(Set.of(aim)));
-                when(entityMock.isVisible()).thenReturn(Optional.of(false));
-                when(entityMock.getCustomFields()).thenReturn(Optional.of(Map.of("test", "value")));
+                        entitiesToReturn.add(entityMock);
+                    });
 
-                entitiesToReturn.add(entityMock);
-            });
-
-            return ResponseEntity.ok(entitiesToReturn.toArray(new MetadataApiEntity[0]));
-        });
+                    return ResponseEntity.ok(entitiesToReturn.toArray(new MetadataApiEntity[0]));
+                });
 
         final var returned = metadataApiService.getMetadataByPublicId(idList);
 
@@ -128,7 +129,8 @@ public class MetadataApiServiceImplTest {
             final var publicId = metadataDto.getPublicId();
             assertFalse(metadataDto.isVisible());
             assertEquals(1, metadataDto.getGrepCodes().size());
-            assertTrue(metadataDto.getGrepCodes().contains(URI.create(publicId).getSchemeSpecificPart().toUpperCase().replace(":", "")));
+            assertTrue(metadataDto.getGrepCodes()
+                    .contains(URI.create(publicId).getSchemeSpecificPart().toUpperCase().replace(":", "")));
             assertNotNull(metadataDto.getCustomFields());
             assertEquals("value", metadataDto.getCustomFields().get("test"));
 
@@ -138,31 +140,32 @@ public class MetadataApiServiceImplTest {
 
     @Test
     public void getMetadataByPublicId_key_value() {
-        when(restTemplate.getForEntity(any(String.class), eq(MetadataApiEntity[].class))).thenAnswer(invocationOnMock -> {
-            final var requestUrl = (String) invocationOnMock.getArgument(0);
+        when(restTemplate.getForEntity(any(String.class), eq(MetadataApiEntity[].class)))
+                .thenAnswer(invocationOnMock -> {
+                    final var requestUrl = (String) invocationOnMock.getArgument(0);
 
-            final var parsedUrl = URI.create(requestUrl);
+                    final var parsedUrl = URI.create(requestUrl);
 
-            assertEquals("/v1/taxonomy_entities/", parsedUrl.getPath());
-            assertEquals("metadata", parsedUrl.getHost());
-            assertEquals("http", parsedUrl.getScheme());
+                    assertEquals("/v1/taxonomy_entities/", parsedUrl.getPath());
+                    assertEquals("metadata", parsedUrl.getHost());
+                    assertEquals("http", parsedUrl.getScheme());
 
-            final var queryMap = UriComponentsBuilder.fromUriString(requestUrl).build().getQueryParams();
+                    final var queryMap = UriComponentsBuilder.fromUriString(requestUrl).build().getQueryParams();
 
-            assertTrue(queryMap.containsKey("key"));
-            assertTrue(queryMap.containsKey("value"));
-            final var key = queryMap.getFirst("key");
-            final var value = queryMap.getFirst("value");
+                    assertTrue(queryMap.containsKey("key"));
+                    assertTrue(queryMap.containsKey("value"));
+                    final var key = queryMap.getFirst("key");
+                    final var value = queryMap.getFirst("value");
 
-            assertEquals("key-v", key);
-            assertEquals("value-v", value);
+                    assertEquals("key-v", key);
+                    assertEquals("value-v", value);
 
-            final var entity = new MetadataApiEntity();
-            entity.setPublicId("urn:bykeyval:1");
-            entity.setVisible(true);
+                    final var entity = new MetadataApiEntity();
+                    entity.setPublicId("urn:bykeyval:1");
+                    entity.setVisible(true);
 
-            return ResponseEntity.ok(new MetadataApiEntity[] {entity});
-        });
+                    return ResponseEntity.ok(new MetadataApiEntity[] { entity });
+                });
 
         final var returned = metadataApiService.getMetadataByKeyAndValue("key-v", "value-v");
 
@@ -175,41 +178,36 @@ public class MetadataApiServiceImplTest {
         });
     }
 
-
     @Test
     public void updateMetadataByPublicId() {
         doAnswer(invocationOnMock -> {
             final var apiEntity = (MetadataApiEntity) invocationOnMock.getArgument(1);
 
             assertEquals(2, apiEntity.getCompetenceAims().orElseThrow().size());
-            assertTrue(
-                    apiEntity.getCompetenceAims()
-                            .stream()
-                            .flatMap(Set::stream)
-                            .map(MetadataApiEntity.CompetenceAim::getCode)
-                            .collect(Collectors.toSet())
-                            .containsAll(Set.of("B1", "B2"))
-            );
+            assertTrue(apiEntity.getCompetenceAims().stream().flatMap(Set::stream)
+                    .map(MetadataApiEntity.CompetenceAim::getCode).collect(Collectors.toSet())
+                    .containsAll(Set.of("B1", "B2")));
             assertTrue(apiEntity.getCustomFields().isPresent());
             assertEquals("value", apiEntity.getCustomFields().get().get("test"));
 
             return null;
         }).when(restTemplate).put(eq("http://metadata/v1/taxonomy_entities/urn:test:1"), any(MetadataApiEntity.class));
 
-        when(restTemplate.getForEntity(eq("http://metadata/v1/taxonomy_entities/urn:test:1"), any(Class.class))).thenAnswer(invocationOnMock -> {
-            final var aim1 = mock(MetadataApiEntity.CompetenceAim.class);
-            final var aim2 = mock(MetadataApiEntity.CompetenceAim.class);
+        when(restTemplate.getForEntity(eq("http://metadata/v1/taxonomy_entities/urn:test:1"), any(Class.class)))
+                .thenAnswer(invocationOnMock -> {
+                    final var aim1 = mock(MetadataApiEntity.CompetenceAim.class);
+                    final var aim2 = mock(MetadataApiEntity.CompetenceAim.class);
 
-            when(aim1.getCode()).thenReturn("A3");
-            when(aim2.getCode()).thenReturn("A4");
+                    when(aim1.getCode()).thenReturn("A3");
+                    when(aim2.getCode()).thenReturn("A4");
 
-            final var returnedEntity = mock(MetadataApiEntity.class);
-            when(returnedEntity.getPublicId()).thenReturn("urn:test:1");
-            when(returnedEntity.getCompetenceAims()).thenReturn(Optional.of(Set.of(aim1, aim2)));
-            when(returnedEntity.getCustomFields()).thenReturn(Optional.of(Map.of()));
+                    final var returnedEntity = mock(MetadataApiEntity.class);
+                    when(returnedEntity.getPublicId()).thenReturn("urn:test:1");
+                    when(returnedEntity.getCompetenceAims()).thenReturn(Optional.of(Set.of(aim1, aim2)));
+                    when(returnedEntity.getCustomFields()).thenReturn(Optional.of(Map.of()));
 
-            return ResponseEntity.ok(returnedEntity);
-        });
+                    return ResponseEntity.ok(returnedEntity);
+                });
 
         final var requestObject = mock(MetadataDto.class);
         when(requestObject.getGrepCodes()).thenReturn(Set.of("B1", "B2"));
@@ -228,7 +226,8 @@ public class MetadataApiServiceImplTest {
         final var requestObject = mock(MetadataDto.class);
         when(requestObject.getGrepCodes()).thenReturn(Set.of("B1", "B2"));
 
-        doThrow(new RestClientException("")).when(restTemplate).put(eq("http://metadata/v1/taxonomy_entities/urn:test:1"), any(MetadataApiEntity.class));
+        doThrow(new RestClientException("")).when(restTemplate)
+                .put(eq("http://metadata/v1/taxonomy_entities/urn:test:1"), any(MetadataApiEntity.class));
 
         try {
             metadataApiService.updateMetadataByPublicId(URI.create("urn:test:1"), requestObject);
@@ -240,7 +239,8 @@ public class MetadataApiServiceImplTest {
 
     @Test
     public void getMetadataByPublicId_withServiceError() {
-        when(restTemplate.getForEntity(eq("http://metadata/v1/taxonomy_entities/urn:test:1"), any(Class.class))).thenThrow(new RestClientException(""));
+        when(restTemplate.getForEntity(eq("http://metadata/v1/taxonomy_entities/urn:test:1"), any(Class.class)))
+                .thenThrow(new RestClientException(""));
 
         try {
             metadataApiService.getMetadataByPublicId(URI.create("urn:test:1"));
@@ -252,7 +252,8 @@ public class MetadataApiServiceImplTest {
 
     @Test
     public void deleteMetadataByPublicId() {
-        doThrow(new RestClientException("")).when(restTemplate).delete("http://metadata/v1/taxonomy_entities/urn:test:124");
+        doThrow(new RestClientException("")).when(restTemplate)
+                .delete("http://metadata/v1/taxonomy_entities/urn:test:124");
 
         metadataApiService.deleteMetadataByPublicId(URI.create("urn:test:123"));
         verify(restTemplate).delete("http://metadata/v1/taxonomy_entities/urn:test:123");
@@ -275,46 +276,47 @@ public class MetadataApiServiceImplTest {
 
         final var updatedIds = new HashSet<>();
 
-        when(restTemplate.getForEntity(any(String.class), eq(MetadataApiEntity[].class))).thenAnswer(invocationOnMock -> {
-            final var requestUrl = (String) invocationOnMock.getArgument(0);
+        when(restTemplate.getForEntity(any(String.class), eq(MetadataApiEntity[].class)))
+                .thenAnswer(invocationOnMock -> {
+                    final var requestUrl = (String) invocationOnMock.getArgument(0);
 
-            final var parsedUrl = URI.create(requestUrl);
+                    final var parsedUrl = URI.create(requestUrl);
 
-            assertEquals("/v1/taxonomy_entities/", parsedUrl.getPath());
-            assertEquals("metadata", parsedUrl.getHost());
-            assertEquals("http", parsedUrl.getScheme());
+                    assertEquals("/v1/taxonomy_entities/", parsedUrl.getPath());
+                    assertEquals("metadata", parsedUrl.getHost());
+                    assertEquals("http", parsedUrl.getScheme());
 
-            final var queryMap = UriComponentsBuilder.fromUriString(requestUrl).build().getQueryParams();
+                    final var queryMap = UriComponentsBuilder.fromUriString(requestUrl).build().getQueryParams();
 
-            assertTrue(queryMap.containsKey("publicIds"));
-            final var publicIdListString = queryMap.getFirst("publicIds");
+                    assertTrue(queryMap.containsKey("publicIds"));
+                    final var publicIdListString = queryMap.getFirst("publicIds");
 
-            final var publicIdList = Arrays.stream(publicIdListString.split(",")).map(URI::create).collect(Collectors.toSet());
+                    final var publicIdList = Arrays.stream(publicIdListString.split(",")).map(URI::create)
+                            .collect(Collectors.toSet());
 
-            assertTrue(publicIdList.size() <= 100);
-            assertTrue(publicIdList.size() > 0);
+                    assertTrue(publicIdList.size() <= 100);
+                    assertTrue(publicIdList.size() > 0);
 
-            assertTrue(idList.containsAll(publicIdList));
+                    assertTrue(idList.containsAll(publicIdList));
 
-            final var entitiesToReturn = new ArrayList<MetadataApiEntity>();
+                    final var entitiesToReturn = new ArrayList<MetadataApiEntity>();
 
+                    publicIdList.forEach(publicId -> {
+                        final var entityMock = mock(MetadataApiEntity.class);
+                        when(entityMock.getPublicId()).thenReturn(publicId.toString());
 
-            publicIdList.forEach(publicId -> {
-                final var entityMock = mock(MetadataApiEntity.class);
-                when(entityMock.getPublicId()).thenReturn(publicId.toString());
+                        final var aim = mock(MetadataApiEntity.CompetenceAim.class);
+                        when(aim.getCode()).thenReturn(publicId.getSchemeSpecificPart().toUpperCase().replace(":", ""));
 
-                final var aim = mock(MetadataApiEntity.CompetenceAim.class);
-                when(aim.getCode()).thenReturn(publicId.getSchemeSpecificPart().toUpperCase().replace(":", ""));
+                        when(entityMock.getCompetenceAims()).thenReturn(Optional.of(Set.of(aim)));
+                        when(entityMock.isVisible()).thenReturn(Optional.of(false));
+                        when(entityMock.getCustomFields()).thenReturn(Optional.of(Map.of()));
 
-                when(entityMock.getCompetenceAims()).thenReturn(Optional.of(Set.of(aim)));
-                when(entityMock.isVisible()).thenReturn(Optional.of(false));
-                when(entityMock.getCustomFields()).thenReturn(Optional.of(Map.of()));
+                        entitiesToReturn.add(entityMock);
+                    });
 
-                entitiesToReturn.add(entityMock);
-            });
-
-            return ResponseEntity.ok(entitiesToReturn.toArray(new MetadataApiEntity[0]));
-        });
+                    return ResponseEntity.ok(entitiesToReturn.toArray(new MetadataApiEntity[0]));
+                });
 
         doAnswer(invocationOnMock -> {
             final var requestUrl = (String) invocationOnMock.getArgument(0);
@@ -326,9 +328,7 @@ public class MetadataApiServiceImplTest {
             assertEquals("metadata", parsedUrl.getHost());
             assertEquals("http", parsedUrl.getScheme());
 
-            final var publicIdList = requestObjects.stream()
-                    .map(MetadataApiEntity::getPublicId)
-                    .map(URI::create)
+            final var publicIdList = requestObjects.stream().map(MetadataApiEntity::getPublicId).map(URI::create)
                     .collect(Collectors.toSet());
 
             assertTrue(publicIdList.size() <= 100);
@@ -341,7 +341,8 @@ public class MetadataApiServiceImplTest {
 
                 assertFalse(requestObject.isVisible().orElseThrow());
                 assertEquals(1, requestObject.getCompetenceAims().orElseThrow().size());
-                assertTrue(requestObject.getCompetenceAims().orElseThrow().stream().map(MetadataApiEntity.CompetenceAim::getCode).collect(Collectors.toSet()).contains("T1"));
+                assertTrue(requestObject.getCompetenceAims().orElseThrow().stream()
+                        .map(MetadataApiEntity.CompetenceAim::getCode).collect(Collectors.toSet()).contains("T1"));
                 assertTrue(requestObject.getCustomFields().isPresent());
                 assertEquals("value", requestObject.getCustomFields().get().get("test"));
 
@@ -365,7 +366,8 @@ public class MetadataApiServiceImplTest {
             final var publicId = metadataDto.getPublicId();
             assertFalse(metadataDto.isVisible());
             assertEquals(1, metadataDto.getGrepCodes().size());
-            assertTrue(metadataDto.getGrepCodes().contains(URI.create(publicId).getSchemeSpecificPart().toUpperCase().replace(":", "")));
+            assertTrue(metadataDto.getGrepCodes()
+                    .contains(URI.create(publicId).getSchemeSpecificPart().toUpperCase().replace(":", "")));
 
             assertTrue(idList.contains(URI.create(publicId)));
         });

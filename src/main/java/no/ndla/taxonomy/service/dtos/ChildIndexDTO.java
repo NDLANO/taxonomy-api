@@ -61,9 +61,7 @@ public class ChildIndexDTO implements TreeSorter.Sortable {
         nodeConnection.getChild().ifPresent(child -> {
             this.id = child.getPublicId();
 
-            this.name = child.getTranslation(language)
-                    .map(NodeTranslation::getName)
-                    .orElse(child.getName());
+            this.name = child.getTranslation(language).map(NodeTranslation::getName).orElse(child.getName());
 
             this.contentUri = child.getContentUri();
             this.paths = child.getAllPaths();

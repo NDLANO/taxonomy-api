@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = {"/v1/topic-resources"})
+@RequestMapping(path = { "/v1/topic-resources" })
 @Transactional
 public class TopicResources {
 
@@ -36,11 +36,9 @@ public class TopicResources {
     private final EntityConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
 
-    public TopicResources(NodeRepository nodeRepository,
-                          ResourceRepository resourceRepository,
-                          NodeResourceRepository nodeResourceRepository,
-                          EntityConnectionService connectionService,
-                          RelevanceRepository relevanceRepository) {
+    public TopicResources(NodeRepository nodeRepository, ResourceRepository resourceRepository,
+            NodeResourceRepository nodeResourceRepository, EntityConnectionService connectionService,
+            RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
         this.resourceRepository = resourceRepository;
         this.nodeResourceRepository = nodeResourceRepository;
@@ -51,10 +49,7 @@ public class TopicResources {
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and resources")
     public List<TopicResourceIndexDocument> index() {
-        return nodeResourceRepository
-                .findAllIncludingNodeAndResource()
-                .stream()
-                .map(TopicResourceIndexDocument::new)
+        return nodeResourceRepository.findAllIncludingNodeAndResource().stream().map(TopicResourceIndexDocument::new)
                 .collect(Collectors.toList());
     }
 
@@ -73,15 +68,16 @@ public class TopicResources {
 
         Node topic = nodeRepository.getByPublicId(command.topicid);
         Resource resource = resourceRepository.getByPublicId(command.resourceId);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
+        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
+                : null;
 
         final NodeResource topicResource;
-        topicResource = connectionService.connectNodeResource(topic, resource, relevance, command.primary, command.rank == 0 ? null : command.rank);
+        topicResource = connectionService.connectNodeResource(topic, resource, relevance, command.primary,
+                command.rank == 0 ? null : command.rank);
 
         URI location = URI.create("/topic-resources/" + topicResource.getPublicId());
         return ResponseEntity.created(location).build();
     }
-
 
     @DeleteMapping("/{id}")
     @ApiOperation("Removes a resource from a topic")
@@ -96,16 +92,17 @@ public class TopicResources {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand
-                            command) {
+            @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand command) {
         NodeResource topicResource = nodeResourceRepository.getByPublicId(id);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
+        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
+                : null;
 
         if (topicResource.isPrimary().orElseThrow() && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
 
-        connectionService.updateNodeResource(topicResource, relevance, command.primary, command.rank > 0 ? command.rank : null);
+        connectionService.updateNodeResource(topicResource, relevance, command.primary,
+                command.rank > 0 ? command.rank : null);
     }
 
     public static class AddResourceToTopicCommand {

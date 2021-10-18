@@ -25,12 +25,9 @@ public abstract class CrudControllerWithMetadata<T extends DomainObject> extends
     private final MetadataApiService metadataApiService;
     private final MetadataUpdateService metadataUpdateService;
 
-    protected CrudControllerWithMetadata(
-            TaxonomyRepository<T> repository,
-            CachedUrlUpdaterService cachedUrlUpdaterService,
-            MetadataApiService metadataApiService,
-            MetadataUpdateService metadataUpdateService
-    ) {
+    protected CrudControllerWithMetadata(TaxonomyRepository<T> repository,
+            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataApiService metadataApiService,
+            MetadataUpdateService metadataUpdateService) {
         super(repository, cachedUrlUpdaterService);
 
         this.metadataApiService = metadataApiService;
@@ -54,9 +51,8 @@ public abstract class CrudControllerWithMetadata<T extends DomainObject> extends
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ApiOperation(value = "Updates metadata for entity recursively")
     public RecursiveMergeResultDto updateRecursively(@PathVariable("id") URI id,
-                                                     @ApiParam(value = "Apply also to resources (even if having multiple topics as parent)", defaultValue = "false")
-                                                     @RequestParam(value = "applyToResources", required = false, defaultValue = "false") boolean applyToResources,
-                                                     @RequestBody MetadataDto metadataToMerge) {
+            @ApiParam(value = "Apply also to resources (even if having multiple topics as parent)", defaultValue = "false") @RequestParam(value = "applyToResources", required = false, defaultValue = "false") boolean applyToResources,
+            @RequestBody MetadataDto metadataToMerge) {
         return metadataUpdateService.updateMetadataRecursivelyByPublicId(id, metadataToMerge, applyToResources);
     }
 }

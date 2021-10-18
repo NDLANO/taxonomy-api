@@ -14,7 +14,8 @@ import no.ndla.taxonomy.service.TreeSorter;
 
 @ApiModel("NodeChild")
 public class TopicChildDTO extends EntityWithPathChildDTO {
-    public TopicChildDTO() {}
+    public TopicChildDTO() {
+    }
 
     public TopicChildDTO(Node node, NodeConnection nodeConnection, String languageCode) {
         super(node, nodeConnection, languageCode);

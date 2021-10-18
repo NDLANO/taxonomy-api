@@ -14,11 +14,11 @@ import java.util.UUID;
 @Entity
 public class ResourceResourceType extends DomainEntity {
 
-    @ManyToOne(cascade = {CascadeType.MERGE})
+    @ManyToOne(cascade = { CascadeType.MERGE })
     @JoinColumn(name = "resource_id")
     private Resource resource;
 
-    @ManyToOne(cascade = {CascadeType.MERGE})
+    @ManyToOne(cascade = { CascadeType.MERGE })
     @JoinColumn(name = "resource_type_id")
     private ResourceType resourceType;
 

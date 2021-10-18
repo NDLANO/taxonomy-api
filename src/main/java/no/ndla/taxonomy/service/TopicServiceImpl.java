@@ -36,8 +36,8 @@ public class TopicServiceImpl implements TopicService {
     private final TreeSorter topicTreeSorter;
 
     public TopicServiceImpl(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository,
-                            EntityConnectionService connectionService,
-                            MetadataApiService metadataApiService, TreeSorter topicTreeSorter) {
+            EntityConnectionService connectionService, MetadataApiService metadataApiService,
+            TreeSorter topicTreeSorter) {
         this.topicRepository = topicRepository;
         this.connectionService = connectionService;
         this.topicSubtopicRepository = topicSubtopicRepository;
@@ -48,7 +48,8 @@ public class TopicServiceImpl implements TopicService {
     @Override
     @Transactional
     public void delete(URI publicId) {
-        final var topicToDelete = topicRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Topic was not found"));
+        final var topicToDelete = topicRepository.findFirstByPublicId(publicId)
+                .orElseThrow(() -> new NotFoundServiceException("Topic was not found"));
 
         connectionService.disconnectAllChildren(topicToDelete);
 
@@ -69,80 +70,67 @@ public class TopicServiceImpl implements TopicService {
             filteredTopics = topicRepository.findAllIncludingCachedUrlsAndTranslations();
         }
 
-        return filteredTopics
-                .stream()
-                .map(topic -> new TopicDTO(topic, languageCode))
-                .collect(Collectors.toList());
+        return filteredTopics.stream().map(topic -> new TopicDTO(topic, languageCode)).collect(Collectors.toList());
     }
 
     @Override
     @MetadataQuery
-    public List<TopicDTO> getTopics(String languageCode, URI contentUriFilter, MetadataKeyValueQuery metadataKeyValueQuery) {
-        Set<String> publicIds = metadataKeyValueQuery.getDtos().stream()
-                .map(MetadataDto::getPublicId)
+    public List<TopicDTO> getTopics(String languageCode, URI contentUriFilter,
+            MetadataKeyValueQuery metadataKeyValueQuery) {
+        Set<String> publicIds = metadataKeyValueQuery.getDtos().stream().map(MetadataDto::getPublicId)
                 .collect(Collectors.toSet());
-        return publicIds.stream()
-                .map(topicId -> {
-                    try {
-                        return new URI(topicId);
-                    } catch (Exception e) {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .map(topicRepository::findByPublicId)
-                .filter(Objects::nonNull)
-                .filter(topic -> {
-                    /*
-                     * I don't think this combination of queries will be normal,
-                     * but it's easy to implement something that probably works.
-                     */
-                    if (contentUriFilter == null) {
-                        return true;
-                    } else {
-                        return contentUriFilter.equals(topic.getContentUri());
-                    }
-                })
-                .map(topic -> new TopicDTO(topic, languageCode))
-                .collect(Collectors.toList());
+        return publicIds.stream().map(topicId -> {
+            try {
+                return new URI(topicId);
+            } catch (Exception e) {
+                return null;
+            }
+        }).filter(Objects::nonNull).map(topicRepository::findByPublicId).filter(Objects::nonNull).filter(topic -> {
+            /*
+             * I don't think this combination of queries will be normal, but it's easy to implement something that
+             * probably works.
+             */
+            if (contentUriFilter == null) {
+                return true;
+            } else {
+                return contentUriFilter.equals(topic.getContentUri());
+            }
+        }).map(topic -> new TopicDTO(topic, languageCode)).collect(Collectors.toList());
     }
 
     @Override
     @InjectMetadata
     public List<ConnectionIndexDTO> getAllConnections(URI topicPublicId) {
-        final var topic = topicRepository.findFirstByPublicId(topicPublicId).orElseThrow(() -> new NotFoundServiceException("Topic was not found"));
+        final var topic = topicRepository.findFirstByPublicId(topicPublicId)
+                .orElseThrow(() -> new NotFoundServiceException("Topic was not found"));
 
         return Stream.concat(
-                connectionService.getParentConnections(topic)
-                        .stream()
-                        .map(ConnectionIndexDTO::parentConnection),
-                connectionService.getChildConnections(topic)
-                        .stream()
-                        .filter(entity -> entity instanceof TopicSubtopic)
-                        .map(ConnectionIndexDTO::childConnection)
-        ).collect(Collectors.toUnmodifiableList());
+                connectionService.getParentConnections(topic).stream().map(ConnectionIndexDTO::parentConnection),
+                connectionService.getChildConnections(topic).stream().filter(entity -> entity instanceof TopicSubtopic)
+                        .map(ConnectionIndexDTO::childConnection))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     @InjectMetadata
-    public List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId, String languageCode) {
-        // NOTE: Since no filter is specified, it defaults to the same as specifying i list of all filters that exists for the given subject
+    public List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, URI subjectPublicId,
+            String languageCode) {
+        // NOTE: Since no filter is specified, it defaults to the same as specifying i list of all
+        // filters that exists for the given subject
 
-        return getFilteredSubtopicConnections(
-                topicPublicId,
-                languageCode);
+        return getFilteredSubtopicConnections(topicPublicId, languageCode);
     }
 
     @Override
     @InjectMetadata
     public List<SubTopicIndexDTO> getFilteredSubtopicConnections(URI topicPublicId, String languageCode) {
         final List<TopicSubtopic> subtopicConnections;
-        subtopicConnections = topicSubtopicRepository.findAllByTopicPublicIdIncludingSubtopicAndSubtopicTranslations(topicPublicId);
+        subtopicConnections = topicSubtopicRepository
+                .findAllByTopicPublicIdIncludingSubtopicAndSubtopicTranslations(topicPublicId);
 
-        final var wrappedList =
-                subtopicConnections.stream()
-                        .map(topicSubtopic -> new SubTopicIndexDTO(topicSubtopic, languageCode))
-                        .collect(Collectors.toUnmodifiableList());
+        final var wrappedList = subtopicConnections.stream()
+                .map(topicSubtopic -> new SubTopicIndexDTO(topicSubtopic, languageCode))
+                .collect(Collectors.toUnmodifiableList());
 
         return topicTreeSorter.sortList(wrappedList);
     }

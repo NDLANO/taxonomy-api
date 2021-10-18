@@ -22,11 +22,13 @@ public interface EntityConnectionService {
 
     TopicResource connectTopicResource(Topic topic, Resource resource, Relevance relevance);
 
-    TopicResource connectTopicResource(Topic topic, Resource resource, Relevance relevance, boolean isPrimary, Integer rank);
+    TopicResource connectTopicResource(Topic topic, Resource resource, Relevance relevance, boolean isPrimary,
+            Integer rank);
 
     NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank);
 
-    NodeResource connectNodeResource(Node node, Resource resource, Relevance relevance, boolean isPrimary, Integer rank);
+    NodeResource connectNodeResource(Node node, Resource resource, Relevance relevance, boolean isPrimary,
+            Integer rank);
 
     void disconnectTopicSubtopic(Topic topic, Topic subTopic);
 

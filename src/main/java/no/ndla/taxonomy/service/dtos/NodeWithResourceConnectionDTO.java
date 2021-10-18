@@ -30,7 +30,8 @@ public class NodeWithResourceConnectionDTO extends NodeDTO {
         this.isPrimary = nodeResource.isPrimary().orElse(false);
         this.connectionId = nodeResource.getPublicId();
         this.rank = nodeResource.getRank();
-        this.relevanceId = nodeResource.getRelevance().map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
+        this.relevanceId = nodeResource.getRelevance().map(Relevance::getPublicId)
+                .orElse(URI.create("urn:relevance:core"));
     }
 
     public NodeWithResourceConnectionDTO() {

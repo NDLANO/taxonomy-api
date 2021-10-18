@@ -26,7 +26,8 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     private final TopicRepository topicRepository;
     private final NodeRepository nodeRepository;
 
-    public DomainEntityHelperServiceImpl(SubjectRepository subjectRepository, TopicRepository topicRepository, NodeRepository nodeRepository) {
+    public DomainEntityHelperServiceImpl(SubjectRepository subjectRepository, TopicRepository topicRepository,
+            NodeRepository nodeRepository) {
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.nodeRepository = nodeRepository;
@@ -35,19 +36,22 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public Subject getSubjectByPublicId(URI publicId) {
-        return subjectRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Subject", publicId));
+        return subjectRepository.findFirstByPublicId(publicId)
+                .orElseThrow(() -> new NotFoundServiceException("Subject", publicId));
     }
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public Topic getTopicByPublicId(URI publicId) {
-        return topicRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Topic", publicId));
+        return topicRepository.findFirstByPublicId(publicId)
+                .orElseThrow(() -> new NotFoundServiceException("Topic", publicId));
     }
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public Node getNodeByPublicId(URI publicId) {
-        return nodeRepository.findFirstByPublicId(publicId).orElseThrow(() -> new NotFoundServiceException("Node", publicId));
+        return nodeRepository.findFirstByPublicId(publicId)
+                .orElseThrow(() -> new NotFoundServiceException("Node", publicId));
     }
 
 }

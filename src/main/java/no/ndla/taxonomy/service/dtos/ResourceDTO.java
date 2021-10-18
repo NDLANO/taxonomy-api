@@ -34,9 +34,8 @@ public class ResourceDTO {
     private String name;
 
     @JsonProperty
-    @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ",
-            notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier " +
-                    "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
+    @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ", notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier "
+            + "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
     private URI contentUri;
 
     @JsonProperty
@@ -69,13 +68,9 @@ public class ResourceDTO {
     public ResourceDTO(Resource resource, String languageCode) {
         this.id = resource.getPublicId();
         this.contentUri = resource.getContentUri();
-        this.name = resource
-                .getTranslation(languageCode)
-                .map(ResourceTranslation::getName)
-                .orElse(resource.getName());
+        this.name = resource.getTranslation(languageCode).map(ResourceTranslation::getName).orElse(resource.getName());
 
-        this.resourceTypes = resource.getResourceResourceTypes()
-                .stream()
+        this.resourceTypes = resource.getResourceResourceTypes().stream()
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
                 .collect(Collectors.toCollection(TreeSet::new));
 
@@ -118,6 +113,4 @@ public class ResourceDTO {
     public Set<String> getPaths() {
         return paths;
     }
-
-
 }

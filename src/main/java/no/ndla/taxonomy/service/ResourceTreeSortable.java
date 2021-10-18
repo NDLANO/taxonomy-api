@@ -25,8 +25,10 @@ public class ResourceTreeSortable<T extends EntityWithPath> implements TreeSorte
     private String type;
 
     public ResourceTreeSortable(SortableResourceConnection<T> resourceConnection) {
-        this.id = resourceConnection.getResource().orElseThrow(() -> new IllegalArgumentException("Resource not set")).getId();
-        this.parentId = resourceConnection.getParent().orElseThrow(() -> new IllegalArgumentException("Parent not set")).getId();
+        this.id = resourceConnection.getResource().orElseThrow(() -> new IllegalArgumentException("Resource not set"))
+                .getId();
+        this.parentId = resourceConnection.getParent().orElseThrow(() -> new IllegalArgumentException("Parent not set"))
+                .getId();
         this.rank = resourceConnection.getRank();
         this.resourceConnection = resourceConnection;
         this.type = "resource";
@@ -44,7 +46,6 @@ public class ResourceTreeSortable<T extends EntityWithPath> implements TreeSorte
         this.type = type;
         this.parentType = parentType;
     }
-
 
     @Override
     public int getSortableRank() {

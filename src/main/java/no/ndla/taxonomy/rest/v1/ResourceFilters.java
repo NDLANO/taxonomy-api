@@ -23,7 +23,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = {"/v1/resource-filters"})
+@RequestMapping(path = { "/v1/resource-filters" })
 @Transactional
 @Deprecated(forRemoval = true)
 public class ResourceFilters {
@@ -35,7 +35,8 @@ public class ResourceFilters {
     @ApiOperation(value = "Adds a filter to a resource")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
-    public ResponseEntity<Void> post(@ApiParam(name = "resource filter", value = "The new resource filter") @RequestBody AddFilterToResourceCommand command) {
+    public ResponseEntity<Void> post(
+            @ApiParam(name = "resource filter", value = "The new resource filter") @RequestBody AddFilterToResourceCommand command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
@@ -44,7 +45,8 @@ public class ResourceFilters {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
-    public void put(@PathVariable("id") URI id, @ApiParam(name = "resource filter", value = "The updated resource filter", required = true) @RequestBody UpdateResourceFilterCommand command) {
+    public void put(@PathVariable("id") URI id,
+            @ApiParam(name = "resource filter", value = "The updated resource filter", required = true) @RequestBody UpdateResourceFilterCommand command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
@@ -52,13 +54,15 @@ public class ResourceFilters {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
-    public void delete(@ApiParam(name = "id", value = "The id of the connection to delete", required = true) @PathVariable URI id) {
+    public void delete(
+            @ApiParam(name = "id", value = "The id of the connection to delete", required = true) @PathVariable URI id) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
     @GetMapping("/{id}")
     @Deprecated(forRemoval = true)
-    public ResourceFilterIndexDocument get(@ApiParam(name = "id", value = "The id of the connection to get", required = true) @PathVariable URI id) {
+    public ResourceFilterIndexDocument get(
+            @ApiParam(name = "id", value = "The id of the connection to get", required = true) @PathVariable URI id) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
@@ -68,7 +72,6 @@ public class ResourceFilters {
     public List<ResourceFilterIndexDocument> index() {
         return List.of();
     }
-
 
     public static class AddFilterToResourceCommand {
         @JsonProperty

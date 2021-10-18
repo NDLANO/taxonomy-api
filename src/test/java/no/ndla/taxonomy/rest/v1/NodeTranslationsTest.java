@@ -41,35 +41,25 @@ public class NodeTranslationsTest extends RestTest {
 
     @Test
     public void can_get_single_node() throws Exception {
-        URI id = builder.node(NodeType.NODE, t -> t
-                .name("Trigonometry")
-                .translation("nb", l -> l
-                        .name("Trigonometri")
-                )
-        ).getPublicId();
+        URI id = builder.node(NodeType.NODE, t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")))
+                .getPublicId();
 
         final var topic = getNode(id, "nb");
         assertEquals("Trigonometri", topic.getName());
     }
 
-
     @Test
     public void fallback_to_default_language() throws Exception {
-        URI id = builder.node(NodeType.TOPIC, t -> t
-                .name("Trigonometry")
-        ).getPublicId();
+        URI id = builder.node(NodeType.TOPIC, t -> t.name("Trigonometry")).getPublicId();
         final var topic = getNode(id, "XX");
         assertEquals("Trigonometry", topic.getName());
     }
 
     @Test
     public void can_get_default_language() throws Exception {
-        URI id = builder.node(NodeType.TOPIC, t -> t
-                .name("Trigonometry")
-                .translation("nb", l -> l
-                        .name("Trigonometri")
-                )
-        ).getPublicId();
+        URI id = builder
+                .node(NodeType.TOPIC, t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")))
+                .getPublicId();
 
         final var topic = getNode(id, null);
         assertEquals("Trigonometry", topic.getName());
@@ -80,21 +70,20 @@ public class NodeTranslationsTest extends RestTest {
         Node trigonometry = builder.node(NodeType.NODE, t -> t.name("Trigonometry"));
         URI id = trigonometry.getPublicId();
 
-        testUtils.updateResource("/v1/nodes/" + id + "/translations/nb", new NodeTranslations.UpdateTranslationCommand() {{
-            name = "Trigonometri";
-        }});
+        testUtils.updateResource("/v1/nodes/" + id + "/translations/nb",
+                new NodeTranslations.UpdateTranslationCommand() {
+                    {
+                        name = "Trigonometri";
+                    }
+                });
 
         assertEquals("Trigonometri", trigonometry.getTranslation("nb").get().getName());
     }
 
     @Test
     public void can_delete_translation() throws Exception {
-        Node node = builder.node(NodeType.TOPIC, t -> t
-                .name("Trigonometry")
-                .translation("nb", l -> l
-                        .name("Trigonometri")
-                )
-        );
+        Node node = builder.node(NodeType.TOPIC,
+                t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")));
         URI id = node.getPublicId();
 
         testUtils.deleteResource("/v1/nodes/" + id + "/translations/nb");
@@ -104,15 +93,14 @@ public class NodeTranslationsTest extends RestTest {
 
     @Test
     public void can_get_all_translations() throws Exception {
-        Node topic = builder.node(NodeType.TOPIC, t -> t
-                .name("Trigonometry")
-                .translation("nb", l -> l.name("Trigonometri"))
-                .translation("en", l -> l.name("Trigonometry"))
-                .translation("de", l -> l.name("Trigonometrie"))
-        );
+        Node topic = builder.node(NodeType.TOPIC,
+                t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri"))
+                        .translation("en", l -> l.name("Trigonometry"))
+                        .translation("de", l -> l.name("Trigonometrie")));
         URI id = topic.getPublicId();
 
-        NodeTranslations.TranslationDTO[] translations = testUtils.getObject(NodeTranslations.TranslationDTO[].class, testUtils.getResource("/v1/nodes/" + id + "/translations"));
+        NodeTranslations.TranslationDTO[] translations = testUtils.getObject(NodeTranslations.TranslationDTO[].class,
+                testUtils.getResource("/v1/nodes/" + id + "/translations"));
 
         assertEquals(3, translations.length);
         assertAnyTrue(translations, t -> t.name.equals("Trigonometri") && t.language.equals("nb"));
@@ -122,10 +110,8 @@ public class NodeTranslationsTest extends RestTest {
 
     @Test
     public void can_get_single_translation() throws Exception {
-        Node topic = builder.node(NodeType.TOPIC, t -> t
-                .name("Trigonometry")
-                .translation("nb", l -> l.name("Trigonometri"))
-        );
+        Node topic = builder.node(NodeType.TOPIC,
+                t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")));
         URI id = topic.getPublicId();
 
         NodeTranslations.TranslationDTO translation = testUtils.getObject(NodeTranslations.TranslationDTO.class,
@@ -134,27 +120,22 @@ public class NodeTranslationsTest extends RestTest {
         assertEquals("nb", translation.language);
     }
 
-
     @Test
     public void can_get_resources_for_a_node_recursively_with_translation() throws Exception {
         builder.resourceType("article", rt -> rt.name("Article").translation("nb", tr -> tr.name("Artikkel")));
 
-        URI a = builder.node(NodeType.TOPIC, t -> t
-                .resource(r -> r
-                        .name("Introduction to calculus")
-                        .translation("nb", tr -> tr.name("Introduksjon til calculus"))
-                        .resourceType("article")
-                )
-                .child(NodeType.TOPIC, st -> st
-                        .resource(r -> r
-                                .name("Introduction to integration")
-                                .translation("nb", tr -> tr.name("Introduksjon til integrasjon"))
-                                .resourceType("article")
-                        )
-                )
-        ).getPublicId();
+        URI a = builder
+                .node(NodeType.TOPIC,
+                        t -> t.resource(r -> r.name("Introduction to calculus")
+                                .translation("nb", tr -> tr.name("Introduksjon til calculus")).resourceType("article"))
+                                .child(NodeType.TOPIC,
+                                        st -> st.resource(r -> r.name("Introduction to integration")
+                                                .translation("nb", tr -> tr.name("Introduksjon til integrasjon"))
+                                                .resourceType("article"))))
+                .getPublicId();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/" + a + "/resources?recursive=true&language=nb");
+        MockHttpServletResponse response = testUtils
+                .getResource("/v1/nodes/" + a + "/resources?recursive=true&language=nb");
         ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
 
         assertEquals(2, result.length);
@@ -167,22 +148,12 @@ public class NodeTranslationsTest extends RestTest {
     public void can_get_resources_for_a_node_without_childrem_resources_with_translation() throws Exception {
         builder.resourceType("article", rt -> rt.name("Article").translation("nb", tr -> tr.name("Artikkel")));
 
-        builder.node(NodeType.SUBJECT, s -> s
-                .isContext(true)
-                .child(NodeType.TOPIC, t -> t
-                        .publicId("urn:topic:1")
-                        .resource(r -> r
-                                .name("resource 1")
-                                .translation("nb", tr -> tr.name("ressurs 1"))
-                                .resourceType("article")
-                        )
-                        .resource(r -> r
-                                .name("resource 2")
-                                .translation("nb", tr -> tr.name("ressurs 2"))
-                                .resourceType("article")
-                        )
-                        .child(NodeType.TOPIC, st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))
-                ));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).child(NodeType.TOPIC, t -> t.publicId("urn:topic:1")
+                .resource(
+                        r -> r.name("resource 1").translation("nb", tr -> tr.name("ressurs 1")).resourceType("article"))
+                .resource(
+                        r -> r.name("resource 2").translation("nb", tr -> tr.name("ressurs 2")).resourceType("article"))
+                .child(NodeType.TOPIC, st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/resources?language=nb");
         ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
@@ -195,7 +166,8 @@ public class NodeTranslationsTest extends RestTest {
 
     private NodeDTO getNode(URI id, String language) throws Exception {
         String path = "/v1/nodes/" + id;
-        if (isNotEmpty(language)) path = path + "?language=" + language;
+        if (isNotEmpty(language))
+            path = path + "?language=" + language;
         return testUtils.getObject(NodeDTO.class, testUtils.getResource(path));
     }
 

@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = {"/v1/topics/{id}/translations"})
+@RequestMapping(path = { "/v1/topics/{id}/translations" })
 @Transactional
 public class TopicTranslations {
 
@@ -44,41 +44,37 @@ public class TopicTranslations {
     public List<TopicTranslations.TopicTranslationIndexDocument> index(@PathVariable("id") URI id) {
         Node topic = nodeRepository.getByPublicId(id);
         List<TopicTranslations.TopicTranslationIndexDocument> result = new ArrayList<>();
-        topic.getTranslations().forEach(t -> result.add(
-                new TopicTranslations.TopicTranslationIndexDocument() {{
-                    name = t.getName();
-                    language = t.getLanguageCode();
-                }})
-        );
+        topic.getTranslations().forEach(t -> result.add(new TopicTranslations.TopicTranslationIndexDocument() {
+            {
+                name = t.getName();
+                language = t.getLanguageCode();
+            }
+        }));
         return result;
     }
 
     @GetMapping("/{language}")
     @ApiOperation("Gets a single translation for a single topic")
-    public TopicTranslations.TopicTranslationIndexDocument get(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-            @PathVariable("language") String language
-    ) {
+    public TopicTranslations.TopicTranslationIndexDocument get(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node topic = nodeRepository.getByPublicId(id);
-        NodeTranslation translation = topic.getTranslation(language).orElseThrow(() -> new NotFoundException("translation with language code " + language + " for topic", id));
-        return new TopicTranslations.TopicTranslationIndexDocument() {{
-            name = translation.getName();
-            language = translation.getLanguageCode();
-        }};
+        NodeTranslation translation = topic.getTranslation(language).orElseThrow(
+                () -> new NotFoundException("translation with language code " + language + " for topic", id));
+        return new TopicTranslations.TopicTranslationIndexDocument() {
+            {
+                name = translation.getName();
+                language = translation.getLanguageCode();
+            }
+        };
     }
 
     @PutMapping("/{language}")
     @ApiOperation("Creates or updates a translation of a topic")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void put(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-            @PathVariable("language") String language,
-            @ApiParam(name = "topic", value = "The new or updated translation")
-            @RequestBody TopicTranslations.UpdateTopicTranslationCommand command
-    ) {
+    public void put(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
+            @ApiParam(name = "topic", value = "The new or updated translation") @RequestBody TopicTranslations.UpdateTopicTranslationCommand command) {
         Node topic = nodeRepository.getByPublicId(id);
         NodeTranslation translation = topic.addTranslation(language);
         entityManager.persist(translation);
@@ -89,11 +85,8 @@ public class TopicTranslations {
     @ApiOperation("Deletes a translation")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    public void delete(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true)
-            @PathVariable("language") String language
-    ) {
+    public void delete(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node topic = nodeRepository.getByPublicId(id);
         topic.getTranslation(language).ifPresent(topicTranslation -> {
             topic.removeTranslation(language);

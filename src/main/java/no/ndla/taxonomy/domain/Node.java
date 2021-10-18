@@ -36,7 +36,8 @@ public class Node extends EntityWithPath {
     private boolean context;
 
     // Needed for hibernate
-    public Node() {}
+    public Node() {
+    }
 
     public Node(NodeType nodeType) {
         setNodeType(nodeType);
@@ -54,34 +55,25 @@ public class Node extends EntityWithPath {
     }
 
     /*
-        In the old code the primary URL for topics was special since it would try to return
-        a context URL (a topic behaving as a subject) rather than a subject URL if that is available.
-        Trying to re-implement it by sorting the context URLs first by the same path comparing as the old code
+     * In the old code the primary URL for topics was special since it would try to return a context URL (a topic
+     * behaving as a subject) rather than a subject URL if that is available. Trying to re-implement it by sorting the
+     * context URLs first by the same path comparing as the old code
      */
-    /*public Optional<String> getPrimaryPath() {
-        return getCachedPaths()
-                .stream()
-                .map(CachedPath::getPath).min((path1, path2) -> {
-                    if (path1.startsWith("/topic") && path2.startsWith("/topic")) {
-                        return 0;
-                    }
-
-                    if (path1.startsWith("/topic")) {
-                        return -1;
-                    }
-
-                    if (path2.startsWith("/topic")) {
-                        return 1;
-                    }
-
-                    return 0;
-                });
-    }*/
+    /*
+     * public Optional<String> getPrimaryPath() { return getCachedPaths() .stream()
+     * .map(CachedPath::getPath).min((path1, path2) -> { if (path1.startsWith("/topic") && path2.startsWith("/topic")) {
+     * return 0; }
+     * 
+     * if (path1.startsWith("/topic")) { return -1; }
+     * 
+     * if (path2.startsWith("/topic")) { return 1; }
+     * 
+     * return 0; }); }
+     */
 
     @Override
     public Set<EntityWithPathConnection> getParentConnections() {
-        return parentConnections.stream()
-                .map(entity -> (EntityWithPathConnection) entity)
+        return parentConnections.stream().map(entity -> (EntityWithPathConnection) entity)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -89,8 +81,7 @@ public class Node extends EntityWithPath {
     public Set<EntityWithPathConnection> getChildConnections() {
         final var toReturn = new HashSet<EntityWithPathConnection>();
         final Set<EntityWithPathConnection> children = childConnections.stream()
-                .map(entity -> (EntityWithPathConnection) entity)
-                .collect(Collectors.toUnmodifiableSet());
+                .map(entity -> (EntityWithPathConnection) entity).collect(Collectors.toUnmodifiableSet());
 
         toReturn.addAll(children);
         toReturn.addAll(getNodeResources());
@@ -127,29 +118,23 @@ public class Node extends EntityWithPath {
     }
 
     public Set<Node> getChildNodes() {
-        return childConnections.stream()
-                .map(NodeConnection::getChild)
-                .map(Optional::get)
+        return childConnections.stream().map(NodeConnection::getChild).map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     public Optional<Node> getParentNode() {
-        return parentConnections.stream()
-                .map(NodeConnection::getParent)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+        return parentConnections.stream().map(NodeConnection::getParent).filter(Optional::isPresent).map(Optional::get)
                 .findFirst();
     }
 
     public Set<NodeResource> getNodeResources() {
-        return this.nodeResources
-                .stream()
-                .collect(Collectors.toUnmodifiableSet());
+        return this.nodeResources.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public void addNodeResource(NodeResource nodeResource) {
         if (nodeResource.getNode().orElse(null) != this) {
-            throw new IllegalArgumentException("NodeResource must have Node set before it can be associated with Resource");
+            throw new IllegalArgumentException(
+                    "NodeResource must have Node set before it can be associated with Resource");
         }
 
         this.nodeResources.add(nodeResource);
@@ -166,10 +151,7 @@ public class Node extends EntityWithPath {
     }
 
     public Set<Resource> getResources() {
-        return nodeResources.stream()
-                .map(NodeResource::getResource)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+        return nodeResources.stream().map(NodeResource::getResource).filter(Optional::isPresent).map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -201,7 +183,8 @@ public class Node extends EntityWithPath {
 
     public NodeTranslation addTranslation(String languageCode) {
         NodeTranslation nodeTranslation = getTranslation(languageCode).orElse(null);
-        if (nodeTranslation != null) return nodeTranslation;
+        if (nodeTranslation != null)
+            return nodeTranslation;
 
         nodeTranslation = new NodeTranslation(this, languageCode);
         translations.add(nodeTranslation);
@@ -210,8 +193,7 @@ public class Node extends EntityWithPath {
 
     @Override
     public Optional<NodeTranslation> getTranslation(String languageCode) {
-        return translations.stream()
-                .filter(translation -> translation.getLanguageCode().equals(languageCode))
+        return translations.stream().filter(translation -> translation.getLanguageCode().equals(languageCode))
                 .findFirst();
     }
 
