@@ -1,6 +1,6 @@
 /*
  * Part of NDLA taxonomy-api
- * Copyright (C) 2021 - 2021 NDLA
+ * Copyright (C) 2021 NDLA
  *
  * See LICENSE
  */
