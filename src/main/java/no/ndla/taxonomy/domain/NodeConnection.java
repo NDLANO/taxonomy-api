@@ -35,7 +35,7 @@ public class NodeConnection extends DomainEntity implements EntityWithPathConnec
 
     public static NodeConnection create(Node parent, Node child) {
         if (child == null || parent == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("Both parent and child must be present.");
         }
 
         final var nodeConnection = new NodeConnection();

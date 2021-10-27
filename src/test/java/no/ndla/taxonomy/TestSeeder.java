@@ -493,7 +493,7 @@ public class TestSeeder {
         createTopicResource("urn:topic-resource:2", topic2, resource1, false, 1);
     }
 
-    public void resourceWithFilterAndTypeTestSetup() {
+    public void resourceWithResourceTypeTestSetup() {
         // create a test structure with subjects, topics, and resources as follows
         // (S=subject, ST = subject-topic, TST = topic-subtopic, R = resource, F = filter)
         //
@@ -504,20 +504,18 @@ public class TestSeeder {
 
         clearAll();
 
-        final var subject1 = createSubject("urn:subject:1", "S:1");
+        final var subject1 = createNode(NodeType.SUBJECT, "urn:subject:1", "S:1", null, true);
 
-        final var topic1 = createTopic("urn:topic:1", "ST:1", null, false);
-        createSubjectTopic("urn:subject-topic:1", topic1, subject1, 1);
+        final var topic1 = createNode(NodeType.NODE, "urn:topic:1", "ST:1", null, false);
+        createNodeConnection("urn:subject-topic:1", subject1, topic1, 1);
 
         final var resource1 = createResource("urn:resource:1", "R:1", null);
         final var resource2 = createResource("urn:resource:2", "R:2", null);
         final var resource3 = createResource("urn:resource:3", "R:3", null);
 
-        createTopicResource("urn:topic-resource:1", topic1, resource1, true, 1);
-        createTopicResource("urn:topic-resource:2", topic1, resource2, true, 2);
-        createTopicResource("urn:topic-resource:3", topic1, resource3, true, 3);
-
-        final var relevance1 = createRelevance("urn:relevance:core", "Core");
+        createNodeResource("urn:topic-resource:1", topic1, resource1, true, 1);
+        createNodeResource("urn:topic-resource:2", topic1, resource2, true, 2);
+        createNodeResource("urn:topic-resource:3", topic1, resource3, true, 3);
 
         final var resourceType1 = createResourceType(null, "urn:resourcetype:video", "Video");
 
