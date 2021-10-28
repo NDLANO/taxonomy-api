@@ -12,7 +12,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.NodeResource;
 import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.TopicResource;
+import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 
 import java.net.URI;
 
@@ -32,7 +32,7 @@ public class NodeWithResourceConnectionDTO extends NodeDTO {
     private URI relevanceId;
 
     public NodeWithResourceConnectionDTO(NodeResource nodeResource, String language) {
-        super(nodeResource.getNode().orElseThrow(), language);
+        super(nodeResource.getNode().orElseThrow(() -> new NotFoundException("Node was not found")), language);
 
         this.isPrimary = nodeResource.isPrimary().orElse(false);
         this.connectionId = nodeResource.getPublicId();

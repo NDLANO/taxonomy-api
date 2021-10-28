@@ -146,7 +146,7 @@ public class Resource extends EntityWithPath {
 
     public Optional<Topic> getPrimaryTopic() {
         for (TopicResource topic : topics) {
-            if (topic.isPrimary().orElseThrow())
+            if (topic.isPrimary().orElse(false))
                 return topic.getTopic();
         }
         return Optional.empty();
@@ -154,7 +154,7 @@ public class Resource extends EntityWithPath {
 
     public Optional<Node> getPrimaryNode() {
         for (NodeResource node : nodes) {
-            if (node.isPrimary().orElseThrow())
+            if (node.isPrimary().orElse(false))
                 return node.getNode();
         }
         return Optional.empty();

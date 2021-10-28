@@ -97,7 +97,7 @@ public class TopicResources {
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
                 : null;
 
-        if (topicResource.isPrimary().orElseThrow() && !command.primary) {
+        if (topicResource.isPrimary().orElse(false) && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
 
@@ -178,7 +178,7 @@ public class TopicResources {
             id = topicResource.getPublicId();
             topicResource.getNode().ifPresent(topic -> topicid = topic.getPublicId());
             topicResource.getResource().ifPresent(resource -> resourceId = resource.getPublicId());
-            primary = topicResource.isPrimary().orElseThrow();
+            primary = topicResource.isPrimary().orElse(false);
             rank = topicResource.getRank();
             relevanceId = topicResource.getRelevance().map(Relevance::getPublicId).orElse(null);
         }

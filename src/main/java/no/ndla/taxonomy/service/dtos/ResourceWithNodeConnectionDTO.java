@@ -10,6 +10,7 @@ package no.ndla.taxonomy.service.dtos;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 
 import java.net.URI;
 
@@ -35,7 +36,8 @@ public class ResourceWithNodeConnectionDTO extends ResourceDTO {
     }
 
     public ResourceWithNodeConnectionDTO(NodeResource nodeResource, String language) {
-        super(nodeResource.getResource().orElseThrow(), language);
+        super(nodeResource.getResource().orElseThrow(() -> new NotFoundException("NodeResource was not found")),
+                language);
 
         this.nodeId = nodeResource.getNode().map(Node::getPublicId).orElse(null);
 

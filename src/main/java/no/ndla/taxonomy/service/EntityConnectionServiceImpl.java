@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
@@ -151,8 +152,9 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         while (parentConnected.getParentConnections().stream().findFirst()
                 .map(EntityWithPathConnection::getConnectedParent).isPresent()) {
             Logger.getLogger(this.getClass().toString()).info(parentConnected.getPublicId().toString());
-            parentConnected = parentConnected.getParentConnections().stream().findFirst().orElseThrow()
-                    .getConnectedParent().orElseThrow();
+            parentConnected = parentConnected.getParentConnections().stream().findFirst()
+                    .orElseThrow(() -> new NotFoundException("Parent connection was not found")).getConnectedParent()
+                    .orElseThrow(() -> new NotFoundException("Parent was not found"));
 
             if (ttl-- < 0) {
                 throw new InvalidArgumentServiceException("Too many levels to get top level object");
@@ -283,7 +285,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     @Override
     public void disconnectTopicResource(TopicResource topicResource) {
-        boolean setNewPrimary = topicResource.isPrimary().orElseThrow() && topicResource.getResource().isPresent();
+        boolean setNewPrimary = topicResource.isPrimary().orElse(false) && topicResource.getResource().isPresent();
         final var resourceOptional = topicResource.getResource();
 
         topicResource.disassociate();
@@ -335,7 +337,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     @Override
     public void disconnectNodeResource(NodeResource nodeResource) {
-        boolean setNewPrimary = nodeResource.isPrimary().orElseThrow() && nodeResource.getResource().isPresent();
+        boolean setNewPrimary = nodeResource.isPrimary().orElse(false) && nodeResource.getResource().isPresent();
         final var resourceOptional = nodeResource.getResource();
 
         nodeResource.disassociate();

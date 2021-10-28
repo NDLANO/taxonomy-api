@@ -107,7 +107,7 @@ public class ResourceIndexDocument implements TreeSorter.Sortable {
 
         this.connectionId = topicResource.getPublicId();
         this.rank = topicResource.getRank();
-        this.isPrimary = topicResource.isPrimary().orElseThrow();
+        this.isPrimary = topicResource.isPrimary().orElse(false);
     }
 
     @Override
