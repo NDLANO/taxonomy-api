@@ -33,7 +33,7 @@ public class ResourceServiceImpl implements ResourceService {
     private final TopicResourceRepository topicResourceRepository;
     private final NodeResourceRepository nodeResourceRepository;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
-    private final TreeSorter topicTreeSorter;
+    private final TreeSorter treeSorter;
 
     public ResourceServiceImpl(ResourceRepository resourceRepository, TopicResourceRepository topicResourceRepository,
             EntityConnectionService connectionService, MetadataApiService metadataApiService,
@@ -48,7 +48,7 @@ public class ResourceServiceImpl implements ResourceService {
         this.topicResourceRepository = topicResourceRepository;
         this.nodeResourceRepository = nodeResourceRepository;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
-        this.topicTreeSorter = topicTreeSorter;
+        this.treeSorter = topicTreeSorter;
     }
 
     @Override
@@ -103,7 +103,7 @@ public class ResourceServiceImpl implements ResourceService {
         // Sort the list, extract all the topicResource objects in between topics and return list of
         // documents
 
-        return topicTreeSorter.sortList(sortableListToAddTo).stream().map(ResourceTreeSortable::getResourceConnection)
+        return treeSorter.sortList(sortableListToAddTo).stream().map(ResourceTreeSortable::getResourceConnection)
                 .filter(Optional::isPresent).map(Optional::get)
                 .map(wrappedTopicResource -> new ResourceWithTopicConnectionDTO((TopicResource) wrappedTopicResource,
                         languageCode))
@@ -211,7 +211,7 @@ public class ResourceServiceImpl implements ResourceService {
 
         // Sort the list, extract all the topicResource objects in between topics and return list of documents
 
-        return topicTreeSorter.sortList(sortableListToAddTo).stream().map(ResourceTreeSortable::getResourceConnection)
+        return treeSorter.sortList(sortableListToAddTo).stream().map(ResourceTreeSortable::getResourceConnection)
                 .filter(Optional::isPresent).map(Optional::get)
                 .map(wrappedNodeResource -> new ResourceWithNodeConnectionDTO((NodeResource) wrappedNodeResource,
                         languageCode))
