@@ -8,11 +8,11 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.TestSeeder;
-import no.ndla.taxonomy.domain.Subject;
-import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
-import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
+import no.ndla.taxonomy.service.dtos.SubjectChildDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -30,7 +30,8 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_single_subject() throws Exception {
-        builder.subject(s -> s.name("english").contentUri("urn:article:1").publicId("urn:subject:1"));
+        builder.node(NodeType.SUBJECT,
+                s -> s.isContext(true).name("english").contentUri("urn:article:1").publicId("urn:subject:1"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1");
         SubjectIndexDocument subject = testUtils.getObject(SubjectIndexDocument.class, response);
@@ -47,8 +48,8 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_all_subjects() throws Exception {
-        builder.subject(s -> s.name("english"));
-        builder.subject(s -> s.name("mathematics"));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("english"));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("mathematics"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects");
         SubjectIndexDocument[] subjects = testUtils.getObject(SubjectIndexDocument[].class, response);
@@ -77,7 +78,7 @@ public class SubjectsTest extends RestTest {
         MockHttpServletResponse response = testUtils.createResource("/v1/subjects", createSubjectCommand);
         URI id = getId(response);
 
-        Subject subject = subjectRepository.getByPublicId(id);
+        Node subject = nodeRepository.getByPublicId(id);
         assertEquals(createSubjectCommand.name, subject.getName());
         assertEquals(createSubjectCommand.contentUri, subject.getContentUri());
     }
@@ -94,12 +95,12 @@ public class SubjectsTest extends RestTest {
         MockHttpServletResponse response = testUtils.createResource("/v1/subjects", command);
         assertEquals("/v1/subjects/urn:subject:1", response.getHeader("Location"));
 
-        assertNotNull(subjectRepository.getByPublicId(command.id));
+        assertNotNull(nodeRepository.getByPublicId(command.id));
     }
 
     @Test
     public void can_update_subject() throws Exception {
-        URI publicId = builder.subject().getPublicId();
+        URI publicId = builder.node(NodeType.SUBJECT).getPublicId();
 
         final var command = new SubjectCommand() {
             {
@@ -111,14 +112,14 @@ public class SubjectsTest extends RestTest {
 
         testUtils.updateResource("/v1/subjects/" + publicId, command);
 
-        Subject subject = subjectRepository.getByPublicId(publicId);
+        Node subject = nodeRepository.getByPublicId(publicId);
         assertEquals(command.name, subject.getName());
         assertEquals(command.contentUri, subject.getContentUri());
     }
 
     @Test
     public void can_update_subject_with_new_id() throws Exception {
-        URI publicId = builder.subject().getPublicId();
+        URI publicId = builder.node(NodeType.SUBJECT).getPublicId();
         URI randomId = URI.create("urn:subject:random");
 
         final var command = new SubjectCommand() {
@@ -131,7 +132,7 @@ public class SubjectsTest extends RestTest {
 
         testUtils.updateResource("/v1/subjects/" + publicId, command);
 
-        Subject subject = subjectRepository.getByPublicId(randomId);
+        Node subject = nodeRepository.getByPublicId(randomId);
         assertEquals(command.name, subject.getName());
         assertEquals(command.contentUri, subject.getContentUri());
     }
@@ -151,24 +152,26 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_delete_subject() throws Exception {
-        URI id = builder.subject(s -> s.topic(t -> t.publicId("urn:topic:1")).translation("nb", tr -> tr.name("fag")))
+        URI id = builder.node(NodeType.SUBJECT,
+                s -> s.child(NodeType.TOPIC, t -> t.publicId("urn:topic:1")).translation("nb", tr -> tr.name("fag")))
                 .getPublicId();
 
         testUtils.deleteResource("/v1/subjects/" + id);
-        assertNull(subjectRepository.findByPublicId(id));
+        assertNull(nodeRepository.findByPublicId(id));
 
         verify(metadataApiService).deleteMetadataByPublicId(id);
     }
 
     @Test
     public void can_get_topics() throws Exception {
-        Subject subject = builder
-                .subject(s -> s.name("physics").topic(t -> t.name("statics").contentUri("urn:article:1"))
-                        .topic(t -> t.name("electricity").contentUri("urn:article:2"))
-                        .topic(t -> t.name("optics").contentUri("urn:article:3")));
+        Node subject = builder.node(NodeType.SUBJECT,
+                s -> s.isContext(true).name("physics")
+                        .child(NodeType.TOPIC, t -> t.name("statics").contentUri("urn:article:1"))
+                        .child(NodeType.TOPIC, t -> t.name("electricity").contentUri("urn:article:2"))
+                        .child(NodeType.TOPIC, t -> t.name("optics").contentUri("urn:article:3")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
-        SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
+        SubjectChildDTO[] topics = testUtils.getObject(SubjectChildDTO[].class, response);
 
         assertEquals(3, topics.length);
         assertAnyTrue(topics, t -> "statics".equals(t.name) && "urn:article:1".equals(t.contentUri.toString()));
@@ -188,16 +191,19 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_topics_recursively() throws Exception {
-        URI subjectid = builder
-                .subject("subject", s -> s.name("subject").publicId("urn:subject:1").topic("parent",
-                        parent -> parent.name("parent topic").publicId("urn:topic:a").subtopic("child",
-                                child -> child.name("child topic").publicId("urn:topic:aa").subtopic("grandchild",
-                                        grandchild -> grandchild.name("grandchild topic").publicId("urn:topic:aaa")))))
+        URI subjectId = builder
+                .node("subject", NodeType.SUBJECT,
+                        s -> s.isContext(true).name("subject").publicId("urn:subject:1").child("parent", NodeType.TOPIC,
+                                parent -> parent.name("parent topic").publicId("urn:topic:a").child("child",
+                                        NodeType.TOPIC,
+                                        child -> child.name("child topic").publicId("urn:topic:aa")
+                                                .child("grandchild", NodeType.TOPIC, grandchild -> grandchild
+                                                        .name("grandchild topic").publicId("urn:topic:aaa")))))
                 .getPublicId();
 
         MockHttpServletResponse response = testUtils
-                .getResource("/v1/subjects/" + subjectid + "/topics?recursive=true");
-        SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
+                .getResource("/v1/subjects/" + subjectId + "/topics?recursive=true");
+        SubjectChildDTO[] topics = testUtils.getObject(SubjectChildDTO[].class, response);
 
         assertEquals(3, topics.length);
         assertEquals("parent topic", topics[0].name);
@@ -212,22 +218,22 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(topics, t -> t.getMetadata().isVisible());
         assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 1);
 
-        Subject subject = builder.subject("subject");
-        assertEquals(first(subject.getSubjectTopics()).getPublicId(), topics[0].connectionId);
+        Node subject = builder.node("subject");
+        assertEquals(first(subject.getChildConnections()).getPublicId(), topics[0].connectionId);
 
-        Topic parent = builder.topic("parent");
-        assertEquals(first(parent.getChildrenTopicSubtopics()).getPublicId(), topics[1].connectionId);
+        Node parent = builder.node("parent");
+        assertEquals(first(parent.getChildConnections()).getPublicId(), topics[1].connectionId);
 
-        Topic child = builder.topic("child");
-        assertEquals(first(child.getChildrenTopicSubtopics()).getPublicId(), topics[2].connectionId);
+        Node child = builder.node("child");
+        assertEquals(first(child.getChildConnections()).getPublicId(), topics[2].connectionId);
     }
 
     @Test
     public void recursive_topics_are_ordered_by_rank_relative_to_parent() throws Exception {
-        testSeeder.recursiveTopicsBySubjectIdTestSetup();
+        testSeeder.recursiveNodesBySubjectNodeIdTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/topics?recursive=true");
-        SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
+        SubjectChildDTO[] topics = testUtils.getObject(SubjectChildDTO[].class, response);
         assertEquals(8, topics.length);
         assertEquals("urn:topic:1", topics[0].id.toString());
         assertEquals("urn:topic:2", topics[1].id.toString());
@@ -240,18 +246,18 @@ public class SubjectsTest extends RestTest {
     }
 
     @Test
-    public void recursive_topics_with_filter_are_ordered_relative_to_parent() throws Exception {
-        testSeeder.recursiveTopicsBySubjectIdAndFiltersTestSetup();
-        // test filter 1
+    public void recursive_topics_with_relevance_are_ordered_relative_to_parent() throws Exception {
+        testSeeder.recursiveNodesBySubjectNodeIdAndRelevanceTestSetup();
+        // test core relevance
         MockHttpServletResponse response = testUtils
-                .getResource("/v1/subjects/urn:subject:1/topics?recursive=true&filter=urn:filter:1");
-        SubTopicIndexDocument[] topics = testUtils.getObject(SubTopicIndexDocument[].class, response);
-        assertEquals(0, topics.length); // Filters are removed
+                .getResource("/v1/subjects/urn:subject:1/topics?recursive=true&relevance=urn:relevance:core");
+        SubjectChildDTO[] topics = testUtils.getObject(SubjectChildDTO[].class, response);
+        assertEquals(5, topics.length);
 
-        // test filter 2
+        // test supplementary relevance
         MockHttpServletResponse response2 = testUtils
-                .getResource("/v1/subjects/urn:subject:1/topics?recursive=true&filter=urn:filter:2");
-        SubTopicIndexDocument[] topics2 = testUtils.getObject(SubTopicIndexDocument[].class, response2);
-        assertEquals(0, topics2.length); // Filters are removed
+                .getResource("/v1/subjects/urn:subject:1/topics?recursive=true&relevance=urn:relevance:supplementary");
+        SubjectChildDTO[] topics2 = testUtils.getObject(SubjectChildDTO[].class, response2);
+        assertEquals(4, topics2.length);
     }
 }

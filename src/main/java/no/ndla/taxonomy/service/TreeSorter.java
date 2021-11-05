@@ -14,7 +14,7 @@ import java.net.URI;
 import java.util.*;
 
 @Component
-public class TopicTreeSorter {
+public class TreeSorter {
     private <T extends Sortable> List<T> addElements(Map<URI, Collection<T>> elementsToAddFrom, URI parentId) {
         final var itemsToAdd = new ArrayList<T>();
 

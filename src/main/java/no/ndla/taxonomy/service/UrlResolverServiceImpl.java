@@ -10,9 +10,8 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.CachedPath;
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.UrlMapping;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
-import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.UrlMappingRepository;
 import no.ndla.taxonomy.service.dtos.ResolvedUrl;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
@@ -32,18 +31,15 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
     private final OldUrlCanonifier canonifier;
 
-    private final SubjectRepository subjectRepository;
-    private final TopicRepository topicRepository;
+    private final NodeRepository nodeRepository;
     private final ResourceRepository resourceRepository;
     private final UrlMappingRepository urlMappingRepository;
 
     @Autowired
-    public UrlResolverServiceImpl(SubjectRepository subjectRepository, TopicRepository topicRepository,
-            ResourceRepository resourceRepository, UrlMappingRepository urlMappingRepository,
-            OldUrlCanonifier oldUrlCanonifier) {
-        this.topicRepository = topicRepository;
-        this.subjectRepository = subjectRepository;
+    public UrlResolverServiceImpl(ResourceRepository resourceRepository, UrlMappingRepository urlMappingRepository,
+            NodeRepository nodeRepository, OldUrlCanonifier oldUrlCanonifier) {
         this.resourceRepository = resourceRepository;
+        this.nodeRepository = nodeRepository;
         this.urlMappingRepository = urlMappingRepository;
         this.canonifier = oldUrlCanonifier;
     }
@@ -127,9 +123,9 @@ public class UrlResolverServiceImpl implements UrlResolverService {
      *            nodeID to be associated with this URL
      * @param subjectId
      *            subjectID to be associated with this URL (optional)
-     * 
+     *
      * @return true in order to be mockable "given" ugh!
-     * 
+     *
      * @throws NodeIdNotFoundExeption
      *             if node ide not found in taxonomy
      */
@@ -247,9 +243,8 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
         switch (publicIdParts[0].toLowerCase()) {
         case "topic":
-            return topicRepository.findFirstByPublicIdIncludingCachedUrls(publicId).map(topic -> topic);
         case "subject":
-            return subjectRepository.findFirstByPublicIdIncludingCachedUrls(publicId).map(subject -> subject);
+            return nodeRepository.findFirstByPublicIdIncludingCachedUrls(publicId).map(topic -> topic);
         case "resource":
             return resourceRepository.findFirstByPublicIdIncludingCachedUrls(publicId).map(resource -> resource);
         }

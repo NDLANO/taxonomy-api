@@ -8,8 +8,8 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.dtos.SubjectDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,14 +50,14 @@ public class SubjectServiceImpl implements SubjectService {
 
     @Override
     @MetadataQuery
-    public List<SubjectIndexDocument> getSubjects(String languageCode) {
+    public List<SubjectDTO> getSubjects(String languageCode) {
         return subjectRepository.findAllIncludingCachedUrlsAndTranslations().stream()
-                .map(subject -> new SubjectIndexDocument(subject, languageCode)).collect(Collectors.toList());
+                .map(subject -> new SubjectDTO(subject, languageCode)).collect(Collectors.toList());
     }
 
     @Override
     @MetadataQuery
-    public List<SubjectIndexDocument> getSubjects(String languageCode, MetadataKeyValueQuery metadataKeyValueQuery) {
+    public List<SubjectDTO> getSubjects(String languageCode, MetadataKeyValueQuery metadataKeyValueQuery) {
         Set<String> publicIds = metadataKeyValueQuery.getDtos().stream().map(MetadataDto::getPublicId)
                 .collect(Collectors.toSet());
 
@@ -68,6 +68,7 @@ public class SubjectServiceImpl implements SubjectService {
                 return null;
             }
         }).filter(Objects::nonNull).map(subjectRepository::findByPublicId).filter(Objects::nonNull)
-                .map(subject -> new SubjectIndexDocument(subject, languageCode)).collect(Collectors.toList());
+                .map(subject -> new SubjectDTO(subject, languageCode)).collect(Collectors.toList());
+
     }
 }

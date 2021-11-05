@@ -9,6 +9,7 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
@@ -37,8 +38,9 @@ class DomainEntityHelperServiceImplTest {
     private DomainEntityHelperServiceImpl service;
 
     @BeforeEach
-    void setUp(@Autowired TopicRepository topicRepository, @Autowired SubjectRepository subjectRepository) {
-        service = new DomainEntityHelperServiceImpl(subjectRepository, topicRepository);
+    void setUp(@Autowired TopicRepository topicRepository, @Autowired SubjectRepository subjectRepository,
+            @Autowired NodeRepository nodeRepository) {
+        service = new DomainEntityHelperServiceImpl(subjectRepository, topicRepository, nodeRepository);
 
         topic1 = new Topic();
         topic1.setPublicId(URI.create("urn:topic:dehsit:1"));

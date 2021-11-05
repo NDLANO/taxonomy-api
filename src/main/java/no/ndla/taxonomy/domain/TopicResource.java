@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Entity
-public class TopicResource extends DomainEntity implements EntityWithPathConnection {
+public class TopicResource extends DomainEntity implements EntityWithPathConnection, SortableResourceConnection<Topic> {
 
     @ManyToOne
     @JoinColumn(name = "topic_id")
@@ -70,6 +70,10 @@ public class TopicResource extends DomainEntity implements EntityWithPathConnect
         if (resource != null) {
             resource.removeTopicResource(this);
         }
+    }
+
+    public Optional<Topic> getParent() {
+        return getTopic();
     }
 
     public Optional<Topic> getTopic() {
