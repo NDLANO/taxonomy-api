@@ -4,7 +4,7 @@ COPY ./ src/
 WORKDIR /src
 RUN mvn clean package -DskipTests
 
-FROM openjdk:11
+FROM adoptopenjdk/openjdk11:alpine-slim
 EXPOSE 5000
 COPY --from=0 /src/target/taxonomy-service.jar /app.jar
 COPY ./run-app.sh /run-app.sh

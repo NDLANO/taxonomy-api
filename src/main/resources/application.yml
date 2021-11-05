@@ -21,7 +21,10 @@ ndla.taxonomy-metadata.url: http://taxonomy-metadata
 
 ---
 
-spring.profiles: junit
+spring:
+  profiles:
+    activate:
+      on-profile: junit
 
 logging.level:
   liquibase: WARN
@@ -33,13 +36,19 @@ logging.level:
 
 ---
 
-spring.profiles: dev
+spring:
+  profiles:
+    activate:
+      on-profile: dev
 
 service: ndla-taxonomy-dev
 ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-dev
 
 ---
-spring.profiles: staging
+spring:
+  profiles:
+    activate:
+      on-profile: staging
 
 auth0:
   issuer: https://ndla-staging.eu.auth0.com/
@@ -49,7 +58,10 @@ service: ndla-taxonomy-staging
 ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-staging
 
 ---
-spring.profiles: prod
+spring:
+  profiles:
+    activate:
+      on-profile: prod
 
 auth0:
   issuer: https://ndla.eu.auth0.com/
@@ -59,17 +71,10 @@ service: ndla-taxonomy-prod
 ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-prod
 
 ---
-spring.profiles: ffprod
-
-auth0:
-  issuer: https://ndla.eu.auth0.com/
-  jwks.kid: OEI1MUU4ODk5NzM5MzI2MzZDODk1N0YwQzdDMDQyODVCQzQ3QTI0MA
-
-service: ndla-taxonomy-ffprod
-ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-ffprod
-
----
-spring.profiles: test
+spring:
+  profiles:
+    activate:
+      on-profile: test
 
 auth0:
   issuer: https://ndla-test.eu.auth0.com/
@@ -77,19 +82,3 @@ auth0:
 
 service: ndla-taxonomy-test
 ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-test
-
----
-spring.profiles: test2
-
-auth0:
-  issuer: https://ndla-test.eu.auth0.com/
-  jwks.kid: QzlEOTQ5M0NGMDk4NjExOEJGMjc2MjVFODhEQkE1NUI2NkE0RTQyRg
-
-service: ndla-taxonomy-test2
-ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-test2
-
----
-spring.profiles: brukertest
-
-service: ndla-taxonomy-brukertest
-ndla.taxonomy-metadata.url: http://taxonomy-metadata-api-brukertest
