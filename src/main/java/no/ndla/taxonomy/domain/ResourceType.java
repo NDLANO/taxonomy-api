@@ -89,7 +89,6 @@ public class ResourceType extends DomainObject {
         return resourceTypeTranslation;
     }
 
-    @Override
     public Optional<ResourceTypeTranslation> getTranslation(String languageCode) {
         return resourceTypeTranslations.stream()
                 .filter(resourceTypeTranslation -> resourceTypeTranslation.getLanguageCode().equals(languageCode))

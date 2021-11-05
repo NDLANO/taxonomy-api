@@ -9,7 +9,6 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.service.dtos.EntityWithPathDTO;
 import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import no.ndla.taxonomy.service.dtos.TopicDTO;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,11 +39,9 @@ public class Queries {
 
     @GetMapping("/topics")
     @ApiOperation(value = "Gets a list of topics matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/topics?contentURI= instead")
-    public List<EntityWithPathDTO> queryTopics(@RequestParam("contentURI") URI contentURI,
+    public List<TopicDTO> queryTopics(@RequestParam("contentURI") URI contentURI,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
-
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
-
             @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) String value) {
         return topicController.index(language, contentURI, null, null);
     }

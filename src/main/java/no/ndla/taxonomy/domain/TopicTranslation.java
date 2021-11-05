@@ -10,7 +10,7 @@ package no.ndla.taxonomy.domain;
 import javax.persistence.*;
 
 @Entity
-public class TopicTranslation implements Translation {
+public class TopicTranslation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -48,7 +48,6 @@ public class TopicTranslation implements Translation {
         }
     }
 
-    @Override
     public String getName() {
         return name;
     }

@@ -7,39 +7,32 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.EntityWithPath;
-import no.ndla.taxonomy.domain.SortableResourceConnection;
-import no.ndla.taxonomy.domain.Topic;
 import no.ndla.taxonomy.domain.TopicResource;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 
-public class ResourceTreeSortable<T extends EntityWithPath> implements TreeSorter.Sortable {
+public class TopicResourceTreeSortable implements TopicTreeSorter.Sortable {
     private int rank;
     private int id;
     private int parentId;
-    private SortableResourceConnection<T> resourceConnection;
+    private TopicResource topicResource;
     private String parentType;
     private String type;
 
-    public ResourceTreeSortable(SortableResourceConnection<T> resourceConnection) {
-        this.id = resourceConnection.getResource().orElseThrow(() -> new IllegalArgumentException("Resource not set"))
+    public TopicResourceTreeSortable(TopicResource topicResource) {
+        this.id = topicResource.getResource().orElseThrow(() -> new IllegalArgumentException("Resource not set"))
                 .getId();
-        this.parentId = resourceConnection.getParent().orElseThrow(() -> new IllegalArgumentException("Parent not set"))
+        this.parentId = topicResource.getTopic().orElseThrow(() -> new IllegalArgumentException("Topic not set"))
                 .getId();
-        this.rank = resourceConnection.getRank();
-        this.resourceConnection = resourceConnection;
+        this.rank = topicResource.getRank();
+        this.topicResource = topicResource;
         this.type = "resource";
-        if (resourceConnection instanceof TopicResource) {
-            this.parentType = "topic";
-        } else {
-            this.parentType = "node";
-        }
+        this.parentType = "topic";
     }
 
-    public ResourceTreeSortable(String type, String parentType, int id, int parentId, int rank) {
+    public TopicResourceTreeSortable(String type, String parentType, int id, int parentId, int rank) {
         this.id = id;
         this.parentId = parentId;
         this.rank = rank;
@@ -56,10 +49,6 @@ public class ResourceTreeSortable<T extends EntityWithPath> implements TreeSorte
         }
 
         if (type.equals("topic") && parentType.equals("topic")) {
-            return rank - 1000;
-        }
-
-        if (type.equals("node") && parentType.equals("node")) {
             return rank - 1000;
         }
 
@@ -84,7 +73,7 @@ public class ResourceTreeSortable<T extends EntityWithPath> implements TreeSorte
         }
     }
 
-    public Optional<SortableResourceConnection> getResourceConnection() {
-        return Optional.ofNullable(resourceConnection);
+    public Optional<TopicResource> getTopicResource() {
+        return Optional.ofNullable(topicResource);
     }
 }

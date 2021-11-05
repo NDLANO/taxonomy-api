@@ -7,13 +7,16 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class FilterTranslationsTest extends RestTest {

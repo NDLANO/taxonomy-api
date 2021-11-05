@@ -11,12 +11,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeTranslation;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.SubjectTranslation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
-import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,19 +29,19 @@ import java.util.List;
 @RequestMapping(path = { "/v1/subjects/{id}/translations" })
 @Transactional
 public class SubjectTranslations {
-    private final NodeRepository nodeRepository;
+    private final SubjectRepository subjectRepository;
 
     private final EntityManager entityManager;
 
-    public SubjectTranslations(NodeRepository nodeRepository, EntityManager entityManager) {
-        this.nodeRepository = nodeRepository;
+    public SubjectTranslations(SubjectRepository subjectRepository, EntityManager entityManager) {
+        this.subjectRepository = subjectRepository;
         this.entityManager = entityManager;
     }
 
     @GetMapping
     @ApiOperation("Gets all relevanceTranslations for a single subject")
     public List<SubjectTranslationIndexDocument> index(@PathVariable("id") URI id) {
-        Node subject = nodeRepository.getByPublicId(id);
+        Subject subject = subjectRepository.getByPublicId(id);
         List<SubjectTranslationIndexDocument> result = new ArrayList<>();
         subject.getTranslations().forEach(t -> result.add(new SubjectTranslationIndexDocument() {
             {
@@ -59,8 +56,8 @@ public class SubjectTranslations {
     @ApiOperation("Gets a single translation for a single subject")
     public SubjectTranslationIndexDocument get(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
-        Node subject = nodeRepository.getByPublicId(id);
-        NodeTranslation translation = subject.getTranslation(language).orElseThrow(
+        Subject subject = subjectRepository.getByPublicId(id);
+        SubjectTranslation translation = subject.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for subject", id));
 
         return new SubjectTranslationIndexDocument() {
@@ -77,7 +74,7 @@ public class SubjectTranslations {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
-        Node subject = nodeRepository.getByPublicId(id);
+        Subject subject = subjectRepository.getByPublicId(id);
         subject.getTranslation(language).ifPresent((translation) -> {
             subject.removeTranslation(language);
             entityManager.remove(translation);
@@ -91,8 +88,8 @@ public class SubjectTranslations {
     public void put(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @ApiParam(name = "subject", value = "The new or updated translation") @RequestBody UpdateSubjectTranslationCommand command) {
-        Node subject = nodeRepository.getByPublicId(id);
-        NodeTranslation translation = subject.addTranslation(language);
+        Subject subject = subjectRepository.getByPublicId(id);
+        SubjectTranslation translation = subject.addTranslation(language);
         entityManager.persist(translation);
         translation.setName(command.name);
     }

@@ -18,7 +18,7 @@ public class URNValidator {
         if (!idParts[0].equals("urn")) {
             throw new IdFormatException("Id should start with urn:");
         }
-        if (!idParts[1].equals(entity.getEntityName())) {
+        if (!idParts[1].equals(entity.getClass().getSimpleName().toLowerCase())) {
             throw new IdFormatException("Id should contain entity name");
         }
         if (idParts.length < 3) {

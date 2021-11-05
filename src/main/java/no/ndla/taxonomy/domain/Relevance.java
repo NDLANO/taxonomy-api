@@ -41,7 +41,6 @@ public class Relevance extends DomainObject {
         return translations.stream().collect(Collectors.toUnmodifiableSet());
     }
 
-    @Override
     public Optional<RelevanceTranslation> getTranslation(String languageCode) {
         return translations.stream()
                 .filter(relevanceTranslation -> relevanceTranslation.getLanguageCode().equals(languageCode))

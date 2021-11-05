@@ -43,10 +43,6 @@ public abstract class EntityWithPath extends DomainObject {
 
     public abstract Set<EntityWithPathConnection> getChildConnections();
 
-    public Optional<EntityWithPathConnection> getParentConnection() {
-        return this.getParentConnections().stream().findFirst();
-    }
-
     public Optional<String> getPathByContext(DomainEntity context) {
         final var contextPublicId = context.getPublicId();
 
@@ -97,9 +93,7 @@ public abstract class EntityWithPath extends DomainObject {
                 .collect(Collectors.toSet());
     }
 
-    abstract public URI getContentUri();
-
-    abstract public void setContentUri(URI contentUri);
+    public abstract URI getContentUri();
 
     /**
      * Checks if this entitiy can be a root node (first element in a path)

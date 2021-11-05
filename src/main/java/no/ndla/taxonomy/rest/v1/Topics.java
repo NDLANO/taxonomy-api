@@ -9,9 +9,8 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.*;
@@ -30,49 +29,45 @@ import java.util.Set;
 
 @RestController
 @RequestMapping(path = { "/v1/topics" })
-public class Topics extends CrudControllerWithMetadata<Node> {
-    private final NodeRepository nodeRepository;
-    private final NodeService nodeService;
+public class Topics extends CrudControllerWithMetadata<Topic> {
+    private final TopicRepository topicRepository;
+    private final TopicService topicService;
     private final ResourceService resourceService;
 
-    public Topics(NodeRepository nodeRepository, NodeService nodeService,
+    public Topics(TopicRepository topicRepository, TopicService topicService,
             CachedUrlUpdaterService cachedUrlUpdaterService, ResourceService resourceService,
             MetadataApiService metadataApiService, MetadataUpdateService metadataUpdateService) {
-        super(nodeRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
+        super(topicRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
 
-        this.nodeRepository = nodeRepository;
-        this.nodeService = nodeService;
+        this.topicRepository = topicRepository;
+        this.topicService = topicService;
         this.resourceService = resourceService;
     }
 
     @GetMapping
     @ApiOperation("Gets all topics")
-    public List<EntityWithPathDTO> index(
+    public List<TopicDTO> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
-
             @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) URI contentUriFilter,
-
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
-
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) String value) {
+            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) String value) {
 
         if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
             contentUriFilter = null;
         }
         if (key != null) {
-            return nodeService.getNodes(language, NodeType.TOPIC, contentUriFilter,
-                    new MetadataKeyValueQuery(key, value));
+            return topicService.getTopics(language, contentUriFilter, new MetadataKeyValueQuery(key, value));
         }
-        return nodeService.getNodes(language, NodeType.TOPIC, contentUriFilter, false);
+        return topicService.getTopics(language, contentUriFilter);
     }
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
     @Transactional
     @InjectMetadata
-    public EntityWithPathDTO get(@PathVariable("id") URI id,
+    public TopicDTO get(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return new NodeDTO(nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
+        return new TopicDTO(topicRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found")), language);
     }
 
@@ -82,7 +77,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @Transactional
     public ResponseEntity<Void> post(
             @ApiParam(name = "connection", value = "The new topic") @RequestBody TopicCommand command) {
-        return doPost(new Node(NodeType.TOPIC), command);
+        return doPost(new Topic(), command);
     }
 
     @PutMapping("/{id}")
@@ -106,7 +101,6 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}/filters")
     @ApiOperation(value = "Gets all filters associated with this topic")
-    @Deprecated(forRemoval = true)
     @Transactional
     @InjectMetadata
     public List<Object> getFilters(@ApiParam(value = "id", required = true) @PathVariable("id") URI id,
@@ -116,18 +110,26 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}/topics")
     @ApiOperation(value = "Gets all subtopics for this topic")
-    public List<TopicChildDTO> getSubTopics(@ApiParam(value = "id", required = true) @PathVariable("id") URI id,
-            @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.") @RequestParam(value = "subject", required = false, defaultValue = "") URI subjectId,
-            @Deprecated(forRemoval = true) @ApiParam(value = "Select by filter id(s). If not specified, all subtopics connected to this topic will be returned."
-                    + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) @RequestParam(value = "filter", required = false, defaultValue = "") URI[] filterIds,
+    public List<SubTopicIndexDTO> getSubTopics(@ApiParam(value = "id", required = true) @PathVariable("id") URI id,
+            @RequestParam(value = "subject", required = false, defaultValue = "") @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.") URI subjectId,
+            @RequestParam(value = "filter", required = false, defaultValue = "") @ApiParam(value = "Select by filter id(s). If not specified, all subtopics connected to this topic will be returned."
+                    + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) URI[] filterIds,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return nodeService.getFilteredChildConnections(id, language);
+        if (filterIds == null) {
+            filterIds = new URI[0];
+        }
+
+        if (filterIds.length == 0) {
+            return topicService.getFilteredSubtopicConnections(id, subjectId, language);
+        }
+
+        return List.of(); // Requested filtered, we don't have filters.
     }
 
     @GetMapping("/{id}/connections")
     @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
     public List<ConnectionIndexDTO> getAllConnections(@PathVariable("id") URI id) {
-        return nodeService.getAllConnections(id);
+        return topicService.getAllConnections(id);
     }
 
     @DeleteMapping("/{id}")
@@ -135,22 +137,23 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
-        nodeService.delete(id);
+        topicService.delete(id);
     }
 
     @GetMapping("/{id}/resources")
     @ApiOperation(value = "Gets all resources for the given topic", tags = { "topics" })
-    public List<ResourceWithNodeConnectionDTO> getResources(
+    public List<ResourceWithTopicConnectionDTO> getResources(
             @ApiParam(value = "id", required = true) @PathVariable("id") URI topicId,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false) String language,
-            @ApiParam("If true, resources from subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
-            @ApiParam(value = "Select by resource type id(s). If not specified, resources of all types will be returned."
-                    + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) @RequestParam(value = "type", required = false) URI[] resourceTypeIds,
-            @Deprecated @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.") @RequestParam(value = "subject", required = false) URI subjectId,
-            @Deprecated @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned."
-                    + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) @RequestParam(value = "filter", required = false) URI[] filterIds,
-            @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.") @RequestParam(value = "relevance", required = false) URI relevance) {
+            @RequestParam(value = "recursive", required = false, defaultValue = "false") @ApiParam("If true, resources from subtopics are fetched recursively") boolean recursive,
+            @RequestParam(value = "type", required = false) @ApiParam(value = "Select by resource type id(s). If not specified, resources of all types will be returned."
+                    + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) URI[] resourceTypeIds,
+            @RequestParam(value = "subject", required = false) @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.") URI subjectId,
+            @RequestParam(value = "filter", required = false) @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned."
+                    + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) URI[] filterIds,
+            @RequestParam(value = "relevance", required = false) @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.") URI relevance) {
         final Set<URI> resourceTypeIdSet;
+        final Set<URI> filterIdSet;
 
         if (resourceTypeIds == null) {
             resourceTypeIdSet = Set.of();
@@ -158,6 +161,17 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             resourceTypeIdSet = new HashSet<>(Arrays.asList(resourceTypeIds));
         }
 
-        return resourceService.getResourcesByNodeId(topicId, resourceTypeIdSet, relevance, language, recursive);
+        if (filterIds == null) {
+            filterIdSet = Set.of();
+        } else {
+            filterIdSet = new HashSet<>(Arrays.asList(filterIds));
+        }
+
+        if (filterIdSet.isEmpty()) {
+            return resourceService.getResourcesByTopicId(topicId, subjectId, resourceTypeIdSet, relevance, language,
+                    recursive);
+        } else {
+            return List.of(); // We don't have filters.
+        }
     }
 }
