@@ -811,5 +811,192 @@
         <modifyDataType tableName="subject_translation" columnName="language_code" newDataType="varchar(7)"/>
         <modifyDataType tableName="topic_translation" columnName="language_code" newDataType="varchar(7)"/>
     </changeSet>
+    
+    <changeSet id="20211020 01 create tables for node" author="Gunnar Velle">
+        <createTable tableName="node">
+            <column name="id" type="serial" autoIncrement="true">
+                <constraints primaryKey="true" uniqueConstraintName="node_pkey"/>
+            </column>
+            <column name="public_id" type="varchar(255)" >
+                <constraints nullable="false" uniqueConstraintName="node_public_id"/>
+            </column>
+            <column name="node_type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ident" type="varchar(255)">
+                <constraints nullable="false" unique="false"/>
+            </column>
+            <column name="name" type="varchar(255)"/>
+            <column name="content_uri" type="varchar(255)"/>
+            <column name="context" type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="node" columnNames="node_type,ident" constraintName="unique_node_type_ident"/>
 
+        <createTable tableName="node_connection">
+            <column name="id" type="serial" autoIncrement="true">
+                <constraints primaryKey="true" uniqueConstraintName="node_connection_pkey"/>
+            </column>
+            <column name="public_id" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="parent_id" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="child_id" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rank" type="integer"/>
+            <column name="relevance_id" type="integer"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="node_connection" baseColumnNames="parent_id"
+                                 constraintName="fk_node_connection_parent_id"
+                                 referencedTableName="node" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+        <addForeignKeyConstraint baseTableName="node_connection" baseColumnNames="child_id"
+                                 constraintName="fk_node_connection_child_id"
+                                 referencedTableName="node" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+
+        <createTable tableName="node_resource">
+            <column name="id" type="serial" autoIncrement="true">
+                <constraints primaryKey="true" uniqueConstraintName="node_resource_pkey"/>
+            </column>
+            <column name="public_id" type="varchar(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="node_resource_public_id"/>
+            </column>
+            <column name="node_id" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_id" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rank" type="integer"/>
+            <column name="relevance_id" type="integer"/>
+            <column name="is_primary" type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="node_resource" baseColumnNames="node_id"
+                                 constraintName="fk_node_resource_node_id"
+                                 referencedTableName="node" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+        <addForeignKeyConstraint baseTableName="node_resource" baseColumnNames="resource_id"
+                                 constraintName="fk_node_resource_resource_id"
+                                 referencedTableName="resource" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+        
+        <createTable tableName="node_translation">
+            <column name="id" type="serial" autoIncrement="true">
+                <constraints primaryKey="true" uniqueConstraintName="node_translation_pkey"/>
+            </column>
+            <column name="node_id" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="language_code" type="varchar(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="node_translation" baseColumnNames="node_id"
+                                 constraintName="fk_node_translation_node_id"
+                                 referencedTableName="node" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+        
+        <addColumn tableName="cached_path">
+            <column name="node_id" type="integer"/>
+        </addColumn>
+        <addForeignKeyConstraint baseTableName="cached_path" baseColumnNames="node_id"
+                                 constraintName="fk_cached_path_node_id"
+                                 referencedTableName="node" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+
+    </changeSet>
+
+    <changeSet id="20211020 copy subjects to nodes" author="Gunnar Velle">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO node (public_id, ident, node_type, name, content_uri, context)
+            SELECT public_id, REPLACE(public_id, 'urn:subject:', '') as ident, 'SUBJECT' as node_type, name, content_uri, true AS context FROM subject;
+        </sql>
+    </changeSet>
+    <changeSet id="20211020 copy topics to nodes" author="Gunnar Velle">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO node (public_id, ident, node_type, name, content_uri, context)
+            SELECT public_id, REPLACE(public_id, 'urn:topic:', '') as ident, 'TOPIC' as node_type, name, content_uri, context FROM topic;
+        </sql>
+    </changeSet>
+    <changeSet id="20211020 copy subjects to nodes - relations" author="Gunnar Velle">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO node_connection (public_id, parent_id, child_id, rank, relevance_id)
+            SELECT
+            r.public_id AS public_id,
+            (SELECT n.id FROM node n WHERE n.public_id = (SELECT s.public_id FROM subject s WHERE s.id = r.subject_id)) AS parent_id,
+            (SELECT n.id FROM node n WHERE n.public_id = (SELECT t.public_id FROM topic t WHERE t.id = r.topic_id)) AS child_id,
+            r.rank AS rank,
+            r.relevance_id AS relevance_id
+            FROM subject_topic r;
+        </sql>
+    </changeSet>
+    <changeSet id="20211020 copy topics to nodes - relations" author="Gunnar Velle">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO node_connection (public_id, parent_id, child_id, rank, relevance_id)
+            SELECT
+            r.public_id AS public_id,
+            (SELECT n.id FROM node n WHERE n.public_id = (SELECT t.public_id FROM topic t WHERE t.id = r.topic_id)) AS parent_id,
+            (SELECT n.id FROM node n WHERE n.public_id = (SELECT t.public_id FROM topic t WHERE t.id = r.subtopic_id)) AS child_id,
+            r.rank AS rank,
+            r.relevance_id AS relevance_id
+            FROM topic_subtopic r;
+        </sql>
+    </changeSet>
+    <changeSet id="20211020 move cached paths from other to node" author="Gunnar Velle">
+        <sql splitStatements="false" stripComments="false">
+            UPDATE cached_path c SET node_id = (SELECT n.id FROM node n WHERE n.public_id = c.public_id);
+            UPDATE cached_path c SET subject_id = NULL WHERE c.subject_id IS NOT NULL;
+            UPDATE cached_path c SET topic_id = NULL WHERE c.topic_id IS NOT NULL;
+        </sql>
+    </changeSet>
+    <changeSet id="20211020 copy translations from subjects to nodes" author="Gunnar Velle">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO node_translation
+            (node_id, language_code, name)
+            SELECT
+            (SELECT n.id FROM node n WHERE n.public_id =
+            (SELECT s.public_id FROM subject s WHERE s.id = st.subject_id)
+            ) AS node_id,
+            st.language_code AS language_code,
+            st.name as name
+            FROM subject_translation st;
+        </sql>
+    </changeSet>
+    <changeSet id="20211020 copy translations from topics to nodes" author="Gunnar Velle">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO node_translation
+            (node_id, language_code, name)
+            SELECT
+            (SELECT n.id FROM node n WHERE n.public_id =
+            (SELECT t.public_id FROM topic t WHERE t.id = tt.topic_id)
+            ) AS node_id,
+            tt.language_code AS language_code,
+            tt.name as name
+            FROM topic_translation tt;
+        </sql>
+    </changeSet>
+    <changeSet id="20211020 copy resources from topics to nodes" author="Gunnar Velle">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO node_resource
+            (node_id, public_id, resource_id, is_primary, rank, relevance_id)
+            SELECT
+            (SELECT n.id FROM node n WHERE n.public_id =
+            (SELECT t.public_id FROM topic t WHERE t.id = tr.topic_id)
+            ) AS node_id,
+            tr.public_id as public_id,
+            tr.resource_id as resource_id,
+            tr.is_primary AS is_primary,
+            tr.rank AS rank,
+            tr.relevance_id as relevance_id
+            FROM topic_resource tr;
+        </sql>
+    </changeSet>
 </databaseChangeLog>

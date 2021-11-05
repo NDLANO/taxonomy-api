@@ -14,10 +14,7 @@ import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
 import no.ndla.taxonomy.service.*;
-import no.ndla.taxonomy.service.dtos.ResourceDTO;
-import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
-import no.ndla.taxonomy.service.dtos.ResourceWithParentTopicsDTO;
-import no.ndla.taxonomy.service.dtos.ResourceWithTopicConnectionDTO;
+import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -58,7 +55,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @Transactional(readOnly = true)
     public List<ResourceDTO> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
-            @RequestParam(value = "contentURI", required = false) @ApiParam(value = "Filter by contentUri") URI contentUriFilter,
+            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) URI contentUriFilter,
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
             @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) String value) {
         if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
@@ -113,9 +110,9 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @GetMapping("{id}/full")
     @ApiOperation(value = "Gets all parent topics, all filters and resourceTypes for this resource")
     @Transactional(readOnly = true)
-    public ResourceWithParentTopicsDTO getResourceFull(@PathVariable("id") URI id,
+    public ResourceWithParentNodesDTO getResourceFull(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return resourceService.getResourceWithParentTopicsByPublicId(id, language);
+        return resourceService.getResourceWithParentNodesByPublicId(id, language);
     }
 
     @DeleteMapping("{id}")

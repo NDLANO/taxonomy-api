@@ -9,7 +9,6 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.TopicRepository;
-import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,7 +46,7 @@ public class TopicServiceImplTest {
     private TopicServiceImpl topicService;
 
     @MockBean
-    private TopicTreeSorter topicTreeSorter;
+    private TreeSorter topicTreeSorter;
 
     @Test
     public void delete() {
