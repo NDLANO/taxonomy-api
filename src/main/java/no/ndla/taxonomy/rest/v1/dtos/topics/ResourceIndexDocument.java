@@ -15,18 +15,19 @@ import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceTranslation;
 import no.ndla.taxonomy.domain.TopicResource;
 import no.ndla.taxonomy.service.MetadataIdField;
-import no.ndla.taxonomy.service.TreeSorter;
+import no.ndla.taxonomy.service.TopicTreeSorter;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.ResourceTypeDTO;
 
 import java.net.URI;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /** */
 @ApiModel("TopicResourceIndexDocument")
-public class ResourceIndexDocument implements TreeSorter.Sortable {
+public class ResourceIndexDocument implements TopicTreeSorter.Sortable {
     @JsonProperty
     @ApiModelProperty(value = "Topic id", example = "urn:topic:123")
     public URI topicId;
@@ -107,7 +108,7 @@ public class ResourceIndexDocument implements TreeSorter.Sortable {
 
         this.connectionId = topicResource.getPublicId();
         this.rank = topicResource.getRank();
-        this.isPrimary = topicResource.isPrimary().orElse(false);
+        this.isPrimary = topicResource.isPrimary().orElseThrow();
     }
 
     @Override

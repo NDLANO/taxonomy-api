@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -33,11 +34,11 @@ public class TopicServiceImpl implements TopicService {
     private final TopicSubtopicRepository topicSubtopicRepository;
     private final EntityConnectionService connectionService;
     private final MetadataApiService metadataApiService;
-    private final TreeSorter topicTreeSorter;
+    private final TopicTreeSorter topicTreeSorter;
 
     public TopicServiceImpl(TopicRepository topicRepository, TopicSubtopicRepository topicSubtopicRepository,
             EntityConnectionService connectionService, MetadataApiService metadataApiService,
-            TreeSorter topicTreeSorter) {
+            TopicTreeSorter topicTreeSorter) {
         this.topicRepository = topicRepository;
         this.connectionService = connectionService;
         this.topicSubtopicRepository = topicSubtopicRepository;

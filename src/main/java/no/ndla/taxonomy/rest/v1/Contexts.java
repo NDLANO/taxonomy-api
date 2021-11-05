@@ -9,8 +9,9 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.domain.SubjectTranslation;
+import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.domain.TopicTranslation;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
@@ -30,11 +31,14 @@ import java.util.stream.Collectors;
 @RequestMapping(path = { "/v1/contexts" })
 @Transactional(readOnly = true)
 public class Contexts {
-    private final NodeRepository nodeRepository;
+    private final TopicRepository topicRepository;
+    private final SubjectRepository subjectRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public Contexts(NodeRepository nodeRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
-        this.nodeRepository = nodeRepository;
+    public Contexts(TopicRepository topicRepository, SubjectRepository subjectRepository,
+            CachedUrlUpdaterService cachedUrlUpdaterService) {
+        this.topicRepository = topicRepository;
+        this.subjectRepository = subjectRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
 
@@ -42,13 +46,22 @@ public class Contexts {
     public List<ContextIndexDocument> get(
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
-        final var nodes = nodeRepository.findAllByContextIncludingCachedUrlsAndTranslations(true);
+        final var subjects = subjectRepository.findAllIncludingCachedUrlsAndTranslations();
+        final var topics = topicRepository.findAllByContextIncludingCachedUrlsAndTranslations(true);
 
         final var contextDocuments = new ArrayList<ContextIndexDocument>();
 
-        contextDocuments.addAll(nodes.stream()
+        contextDocuments
+                .addAll(subjects.stream()
+                        .map(subject -> new ContextIndexDocument(subject.getPublicId(),
+                                subject.getTranslation(language).map(SubjectTranslation::getName)
+                                        .orElse(subject.getName()),
+                                subject.getPrimaryPath().orElse(null)))
+                        .collect(Collectors.toList()));
+
+        contextDocuments.addAll(topics.stream()
                 .map(topic -> new ContextIndexDocument(topic.getPublicId(),
-                        topic.getTranslation(language).map(Translation::getName).orElse(topic.getName()),
+                        topic.getTranslation(language).map(TopicTranslation::getName).orElse(topic.getName()),
                         topic.getPrimaryPath().orElse(null)))
                 .collect(Collectors.toList()));
 
@@ -63,7 +76,7 @@ public class Contexts {
     @Transactional
     public ResponseEntity<Void> post(
             @ApiParam(name = "context", value = "the new context") @RequestBody CreateContextCommand command) {
-        Node topic = nodeRepository.getByPublicId(command.id);
+        Topic topic = topicRepository.getByPublicId(command.id);
         topic.setContext(true);
         URI location = URI.create("/v1/contexts/" + topic.getPublicId());
 
@@ -78,7 +91,7 @@ public class Contexts {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void delete(@PathVariable("id") URI id) {
-        Node topic = nodeRepository.getByPublicId(id);
+        Topic topic = topicRepository.getByPublicId(id);
         topic.setContext(false);
 
         cachedUrlUpdaterService.updateCachedUrls(topic);

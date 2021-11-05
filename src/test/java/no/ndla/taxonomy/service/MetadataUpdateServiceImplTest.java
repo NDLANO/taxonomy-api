@@ -8,8 +8,6 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
 import no.ndla.taxonomy.repositories.TopicRepository;
@@ -38,29 +36,29 @@ import static org.mockito.Mockito.mock;
 @ExtendWith(SpringExtension.class)
 @Transactional
 class MetadataUpdateServiceImplTest {
-    private NodeRepository nodeRepository;
+    private SubjectRepository subjectRepository;
+    private TopicRepository topicRepository;
     private ResourceRepository resourceRepository;
     private MetadataApiService metadataApiService;
     private MetadataUpdateServiceImpl metadataUpdateService;
 
     @BeforeEach
-    void setUp(@Autowired NodeRepository nodeRepository, @Autowired Builder builder,
-            @Autowired ResourceRepository resourceRepository) {
+    void setUp(@Autowired SubjectRepository subjectRepository, @Autowired TopicRepository topicRepository,
+            @Autowired Builder builder, @Autowired ResourceRepository resourceRepository) {
 
         metadataApiService = mock(MetadataApiService.class);
 
-        builder.node(NodeType.SUBJECT, sb -> {
-            sb.isContext(true);
+        builder.subject(sb -> {
             sb.publicId("urn:subject:mdup:1");
             sb.name("Subject 1");
 
-            sb.child(NodeType.TOPIC, tb -> {
+            sb.topic(tb -> {
                 tb.publicId("urn:topic:mdup:11");
 
                 tb.resource(rb -> rb.publicId("urn:resource:mdup:111"));
                 tb.resource(rb -> rb.publicId("urn:resource:mdup:112"));
             });
-            sb.child(NodeType.TOPIC, tb -> {
+            sb.topic(tb -> {
                 tb.publicId("urn:topic:mdup:12");
 
                 tb.resource(rb -> rb.publicId("urn:resource:mdup:121"));
@@ -68,18 +66,17 @@ class MetadataUpdateServiceImplTest {
             });
         });
 
-        builder.node(NodeType.SUBJECT, sb -> {
-            sb.isContext(true);
+        builder.subject(sb -> {
             sb.publicId("urn:subject:mdup:2");
             sb.name("Subject 2");
 
-            sb.child(NodeType.TOPIC, tb -> {
+            sb.topic(tb -> {
                 tb.publicId("urn:topic:mdup:21");
 
                 tb.resource(rb -> rb.publicId("urn:resource:mdup:211"));
                 tb.resource(rb -> rb.publicId("urn:resource:mdup:212"));
             });
-            sb.child(NodeType.TOPIC, tb -> {
+            sb.topic(tb -> {
                 tb.publicId("urn:topic:mdup:22");
 
                 tb.resource(rb -> rb.publicId("urn:resource:mdup:221"));
@@ -87,7 +84,8 @@ class MetadataUpdateServiceImplTest {
             });
         });
 
-        metadataUpdateService = new MetadataUpdateServiceImpl(resourceRepository, nodeRepository, metadataApiService);
+        metadataUpdateService = new MetadataUpdateServiceImpl(subjectRepository, topicRepository, resourceRepository,
+                metadataApiService);
     }
 
     @Test

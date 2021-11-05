@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TopicTreeSorterTest {
     @Test
     public void sortList() throws URISyntaxException {
-        final var sorter = new TreeSorter();
+        final var sorter = new TopicTreeSorter();
 
         final var l1a = new TestSortable(null, new URI("urn:l1a"), 1);
         final var l1b = new TestSortable(null, new URI("urn:l1b"), 2);
@@ -51,7 +51,7 @@ public class TopicTreeSorterTest {
         assertEquals("urn:l1d", sortedList.get(9).getSortableId().toString());
     }
 
-    private static class TestSortable implements TreeSorter.Sortable {
+    private static class TestSortable implements TopicTreeSorter.Sortable {
         private final URI parentId;
         private final URI id;
         private final int rank;

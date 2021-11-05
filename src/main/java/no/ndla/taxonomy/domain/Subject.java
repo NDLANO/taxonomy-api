@@ -80,7 +80,6 @@ public class Subject extends EntityWithPath {
         return subjectTranslation;
     }
 
-    @Override
     public Optional<SubjectTranslation> getTranslation(String languageCode) {
         return translations.stream()
                 .filter(subjectTranslation -> subjectTranslation.getLanguageCode().equals(languageCode)).findFirst();

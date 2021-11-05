@@ -11,10 +11,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeTranslation;
+import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.domain.TopicTranslation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
-import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.repositories.TopicRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -30,19 +30,19 @@ import java.util.List;
 @Transactional
 public class TopicTranslations {
 
-    private final NodeRepository nodeRepository;
+    private final TopicRepository topicRepository;
 
     private final EntityManager entityManager;
 
-    public TopicTranslations(NodeRepository nodeRepository, EntityManager entityManager) {
-        this.nodeRepository = nodeRepository;
+    public TopicTranslations(TopicRepository topicRepository, EntityManager entityManager) {
+        this.topicRepository = topicRepository;
         this.entityManager = entityManager;
     }
 
     @GetMapping
     @ApiOperation("Gets all relevanceTranslations for a single topic")
     public List<TopicTranslations.TopicTranslationIndexDocument> index(@PathVariable("id") URI id) {
-        Node topic = nodeRepository.getByPublicId(id);
+        Topic topic = topicRepository.getByPublicId(id);
         List<TopicTranslations.TopicTranslationIndexDocument> result = new ArrayList<>();
         topic.getTranslations().forEach(t -> result.add(new TopicTranslations.TopicTranslationIndexDocument() {
             {
@@ -57,8 +57,8 @@ public class TopicTranslations {
     @ApiOperation("Gets a single translation for a single topic")
     public TopicTranslations.TopicTranslationIndexDocument get(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
-        Node topic = nodeRepository.getByPublicId(id);
-        NodeTranslation translation = topic.getTranslation(language).orElseThrow(
+        Topic topic = topicRepository.getByPublicId(id);
+        TopicTranslation translation = topic.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for topic", id));
         return new TopicTranslations.TopicTranslationIndexDocument() {
             {
@@ -75,8 +75,8 @@ public class TopicTranslations {
     public void put(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @ApiParam(name = "topic", value = "The new or updated translation") @RequestBody TopicTranslations.UpdateTopicTranslationCommand command) {
-        Node topic = nodeRepository.getByPublicId(id);
-        NodeTranslation translation = topic.addTranslation(language);
+        Topic topic = topicRepository.getByPublicId(id);
+        TopicTranslation translation = topic.addTranslation(language);
         entityManager.persist(translation);
         translation.setName(command.name);
     }
@@ -87,7 +87,7 @@ public class TopicTranslations {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
-        Node topic = nodeRepository.getByPublicId(id);
+        Topic topic = topicRepository.getByPublicId(id);
         topic.getTranslation(language).ifPresent(topicTranslation -> {
             topic.removeTranslation(language);
             entityManager.remove(topicTranslation);
