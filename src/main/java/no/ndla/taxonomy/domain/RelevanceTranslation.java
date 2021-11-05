@@ -10,7 +10,7 @@ package no.ndla.taxonomy.domain;
 import javax.persistence.*;
 
 @Entity
-public class RelevanceTranslation {
+public class RelevanceTranslation implements Translation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;

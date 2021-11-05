@@ -8,10 +8,10 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.UrlMapping;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
-import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.repositories.UrlMappingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,9 +40,7 @@ public class UrlResolverServiceImplTest {
     private EntityManager entityManager;
 
     @Autowired
-    private SubjectRepository subjectRepository;
-    @Autowired
-    private TopicRepository topicRepository;
+    private NodeRepository nodeRepository;
     @Autowired
     private ResourceRepository resourceRepository;
     @Autowired
@@ -55,14 +53,13 @@ public class UrlResolverServiceImplTest {
     @BeforeEach
     void clearAllRepos() {
         resourceRepository.deleteAllAndFlush();
-        topicRepository.deleteAllAndFlush();
-        subjectRepository.deleteAllAndFlush();
+        nodeRepository.deleteAllAndFlush();
     }
 
     @BeforeEach
     public void restTestSetUp() {
-        urlResolverService = new UrlResolverServiceImpl(subjectRepository, topicRepository, resourceRepository,
-                urlMappingRepository, oldUrlCanonifier);
+        urlResolverService = new UrlResolverServiceImpl(resourceRepository, urlMappingRepository, nodeRepository,
+                oldUrlCanonifier);
     }
 
     @Test
@@ -70,7 +67,8 @@ public class UrlResolverServiceImplTest {
     public void resolveOldUrl() {
         final String subjectId = "urn:subject:11";
         final String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
+        builder.node(NodeType.SUBJECT,
+                s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         final String oldUrl = "ndla.no/node/183926?fag=127013";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
         entityManager.persist(urlMapping);
@@ -90,7 +88,8 @@ public class UrlResolverServiceImplTest {
         String otherTopicUrl = "ndla.no/node/54321";
 
         // create another topic and mapping that should NOT match the query for the url above
-        builder.subject(s -> s.publicId(otherSubjectId).topic(t -> t.publicId("urn:topic:1:54321")));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId(otherSubjectId).child(NodeType.TOPIC,
+                t -> t.publicId("urn:topic:1:54321")));
         entityManager.persist(
                 builder.urlMapping(c -> c.oldUrl(otherTopicUrl).public_id(otherTopicId).subject_id(otherSubjectId)));
         entityManager.flush();
@@ -103,7 +102,8 @@ public class UrlResolverServiceImplTest {
     public void resolveOldUrlWithLanguage() {
         final String subjectId = "urn:subject:11";
         final String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
+        builder.node(NodeType.SUBJECT,
+                s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         final String oldUrl = "ndla.no/node/183926?fag=127013";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
         entityManager.persist(urlMapping);
@@ -118,7 +118,8 @@ public class UrlResolverServiceImplTest {
     @Transactional
     public void resolveOldUrlWhenNoSubjectImportedToPrimaryPath() {
         String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s.publicId("urn:subject:2").topic(t -> t.publicId(nodeId)));
+        builder.node(NodeType.SUBJECT,
+                s -> s.isContext(true).publicId("urn:subject:2").child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         String oldUrl = "ndla.no/node/183926?fag=127013";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId));
         entityManager.persist(urlMapping);
@@ -133,7 +134,8 @@ public class UrlResolverServiceImplTest {
     @Transactional
     public void resolveOldUrlWhenNoSubjectImportedOrQueriedToPrimaryPath() {
         String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s.publicId("urn:subject:2").topic(t -> t.publicId(nodeId)));
+        builder.node(NodeType.SUBJECT,
+                s -> s.isContext(true).publicId("urn:subject:2").child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         String oldUrl = "ndla.no/node/183926";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId));
         entityManager.persist(urlMapping);
@@ -149,7 +151,8 @@ public class UrlResolverServiceImplTest {
     public void resolveOldUrlWhenSubjectImportedButNotQueriedToPrimaryPath() {
         final String subjectId = "urn:subject:11";
         String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
+        builder.node(NodeType.SUBJECT,
+                s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         String oldUrl = "ndla.no/node/183926?fag=127013";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
         entityManager.persist(urlMapping);
@@ -163,7 +166,8 @@ public class UrlResolverServiceImplTest {
     @Test
     @Transactional
     public void resolveOldUrlBadSubjectPrimaryPath() {
-        builder.subject(s -> s.publicId("urn:subject:2").topic(t -> t.publicId("urn:topic:1:183926")));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:2").child(NodeType.TOPIC,
+                t -> t.publicId("urn:topic:1:183926")));
         String oldUrl = "ndla.no/node/183926?fag=127013";
         UrlMapping urlMapping = builder
                 .urlMapping(c -> c.oldUrl(oldUrl).public_id("urn:topic:1:183926").subject_id("urn:subject:11"));
@@ -187,7 +191,8 @@ public class UrlResolverServiceImplTest {
     public void putOldUrl() throws Exception {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
+        builder.node(NodeType.SUBJECT,
+                s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         entityManager.flush();
 
         final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
@@ -203,7 +208,8 @@ public class UrlResolverServiceImplTest {
     public void putOldUrlTwice() throws Exception {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
+        builder.node(NodeType.SUBJECT,
+                s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         entityManager.flush();
 
         final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
@@ -220,7 +226,8 @@ public class UrlResolverServiceImplTest {
     public void putOldUrlWithNoPaths() throws Exception {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
+        builder.node(NodeType.SUBJECT,
+                s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         entityManager.flush();
 
         final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
@@ -237,7 +244,8 @@ public class UrlResolverServiceImplTest {
     public void putOldUrlWithSubjectQueryWithoutSubject() throws Exception {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
-        builder.subject(s -> s.publicId(subjectId).topic(t -> t.publicId(nodeId)));
+        builder.node(NodeType.SUBJECT,
+                s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         entityManager.flush();
 
         final String oldUrl = "ndla.no/nb/node/183926?fag=127013";
@@ -252,15 +260,16 @@ public class UrlResolverServiceImplTest {
     @Test
     @Transactional
     public void resolveEntitiesFromPath() {
-        builder.subject(s -> s.publicId("urn:subject:1")
-                .topic(t -> t.publicId("urn:topic:1").resource("resource", resourceBuilder -> {
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC,
+                t -> t.publicId("urn:topic:1").resource("resource", resourceBuilder -> {
                     resourceBuilder.publicId("urn:resource:1").name("Resource Name")
                             .contentUri(URI.create("urn:test:1"));
                 })));
 
-        builder.subject(s -> s.publicId("urn:subject:2").topic(t -> t.publicId("urn:topic:2").resource("resource")));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:2").child(NodeType.TOPIC,
+                t -> t.publicId("urn:topic:2").resource("resource")));
 
-        builder.subject(s -> s.publicId("urn:subject:3").topic(t -> {
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:3").child(NodeType.TOPIC, t -> {
             t.publicId("urn:topic:3");
             t.isContext(true);
             t.resource("resource");

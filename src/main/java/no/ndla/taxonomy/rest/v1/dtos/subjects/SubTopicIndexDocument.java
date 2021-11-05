@@ -15,7 +15,7 @@ import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.InjectMetadata;
 import no.ndla.taxonomy.service.MetadataIdField;
-import no.ndla.taxonomy.service.TopicTreeSorter;
+import no.ndla.taxonomy.service.TreeSorter;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 
 import java.net.URI;
@@ -26,7 +26,7 @@ import java.util.Set;
 
 /** */
 @ApiModel("SubTopicIndexDocument")
-public class SubTopicIndexDocument implements TopicTreeSorter.Sortable {
+public class SubTopicIndexDocument implements TreeSorter.Sortable {
     @JsonProperty
     @MetadataIdField
     public URI id;

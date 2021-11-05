@@ -213,6 +213,7 @@ public class Topic extends EntityWithPath {
         return topicTranslation;
     }
 
+    @Override
     public Optional<TopicTranslation> getTranslation(String languageCode) {
         return translations.stream().filter(translation -> translation.getLanguageCode().equals(languageCode))
                 .findFirst();

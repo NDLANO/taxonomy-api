@@ -31,6 +31,9 @@ public class Resource extends EntityWithPath {
     private Set<TopicResource> topics = new HashSet<>();
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<NodeResource> nodes = new HashSet<>();
+
+    @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     protected Set<CachedPath> cachedPaths = new HashSet<>();
 
     @Override
@@ -40,7 +43,10 @@ public class Resource extends EntityWithPath {
 
     @Override
     public Set<EntityWithPathConnection> getParentConnections() {
-        return topics.stream().collect(Collectors.toUnmodifiableSet());
+        if (!topics.isEmpty()) {
+            return topics.stream().collect(Collectors.toUnmodifiableSet());
+        }
+        return nodes.stream().collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
@@ -108,6 +114,7 @@ public class Resource extends EntityWithPath {
         return resourceTranslation;
     }
 
+    @Override
     public Optional<ResourceTranslation> getTranslation(String languageCode) {
         return resourceTranslations.stream()
                 .filter(resourceTranslation -> resourceTranslation.getLanguageCode().equals(languageCode)).findFirst();
@@ -139,8 +146,16 @@ public class Resource extends EntityWithPath {
 
     public Optional<Topic> getPrimaryTopic() {
         for (TopicResource topic : topics) {
-            if (topic.isPrimary().orElseThrow())
+            if (topic.isPrimary().orElse(false))
                 return topic.getTopic();
+        }
+        return Optional.empty();
+    }
+
+    public Optional<Node> getPrimaryNode() {
+        for (NodeResource node : nodes) {
+            if (node.isPrimary().orElse(false))
+                return node.getNode();
         }
         return Optional.empty();
     }
@@ -186,10 +201,31 @@ public class Resource extends EntityWithPath {
         }
     }
 
+    public Set<NodeResource> getNodeResources() {
+        return this.nodes.stream().collect(Collectors.toUnmodifiableSet());
+    }
+
+    public void removeNodeResource(NodeResource nodeResource) {
+        this.nodes.remove(nodeResource);
+
+        if (nodeResource.getResource().orElse(null) == this) {
+            nodeResource.disassociate();
+        }
+    }
+
+    public void addNodeResource(NodeResource nodeResource) {
+        this.nodes.add(nodeResource);
+
+        if (nodeResource.getResource().orElse(null) != this) {
+            throw new IllegalArgumentException("NodeResource must have Resource relation set before adding");
+        }
+    }
+
     @PreRemove
     void preRemove() {
         Set.copyOf(resourceResourceTypes).forEach(ResourceResourceType::disassociate);
         Set.copyOf(topics).forEach(TopicResource::disassociate);
+        Set.copyOf(nodes).forEach(NodeResource::disassociate);
     }
 
     @Override

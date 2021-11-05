@@ -15,14 +15,14 @@ import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.TopicSubtopic;
 import no.ndla.taxonomy.domain.TopicTranslation;
 import no.ndla.taxonomy.service.MetadataIdField;
-import no.ndla.taxonomy.service.TopicTreeSorter;
+import no.ndla.taxonomy.service.TreeSorter;
 
 import java.net.URI;
 import java.util.Set;
 
 /** */
 @ApiModel("SubTopicIndexDocument")
-public class SubTopicIndexDTO implements TopicTreeSorter.Sortable {
+public class SubTopicIndexDTO implements TreeSorter.Sortable {
     @JsonProperty
     @ApiModelProperty(value = "Topic id", example = "urn:topic:234")
     @MetadataIdField

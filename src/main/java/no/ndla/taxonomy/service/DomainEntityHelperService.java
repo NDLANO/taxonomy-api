@@ -7,6 +7,7 @@
 
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.Topic;
 
@@ -16,4 +17,6 @@ public interface DomainEntityHelperService {
     Subject getSubjectByPublicId(URI publicId);
 
     Topic getTopicByPublicId(URI publicId);
+
+    Node getNodeByPublicId(URI publicId);
 }
