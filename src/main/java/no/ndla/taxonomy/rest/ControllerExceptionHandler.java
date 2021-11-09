@@ -7,12 +7,11 @@
 
 package no.ndla.taxonomy.rest;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.service.exceptions.ServiceUnavailableException;
-import org.springframework.boot.configurationprocessor.json.JSONException;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,10 +24,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     private String createErrorBody(RuntimeException exception) {
         try {
-            final var jsonObject = new JSONObject();
+            final var jsonObject = JsonNodeFactory.instance.objectNode();
             jsonObject.put("error", exception.getMessage());
             return jsonObject.toString();
-        } catch (JSONException jsonException) {
+        } catch (Exception jsonException) {
             throw new RuntimeException(jsonException);
         }
     }
