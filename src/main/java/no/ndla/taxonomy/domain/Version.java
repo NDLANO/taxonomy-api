@@ -7,7 +7,7 @@
 
 package no.ndla.taxonomy.domain;
 
-import org.springframework.data.annotation.CreatedDate;
+import no.ndla.taxonomy.util.HashUtil;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -24,8 +24,10 @@ public class Version extends DomainEntity {
     private VersionType versionType = VersionType.BETA;
 
     @Column
-    @CreatedDate
-    private Instant created;
+    private String name;
+
+    @Column
+    private final String hash;
 
     @Column
     private Instant published;
@@ -34,8 +36,8 @@ public class Version extends DomainEntity {
     private Instant archived;
 
     public Version() {
-        created = Instant.now();
         setPublicId(URI.create("urn:version:" + UUID.randomUUID()));
+        this.hash = HashUtil.shortHash(getPublicId());
     }
 
     public VersionType getVersionType() {
@@ -46,8 +48,16 @@ public class Version extends DomainEntity {
         this.versionType = versionType;
     }
 
-    public Instant getCreated() {
-        return created;
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getHash() {
+        return hash;
     }
 
     public Instant getPublished() {

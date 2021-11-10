@@ -1011,8 +1011,11 @@
             <column name="version_type" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="created" type="timestamp with time zone">
-                <constraints nullable="false"/>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="hash" type="varchar(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="version_hash"/>
             </column>
             <column name="published" type="timestamp with time zone">
                 <constraints nullable="true"/>

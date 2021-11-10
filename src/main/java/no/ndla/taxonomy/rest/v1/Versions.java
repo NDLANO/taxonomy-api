@@ -7,6 +7,8 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Version;
@@ -15,15 +17,19 @@ import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
 import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
+import no.ndla.taxonomy.service.UpdatableDto;
 import no.ndla.taxonomy.service.VersionService;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
+import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping(path = { "/v1/versions" })
@@ -66,7 +72,20 @@ public class Versions extends CrudController<Version> {
     @ApiOperation("Updates a version")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
-    public void put(@PathVariable("id") URI id, @ApiParam(name = "subject", value = "The updated version.") @RequestBody VersionCommand command) {
+    public void put(@PathVariable("id") URI id,
+            @ApiParam(name = "version", value = "The updated version.") @RequestBody VersionCommand command) {
         doPut(id, command);
+    }
+
+    @PutMapping("/{id}/publish")
+    @ApiOperation("Publishes a version")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
+    public void publish(@PathVariable("id") URI id) {
+        Version version = versionRepository.getByPublicId(id);
+        if (version == null || version.getVersionType() != VersionType.BETA) {
+            throw new InvalidArgumentServiceException("Version has wrong type");
+        }
+        versionService.publishBetaAndArchiveCurrent(id);
     }
 }

@@ -20,6 +20,10 @@ public class VersionCommand implements UpdatableDto<Version> {
     @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:subject:1")
     public URI id;
 
+    @JsonProperty
+    @ApiModelProperty(notes = "If specified, set the name to this value.", example = "Beta 2022")
+    public String name;
+
     @Override
     public Optional<URI> getId() {
         return Optional.ofNullable(id);
@@ -29,5 +33,8 @@ public class VersionCommand implements UpdatableDto<Version> {
     public void apply(Version entity) {
         if (getId().isPresent())
             entity.setPublicId(id);
+        if (name != null) {
+            entity.setName(name);
+        }
     }
 }

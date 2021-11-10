@@ -30,8 +30,12 @@ public class VersionDTO {
     private VersionType versionType;
 
     @JsonProperty
-    @ApiModelProperty(notes = "Timestamp for when version was created")
-    private Instant created;
+    @ApiModelProperty(notes = "Name for the version")
+    private String name;
+
+    @JsonProperty
+    @ApiModelProperty(notes = "Unique hash for the version")
+    private String hash;
 
     @JsonProperty
     @ApiModelProperty(notes = "Timestamp for when version was published")
@@ -47,7 +51,8 @@ public class VersionDTO {
     public VersionDTO(Version version) {
         this.id = version.getPublicId();
         this.versionType = version.getVersionType();
-        this.created = version.getCreated();
+        this.name = version.getName();
+        this.hash = version.getHash();
         this.published = version.getPublished();
         this.archived = version.getArchived();
     }
@@ -60,8 +65,12 @@ public class VersionDTO {
         return versionType;
     }
 
-    public Instant getCreated() {
-        return created;
+    public String getName() {
+        return name;
+    }
+
+    public String getHash() {
+        return hash;
     }
 
     public Instant getPublished() {

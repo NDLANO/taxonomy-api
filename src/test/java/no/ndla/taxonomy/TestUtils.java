@@ -92,8 +92,12 @@ public class TestUtils {
     public MockHttpServletResponse updateResource(String path, Object command, ResultMatcher resultMatcher)
             throws Exception {
         entityManager.flush();
-        return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
-                .andExpect(resultMatcher).andReturn().getResponse();
+        if (command == null)
+            return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8)).andExpect(resultMatcher).andReturn()
+                    .getResponse();
+        else
+            return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
+                    .andExpect(resultMatcher).andReturn().getResponse();
     }
 
     public static URI getId(MockHttpServletResponse response) {
