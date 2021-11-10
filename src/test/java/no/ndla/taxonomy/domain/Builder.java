@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 public class Builder {
     private final EntityManager entityManager;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final Map<String, VersionBuilder> versions = new HashMap<>();
     private final Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();
     private final Map<String, SubjectBuilder> subjects = new HashMap<>();
     private final Map<String, TopicBuilder> topics = new HashMap<>();
@@ -39,6 +40,28 @@ public class Builder {
 
     private String createKey() {
         return "DefaultKey:" + keyCounter++;
+    }
+
+    public Version version() {
+        return version(null, null);
+    }
+
+    public Version version(String key) {
+        return version(key, null);
+    }
+
+    public Version version(Consumer<VersionBuilder> consumer) {
+        return version(null, consumer);
+    }
+
+    public Version version(String key, Consumer<VersionBuilder> consumer) {
+        VersionBuilder builder = getVersionBuilder(key);
+        if (null != consumer)
+            consumer.accept(builder);
+
+        entityManager.persist(builder.version);
+
+        return builder.version;
     }
 
     public Topic topic(String key) {
@@ -107,6 +130,14 @@ public class Builder {
         if (null != consumer)
             consumer.accept(relevance);
         return relevance.relevance;
+    }
+
+    private VersionBuilder getVersionBuilder(String key) {
+        if (key == null) {
+            key = createKey();
+        }
+        versions.putIfAbsent(key, new VersionBuilder());
+        return versions.get(key);
     }
 
     private RelevanceBuilder getRelevanceBuilder(String key) {
@@ -223,6 +254,27 @@ public class Builder {
         }
         cachedUrlOldRigBuilders.putIfAbsent(key, new UrlMappingBuilder());
         return cachedUrlOldRigBuilders.get(key);
+    }
+
+    @Transactional
+    public static class VersionBuilder {
+        private Version version;
+
+        public VersionBuilder() {
+            this.version = new Version();
+
+        }
+
+        public VersionBuilder publicId(URI publicId) {
+            version.setPublicId(publicId);
+            return this;
+        }
+
+        public VersionBuilder type(VersionType versionType) {
+            version.setVersionType(versionType);
+            return this;
+        }
+
     }
 
     @Transactional
