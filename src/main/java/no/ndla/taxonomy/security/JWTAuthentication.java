@@ -22,6 +22,7 @@ public class JWTAuthentication implements Authentication {
     private static final long serialVersionUID = 1L;
     private static final String TAXONOMY_API = "taxonomy";
     private static final String WRITE_PERMISSION = "write";
+    private static final String ADMIN_PERMISSION = "admin";
     private static final String PRODUCTION = "prod";
 
     private Collection<GrantedAuthority> authorities;
@@ -41,9 +42,11 @@ public class JWTAuthentication implements Authentication {
                 for (String jwtPermissionString : allPermissions) {
                     final JWTPermission jwtPermission = new JWTPermission(jwtPermissionString);
                     if (jwtPermission.getApi() != null && jwtPermission.getPermission() != null
-                            && jwtPermission.getApi().equals(TAXONOMY_API)
-                            && jwtPermission.getPermission().equals(WRITE_PERMISSION)) {
-                        tmp.add(new SimpleGrantedAuthority("TAXONOMY_WRITE"));
+                            && jwtPermission.getApi().equals(TAXONOMY_API)) {
+                        if (jwtPermission.getPermission().equals(WRITE_PERMISSION))
+                            tmp.add(new SimpleGrantedAuthority("TAXONOMY_WRITE"));
+                        if (jwtPermission.getPermission().equals(ADMIN_PERMISSION))
+                            tmp.add(new SimpleGrantedAuthority("TAXONOMY_ADMIN"));
                     }
                 }
             }

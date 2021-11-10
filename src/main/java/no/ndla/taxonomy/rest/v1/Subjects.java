@@ -178,7 +178,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Deletes a single entity by id")
-    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
         nodeService.delete(id);
