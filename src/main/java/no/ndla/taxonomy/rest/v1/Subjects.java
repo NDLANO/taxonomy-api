@@ -59,7 +59,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     public List<EntityWithPathDTO> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
-            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) String value) {
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) String value) {
         if (key != null) {
             return nodeService.getNodes(language, NodeType.SUBJECT, null, new MetadataKeyValueQuery(key, value));
         }

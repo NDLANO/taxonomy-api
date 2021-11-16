@@ -10,12 +10,12 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
-import no.ndla.taxonomy.service.dtos.SubjectDTO;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
@@ -26,9 +26,11 @@ import java.util.stream.Collectors;
 @Service
 public class VersionService {
     private final VersionRepository versionRepository;
+    private VersionGeneratorService versionJsonGeneratorService;
 
-    public VersionService(VersionRepository versionRepository) {
+    public VersionService(VersionRepository versionRepository, VersionGeneratorService versionJsonGeneratorService) {
         this.versionRepository = versionRepository;
+        this.versionJsonGeneratorService = versionJsonGeneratorService;
     }
 
     @Transactional
@@ -61,5 +63,10 @@ public class VersionService {
         beta.setVersionType(VersionType.PUBLISHED);
         beta.setPublished(Instant.now());
         versionRepository.save(beta);
+    }
+
+    public void generateFilesForAllEndpoints(URI id) throws IOException {
+        Version beta = versionRepository.getByPublicId(id);
+        versionJsonGeneratorService.generateJson(beta);
     }
 }

@@ -11,10 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.ApiKey;
-import springfox.documentation.service.AuthorizationScope;
-import springfox.documentation.service.SecurityReference;
+import springfox.documentation.service.*;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.plugins.Docket;
@@ -65,6 +62,7 @@ public class SwaggerConfiguration {
                 + "Unless otherwise specified, all PUT and POST requests must use Content-Type: application/json;charset=UTF-8. If charset is omitted, UTF-8 will be assumed. All GET requests will return data using the same content type.\n\n"
                 + "When you remove an entity, its associations are also deleted. E.g., if you remove a subject, its associations to any topics are removed. The topics themselves are not affected.\n\n"
                 + "If you are using Swagger in an environment that requires authentication you will need a valid JWT token to PUT/POST/DELETE. Apply this by typing 'Bearer [YOUR TOKEN]' in the 'Authorize' dialog",
-                "v1", null, null, "GPL 3.0", "https://www.gnu.org/licenses/gpl-3.0.en.html", emptyList());
+                "v1", "https://om.ndla.no/tos", new Contact("NDLA", "ndla.no", "support+api@ndla.no"), "GPL 3.0",
+                "https://www.gnu.org/licenses/gpl-3.0.en.html", emptyList());
     }
 }

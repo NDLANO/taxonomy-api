@@ -152,4 +152,21 @@ public class VersionsTest extends RestTest {
         assertNotNull(unpublished.getArchived());
     }
 
+    @Test
+    public void generate_files_only_works_for_betas() throws Exception {
+        Version published = builder.version(v -> v.type(VersionType.PUBLISHED));
+        MockHttpServletResponse response = testUtils.updateResource(
+                "/v1/versions/" + published.getPublicId() + "/generate", null, status().is4xxClientError());
+        assertEquals(400, response.getStatus());
+        assertEquals("{\"error\":\"Cannot update production version\"}", response.getContentAsString());
+    }
+
+    @Test
+    public void generate_files_works_for_betas() throws Exception {
+        Version beta = builder.version();
+        MockHttpServletResponse response = testUtils.updateResource("/v1/versions/" + beta.getPublicId() + "/generate",
+                null);
+        assertEquals(204, response.getStatus());
+    }
+
 }

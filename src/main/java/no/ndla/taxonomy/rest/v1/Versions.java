@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
@@ -87,5 +88,17 @@ public class Versions extends CrudController<Version> {
             throw new InvalidArgumentServiceException("Version has wrong type");
         }
         versionService.publishBetaAndArchiveCurrent(id);
+    }
+
+    @PutMapping("/{id}/generate")
+    @ApiOperation("Generates files for a beta version")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
+    public void generate(@PathVariable("id") URI id) throws IOException {
+        Version version = versionRepository.getByPublicId(id);
+        if (version == null || version.getVersionType() != VersionType.BETA) {
+            throw new InvalidArgumentServiceException("Cannot update production version");
+        }
+        versionService.generateFilesForAllEndpoints(id);
     }
 }
