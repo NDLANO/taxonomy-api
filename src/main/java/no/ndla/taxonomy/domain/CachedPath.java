@@ -8,7 +8,6 @@
 package no.ndla.taxonomy.domain;
 
 import javax.persistence.*;
-import java.net.URI;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -26,9 +25,6 @@ public class CachedPath {
     @Column
     @Id
     private UUID id;
-
-    @Column
-    private URI publicId;
 
     @Column
     private String path;
@@ -54,14 +50,6 @@ public class CachedPath {
 
     public UUID getId() {
         return id;
-    }
-
-    public URI getPublicId() {
-        return publicId;
-    }
-
-    public void setPublicId(URI publicId) {
-        this.publicId = publicId;
     }
 
     public String getPath() {
@@ -143,8 +131,6 @@ public class CachedPath {
             throw new IllegalArgumentException("Unknown entity of type " + entity.getClass().toString()
                     + " passed as owning entity of CachedPath");
         }
-
-        setPublicId(entity.getPublicId());
     }
 
     public Optional<Topic> getTopic() {

@@ -19,6 +19,11 @@ management:
 
 ndla.taxonomy-metadata.url: http://taxonomy-metadata
 
+cloud:
+  aws:
+    region:
+      static: eu-west-1
+
 ---
 
 spring:

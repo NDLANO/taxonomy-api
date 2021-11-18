@@ -22,10 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -33,16 +30,18 @@ import java.util.stream.Collectors;
 public class Resources extends CrudControllerWithMetadata<Resource> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ResourceService resourceService;
+    private final VersionService versionService;
 
     public Resources(ResourceRepository resourceRepository,
             ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceService resourceService,
             CachedUrlUpdaterService cachedUrlUpdaterService, MetadataApiService metadataApiService,
-            MetadataUpdateService metadataUpdateService) {
+            MetadataUpdateService metadataUpdateService, VersionService versionService) {
         super(resourceRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.repository = resourceRepository;
         this.resourceService = resourceService;
+        this.versionService = versionService;
     }
 
     @Override
@@ -57,7 +56,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) URI contentUriFilter,
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
-            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) String value) {
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) String value) {
         if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
             contentUriFilter = null;
         }
@@ -92,7 +91,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @Transactional
     public ResponseEntity<Void> post(
             @ApiParam(name = "resource", value = "the new resource") @RequestBody ResourceCommand command) {
-        return doPost(new Resource(), command);
+        return doPost(new Resource(versionService.getBeta()), command);
     }
 
     @GetMapping("{id}/resource-types")

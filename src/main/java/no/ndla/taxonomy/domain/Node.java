@@ -26,6 +26,9 @@ public class Node extends EntityWithPath {
     @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<NodeTranslation> translations = new HashSet<>();
 
+    @ManyToOne
+    private Version version;
+
     @Column
     private URI contentUri;
 
@@ -46,7 +49,8 @@ public class Node extends EntityWithPath {
     public Node() {
     }
 
-    public Node(NodeType nodeType) {
+    public Node(NodeType nodeType, Version version) {
+        setVersion(version);
         setNodeType(nodeType);
         setIdent(UUID.randomUUID().toString());
         updatePublicID();
@@ -226,6 +230,14 @@ public class Node extends EntityWithPath {
 
     public void removeTranslation(String languageCode) {
         getTranslation(languageCode).ifPresent(this::removeTranslation);
+    }
+
+    public Version getVersion() {
+        return version;
+    }
+
+    public void setVersion(Version version) {
+        this.version = version;
     }
 
     public void setContext(boolean context) {

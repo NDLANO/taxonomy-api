@@ -1025,4 +1025,39 @@
             </column>
         </createTable>
     </changeSet>
+    
+    <changeSet id="20211117 add default published version" author="Gunnar Velle">
+        <insert tableName="version">
+            <column name="id" value="1"/>
+            <column name="public_id" value="urn:version:published"/>
+            <column name="version_type" value="PUBLISHED"/>
+            <column name="name" value="Initial"/>
+            <column name="hash" value="abcd"/>
+            <column name="published"  valueComputed="CURRENT_TIMESTAMP()"/>
+        </insert>
+        <insert tableName="version">
+            <column name="id" value="2"/>
+            <column name="public_id" value="urn:version:beta"/>
+            <column name="version_type" value="BETA"/>
+            <column name="name" value="Beta"/>
+            <column name="hash" value="efgh"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="20211117 removed field only used by test" author="Gunnar Velle">
+        <dropColumn tableName="cached_path" columnName="public_id"/>
+    </changeSet>
+
+    <changeSet id="20211117 add version to all relevant tables" author="Gunnar Velle">
+        <addColumn tableName="node">
+            <column name="version_id" type="integer" valueNumeric="1" defaultValueNumeric="1">
+                <constraints nullable="true" referencedTableName="version" referencedColumnNames="id" foreignKeyName="fk_node_version_id"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="resource">
+            <column name="version_id" type="integer" valueNumeric="1" defaultValueNumeric="1">
+                <constraints nullable="false" referencedTableName="version" referencedColumnNames="id" foreignKeyName="fk_resource_version_id"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

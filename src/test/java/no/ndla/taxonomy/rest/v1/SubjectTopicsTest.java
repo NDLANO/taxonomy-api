@@ -7,9 +7,7 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.RankableConnectionUpdater;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -200,8 +198,8 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void update_subject_rank_no_existing_connections_returns_single_connection() {
-        Node subject = new Node(NodeType.SUBJECT);
-        Node topic = new Node(NodeType.TOPIC);
+        Node subject = new Node(NodeType.SUBJECT, versionService.getBeta().orElseThrow());
+        Node topic = new Node(NodeType.TOPIC, versionService.getBeta().orElseThrow());
 
         NodeConnection st = NodeConnection.create(subject, topic);
         List<NodeConnection> rankedList = RankableConnectionUpdater.rank(new ArrayList<>(), st, 99);
@@ -252,8 +250,9 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void topic_has_default_rank() throws Exception {
-        builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("Mathematics").child(NodeType.TOPIC, t -> t.name("Geometry")));
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Mathematics").child(NodeType.TOPIC, version, t -> t.name("Geometry")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subject-topics");
         SubjectTopics.SubjectTopicIndexDocument[] topics = testUtils
@@ -264,10 +263,11 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_change_sorting_order_for_topics() throws Exception {
-        Node mathematics = builder.node(NodeType.SUBJECT,
+        Version version = versionService.getPublished().get();
+        Node mathematics = builder.node(NodeType.SUBJECT, version,
                 s -> s.isContext(true).name("Mathematics").publicId("urn:subject:1"));
-        Node geometry = builder.node(NodeType.TOPIC, t -> t.name("Geometry").publicId("urn:topic:1"));
-        Node statistics = builder.node(NodeType.TOPIC, t -> t.name("Statistics").publicId("urn:topic:2"));
+        Node geometry = builder.node(NodeType.TOPIC, version, t -> t.name("Geometry").publicId("urn:topic:1"));
+        Node statistics = builder.node(NodeType.TOPIC, version, t -> t.name("Statistics").publicId("urn:topic:2"));
         NodeConnection geometryMaths = save(NodeConnection.create(mathematics, geometry));
         NodeConnection statisticsMaths = save(NodeConnection.create(mathematics, statistics));
 
@@ -299,12 +299,13 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_change_sorting_order_for_subtopics() throws Exception {
-        Node mathematics = builder.node(NodeType.SUBJECT,
+        Version version = versionService.getPublished().get();
+        Node mathematics = builder.node(NodeType.SUBJECT, version,
                 s -> s.isContext(true).name("Mathematics").publicId("urn:subject:1"));
-        Node geometry = builder.node(NodeType.TOPIC, t -> t.name("Geometry").publicId("urn:topic:1"));
-        Node statistics = builder.node(NodeType.TOPIC, t -> t.name("Statistics").publicId("urn:topic:2"));
-        Node subtopic1 = builder.node(NodeType.TOPIC, t -> t.name("Subtopic 1").publicId("urn:topic:aa"));
-        Node subtopic2 = builder.node(NodeType.TOPIC, t -> t.name("Subtopic 2").publicId("urn:topic:ab"));
+        Node geometry = builder.node(NodeType.TOPIC, version, t -> t.name("Geometry").publicId("urn:topic:1"));
+        Node statistics = builder.node(NodeType.TOPIC, version, t -> t.name("Statistics").publicId("urn:topic:2"));
+        Node subtopic1 = builder.node(NodeType.TOPIC, version, t -> t.name("Subtopic 1").publicId("urn:topic:aa"));
+        Node subtopic2 = builder.node(NodeType.TOPIC, version, t -> t.name("Subtopic 2").publicId("urn:topic:ab"));
         NodeConnection geometryMaths = save(NodeConnection.create(mathematics, geometry));
         NodeConnection statisticsMaths = save(NodeConnection.create(mathematics, statistics));
         NodeConnection tst1 = save(NodeConnection.create(geometry, subtopic1));
@@ -355,10 +356,11 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_create_topic_with_rank() throws Exception {
-        Node mathematics = builder.node(NodeType.SUBJECT,
+        Version version = versionService.getPublished().get();
+        Node mathematics = builder.node(NodeType.SUBJECT, version,
                 s -> s.isContext(true).name("Mathematics").publicId("urn:subject:1"));
-        Node geometry = builder.node(NodeType.TOPIC, t -> t.name("Geometry").publicId("urn:topic:1"));
-        Node statistics = builder.node(NodeType.TOPIC, t -> t.name("Statistics").publicId("urn:topic:2"));
+        Node geometry = builder.node(NodeType.TOPIC, version, t -> t.name("Geometry").publicId("urn:topic:1"));
+        Node statistics = builder.node(NodeType.TOPIC, version, t -> t.name("Statistics").publicId("urn:topic:2"));
 
         testUtils.createResource("/v1/subject-topics", new SubjectTopics.AddTopicToSubjectCommand() {
             {

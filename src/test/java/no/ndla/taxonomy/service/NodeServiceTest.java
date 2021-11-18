@@ -9,6 +9,8 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,9 +52,9 @@ public class NodeServiceTest {
 
     @Test
     public void delete() {
-        final var createdTopic = builder.node(n -> n.nodeType(NodeType.TOPIC));
+        final var createdTopic = builder.node(NodeType.TOPIC, builder.version());
         final var topicId = createdTopic.getPublicId();
-        nodeService.delete(topicId);
+        nodeService.delete(topicId, createdTopic.getVersion().getHash());
 
         assertFalse(nodeRepository.findFirstByPublicId(topicId).isPresent());
         verify(entityConnectionService).disconnectAllChildren(createdTopic);
@@ -62,7 +64,8 @@ public class NodeServiceTest {
 
     @Test
     public void getAllConnections() {
-        final var topicId = builder.node(n -> n.nodeType(NodeType.TOPIC)).getPublicId();
+        Version version = builder.version();
+        final var topicId = builder.node(NodeType.TOPIC, version).getPublicId();
 
         final var subjectTopic = mock(NodeConnection.class);
         final var parentTopicSubtopic = mock(NodeConnection.class);
@@ -88,7 +91,7 @@ public class NodeServiceTest {
             return childConnectionsToReturn;
         });
 
-        final var returnedConnections = nodeService.getAllConnections(topicId);
+        final var returnedConnections = nodeService.getAllConnections(topicId, version.getHash());
 
         assertEquals(2, returnedConnections.size());
         returnedConnections.forEach(connection -> {

@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -25,14 +24,6 @@ public class CachedPathTest {
     @BeforeEach
     public void setUp() {
         this.cachedPath = new CachedPath();
-    }
-
-    @Test
-    public void setAndGetPublicId() throws URISyntaxException {
-        assertNull(cachedPath.getPublicId());
-
-        cachedPath.setPublicId(new URI("urn:test:1"));
-        assertEquals(new URI("urn:test:1"), cachedPath.getPublicId());
     }
 
     @Test
@@ -85,21 +76,18 @@ public class CachedPathTest {
         assertSame(subject, getField(cachedPath, "subject"));
         assertNull(getField(cachedPath, "topic"));
         assertNull(getField(cachedPath, "resource"));
-        assertEquals("urn:subject:1", cachedPath.getPublicId().toString());
 
         cachedPath.setOwningEntity(topic);
 
         assertNull(getField(cachedPath, "subject"));
         assertSame(topic, getField(cachedPath, "topic"));
         assertNull(getField(cachedPath, "resource"));
-        assertEquals("urn:topic:1", cachedPath.getPublicId().toString());
 
         cachedPath.setOwningEntity(resource);
 
         assertNull(getField(cachedPath, "subject"));
         assertNull(getField(cachedPath, "topic"));
         assertSame(resource, getField(cachedPath, "resource"));
-        assertEquals("urn:resource:1", cachedPath.getPublicId().toString());
 
         try {
             cachedPath.setOwningEntity(unknown);

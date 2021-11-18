@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
@@ -32,6 +33,7 @@ public class ResourceServiceImpl implements ResourceService {
     private final RecursiveTopicTreeService recursiveTopicTreeService;
     private final TopicResourceRepository topicResourceRepository;
     private final NodeResourceRepository nodeResourceRepository;
+    private final NodeRepository nodeRepository;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
 
@@ -39,7 +41,7 @@ public class ResourceServiceImpl implements ResourceService {
             EntityConnectionService connectionService, MetadataApiService metadataApiService,
             DomainEntityHelperService domainEntityHelperService, RecursiveTopicTreeService recursiveTopicTreeService,
             NodeResourceRepository nodeResourceRepository, RecursiveNodeTreeService recursiveNodeTreeService,
-            TreeSorter topicTreeSorter) {
+            NodeRepository nodeRepository, TreeSorter topicTreeSorter) {
         this.resourceRepository = resourceRepository;
         this.connectionService = connectionService;
         this.metadataApiService = metadataApiService;
@@ -47,6 +49,7 @@ public class ResourceServiceImpl implements ResourceService {
         this.recursiveTopicTreeService = recursiveTopicTreeService;
         this.topicResourceRepository = topicResourceRepository;
         this.nodeResourceRepository = nodeResourceRepository;
+        this.nodeRepository = nodeRepository;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.treeSorter = topicTreeSorter;
     }
@@ -221,9 +224,10 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Override
     @InjectMetadata
-    public List<ResourceWithNodeConnectionDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds,
-            URI relevancePublicId, String languageCode, boolean recursive) {
-        final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
+    public List<ResourceWithNodeConnectionDTO> getResourcesByNodeId(URI nodePublicId, String versionHash,
+            Set<URI> resourceTypeIds, URI relevancePublicId, String languageCode, boolean recursive) {
+        final var optional = nodeRepository.findFirstByPublicIdAndVersion(nodePublicId, versionHash);
+        final var node = optional.orElseThrow(() -> new NotFoundServiceException("Node not found"));
 
         final Set<Integer> topicIdsToSearchFor;
 

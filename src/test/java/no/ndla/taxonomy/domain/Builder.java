@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.domain;
 
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.VersionService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import java.util.function.Consumer;
 public class Builder {
     private final EntityManager entityManager;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final VersionService versionService;
     private final Map<String, VersionBuilder> versions = new HashMap<>();
     private final Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();
     private final Map<String, SubjectBuilder> subjects = new HashMap<>();
@@ -33,9 +35,11 @@ public class Builder {
     private final Map<String, UrlMappingBuilder> cachedUrlOldRigBuilders = new HashMap<>();
     private int keyCounter = 0;
 
-    public Builder(EntityManager entityManager, CachedUrlUpdaterService cachedUrlUpdaterService) {
+    public Builder(EntityManager entityManager, CachedUrlUpdaterService cachedUrlUpdaterService,
+            VersionService versionService) {
         this.entityManager = entityManager;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.versionService = versionService;
     }
 
     private String createKey() {
@@ -165,14 +169,17 @@ public class Builder {
         return topics.get(key);
     }
 
-    private NodeBuilder getNodeBuilder(String key, NodeType nodeType) {
+    private NodeBuilder getNodeBuilder(String key, NodeType nodeType, Version version) {
         if (key == null) {
             key = createKey();
         }
         if (nodeType == null) {
             nodeType = NodeType.NODE;
         }
-        nodes.putIfAbsent(key, new NodeBuilder(nodeType));
+        if (version == null) {
+            version = versions.get("published").version;
+        }
+        nodes.putIfAbsent(key, new NodeBuilder(nodeType, version));
         return nodes.get(key);
     }
 
@@ -217,27 +224,51 @@ public class Builder {
     }
 
     public Node node() {
-        return node(null, null, null);
+        return node(null, null, null, null);
+    }
+
+    public Node node(Version version) {
+        return node(null, null, version, null);
     }
 
     public Node node(String key) {
-        return node(key, null, null);
+        return node(key, null, null, null);
+    }
+
+    public Node node(String key, Version version) {
+        return node(key, null, version, null);
     }
 
     public Node node(NodeType nodeType) {
-        return node(null, nodeType, null);
+        return node(null, nodeType, null, null);
+    }
+
+    public Node node(NodeType nodeType, Version version) {
+        return node(null, nodeType, version, null);
     }
 
     public Node node(Consumer<NodeBuilder> consumer) {
-        return node(null, null, consumer);
+        return node(null, null, null, consumer);
+    }
+
+    public Node node(Version version, Consumer<NodeBuilder> consumer) {
+        return node(null, null, version, consumer);
     }
 
     public Node node(NodeType nodeType, Consumer<NodeBuilder> consumer) {
-        return node(null, nodeType, consumer);
+        return node(null, nodeType, null, consumer);
+    }
+
+    public Node node(NodeType nodeType, Version version, Consumer<NodeBuilder> consumer) {
+        return node(null, nodeType, version, consumer);
     }
 
     public Node node(String key, NodeType nodeType, Consumer<NodeBuilder> consumer) {
-        NodeBuilder node = getNodeBuilder(key, nodeType);
+        return node(key, nodeType, null, consumer);
+    }
+
+    public Node node(String key, NodeType nodeType, Version version, Consumer<NodeBuilder> consumer) {
+        NodeBuilder node = getNodeBuilder(key, nodeType, version);
         if (null != consumer)
             consumer.accept(node);
 
@@ -257,12 +288,11 @@ public class Builder {
     }
 
     @Transactional
-    public static class VersionBuilder {
-        private Version version;
+    public class VersionBuilder {
+        private final Version version;
 
         public VersionBuilder() {
             this.version = new Version();
-
         }
 
         public VersionBuilder publicId(URI publicId) {
@@ -441,7 +471,7 @@ public class Builder {
         private final Resource resource;
 
         public ResourceBuilder() {
-            resource = new Resource();
+            resource = new Resource(versionService.getBeta());
             entityManager.persist(resource);
         }
 
@@ -698,9 +728,14 @@ public class Builder {
     public class NodeBuilder {
         private final Node node;
 
-        public NodeBuilder(NodeType nodeType) {
-            node = new Node(nodeType);
+        public NodeBuilder(NodeType nodeType, Version version) {
+            node = new Node(nodeType, version);
             entityManager.persist(node);
+        }
+
+        public NodeBuilder version(Version version) {
+            node.setVersion(version);
+            return this;
         }
 
         public NodeBuilder nodeType(NodeType nodeType) {
@@ -738,23 +773,43 @@ public class Builder {
         }
 
         public NodeBuilder child(String nodeKey) {
-            return child(nodeKey, null, null);
+            return child(nodeKey, null, null, null);
+        }
+
+        public NodeBuilder child(String nodeKey, Version version) {
+            return child(nodeKey, null, version, null);
         }
 
         public NodeBuilder child(String nodeKey, NodeType nodeType) {
-            return child(nodeKey, nodeType, null);
+            return child(nodeKey, nodeType, null, null);
+        }
+
+        public NodeBuilder child(String nodeKey, NodeType nodeType, Version version) {
+            return child(nodeKey, nodeType, version, null);
         }
 
         public NodeBuilder child(Consumer<NodeBuilder> consumer) {
-            return child(null, null, consumer);
+            return child(null, null, null, consumer);
+        }
+
+        public NodeBuilder child(Version version, Consumer<NodeBuilder> consumer) {
+            return child(null, null, version, consumer);
         }
 
         public NodeBuilder child(NodeType nodeType, Consumer<NodeBuilder> consumer) {
-            return child(null, nodeType, consumer);
+            return child(null, nodeType, null, consumer);
+        }
+
+        public NodeBuilder child(NodeType nodeType, Version version, Consumer<NodeBuilder> consumer) {
+            return child(null, nodeType, version, consumer);
         }
 
         public NodeBuilder child(String key, NodeType nodeType, Consumer<NodeBuilder> consumer) {
-            NodeBuilder nodeBuilder = getNodeBuilder(key, nodeType);
+            return child(key, nodeType, null, consumer);
+        }
+
+        public NodeBuilder child(String key, NodeType nodeType, Version version, Consumer<NodeBuilder> consumer) {
+            NodeBuilder nodeBuilder = getNodeBuilder(key, nodeType, version);
             if (null != consumer)
                 consumer.accept(nodeBuilder);
             child(nodeBuilder.node);

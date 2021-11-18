@@ -9,10 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.EntityWithPath;
-import no.ndla.taxonomy.domain.EntityWithPathConnection;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -20,6 +17,7 @@ import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,12 +36,14 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     private final NodeService nodeService;
     private final ResourceService resourceService;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
+    private final VersionService versionService;
     private final TreeSorter treeSorter;
 
     public Nodes(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
             NodeService nodeService, CachedUrlUpdaterService cachedUrlUpdaterService, ResourceService resourceService,
             RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter,
-            MetadataApiService metadataApiService, MetadataUpdateService metadataUpdateService) {
+            MetadataApiService metadataApiService, MetadataUpdateService metadataUpdateService,
+            VersionService versionService) {
         super(nodeRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
 
         this.nodeRepository = nodeRepository;
@@ -51,12 +51,14 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         this.nodeService = nodeService;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.resourceService = resourceService;
+        this.versionService = versionService;
         this.treeSorter = treeSorter;
     }
 
     @GetMapping
     @ApiOperation("Gets all nodes")
-    public List<EntityWithPathDTO> index(
+    public List<EntityWithPathDTO> all(
+            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
             @ApiParam(value = "Filter by nodeType") @RequestParam(value = "nodeType", required = false) NodeType nodeTypeFilter,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) URI contentUriFilter,
@@ -64,14 +66,17 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) String value) {
 
+        if (versionHash == null) {
+            versionHash = versionService.getPublishedHash();
+        }
         if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
             contentUriFilter = null;
         }
         if (key != null) {
-            return nodeService.getNodes(language, nodeTypeFilter, contentUriFilter,
+            return nodeService.getNodes(versionHash, language, nodeTypeFilter, contentUriFilter,
                     new MetadataKeyValueQuery(key, value));
         }
-        return nodeService.getNodes(language, nodeTypeFilter, contentUriFilter, isRoot);
+        return nodeService.getNodes(versionHash, language, nodeTypeFilter, contentUriFilter, isRoot);
     }
 
     @GetMapping("/{id}")
@@ -79,9 +84,14 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @Transactional
     @InjectMetadata
     public NodeDTO get(@PathVariable("id") URI id,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return new NodeDTO(nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
-                .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found")), language);
+        if (versionHash == null)
+            versionHash = versionService.getPublishedHash();
+        return new NodeDTO(
+                nodeRepository.findFirstByPublicIdAndVersionIncludingCachedUrlsAndTranslations(id, versionHash)
+                        .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found")),
+                language);
     }
 
     @PostMapping
@@ -90,7 +100,10 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @Transactional
     public ResponseEntity<Void> post(
             @ApiParam(name = "connection", value = "The new node") @RequestBody NodeCommand command) {
-        return doPost(new Node(command.nodeType), command);
+        return doPost(
+                new Node(command.nodeType,
+                        versionService.getBeta().orElseThrow(() -> new NotFoundServiceException("No beta version"))),
+                command);
     }
 
     @PutMapping("/{id}")
@@ -107,9 +120,13 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @ApiOperation(value = "Gets all children for this node")
     @InjectMetadata
     public List<EntityWithPathChildDTO> getChildren(@ApiParam(value = "id", required = true) @PathVariable("id") URI id,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
             @ApiParam("If true, children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        final var node = nodeRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundException("Node", id));
+        if (versionHash == null)
+            versionHash = versionService.getPublishedHash();
+        final var node = nodeRepository.findFirstByPublicIdAndVersion(id, versionHash)
+                .orElseThrow(() -> new NotFoundException("Node", id));
 
         final List<Integer> childrenIds;
         if (recursive) {
@@ -133,8 +150,11 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}/connections")
     @ApiOperation(value = "Gets all parents and children this node is connected to")
-    public List<ConnectionIndexDTO> getAllConnections(@PathVariable("id") URI id) {
-        return nodeService.getAllConnections(id);
+    public List<ConnectionIndexDTO> getAllConnections(@PathVariable("id") URI id,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash) {
+        if (versionHash == null)
+            versionHash = versionService.getPublishedHash();
+        return nodeService.getAllConnections(id, versionHash);
     }
 
     @DeleteMapping("/{id}")
@@ -142,19 +162,22 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
-        nodeService.delete(id);
+        nodeService.delete(id, versionService.getBetaVersionHash());
     }
 
     @GetMapping("/{id}/resources")
     @ApiOperation(value = "Gets all resources for the given node", tags = { "nodes" })
     public List<ResourceWithNodeConnectionDTO> getResources(
             @ApiParam(value = "id", required = true) @PathVariable("id") URI nodeId,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false) String language,
             @ApiParam("If true, resources from children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @ApiParam(value = "Select by resource type id(s). If not specified, resources of all types will be returned."
                     + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) @RequestParam(value = "type", required = false) URI[] resourceTypeIds,
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.") @RequestParam(value = "relevance", required = false) URI relevance) {
         final Set<URI> resourceTypeIdSet;
+        if (versionHash == null)
+            versionHash = versionService.getPublishedHash();
 
         if (resourceTypeIds == null) {
             resourceTypeIdSet = Set.of();
@@ -162,7 +185,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             resourceTypeIdSet = new HashSet<>(Arrays.asList(resourceTypeIds));
         }
 
-        return resourceService.getResourcesByNodeId(nodeId, resourceTypeIdSet, relevance, language, recursive);
+        return resourceService.getResourcesByNodeId(nodeId, versionHash, resourceTypeIdSet, relevance, language,
+                recursive);
     }
 
 }

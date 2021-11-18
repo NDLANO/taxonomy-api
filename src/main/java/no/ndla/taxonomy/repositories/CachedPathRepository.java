@@ -16,7 +16,10 @@ import java.util.List;
 
 public interface CachedPathRepository extends JpaRepository<CachedPath, String> {
 
-    @Query("select cp from CachedPath cp where cp.active = true and cp.publicId = ?1")
+    @Query("SELECT cp from CachedPath cp LEFT JOIN FETCH cp.node n LEFT JOIN FETCH cp.subject s "
+            + "LEFT JOIN FETCH cp.topic t LEFT JOIN FETCH cp.resource r "
+            + "WHERE cp.active = true AND (n.publicId = :publicId  OR s.publicId = :publicId "
+            + "OR t.publicId = :publicId  OR r.publicId = :publicId)")
     List<CachedPath> findAllByPublicId(URI publicId);
 
     int deleteByActiveFalse();

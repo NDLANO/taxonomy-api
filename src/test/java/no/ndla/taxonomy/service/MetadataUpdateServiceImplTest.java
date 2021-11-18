@@ -9,6 +9,7 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.SubjectRepository;
@@ -45,22 +46,22 @@ class MetadataUpdateServiceImplTest {
 
     @BeforeEach
     void setUp(@Autowired NodeRepository nodeRepository, @Autowired Builder builder,
-            @Autowired ResourceRepository resourceRepository) {
+            @Autowired VersionService versionService, @Autowired ResourceRepository resourceRepository) {
 
         metadataApiService = mock(MetadataApiService.class);
-
-        builder.node(NodeType.SUBJECT, sb -> {
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version, sb -> {
             sb.isContext(true);
             sb.publicId("urn:subject:mdup:1");
             sb.name("Subject 1");
 
-            sb.child(NodeType.TOPIC, tb -> {
+            sb.child(NodeType.TOPIC, version, tb -> {
                 tb.publicId("urn:topic:mdup:11");
 
                 tb.resource(rb -> rb.publicId("urn:resource:mdup:111"));
                 tb.resource(rb -> rb.publicId("urn:resource:mdup:112"));
             });
-            sb.child(NodeType.TOPIC, tb -> {
+            sb.child(NodeType.TOPIC, version, tb -> {
                 tb.publicId("urn:topic:mdup:12");
 
                 tb.resource(rb -> rb.publicId("urn:resource:mdup:121"));
@@ -68,18 +69,18 @@ class MetadataUpdateServiceImplTest {
             });
         });
 
-        builder.node(NodeType.SUBJECT, sb -> {
+        builder.node(NodeType.SUBJECT, version, sb -> {
             sb.isContext(true);
             sb.publicId("urn:subject:mdup:2");
             sb.name("Subject 2");
 
-            sb.child(NodeType.TOPIC, tb -> {
+            sb.child(NodeType.TOPIC, version, tb -> {
                 tb.publicId("urn:topic:mdup:21");
 
                 tb.resource(rb -> rb.publicId("urn:resource:mdup:211"));
                 tb.resource(rb -> rb.publicId("urn:resource:mdup:212"));
             });
-            sb.child(NodeType.TOPIC, tb -> {
+            sb.child(NodeType.TOPIC, version, tb -> {
                 tb.publicId("urn:topic:mdup:22");
 
                 tb.resource(rb -> rb.publicId("urn:resource:mdup:221"));

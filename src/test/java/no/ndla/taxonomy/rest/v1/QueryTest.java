@@ -8,6 +8,8 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.Version;
+import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.rest.v1.dtos.queries.ResourceIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.queries.TopicIndexDocument;
 import org.junit.jupiter.api.Test;
@@ -82,8 +84,8 @@ public class QueryTest extends RestTest {
     public void can_get_a_topic_matching_contentURI() throws Exception {
         builder.resource(r -> r.publicId("urn:resource:1").contentUri("urn:article:345")
                 .resourceType(rt -> rt.name("Subject material")));
-
-        builder.node(NodeType.TOPIC, r -> r.publicId("urn:topic:2").contentUri("urn:article:345"));
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.TOPIC, version, r -> r.publicId("urn:topic:2").contentUri("urn:article:345"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/topics?contentURI=urn:article:345");
         ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
@@ -94,9 +96,10 @@ public class QueryTest extends RestTest {
 
     @Test
     public void can_get_all_topics_matching_contentURI() throws Exception {
-        builder.node(NodeType.TOPIC, r -> r.publicId("urn:topic:2").contentUri("urn:article:345"));
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.TOPIC, version, r -> r.publicId("urn:topic:2").contentUri("urn:article:345"));
 
-        builder.node(NodeType.TOPIC, r -> r.publicId("urn:topic:3").contentUri("urn:article:345"));
+        builder.node(NodeType.TOPIC, version, r -> r.publicId("urn:topic:3").contentUri("urn:article:345"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/topics?contentURI=urn:article:345");
         ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
@@ -116,7 +119,8 @@ public class QueryTest extends RestTest {
 
     @Test
     public void can_get_translated_name_for_topic() throws Exception {
-        builder.node(NodeType.TOPIC, r -> r.publicId("urn:topic:2").name("topic")
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.TOPIC, version, r -> r.publicId("urn:topic:2").name("topic")
                 .translation("nb", tr -> tr.name("Emne")).contentUri("urn:article:345"));
 
         MockHttpServletResponse response = testUtils

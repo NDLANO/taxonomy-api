@@ -26,8 +26,9 @@ public class TopicSubtopicsTest extends RestTest {
     @Test
     public void can_add_subtopic_to_topic() throws Exception {
         URI integrationId, calculusId;
-        calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus")).getPublicId();
-        integrationId = builder.node(NodeType.TOPIC, t -> t.name("integration")).getPublicId();
+        Version version = versionService.getPublished().get();
+        calculusId = builder.node(NodeType.TOPIC, version, t -> t.name("calculus")).getPublicId();
+        integrationId = builder.node(NodeType.TOPIC, version, t -> t.name("integration")).getPublicId();
 
         URI id = getId(testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {
             {
@@ -46,8 +47,11 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void cannot_add_existing_subtopic_to_topic() throws Exception {
-        URI integrationId = builder.node("integration", NodeType.TOPIC, t -> t.name("integration")).getPublicId();
-        URI calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus").child("integration")).getPublicId();
+        Version version = versionService.getPublished().get();
+        URI integrationId = builder.node("integration", NodeType.TOPIC, version, t -> t.name("integration"))
+                .getPublicId();
+        URI calculusId = builder.node(NodeType.TOPIC, version, t -> t.name("calculus").child("integration", version))
+                .getPublicId();
 
         testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {
             {
@@ -66,11 +70,16 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void can_get_topics() throws Exception {
-        URI alternatingCurrentId = builder.node("ac", NodeType.TOPIC, t -> t.name("alternating current")).getPublicId();
-        URI electricityId = builder.node(NodeType.TOPIC, t -> t.name("electricity").child("ac", NodeType.TOPIC))
+        Version version = versionService.getPublished().get();
+        URI alternatingCurrentId = builder.node("ac", NodeType.TOPIC, version, t -> t.name("alternating current"))
                 .getPublicId();
-        URI integrationId = builder.node("integration", NodeType.TOPIC, t -> t.name("integration")).getPublicId();
-        URI calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus").child("integration", NodeType.TOPIC))
+        URI electricityId = builder
+                .node(NodeType.TOPIC, version, t -> t.name("electricity").child("ac", NodeType.TOPIC, version))
+                .getPublicId();
+        URI integrationId = builder.node("integration", NodeType.TOPIC, version, t -> t.name("integration"))
+                .getPublicId();
+        URI calculusId = builder
+                .node(NodeType.TOPIC, version, t -> t.name("calculus").child("integration", NodeType.TOPIC, version))
                 .getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topic-subtopics");
@@ -106,9 +115,10 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void subtopics_have_default_rank() throws Exception {
-        builder.node(NodeType.TOPIC,
-                t -> t.name("electricity").child(NodeType.TOPIC, st -> st.name("alternating currents"))
-                        .child(NodeType.TOPIC, st -> st.name("wiring")));
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.TOPIC, version,
+                t -> t.name("electricity").child(NodeType.TOPIC, version, st -> st.name("alternating currents"))
+                        .child(NodeType.TOPIC, version, st -> st.name("wiring")));
         MockHttpServletResponse response = testUtils.getResource(("/v1/topic-subtopics"));
         TopicSubtopics.TopicSubtopicIndexDocument[] subtopics = testUtils
                 .getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);
@@ -118,12 +128,14 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void subtopics_can_be_created_with_rank() throws Exception {
-        Node subject = builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Subject").publicId("urn:subject:1"));
-        Node electricity = builder.node(NodeType.TOPIC, s -> s.name("Electricity").publicId("urn:topic:1"));
+        Version version = versionService.getPublished().get();
+        Node subject = builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Subject").publicId("urn:subject:1"));
+        Node electricity = builder.node(NodeType.TOPIC, version, s -> s.name("Electricity").publicId("urn:topic:1"));
         save(NodeConnection.create(subject, electricity));
-        Node alternatingCurrents = builder.node(NodeType.TOPIC,
+        Node alternatingCurrents = builder.node(NodeType.TOPIC, version,
                 t -> t.name("Alternating currents").publicId("urn:topic:11"));
-        Node wiring = builder.node(NodeType.TOPIC, t -> t.name("Wiring").publicId("urn:topic:12"));
+        Node wiring = builder.node(NodeType.TOPIC, version, t -> t.name("Wiring").publicId("urn:topic:12"));
 
         testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {
             {

@@ -10,6 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import no.ndla.taxonomy.service.dtos.SubjectChildDTO;
@@ -30,7 +31,8 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_single_subject() throws Exception {
-        builder.node(NodeType.SUBJECT,
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version,
                 s -> s.isContext(true).name("english").contentUri("urn:article:1").publicId("urn:subject:1"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1");
@@ -48,8 +50,9 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_all_subjects() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("english"));
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("mathematics"));
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version, s -> s.isContext(true).name("english"));
+        builder.node(NodeType.SUBJECT, version, s -> s.isContext(true).name("mathematics"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects");
         SubjectIndexDocument[] subjects = testUtils.getObject(SubjectIndexDocument[].class, response);
@@ -100,7 +103,8 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_update_subject() throws Exception {
-        URI publicId = builder.node(NodeType.SUBJECT).getPublicId();
+        Version version = versionService.getBeta().get();
+        URI publicId = builder.node(NodeType.SUBJECT, version).getPublicId();
 
         final var command = new SubjectCommand() {
             {
@@ -119,7 +123,8 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_update_subject_with_new_id() throws Exception {
-        URI publicId = builder.node(NodeType.SUBJECT).getPublicId();
+        Version version = versionService.getBeta().get();
+        URI publicId = builder.node(NodeType.SUBJECT, version).getPublicId();
         URI randomId = URI.create("urn:subject:random");
 
         final var command = new SubjectCommand() {
@@ -152,8 +157,9 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_delete_subject() throws Exception {
-        URI id = builder.node(NodeType.SUBJECT,
-                s -> s.child(NodeType.TOPIC, t -> t.publicId("urn:topic:1")).translation("nb", tr -> tr.name("fag")))
+        Version version = versionService.getBeta().get();
+        URI id = builder.node(NodeType.SUBJECT, version, s -> s
+                .child(NodeType.TOPIC, version, t -> t.publicId("urn:topic:1")).translation("nb", tr -> tr.name("fag")))
                 .getPublicId();
 
         testUtils.deleteResource("/v1/subjects/" + id);
@@ -164,11 +170,12 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_topics() throws Exception {
-        Node subject = builder.node(NodeType.SUBJECT,
+        Version version = versionService.getPublished().get();
+        Node subject = builder.node(NodeType.SUBJECT, version,
                 s -> s.isContext(true).name("physics")
-                        .child(NodeType.TOPIC, t -> t.name("statics").contentUri("urn:article:1"))
-                        .child(NodeType.TOPIC, t -> t.name("electricity").contentUri("urn:article:2"))
-                        .child(NodeType.TOPIC, t -> t.name("optics").contentUri("urn:article:3")));
+                        .child(NodeType.TOPIC, version, t -> t.name("statics").contentUri("urn:article:1"))
+                        .child(NodeType.TOPIC, version, t -> t.name("electricity").contentUri("urn:article:2"))
+                        .child(NodeType.TOPIC, version, t -> t.name("optics").contentUri("urn:article:3")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
         SubjectChildDTO[] topics = testUtils.getObject(SubjectChildDTO[].class, response);
@@ -191,13 +198,15 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_topics_recursively() throws Exception {
+        Version version = versionService.getPublished().get();
         URI subjectId = builder
-                .node("subject", NodeType.SUBJECT,
+                .node("subject", NodeType.SUBJECT, version,
                         s -> s.isContext(true).name("subject").publicId("urn:subject:1").child("parent", NodeType.TOPIC,
-                                parent -> parent.name("parent topic").publicId("urn:topic:a").child("child",
-                                        NodeType.TOPIC,
-                                        child -> child.name("child topic").publicId("urn:topic:aa")
-                                                .child("grandchild", NodeType.TOPIC, grandchild -> grandchild
+                                version,
+                                parent -> parent.name("parent topic").publicId("urn:topic:a").child(
+                                        "child", NodeType.TOPIC, version,
+                                        child -> child.name("child topic").publicId("urn:topic:aa").child("grandchild",
+                                                NodeType.TOPIC, version, grandchild -> grandchild
                                                         .name("grandchild topic").publicId("urn:topic:aaa")))))
                 .getPublicId();
 
@@ -218,13 +227,13 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(topics, t -> t.getMetadata().isVisible());
         assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 1);
 
-        Node subject = builder.node("subject");
+        Node subject = builder.node("subject", version);
         assertEquals(first(subject.getChildConnections()).getPublicId(), topics[0].connectionId);
 
-        Node parent = builder.node("parent");
+        Node parent = builder.node("parent", version);
         assertEquals(first(parent.getChildConnections()).getPublicId(), topics[1].connectionId);
 
-        Node child = builder.node("child");
+        Node child = builder.node("child", version);
         assertEquals(first(child.getChildConnections()).getPublicId(), topics[2].connectionId);
     }
 

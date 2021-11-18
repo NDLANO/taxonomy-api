@@ -8,9 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.TestSeeder;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
 import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +40,8 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_get_single_node() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1").child(t -> t
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version, s -> s.isContext(true).publicId("urn:subject:1").child(version, t -> t
                 .nodeType(NodeType.TOPIC).name("trigonometry").contentUri("urn:article:1").publicId("urn:topic:1")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1");
@@ -60,7 +59,7 @@ public class NodesTest extends RestTest {
 
     @Test
     public void single_node_has_no_url() throws Exception {
-        builder.node(NodeType.NODE, t -> t.publicId("urn:node:1"));
+        builder.node(NodeType.NODE, versionService.getPublished().get(), t -> t.publicId("urn:node:1"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:node:1");
         final var node = testUtils.getObject(NodeDTO.class, response);
@@ -70,14 +69,17 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_get_nodes_by_contentURI() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> {
-            t.name("photo synthesis");
-            t.contentUri(URI.create("urn:test:1"));
-        }));
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> {
-            t.name("trigonometry");
-            t.contentUri(URI.create("urn:test:2"));
-        }));
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, version, t -> {
+                    t.name("photo synthesis");
+                    t.contentUri(URI.create("urn:test:1"));
+                }));
+        builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, version, t -> {
+                    t.name("trigonometry");
+                    t.contentUri(URI.create("urn:test:2"));
+                }));
 
         {
             final var response = testUtils.getResource("/v1/nodes?contentURI=urn:test:1");
@@ -96,17 +98,19 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_get_nodes_by_key_and_value() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Basic science").child(t -> {
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version, s -> s.isContext(true).name("Basic science").child(version, t -> {
             t.nodeType(NodeType.TOPIC);
             t.publicId("urn:topic:b8001");
             t.name("photo synthesis");
             t.contentUri(URI.create("urn:test:1"));
         }));
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> {
-            t.publicId("urn:topic:b8003");
-            t.name("trigonometry");
-            t.contentUri(URI.create("urn:test:2"));
-        }));
+        builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, version, t -> {
+                    t.publicId("urn:topic:b8003");
+                    t.name("trigonometry");
+                    t.contentUri(URI.create("urn:test:2"));
+                }));
 
         final var metadata1 = new MetadataDto();
         metadata1.setPublicId("urn:topic:b8001");
@@ -143,10 +147,11 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_get_all_nodes() throws Exception {
-        builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> t.name("photo synthesis")));
-        builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> t.name("trigonometry")));
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version, s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC,
+                version, t -> t.name("photo synthesis")));
+        builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, version, t -> t.name("trigonometry")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes");
         final var nodes = testUtils.getObject(NodeDTO[].class, response);
@@ -166,12 +171,14 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_get_all_root_nodes() throws Exception {
-        builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> t.name("photo synthesis")));
-        builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> t.name("trigonometry")));
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Arts and crafts"));
-        builder.node(NodeType.NODE, n -> n.name("Random node").child(NodeType.NODE, c -> c.name("Subnode")));
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version, s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC,
+                version, t -> t.name("photo synthesis")));
+        builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, version, t -> t.name("trigonometry")));
+        builder.node(NodeType.SUBJECT, version, s -> s.isContext(true).name("Arts and crafts"));
+        builder.node(NodeType.NODE, version,
+                n -> n.name("Random node").child(NodeType.NODE, version, c -> c.name("Subnode")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes?isRoot=true");
         final var nodes = testUtils.getObject(NodeDTO[].class, response);
@@ -190,8 +197,9 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_place_subject_below_subject() throws Exception {
-        builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("Maths").publicId("urn:subject:1").child(NodeType.SUBJECT,
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Maths").publicId("urn:subject:1").child(NodeType.SUBJECT, version,
                         t -> t.name("Maths vg1").contentUri("urn:frontpage:1").publicId("urn:subject:2")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:subject:2");
@@ -292,6 +300,7 @@ public class NodesTest extends RestTest {
         assertEquals(createNodeCommand.nodeType, node.getNodeType());
         assertEquals(createNodeCommand.name, node.getName());
         assertEquals(createNodeCommand.contentUri, node.getContentUri());
+        assertSame(node.getVersion().getVersionType(), VersionType.BETA);
     }
 
     @Test
@@ -311,6 +320,7 @@ public class NodesTest extends RestTest {
         assertEquals(createNodeCommand.nodeType, node.getNodeType());
         assertEquals(createNodeCommand.name, node.getName());
         assertEquals(createNodeCommand.contentUri, node.getContentUri());
+        assertSame(node.getVersion().getVersionType(), VersionType.BETA);
     }
 
     @Test
@@ -330,6 +340,7 @@ public class NodesTest extends RestTest {
         assertEquals(createNodeCommand.nodeType, node.getNodeType());
         assertEquals(createNodeCommand.name, node.getName());
         assertEquals(createNodeCommand.contentUri, node.getContentUri());
+        assertSame(node.getVersion().getVersionType(), VersionType.BETA);
     }
 
     @Test
@@ -364,7 +375,7 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_update_node() throws Exception {
-        Node n = builder.node();
+        Node n = builder.node(builder.version());
 
         testUtils.updateResource("/v1/nodes/" + n.getPublicId(), new NodeCommand() {
             {
@@ -378,11 +389,12 @@ public class NodesTest extends RestTest {
         Node node = nodeRepository.getByPublicId(n.getPublicId());
         assertEquals("trigonometry", node.getName());
         assertEquals("urn:article:1", node.getContentUri().toString());
+        assertSame(node.getVersion().getVersionType(), VersionType.BETA);
     }
 
     @Test
     public void can_update_node_with_new_id() throws Exception {
-        URI publicId = builder.node(NodeType.TOPIC).getPublicId();
+        URI publicId = builder.node(NodeType.TOPIC, builder.version()).getPublicId();
         URI randomId = URI.create("urn:topic:random");
 
         testUtils.updateResource("/v1/nodes/" + publicId, new NodeCommand() {
@@ -397,11 +409,12 @@ public class NodesTest extends RestTest {
         Node node = nodeRepository.getByPublicId(randomId);
         assertEquals("trigonometry", node.getName());
         assertEquals("urn:article:1", node.getContentUri().toString());
+        assertSame(node.getVersion().getVersionType(), VersionType.BETA);
     }
 
     @Test
     public void can_update_node_with_new_type() throws Exception {
-        Node n = builder.node(); // NODE
+        Node n = builder.node(builder.version()); // NODE
         String ident = n.getIdent();
 
         var command = new NodeCommand() {
@@ -419,17 +432,32 @@ public class NodesTest extends RestTest {
         assertEquals(NodeType.SUBJECT.getName() + ":" + ident, node.getPublicId().getSchemeSpecificPart());
         assertEquals("trigonometry", node.getName());
         assertEquals("urn:article:1", node.getContentUri().toString());
+        assertSame(node.getVersion().getVersionType(), VersionType.BETA);
+    }
+
+    @Test
+    public void cannot_delete_node_in_published() throws Exception {
+        Version version = versionService.getPublished().get();
+        Node childTopic1 = builder.node(NodeType.TOPIC, version);
+
+        URI parentId = builder.node(NodeType.TOPIC, version, parent -> parent.child(childTopic1)).getPublicId();
+
+        testUtils.deleteResource("/v1/nodes/" + parentId + "?version=" + version.getHash(),
+                status().is4xxClientError());
+
+        assertNotNull(nodeRepository.findByPublicId(parentId));
     }
 
     @Test
     public void can_delete_node_with_2_subnodes() throws Exception {
-        Node childTopic1 = builder.node(NodeType.TOPIC, child -> child.name("DELETE EDGE TO ME"));
-        Node childTopic2 = builder.node(NodeType.TOPIC, child -> child.name("DELETE EDGE TO ME ALSO"));
+        Version version = versionService.getBeta().get();
+        Node childTopic1 = builder.node(NodeType.TOPIC, version, child -> child.name("DELETE EDGE TO ME"));
+        Node childTopic2 = builder.node(NodeType.TOPIC, version, child -> child.name("DELETE EDGE TO ME ALSO"));
 
-        URI parentId = builder.node(NodeType.TOPIC, parent -> parent.child(childTopic1).child(childTopic2))
+        URI parentId = builder.node(NodeType.TOPIC, version, parent -> parent.child(childTopic1).child(childTopic2))
                 .getPublicId();
 
-        testUtils.deleteResource("/v1/nodes/" + parentId);
+        testUtils.deleteResource("/v1/nodes/" + parentId + "?version=" + version.getHash());
 
         assertNull(nodeRepository.findByPublicId(parentId));
 
@@ -438,13 +466,14 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_delete_node_with_2_resources() throws Exception {
-        Node topic = builder.node(NodeType.TOPIC,
+        Version version = versionService.getBeta().get();
+        Node topic = builder.node(NodeType.TOPIC, version,
                 child -> child.name("MAIN TOPIC").translation("nb", tr -> tr.name("HovedEmne"))
                         .resource(r -> r.publicId("urn:resource:1")).resource(r -> r.publicId("urn:resource:2")));
 
         final var topicId = topic.getPublicId();
 
-        testUtils.deleteResource("/v1/nodes/" + topicId);
+        testUtils.deleteResource("/v1/nodes/" + topicId + "?version=" + version.getHash());
 
         assertNull(nodeRepository.findByPublicId(topicId));
 
@@ -453,14 +482,15 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_delete_node_but_subnodes_remain() throws Exception {
-        Node childTopic = builder.node(NodeType.TOPIC,
+        Version version = versionService.getBeta().get();
+        Node childTopic = builder.node(NodeType.TOPIC, version,
                 child -> child.name("DELETE EDGE TO ME").translation("nb", tr -> tr.name("emne"))
-                        .child(NodeType.TOPIC, sub -> sub.publicId("urn:topic:1"))
+                        .child(NodeType.TOPIC, version, sub -> sub.publicId("urn:topic:1"))
                         .resource(r -> r.publicId("urn:resource:1")));
 
-        URI parentId = builder.node(NodeType.TOPIC, parent -> parent.child(childTopic)).getPublicId();
+        URI parentId = builder.node(NodeType.TOPIC, version, parent -> parent.child(childTopic)).getPublicId();
 
-        testUtils.deleteResource("/v1/nodes/" + parentId);
+        testUtils.deleteResource("/v1/nodes/" + parentId + "?version=" + version.getHash());
 
         assertNull(nodeRepository.findByPublicId(parentId));
         assertNotNull(nodeRepository.findByPublicId(childTopic.getPublicId()));
@@ -473,9 +503,10 @@ public class NodesTest extends RestTest {
         Resource resource = builder.resource("resource",
                 r -> r.translation("nb", tr -> tr.name("ressurs")).resourceType(rt -> rt.name("Learning path")));
 
-        URI parentId = builder.node(NodeType.TOPIC, parent -> parent.resource(resource)).getPublicId();
+        Version version = versionService.getBeta().get();
+        URI parentId = builder.node(NodeType.TOPIC, version, parent -> parent.resource(resource)).getPublicId();
 
-        testUtils.deleteResource("/v1/nodes/" + parentId);
+        testUtils.deleteResource("/v1/nodes/" + parentId + "?version=" + version.getHash());
 
         assertNull(nodeRepository.findByPublicId(parentId));
         assertNotNull(resourceRepository.findByPublicId(resource.getPublicId()));

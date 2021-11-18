@@ -37,13 +37,15 @@ public class TestSeeder {
     private final NodeConnectionRepository nodeConnectionRepository;
     private final NodeResourceRepository nodeResourceRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final VersionRepository versionRepository;
 
     public TestSeeder(SubjectRepository subjectRepository, TopicRepository topicRepository,
             ResourceRepository resourceRepository, RelevanceRepository relevanceRepository,
             ResourceTypeRepository resourceTypeRepository, SubjectTopicRepository subjectTopicRepository,
             TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository,
             NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            NodeResourceRepository nodeResourceRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
+            NodeResourceRepository nodeResourceRepository, CachedUrlUpdaterService cachedUrlUpdaterService,
+            VersionRepository versionRepository) {
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
@@ -56,6 +58,7 @@ public class TestSeeder {
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.nodeResourceRepository = nodeResourceRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.versionRepository = versionRepository;
     }
 
     private Topic createTopic(String publicId, String name, String contentUri, Boolean context) {
@@ -151,7 +154,7 @@ public class TestSeeder {
     }
 
     private Resource createResource(String publicId, String name, String contentUri) {
-        final var resource = new Resource();
+        final var resource = new Resource(versionRepository.findFirstByVersionType(VersionType.PUBLISHED));
 
         if (publicId != null) {
             resource.setPublicId(URI.create(publicId));
@@ -230,7 +233,8 @@ public class TestSeeder {
     }
 
     private Node createNode(NodeType nodeType, String publicId, String name, String contentUri, Boolean context) {
-        final var node = new Node(nodeType);
+        final var node = new Node(nodeType,
+                versionRepository.findFirstByVersionType(VersionType.PUBLISHED).orElseThrow());
 
         if (publicId != null) {
             node.setPublicId(URI.create(publicId));
@@ -950,7 +954,6 @@ public class TestSeeder {
         //
 
         clearAll();
-
         final var subject1 = createNode(NodeType.SUBJECT, "urn:subject:1000", "S:1", null, true);
 
         final var topic1 = createNode(NodeType.TOPIC, "urn:topic:1000", "T1", null, false);

@@ -10,7 +10,6 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
-import no.ndla.taxonomy.service.dtos.SubjectDTO;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.stereotype.Service;
@@ -49,17 +48,39 @@ public class VersionService {
                 .collect(Collectors.toList());
     }
 
-    public void publishBetaAndArchiveCurrent(URI id) {
-        Optional<Version> published = versionRepository.findFirstByVersionType(VersionType.PUBLISHED);
+    public String getPublishedHash() {
+        return getPublished().map(Version::getHash)
+                .orElseThrow(() -> new NotFoundServiceException("No published version"));
+    }
+
+    public String getBetaVersionHash() {
+        return getBeta().map(Version::getHash).orElseThrow(() -> new NotFoundServiceException("No beta version"));
+    }
+
+    public Optional<Version> getPublished() {
+        return versionRepository.findFirstByVersionType(VersionType.PUBLISHED);
+    }
+
+    public Optional<Version> getBeta() {
+        return versionRepository.findFirstByVersionType(VersionType.BETA);
+    }
+
+    public void publishBetaArchiveCurrentAddNew(URI id) {
+        Optional<Version> published = getPublished();
         if (published.isPresent()) {
             Version version = published.get();
             version.setVersionType(VersionType.ARCHIVED);
             version.setArchived(Instant.now());
             versionRepository.save(version);
         }
+
         Version beta = versionRepository.getByPublicId(id);
         beta.setVersionType(VersionType.PUBLISHED);
         beta.setPublished(Instant.now());
         versionRepository.save(beta);
+
+        Version newBeta = new Version();
+        newBeta.setVersionType(VersionType.BETA);
+        versionRepository.save(newBeta);
     }
 }

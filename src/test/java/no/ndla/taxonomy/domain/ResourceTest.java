@@ -25,7 +25,7 @@ public class ResourceTest {
 
     @BeforeEach
     public void setUp() {
-        this.resource = new Resource();
+        this.resource = new Resource(Optional.of(new Version()));
     }
 
     @Test
@@ -268,7 +268,7 @@ public class ResourceTest {
 
     @Test
     public void isContext() {
-        final var resource = new Resource();
+        final var resource = new Resource(Optional.of(new Version()));
         assertFalse(resource.isContext());
     }
 

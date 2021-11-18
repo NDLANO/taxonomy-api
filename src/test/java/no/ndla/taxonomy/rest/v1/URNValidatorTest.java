@@ -10,12 +10,14 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Subject;
+import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.exceptions.IdFormatException;
 import no.ndla.taxonomy.service.URNValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -67,7 +69,7 @@ public class URNValidatorTest {
     @Test
     public void listingStyleURIIsAccepted() {
         URI id = URI.create("urn:resource:1:verktoy:blikkenslageren");
-        validator.validate(id, new Resource());
+        validator.validate(id, new Resource(Optional.of(new Version())));
     }
 
     @Test

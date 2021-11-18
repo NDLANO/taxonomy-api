@@ -12,6 +12,7 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.MetadataApiService;
+import no.ndla.taxonomy.service.VersionService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -74,6 +75,9 @@ public abstract class RestTest {
     @Autowired
     protected CachedUrlUpdaterService cachedUrlUpdaterService;
 
+    @Autowired
+    protected VersionService versionService;
+
     protected Builder builder;
 
     private MetadataDto createMetadataObject(URI publicId) {
@@ -91,7 +95,7 @@ public abstract class RestTest {
     @SuppressWarnings("unchecked")
     @BeforeEach
     public void restTestSetUp() {
-        builder = new Builder(entityManager, cachedUrlUpdaterService);
+        builder = new Builder(entityManager, cachedUrlUpdaterService, versionService);
 
         when(metadataApiService.getMetadataByPublicId(any(URI.class))).thenAnswer(invocationOnMock -> metadataApiService
                 .getMetadataByPublicId(List.of((URI) invocationOnMock.getArgument(0))).stream().findFirst()
@@ -116,18 +120,18 @@ public abstract class RestTest {
     }
 
     Node newSubject() {
-        Node node = new Node(NodeType.SUBJECT);
+        Node node = new Node(NodeType.SUBJECT, versionService.getBeta().orElseThrow());
         node.setContext(true);
         return save(node);
     }
 
     Node newTopic() {
-        Node node = new Node(NodeType.TOPIC);
+        Node node = new Node(NodeType.TOPIC, versionService.getBeta().orElseThrow());
         return save(node);
     }
 
     Resource newResource() {
-        return save(new Resource());
+        return save(new Resource(versionService.getBeta()));
     }
 
     ResourceType newResourceType() {

@@ -8,10 +8,7 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.repositories.CachedPathRepository;
-import no.ndla.taxonomy.repositories.ResourceRepository;
-import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.repositories.TopicRepository;
+import no.ndla.taxonomy.repositories.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,14 +32,17 @@ class CachedUrlUpdaterServiceImplTest {
     private SubjectRepository subjectRepository;
     private TopicRepository topicRepository;
     private ResourceRepository resourceRepository;
+    private VersionRepository versionRepository;
 
     @BeforeEach
     void setup(@Autowired CachedPathRepository cachedPathRepository, @Autowired SubjectRepository subjectRepository,
-            @Autowired TopicRepository topicRepository, @Autowired ResourceRepository resourceRepository) {
+            @Autowired TopicRepository topicRepository, @Autowired ResourceRepository resourceRepository,
+            @Autowired VersionRepository versionRepository) {
         this.cachedPathRepository = cachedPathRepository;
         this.subjectRepository = subjectRepository;
         this.topicRepository = topicRepository;
         this.resourceRepository = resourceRepository;
+        this.versionRepository = versionRepository;
 
         service = new CachedUrlUpdaterServiceImpl(cachedPathRepository);
     }
@@ -61,7 +61,6 @@ class CachedUrlUpdaterServiceImplTest {
             assertEquals(1, subject1.getCachedPaths().size());
             final var path1 = subject1.getCachedPaths().iterator().next();
             assertEquals("/subject:1", path1.getPath());
-            assertEquals("urn:subject:1", path1.getPublicId().toString());
             assertSame(subject1, path1.getSubject().orElseThrow());
             assertTrue(path1.isPrimary());
 
@@ -80,7 +79,6 @@ class CachedUrlUpdaterServiceImplTest {
             assertEquals(1, topic1.getCachedPaths().size());
             final var path1 = topic1.getCachedPaths().iterator().next();
             assertEquals("/topic:1", path1.getPath());
-            assertEquals("urn:topic:1", path1.getPublicId().toString());
             assertSame(topic1, path1.getTopic().orElseThrow());
             assertTrue(path1.isPrimary());
 
@@ -138,7 +136,7 @@ class CachedUrlUpdaterServiceImplTest {
                     .containsAll(Set.of("/subject:1/topic:1/topic:2", "/topic:1/topic:2")));
         }
 
-        final var resource1 = new Resource();
+        final var resource1 = new Resource(versionRepository.findFirstByVersionType(VersionType.BETA));
         resource1.setPublicId(URI.create("urn:resource:1"));
         resourceRepository.save(resource1);
 

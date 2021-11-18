@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -21,9 +22,10 @@ public class SubjectResourceTypesTest extends RestTest {
 
     @Test
     public void can_have_several_resource_types_recursively() throws Exception {
-        URI id = builder
-                .node(NodeType.SUBJECT,
-                        s -> s.isContext(true).child(NodeType.TOPIC, t -> t.name("topic").child(NodeType.TOPIC,
+        Version version = versionService.getPublished().get();
+        URI id = builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).child(NodeType.TOPIC, version,
+                        t -> t.name("topic").child(NodeType.TOPIC, version,
                                 st -> st.resource(r -> r.name("resource 1").resourceType(rt -> rt.name("lecure"))
                                         .resourceType(rt -> rt.name("assignment"))))
                                 .resource(r -> r.name("resource 2").resourceType(rt -> rt.name("lecture"))
@@ -40,9 +42,11 @@ public class SubjectResourceTypesTest extends RestTest {
 
     @Test
     public void can_have_no_resource_type() throws Exception {
+        Version version = versionService.getPublished().get();
         URI id = builder
-                .node(NodeType.SUBJECT, n -> n.isContext(true).name("subject").child(NodeType.TOPIC,
-                        t -> t.name("topic").child(NodeType.TOPIC, st -> st.resource(r -> r.name("resource 1")))))
+                .node(NodeType.SUBJECT, version,
+                        n -> n.isContext(true).name("subject").child(NodeType.TOPIC, version, t -> t.name("topic")
+                                .child(NodeType.TOPIC, version, st -> st.resource(r -> r.name("resource 1")))))
                 .getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources");
@@ -56,11 +60,15 @@ public class SubjectResourceTypesTest extends RestTest {
     public void can_get_resources_for_a_subject_filtered_on_resource_type() throws Exception {
         builder.resourceType("assignment").getPublicId();
         URI lecture = builder.resourceType("lecture").getPublicId();
-
-        URI id = builder.node(NodeType.SUBJECT, n -> n.isContext(true).child(t -> t.name("a").child(NodeType.TOPIC,
-                sub -> sub.name("subtopic").resource(r -> r.name("a lecture in a subtopic").resourceType("lecture")))
-                .resource(r -> r.name("an assignment").resourceType("assignment"))
-                .resource(r -> r.name("a lecture").resourceType("lecture")))).getPublicId();
+        Version version = versionService.getPublished().get();
+        URI id = builder.node(NodeType.SUBJECT, version,
+                n -> n.isContext(true).child(version, t -> t.name("a")
+                        .child(NodeType.TOPIC, version,
+                                sub -> sub.name("subtopic")
+                                        .resource(r -> r.name("a lecture in a subtopic").resourceType("lecture")))
+                        .resource(r -> r.name("an assignment").resourceType("assignment"))
+                        .resource(r -> r.name("a lecture").resourceType("lecture"))))
+                .getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources?type=" + lecture);
         ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);

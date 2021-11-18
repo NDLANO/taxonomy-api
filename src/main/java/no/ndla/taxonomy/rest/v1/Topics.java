@@ -16,6 +16,7 @@ import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,36 +35,38 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     private final NodeRepository nodeRepository;
     private final NodeService nodeService;
     private final ResourceService resourceService;
+    private final VersionService versionService;
 
     public Topics(NodeRepository nodeRepository, NodeService nodeService,
             CachedUrlUpdaterService cachedUrlUpdaterService, ResourceService resourceService,
-            MetadataApiService metadataApiService, MetadataUpdateService metadataUpdateService) {
+            MetadataApiService metadataApiService, MetadataUpdateService metadataUpdateService,
+            VersionService versionService) {
         super(nodeRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
 
         this.nodeRepository = nodeRepository;
         this.nodeService = nodeService;
         this.resourceService = resourceService;
+        this.versionService = versionService;
     }
 
     @GetMapping
     @ApiOperation("Gets all topics")
     public List<EntityWithPathDTO> index(
+            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
-
             @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) URI contentUriFilter,
-
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
-
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) String value) {
-
+        if (versionHash == null)
+            versionHash = versionService.getPublishedHash();
         if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
             contentUriFilter = null;
         }
         if (key != null) {
-            return nodeService.getNodes(language, NodeType.TOPIC, contentUriFilter,
+            return nodeService.getNodes(versionHash, language, NodeType.TOPIC, contentUriFilter,
                     new MetadataKeyValueQuery(key, value));
         }
-        return nodeService.getNodes(language, NodeType.TOPIC, contentUriFilter, false);
+        return nodeService.getNodes(versionHash, language, NodeType.TOPIC, contentUriFilter, false);
     }
 
     @GetMapping("/{id}")
@@ -71,9 +74,14 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @Transactional
     @InjectMetadata
     public EntityWithPathDTO get(@PathVariable("id") URI id,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return new NodeDTO(nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
-                .orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found")), language);
+        if (versionHash == null)
+            versionHash = versionService.getPublishedHash();
+        return new NodeDTO(
+                nodeRepository.findFirstByPublicIdAndVersionIncludingCachedUrlsAndTranslations(id, versionHash)
+                        .orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found")),
+                language);
     }
 
     @PostMapping
@@ -82,7 +90,10 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @Transactional
     public ResponseEntity<Void> post(
             @ApiParam(name = "connection", value = "The new topic") @RequestBody TopicCommand command) {
-        return doPost(new Node(NodeType.TOPIC), command);
+        return doPost(
+                new Node(NodeType.TOPIC,
+                        versionService.getBeta().orElseThrow(() -> new NotFoundServiceException("No beta version"))),
+                command);
     }
 
     @PutMapping("/{id}")
@@ -117,17 +128,23 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/topics")
     @ApiOperation(value = "Gets all subtopics for this topic")
     public List<TopicChildDTO> getSubTopics(@ApiParam(value = "id", required = true) @PathVariable("id") URI id,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
             @ApiParam(value = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.") @RequestParam(value = "subject", required = false, defaultValue = "") URI subjectId,
             @Deprecated(forRemoval = true) @ApiParam(value = "Select by filter id(s). If not specified, all subtopics connected to this topic will be returned."
                     + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) @RequestParam(value = "filter", required = false, defaultValue = "") URI[] filterIds,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+        if (versionHash == null)
+            versionHash = versionService.getPublishedHash();
         return nodeService.getFilteredChildConnections(id, language);
     }
 
     @GetMapping("/{id}/connections")
     @ApiOperation(value = "Gets all subjects and subtopics this topic is connected to")
-    public List<ConnectionIndexDTO> getAllConnections(@PathVariable("id") URI id) {
-        return nodeService.getAllConnections(id);
+    public List<ConnectionIndexDTO> getAllConnections(@PathVariable("id") URI id,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash) {
+        if (versionHash == null)
+            versionHash = versionService.getPublishedHash();
+        return nodeService.getAllConnections(id, versionHash);
     }
 
     @DeleteMapping("/{id}")
@@ -135,13 +152,14 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
-        nodeService.delete(id);
+        nodeService.delete(id, versionService.getBetaVersionHash());
     }
 
     @GetMapping("/{id}/resources")
     @ApiOperation(value = "Gets all resources for the given topic", tags = { "topics" })
     public List<ResourceWithNodeConnectionDTO> getResources(
             @ApiParam(value = "id", required = true) @PathVariable("id") URI topicId,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false) String language,
             @ApiParam("If true, resources from subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @ApiParam(value = "Select by resource type id(s). If not specified, resources of all types will be returned."
@@ -151,6 +169,8 @@ public class Topics extends CrudControllerWithMetadata<Node> {
                     + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) @RequestParam(value = "filter", required = false) URI[] filterIds,
             @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.") @RequestParam(value = "relevance", required = false) URI relevance) {
         final Set<URI> resourceTypeIdSet;
+        if (versionHash == null)
+            versionHash = versionService.getPublishedHash();
 
         if (resourceTypeIds == null) {
             resourceTypeIdSet = Set.of();
@@ -158,6 +178,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             resourceTypeIdSet = new HashSet<>(Arrays.asList(resourceTypeIds));
         }
 
-        return resourceService.getResourcesByNodeId(topicId, resourceTypeIdSet, relevance, language, recursive);
+        return resourceService.getResourcesByNodeId(topicId, versionHash, resourceTypeIdSet, relevance, language,
+                recursive);
     }
 }

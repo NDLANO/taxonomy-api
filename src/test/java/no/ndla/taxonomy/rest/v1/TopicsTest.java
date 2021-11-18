@@ -11,6 +11,7 @@ import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
@@ -44,7 +45,8 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_single_topic() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1").child(t -> t
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version, s -> s.isContext(true).publicId("urn:subject:1").child(version, t -> t
                 .nodeType(NodeType.TOPIC).name("trigonometry").contentUri("urn:article:1").publicId("urn:topic:1")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
@@ -62,7 +64,8 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void topic_without_subject_has_no_url() throws Exception {
-        builder.node(NodeType.TOPIC, t -> t.publicId("urn:topic:1"));
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.TOPIC, version, t -> t.publicId("urn:topic:1"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
         final var topic = testUtils.getObject(TopicDTO.class, response);
@@ -72,14 +75,17 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_topics_by_contentURI() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> {
-            t.name("photo synthesis");
-            t.contentUri(URI.create("urn:test:1"));
-        }));
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> {
-            t.name("trigonometry");
-            t.contentUri(URI.create("urn:test:2"));
-        }));
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, version, t -> {
+                    t.name("photo synthesis");
+                    t.contentUri(URI.create("urn:test:1"));
+                }));
+        builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, version, t -> {
+                    t.name("trigonometry");
+                    t.contentUri(URI.create("urn:test:2"));
+                }));
 
         {
             final var response = testUtils.getResource("/v1/topics?contentURI=urn:test:1");
@@ -98,16 +104,19 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_topics_by_key_and_value() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> {
-            t.publicId("urn:topic:b8001");
-            t.name("photo synthesis");
-            t.contentUri(URI.create("urn:test:1"));
-        }));
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> {
-            t.publicId("urn:topic:b8003");
-            t.name("trigonometry");
-            t.contentUri(URI.create("urn:test:2"));
-        }));
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, version, t -> {
+                    t.publicId("urn:topic:b8001");
+                    t.name("photo synthesis");
+                    t.contentUri(URI.create("urn:test:1"));
+                }));
+        builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, version, t -> {
+                    t.publicId("urn:topic:b8003");
+                    t.name("trigonometry");
+                    t.contentUri(URI.create("urn:test:2"));
+                }));
 
         final var metadata1 = new MetadataDto();
         metadata1.setPublicId("urn:topic:b8001");
@@ -144,10 +153,11 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_get_all_topics() throws Exception {
-        builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> t.name("photo synthesis")));
-        builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> t.name("trigonometry")));
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version, s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC,
+                version, t -> t.name("photo synthesis")));
+        builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, version, t -> t.name("trigonometry")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics");
         final var topics = testUtils.getObject(TopicDTO[].class, response);
@@ -280,7 +290,8 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_update_topic() throws Exception {
-        URI publicId = builder.node(NodeType.TOPIC).getPublicId();
+        Version version = versionService.getPublished().get();
+        URI publicId = builder.node(NodeType.TOPIC, version).getPublicId();
 
         testUtils.updateResource("/v1/topics/" + publicId, new TopicCommand() {
             {
@@ -297,7 +308,8 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_update_topic_with_new_id() throws Exception {
-        URI publicId = builder.node(NodeType.TOPIC).getPublicId();
+        Version version = versionService.getBeta().get();
+        URI publicId = builder.node(NodeType.TOPIC, version).getPublicId();
         URI randomId = URI.create("urn:topic:random");
 
         testUtils.updateResource("/v1/topics/" + publicId, new TopicCommand() {
@@ -315,10 +327,12 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_delete_topic_with_2_subtopics() throws Exception {
-        Node childTopic1 = builder.node(NodeType.TOPIC).name("DELETE EDGE TO ME");
-        Node childTopic2 = builder.node(NodeType.TOPIC).name("DELETE EDGE TO ME ALSO");
+        Version version = versionService.getBeta().get();
+        Node childTopic1 = builder.node(NodeType.TOPIC, version).name("DELETE EDGE TO ME");
+        Node childTopic2 = builder.node(NodeType.TOPIC, version).name("DELETE EDGE TO ME ALSO");
 
-        URI parentId = builder.node(parent -> parent.nodeType(NodeType.TOPIC).child(childTopic1).child(childTopic2))
+        URI parentId = builder
+                .node(version, parent -> parent.nodeType(NodeType.TOPIC).child(childTopic1).child(childTopic2))
                 .getPublicId();
 
         testUtils.deleteResource("/v1/topics/" + parentId);
@@ -330,7 +344,8 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_delete_topic_with_2_resources() throws Exception {
-        Node topic = builder.node(NodeType.TOPIC,
+        Version version = versionService.getBeta().get();
+        Node topic = builder.node(NodeType.TOPIC, version,
                 child -> child.name("MAIN TOPIC").translation("nb", tr -> tr.name("HovedEmne"))
                         .resource(r -> r.publicId("urn:resource:1")).resource(r -> r.publicId("urn:resource:2")));
 
@@ -345,12 +360,13 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_delete_topic_but_subtopics_remain() throws Exception {
-        Node childTopic = builder.node(NodeType.TOPIC,
+        Version version = versionService.getBeta().get();
+        Node childTopic = builder.node(NodeType.TOPIC, version,
                 child -> child.name("DELETE EDGE TO ME").translation("nb", tr -> tr.name("emne"))
-                        .child(NodeType.TOPIC, sub -> sub.publicId("urn:topic:1"))
+                        .child(NodeType.TOPIC, version, sub -> sub.publicId("urn:topic:1"))
                         .resource(r -> r.publicId("urn:resource:1")));
 
-        URI parentId = builder.node(NodeType.TOPIC, parent -> parent.child(childTopic)).getPublicId();
+        URI parentId = builder.node(NodeType.TOPIC, version, parent -> parent.child(childTopic)).getPublicId();
 
         testUtils.deleteResource("/v1/topics/" + parentId);
 
@@ -362,10 +378,11 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_delete_topic_but_resources_and_filter_remain() throws Exception {
+        Version version = versionService.getBeta().get();
         Resource resource = builder.resource("resource",
                 r -> r.translation("nb", tr -> tr.name("ressurs")).resourceType(rt -> rt.name("Learning path")));
 
-        URI parentId = builder.node(NodeType.TOPIC, parent -> parent.resource(resource)).getPublicId();
+        URI parentId = builder.node(NodeType.TOPIC, version, parent -> parent.resource(resource)).getPublicId();
 
         testUtils.deleteResource("/v1/topics/" + parentId);
 

@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.TopicResourceRepository;
@@ -43,11 +44,12 @@ public class ResourceServiceImplTest {
         final var recursiveTopicTreeService = mock(RecursiveTopicTreeService.class);
         final var recursiveNodeTreeService = mock(RecursiveNodeTreeService.class);
         final var nodeResourceRepository = mock(NodeResourceRepository.class);
+        final var nodeRepository = mock(NodeRepository.class);
         final var topicTreeSorter = mock(TreeSorter.class);
 
         resourceService = new ResourceServiceImpl(resourceRepository, topicResourceRepository, connectionService,
                 metadataApiService, domainEntityHelperService, recursiveTopicTreeService, nodeResourceRepository,
-                recursiveNodeTreeService, topicTreeSorter);
+                recursiveNodeTreeService, nodeRepository, topicTreeSorter);
     }
 
     @Test

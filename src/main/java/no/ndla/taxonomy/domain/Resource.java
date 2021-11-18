@@ -36,6 +36,9 @@ public class Resource extends EntityWithPath {
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     protected Set<CachedPath> cachedPaths = new HashSet<>();
 
+    @ManyToOne
+    private Version version;
+
     @Override
     public Set<CachedPath> getCachedPaths() {
         return cachedPaths;
@@ -54,7 +57,8 @@ public class Resource extends EntityWithPath {
         return Set.of();
     }
 
-    public Resource() {
+    public Resource(Optional<Version> version) {
+        version.ifPresent(this::setVersion);
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
     }
 
@@ -219,6 +223,14 @@ public class Resource extends EntityWithPath {
         if (nodeResource.getResource().orElse(null) != this) {
             throw new IllegalArgumentException("NodeResource must have Resource relation set before adding");
         }
+    }
+
+    public Version getVersion() {
+        return version;
+    }
+
+    public void setVersion(Version version) {
+        this.version = version;
     }
 
     @PreRemove

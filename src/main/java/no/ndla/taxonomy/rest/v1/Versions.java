@@ -7,17 +7,13 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
 import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
-import no.ndla.taxonomy.service.UpdatableDto;
 import no.ndla.taxonomy.service.VersionService;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
@@ -27,7 +23,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -64,8 +59,11 @@ public class Versions extends CrudController<Version> {
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "version", value = "The new version") @RequestBody VersionCommand command) {
-        final var version = new Version();
-        return doPost(version, command);
+        Optional<Version> beta = versionService.getBeta();
+        if (beta.isPresent()) {
+            throw new InvalidArgumentServiceException("Only one beta at the time");
+        }
+        return doPost(new Version(), command);
     }
 
     @PutMapping("/{id}")
@@ -86,6 +84,6 @@ public class Versions extends CrudController<Version> {
         if (version == null || version.getVersionType() != VersionType.BETA) {
             throw new InvalidArgumentServiceException("Version has wrong type");
         }
-        versionService.publishBetaAndArchiveCurrent(id);
+        versionService.publishBetaArchiveCurrentAddNew(id);
     }
 }

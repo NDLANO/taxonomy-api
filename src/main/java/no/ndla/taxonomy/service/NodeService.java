@@ -44,11 +44,12 @@ public class NodeService {
     }
 
     @Transactional
-    public void delete(URI publicId) {
-        final var nodeToDelete = nodeRepository.findFirstByPublicId(publicId)
+    public void delete(URI publicId, String versionHash) {
+        final var nodeToDelete = nodeRepository.findFirstByPublicIdAndVersion(publicId, versionHash)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
 
         connectionService.disconnectAllChildren(nodeToDelete);
+        nodeToDelete.setVersion(null);
 
         nodeRepository.delete(nodeToDelete);
         nodeRepository.flush();
@@ -57,12 +58,12 @@ public class NodeService {
     }
 
     @InjectMetadata
-    public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter,
-            boolean isRoot) {
+    public List<EntityWithPathDTO> getNodes(String versionHash, String languageCode, NodeType nodeTypeFilter,
+            URI contentUriFilter, boolean isRoot) {
         final List<Node> filtered;
 
         if (isRoot) {
-            filtered = nodeRepository.findAllRootsIncludingCachedUrlsAndTranslations();
+            filtered = nodeRepository.findAllRootsForVersionIncludingCachedUrlsAndTranslations(versionHash);
         } else {
             if (contentUriFilter != null && nodeTypeFilter != null) {
                 filtered = nodeRepository.findAllByContentUriAndNodeTypeIncludingCachedUrlsAndTranslations(
@@ -81,8 +82,8 @@ public class NodeService {
     }
 
     @MetadataQuery
-    public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter,
-            MetadataKeyValueQuery metadataKeyValueQuery) {
+    public List<EntityWithPathDTO> getNodes(String versionHash, String languageCode, NodeType nodeTypeFilter,
+            URI contentUriFilter, MetadataKeyValueQuery metadataKeyValueQuery) {
         Set<String> publicIds = metadataKeyValueQuery.getDtos().stream().map(MetadataDto::getPublicId)
                 .collect(Collectors.toSet());
         return publicIds.stream().map(topicId -> {
@@ -91,32 +92,33 @@ public class NodeService {
             } catch (Exception e) {
                 return null;
             }
-        }).filter(Objects::nonNull).map(nodeRepository::findByPublicId).filter(Objects::nonNull).filter(node -> {
-            /*
-             * I don't think this combination of queries will be normal, but it's easy to implement something that
-             * probably works.
-             */
-            if (contentUriFilter == null) {
-                return true;
-            } else {
-                return contentUriFilter.equals(node.getContentUri());
-            }
-        }).filter(node -> {
-            /*
-             * I don't think this combination of queries will be normal, but it's easy to implement something that
-             * probably works.
-             */
-            if (nodeTypeFilter == null) {
-                return true;
-            } else {
-                return nodeTypeFilter.equals(node.getNodeType());
-            }
-        }).map(node -> new NodeDTO(node, languageCode)).collect(Collectors.toList());
+        }).filter(Objects::nonNull).map(nodeRepository::findByPublicId).filter(Objects::nonNull)
+                .filter(node -> node.getVersion().getHash().equals(versionHash)).filter(node -> {
+                    /*
+                     * I don't think this combination of queries will be normal, but it's easy to implement something
+                     * that probably works.
+                     */
+                    if (contentUriFilter == null) {
+                        return true;
+                    } else {
+                        return contentUriFilter.equals(node.getContentUri());
+                    }
+                }).filter(node -> {
+                    /*
+                     * I don't think this combination of queries will be normal, but it's easy to implement something
+                     * that probably works.
+                     */
+                    if (nodeTypeFilter == null) {
+                        return true;
+                    } else {
+                        return nodeTypeFilter.equals(node.getNodeType());
+                    }
+                }).map(node -> new NodeDTO(node, languageCode)).collect(Collectors.toList());
     }
 
     @InjectMetadata
-    public List<ConnectionIndexDTO> getAllConnections(URI nodePublicId) {
-        final var node = nodeRepository.findFirstByPublicId(nodePublicId)
+    public List<ConnectionIndexDTO> getAllConnections(URI nodePublicId, String versionHash) {
+        final var node = nodeRepository.findFirstByPublicIdAndVersion(nodePublicId, versionHash)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
 
         return Stream

@@ -22,8 +22,8 @@ public interface ResourceService {
     List<ResourceWithTopicConnectionDTO> getResourcesBySubjectId(URI subjectPublicId, Set<URI> resourceTypeIds,
             URI relevancePublicId, String languageCode);
 
-    List<ResourceWithNodeConnectionDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds,
-            URI relevancePublicId, String languageCode, boolean recursive);
+    List<ResourceWithNodeConnectionDTO> getResourcesByNodeId(URI nodePublicId, String versionHash,
+            Set<URI> resourceTypeIds, URI relevancePublicId, String languageCode, boolean recursive);
 
     ResourceDTO getResourceByPublicId(URI publicId, String languageCode);
 

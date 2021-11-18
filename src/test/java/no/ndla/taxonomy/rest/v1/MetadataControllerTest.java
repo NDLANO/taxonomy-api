@@ -9,10 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
-import no.ndla.taxonomy.service.MetadataApiService;
-import no.ndla.taxonomy.service.MetadataUpdateService;
-import no.ndla.taxonomy.service.ResourceService;
+import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.RecursiveMergeResultDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +31,7 @@ class MetadataControllerTest {
     private ResourceResourceTypeRepository resourceResourceTypeRepository;
     private ResourceService resourceService;
     private CachedUrlUpdaterService cachedUrlUpdaterService;
+    private VersionService versionService;
     private Resources controller;
 
     @BeforeEach
@@ -43,12 +41,13 @@ class MetadataControllerTest {
         resourceRepository = mock(ResourceRepository.class);
         resourceResourceTypeRepository = mock(ResourceResourceTypeRepository.class);
         resourceService = mock(ResourceService.class);
+        versionService = mock(VersionService.class);
         cachedUrlUpdaterService = mock(CachedUrlUpdaterService.class);
 
         when(metadataUpdateService.getMetadataApiService()).thenReturn(metadataApiService);
 
         controller = new Resources(resourceRepository, resourceResourceTypeRepository, resourceService,
-                cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
+                cachedUrlUpdaterService, metadataApiService, metadataUpdateService, versionService);
     }
 
     @Test

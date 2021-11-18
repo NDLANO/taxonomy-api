@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubTopicIndexDocument;
 import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
 import no.ndla.taxonomy.service.dtos.ResourceDTO;
@@ -32,8 +33,10 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_all_subjects() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
-        builder.node(NodeType.SUBJECT, s -> s.name("Chemistry").translation("nb", l -> l.name("Kjemi")));
+        Version version = versionService.getPublished().get();
+        builder.node(NodeType.SUBJECT, version,
+                s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
+        builder.node(NodeType.SUBJECT, version, s -> s.name("Chemistry").translation("nb", l -> l.name("Kjemi")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects?language=nb");
         SubjectIndexDocument[] subjects = testUtils.getObject(SubjectIndexDocument[].class, response);
@@ -45,8 +48,9 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_single_subject() throws Exception {
-        URI id = builder.node(NodeType.SUBJECT, s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")))
-                .getPublicId();
+        Version version = versionService.getPublished().get();
+        URI id = builder.node(NodeType.SUBJECT, version,
+                s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk"))).getPublicId();
 
         SubjectIndexDocument subject = getSubject(id, "nb");
         assertEquals("Matematikk", subject.name);
@@ -54,15 +58,17 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void fallback_to_default_language() throws Exception {
-        URI id = builder.node(NodeType.SUBJECT, s -> s.name("Mathematics")).getPublicId();
+        Version version = versionService.getPublished().get();
+        URI id = builder.node(NodeType.SUBJECT, version, s -> s.name("Mathematics")).getPublicId();
         SubjectIndexDocument subject = getSubject(id, "XX");
         assertEquals("Mathematics", subject.name);
     }
 
     @Test
     public void can_get_default_language() throws Exception {
-        URI id = builder.node(NodeType.SUBJECT, s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")))
-                .getPublicId();
+        Version version = versionService.getPublished().get();
+        URI id = builder.node(NodeType.SUBJECT, version,
+                s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk"))).getPublicId();
 
         SubjectIndexDocument subject = getSubject(id, null);
         assertEquals("Mathematics", subject.name);
@@ -70,7 +76,8 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_add_translation() throws Exception {
-        Node mathematics = builder.node(NodeType.SUBJECT, s -> s.name("Mathematics"));
+        Version version = versionService.getPublished().get();
+        Node mathematics = builder.node(NodeType.SUBJECT, version, s -> s.name("Mathematics"));
         URI id = mathematics.getPublicId();
 
         testUtils.updateResource("/v1/subjects/" + id + "/translations/nb",
@@ -85,7 +92,8 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_delete_translation() throws Exception {
-        Node subject = builder.node(NodeType.SUBJECT,
+        Version version = versionService.getPublished().get();
+        Node subject = builder.node(NodeType.SUBJECT, version,
                 s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
         URI id = subject.getPublicId();
 
@@ -96,7 +104,8 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_all_translations() throws Exception {
-        Node subject = builder.node(NodeType.SUBJECT,
+        Version version = versionService.getPublished().get();
+        Node subject = builder.node(NodeType.SUBJECT, version,
                 s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk"))
                         .translation("en", l -> l.name("Mathematics")).translation("de", l -> l.name("Mathematik")));
         URI id = subject.getPublicId();
@@ -113,7 +122,8 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_single_translation() throws Exception {
-        Node subject = builder.node(NodeType.SUBJECT,
+        Version version = versionService.getPublished().get();
+        Node subject = builder.node(NodeType.SUBJECT, version,
                 s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
         URI id = subject.getPublicId();
 
@@ -126,12 +136,12 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_topics_with_language() throws Exception {
-        Node subject = builder.node(NodeType.SUBJECT,
-                s -> s.name("physics")
-                        .child(NodeType.TOPIC, t -> t.name("statics").translation("nb", tr -> tr.name("statikk")))
-                        .child(NodeType.TOPIC,
-                                t -> t.name("electricity").translation("nb", tr -> tr.name("elektrisitet")))
-                        .child(NodeType.TOPIC, t -> t.name("optics").translation("nb", tr -> tr.name("optikk"))));
+        Version version = versionService.getPublished().get();
+        Node subject = builder.node(NodeType.SUBJECT, version, s -> s.name("physics")
+                .child(NodeType.TOPIC, version, t -> t.name("statics").translation("nb", tr -> tr.name("statikk")))
+                .child(NodeType.TOPIC, version,
+                        t -> t.name("electricity").translation("nb", tr -> tr.name("elektrisitet")))
+                .child(NodeType.TOPIC, version, t -> t.name("optics").translation("nb", tr -> tr.name("optikk"))));
 
         MockHttpServletResponse response = testUtils
                 .getResource("/v1/subjects/" + subject.getPublicId() + "/topics?language=nb");
@@ -147,11 +157,11 @@ public class SubjectTranslationsTest extends RestTest {
     public void can_get_translated_resources() throws Exception {
 
         builder.resourceType("article", rt -> rt.name("Article").translation("nb", tr -> tr.name("Artikkel")));
-
-        URI id = builder.node(NodeType.SUBJECT, s -> s.name("subject")
-                .child(NodeType.TOPIC, t -> t.name("Trigonometry").resource(r -> r.name("Introduction to trigonometry")
+        Version version = versionService.getPublished().get();
+        URI id = builder.node(NodeType.SUBJECT, version, s -> s.name("subject").child(NodeType.TOPIC, version,
+                t -> t.name("Trigonometry").resource(r -> r.name("Introduction to trigonometry")
                         .translation("nb", tr -> tr.name("Introduksjon til trigonometri")).resourceType("article")))
-                .child(NodeType.TOPIC, t -> t.name("Calculus").resource(r -> r.name("Introduction to calculus")
+                .child(NodeType.TOPIC, version, t -> t.name("Calculus").resource(r -> r.name("Introduction to calculus")
                         .translation("nb", tr -> tr.name("Introduksjon til calculus")).resourceType("article"))))
                 .getPublicId();
 

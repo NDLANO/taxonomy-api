@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.dtos.TopicDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +33,9 @@ public class ContextsTest extends RestTest {
     public void all_subjects_are_contexts() throws Exception {
         nodeRepository.flush();
 
-        builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).publicId("urn:subject:1").name("Subject 1"));
+        Version version = versionService.getPublished().get();
+        builder.node(version,
+                s -> s.nodeType(NodeType.SUBJECT).isContext(true).publicId("urn:subject:1").name("Subject 1"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/contexts");
         Contexts.ContextIndexDocument[] contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
@@ -45,7 +48,8 @@ public class ContextsTest extends RestTest {
 
     @Test
     public void topics_can_be_contexts() throws Exception {
-        builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").name("Topic 1").isContext(true));
+        Version version = versionService.getPublished().get();
+        builder.node(version, t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").name("Topic 1").isContext(true));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/contexts");
         Contexts.ContextIndexDocument[] contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
@@ -58,7 +62,8 @@ public class ContextsTest extends RestTest {
 
     @Test
     public void can_add_topic_as_context() throws Exception {
-        Node topic = builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:ct:2"));
+        Version version = versionService.getPublished().get();
+        Node topic = builder.node(version, t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:ct:2"));
 
         testUtils.createResource("/v1/contexts", new Contexts.CreateContextCommand() {
             {
@@ -71,7 +76,8 @@ public class ContextsTest extends RestTest {
 
     @Test
     public void can_remove_topic_as_context() throws Exception {
-        Node topic = builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").isContext(true));
+        Version version = versionService.getPublished().get();
+        Node topic = builder.node(version, t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").isContext(true));
 
         testUtils.deleteResource("/v1/contexts/urn:topic:1");
         assertFalse(topic.isContext());
@@ -80,11 +86,11 @@ public class ContextsTest extends RestTest {
     @Test
     public void can_get_translated_contexts() throws Exception {
         nodeRepository.deleteAllAndFlush();
+        Version version = versionService.getPublished().get();
+        builder.node(version, s -> s.nodeType(NodeType.SUBJECT).isContext(true).publicId("urn:subject:1")
+                .name("Subject 1").translation("nb", tr -> tr.name("Fag 1")));
 
-        builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).publicId("urn:subject:1").name("Subject 1")
-                .translation("nb", tr -> tr.name("Fag 1")));
-
-        builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").name("Topic 1")
+        builder.node(version, t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").name("Topic 1")
                 .translation("nb", tr -> tr.name("Emne 1")).isContext(true));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/contexts?language=nb");
@@ -99,10 +105,11 @@ public class ContextsTest extends RestTest {
     // TODO Set is not ordered
     @Test
     public void root_context_is_more_important_than_primary_parent() throws Exception {
-        Node topic = builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1"));
+        Version version = versionService.getPublished().get();
+        Node topic = builder.node(version, t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1"));
 
-        Node subject = builder
-                .node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).publicId("urn:subject:1").child(topic));
+        Node subject = builder.node(version,
+                s -> s.nodeType(NodeType.SUBJECT).isContext(true).publicId("urn:subject:1").child(topic));
 
         topic.setContext(true);
         nodeRepository.saveAndFlush(topic);
