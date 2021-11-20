@@ -80,8 +80,7 @@ public class NodeConnectionsTest extends RestTest {
                 .getObject(NodeConnections.ParentChildIndexDocument[].class, response);
 
         assertEquals(2, parentChildren.length);
-        assertAnyTrue(parentChildren,
-                t -> electricityId.equals(t.parentId) && alternatingCurrentId.equals(t.childId));
+        assertAnyTrue(parentChildren, t -> electricityId.equals(t.parentId) && alternatingCurrentId.equals(t.childId));
         assertAnyTrue(parentChildren, t -> calculusId.equals(t.parentId) && integrationId.equals(t.childId));
         assertAllTrue(parentChildren, t -> isValidId(t.id));
     }
@@ -166,8 +165,9 @@ public class NodeConnectionsTest extends RestTest {
 
     @Test
     public void update_child_rank_modifies_other_contiguous_ranks() throws Exception {
-        List<NodeConnection> nodeConnections = createTenContiguousRankedConnections(); // creates ranks 1, 2, 3, 4, 5, 6,
-                                                                                      // 7, 8, 9, 10
+        List<NodeConnection> nodeConnections = createTenContiguousRankedConnections(); // creates ranks 1, 2, 3, 4, 5,
+                                                                                       // 6,
+                                                                                       // 7, 8, 9, 10
         Map<String, Integer> mappedRanks = mapConnectionRanks(nodeConnections);
 
         // make the last object the first
@@ -199,8 +199,9 @@ public class NodeConnectionsTest extends RestTest {
     @Test
     public void update_child_rank_does_not_alter_noncontiguous_ranks() throws Exception {
 
-        List<NodeConnection> nodeConnections = createTenNonContiguousRankedConnections(); // creates ranks 1, 2, 3, 4, 5,
-                                                                                         // 60, 70, 80, 90, 100
+        List<NodeConnection> nodeConnections = createTenNonContiguousRankedConnections(); // creates ranks 1, 2, 3, 4,
+                                                                                          // 5,
+                                                                                          // 60, 70, 80, 90, 100
         Map<String, Integer> mappedRanks = mapConnectionRanks(nodeConnections);
 
         // make the last object the first

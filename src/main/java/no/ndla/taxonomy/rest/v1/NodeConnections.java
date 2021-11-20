@@ -38,7 +38,7 @@ public class NodeConnections {
     private final RelevanceRepository relevanceRepository;
 
     public NodeConnections(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-                           EntityConnectionService connectionService, RelevanceRepository relevanceRepository) {
+            EntityConnectionService connectionService, RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
