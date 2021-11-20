@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = { "/v1/node-connection" })
+@RequestMapping(path = { "/v1/node-connections" })
 @Transactional
 public class NodeConnections {
     private final NodeRepository nodeRepository;
