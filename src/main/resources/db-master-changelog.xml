@@ -999,4 +999,18 @@
             FROM topic_resource tr;
         </sql>
     </changeSet>
+
+    <changeSet id="20211122 removes old fields" author="Gunnar Velle">
+        <dropColumn tableName="cached_path" columnName="subject_id"/>
+        <dropColumn tableName="cached_path" columnName="topic_id"/>
+    </changeSet>
+    <changeSet id="20211122 01 drop old tables" author="Gunnar Velle">
+        <dropTable tableName="topic_subtopic"/>
+        <dropTable tableName="topic_resource"/>
+        <dropTable tableName="topic_translation"/>
+        <dropTable tableName="topic"/>
+        <dropTable tableName="subject_topic"/>
+        <dropTable tableName="subject_translation"/>
+        <dropTable tableName="subject"/>
+    </changeSet>
 </databaseChangeLog>

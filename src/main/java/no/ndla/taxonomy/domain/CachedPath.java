@@ -34,12 +34,6 @@ public class CachedPath {
     private String path;
 
     @ManyToOne
-    private Subject subject;
-
-    @ManyToOne
-    private Topic topic;
-
-    @ManyToOne
     private Resource resource;
 
     @ManyToOne
@@ -95,14 +89,6 @@ public class CachedPath {
     public Optional<EntityWithPath> getOwningEntity() {
         final var entitiesThatCanBeReturned = new HashSet<EntityWithPath>();
 
-        if (subject != null) {
-            entitiesThatCanBeReturned.add(subject);
-        }
-
-        if (topic != null) {
-            entitiesThatCanBeReturned.add(topic);
-        }
-
         if (resource != null) {
             entitiesThatCanBeReturned.add(resource);
         }
@@ -124,18 +110,12 @@ public class CachedPath {
 
     public void setOwningEntity(EntityWithPath entity) {
         if (entity == null) {
-            this.setSubject(null);
-            this.setTopic(null);
             this.setResource(null);
             this.setNode(null);
             return;
         }
 
-        if (entity instanceof Subject) {
-            this.setSubject((Subject) entity);
-        } else if (entity instanceof Topic) {
-            this.setTopic((Topic) entity);
-        } else if (entity instanceof Resource) {
+        if (entity instanceof Resource) {
             this.setResource((Resource) entity);
         } else if (entity instanceof Node) {
             this.setNode((Node) entity);
@@ -145,62 +125,6 @@ public class CachedPath {
         }
 
         setPublicId(entity.getPublicId());
-    }
-
-    public Optional<Topic> getTopic() {
-        return Optional.ofNullable(this.topic);
-    }
-
-    public void setTopic(Topic topic) {
-        final var oldTopic = this.topic;
-
-        if (topic == null && oldTopic == null) {
-            return;
-        }
-
-        this.topic = topic;
-
-        if (oldTopic != null && oldTopic != topic) {
-            oldTopic.removeCachedPath(this);
-        }
-
-        if (topic != null && !topic.getCachedPaths().contains(this)) {
-            topic.addCachedPath(this);
-        }
-
-        if (topic != null) {
-            setSubject(null);
-            setResource(null);
-            setNode(null);
-        }
-    }
-
-    public Optional<Subject> getSubject() {
-        return Optional.ofNullable(this.subject);
-    }
-
-    public void setSubject(Subject subject) {
-        final var oldSubject = this.subject;
-
-        if (subject == null && oldSubject == null) {
-            return;
-        }
-
-        this.subject = subject;
-
-        if (oldSubject != null && oldSubject != subject) {
-            oldSubject.removeCachedPath(this);
-        }
-
-        if (subject != null && !subject.getCachedPaths().contains(this)) {
-            subject.addCachedPath(this);
-        }
-
-        if (subject != null) {
-            setTopic(null);
-            setResource(null);
-            setNode(null);
-        }
     }
 
     public Optional<Resource> getResource() {
@@ -225,8 +149,6 @@ public class CachedPath {
         }
 
         if (resource != null) {
-            setSubject(null);
-            setTopic(null);
             setNode(null);
         }
     }
@@ -253,8 +175,6 @@ public class CachedPath {
         }
 
         if (node != null) {
-            setSubject(null);
-            setTopic(null);
             setResource(null);
         }
     }

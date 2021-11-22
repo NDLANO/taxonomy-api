@@ -10,7 +10,6 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
-import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,22 +31,19 @@ public class ResourceServiceImplTest {
     private MetadataApiService metadataApiService;
 
     @BeforeEach
-    public void setUp(@Autowired ResourceRepository resourceRepository,
-            @Autowired TopicResourceRepository topicResourceRepository, @Autowired Builder builder) {
+    public void setUp(@Autowired ResourceRepository resourceRepository, @Autowired Builder builder) {
         this.builder = builder;
 
         connectionService = mock(EntityConnectionService.class);
         metadataApiService = mock(MetadataApiService.class);
 
         final var domainEntityHelperService = mock(DomainEntityHelperService.class);
-        final var recursiveTopicTreeService = mock(RecursiveTopicTreeService.class);
         final var recursiveNodeTreeService = mock(RecursiveNodeTreeService.class);
         final var nodeResourceRepository = mock(NodeResourceRepository.class);
-        final var topicTreeSorter = mock(TreeSorter.class);
+        final var treeSorter = mock(TreeSorter.class);
 
-        resourceService = new ResourceServiceImpl(resourceRepository, topicResourceRepository, connectionService,
-                metadataApiService, domainEntityHelperService, recursiveTopicTreeService, nodeResourceRepository,
-                recursiveNodeTreeService, topicTreeSorter);
+        resourceService = new ResourceServiceImpl(resourceRepository, connectionService, metadataApiService,
+                domainEntityHelperService, nodeResourceRepository, recursiveNodeTreeService, treeSorter);
     }
 
     @Test

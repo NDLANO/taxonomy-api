@@ -8,7 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
+import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -31,11 +31,11 @@ public class SubjectResourceTypesTest extends RestTest {
                 .getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources");
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        ResourceWithNodeConnectionDTO[] result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(2, result.length);
-        assertEquals(2, result[0].resourceTypes.size());
-        assertEquals(2, result[1].resourceTypes.size());
+        assertEquals(2, result[0].getResourceTypes().size());
+        assertEquals(2, result[1].getResourceTypes().size());
     }
 
     @Test
@@ -46,10 +46,10 @@ public class SubjectResourceTypesTest extends RestTest {
                 .getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources");
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        ResourceWithNodeConnectionDTO[] result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(1, result.length);
-        assertEquals(0, result[0].resourceTypes.size());
+        assertEquals(0, result[0].getResourceTypes().size());
     }
 
     @Test
@@ -63,9 +63,9 @@ public class SubjectResourceTypesTest extends RestTest {
                 .resource(r -> r.name("a lecture").resourceType("lecture")))).getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources?type=" + lecture);
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        ResourceWithNodeConnectionDTO[] result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(2, result.length);
-        assertAnyTrue(result, r -> "a lecture".equals(r.name));
+        assertAnyTrue(result, r -> "a lecture".equals(r.getName()));
     }
 }

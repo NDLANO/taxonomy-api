@@ -68,36 +68,32 @@ public class CachedPathTest {
 
     @Test
     public void setOwningEntity() {
-        final var subject = mock(Subject.class);
+        final var subject = mock(Node.class);
         when(subject.getPublicId()).thenReturn(URI.create("urn:subject:1"));
-        final var topic = mock(Topic.class);
+        final var topic = mock(Node.class);
         when(topic.getPublicId()).thenReturn(URI.create("urn:topic:1"));
         final var resource = mock(Resource.class);
         when(resource.getPublicId()).thenReturn(URI.create("urn:resource:1"));
         final var unknown = mock(EntityWithPath.class);
 
-        assertNull(getField(cachedPath, "subject"));
-        assertNull(getField(cachedPath, "topic"));
+        assertNull(getField(cachedPath, "node"));
         assertNull(getField(cachedPath, "resource"));
 
         cachedPath.setOwningEntity(subject);
 
-        assertSame(subject, getField(cachedPath, "subject"));
-        assertNull(getField(cachedPath, "topic"));
+        assertSame(subject, getField(cachedPath, "node"));
         assertNull(getField(cachedPath, "resource"));
         assertEquals("urn:subject:1", cachedPath.getPublicId().toString());
 
         cachedPath.setOwningEntity(topic);
 
-        assertNull(getField(cachedPath, "subject"));
-        assertSame(topic, getField(cachedPath, "topic"));
+        assertSame(topic, getField(cachedPath, "node"));
         assertNull(getField(cachedPath, "resource"));
         assertEquals("urn:topic:1", cachedPath.getPublicId().toString());
 
         cachedPath.setOwningEntity(resource);
 
-        assertNull(getField(cachedPath, "subject"));
-        assertNull(getField(cachedPath, "topic"));
+        assertNull(getField(cachedPath, "node"));
         assertSame(resource, getField(cachedPath, "resource"));
         assertEquals("urn:resource:1", cachedPath.getPublicId().toString());
 
@@ -109,22 +105,19 @@ public class CachedPathTest {
 
         cachedPath.setOwningEntity(null);
 
-        assertNull(getField(cachedPath, "subject"));
-        assertNull(getField(cachedPath, "topic"));
+        assertNull(getField(cachedPath, "node"));
         assertNull(getField(cachedPath, "resource"));
 
         cachedPath.setOwningEntity(subject);
         cachedPath.setOwningEntity(null);
 
-        assertNull(getField(cachedPath, "subject"));
-        assertNull(getField(cachedPath, "topic"));
+        assertNull(getField(cachedPath, "node"));
         assertNull(getField(cachedPath, "resource"));
 
         cachedPath.setOwningEntity(topic);
         cachedPath.setOwningEntity(null);
 
-        assertNull(getField(cachedPath, "subject"));
-        assertNull(getField(cachedPath, "topic"));
+        assertNull(getField(cachedPath, "node"));
         assertNull(getField(cachedPath, "resource"));
     }
 
@@ -132,21 +125,18 @@ public class CachedPathTest {
     public void getOwningEntity() {
         assertFalse(cachedPath.getOwningEntity().isPresent());
 
-        final var subject = mock(Subject.class);
-        setField(cachedPath, "subject", subject);
+        final var subject = mock(Node.class);
+        setField(cachedPath, "node", subject);
         assertSame(subject, cachedPath.getOwningEntity().orElseThrow());
 
-        final var topic = mock(Topic.class);
+        final var topic = mock(Node.class);
 
-        setField(cachedPath, "topic", topic);
+        setField(cachedPath, "node", topic);
 
         try {
             cachedPath.getOwningEntity();
-            fail("Expected IllegalStateException");
         } catch (IllegalStateException ignored) {
         }
-
-        setField(cachedPath, "subject", null);
 
         assertSame(topic, cachedPath.getOwningEntity().orElseThrow());
 
@@ -160,31 +150,9 @@ public class CachedPathTest {
         } catch (IllegalStateException ignored) {
         }
 
-        setField(cachedPath, "topic", null);
+        setField(cachedPath, "node", null);
 
         assertSame(resource, cachedPath.getOwningEntity().orElseThrow());
-    }
-
-    @Test
-    public void getTopic() {
-        assertFalse(cachedPath.getTopic().isPresent());
-
-        final var topic = mock(Topic.class);
-
-        setField(cachedPath, "topic", topic);
-
-        assertSame(topic, cachedPath.getTopic().orElseThrow());
-    }
-
-    @Test
-    public void getSubject() {
-        assertFalse(cachedPath.getSubject().isPresent());
-
-        final var subject = mock(Subject.class);
-
-        setField(cachedPath, "subject", subject);
-
-        assertSame(subject, cachedPath.getSubject().orElseThrow());
     }
 
     @Test
@@ -196,56 +164,6 @@ public class CachedPathTest {
         setField(cachedPath, "resource", resource);
 
         assertSame(resource, cachedPath.getResource().orElseThrow());
-    }
-
-    @Test
-    public void setSubject() {
-        assertNull(getField(cachedPath, "subject"));
-
-        final var subject1 = mock(Subject.class);
-        final var subject2 = mock(Subject.class);
-
-        final var subject1CachedPaths = new HashSet<CachedPath>();
-        final var subject2CachedPaths = new HashSet<CachedPath>();
-
-        when(subject1.getCachedPaths()).thenReturn(subject1CachedPaths);
-        when(subject2.getCachedPaths()).thenReturn(subject2CachedPaths);
-
-        cachedPath.setSubject(subject1);
-        verify(subject1, atLeastOnce()).addCachedPath(cachedPath);
-
-        subject1CachedPaths.add(cachedPath);
-        verify(subject1, times(0)).removeCachedPath(cachedPath);
-
-        cachedPath.setSubject(subject2);
-
-        verify(subject2).addCachedPath(cachedPath);
-        verify(subject1).removeCachedPath(cachedPath);
-    }
-
-    @Test
-    public void setTopic() {
-        assertNull(getField(cachedPath, "topic"));
-
-        final var topic1 = mock(Topic.class);
-        final var topic2 = mock(Topic.class);
-
-        final var topic1CachedPaths = new HashSet<CachedPath>();
-        final var topic2CachedPaths = new HashSet<CachedPath>();
-
-        when(topic1.getCachedPaths()).thenReturn(topic1CachedPaths);
-        when(topic2.getCachedPaths()).thenReturn(topic2CachedPaths);
-
-        cachedPath.setTopic(topic1);
-        verify(topic1, atLeastOnce()).addCachedPath(cachedPath);
-
-        topic1CachedPaths.add(cachedPath);
-        verify(topic1, times(0)).removeCachedPath(cachedPath);
-
-        cachedPath.setTopic(topic2);
-
-        verify(topic2).addCachedPath(cachedPath);
-        verify(topic1).removeCachedPath(cachedPath);
     }
 
     @Test

@@ -11,8 +11,6 @@ import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
-import no.ndla.taxonomy.repositories.SubjectRepository;
-import no.ndla.taxonomy.repositories.TopicRepository;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.RecursiveMergeResultDto;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;

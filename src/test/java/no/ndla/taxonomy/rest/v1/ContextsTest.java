@@ -10,7 +10,8 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
-import no.ndla.taxonomy.service.dtos.TopicDTO;
+import no.ndla.taxonomy.service.dtos.EntityWithPathDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,7 +111,7 @@ public class ContextsTest extends RestTest {
         cachedUrlUpdaterService.updateCachedUrls(topic);
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
-        final var topicIndexDocument = testUtils.getObject(TopicDTO.class, response);
+        final var topicIndexDocument = testUtils.getObject(NodeDTO.class, response);
         // assertEquals("/topic:1", topicIndexDocument.getPath());
         assertAnyTrue(topicIndexDocument.getPaths(), p -> p.equals("/topic:1"));
     }

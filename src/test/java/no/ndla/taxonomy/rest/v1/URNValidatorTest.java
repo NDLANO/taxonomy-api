@@ -7,9 +7,10 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceType;
-import no.ndla.taxonomy.domain.Subject;
 import no.ndla.taxonomy.domain.exceptions.IdFormatException;
 import no.ndla.taxonomy.service.URNValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,6 +74,6 @@ public class URNValidatorTest {
     @Test
     public void differentEntityClassesAreAccepted() {
         URI id = URI.create("urn:subject:134");
-        validator.validate(id, new Subject());
+        validator.validate(id, new Node(NodeType.SUBJECT));
     }
 }

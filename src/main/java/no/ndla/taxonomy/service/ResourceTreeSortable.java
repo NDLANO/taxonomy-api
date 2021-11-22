@@ -9,8 +9,6 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.SortableResourceConnection;
-import no.ndla.taxonomy.domain.Topic;
-import no.ndla.taxonomy.domain.TopicResource;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,11 +30,7 @@ public class ResourceTreeSortable<T extends EntityWithPath> implements TreeSorte
         this.rank = resourceConnection.getRank();
         this.resourceConnection = resourceConnection;
         this.type = "resource";
-        if (resourceConnection instanceof TopicResource) {
-            this.parentType = "topic";
-        } else {
-            this.parentType = "node";
-        }
+        this.parentType = "node";
     }
 
     public ResourceTreeSortable(String type, String parentType, int id, int parentId, int rank) {

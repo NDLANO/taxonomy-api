@@ -15,7 +15,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TopicTreeSorterTest {
+public class TreeSorterTest {
     @Test
     public void sortList() throws URISyntaxException {
         final var sorter = new TreeSorter();

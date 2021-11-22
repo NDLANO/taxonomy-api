@@ -9,7 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.dtos.queries.ResourceIndexDocument;
-import no.ndla.taxonomy.rest.v1.dtos.queries.TopicIndexDocument;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -109,7 +109,7 @@ public class QueryTest extends RestTest {
     @Test
     public void no_topics_matching_contentURI() throws Exception {
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/topics?contentURI=urn:article:345");
-        TopicIndexDocument[] resources = testUtils.getObject(TopicIndexDocument[].class, response);
+        NodeDTO[] resources = testUtils.getObject(NodeDTO[].class, response);
 
         assertEquals(0, resources.length);
     }

@@ -8,7 +8,6 @@
 package no.ndla.taxonomy.repositories;
 
 import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.TopicSubtopic;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
@@ -19,8 +18,8 @@ import java.util.Set;
 
 public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnection> {
     @SuppressWarnings("SpringDataRepositoryMethodReturnTypeInspection")
-    @Query("SELECT nc.parent.id AS parentId, nc.child.id AS childId, nc.rank AS rank" + "   FROM NodeConnection nc"
-            + "   JOIN nc.parent" + "   JOIN nc.child" + "   WHERE nc.parent.id IN :nodeId")
+    @Query("SELECT nc.parent.id AS parentId, nc.child.id AS childId, nc.rank AS rank FROM NodeConnection nc"
+            + " JOIN nc.parent JOIN nc.child  WHERE nc.parent.id IN :nodeId")
     List<NodeTreeElement> findAllByNodeIdInIncludingTopicAndSubtopic(Set<Integer> nodeId);
 
     interface NodeTreeElement {
@@ -58,5 +57,5 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
         return doFindAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(nodeId);
     }
 
-    Optional<TopicSubtopic> findFirstByPublicId(URI publicId);
+    Optional<NodeConnection> findFirstByPublicId(URI publicId);
 }

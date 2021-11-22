@@ -7,9 +7,11 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
-import no.ndla.taxonomy.service.dtos.ResourceWithTopicConnectionDTO;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeResource;
+import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -254,9 +256,10 @@ public class TopicResourcesTest extends RestTest {
                 });
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/" + geometry.getPublicId() + "/resources");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
-        assertEquals(circles.getPublicId(), resources[0].id);
-        assertEquals(squares.getPublicId(), resources[1].id);
+        ResourceWithNodeConnectionDTO[] resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class,
+                response);
+        assertEquals(circles.getPublicId(), resources[0].getId());
+        assertEquals(squares.getPublicId(), resources[1].getId());
     }
 
     @Test
@@ -295,7 +298,7 @@ public class TopicResourcesTest extends RestTest {
         });
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/" + geometry.getPublicId() + "/resources");
-        final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+        final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(circles.getPublicId(), resources[0].getId());
         assertEquals(squares.getPublicId(), resources[1].getId());

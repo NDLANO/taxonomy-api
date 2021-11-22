@@ -315,7 +315,7 @@ public class ResourcesTest extends RestTest {
         testSeeder.resourceInDualSubjectsTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1/full");
-        final var result = testUtils.getObject(ResourceWithParentTopicsDTO.class, response);
+        final var result = testUtils.getObject(ResourceWithParentNodesDTO.class, response);
         assertNotNull(result.getPaths());
         assertEquals(2, result.getPaths().size());
     }
@@ -325,7 +325,7 @@ public class ResourcesTest extends RestTest {
         testSeeder.resourceInDualSubjectsTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
-        final var result = testUtils.getObject(ResourceWithParentTopicsDTO.class, response);
+        final var result = testUtils.getObject(ResourceWithParentNodesDTO.class, response);
         assertNotNull(result.getPaths());
         assertEquals(2, result.getPaths().size());
     }
@@ -334,7 +334,7 @@ public class ResourcesTest extends RestTest {
     public void can_get_resource_connection_id() throws Exception {
         Node topic = builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").resource());
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources");
-        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+        final var result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(first(topic.getNodeResources()).getPublicId(), result[0].getConnectionId());
     }
@@ -343,7 +343,7 @@ public class ResourcesTest extends RestTest {
     public void can_get_resource_connections_with_metadata() throws Exception {
         Node topic = builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").resource());
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources");
-        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+        final var result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(first(topic.getNodeResources()).getPublicId(), result[0].getConnectionId());
         assertAllTrue(result, connection -> connection.getMetadata() != null);
@@ -359,7 +359,7 @@ public class ResourcesTest extends RestTest {
                         st -> st.publicId("urn:topic:2").resource(r -> r.name("b").publicId("urn:resource:2"))));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1343/resources?recursive=true");
-        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+        final var result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(first(builder.node("topic").getNodeResources()).getPublicId(), result[0].getConnectionId());
         assertEquals(first(builder.node("subtopic").getNodeResources()).getPublicId(), result[1].getConnectionId());
@@ -379,7 +379,7 @@ public class ResourcesTest extends RestTest {
                                         .resource(true, r -> r.name("resource aab").contentUri("urn:article:aab"))))));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:a/resources?recursive=true");
-        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+        final var result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(4, result.length);
         assertAnyTrue(result,
@@ -391,14 +391,14 @@ public class ResourcesTest extends RestTest {
         assertAnyTrue(result,
                 r -> "resource aab".equals(r.getName()) && "urn:article:aab".equals(r.getContentUri().toString()));
         assertAllTrue(result, r -> !r.getPaths().isEmpty());
-        assertAllTrue(result, ResourceWithTopicConnectionDTO::isPrimary);
+        assertAllTrue(result, ResourceWithNodeConnectionDTO::isPrimary);
     }
 
     @Test
     public void resources_by_topic_id_recursively_are_ordered_by_rank_in_parent() throws Exception {
         testSeeder.resourcesBySubjectIdTestSetup();
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:5/resources?recursive=true");
-        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+        final var result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
         assertEquals(6, result.length);
         assertEquals("urn:resource:3", result[0].getId().toString());
         assertEquals("urn:resource:5", result[1].getId().toString());
@@ -410,9 +410,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void primary_status_is_returned_on_resources() throws Exception {
-        final var resource = builder.resource("r1", rb -> {
-            rb.name("resource 1");
-        });
+        final var resource = builder.resource("r1", rb -> rb.name("resource 1"));
 
         builder.node(tb -> {
             tb.nodeType(NodeType.TOPIC);
@@ -430,13 +428,13 @@ public class ResourcesTest extends RestTest {
 
         {
             MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:rt:1201/resources");
-            final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            final var result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
             assertEquals(1, result.length);
             assertTrue(result[0].isPrimary());
         }
         {
             MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:rt:1202/resources");
-            final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            final var result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
             assertEquals(1, result.length);
             assertFalse(result[0].isPrimary());
         }
@@ -455,14 +453,14 @@ public class ResourcesTest extends RestTest {
                                         r -> r.publicId("urn:resource:aab"))))));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:a/resources?recursive=true");
-        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+        final var result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(4, result.length);
         assertAnyTrue(result, r -> "/subject:1/topic:a/resource:a".equals(r.getPath()));
         assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/resource:aa".equals(r.getPath()));
         assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aaa/resource:aaa".equals(r.getPath()));
         assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aab/resource:aab".equals(r.getPath()));
-        assertAllTrue(result, ResourceWithTopicConnectionDTO::isPrimary);
+        assertAllTrue(result, ResourceWithNodeConnectionDTO::isPrimary);
     }
 
     @Test
@@ -473,7 +471,7 @@ public class ResourcesTest extends RestTest {
                         .resource(r -> r.name("resource 1")).resource(r -> r.name("resource 2"))));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources");
-        final var result = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+        final var result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "resource 1".equals(r.getName()));
@@ -486,12 +484,12 @@ public class ResourcesTest extends RestTest {
 
         MockHttpServletResponse response = testUtils
                 .getResource("/v1/topics/urn:topic:1/resources?relevance=urn:relevance:core");
-        final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+        final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
         assertEquals(9, resources.length);
 
         MockHttpServletResponse response2 = testUtils
                 .getResource("/v1/topics/urn:topic:1/resources?relevance=urn:relevance:supplementary");
-        final var resources2 = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response2);
+        final var resources2 = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response2);
         assertEquals(1, resources2.length);
 
     }
@@ -503,26 +501,26 @@ public class ResourcesTest extends RestTest {
         {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/topics/urn:topic:1:1/resources?relevance=urn:relevance:core");
-            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
             assertEquals(5, resources.length);
         }
         {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/topics/urn:topic:2:1/resources?relevance=urn:relevance:core");
-            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
             assertEquals(5, resources.length);
         }
 
         {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/topics/urn:topic:1:1/resources?relevance=urn:relevance:supplementary");
-            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
             assertEquals(0, resources.length);
         }
         {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/topics/urn:topic:2:1/resources?relevance=urn:relevance:supplementary");
-            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
             assertEquals(5, resources.length);
         }
     }
@@ -534,26 +532,26 @@ public class ResourcesTest extends RestTest {
         {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/topics/urn:topic:1:1/resources?relevance=urn:relevance:core");
-            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
             assertEquals(5, resources.length);
         }
         {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/topics/urn:topic:2:1/resources?relevance=urn:relevance:core");
-            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
             assertEquals(5, resources.length);
         }
 
         {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/topics/urn:topic:1:1/resources?relevance=urn:relevance:supplementary");
-            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
             assertEquals(0, resources.length);
         }
         {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/topics/urn:topic:2:1/resources?relevance=urn:relevance:supplementary");
-            final var resources = testUtils.getObject(ResourceWithTopicConnectionDTO[].class, response);
+            final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
             assertEquals(5, resources.length);
         }
     }
