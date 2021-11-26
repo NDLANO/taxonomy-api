@@ -81,6 +81,7 @@ public class SubjectsTest extends RestTest {
         Node subject = nodeRepository.getByPublicId(id);
         assertEquals(createSubjectCommand.name, subject.getName());
         assertEquals(createSubjectCommand.contentUri, subject.getContentUri());
+        assertTrue(subject.isRoot()); // all subjects are roots
     }
 
     @Test
