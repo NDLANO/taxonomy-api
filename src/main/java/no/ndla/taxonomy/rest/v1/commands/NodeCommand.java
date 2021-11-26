@@ -40,7 +40,7 @@ public class NodeCommand implements UpdatableDto<Node> {
     public String name;
 
     @JsonProperty
-    @ApiModelProperty(value = "The node is a context", example = "Trigonometry")
+    @ApiModelProperty(value = "The node is a root node. Default is false. Only used if present.")
     public Boolean root;
 
     public Optional<String> getNodeId() {
