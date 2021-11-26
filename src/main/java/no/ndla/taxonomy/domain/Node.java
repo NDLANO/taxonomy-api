@@ -237,7 +237,7 @@ public class Node extends EntityWithPath {
 
     @Override
     public boolean isContext() {
-        return context;
+        return root || context;
     }
 
     @Override
