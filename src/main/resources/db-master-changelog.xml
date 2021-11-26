@@ -999,4 +999,14 @@
             FROM topic_resource tr;
         </sql>
     </changeSet>
+
+    <changeSet id="20211126 add root param to node" author="Gunnar Velle">
+        <addColumn tableName="node">
+            <column name="root" type="boolean" defaultValueBoolean="false"/>
+        </addColumn>
+        <sql splitStatements="false" stripComments="false">
+            UPDATE node SET root = true
+            WHERE node_type = 'SUBJECT';
+        </sql>
+    </changeSet>
 </databaseChangeLog>

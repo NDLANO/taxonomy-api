@@ -60,6 +60,20 @@ public class NodeConnectionsTest extends RestTest {
     }
 
     @Test
+    public void cannot_add_root_child_to_parent() throws Exception {
+        URI integrationId = builder.node("integration", NodeType.TOPIC, t -> t.isRoot(true).name("integration"))
+                .getPublicId();
+        URI calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus")).getPublicId();
+
+        testUtils.createResource("/v1/node-connections", new NodeConnections.AddChildToParentCommand() {
+            {
+                parentId = calculusId;
+                childId = integrationId;
+            }
+        }, status().isBadRequest());
+    }
+
+    @Test
     public void can_delete_parent_child() throws Exception {
         URI id = save(NodeConnection.create(newTopic(), newTopic())).getPublicId();
         testUtils.deleteResource("/v1/node-connections/" + id);

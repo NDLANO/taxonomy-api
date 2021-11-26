@@ -685,6 +685,13 @@ public class Builder {
             return this;
         }
 
+        public NodeBuilder isRoot(boolean root) {
+            node.setRoot(root);
+
+            cachedUrlUpdaterService.updateCachedUrls(node);
+            return this;
+        }
+
         public NodeBuilder child(String nodeKey) {
             return child(nodeKey, null, null);
         }

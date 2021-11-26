@@ -38,6 +38,7 @@ public class SubjectCommand implements UpdatableDto<Node> {
         if (getId().isPresent())
             subject.setPublicId(id);
         subject.setContext(true);
+        subject.setRoot(true);
         subject.setName(name);
         subject.setContentUri(contentUri);
     }
