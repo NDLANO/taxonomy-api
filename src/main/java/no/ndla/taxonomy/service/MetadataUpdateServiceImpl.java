@@ -45,6 +45,9 @@ public class MetadataUpdateServiceImpl implements MetadataUpdateService {
         case "topic":
             return nodeRepository.findFirstByPublicId(publicId)
                     .orElseThrow(() -> new NotFoundServiceException("Topic by id was not found"));
+        case "node":
+            return nodeRepository.findFirstByPublicId(publicId)
+                    .orElseThrow(() -> new NotFoundServiceException("Node by id was not found"));
         case "resource":
             return resourceRepository.findFirstByPublicId(publicId)
                     .orElseThrow(() -> new NotFoundServiceException("Resource by id was not found"));
