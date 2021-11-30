@@ -1010,11 +1010,11 @@
         </sql>
     </changeSet>
 
-    <changeSet id="20211122 removes old fields" author="Gunnar Velle">
+    <changeSet id="20211130 removes old fields" author="Gunnar Velle">
         <dropColumn tableName="cached_path" columnName="subject_id"/>
         <dropColumn tableName="cached_path" columnName="topic_id"/>
     </changeSet>
-    <!--changeSet id="20211122 01 drop old tables" author="Gunnar Velle">
+    <!--changeSet id="2021XXXX drop old tables" author="Gunnar Velle">
         <dropTable tableName="subject_topic"/>
         <dropTable tableName="topic_subtopic"/>
         <dropTable tableName="topic_resource"/>
