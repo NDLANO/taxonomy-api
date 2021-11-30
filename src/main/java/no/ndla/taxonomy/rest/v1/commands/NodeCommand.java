@@ -39,6 +39,10 @@ public class NodeCommand implements UpdatableDto<Node> {
     @ApiModelProperty(required = true, value = "The name of the node", example = "Trigonometry")
     public String name;
 
+    @JsonProperty
+    @ApiModelProperty(value = "The node is a root node. Default is false. Only used if present.")
+    public Boolean root;
+
     public Optional<String> getNodeId() {
         return Optional.ofNullable(nodeId);
     }
@@ -56,6 +60,9 @@ public class NodeCommand implements UpdatableDto<Node> {
         }
         if (node.getIdent() == null) {
             node.setIdent(UUID.randomUUID().toString());
+        }
+        if (root != null) {
+            node.setRoot(root);
         }
         node.setNodeType(nodeType);
         node.setName(name);

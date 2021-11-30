@@ -87,6 +87,10 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
             throw new InvalidArgumentServiceException("Cannot connect node to itself");
         }
 
+        if (child.isRoot()) {
+            throw new InvalidArgumentServiceException("Root node cannot be set as child");
+        }
+
         EntityWithPath parentConnected = parent;
 
         var ttl = 100;

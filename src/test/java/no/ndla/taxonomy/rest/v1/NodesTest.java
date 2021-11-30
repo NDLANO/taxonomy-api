@@ -166,12 +166,13 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_get_all_root_nodes() throws Exception {
+        builder.node(NodeType.SUBJECT, s -> s.isRoot(true).isContext(true).name("Basic science").child(NodeType.TOPIC,
+                t -> t.name("photo synthesis")));
         builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> t.name("photo synthesis")));
-        builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> t.name("trigonometry")));
+                s -> s.isRoot(true).isContext(true).name("Maths").child(NodeType.TOPIC, t -> t.name("trigonometry")));
         builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Arts and crafts"));
-        builder.node(NodeType.NODE, n -> n.name("Random node").child(NodeType.NODE, c -> c.name("Subnode")));
+        builder.node(NodeType.NODE,
+                n -> n.isRoot(true).name("Random node").child(NodeType.NODE, c -> c.name("Subnode")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes?isRoot=true");
         final var nodes = testUtils.getObject(NodeDTO[].class, response);
@@ -282,6 +283,7 @@ public class NodesTest extends RestTest {
                 nodeType = NodeType.NODE;
                 name = "node";
                 contentUri = URI.create("urn:article:1");
+                root = Boolean.TRUE;
             }
         };
 
@@ -292,6 +294,7 @@ public class NodesTest extends RestTest {
         assertEquals(createNodeCommand.nodeType, node.getNodeType());
         assertEquals(createNodeCommand.name, node.getName());
         assertEquals(createNodeCommand.contentUri, node.getContentUri());
+        assertEquals(createNodeCommand.root, node.isRoot());
     }
 
     @Test
