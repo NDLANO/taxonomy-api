@@ -303,8 +303,8 @@ public class ResourcesTest extends RestTest {
         assertEquals(1, result.getResourceTypes().size());
         assertEquals(resourceType.getName(), result.getResourceTypes().iterator().next().getName());
         assertEquals(0, result.getFilters().size());
-        assertEquals(1, result.getParentTopics().size());
-        final NodeWithResourceConnectionDTO t = result.getParentTopics().iterator().next();
+        assertEquals(1, result.getParentNodes().size());
+        final NodeWithResourceConnectionDTO t = result.getParentNodes().iterator().next();
         assertEquals(topic.getName(), t.getName());
         assertTrue(t.isPrimary());
         assertEquals(URI.create("urn:article:6662"), t.getContentUri());

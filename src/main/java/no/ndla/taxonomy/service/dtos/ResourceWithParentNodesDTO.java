@@ -24,7 +24,7 @@ public class ResourceWithParentNodesDTO extends ResourceDTO {
             + "\"contentUri\": \"urn:article:6662\"," + "\"path\": \"/subject:2/topic:1:181900\","
             + "\"primary\": \"true\"}]")
     @InjectMetadata
-    private Set<NodeWithResourceConnectionDTO> parentTopics = new HashSet<>();
+    private Set<NodeWithResourceConnectionDTO> parentNodes = new HashSet<>();
 
     public ResourceWithParentNodesDTO() {
         super();
@@ -35,10 +35,14 @@ public class ResourceWithParentNodesDTO extends ResourceDTO {
 
         resource.getNodeResources().stream()
                 .map(nodeResource -> new NodeWithResourceConnectionDTO(nodeResource, languageCode))
-                .forEach(parentTopics::add);
+                .forEach(parentNodes::add);
+    }
+
+    public Set<NodeWithResourceConnectionDTO> getParentNodes() {
+        return parentNodes;
     }
 
     public Set<NodeWithResourceConnectionDTO> getParentTopics() {
-        return parentTopics;
+        return getParentNodes();
     }
 }
