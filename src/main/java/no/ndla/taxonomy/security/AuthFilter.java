@@ -23,11 +23,14 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -65,17 +68,9 @@ public class AuthFilter extends GenericFilterBean {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
-            throws IOException {
-        try {
-            parseWebToken((HttpServletRequest) servletRequest);
-            filterChain.doFilter(servletRequest, servletResponse);
-        } catch (TokenExpiredException ex) {
-            LOGGER.error("Remote host: " + servletRequest.getRemoteAddr() + " " + ex.getMessage());
-            ((HttpServletResponse) servletResponse).sendError(HttpServletResponse.SC_UNAUTHORIZED, ex.getMessage());
-        } catch (Exception ex) {
-            LOGGER.error("Remote host: " + servletRequest.getRemoteAddr() + " " + ex.getMessage());
-            ((HttpServletResponse) servletResponse).sendError(HttpServletResponse.SC_BAD_REQUEST, ex.getMessage());
-        }
+            throws IOException, ServletException {
+        parseWebToken((HttpServletRequest) servletRequest);
+        filterChain.doFilter(servletRequest, servletResponse);
     }
 
     private void parseWebToken(HttpServletRequest request) {
