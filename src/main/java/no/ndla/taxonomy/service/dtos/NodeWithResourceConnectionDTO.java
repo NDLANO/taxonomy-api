@@ -56,4 +56,9 @@ public class NodeWithResourceConnectionDTO extends NodeDTO {
     public int getRank() {
         return rank;
     }
+
+    @Override
+    public URI getRelevanceId() {
+        return relevanceId;
+    }
 }
