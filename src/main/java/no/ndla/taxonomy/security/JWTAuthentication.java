@@ -22,6 +22,7 @@ public class JWTAuthentication implements Authentication {
     private static final long serialVersionUID = 1L;
     private static final String TAXONOMY_API = "taxonomy";
     private static final String WRITE_PERMISSION = "write";
+    private static final String ADMIN_PERMISSION = "admin";
     private static final String PRODUCTION = "prod";
 
     private Collection<GrantedAuthority> authorities;
@@ -30,30 +31,40 @@ public class JWTAuthentication implements Authentication {
     private static final Logger LOGGER = LoggerFactory.getLogger(JWTAuthentication.class);
 
     public JWTAuthentication(DecodedJWT token) {
-        Claim appMetadata = token.getClaim("scope");
+        Claim scope = token.getClaim("scope");
+        Claim permissions = token.getClaim("permissions");
 
-        List<GrantedAuthority> tmp = new ArrayList<>();
-        tmp.add(new SimpleGrantedAuthority("READONLY"));
+        List<GrantedAuthority> auths = new ArrayList<>();
+        auths.add(new SimpleGrantedAuthority("READONLY"));
 
         try {
-            if (appMetadata != null && appMetadata.asString() != null) {
-                final String[] allPermissions = appMetadata.asString().split(" ");
-                for (String jwtPermissionString : allPermissions) {
-                    final JWTPermission jwtPermission = new JWTPermission(jwtPermissionString);
-                    if (jwtPermission.getApi() != null && jwtPermission.getPermission() != null
-                            && jwtPermission.getApi().equals(TAXONOMY_API)
-                            && jwtPermission.getPermission().equals(WRITE_PERMISSION)) {
-                        tmp.add(new SimpleGrantedAuthority("TAXONOMY_WRITE"));
-                    }
-                }
+            if (permissions != null && permissions.asArray(String.class) != null) {
+                auths.addAll(addPermissionsAsAuthorities(permissions.asArray(String.class)));
+            } else if (scope != null && scope.asString() != null) {
+                auths.addAll(addPermissionsAsAuthorities(scope.asString().split(" ")));
             }
         } catch (Exception e) {
             LOGGER.error("JWT Authentication failed", e);
         }
 
-        this.authorities = Collections.unmodifiableList(tmp);
+        this.authorities = Collections.unmodifiableList(auths);
         this.claims = token.getClaims();
         authenticated = true;
+    }
+
+    private List<GrantedAuthority> addPermissionsAsAuthorities(String[] allPermissions) {
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        for (String jwtPermissionString : allPermissions) {
+            final JWTPermission jwtPermission = new JWTPermission(jwtPermissionString);
+            if (jwtPermission.getApi() != null && jwtPermission.getPermission() != null
+                    && jwtPermission.getApi().equals(TAXONOMY_API)) {
+                if (jwtPermission.getPermission().equals(WRITE_PERMISSION))
+                    authorities.add(new SimpleGrantedAuthority("TAXONOMY_WRITE"));
+                if (jwtPermission.getPermission().equals(ADMIN_PERMISSION))
+                    authorities.add(new SimpleGrantedAuthority("TAXONOMY_ADMIN"));
+            }
+        }
+        return authorities;
     }
 
     @Override
