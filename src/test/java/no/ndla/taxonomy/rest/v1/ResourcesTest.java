@@ -296,15 +296,15 @@ public class ResourcesTest extends RestTest {
                 .publicId("urn:topic:1").contentUri(URI.create("urn:article:6662")).resource(resource, true));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/" + resource.getPublicId() + "/full");
-        final var result = testUtils.getObject(ResourceWithParentNodesDTO.class, response);
+        final var result = testUtils.getObject(ResourceWithParentsDTO.class, response);
 
         assertEquals(resource.getPublicId(), result.getId());
         assertEquals(resource.getName(), result.getName());
         assertEquals(1, result.getResourceTypes().size());
         assertEquals(resourceType.getName(), result.getResourceTypes().iterator().next().getName());
         assertEquals(0, result.getFilters().size());
-        assertEquals(1, result.getParentNodes().size());
-        final NodeWithResourceConnectionDTO t = result.getParentNodes().iterator().next();
+        assertEquals(1, result.getParents().size());
+        final NodeWithResourceConnectionDTO t = result.getParents().iterator().next();
         assertEquals(topic.getName(), t.getName());
         assertTrue(t.isPrimary());
         assertEquals(URI.create("urn:article:6662"), t.getContentUri());
@@ -315,7 +315,7 @@ public class ResourcesTest extends RestTest {
         testSeeder.resourceInDualSubjectsTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1/full");
-        final var result = testUtils.getObject(ResourceWithParentNodesDTO.class, response);
+        final var result = testUtils.getObject(ResourceWithParentsDTO.class, response);
         assertNotNull(result.getPaths());
         assertEquals(2, result.getPaths().size());
     }
@@ -325,7 +325,7 @@ public class ResourcesTest extends RestTest {
         testSeeder.resourceInDualSubjectsTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
-        final var result = testUtils.getObject(ResourceWithParentNodesDTO.class, response);
+        final var result = testUtils.getObject(ResourceWithParentsDTO.class, response);
         assertNotNull(result.getPaths());
         assertEquals(2, result.getPaths().size());
     }

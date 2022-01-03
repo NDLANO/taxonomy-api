@@ -22,10 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -110,7 +107,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @GetMapping("{id}/full")
     @ApiOperation(value = "Gets all parent topics, all filters and resourceTypes for this resource")
     @Transactional(readOnly = true)
-    public ResourceWithParentNodesDTO getResourceFull(@PathVariable("id") URI id,
+    public ResourceWithParentsDTO getResourceFull(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return resourceService.getResourceWithParentNodesByPublicId(id, language);
     }

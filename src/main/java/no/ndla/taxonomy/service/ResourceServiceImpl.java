@@ -145,11 +145,11 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Override
     @InjectMetadata
-    public ResourceWithParentNodesDTO getResourceWithParentNodesByPublicId(URI publicId, String languageCode) {
+    public ResourceWithParentsDTO getResourceWithParentNodesByPublicId(URI publicId, String languageCode) {
         final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
 
-        return new ResourceWithParentNodesDTO(resource, languageCode);
+        return new ResourceWithParentsDTO(resource, languageCode);
     }
 
     private List<ResourceDTO> createDto(List<Resource> resources, String languageCode) {

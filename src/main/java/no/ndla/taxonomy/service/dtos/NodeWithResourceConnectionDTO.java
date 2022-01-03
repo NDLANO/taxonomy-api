@@ -56,4 +56,19 @@ public class NodeWithResourceConnectionDTO extends NodeDTO {
     public int getRank() {
         return rank;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null || obj.getClass() != this.getClass())
+            return false;
+        var other = (NodeWithResourceConnectionDTO) obj;
+        return other.connectionId.equals(this.connectionId);
+    }
+
+    @Override
+    public int hashCode() {
+        return connectionId.hashCode();
+    }
 }

@@ -21,7 +21,7 @@ public interface ResourceService {
 
     ResourceDTO getResourceByPublicId(URI publicId, String languageCode);
 
-    ResourceWithParentNodesDTO getResourceWithParentNodesByPublicId(URI publicId, String languageCode);
+    ResourceWithParentsDTO getResourceWithParentNodesByPublicId(URI publicId, String languageCode);
 
     List<ResourceDTO> getResources(String languageCode, URI contentUriFilter);
 
