@@ -58,6 +58,11 @@ public class NodeWithResourceConnectionDTO extends NodeDTO {
     }
 
     @Override
+    public URI getRelevanceId() {
+        return relevanceId;
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
