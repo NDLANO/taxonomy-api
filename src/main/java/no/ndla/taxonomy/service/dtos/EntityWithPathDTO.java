@@ -43,7 +43,6 @@ public abstract class EntityWithPathDTO {
     public URI relevanceId;
 
     public EntityWithPathDTO() {
-
     }
 
     public EntityWithPathDTO(EntityWithPath entity, String languageCode) {

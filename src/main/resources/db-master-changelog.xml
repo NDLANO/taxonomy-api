@@ -1025,4 +1025,18 @@
         <addUniqueConstraint tableName="node_translation" columnNames="node_id,language_code"
                              constraintName="node_language_unique" />
     </changeSet>
+
+    <changeSet id="20220105 removes old fields" author="Gunnar Velle">
+        <dropColumn tableName="cached_path" columnName="subject_id"/>
+        <dropColumn tableName="cached_path" columnName="topic_id"/>
+    </changeSet>
+    <!--changeSet id="2021XXXX drop old tables" author="Gunnar Velle">
+        <dropTable tableName="subject_topic"/>
+        <dropTable tableName="topic_subtopic"/>
+        <dropTable tableName="topic_resource"/>
+        <dropTable tableName="topic_translation"/>
+        <dropTable tableName="topic"/>
+        <dropTable tableName="subject_translation"/>
+        <dropTable tableName="subject"/>
+    </changeSet-->
 </databaseChangeLog>

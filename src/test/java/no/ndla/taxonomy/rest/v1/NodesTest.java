@@ -246,7 +246,7 @@ public class NodesTest extends RestTest {
         testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes");
-        final var subtopics = testUtils.getObject(TopicDTO[].class, response);
+        final var subtopics = testUtils.getObject(NodeDTO[].class, response);
         assertEquals(7, subtopics.length);
 
         assertEquals("urn:topic:2", subtopics[0].getId().toString());

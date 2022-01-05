@@ -8,10 +8,11 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Builder;
-import no.ndla.taxonomy.domain.SubjectTopic;
-import no.ndla.taxonomy.domain.TopicResource;
-import no.ndla.taxonomy.domain.TopicSubtopic;
-import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.NodeResource;
+import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.repositories.NodeConnectionRepository;
+import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,12 +33,6 @@ import static org.mockito.Mockito.*;
 @Transactional
 public class EntityConnectionServiceImplTest {
     @Autowired
-    private SubjectTopicRepository subjectTopicRepository;
-    @Autowired
-    private TopicSubtopicRepository topicSubtopicRepository;
-    @Autowired
-    private TopicResourceRepository topicResourceRepository;
-    @Autowired
     private NodeConnectionRepository nodeConnectionRepository;
     @Autowired
     private NodeResourceRepository nodeResourceRepository;
@@ -53,120 +48,52 @@ public class EntityConnectionServiceImplTest {
     public void setUp() throws Exception {
         cachedUrlUpdaterService = mock(CachedUrlUpdaterService.class);
 
-        service = new EntityConnectionServiceImpl(subjectTopicRepository, topicSubtopicRepository,
-                topicResourceRepository, nodeConnectionRepository, nodeResourceRepository, cachedUrlUpdaterService);
-    }
-
-    @Test
-    public void connectSubjectTopic() {
-        final var subject1 = builder.subject();
-        final var subject2 = builder.subject();
-
-        final var topic1 = builder.topic();
-        final var topic2 = builder.topic();
-
-        final var relevance = builder.relevance();
-
-        assertFalse(subjectTopicRepository.findFirstBySubjectAndTopic(subject1, topic1).isPresent());
-
-        final var connection1 = service.connectSubjectTopic(subject1, topic1, relevance);
-        assertNotNull(connection1);
-        assertNotNull(connection1.getId());
-        assertNotNull(connection1.getPublicId());
-        assertEquals(1, connection1.getRank());
-
-        verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(topic1);
-
-        assertTrue(subjectTopicRepository.findFirstBySubjectAndTopic(subject1, topic1).isPresent());
-
-        final var connection2 = service.connectSubjectTopic(subject2, topic2, relevance);
-
-        assertNotNull(connection2.getId());
-        assertEquals(1, connection2.getRank());
-
-        // Testing ranking, ranking is ranking child object below parents
-        final var subject4 = builder.subject();
-        final var topic4 = builder.topic();
-        final var topic5 = builder.topic();
-        final var topic6 = builder.topic();
-        final var topic7 = builder.topic();
-        final var topic8 = builder.topic();
-
-        final var connection5 = service.connectSubjectTopic(subject4, topic4, relevance);
-        assertEquals(1, connection5.getRank());
-
-        final var connection6 = service.connectSubjectTopic(subject4, topic5, relevance);
-        assertEquals(1, connection5.getRank());
-        assertEquals(2, connection6.getRank());
-
-        final var connection7 = service.connectSubjectTopic(subject4, topic6, relevance, 2);
-        assertEquals(1, connection5.getRank());
-        assertEquals(3, connection6.getRank());
-        assertEquals(2, connection7.getRank());
-
-        final var connection8 = service.connectSubjectTopic(subject4, topic7, relevance, 1);
-        assertEquals(2, connection5.getRank());
-        assertEquals(4, connection6.getRank());
-        assertEquals(3, connection7.getRank());
-        assertEquals(1, connection8.getRank());
-
-        final var connection9 = service.connectSubjectTopic(subject4, topic8, relevance, 5);
-        assertEquals(2, connection5.getRank());
-        assertEquals(4, connection6.getRank());
-        assertEquals(3, connection7.getRank());
-        assertEquals(1, connection8.getRank());
-        assertEquals(5, connection9.getRank());
-
-        try {
-            service.connectSubjectTopic(subject4, topic5, relevance);
-            fail("Expected DuplicateConnectionException");
-        } catch (DuplicateConnectionException ignored) {
-
-        }
+        service = new EntityConnectionServiceImpl(nodeConnectionRepository, nodeResourceRepository,
+                cachedUrlUpdaterService);
     }
 
     @Test
     public void connectTopicSubtopic() {
-        final var topic1 = builder.topic();
-        final var topic2 = builder.topic();
-        final var topic4 = builder.topic();
-        final var topic5 = builder.topic();
-        final var topic6 = builder.topic();
-        final var topic7 = builder.topic();
-        final var topic8 = builder.topic();
-        final var topic9 = builder.topic();
+        final var topic1 = builder.node(NodeType.TOPIC);
+        final var topic2 = builder.node(NodeType.TOPIC);
+        final var topic4 = builder.node(NodeType.TOPIC);
+        final var topic5 = builder.node(NodeType.TOPIC);
+        final var topic6 = builder.node(NodeType.TOPIC);
+        final var topic7 = builder.node(NodeType.TOPIC);
+        final var topic8 = builder.node(NodeType.TOPIC);
+        final var topic9 = builder.node(NodeType.TOPIC);
 
         final var relevance = builder.relevance();
 
-        final var connection1 = service.connectTopicSubtopic(topic2, topic1, null);
+        final var connection1 = service.connectParentChild(topic2, topic1, null, 1);
         assertNotNull(connection1);
         assertNotNull(connection1.getId());
         assertEquals(1, connection1.getRank());
-        assertSame(topic2, connection1.getTopic().orElse(null));
-        assertSame(topic1, connection1.getSubtopic().orElse(null));
+        assertSame(topic2, connection1.getParent().orElse(null));
+        assertSame(topic1, connection1.getChild().orElse(null));
 
         verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(topic1);
 
         // Test ranking
-        final var connection4 = service.connectTopicSubtopic(topic4, topic5, null);
+        final var connection4 = service.connectParentChild(topic4, topic5, null, null);
         assertEquals(1, connection4.getRank());
 
-        final var connection5 = service.connectTopicSubtopic(topic4, topic6, null);
+        final var connection5 = service.connectParentChild(topic4, topic6, null, null);
         assertEquals(1, connection4.getRank());
         assertEquals(2, connection5.getRank());
 
-        final var connection6 = service.connectTopicSubtopic(topic4, topic7, relevance, 1);
+        final var connection6 = service.connectParentChild(topic4, topic7, relevance, 1);
         assertEquals(2, connection4.getRank());
         assertEquals(3, connection5.getRank());
         assertEquals(1, connection6.getRank());
 
-        final var connection7 = service.connectTopicSubtopic(topic4, topic8, relevance, 3);
+        final var connection7 = service.connectParentChild(topic4, topic8, relevance, 3);
         assertEquals(2, connection4.getRank());
         assertEquals(4, connection5.getRank());
         assertEquals(1, connection6.getRank());
         assertEquals(3, connection7.getRank());
 
-        final var connection8 = service.connectTopicSubtopic(topic4, topic9, relevance, 5);
+        final var connection8 = service.connectParentChild(topic4, topic9, relevance, 5);
         assertEquals(2, connection4.getRank());
         assertEquals(4, connection5.getRank());
         assertEquals(1, connection6.getRank());
@@ -174,49 +101,49 @@ public class EntityConnectionServiceImplTest {
         assertEquals(5, connection8.getRank());
 
         try {
-            service.connectTopicSubtopic(topic4, topic8, relevance);
+            service.connectParentChild(topic4, topic8, relevance, 0);
         } catch (DuplicateConnectionException ignored) {
 
         }
 
         // try to create loops
-        final var topic10 = builder.topic();
-        final var topic11 = builder.topic();
-        final var topic12 = builder.topic();
+        final var topic10 = builder.node(NodeType.TOPIC);
+        final var topic11 = builder.node(NodeType.TOPIC);
+        final var topic12 = builder.node(NodeType.TOPIC);
 
         try {
-            service.connectTopicSubtopic(topic10, topic10, relevance);
+            service.connectParentChild(topic10, topic10, relevance, 0);
             fail("Expected InvalidArgumentServiceException");
         } catch (InvalidArgumentServiceException ignored) {
 
         }
 
-        service.connectTopicSubtopic(topic10, topic11, relevance);
-        service.connectTopicSubtopic(topic11, topic12, relevance);
+        service.connectParentChild(topic10, topic11, relevance, 0);
+        service.connectParentChild(topic11, topic12, relevance, 0);
 
         try {
-            service.connectTopicSubtopic(topic12, topic10, relevance);
-            fail("Expected InvalidArgumentServiceException");
-        } catch (InvalidArgumentServiceException ignored) {
-
-        }
-
-        try {
-            service.connectTopicSubtopic(topic11, topic10, relevance);
+            service.connectParentChild(topic12, topic10, relevance, 0);
             fail("Expected InvalidArgumentServiceException");
         } catch (InvalidArgumentServiceException ignored) {
 
         }
 
         try {
-            service.connectTopicSubtopic(topic12, topic11, relevance);
+            service.connectParentChild(topic11, topic10, relevance, 0);
+            fail("Expected InvalidArgumentServiceException");
+        } catch (InvalidArgumentServiceException ignored) {
+
+        }
+
+        try {
+            service.connectParentChild(topic12, topic11, relevance, 0);
             fail("Expected DuplicateConnectionException");
         } catch (DuplicateConnectionException ignored) {
 
         }
 
         try {
-            service.connectTopicSubtopic(topic11, topic10, relevance);
+            service.connectParentChild(topic11, topic10, relevance, 0);
             fail("Expected InvalidArgumentServiceException");
         } catch (InvalidArgumentServiceException ignored) {
 
@@ -225,10 +152,10 @@ public class EntityConnectionServiceImplTest {
 
     @Test
     public void connectTopicResource() {
-        final var topic1 = builder.topic();
-        final var topic2 = builder.topic();
-        final var topic3 = builder.topic();
-        final var topic4 = builder.topic();
+        final var topic1 = builder.node(NodeType.TOPIC);
+        final var topic2 = builder.node(NodeType.TOPIC);
+        final var topic3 = builder.node(NodeType.TOPIC);
+        final var topic4 = builder.node(NodeType.TOPIC);
 
         final var resource1 = builder.resource();
         final var resource2 = builder.resource();
@@ -240,18 +167,18 @@ public class EntityConnectionServiceImplTest {
 
         final var relevance = builder.relevance();
 
-        final var connection1 = service.connectTopicResource(topic1, resource1, relevance, true, null);
+        final var connection1 = service.connectNodeResource(topic1, resource1, relevance, true, null);
         assertNotNull(connection1);
-        assertSame(topic1, connection1.getTopic().orElse(null));
+        assertSame(topic1, connection1.getNode().orElse(null));
         assertSame(resource1, connection1.getResource().orElse(null));
         assertTrue(connection1.isPrimary().orElseThrow());
         assertEquals(1, connection1.getRank());
 
         verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(resource1);
 
-        final var connection2 = service.connectTopicResource(topic1, resource2, relevance, true, null);
+        final var connection2 = service.connectNodeResource(topic1, resource2, relevance, true, null);
         assertNotNull(connection2);
-        assertSame(topic1, connection2.getTopic().orElse(null));
+        assertSame(topic1, connection2.getNode().orElse(null));
         assertSame(resource2, connection2.getResource().orElse(null));
         assertTrue(connection2.isPrimary().orElseThrow());
         assertEquals(2, connection2.getRank());
@@ -259,7 +186,7 @@ public class EntityConnectionServiceImplTest {
         assertTrue(connection1.isPrimary().orElseThrow());
         assertEquals(1, connection1.getRank());
 
-        final var connection3 = service.connectTopicResource(topic2, resource2, relevance, false, null);
+        final var connection3 = service.connectNodeResource(topic2, resource2, relevance, false, null);
         assertFalse(connection3.isPrimary().orElseThrow());
         assertEquals(1, connection3.getRank());
 
@@ -267,7 +194,7 @@ public class EntityConnectionServiceImplTest {
         assertTrue(connection2.isPrimary().orElseThrow());
 
         // Test setting primary, should set old primary to non-primary
-        final var connection4 = service.connectTopicResource(topic3, resource2, relevance, true, null);
+        final var connection4 = service.connectNodeResource(topic3, resource2, relevance, true, null);
         assertTrue(connection4.isPrimary().orElseThrow());
         assertEquals(1, connection4.getRank());
 
@@ -275,25 +202,25 @@ public class EntityConnectionServiceImplTest {
         assertFalse(connection2.isPrimary().orElseThrow());
 
         // Test ranking
-        final var connection5 = service.connectTopicResource(topic4, resource1, relevance, true, null);
+        final var connection5 = service.connectNodeResource(topic4, resource1, relevance, true, null);
         assertEquals(1, connection5.getRank());
 
-        final var connection6 = service.connectTopicResource(topic4, resource2, relevance);
+        final var connection6 = service.connectNodeResource(topic4, resource2, relevance, true, null);
         assertEquals(1, connection5.getRank());
         assertEquals(2, connection6.getRank());
 
-        final var connection7 = service.connectTopicResource(topic4, resource3, relevance, true, 1);
+        final var connection7 = service.connectNodeResource(topic4, resource3, relevance, true, 1);
         assertEquals(2, connection5.getRank());
         assertEquals(3, connection6.getRank());
         assertEquals(1, connection7.getRank());
 
-        final var connection8 = service.connectTopicResource(topic4, resource4, relevance, true, 2);
+        final var connection8 = service.connectNodeResource(topic4, resource4, relevance, true, 2);
         assertEquals(3, connection5.getRank());
         assertEquals(4, connection6.getRank());
         assertEquals(1, connection7.getRank());
         assertEquals(2, connection8.getRank());
 
-        final var connection9 = service.connectTopicResource(topic4, resource5, relevance, true, 5);
+        final var connection9 = service.connectNodeResource(topic4, resource5, relevance, true, 5);
         assertEquals(3, connection5.getRank());
         assertEquals(4, connection6.getRank());
         assertEquals(1, connection7.getRank());
@@ -301,14 +228,14 @@ public class EntityConnectionServiceImplTest {
         assertEquals(5, connection9.getRank());
 
         // First topic connection for a resource will be primary regardless of request
-        final var forcedPrimaryConnection1 = service.connectTopicResource(topic4, resource6, relevance);
+        final var forcedPrimaryConnection1 = service.connectNodeResource(topic4, resource6, relevance, false, 0);
         assertTrue(forcedPrimaryConnection1.isPrimary().orElseThrow());
-        final var forcedPrimaryConnection2 = service.connectTopicResource(topic4, resource7, relevance, false, 1);
+        final var forcedPrimaryConnection2 = service.connectNodeResource(topic4, resource7, relevance, false, 1);
         assertTrue(forcedPrimaryConnection2.isPrimary().orElseThrow());
 
         // Trying to add duplicate connection
         try {
-            service.connectTopicResource(topic4, resource4, relevance);
+            service.connectNodeResource(topic4, resource4, relevance, false, 0);
             fail("Expected DuplicateConnectionException");
         } catch (DuplicateConnectionException ignored) {
         }
@@ -316,87 +243,62 @@ public class EntityConnectionServiceImplTest {
 
     @Test
     public void disconnectTopicSubtopic() {
-        final var topic1 = builder.topic();
-        final var subtopic1 = builder.topic();
-        final var subtopic2 = builder.topic();
-        final var subtopic3 = builder.topic();
+        final var topic1 = builder.node(NodeType.TOPIC);
+        final var subtopic1 = builder.node(NodeType.TOPIC);
+        final var subtopic2 = builder.node(NodeType.TOPIC);
+        final var subtopic3 = builder.node(NodeType.TOPIC);
 
-        final var topic1subtopic1 = TopicSubtopic.create(topic1, subtopic1);
-        final var topic1subtopic2 = TopicSubtopic.create(topic1, subtopic2);
-        final var topic1subtopic3 = TopicSubtopic.create(topic1, subtopic3);
+        final var topic1subtopic1 = NodeConnection.create(topic1, subtopic1);
+        final var topic1subtopic2 = NodeConnection.create(topic1, subtopic2);
+        final var topic1subtopic3 = NodeConnection.create(topic1, subtopic3);
 
         // Just verifies the pre-conditions of the created objects that is used for the test
-        assertTrue(topic1.getChildrenTopicSubtopics()
-                .containsAll(Set.of(topic1subtopic1, topic1subtopic2, topic1subtopic3)));
-        assertSame(topic1subtopic1, subtopic1.getParentTopicSubtopic().orElseThrow());
-        assertSame(topic1subtopic2, subtopic2.getParentTopicSubtopic().orElseThrow());
-        assertSame(topic1subtopic3, subtopic3.getParentTopicSubtopic().orElseThrow());
-        assertEquals(3, topic1.getChildrenTopicSubtopics().size());
+        assertTrue(topic1.getChildConnections().containsAll(Set.of(topic1subtopic1, topic1subtopic2, topic1subtopic3)));
+        assertSame(topic1subtopic1, subtopic1.getParentConnection().orElseThrow());
+        assertSame(topic1subtopic2, subtopic2.getParentConnection().orElseThrow());
+        assertSame(topic1subtopic3, subtopic3.getParentConnection().orElseThrow());
+        assertEquals(3, topic1.getChildConnections().size());
 
         reset(cachedUrlUpdaterService);
 
-        service.disconnectTopicSubtopic(topic1subtopic1);
+        service.disconnectParentChildConnection(topic1subtopic1);
 
         verify(cachedUrlUpdaterService).updateCachedUrls(subtopic1);
 
-        assertFalse(topic1subtopic1.getTopic().isPresent());
-        assertFalse(topic1subtopic1.getSubtopic().isPresent());
-        assertFalse(topic1.getChildrenTopicSubtopics().contains(topic1subtopic1));
-        assertEquals(2, topic1.getChildrenTopicSubtopics().size());
-        assertFalse(subtopic1.getParentTopicSubtopic().isPresent());
-        assertSame(topic1subtopic2, subtopic2.getParentTopicSubtopic().orElseThrow());
-        assertSame(topic1subtopic3, subtopic3.getParentTopicSubtopic().orElseThrow());
+        assertFalse(topic1subtopic1.getParent().isPresent());
+        assertFalse(topic1subtopic1.getChild().isPresent());
+        assertFalse(topic1.getChildConnections().contains(topic1subtopic1));
+        assertEquals(2, topic1.getChildConnections().size());
+        assertFalse(subtopic1.getParentConnection().isPresent());
+        assertSame(topic1subtopic2, subtopic2.getParentConnection().orElseThrow());
+        assertSame(topic1subtopic3, subtopic3.getParentConnection().orElseThrow());
 
-        service.disconnectTopicSubtopic(topic1, subtopic2);
-        assertFalse(topic1subtopic2.getTopic().isPresent());
-        assertFalse(topic1subtopic2.getSubtopic().isPresent());
-        assertFalse(topic1.getChildrenTopicSubtopics().contains(topic1subtopic2));
-        assertEquals(1, topic1.getChildrenTopicSubtopics().size());
-        assertFalse(subtopic1.getParentTopicSubtopic().isPresent());
-        assertFalse(subtopic2.getParentTopicSubtopic().isPresent());
-        assertSame(topic1subtopic3, subtopic3.getParentTopicSubtopic().orElseThrow());
-    }
-
-    @Test
-    public void disconnectSubjectTopic() {
-        final var subject1 = builder.subject();
-
-        final var topic1 = builder.topic();
-
-        final var subject1topic1 = SubjectTopic.create(subject1, topic1);
-
-        assertTrue(subject1.getSubjectTopics().contains(subject1topic1));
-        assertTrue(topic1.getSubjectTopics().contains(subject1topic1));
-
-        reset(cachedUrlUpdaterService);
-
-        service.disconnectSubjectTopic(subject1, topic1);
-
-        verify(cachedUrlUpdaterService).updateCachedUrls(topic1);
-
-        assertFalse(subject1topic1.getTopic().isPresent());
-        assertFalse(subject1topic1.getSubject().isPresent());
-
-        assertFalse(subject1.getSubjectTopics().contains(subject1topic1));
-        assertFalse(topic1.getSubjectTopics().contains(subject1topic1));
+        service.disconnectParentChild(topic1, subtopic2);
+        assertFalse(topic1subtopic2.getParent().isPresent());
+        assertFalse(topic1subtopic2.getChild().isPresent());
+        assertFalse(topic1.getChildConnections().contains(topic1subtopic2));
+        assertEquals(1, topic1.getChildConnections().size());
+        assertFalse(subtopic1.getParentConnection().isPresent());
+        assertFalse(subtopic2.getParentConnection().isPresent());
+        assertSame(topic1subtopic3, subtopic3.getParentConnection().orElseThrow());
     }
 
     @Test
     public void disconnectTopicResource() {
-        final var topic1 = builder.topic();
-        final var topic2 = builder.topic();
-        final var topic3 = builder.topic();
+        final var topic1 = builder.node(NodeType.TOPIC);
+        final var topic2 = builder.node(NodeType.TOPIC);
+        final var topic3 = builder.node(NodeType.TOPIC);
 
         final var resource1 = builder.resource();
         final var resource2 = builder.resource();
         final var resource3 = builder.resource();
 
-        final var topic1resource1 = TopicResource.create(topic1, resource1, true);
-        final var topic1resource2 = TopicResource.create(topic1, resource2, true);
-        final var topic1resource3 = TopicResource.create(topic1, resource3, true);
+        final var topic1resource1 = NodeResource.create(topic1, resource1, true);
+        final var topic1resource2 = NodeResource.create(topic1, resource2, true);
+        final var topic1resource3 = NodeResource.create(topic1, resource3, true);
 
-        final var topic2resource1 = TopicResource.create(topic2, resource1, false);
-        final var topic3resource1 = TopicResource.create(topic3, resource1, false);
+        final var topic2resource1 = NodeResource.create(topic2, resource1, false);
+        final var topic3resource1 = NodeResource.create(topic3, resource1, false);
 
         assertTrue(topic1resource1.isPrimary().orElseThrow());
         assertTrue(topic1resource2.isPrimary().orElseThrow());
@@ -404,99 +306,75 @@ public class EntityConnectionServiceImplTest {
         assertFalse(topic2resource1.isPrimary().orElseThrow());
         assertFalse(topic3resource1.isPrimary().orElseThrow());
 
-        assertTrue(topic1.getTopicResources().contains(topic1resource1));
-        assertTrue(resource1.getTopicResources().contains(topic1resource1));
+        assertTrue(topic1.getNodeResources().contains(topic1resource1));
+        assertTrue(resource1.getNodeResources().contains(topic1resource1));
 
         reset(cachedUrlUpdaterService);
 
-        service.disconnectTopicResource(topic1, resource1);
+        service.disconnectNodeResource(topic1, resource1);
 
         verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(resource1);
 
         assertTrue(topic2resource1.isPrimary().orElseThrow() ^ topic3resource1.isPrimary().orElseThrow());
         assertFalse(topic1resource1.getResource().isPresent());
-        assertFalse(topic1resource1.getTopic().isPresent());
-        assertFalse(topic1.getTopicResources().contains(topic1resource1));
-        assertFalse(resource1.getTopicResources().contains(topic1resource1));
+        assertFalse(topic1resource1.getNode().isPresent());
+        assertFalse(topic1.getNodeResources().contains(topic1resource1));
+        assertFalse(resource1.getNodeResources().contains(topic1resource1));
 
-        service.disconnectTopicResource(topic2resource1);
+        service.disconnectNodeResource(topic2resource1);
         assertTrue(topic3resource1.isPrimary().orElseThrow());
 
-        assertTrue(resource2.getTopicResources().contains(topic1resource2));
-        assertTrue(resource3.getTopicResources().contains(topic1resource3));
+        assertTrue(resource2.getNodeResources().contains(topic1resource2));
+        assertTrue(resource3.getNodeResources().contains(topic1resource3));
 
-        service.disconnectTopicResource(topic1resource2);
-        service.disconnectTopicResource(topic1resource3);
+        service.disconnectNodeResource(topic1resource2);
+        service.disconnectNodeResource(topic1resource3);
 
-        assertFalse(resource2.getTopicResources().contains(topic1resource2));
-        assertFalse(resource3.getTopicResources().contains(topic1resource3));
+        assertFalse(resource2.getNodeResources().contains(topic1resource2));
+        assertFalse(resource3.getNodeResources().contains(topic1resource3));
     }
 
     @Test
     public void updateTopicSubtopic() {
-        final var rootTopic1 = builder.topic();
-        final var rootTopic3 = builder.topic();
+        final var rootTopic1 = builder.node(NodeType.TOPIC);
+        final var rootTopic3 = builder.node(NodeType.TOPIC);
 
-        final var subTopic1 = builder.topic();
-        final var subTopic2 = builder.topic();
-        final var subTopic3 = builder.topic();
+        final var subTopic1 = builder.node(NodeType.TOPIC);
+        final var subTopic2 = builder.node(NodeType.TOPIC);
+        final var subTopic3 = builder.node(NodeType.TOPIC);
 
-        final var subject1 = builder.subject();
+        final var subject1 = builder.node(NodeType.SUBJECT);
 
         final var relevance = builder.relevance();
 
-        final var subjectTopic = SubjectTopic.create(subject1, subTopic2);
+        final var subjectTopic = NodeConnection.create(subject1, subTopic2);
 
-        final var connection1 = TopicSubtopic.create(rootTopic1, subTopic1);
+        final var connection1 = NodeConnection.create(rootTopic1, subTopic1);
 
-        final var connection5 = TopicSubtopic.create(rootTopic3, subTopic3);
+        final var connection5 = NodeConnection.create(rootTopic3, subTopic3);
 
         connection1.setRank(1);
 
         assertEquals(1, connection1.getRank());
 
-        service.updateTopicSubtopic(connection1, relevance, 2);
+        service.updateParentChild(connection1, relevance, 2);
         assertEquals(2, connection1.getRank());
     }
 
     @Test
-    public void updateSubjectTopic() {
-        final var topic1 = builder.topic();
-        final var topic2 = builder.topic();
-        final var topic3 = builder.topic();
-
-        final var subject1 = builder.subject();
-        final var subject3 = builder.subject();
-
-        final var subject1topic1 = SubjectTopic.create(subject1, topic1);
-        final var subject1topic2 = SubjectTopic.create(subject1, topic2);
-
-        final var relevance = builder.relevance();
-
-        SubjectTopic.create(subject3, topic3);
-
-        subject1topic1.setRank(1);
-        subject1topic2.setRank(2);
-
-        service.updateSubjectTopic(subject1topic2, relevance, 1);
-        assertEquals(2, subject1topic1.getRank());
-        assertEquals(1, subject1topic2.getRank());
-    }
-
-    @Test
     public void updateTopicResource() {
-        final var topic1 = builder.topic();
-        final var topic2 = builder.topic();
+        final var topic1 = builder.node(NodeType.TOPIC);
+        final var topic2 = builder.node(NodeType.TOPIC);
 
         final var resource1 = builder.resource();
         final var resource2 = builder.resource();
         final var resource3 = builder.resource();
 
-        final var topic1resource1 = TopicResource.create(topic1, resource1, true);
-        final var topic1resource2 = TopicResource.create(topic1, resource2, true);
-        final var topic1resource3 = TopicResource.create(topic1, resource3, true);
+        final var topic1resource1 = NodeResource.create(topic1, resource1, true);
+        final var topic1resource2 = NodeResource.create(topic1, resource2, true);
+        final var topic1resource3 = NodeResource.create(topic1, resource3, true);
 
-        final var topic2resource1 = TopicResource.create(topic2, resource1, false);
+        final var topic2resource1 = NodeResource.create(topic2, resource1, false);
 
         final var relevance = builder.relevance();
 
@@ -509,14 +387,14 @@ public class EntityConnectionServiceImplTest {
         assertTrue(topic1resource3.isPrimary().orElseThrow());
         assertFalse(topic2resource1.isPrimary().orElseThrow());
 
-        service.updateTopicResource(topic2resource1, relevance, true, null);
+        service.updateNodeResource(topic2resource1, relevance, true, null);
 
         assertFalse(topic1resource1.isPrimary().orElseThrow());
         assertTrue(topic1resource2.isPrimary().orElseThrow());
         assertTrue(topic1resource3.isPrimary().orElseThrow());
         assertTrue(topic2resource1.isPrimary().orElseThrow());
 
-        service.updateTopicResource(topic2resource1, relevance, false, null);
+        service.updateNodeResource(topic2resource1, relevance, false, null);
 
         assertTrue(topic1resource1.isPrimary().orElseThrow());
         assertTrue(topic1resource2.isPrimary().orElseThrow());
@@ -524,7 +402,7 @@ public class EntityConnectionServiceImplTest {
         assertFalse(topic2resource1.isPrimary().orElseThrow());
 
         try {
-            service.updateTopicResource(topic1resource3, relevance, false, null);
+            service.updateNodeResource(topic1resource3, relevance, false, null);
             fail("Expected InvalidArgumentServiceException");
         } catch (InvalidArgumentServiceException ignored) {
 
@@ -533,12 +411,12 @@ public class EntityConnectionServiceImplTest {
         assertEquals(1, topic1resource1.getRank());
         assertEquals(2, topic1resource2.getRank());
         assertEquals(3, topic1resource3.getRank());
-        service.updateTopicResource(topic1resource3, relevance, true, 1);
+        service.updateNodeResource(topic1resource3, relevance, true, 1);
         assertEquals(2, topic1resource1.getRank());
         assertEquals(3, topic1resource2.getRank());
         assertEquals(1, topic1resource3.getRank());
 
-        service.updateTopicResource(topic1resource2, relevance, true, 2);
+        service.updateNodeResource(topic1resource2, relevance, true, 2);
         assertEquals(3, topic1resource1.getRank());
         assertEquals(2, topic1resource2.getRank());
         assertEquals(1, topic1resource3.getRank());
@@ -546,19 +424,19 @@ public class EntityConnectionServiceImplTest {
 
     @Test
     public void replacePrimaryConnectionsFor() {
-        final var subject1 = builder.subject();
-        final var subject2 = builder.subject();
+        final var subject1 = builder.node(NodeType.SUBJECT);
+        final var subject2 = builder.node(NodeType.SUBJECT);
 
-        final var topic1 = builder.topic();
-        final var topic2 = builder.topic();
+        final var topic1 = builder.node(NodeType.TOPIC);
+        final var topic2 = builder.node(NodeType.TOPIC);
 
         final var resource1 = builder.resource();
 
-        SubjectTopic.create(subject1, topic1);
+        NodeConnection.create(subject1, topic1);
 
-        final var topic1resource1 = TopicResource.create(topic1, resource1, true);
-        final var topic2resource1 = TopicResource.create(topic2, resource1, false);
-        final var topic1topic2 = TopicSubtopic.create(topic1, topic2);
+        final var topic1resource1 = NodeResource.create(topic1, resource1, true);
+        final var topic2resource1 = NodeResource.create(topic2, resource1, false);
+        // final var topic1topic2 = NodeConnection.create(topic1, topic2);
 
         assertTrue(topic1resource1.isPrimary().orElseThrow());
         assertFalse(topic2resource1.isPrimary().orElseThrow());
