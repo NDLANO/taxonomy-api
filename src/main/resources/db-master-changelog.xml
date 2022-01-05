@@ -1010,7 +1010,23 @@
         </sql>
     </changeSet>
 
-    <changeSet id="20211130 removes old fields" author="Gunnar Velle">
+    <changeSet id="20220104 add missing index for cached path" author="Gunnar Velle">
+        <createIndex tableName="cached_path" indexName="cached_path_node_id">
+            <column name="node_id"/>
+        </createIndex>
+        <addUniqueConstraint tableName="node" columnNames="public_id"
+                             constraintName="node_public_id"/>
+        <addUniqueConstraint tableName="node_resource" columnNames="node_id,resource_id"
+                             constraintName="node_resource_unique"/>
+        <addUniqueConstraint tableName="node_connection" columnNames="child_id"
+                             constraintName="unique_node_connection_child_id"/>
+        <addUniqueConstraint tableName="node_connection" columnNames="parent_id,child_id"
+                             constraintName="node_connection_unique"/>
+        <addUniqueConstraint tableName="node_translation" columnNames="node_id,language_code"
+                             constraintName="node_language_unique" />
+    </changeSet>
+
+    <changeSet id="20220105 removes old fields" author="Gunnar Velle">
         <dropColumn tableName="cached_path" columnName="subject_id"/>
         <dropColumn tableName="cached_path" columnName="topic_id"/>
     </changeSet>

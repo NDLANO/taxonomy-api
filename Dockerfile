@@ -5,6 +5,7 @@ WORKDIR /src
 RUN mvn clean package -DskipTests
 
 FROM adoptopenjdk/openjdk11:alpine-slim
+RUN apk add fontconfig && apk add ttf-dejavu
 EXPOSE 5000
 COPY --from=0 /src/target/taxonomy-service.jar /app.jar
 COPY ./run-app.sh /run-app.sh
