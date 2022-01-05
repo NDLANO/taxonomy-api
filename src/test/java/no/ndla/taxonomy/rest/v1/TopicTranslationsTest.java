@@ -10,9 +10,10 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Version;
-import no.ndla.taxonomy.rest.v1.dtos.queries.TopicIndexDocument;
-import no.ndla.taxonomy.rest.v1.dtos.topics.ResourceIndexDocument;
-import no.ndla.taxonomy.service.dtos.TopicDTO;
+import no.ndla.taxonomy.service.dtos.EntityWithPathChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -34,7 +35,7 @@ public class TopicTranslationsTest extends RestTest {
         builder.node(NodeType.TOPIC, version, t -> t.name("Integration").translation("nb", l -> l.name("Integrasjon")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics?language=nb");
-        final var topics = testUtils.getObject(TopicIndexDocument[].class, response);
+        final var topics = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(2, topics.length);
         assertAnyTrue(topics, s -> s.name.equals("Trigonometri"));
@@ -146,12 +147,12 @@ public class TopicTranslationsTest extends RestTest {
 
         MockHttpServletResponse response = testUtils
                 .getResource("/v1/topics/" + a + "/resources?recursive=true&language=nb");
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        ResourceWithNodeConnectionDTO[] result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(2, result.length);
-        assertAnyTrue(result, r -> "Introduksjon til calculus".equals(r.name));
-        assertAnyTrue(result, r -> "Introduksjon til integrasjon".equals(r.name));
-        assertAllTrue(result, r -> r.resourceTypes.iterator().next().getName().equals("Artikkel"));
+        assertAnyTrue(result, r -> "Introduksjon til calculus".equals(r.getName()));
+        assertAnyTrue(result, r -> "Introduksjon til integrasjon".equals(r.getName()));
+        assertAllTrue(result, r -> r.getResourceTypes().iterator().next().getName().equals("Artikkel"));
     }
 
     @Test
@@ -167,18 +168,18 @@ public class TopicTranslationsTest extends RestTest {
                 .child(NodeType.TOPIC, version, st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?language=nb");
-        ResourceIndexDocument[] result = testUtils.getObject(ResourceIndexDocument[].class, response);
+        ResourceWithNodeConnectionDTO[] result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(2, result.length);
-        assertAnyTrue(result, r -> "ressurs 1".equals(r.name));
-        assertAnyTrue(result, r -> "ressurs 2".equals(r.name));
-        assertAllTrue(result, r -> r.resourceTypes.iterator().next().getName().equals("Artikkel"));
+        assertAnyTrue(result, r -> "ressurs 1".equals(r.getName()));
+        assertAnyTrue(result, r -> "ressurs 2".equals(r.getName()));
+        assertAllTrue(result, r -> r.getResourceTypes().iterator().next().getName().equals("Artikkel"));
     }
 
-    private TopicDTO getTopic(URI id, String language) throws Exception {
+    private NodeDTO getTopic(URI id, String language) throws Exception {
         String path = "/v1/topics/" + id;
         if (isNotEmpty(language))
             path = path + "?language=" + language;
-        return testUtils.getObject(TopicDTO.class, testUtils.getResource(path));
+        return testUtils.getObject(NodeDTO.class, testUtils.getResource(path));
     }
 }

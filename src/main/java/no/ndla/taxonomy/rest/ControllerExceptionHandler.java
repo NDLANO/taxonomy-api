@@ -7,6 +7,7 @@
 
 package no.ndla.taxonomy.rest;
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -38,6 +40,11 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
         return headers;
     }
 
+    @ExceptionHandler({ JWTVerificationException.class, AccessDeniedException.class })
+    protected ResponseEntity<String> handleAuthenticationExceptions(RuntimeException exception) {
+        return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.UNAUTHORIZED);
+    }
+
     @ExceptionHandler(ServiceUnavailableException.class)
     protected ResponseEntity<String> handleServiceUnavailableException(RuntimeException exception) {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.SERVICE_UNAVAILABLE);
@@ -57,4 +64,5 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<String> handleInvalidArgumentExceptions(RuntimeException exception) {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.BAD_REQUEST);
     }
+
 }

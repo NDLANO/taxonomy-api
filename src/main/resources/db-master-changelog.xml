@@ -1000,6 +1000,46 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20211126 add root param to node" author="Gunnar Velle">
+        <addColumn tableName="node">
+            <column name="root" type="boolean" defaultValueBoolean="false"/>
+        </addColumn>
+        <sql splitStatements="false" stripComments="false">
+            UPDATE node SET root = true
+            WHERE node_type = 'SUBJECT';
+        </sql>
+    </changeSet>
+
+    <changeSet id="20220104 add missing index for cached path" author="Gunnar Velle">
+        <createIndex tableName="cached_path" indexName="cached_path_node_id">
+            <column name="node_id"/>
+        </createIndex>
+        <addUniqueConstraint tableName="node" columnNames="public_id"
+                             constraintName="node_public_id"/>
+        <addUniqueConstraint tableName="node_resource" columnNames="node_id,resource_id"
+                             constraintName="node_resource_unique"/>
+        <addUniqueConstraint tableName="node_connection" columnNames="child_id"
+                             constraintName="unique_node_connection_child_id"/>
+        <addUniqueConstraint tableName="node_connection" columnNames="parent_id,child_id"
+                             constraintName="node_connection_unique"/>
+        <addUniqueConstraint tableName="node_translation" columnNames="node_id,language_code"
+                             constraintName="node_language_unique" />
+    </changeSet>
+
+    <changeSet id="20220105 removes old fields" author="Gunnar Velle">
+        <dropColumn tableName="cached_path" columnName="subject_id"/>
+        <dropColumn tableName="cached_path" columnName="topic_id"/>
+    </changeSet>
+    <!--changeSet id="2021XXXX drop old tables" author="Gunnar Velle">
+        <dropTable tableName="subject_topic"/>
+        <dropTable tableName="topic_subtopic"/>
+        <dropTable tableName="topic_resource"/>
+        <dropTable tableName="topic_translation"/>
+        <dropTable tableName="topic"/>
+        <dropTable tableName="subject_translation"/>
+        <dropTable tableName="subject"/>
+    </changeSet-->
+
     <changeSet id="20211110 add version table" author="Gunnar Velle">
         <createTable tableName="version">
             <column name="id" type="serial" autoIncrement="true">

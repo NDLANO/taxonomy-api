@@ -45,6 +45,9 @@ public class Node extends EntityWithPath {
     @Column
     private boolean context;
 
+    @Column
+    private boolean root;
+
     // Needed for hibernate
     public Node() {
     }
@@ -246,12 +249,20 @@ public class Node extends EntityWithPath {
 
     @Override
     public boolean isContext() {
-        return context;
+        return root || context;
     }
 
     @Override
     public String getEntityName() {
         return nodeType.getName();
+    }
+
+    public boolean isRoot() {
+        return root;
+    }
+
+    public void setRoot(boolean root) {
+        this.root = root;
     }
 
     @Override

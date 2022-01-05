@@ -12,7 +12,9 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
-import no.ndla.taxonomy.rest.v1.dtos.subjects.SubjectIndexDocument;
+import no.ndla.taxonomy.service.dtos.EntityWithPathDTO;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SubjectChildDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,11 +38,11 @@ public class SubjectsTest extends RestTest {
                 s -> s.isContext(true).name("english").contentUri("urn:article:1").publicId("urn:subject:1"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1");
-        SubjectIndexDocument subject = testUtils.getObject(SubjectIndexDocument.class, response);
+        NodeDTO subject = testUtils.getObject(NodeDTO.class, response);
 
-        assertEquals("english", subject.name);
-        assertEquals("urn:article:1", subject.contentUri.toString());
-        assertEquals("/subject:1", subject.path);
+        assertEquals("english", subject.getName());
+        assertEquals("urn:article:1", subject.getContentUri().toString());
+        assertEquals("/subject:1", subject.getPath());
 
         assertNotNull(subject.getMetadata());
         assertTrue(subject.getMetadata().isVisible());
@@ -55,13 +57,13 @@ public class SubjectsTest extends RestTest {
         builder.node(NodeType.SUBJECT, version, s -> s.isContext(true).name("mathematics"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects");
-        SubjectIndexDocument[] subjects = testUtils.getObject(SubjectIndexDocument[].class, response);
+        NodeDTO[] subjects = testUtils.getObject(NodeDTO[].class, response);
         assertEquals(2, subjects.length);
 
-        assertAnyTrue(subjects, s -> "english".equals(s.name));
-        assertAnyTrue(subjects, s -> "mathematics".equals(s.name));
-        assertAllTrue(subjects, s -> isValidId(s.id));
-        assertAllTrue(subjects, s -> !s.path.isEmpty());
+        assertAnyTrue(subjects, s -> "english".equals(s.getName()));
+        assertAnyTrue(subjects, s -> "mathematics".equals(s.getName()));
+        assertAllTrue(subjects, s -> isValidId(s.getId()));
+        assertAllTrue(subjects, s -> !s.getPath().isEmpty());
 
         assertAllTrue(subjects, s -> s.getMetadata() != null);
 
@@ -84,6 +86,7 @@ public class SubjectsTest extends RestTest {
         Node subject = nodeRepository.getByPublicId(id);
         assertEquals(createSubjectCommand.name, subject.getName());
         assertEquals(createSubjectCommand.contentUri, subject.getContentUri());
+        assertTrue(subject.isRoot()); // all subjects are roots
     }
 
     @Test
@@ -178,7 +181,7 @@ public class SubjectsTest extends RestTest {
                         .child(NodeType.TOPIC, version, t -> t.name("optics").contentUri("urn:article:3")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
-        SubjectChildDTO[] topics = testUtils.getObject(SubjectChildDTO[].class, response);
+        NodeChildDTO[] topics = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(3, topics.length);
         assertAnyTrue(topics, t -> "statics".equals(t.name) && "urn:article:1".equals(t.contentUri.toString()));
@@ -212,7 +215,7 @@ public class SubjectsTest extends RestTest {
 
         MockHttpServletResponse response = testUtils
                 .getResource("/v1/subjects/" + subjectId + "/topics?recursive=true");
-        SubjectChildDTO[] topics = testUtils.getObject(SubjectChildDTO[].class, response);
+        NodeChildDTO[] topics = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(3, topics.length);
         assertEquals("parent topic", topics[0].name);

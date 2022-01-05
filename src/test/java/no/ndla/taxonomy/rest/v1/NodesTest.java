@@ -172,13 +172,13 @@ public class NodesTest extends RestTest {
     @Test
     public void can_get_all_root_nodes() throws Exception {
         Version version = versionService.getPublished().get();
-        builder.node(NodeType.SUBJECT, version, s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC,
-                version, t -> t.name("photo synthesis")));
-        builder.node(NodeType.SUBJECT, version,
-                s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, version, t -> t.name("trigonometry")));
+        builder.node(NodeType.SUBJECT, version, s -> s.isRoot(true).isContext(true).name("Basic science")
+                .child(NodeType.TOPIC, version, t -> t.name("photo synthesis")));
+        builder.node(NodeType.SUBJECT, version, s -> s.isRoot(true).isContext(true).name("Maths").child(NodeType.TOPIC,
+                version, t -> t.name("trigonometry")));
         builder.node(NodeType.SUBJECT, version, s -> s.isContext(true).name("Arts and crafts"));
         builder.node(NodeType.NODE, version,
-                n -> n.name("Random node").child(NodeType.NODE, version, c -> c.name("Subnode")));
+                n -> n.isRoot(true).name("Random node").child(NodeType.NODE, version, c -> c.name("Subnode")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes?isRoot=true");
         final var nodes = testUtils.getObject(NodeDTO[].class, response);
@@ -253,7 +253,7 @@ public class NodesTest extends RestTest {
         testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes");
-        final var subtopics = testUtils.getObject(TopicDTO[].class, response);
+        final var subtopics = testUtils.getObject(NodeDTO[].class, response);
         assertEquals(7, subtopics.length);
 
         assertEquals("urn:topic:2", subtopics[0].getId().toString());
@@ -290,6 +290,7 @@ public class NodesTest extends RestTest {
                 nodeType = NodeType.NODE;
                 name = "node";
                 contentUri = URI.create("urn:article:1");
+                root = Boolean.TRUE;
             }
         };
 
@@ -300,6 +301,7 @@ public class NodesTest extends RestTest {
         assertEquals(createNodeCommand.nodeType, node.getNodeType());
         assertEquals(createNodeCommand.name, node.getName());
         assertEquals(createNodeCommand.contentUri, node.getContentUri());
+        assertEquals(createNodeCommand.root, node.isRoot());
         assertSame(node.getVersion().getVersionType(), VersionType.BETA);
     }
 

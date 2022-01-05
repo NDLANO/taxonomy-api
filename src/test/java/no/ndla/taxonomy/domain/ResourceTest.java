@@ -67,22 +67,22 @@ public class ResourceTest {
     }
 
     @Test
-    public void getTopics() {
-        final var topic1 = mock(Topic.class);
-        final var topic2 = mock(Topic.class);
+    public void getNodes() {
+        final var node1 = mock(Node.class);
+        final var node2 = mock(Node.class);
 
-        assertEquals(0, resource.getTopics().size());
+        assertEquals(0, resource.getNodes().size());
 
-        final var topicResource1 = mock(TopicResource.class);
-        final var topicResource2 = mock(TopicResource.class);
+        final var nodeResource1 = mock(NodeResource.class);
+        final var nodeResource2 = mock(NodeResource.class);
 
-        when(topicResource1.getTopic()).thenReturn(Optional.of(topic1));
-        when(topicResource2.getTopic()).thenReturn(Optional.of(topic2));
+        when(nodeResource1.getNode()).thenReturn(Optional.of(node1));
+        when(nodeResource2.getNode()).thenReturn(Optional.of(node2));
 
-        setField(resource, "topics", Set.of(topicResource1, topicResource2));
+        setField(resource, "nodes", Set.of(nodeResource1, nodeResource2));
 
-        assertEquals(2, resource.getTopics().size());
-        assertTrue(resource.getTopics().containsAll(Set.of(topic1, topic2)));
+        assertEquals(2, resource.getNodes().size());
+        assertTrue(resource.getNodes().containsAll(Set.of(node1, node2)));
     }
 
     @Test
@@ -204,66 +204,66 @@ public class ResourceTest {
     }
 
     @Test
-    public void addGetAndRemoveTopicResources() {
-        final var topicResource1 = mock(TopicResource.class);
-        final var topicResource2 = mock(TopicResource.class);
+    public void addGetAndRemoveNodeResources() {
+        final var nodeResource1 = mock(NodeResource.class);
+        final var nodeResource2 = mock(NodeResource.class);
 
-        assertEquals(0, resource.getTopicResources().size());
+        assertEquals(0, resource.getNodeResources().size());
 
         try {
-            resource.addTopicResource(topicResource1);
+            resource.addNodeResource(nodeResource1);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException ignored) {
         }
 
-        when(topicResource1.getResource()).thenReturn(Optional.of(resource));
-        resource.addTopicResource(topicResource1);
+        when(nodeResource1.getResource()).thenReturn(Optional.of(resource));
+        resource.addNodeResource(nodeResource1);
 
-        assertEquals(1, resource.getTopicResources().size());
-        assertTrue(resource.getTopicResources().contains(topicResource1));
+        assertEquals(1, resource.getNodeResources().size());
+        assertTrue(resource.getNodeResources().contains(nodeResource1));
 
         try {
-            resource.addTopicResource(topicResource2);
+            resource.addNodeResource(nodeResource2);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException ignored) {
         }
 
-        when(topicResource2.getResource()).thenReturn(Optional.of(resource));
-        resource.addTopicResource(topicResource2);
+        when(nodeResource2.getResource()).thenReturn(Optional.of(resource));
+        resource.addNodeResource(nodeResource2);
 
-        assertEquals(2, resource.getTopicResources().size());
-        assertTrue(resource.getTopicResources().containsAll(Set.of(topicResource1, topicResource2)));
+        assertEquals(2, resource.getNodeResources().size());
+        assertTrue(resource.getNodeResources().containsAll(Set.of(nodeResource1, nodeResource2)));
 
-        when(topicResource1.getResource()).thenReturn(Optional.of(resource));
-        when(topicResource2.getResource()).thenReturn(Optional.of(resource));
+        when(nodeResource1.getResource()).thenReturn(Optional.of(resource));
+        when(nodeResource2.getResource()).thenReturn(Optional.of(resource));
 
-        resource.removeTopicResource(topicResource1);
+        resource.removeNodeResource(nodeResource1);
 
-        verify(topicResource1).disassociate();
+        verify(nodeResource1).disassociate();
 
-        assertEquals(1, resource.getTopicResources().size());
-        assertTrue(resource.getTopicResources().contains(topicResource2));
+        assertEquals(1, resource.getNodeResources().size());
+        assertTrue(resource.getNodeResources().contains(nodeResource2));
 
-        resource.removeTopicResource(topicResource2);
+        resource.removeNodeResource(nodeResource2);
 
-        verify(topicResource2).disassociate();
-        assertEquals(0, resource.getTopicResources().size());
+        verify(nodeResource2).disassociate();
+        assertEquals(0, resource.getNodeResources().size());
     }
 
     @Test
     public void preRemove() {
-        final var topicResource1 = mock(TopicResource.class);
-        final var topicResource2 = mock(TopicResource.class);
+        final var nodeResource1 = mock(NodeResource.class);
+        final var nodeResource2 = mock(NodeResource.class);
 
-        Set.of(topicResource1, topicResource2).forEach(topicResource -> {
-            when(topicResource.getResource()).thenReturn(Optional.of(resource));
-            resource.addTopicResource(topicResource);
+        Set.of(nodeResource1, nodeResource2).forEach(nodeResource -> {
+            when(nodeResource.getResource()).thenReturn(Optional.of(resource));
+            resource.addNodeResource(nodeResource);
         });
 
         resource.preRemove();
 
-        verify(topicResource1).disassociate();
-        verify(topicResource2).disassociate();
+        verify(nodeResource1).disassociate();
+        verify(nodeResource2).disassociate();
     }
 
     @Test

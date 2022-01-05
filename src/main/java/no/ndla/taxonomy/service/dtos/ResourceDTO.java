@@ -13,7 +13,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceTranslation;
-import no.ndla.taxonomy.service.InjectMetadata;
 import no.ndla.taxonomy.service.MetadataIdField;
 
 import java.net.URI;

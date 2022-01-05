@@ -28,9 +28,6 @@ public class Resource extends EntityWithPath {
     private Set<ResourceTranslation> resourceTranslations = new HashSet<>();
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TopicResource> topics = new HashSet<>();
-
-    @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<NodeResource> nodes = new HashSet<>();
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -46,9 +43,6 @@ public class Resource extends EntityWithPath {
 
     @Override
     public Set<EntityWithPathConnection> getParentConnections() {
-        if (!topics.isEmpty()) {
-            return topics.stream().collect(Collectors.toUnmodifiableSet());
-        }
         return nodes.stream().collect(Collectors.toUnmodifiableSet());
     }
 
@@ -62,8 +56,8 @@ public class Resource extends EntityWithPath {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
     }
 
-    public Collection<Topic> getTopics() {
-        return getTopicResources().stream().map(TopicResource::getTopic).map(Optional::get)
+    public Collection<Node> getNodes() {
+        return getNodeResources().stream().map(NodeResource::getNode).map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -148,14 +142,6 @@ public class Resource extends EntityWithPath {
         }
     }
 
-    public Optional<Topic> getPrimaryTopic() {
-        for (TopicResource topic : topics) {
-            if (topic.isPrimary().orElse(false))
-                return topic.getTopic();
-        }
-        return Optional.empty();
-    }
-
     public Optional<Node> getPrimaryNode() {
         for (NodeResource node : nodes) {
             if (node.isPrimary().orElse(false))
@@ -183,26 +169,6 @@ public class Resource extends EntityWithPath {
 
     public Set<ResourceResourceType> getResourceResourceTypes() {
         return this.resourceResourceTypes.stream().collect(Collectors.toUnmodifiableSet());
-    }
-
-    public Set<TopicResource> getTopicResources() {
-        return this.topics.stream().collect(Collectors.toUnmodifiableSet());
-    }
-
-    public void removeTopicResource(TopicResource topicResource) {
-        this.topics.remove(topicResource);
-
-        if (topicResource.getResource().orElse(null) == this) {
-            topicResource.disassociate();
-        }
-    }
-
-    public void addTopicResource(TopicResource topicResource) {
-        this.topics.add(topicResource);
-
-        if (topicResource.getResource().orElse(null) != this) {
-            throw new IllegalArgumentException("TopicResource must have Resource relation set before adding");
-        }
     }
 
     public Set<NodeResource> getNodeResources() {
@@ -236,7 +202,6 @@ public class Resource extends EntityWithPath {
     @PreRemove
     void preRemove() {
         Set.copyOf(resourceResourceTypes).forEach(ResourceResourceType::disassociate);
-        Set.copyOf(topics).forEach(TopicResource::disassociate);
         Set.copyOf(nodes).forEach(NodeResource::disassociate);
     }
 

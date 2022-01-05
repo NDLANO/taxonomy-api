@@ -17,7 +17,7 @@ import java.net.URI;
 @ApiModel("ResourceWithTopicConnection")
 public class ResourceWithNodeConnectionDTO extends ResourceDTO {
     @ApiParam
-    private URI nodeId;
+    private URI parentId;
 
     @ApiParam
     private URI connectionId;
@@ -39,7 +39,7 @@ public class ResourceWithNodeConnectionDTO extends ResourceDTO {
         super(nodeResource.getResource().orElseThrow(() -> new NotFoundException("NodeResource was not found")),
                 language);
 
-        this.nodeId = nodeResource.getNode().map(Node::getPublicId).orElse(null);
+        this.parentId = nodeResource.getNode().map(Node::getPublicId).orElse(null);
 
         this.connectionId = nodeResource.getPublicId();
         this.rank = nodeResource.getRank();
@@ -50,8 +50,8 @@ public class ResourceWithNodeConnectionDTO extends ResourceDTO {
         }
     }
 
-    public URI getNodeId() {
-        return nodeId;
+    public URI getParentId() {
+        return parentId;
     }
 
     public URI getConnectionId() {

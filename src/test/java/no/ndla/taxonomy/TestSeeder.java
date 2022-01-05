@@ -25,118 +25,27 @@ import java.net.URI;
 @Transactional
 @Component
 public class TestSeeder {
-    private final SubjectRepository subjectRepository;
-    private final TopicRepository topicRepository;
     private final ResourceRepository resourceRepository;
     private final RelevanceRepository relevanceRepository;
     private final ResourceTypeRepository resourceTypeRepository;
-    private final SubjectTopicRepository subjectTopicRepository;
-    private final TopicSubtopicRepository topicSubtopicRepository;
-    private final TopicResourceRepository topicResourceRepository;
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final NodeResourceRepository nodeResourceRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
     private final VersionRepository versionRepository;
 
-    public TestSeeder(SubjectRepository subjectRepository, TopicRepository topicRepository,
-            ResourceRepository resourceRepository, RelevanceRepository relevanceRepository,
-            ResourceTypeRepository resourceTypeRepository, SubjectTopicRepository subjectTopicRepository,
-            TopicSubtopicRepository topicSubtopicRepository, TopicResourceRepository topicResourceRepository,
-            NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            NodeResourceRepository nodeResourceRepository, CachedUrlUpdaterService cachedUrlUpdaterService,
-            VersionRepository versionRepository) {
-        this.subjectRepository = subjectRepository;
-        this.topicRepository = topicRepository;
+    public TestSeeder(ResourceRepository resourceRepository, RelevanceRepository relevanceRepository,
+            ResourceTypeRepository resourceTypeRepository, NodeRepository nodeRepository,
+            NodeConnectionRepository nodeConnectionRepository, NodeResourceRepository nodeResourceRepository,
+            CachedUrlUpdaterService cachedUrlUpdaterService, VersionRepository versionRepository) {
         this.resourceRepository = resourceRepository;
         this.relevanceRepository = relevanceRepository;
         this.resourceTypeRepository = resourceTypeRepository;
-        this.subjectTopicRepository = subjectTopicRepository;
-        this.topicSubtopicRepository = topicSubtopicRepository;
-        this.topicResourceRepository = topicResourceRepository;
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.nodeResourceRepository = nodeResourceRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
         this.versionRepository = versionRepository;
-    }
-
-    private Topic createTopic(String publicId, String name, String contentUri, Boolean context) {
-        final var topic = new Topic();
-        if (publicId != null) {
-            topic.setPublicId(URI.create(publicId));
-        }
-
-        if (name != null) {
-            topic.setName(name);
-        }
-
-        if (contentUri != null) {
-            topic.setContentUri(URI.create(contentUri));
-        }
-
-        if (context != null) {
-            topic.setContext(context);
-        }
-
-        topicRepository.saveAndFlush(topic);
-
-        cachedUrlUpdaterService.updateCachedUrls(topic);
-
-        return topic;
-    }
-
-    private Subject createSubject(String publicId, String name) {
-        final var subject = new Subject();
-
-        if (publicId != null) {
-            subject.setPublicId(URI.create(publicId));
-        }
-        if (name != null) {
-            subject.setName(name);
-        }
-
-        subjectRepository.saveAndFlush(subject);
-
-        cachedUrlUpdaterService.updateCachedUrls(subject);
-
-        return subject;
-    }
-
-    private SubjectTopic createSubjectTopic(String publicId, Topic topic, Subject subject, Integer rank) {
-        final var subjectTopic = SubjectTopic.create(subject, topic);
-
-        if (publicId != null) {
-            subjectTopic.setPublicId(URI.create(publicId));
-        }
-
-        if (rank != null) {
-            subjectTopic.setRank(rank);
-        }
-
-        subjectTopicRepository.saveAndFlush(subjectTopic);
-
-        subjectTopic.getSubject().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
-
-        return subjectTopic;
-    }
-
-    private TopicSubtopic createTopicSubtopic(String publicId, Topic topic, Topic subTopic, Integer rank) {
-        final var topicSubtopic = TopicSubtopic.create(topic, subTopic);
-
-        if (publicId != null) {
-            topicSubtopic.setPublicId(URI.create(publicId));
-        }
-
-        if (rank != null) {
-            topicSubtopic.setRank(rank);
-        }
-
-        topicSubtopicRepository.saveAndFlush(topicSubtopic);
-
-        topicSubtopic.getTopic().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
-
-        return topicSubtopic;
     }
 
     private Relevance createRelevance(String publicId, String name) {
@@ -173,34 +82,6 @@ public class TestSeeder {
         cachedUrlUpdaterService.updateCachedUrls(resource);
 
         return resource;
-    }
-
-    private TopicResource createTopicResource(String publicId, Topic topic, Resource resource, Boolean isPrimary,
-            Integer rank) {
-        return createTopicResource(publicId, topic, resource, isPrimary, rank, null);
-    }
-
-    private TopicResource createTopicResource(String publicId, Topic topic, Resource resource, Boolean isPrimary,
-            Integer rank, Relevance relevance) {
-        final var topicResource = TopicResource.create(topic, resource);
-
-        if (publicId != null) {
-            topicResource.setPublicId(URI.create(publicId));
-        }
-
-        if (isPrimary != null) {
-            topicResource.setPrimary(isPrimary);
-        }
-
-        if (rank != null) {
-            topicResource.setRank(rank);
-        }
-
-        topicResource.setRelevance(relevance);
-
-        topicResource.getTopic().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
-
-        return topicResourceRepository.saveAndFlush(topicResource);
     }
 
     private ResourceType createResourceType(ResourceType parent, String publicId, String name) {
@@ -315,50 +196,7 @@ public class TestSeeder {
         resourceTypeRepository.deleteAllAndFlush();
         relevanceRepository.deleteAllAndFlush();
         resourceRepository.deleteAllAndFlush();
-        topicRepository.deleteAllAndFlush();
-        subjectRepository.deleteAllAndFlush();
-    }
-
-    public void recursiveTopicsBySubjectIdAndFiltersTestSetup() {
-        // create a test structure with subjects, topics and subtopics as follows
-        // (S=subject, ST = subject-topic, TST = topic-subtopic, F=Filter)
-
-        // S:1
-        // - ST:1 (F:1)
-        // - TST: 1-1 (F:1)
-        // - ST:2 (F:2)
-        // - TST:2-1 (F:2)
-        // - ST:3 (F:1)
-        // - TST:3-1 (F:1)
-        // - TST:3-2 (F:1)
-        // - TST:3-3 (F:2)
-
-        // NOTE ST:3 does not have F:2 but should "inherit" it because one of the subtopics has F:2
-
-        clearAll();
-
-        final var subject1 = createSubject("urn:subject:1", "S:1");
-
-        final var topic1 = createTopic("urn:topic:1", "ST:1", null, false);
-        final var topic2 = createTopic("urn:topic:2", "TST:1-1", null, false);
-        final var topic3 = createTopic("urn:topic:3", "ST:2", null, false);
-        final var topic4 = createTopic("urn:topic:4", "TST:2-1", null, false);
-        final var topic5 = createTopic("urn:topic:5", "ST:3", null, false);
-        final var topic6 = createTopic("urn:topic:6", "TST:3-1", null, false);
-        final var topic7 = createTopic("urn:topic:7", "TST:3-2", null, false);
-        final var topic8 = createTopic("urn:topic:8", "TST:3-3", null, false);
-
-        createSubjectTopic("urn:subject-topic:1", topic1, subject1, 1);
-        createSubjectTopic("urn:subject-topic:2", topic3, subject1, 2);
-        createSubjectTopic("urn:subject-topic-3", topic5, subject1, 3);
-
-        createTopicSubtopic("urn:topic-subtopic:1", topic1, topic2, 1);
-        createTopicSubtopic("urn:topic-subtopic:2", topic3, topic4, 1);
-        createTopicSubtopic("urn:topic-subtopic:3", topic5, topic6, 1);
-        createTopicSubtopic("urn:topic-subtopic:4", topic5, topic7, 2);
-        createTopicSubtopic("urn:topic-subtopic:5", topic5, topic8, 3);
-
-        final var relevance1 = createRelevance("urn:relevance:core", "Kjernestoff");
+        nodeRepository.deleteAllAndFlush();
     }
 
     public void recursiveNodesBySubjectNodeIdAndRelevanceTestSetup() {
@@ -404,44 +242,6 @@ public class TestSeeder {
         createNodeConnection("urn:topic-subtopic:5", topic5, topic8, 3, supp);
     }
 
-    public void recursiveTopicsBySubjectIdTestSetup() {
-        // create a test structure with subjects, topics and subtopics as follows
-        // (S=subject, ST = subject-topic, TST = topic-subtopic)
-
-        // S:1
-        // - ST:1
-        // - TST: 1-1
-        // - ST:2
-        // - TST:2-1
-        // - ST:3
-        // - TST:3-1
-        // - TST:3-2
-        // - TST:3-3
-
-        clearAll();
-
-        final var subject1 = createSubject("urn:subject:1", "S:1");
-
-        final var topic1 = createTopic("urn:topic:1", "ST:1", null, false);
-        final var topic2 = createTopic("urn:topic:2", "TST:1-1", null, false);
-        final var topic3 = createTopic("urn:topic:3", "ST:2", null, false);
-        final var topic4 = createTopic("urn:topic:4", "TST:2-1", null, false);
-        final var topic5 = createTopic("urn:topic:5", "ST:3", null, false);
-        final var topic6 = createTopic("urn:topic:6", "TST:3-1", null, false);
-        final var topic7 = createTopic("urn:topic:7", "TST:3-2", null, false);
-        final var topic8 = createTopic("urn:topic:8", "TST:3-3", null, false);
-
-        createSubjectTopic("urn:subject-topic:1", topic1, subject1, 1);
-        createSubjectTopic("urn:subject-topic:2", topic3, subject1, 2);
-        createSubjectTopic("urn:subject-topic-3", topic5, subject1, 3);
-
-        createTopicSubtopic("urn:topic-subtopic:1", topic1, topic2, 1);
-        createTopicSubtopic("urn:topic-subtopic:2", topic3, topic4, 1);
-        createTopicSubtopic("urn:topic-subtopic:3", topic5, topic6, 1);
-        createTopicSubtopic("urn:topic-subtopic:4", topic5, topic7, 2);
-        createTopicSubtopic("urn:topic-subtopic:5", topic5, topic8, 3);
-    }
-
     public void recursiveNodesBySubjectNodeIdTestSetup() {
         // create a test structure with subjects, topics and subtopics as follows
         // (S=subject, ST = subject-topic, TST = topic-subtopic)
@@ -482,19 +282,19 @@ public class TestSeeder {
     public void resourceInDualSubjectsTestSetup() {
         clearAll();
 
-        final var subject1 = createSubject("urn:subject:1", "S:1");
-        final var subject2 = createSubject("urn:subject:2", "S:2");
+        final var subject1 = createNode(NodeType.SUBJECT, "urn:subject:1", "S:1", null, true);
+        final var subject2 = createNode(NodeType.SUBJECT, "urn:subject:2", "S:2", null, true);
 
-        final var topic1 = createTopic("urn:topic:1", "ST:1", null, false);
-        final var topic2 = createTopic("urn:topic:2", "ST:2", null, false);
+        final var topic1 = createNode(NodeType.NODE, "urn:topic:1", "ST:1", null, false);
+        final var topic2 = createNode(NodeType.NODE, "urn:topic:2", "ST:2", null, false);
 
-        createSubjectTopic("urn:subject-topic:1", topic1, subject1, 1);
-        createSubjectTopic("urn:subject-topic:2", topic2, subject2, 1);
+        createNodeConnection("urn:subject-topic:1", subject1, topic1, 1);
+        createNodeConnection("urn:subject-topic:2", subject2, topic2, 1);
 
         final var resource1 = createResource("urn:resource:1", "R:1", null);
 
-        createTopicResource("urn:topic-resource:1", topic1, resource1, true, 1);
-        createTopicResource("urn:topic-resource:2", topic2, resource1, false, 1);
+        createNodeResource("urn:topic-resource:1", topic1, resource1, true, 1);
+        createNodeResource("urn:topic-resource:2", topic2, resource1, false, 1);
     }
 
     public void resourceWithResourceTypeTestSetup() {
@@ -836,44 +636,6 @@ public class TestSeeder {
         final var relevance1 = createRelevance("urn:relevance:core", "Core");
     }
 
-    public void subtopicsByTopicIdAndFiltersTestSetup() {
-        // Creates subtopics with different filters
-        //
-        // Subjects S:1
-        // \
-        // \
-        // Parent topic T1 (has filter F:1 and F:2)
-        // |
-        // Subtopics T1-1, T1-2, T1-3 (have filter F:1),
-        // T1-4, T1-5, T1-6, T1-7 (have filter F:2)
-        //
-
-        clearAll();
-
-        final var subject1 = createSubject("urn:subject:1", "S:1");
-
-        final var topic1 = createTopic("urn:topic:1", "T1", null, false);
-        final var topic2 = createTopic("urn:topic:2", "T1-1", null, false);
-        final var topic3 = createTopic("urn:topic:3", "T1-2", null, false);
-        final var topic4 = createTopic("urn:topic:4", "T1-3", null, false);
-        final var topic5 = createTopic("urn:topic:5", "T1-4", null, false);
-        final var topic6 = createTopic("urn:topic:6", "T1-5", null, false);
-        final var topic7 = createTopic("urn:topic:7", "T1-6", null, false);
-        final var topic8 = createTopic("urn:topic:8", "T1-7", null, false);
-
-        createSubjectTopic("urn:subject-topic:1", topic1, subject1, 1);
-
-        createTopicSubtopic("urn:topic-subtopic:1", topic1, topic2, 1);
-        createTopicSubtopic("urn:topic-subtopic:3", topic1, topic4, 3);
-        createTopicSubtopic("urn:topic-subtopic:2", topic1, topic3, 2);
-        createTopicSubtopic("urn:topic-subtopic:4", topic1, topic5, 4);
-        createTopicSubtopic("urn:topic-subtopic:5", topic1, topic6, 5);
-        createTopicSubtopic("urn:topic-subtopic:6", topic1, topic7, 6);
-        createTopicSubtopic("urn:topic-subtopic:7", topic1, topic8, 7);
-
-        final var relevance1 = createRelevance("urn:relevance:core", "Kjernestoff");
-    }
-
     public void subtopicsByNodeIdAndRelevanceTestSetup() {
         // Creates subtopics with different filters
         //
@@ -911,34 +673,6 @@ public class TestSeeder {
         createNodeConnection("urn:topic-subtopic:5", topic1, topic6, 5, supp);
         createNodeConnection("urn:topic-subtopic:6", topic1, topic7, 6, supp);
         createNodeConnection("urn:topic-subtopic:7", topic1, topic8, 7, supp);
-    }
-
-    public void topicConnectionsTestSetup() {
-        // create a test structure with subjects, topics and subtopics as follows
-        //
-        // S:1
-        // \
-        // T:1
-        // \
-        // T:2
-        // / \
-        // T:3 T:4
-        //
-
-        clearAll();
-
-        final var subject1 = createSubject("urn:subject:1000", "S:1");
-
-        final var topic1 = createTopic("urn:topic:1000", "T1", null, false);
-        final var topic2 = createTopic("urn:topic:2000", "T2", null, false);
-        final var topic3 = createTopic("urn:topic:3000", "T3", null, false);
-        final var topic4 = createTopic("urn:topic:4000", "T4", null, false);
-
-        createSubjectTopic("urn:subject-topic:1000", topic1, subject1, 1);
-
-        createTopicSubtopic("urn:topic-subtopic:1000", topic1, topic2, 1);
-        createTopicSubtopic("urn:topic-subtopic:2000", topic2, topic3, 1);
-        createTopicSubtopic("urn:topic-subtopic:3000", topic2, topic4, 2);
     }
 
     public void topicNodeConnectionsTestSetup() {

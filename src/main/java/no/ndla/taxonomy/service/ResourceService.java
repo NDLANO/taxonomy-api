@@ -16,20 +16,12 @@ import java.util.Set;
 public interface ResourceService {
     void delete(URI id);
 
-    List<ResourceWithTopicConnectionDTO> getResourcesByTopicId(URI topicPublicId, URI filterBySubjectId,
-            Set<URI> resourceTypeIds, URI relevancePublicId, String languageCode, boolean recursive);
-
-    List<ResourceWithTopicConnectionDTO> getResourcesBySubjectId(URI subjectPublicId, Set<URI> resourceTypeIds,
-            URI relevancePublicId, String languageCode);
-
     List<ResourceWithNodeConnectionDTO> getResourcesByNodeId(URI nodePublicId, String versionHash,
             Set<URI> resourceTypeIds, URI relevancePublicId, String languageCode, boolean recursive);
 
     ResourceDTO getResourceByPublicId(URI publicId, String languageCode);
 
-    ResourceWithParentTopicsDTO getResourceWithParentTopicsByPublicId(URI publicId, String languageCode);
-
-    ResourceWithParentNodesDTO getResourceWithParentNodesByPublicId(URI publicId, String languageCode);
+    ResourceWithParentsDTO getResourceWithParentNodesByPublicId(URI publicId, String languageCode);
 
     List<ResourceDTO> getResources(String languageCode, URI contentUriFilter);
 

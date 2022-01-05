@@ -12,8 +12,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.EntityWithPathConnection;
 import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.SubjectTopic;
-import no.ndla.taxonomy.domain.TopicSubtopic;
 
 import java.net.URI;
 import java.util.HashSet;
@@ -58,19 +56,7 @@ public class ConnectionIndexDTO {
             this.paths = Set.copyOf(connected.getAllPaths());
         });
 
-        if (connection instanceof TopicSubtopic) {
-            if (isParentConnection) {
-                this.type = "parent-topic";
-            } else {
-                this.type = "subtopic";
-            }
-        } else if (connection instanceof SubjectTopic) {
-            if (isParentConnection) {
-                this.type = "parent-subject";
-            } else {
-                this.type = "topic";
-            }
-        } else if (connection instanceof NodeConnection) {
+        if (connection instanceof NodeConnection) {
             if (isParentConnection) {
                 this.type = "parent-topic";
             } else {

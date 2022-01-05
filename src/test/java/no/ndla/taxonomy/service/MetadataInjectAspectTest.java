@@ -7,9 +7,11 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.Topic;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
-import no.ndla.taxonomy.service.dtos.TopicDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +41,7 @@ public class MetadataInjectAspectTest {
         final var metadata1 = new MetadataDto();
 
         /* metadata aspect will match by public ID between metadata entity and api entity */
-        metadata1.setPublicId("urn:test:1");
+        metadata1.setPublicId("urn:topic:1");
 
         /*
          * injector will run the metadata query before handing off to the api handler.
@@ -49,10 +51,10 @@ public class MetadataInjectAspectTest {
          */
         when(metadataApiService.getMetadataByKeyAndValue("key-v", "value-v")).thenReturn(Set.of(metadata1));
 
-        final var topic1 = new TopicDTO(new Topic() {
+        final var topic1 = new NodeDTO(new Node(NodeType.TOPIC, new Version()) {
             {
                 /* metadata aspect will match by public ID between metadata entity and api entity */
-                setPublicId(URI.create("urn:test:1"));
+                setPublicId(URI.create("urn:topic:1"));
             }
         }, null);
         /* Check that the topic dto has no metadata object */
@@ -61,7 +63,7 @@ public class MetadataInjectAspectTest {
         /*
          * The mocked api/service handler.
          */
-        List<TopicDTO> nodes = List.of(topic1);
+        List<NodeDTO> nodes = List.of(topic1);
         try {
             when(pjp.proceed()).thenReturn(nodes);
         } catch (Throwable throwable) {

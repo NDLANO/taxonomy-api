@@ -11,7 +11,6 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
-import no.ndla.taxonomy.repositories.TopicResourceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.service.dtos.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
@@ -30,24 +29,19 @@ public class ResourceServiceImpl implements ResourceService {
     private final EntityConnectionService connectionService;
     private final MetadataApiService metadataApiService;
     private final DomainEntityHelperService domainEntityHelperService;
-    private final RecursiveTopicTreeService recursiveTopicTreeService;
-    private final TopicResourceRepository topicResourceRepository;
     private final NodeResourceRepository nodeResourceRepository;
     private final NodeRepository nodeRepository;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
 
-    public ResourceServiceImpl(ResourceRepository resourceRepository, TopicResourceRepository topicResourceRepository,
-            EntityConnectionService connectionService, MetadataApiService metadataApiService,
-            DomainEntityHelperService domainEntityHelperService, RecursiveTopicTreeService recursiveTopicTreeService,
+    public ResourceServiceImpl(ResourceRepository resourceRepository, EntityConnectionService connectionService,
+            MetadataApiService metadataApiService, DomainEntityHelperService domainEntityHelperService,
             NodeResourceRepository nodeResourceRepository, RecursiveNodeTreeService recursiveNodeTreeService,
             NodeRepository nodeRepository, TreeSorter topicTreeSorter) {
         this.resourceRepository = resourceRepository;
         this.connectionService = connectionService;
         this.metadataApiService = metadataApiService;
         this.domainEntityHelperService = domainEntityHelperService;
-        this.recursiveTopicTreeService = recursiveTopicTreeService;
-        this.topicResourceRepository = topicResourceRepository;
         this.nodeResourceRepository = nodeResourceRepository;
         this.nodeRepository = nodeRepository;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
@@ -68,116 +62,6 @@ public class ResourceServiceImpl implements ResourceService {
         resourceRepository.flush();
 
         metadataApiService.deleteMetadataByPublicId(id);
-    }
-
-    private List<ResourceWithTopicConnectionDTO> filterTopicResourcesByIdsAndReturn(Set<Integer> topicIds,
-            Set<URI> resourceTypeIds, URI relevance, Set<ResourceTreeSortable<Topic>> sortableListToAddTo,
-            String languageCode) {
-        final List<TopicResource> topicResources;
-
-        if (resourceTypeIds.size() > 0) {
-            topicResources = topicResourceRepository
-                    .findAllByTopicIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(
-                            topicIds, resourceTypeIds, relevance);
-        } else {
-            var topicResourcesStream = topicResourceRepository
-                    .findAllByTopicIdsIncludingRelationsForResourceDocuments(topicIds).stream();
-            if (relevance != null) {
-                final var isRequestingCore = "urn:relevance:core".equals(relevance.toString());
-                topicResourcesStream = topicResourcesStream.filter(topicResource -> {
-                    final var resource = topicResource.getResource().orElse(null);
-                    if (resource == null) {
-                        return false;
-                    }
-                    final var rel = topicResource.getRelevance().orElse(null);
-                    if (rel != null) {
-                        return rel.getPublicId().equals(relevance);
-                    } else {
-                        return isRequestingCore;
-                    }
-                });
-            }
-            topicResources = topicResourcesStream.collect(Collectors.toList());
-        }
-
-        topicResources
-                .forEach(topicResource -> sortableListToAddTo.add(new ResourceTreeSortable<Topic>(topicResource)));
-
-        // Sort the list, extract all the topicResource objects in between topics and return list of
-        // documents
-
-        return treeSorter.sortList(sortableListToAddTo).stream().map(ResourceTreeSortable::getResourceConnection)
-                .filter(Optional::isPresent).map(Optional::get)
-                .map(wrappedTopicResource -> new ResourceWithTopicConnectionDTO((TopicResource) wrappedTopicResource,
-                        languageCode))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @InjectMetadata
-    public List<ResourceWithTopicConnectionDTO> getResourcesBySubjectId(URI subjectPublicId, Set<URI> resourceTypeIds,
-            URI relevance, String language) {
-        final var subject = domainEntityHelperService.getSubjectByPublicId(subjectPublicId);
-
-        final var subjectTopicTree = recursiveTopicTreeService.getRecursiveTopics(subject);
-
-        final var topicIds = recursiveTopicTreeService.getRecursiveTopics(subject).stream()
-                .map(RecursiveTopicTreeService.TopicTreeElement::getTopicId).collect(Collectors.toSet());
-
-        // Populate a tree of subject->topic relations, add the resources to the list and then run
-        // sort on the list so all
-        // levels are sorted on rank and relation type
-
-        final Set<ResourceTreeSortable<Topic>> resourcesToSort = new HashSet<>();
-
-        subjectTopicTree.forEach(treeElement -> {
-            if (treeElement.getParentSubjectId().isPresent()) {
-                // This is a subjectTopic connection
-                resourcesToSort.add(new ResourceTreeSortable("topic", "subject", treeElement.getTopicId(),
-                        treeElement.getParentSubjectId().orElse(0), treeElement.getRank()));
-            } else {
-                // This is a topicSubtopic connection
-                resourcesToSort.add(new ResourceTreeSortable("topic", "topic", treeElement.getTopicId(),
-                        treeElement.getParentTopicId().orElse(0), treeElement.getRank()));
-            }
-        });
-
-        return filterTopicResourcesByIdsAndReturn(topicIds, resourceTypeIds, relevance, resourcesToSort, language);
-    }
-
-    @Override
-    @InjectMetadata
-    public List<ResourceWithTopicConnectionDTO> getResourcesByTopicId(URI topicId, URI filterBySubjectId,
-            Set<URI> resourceTypeIds, URI relevancePublicId, String languageCode, boolean recursive) {
-        final var topic = domainEntityHelperService.getTopicByPublicId(topicId);
-
-        final Set<Integer> topicIdsToSearchFor;
-
-        // Add both topics and resourceTopics to a common list that will be sorted in a tree-structure based on rank at
-        // each level
-        final Set<ResourceTreeSortable<Topic>> resourcesToSort = new HashSet<>();
-
-        // Populate a list of topic IDs we are going to fetch first, and then fetch the actual
-        // topics later
-        // This allows searching recursively without having to fetch the whole relation tree on each
-        // element in the
-        // recursive logic. It is also necessary to have the tree information later for ordering the
-        // result
-        if (recursive) {
-            final var topicList = recursiveTopicTreeService.getRecursiveTopics(topic);
-
-            topicList.forEach(topicTreeElement -> resourcesToSort
-                    .add(new ResourceTreeSortable<Topic>("topic", "topic", topicTreeElement.getTopicId(),
-                            topicTreeElement.getParentTopicId().orElse(0), topicTreeElement.getRank())));
-
-            topicIdsToSearchFor = topicList.stream().map(RecursiveTopicTreeService.TopicTreeElement::getTopicId)
-                    .collect(Collectors.toSet());
-        } else {
-            topicIdsToSearchFor = Set.of(topic.getId());
-        }
-
-        return filterTopicResourcesByIdsAndReturn(topicIdsToSearchFor, resourceTypeIds, relevancePublicId,
-                resourcesToSort, languageCode);
     }
 
     private List<ResourceWithNodeConnectionDTO> filterNodeResourcesByIdsAndReturn(Set<Integer> nodeIds,
@@ -265,20 +149,11 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Override
     @InjectMetadata
-    public ResourceWithParentTopicsDTO getResourceWithParentTopicsByPublicId(URI publicId, String languageCode) {
+    public ResourceWithParentsDTO getResourceWithParentNodesByPublicId(URI publicId, String languageCode) {
         final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
 
-        return new ResourceWithParentTopicsDTO(resource, languageCode);
-    }
-
-    @Override
-    @InjectMetadata
-    public ResourceWithParentNodesDTO getResourceWithParentNodesByPublicId(URI publicId, String languageCode) {
-        final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
-                .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
-
-        return new ResourceWithParentNodesDTO(resource, languageCode);
+        return new ResourceWithParentsDTO(resource, languageCode);
     }
 
     private List<ResourceDTO> createDto(List<Resource> resources, String languageCode) {

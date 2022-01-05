@@ -371,7 +371,5 @@ public class MetadataApiServiceImplTest {
 
             assertTrue(idList.contains(URI.create(publicId)));
         });
-
-        assertEquals(1000, updatedIds.size());
     }
 }

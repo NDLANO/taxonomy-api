@@ -29,18 +29,15 @@ class CachedUrlUpdaterServiceImplTest {
     private CachedPathRepository cachedPathRepository;
     private CachedUrlUpdaterServiceImpl service;
 
-    private SubjectRepository subjectRepository;
-    private TopicRepository topicRepository;
+    private NodeRepository nodeRepository;
     private ResourceRepository resourceRepository;
     private VersionRepository versionRepository;
 
     @BeforeEach
-    void setup(@Autowired CachedPathRepository cachedPathRepository, @Autowired SubjectRepository subjectRepository,
-            @Autowired TopicRepository topicRepository, @Autowired ResourceRepository resourceRepository,
-            @Autowired VersionRepository versionRepository) {
+    void setup(@Autowired CachedPathRepository cachedPathRepository, @Autowired NodeRepository nodeRepository,
+            @Autowired ResourceRepository resourceRepository, @Autowired VersionRepository versionRepository) {
         this.cachedPathRepository = cachedPathRepository;
-        this.subjectRepository = subjectRepository;
-        this.topicRepository = topicRepository;
+        this.nodeRepository = nodeRepository;
         this.resourceRepository = resourceRepository;
         this.versionRepository = versionRepository;
 
@@ -50,10 +47,11 @@ class CachedUrlUpdaterServiceImplTest {
     @Test
     @Transactional
     void updateCachedUrls() {
-        final var subject1 = new Subject();
+        final var subject1 = new Node(NodeType.SUBJECT, new Version());
         subject1.setPublicId(URI.create("urn:subject:1"));
+        subject1.setContext(true);
 
-        subjectRepository.save(subject1);
+        nodeRepository.save(subject1);
 
         service.updateCachedUrls(subject1);
 
@@ -61,17 +59,17 @@ class CachedUrlUpdaterServiceImplTest {
             assertEquals(1, subject1.getCachedPaths().size());
             final var path1 = subject1.getCachedPaths().iterator().next();
             assertEquals("/subject:1", path1.getPath());
-            assertSame(subject1, path1.getSubject().orElseThrow());
+            assertSame(subject1, path1.getNode().orElseThrow());
             assertTrue(path1.isPrimary());
 
             assertEquals(1, cachedPathRepository.findAllByPublicId(URI.create("urn:subject:1")).size());
         }
 
-        final var topic1 = new Topic();
+        final var topic1 = new Node(NodeType.TOPIC, new Version());
         topic1.setPublicId(URI.create("urn:topic:1"));
         topic1.setContext(true);
 
-        topicRepository.save(topic1);
+        nodeRepository.save(topic1);
 
         service.updateCachedUrls(topic1);
 
@@ -79,13 +77,13 @@ class CachedUrlUpdaterServiceImplTest {
             assertEquals(1, topic1.getCachedPaths().size());
             final var path1 = topic1.getCachedPaths().iterator().next();
             assertEquals("/topic:1", path1.getPath());
-            assertSame(topic1, path1.getTopic().orElseThrow());
+            assertSame(topic1, path1.getNode().orElseThrow());
             assertTrue(path1.isPrimary());
 
             assertEquals(1, cachedPathRepository.findAllByPublicId(URI.create("urn:topic:1")).size());
         }
 
-        topic1.addSubjectTopic(SubjectTopic.create(subject1, topic1));
+        topic1.addParentConnection(NodeConnection.create(subject1, topic1));
 
         service.updateCachedUrls(topic1);
 
@@ -105,9 +103,9 @@ class CachedUrlUpdaterServiceImplTest {
                     .map(CachedPath::getPath).collect(Collectors.toList()).contains("/subject:1/topic:1"));
         }
 
-        final var topic2 = new Topic();
+        final var topic2 = new Node(NodeType.TOPIC, new Version());
         topic2.setPublicId(URI.create("urn:topic:2"));
-        topicRepository.save(topic2);
+        nodeRepository.save(topic2);
 
         service.updateCachedUrls(topic1);
 
@@ -115,7 +113,7 @@ class CachedUrlUpdaterServiceImplTest {
             assertEquals(0, cachedPathRepository.findAllByPublicId(URI.create("urn:topic:2")).size());
         }
 
-        topic1.addChildTopicSubtopic(TopicSubtopic.create(topic1, topic2));
+        topic1.addChildConnection(NodeConnection.create(topic1, topic2));
 
         service.updateCachedUrls(topic1);
 
@@ -146,7 +144,7 @@ class CachedUrlUpdaterServiceImplTest {
             assertEquals(0, cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).size());
         }
 
-        topic1.addTopicResource(TopicResource.create(topic1, resource1));
+        topic1.addNodeResource(NodeResource.create(topic1, resource1));
 
         service.updateCachedUrls(resource1);
 
@@ -157,7 +155,7 @@ class CachedUrlUpdaterServiceImplTest {
                     .containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1")));
         }
 
-        topic2.addTopicResource(TopicResource.create(topic2, resource1));
+        topic2.addNodeResource(NodeResource.create(topic2, resource1));
 
         service.updateCachedUrls(resource1);
 
@@ -178,10 +176,11 @@ class CachedUrlUpdaterServiceImplTest {
 
     @Test
     void clearCachedUrls() {
-        final var subject1 = new Subject();
+        final var subject1 = new Node(NodeType.SUBJECT, new Version());
         subject1.setPublicId(URI.create("urn:subject:1"));
+        subject1.setContext(true);
 
-        subjectRepository.save(subject1);
+        nodeRepository.save(subject1);
 
         service.updateCachedUrls(subject1);
 
