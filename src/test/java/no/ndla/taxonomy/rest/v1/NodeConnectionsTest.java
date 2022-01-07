@@ -10,6 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.Version;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -28,8 +29,9 @@ public class NodeConnectionsTest extends RestTest {
     @Test
     public void can_add_child_to_parent() throws Exception {
         URI integrationId, calculusId;
-        calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus")).getPublicId();
-        integrationId = builder.node(NodeType.TOPIC, t -> t.name("integration")).getPublicId();
+        Version version = builder.version();
+        calculusId = builder.node(NodeType.TOPIC, version, t -> t.name("calculus")).getPublicId();
+        integrationId = builder.node(NodeType.TOPIC, version, t -> t.name("integration")).getPublicId();
 
         URI id = getId(testUtils.createResource("/v1/node-connections", new NodeConnections.AddChildToParentCommand() {
             {
@@ -48,8 +50,11 @@ public class NodeConnectionsTest extends RestTest {
 
     @Test
     public void cannot_add_existing_child_to_parent() throws Exception {
-        URI integrationId = builder.node("integration", NodeType.TOPIC, t -> t.name("integration")).getPublicId();
-        URI calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus").child("integration")).getPublicId();
+        Version version = builder.version();
+        URI integrationId = builder.node("integration", NodeType.TOPIC, version, t -> t.name("integration"))
+                .getPublicId();
+        URI calculusId = builder.node(NodeType.TOPIC, version, t -> t.name("calculus").child("integration", version))
+                .getPublicId();
 
         testUtils.createResource("/v1/node-connections", new NodeConnections.AddChildToParentCommand() {
             {
@@ -61,9 +66,10 @@ public class NodeConnectionsTest extends RestTest {
 
     @Test
     public void cannot_add_root_child_to_parent() throws Exception {
-        URI integrationId = builder.node("integration", NodeType.TOPIC, t -> t.isRoot(true).name("integration"))
-                .getPublicId();
-        URI calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus")).getPublicId();
+        Version version = builder.version();
+        URI integrationId = builder
+                .node("integration", NodeType.TOPIC, version, t -> t.isRoot(true).name("integration")).getPublicId();
+        URI calculusId = builder.node(NodeType.TOPIC, version, t -> t.name("calculus")).getPublicId();
 
         testUtils.createResource("/v1/node-connections", new NodeConnections.AddChildToParentCommand() {
             {
@@ -82,11 +88,16 @@ public class NodeConnectionsTest extends RestTest {
 
     @Test
     public void can_get_nodes() throws Exception {
-        URI alternatingCurrentId = builder.node("ac", NodeType.TOPIC, t -> t.name("alternating current")).getPublicId();
-        URI electricityId = builder.node(NodeType.TOPIC, t -> t.name("electricity").child("ac", NodeType.TOPIC))
+        Version version = builder.version();
+        URI alternatingCurrentId = builder.node("ac", NodeType.TOPIC, version, t -> t.name("alternating current"))
                 .getPublicId();
-        URI integrationId = builder.node("integration", NodeType.TOPIC, t -> t.name("integration")).getPublicId();
-        URI calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus").child("integration", NodeType.TOPIC))
+        URI electricityId = builder
+                .node(NodeType.TOPIC, version, t -> t.name("electricity").child("ac", NodeType.TOPIC, version))
+                .getPublicId();
+        URI integrationId = builder.node("integration", NodeType.TOPIC, version, t -> t.name("integration"))
+                .getPublicId();
+        URI calculusId = builder
+                .node(NodeType.TOPIC, version, t -> t.name("calculus").child("integration", NodeType.TOPIC, version))
                 .getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/node-connections");
@@ -120,9 +131,10 @@ public class NodeConnectionsTest extends RestTest {
 
     @Test
     public void children_have_default_rank() throws Exception {
-        builder.node(NodeType.TOPIC,
-                t -> t.name("electricity").child(NodeType.TOPIC, st -> st.name("alternating currents"))
-                        .child(NodeType.TOPIC, st -> st.name("wiring")));
+        Version version = builder.version();
+        builder.node(NodeType.TOPIC, version,
+                t -> t.name("electricity").child(NodeType.TOPIC, version, st -> st.name("alternating currents"))
+                        .child(NodeType.TOPIC, version, st -> st.name("wiring")));
         MockHttpServletResponse response = testUtils.getResource(("/v1/node-connections"));
         NodeConnections.ParentChildIndexDocument[] children = testUtils
                 .getObject(NodeConnections.ParentChildIndexDocument[].class, response);
@@ -132,12 +144,14 @@ public class NodeConnectionsTest extends RestTest {
 
     @Test
     public void chlidren_can_be_created_with_rank() throws Exception {
-        Node subject = builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Subject").publicId("urn:subject:1"));
-        Node electricity = builder.node(NodeType.TOPIC, s -> s.name("Electricity").publicId("urn:topic:1"));
+        Version version = builder.version();
+        Node subject = builder.node(NodeType.SUBJECT, version,
+                s -> s.isContext(true).name("Subject").publicId("urn:subject:1"));
+        Node electricity = builder.node(NodeType.TOPIC, version, s -> s.name("Electricity").publicId("urn:topic:1"));
         save(NodeConnection.create(subject, electricity));
-        Node alternatingCurrents = builder.node(NodeType.TOPIC,
+        Node alternatingCurrents = builder.node(NodeType.TOPIC, version,
                 t -> t.name("Alternating currents").publicId("urn:topic:11"));
-        Node wiring = builder.node(NodeType.TOPIC, t -> t.name("Wiring").publicId("urn:topic:12"));
+        Node wiring = builder.node(NodeType.TOPIC, version, t -> t.name("Wiring").publicId("urn:topic:12"));
 
         testUtils.createResource("/v1/node-connections", new NodeConnections.AddChildToParentCommand() {
             {
@@ -155,8 +169,8 @@ public class NodeConnectionsTest extends RestTest {
             }
         });
 
-        MockHttpServletResponse response = testUtils
-                .getResource("/v1/subjects/" + subject.getPublicId() + "/topics?recursive=true");
+        MockHttpServletResponse response = testUtils.getResource(
+                "/v1/subjects/" + subject.getPublicId() + "/topics?recursive=true&version=" + version.getHash());
         TopicSubtopics.TopicSubtopicIndexDocument[] topics = testUtils
                 .getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);
 

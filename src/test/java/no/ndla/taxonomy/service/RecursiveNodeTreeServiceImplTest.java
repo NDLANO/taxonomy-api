@@ -28,14 +28,17 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 @Transactional
 class RecursiveNodeTreeServiceImplTest {
+    private VersionRepository versionRepository;
     private NodeRepository nodeRepository;
     private NodeConnectionRepository nodeConnectionRepository;
 
     private RecursiveNodeTreeService service;
 
     @BeforeEach
-    void setUp(@Autowired NodeConnectionRepository nodeConnectionRepository, @Autowired NodeRepository nodeRepository,
+    void setUp(@Autowired VersionRepository versionRepository,
+            @Autowired NodeConnectionRepository nodeConnectionRepository, @Autowired NodeRepository nodeRepository,
             @Autowired TestSeeder testSeeder) {
+        this.versionRepository = versionRepository;
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
 
@@ -252,6 +255,8 @@ class RecursiveNodeTreeServiceImplTest {
         // result in a StackOverflowError at some point
 
         final var version = new Version();
+        versionRepository.save(version);
+
         final var topic1 = new Node(NodeType.TOPIC, version);
         final var topic2 = new Node(NodeType.TOPIC, version);
         final var topic3 = new Node(NodeType.TOPIC, version);

@@ -139,7 +139,7 @@ public class Builder {
             nodeType = NodeType.NODE;
         }
         if (version == null) {
-            version = versions.get("published").version;
+            version = versionService.getBeta().orElse(new Version());
         }
         nodes.putIfAbsent(key, new NodeBuilder(nodeType, version));
         return nodes.get(key);

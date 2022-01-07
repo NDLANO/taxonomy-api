@@ -47,7 +47,9 @@ class CachedUrlUpdaterServiceImplTest {
     @Test
     @Transactional
     void updateCachedUrls() {
-        final var subject1 = new Node(NodeType.SUBJECT, new Version());
+        Version version = new Version();
+        versionRepository.save(version);
+        final var subject1 = new Node(NodeType.SUBJECT, version);
         subject1.setPublicId(URI.create("urn:subject:1"));
         subject1.setContext(true);
 
@@ -65,7 +67,7 @@ class CachedUrlUpdaterServiceImplTest {
             assertEquals(1, cachedPathRepository.findAllByPublicId(URI.create("urn:subject:1")).size());
         }
 
-        final var topic1 = new Node(NodeType.TOPIC, new Version());
+        final var topic1 = new Node(NodeType.TOPIC, version);
         topic1.setPublicId(URI.create("urn:topic:1"));
         topic1.setContext(true);
 
@@ -103,7 +105,7 @@ class CachedUrlUpdaterServiceImplTest {
                     .map(CachedPath::getPath).collect(Collectors.toList()).contains("/subject:1/topic:1"));
         }
 
-        final var topic2 = new Node(NodeType.TOPIC, new Version());
+        final var topic2 = new Node(NodeType.TOPIC, version);
         topic2.setPublicId(URI.create("urn:topic:2"));
         nodeRepository.save(topic2);
 
@@ -176,7 +178,9 @@ class CachedUrlUpdaterServiceImplTest {
 
     @Test
     void clearCachedUrls() {
-        final var subject1 = new Node(NodeType.SUBJECT, new Version());
+        Version version = new Version();
+        versionRepository.save(version);
+        final var subject1 = new Node(NodeType.SUBJECT, version);
         subject1.setPublicId(URI.create("urn:subject:1"));
         subject1.setContext(true);
 

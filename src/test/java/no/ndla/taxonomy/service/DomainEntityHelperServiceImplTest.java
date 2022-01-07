@@ -11,6 +11,7 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,10 +39,11 @@ class DomainEntityHelperServiceImplTest {
     private DomainEntityHelperServiceImpl service;
 
     @BeforeEach
-    void setUp(@Autowired NodeRepository nodeRepository) {
+    void setUp(@Autowired NodeRepository nodeRepository, @Autowired VersionRepository versionRepository) {
         service = new DomainEntityHelperServiceImpl(nodeRepository);
 
         version = new Version();
+        versionRepository.save(version);
 
         topic1 = new Node(NodeType.TOPIC, version);
         topic1.setPublicId(URI.create("urn:topic:dehsit:1"));
@@ -52,7 +54,7 @@ class DomainEntityHelperServiceImplTest {
         topic2 = nodeRepository.save(topic2);
 
         subject1 = new Node(NodeType.SUBJECT, version);
-        ;
+
         subject1.setPublicId(URI.create("urn:subject:dehsit:1"));
         subject1 = nodeRepository.save(subject1);
 

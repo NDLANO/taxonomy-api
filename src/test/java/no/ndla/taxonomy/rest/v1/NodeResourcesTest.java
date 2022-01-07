@@ -7,10 +7,7 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeResource;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -209,9 +206,10 @@ public class NodeResourcesTest extends RestTest {
     public void resource_can_only_have_one_primary_node() throws Exception {
         Resource graphs = builder.resource(r -> r.name("graphs"));
 
-        builder.node(NodeType.TOPIC, t -> t.name("elementary maths").resource(graphs));
+        Version version = builder.version();
+        builder.node(NodeType.TOPIC, version, t -> t.name("elementary maths").resource(graphs));
 
-        Node graphTheory = builder.node(NodeType.TOPIC, t -> t.name("graph theory"));
+        Node graphTheory = builder.node(NodeType.TOPIC, version, t -> t.name("graph theory"));
 
         testUtils.createResource("/v1/node-resources", new NodeResources.AddResourceToNodeCommand() {
             {
@@ -232,7 +230,8 @@ public class NodeResourcesTest extends RestTest {
 
     @Test
     public void can_order_resources() throws Exception {
-        Node geometry = builder.node(NodeType.TOPIC, t -> t.name("Geometry").publicId("urn:topic:1"));
+        Version version = builder.version();
+        Node geometry = builder.node(NodeType.TOPIC, version, t -> t.name("Geometry").publicId("urn:topic:1"));
         Resource squares = builder.resource(r -> r.name("Squares").publicId("urn:resource:1"));
         Resource circles = builder.resource(r -> r.name("Circles").publicId("urn:resource:2"));
 
@@ -255,7 +254,8 @@ public class NodeResourcesTest extends RestTest {
                     }
                 });
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/" + geometry.getPublicId() + "/resources");
+        MockHttpServletResponse response = testUtils
+                .getResource("/v1/nodes/" + geometry.getPublicId() + "/resources?version=" + version.getHash());
         ResourceWithNodeConnectionDTO[] resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class,
                 response);
         assertEquals(circles.getPublicId(), resources[0].getId());
@@ -264,7 +264,8 @@ public class NodeResourcesTest extends RestTest {
 
     @Test
     public void resources_can_have_default_rank() throws Exception {
-        builder.node(NodeType.TOPIC,
+        Version version = builder.version();
+        builder.node(NodeType.TOPIC, version,
                 t -> t.name("elementary maths").resource(r -> r.name("graphs")).resource(r -> r.name("sets")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/node-resources");
@@ -275,7 +276,8 @@ public class NodeResourcesTest extends RestTest {
 
     @Test
     public void can_create_resources_with_rank() throws Exception {
-        Node geometry = builder.node(NodeType.TOPIC, t -> t.name("Geometry").publicId("urn:topic:1"));
+        Version version = builder.version();
+        Node geometry = builder.node(NodeType.TOPIC, version, t -> t.name("Geometry").publicId("urn:topic:1"));
         Resource squares = builder.resource(r -> r.name("Squares").publicId("urn:resource:1"));
         Resource circles = builder.resource(r -> r.name("Circles").publicId("urn:resource:2"));
 
@@ -297,7 +299,8 @@ public class NodeResourcesTest extends RestTest {
             }
         });
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/" + geometry.getPublicId() + "/resources");
+        MockHttpServletResponse response = testUtils
+                .getResource("/v1/nodes/" + geometry.getPublicId() + "/resources?version=" + version.getHash());
         final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(circles.getPublicId(), resources[0].getId());
