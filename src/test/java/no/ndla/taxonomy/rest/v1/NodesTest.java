@@ -14,6 +14,7 @@ import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import javax.persistence.EntityManager;
@@ -444,8 +445,9 @@ public class NodesTest extends RestTest {
 
         URI parentId = builder.node(NodeType.TOPIC, version, parent -> parent.child(childTopic1)).getPublicId();
 
-        testUtils.deleteResource("/v1/nodes/" + parentId + "?version=" + version.getHash(),
-                status().is4xxClientError());
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("version", version.getHash());
+        testUtils.deleteResource("/v1/nodes/" + parentId, httpHeaders, status().is4xxClientError());
 
         assertNotNull(nodeRepository.findByPublicId(parentId));
     }
@@ -459,7 +461,9 @@ public class NodesTest extends RestTest {
         URI parentId = builder.node(NodeType.TOPIC, version, parent -> parent.child(childTopic1).child(childTopic2))
                 .getPublicId();
 
-        testUtils.deleteResource("/v1/nodes/" + parentId + "?version=" + version.getHash());
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("version", version.getHash());
+        testUtils.deleteResource("/v1/nodes/" + parentId, httpHeaders);
 
         assertNull(nodeRepository.findByPublicId(parentId));
 
@@ -475,7 +479,9 @@ public class NodesTest extends RestTest {
 
         final var topicId = topic.getPublicId();
 
-        testUtils.deleteResource("/v1/nodes/" + topicId + "?version=" + version.getHash());
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("version", version.getHash());
+        testUtils.deleteResource("/v1/nodes/" + topicId, httpHeaders);
 
         assertNull(nodeRepository.findByPublicId(topicId));
 
@@ -492,7 +498,9 @@ public class NodesTest extends RestTest {
 
         URI parentId = builder.node(NodeType.TOPIC, version, parent -> parent.child(childTopic)).getPublicId();
 
-        testUtils.deleteResource("/v1/nodes/" + parentId + "?version=" + version.getHash());
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("version", version.getHash());
+        testUtils.deleteResource("/v1/nodes/" + parentId, httpHeaders);
 
         assertNull(nodeRepository.findByPublicId(parentId));
         assertNotNull(nodeRepository.findByPublicId(childTopic.getPublicId()));
@@ -508,7 +516,9 @@ public class NodesTest extends RestTest {
         Version version = versionService.getBeta().get();
         URI parentId = builder.node(NodeType.TOPIC, version, parent -> parent.resource(resource)).getPublicId();
 
-        testUtils.deleteResource("/v1/nodes/" + parentId + "?version=" + version.getHash());
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("version", version.getHash());
+        testUtils.deleteResource("/v1/nodes/" + parentId, httpHeaders);
 
         assertNull(nodeRepository.findByPublicId(parentId));
         assertNotNull(resourceRepository.findByPublicId(resource.getPublicId()));

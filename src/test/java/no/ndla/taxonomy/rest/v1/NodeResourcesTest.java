@@ -10,6 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
@@ -254,8 +255,10 @@ public class NodeResourcesTest extends RestTest {
                     }
                 });
 
-        MockHttpServletResponse response = testUtils
-                .getResource("/v1/nodes/" + geometry.getPublicId() + "/resources?version=" + version.getHash());
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("version", version.getHash());
+        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/" + geometry.getPublicId() + "/resources",
+                httpHeaders);
         ResourceWithNodeConnectionDTO[] resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class,
                 response);
         assertEquals(circles.getPublicId(), resources[0].getId());
@@ -299,8 +302,10 @@ public class NodeResourcesTest extends RestTest {
             }
         });
 
-        MockHttpServletResponse response = testUtils
-                .getResource("/v1/nodes/" + geometry.getPublicId() + "/resources?version=" + version.getHash());
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("version", version.getHash());
+        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/" + geometry.getPublicId() + "/resources",
+                httpHeaders);
         final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
 
         assertEquals(circles.getPublicId(), resources[0].getId());

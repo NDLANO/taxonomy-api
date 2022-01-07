@@ -52,7 +52,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @GetMapping
     @ApiOperation("Gets all topics")
     public List<EntityWithPathDTO> index(
-            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestHeader(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) URI contentUriFilter,
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
@@ -74,7 +74,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @Transactional
     @InjectMetadata
     public EntityWithPathDTO get(@PathVariable("id") URI id,
-            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestHeader(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         if (versionHash == null)
             versionHash = versionService.getPublishedHash();
@@ -159,7 +159,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @ApiOperation(value = "Gets all resources for the given topic", tags = { "topics" })
     public List<ResourceWithNodeConnectionDTO> getResources(
             @ApiParam(value = "id", required = true) @PathVariable("id") URI topicId,
-            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestHeader(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false) String language,
             @ApiParam("If true, resources from subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @ApiParam(value = "Select by resource type id(s). If not specified, resources of all types will be returned."

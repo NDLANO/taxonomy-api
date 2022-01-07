@@ -58,7 +58,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping
     @ApiOperation("Gets all nodes")
     public List<EntityWithPathDTO> all(
-            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestHeader(value = "version", required = false) String versionHash,
             @ApiParam(value = "Filter by nodeType") @RequestParam(value = "nodeType", required = false) NodeType nodeTypeFilter,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) URI contentUriFilter,
@@ -84,7 +84,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @Transactional
     @InjectMetadata
     public NodeDTO get(@PathVariable("id") URI id,
-            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestHeader(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         if (versionHash == null)
             versionHash = versionService.getPublishedHash();
@@ -120,7 +120,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @ApiOperation(value = "Gets all children for this node")
     @InjectMetadata
     public List<EntityWithPathChildDTO> getChildren(@ApiParam(value = "id", required = true) @PathVariable("id") URI id,
-            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestHeader(value = "version", required = false) String versionHash,
             @ApiParam("If true, children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         if (versionHash == null)
@@ -151,7 +151,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/connections")
     @ApiOperation(value = "Gets all parents and children this node is connected to")
     public List<ConnectionIndexDTO> getAllConnections(@PathVariable("id") URI id,
-            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash) {
+            @ApiParam(value = "Version hash", example = "h34g") @RequestHeader(value = "version", required = false) String versionHash) {
         if (versionHash == null)
             versionHash = versionService.getPublishedHash();
         return nodeService.getAllConnections(id, versionHash);
@@ -169,7 +169,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @ApiOperation(value = "Gets all resources for the given node", tags = { "nodes" })
     public List<ResourceWithNodeConnectionDTO> getResources(
             @ApiParam(value = "id", required = true) @PathVariable("id") URI nodeId,
-            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestHeader(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false) String language,
             @ApiParam("If true, resources from children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @ApiParam(value = "Select by resource type id(s). If not specified, resources of all types will be returned."

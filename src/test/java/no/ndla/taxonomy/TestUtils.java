@@ -8,6 +8,7 @@
 package no.ndla.taxonomy;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -60,45 +61,74 @@ public class TestUtils {
     }
 
     public MockHttpServletResponse createResource(String path, Object command) throws Exception {
-        return createResource(path, command, status().isCreated());
+        return createResource(path, command, HttpHeaders.EMPTY, status().isCreated());
     }
 
     public MockHttpServletResponse createResource(String path, Object command, ResultMatcher resultMatcher)
             throws Exception {
+        return createResource(path, command, HttpHeaders.EMPTY, resultMatcher);
+    }
+
+    public MockHttpServletResponse createResource(String path, Object command, HttpHeaders httpHeaders,
+            ResultMatcher resultMatcher) throws Exception {
         entityManager.flush();
-        return mockMvc.perform(post(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
+        return mockMvc
+                .perform(post(path).headers(httpHeaders).contentType(APPLICATION_JSON_UTF8).content(json(command)))
                 .andExpect(resultMatcher).andReturn().getResponse();
     }
 
-    public MockHttpServletResponse getResource(String path, ResultMatcher resultMatcher) throws Exception {
+    public MockHttpServletResponse getResource(String path, HttpHeaders httpHeaders, ResultMatcher resultMatcher)
+            throws Exception {
         entityManager.flush();
-        return mockMvc.perform(get(path).accept(APPLICATION_JSON_UTF8)).andExpect(resultMatcher).andReturn()
-                .getResponse();
+        return mockMvc.perform(get(path).headers(httpHeaders).accept(APPLICATION_JSON_UTF8)).andExpect(resultMatcher)
+                .andReturn().getResponse();
+    }
+
+    public MockHttpServletResponse getResource(String path, ResultMatcher resultMatcher) throws Exception {
+        return getResource(path, HttpHeaders.EMPTY, resultMatcher);
+    }
+
+    public MockHttpServletResponse getResource(String path, HttpHeaders httpHeaders) throws Exception {
+        return getResource(path, httpHeaders, status().isOk());
     }
 
     public MockHttpServletResponse getResource(String path) throws Exception {
-        return getResource(path, status().isOk());
+        return getResource(path, HttpHeaders.EMPTY, status().isOk());
     }
 
     public MockHttpServletResponse deleteResource(String path) throws Exception {
-        return deleteResource(path, status().isNoContent());
+        return deleteResource(path, HttpHeaders.EMPTY, status().isNoContent());
+    }
+
+    public MockHttpServletResponse deleteResource(String path, HttpHeaders httpHeaders) throws Exception {
+        return deleteResource(path, httpHeaders, status().isNoContent());
     }
 
     public MockHttpServletResponse deleteResource(String path, ResultMatcher resultMatcher) throws Exception {
+        return deleteResource(path, HttpHeaders.EMPTY, resultMatcher);
+    }
+
+    public MockHttpServletResponse deleteResource(String path, HttpHeaders httpHeaders, ResultMatcher resultMatcher)
+            throws Exception {
         entityManager.flush();
-        return mockMvc.perform(delete(path)).andExpect(resultMatcher).andReturn().getResponse();
+        return mockMvc.perform(delete(path).headers(httpHeaders)).andExpect(resultMatcher).andReturn().getResponse();
     }
 
     public MockHttpServletResponse updateResource(String path, Object command) throws Exception {
-        return updateResource(path, command, status().isNoContent());
+        return updateResource(path, command, HttpHeaders.EMPTY, status().isNoContent());
     }
 
     public MockHttpServletResponse updateResource(String path, Object command, ResultMatcher resultMatcher)
             throws Exception {
+        return updateResource(path, command, HttpHeaders.EMPTY, resultMatcher);
+    }
+
+    public MockHttpServletResponse updateResource(String path, Object command, HttpHeaders httpHeaders,
+            ResultMatcher resultMatcher) throws Exception {
         entityManager.flush();
         if (command == null)
-            return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8)).andExpect(resultMatcher).andReturn()
-                    .getResponse();
+            return mockMvc.perform(put(path).headers(httpHeaders).contentType(APPLICATION_JSON_UTF8))
+                    .andExpect(resultMatcher).andReturn().getResponse();
         else
             return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
                     .andExpect(resultMatcher).andReturn().getResponse();

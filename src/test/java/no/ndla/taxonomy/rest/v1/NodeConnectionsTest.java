@@ -12,6 +12,7 @@ import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Version;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
@@ -169,8 +170,10 @@ public class NodeConnectionsTest extends RestTest {
             }
         });
 
-        MockHttpServletResponse response = testUtils.getResource(
-                "/v1/subjects/" + subject.getPublicId() + "/topics?recursive=true&version=" + version.getHash());
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("version", version.getHash());
+        MockHttpServletResponse response = testUtils
+                .getResource("/v1/subjects/" + subject.getPublicId() + "/topics?recursive=true", httpHeaders);
         TopicSubtopics.TopicSubtopicIndexDocument[] topics = testUtils
                 .getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);
 

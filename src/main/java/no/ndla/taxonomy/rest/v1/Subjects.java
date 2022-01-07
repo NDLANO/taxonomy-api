@@ -61,7 +61,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @ApiOperation("Gets all subjects")
     @InjectMetadata
     public List<EntityWithPathDTO> index(
-            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestHeader(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
             @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) String value) {
@@ -78,7 +78,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @ApiOperation(value = "Gets a single subject", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
     @InjectMetadata
     public EntityWithPathDTO get(@PathVariable("id") URI id,
-            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestHeader(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         if (versionHash == null)
             versionHash = versionService.getPublishedHash();
@@ -110,7 +110,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @ApiOperation(value = "Gets all children associated with a subject", notes = "This resource is read-only. To update the relationship between nodes, use the resource /subject-topics.")
     @InjectMetadata
     public List<EntityWithPathChildDTO> getChildren(@PathVariable("id") URI id,
-            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestHeader(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @ApiParam("If true, subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @Deprecated @ApiParam(value = "Select by filter id(s). If not specified, all topics will be returned."
@@ -204,7 +204,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             + "The ordering of resources will be based on the rank of resources relative to the node they belong to.", tags = {
                     "subjects" })
     public List<ResourceWithNodeConnectionDTO> getResources(@PathVariable("subjectId") URI subjectId,
-            @ApiParam(value = "Version hash", example = "h34g") @RequestParam(value = "version", required = false) String versionHash,
+            @ApiParam(value = "Version hash", example = "h34g") @RequestHeader(value = "version", required = false) String versionHash,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @ApiParam(value = "Filter by resource type id(s). If not specified, resources of all types will be returned."
                     + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) @RequestParam(value = "type", required = false, defaultValue = "") URI[] resourceTypeIds,
