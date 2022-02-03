@@ -73,8 +73,8 @@ public class ResourceDTO {
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
                 .collect(Collectors.toCollection(TreeSet::new));
 
-        this.path = resource.getPrimaryPath().orElse(null);
         this.paths = resource.getAllPaths();
+        this.path = resource.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(null));
     }
 
     public String getPath() {
