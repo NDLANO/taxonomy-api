@@ -35,9 +35,14 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     private final NodeService nodeService;
     private final ResourceService resourceService;
 
-    public Topics(NodeRepository nodeRepository, NodeService nodeService,
-            CachedUrlUpdaterService cachedUrlUpdaterService, ResourceService resourceService,
-            MetadataApiService metadataApiService, MetadataUpdateService metadataUpdateService) {
+    public Topics(
+            NodeRepository nodeRepository,
+            NodeService nodeService,
+            CachedUrlUpdaterService cachedUrlUpdaterService,
+            ResourceService resourceService,
+            MetadataApiService metadataApiService,
+            MetadataUpdateService metadataUpdateService
+    ) {
         super(nodeRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
 
         this.nodeRepository = nodeRepository;
