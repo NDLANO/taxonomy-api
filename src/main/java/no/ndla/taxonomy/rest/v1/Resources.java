@@ -31,14 +31,10 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ResourceService resourceService;
 
-    public Resources(
-            ResourceRepository resourceRepository,
-            ResourceResourceTypeRepository resourceResourceTypeRepository,
-            ResourceService resourceService,
-            CachedUrlUpdaterService cachedUrlUpdaterService,
-            MetadataApiService metadataApiService,
-            MetadataUpdateService metadataUpdateService
-    ) {
+    public Resources(ResourceRepository resourceRepository,
+            ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceService resourceService,
+            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataApiService metadataApiService,
+            MetadataUpdateService metadataUpdateService) {
         super(resourceRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
@@ -72,7 +68,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @GetMapping("{id}")
     @ApiOperation(value = "Gets a single resource")
     public ResourceDTO get(@PathVariable("id") URI id,
-                           @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
         return resourceService.getResourceByPublicId(id, language);
     }
@@ -83,7 +79,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "resource", value = "the updated resource. Fields not included will be set to null.") @RequestBody ResourceCommand command) {
+            @ApiParam(name = "resource", value = "the updated resource. Fields not included will be set to null.") @RequestBody ResourceCommand command) {
         doPut(id, command);
     }
 
@@ -100,7 +96,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @ApiOperation(value = "Gets all resource types associated with this resource")
     @Transactional(readOnly = true)
     public List<ResourceTypeWithConnectionDTO> getResourceTypes(@PathVariable("id") URI id,
-                                                                @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
         return resourceResourceTypeRepository
                 .findAllByResourcePublicIdIncludingResourceAndResourceTypeAndResourceTypeParent(id).stream()
@@ -112,7 +108,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @ApiOperation(value = "Gets all parent topics, all filters and resourceTypes for this resource")
     @Transactional(readOnly = true)
     public ResourceWithParentsDTO getResourceFull(@PathVariable("id") URI id,
-                                                  @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return resourceService.getResourceWithParentNodesByPublicId(id, language);
     }
 

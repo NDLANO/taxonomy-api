@@ -9,4 +9,6 @@ package no.ndla.taxonomy.domain;
 
 public interface Translation {
     String getName();
+
+    String getLanguageCode();
 }
