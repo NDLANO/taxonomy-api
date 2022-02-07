@@ -11,9 +11,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.ResourceType;
-import no.ndla.taxonomy.domain.ResourceTypeTranslation;
+import no.ndla.taxonomy.domain.Translation;
+import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 
 import java.net.URI;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApiModel("ResourceType")
 public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
@@ -29,16 +33,23 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
     @ApiModelProperty(value = "The name of the resource type", example = "Lecture")
     private String name;
 
+    @JsonProperty
+    @ApiModelProperty(value = "All translations of this node")
+    private Set<TranslationDTO> translations;
+
     public ResourceTypeDTO() {
     }
 
     public ResourceTypeDTO(ResourceType resourceType, String languageCode) {
         this.id = resourceType.getPublicId();
 
+        var translations = resourceType.getTranslations();
+        this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
+
         resourceType.getParent().map(ResourceType::getPublicId).ifPresent(publicId -> this.parentId = publicId);
 
-        this.name = resourceType.getTranslation(languageCode).map(ResourceTypeTranslation::getName)
-                .orElse(resourceType.getName());
+        this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
+                .map(Translation::getName).orElse(resourceType.getName());
     }
 
     public URI getId() {
@@ -51,6 +62,10 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
 
     public String getName() {
         return name;
+    }
+
+    public Set<TranslationDTO> getTranslations() {
+        return translations;
     }
 
     @Override

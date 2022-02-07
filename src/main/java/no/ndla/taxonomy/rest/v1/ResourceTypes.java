@@ -18,6 +18,7 @@ import no.ndla.taxonomy.domain.ResourceTypeTranslation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import no.ndla.taxonomy.service.UpdatableDto;
+import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,6 +29,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -118,11 +120,18 @@ public class ResourceTypes extends CrudController<ResourceType> {
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public List<ResourceTypeIndexDocument> subtypes = new ArrayList<>();
 
+        @JsonProperty
+        @ApiModelProperty(value = "All translations of this resource type")
+        private Set<TranslationDTO> translations;
+
         public ResourceTypeIndexDocument() {
         }
 
         public ResourceTypeIndexDocument(ResourceType resourceType, String language, int recursionLevels) {
             this.id = resourceType.getPublicId();
+
+            var translations = resourceType.getTranslations();
+            this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
             this.name = resourceType.getTranslation(language).map(ResourceTypeTranslation::getName)
                     .orElse(resourceType.getName());
 
