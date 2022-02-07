@@ -87,6 +87,9 @@ public class NodeTranslations {
     }
 
     public static class TranslationDTO {
+        public TranslationDTO() {
+        }
+
         public TranslationDTO(Translation translation) {
             name = translation.getName();
             language = translation.getLanguageCode();
