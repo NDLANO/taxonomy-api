@@ -13,7 +13,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeTranslation;
-import no.ndla.taxonomy.domain.ResourceTranslation;
 import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeRepository;
