@@ -34,7 +34,7 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
     private String name;
 
     @JsonProperty
-    @ApiModelProperty(value = "All translations of this node")
+    @ApiModelProperty(value = "All translations of this resource type")
     private Set<TranslationDTO> translations;
 
     public ResourceTypeDTO() {
