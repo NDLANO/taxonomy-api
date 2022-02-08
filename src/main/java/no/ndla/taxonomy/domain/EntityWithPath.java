@@ -97,6 +97,8 @@ public abstract class EntityWithPath extends DomainObject {
                 .collect(Collectors.toSet());
     }
 
+    abstract public Metadata getMetadata();
+
     abstract public URI getContentUri();
 
     abstract public void setContentUri(URI contentUri);

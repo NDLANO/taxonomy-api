@@ -13,7 +13,6 @@ import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
-import no.ndla.taxonomy.service.dtos.EntityWithPathDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,8 +56,7 @@ public class TopicsTest extends RestTest {
 
         assertNotNull(topic.getMetadata());
         assertTrue(topic.getMetadata().isVisible());
-        assertTrue(topic.getMetadata().getGrepCodes().size() == 1
-                && topic.getMetadata().getGrepCodes().contains("TOPIC1"));
+        assertTrue(topic.getMetadata().getGrepCodes().size() == 0);
     }
 
     @Test
@@ -97,51 +95,34 @@ public class TopicsTest extends RestTest {
         }
     }
 
-    @Test
-    public void can_get_topics_by_key_and_value() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> {
-            t.publicId("urn:topic:b8001");
-            t.name("photo synthesis");
-            t.contentUri(URI.create("urn:test:1"));
-        }));
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> {
-            t.publicId("urn:topic:b8003");
-            t.name("trigonometry");
-            t.contentUri(URI.create("urn:test:2"));
-        }));
-
-        final var metadata1 = new MetadataDto();
-        metadata1.setPublicId("urn:topic:b8001");
-        metadata1.setGrepCodes(Set.of("GREP1"));
-        final var metadata2 = new MetadataDto();
-        metadata2.setPublicId("urn:topic:b8003");
-        metadata2.setGrepCodes(Set.of("GREP2"));
-        when(metadataApiService.getMetadataByKeyAndValue("test", "value")).thenReturn(Set.of(metadata1));
-        when(metadataApiService.getMetadataByKeyAndValue("test", "value2")).thenReturn(Set.of(metadata2));
-
-        {
-            final var response = testUtils.getResource("/v1/topics?key=test&value=value");
-            final var topics = testUtils.getObject(NodeDTO[].class, response);
-            assertEquals(1, topics.length);
-            assertEquals("photo synthesis", topics[0].getName());
-            assertNotNull(topics[0].getMetadata());
-            assertNotNull(topics[0].getMetadata().getGrepCodes());
-            assertEquals(Set.of("GREP1"), topics[0].getMetadata().getGrepCodes());
-        }
-
-        {
-            final var response = testUtils.getResource("/v1/topics?key=test&value=value2");
-            final var topics = testUtils.getObject(NodeDTO[].class, response);
-            assertEquals(1, topics.length);
-            assertEquals("trigonometry", topics[0].getName());
-            assertNotNull(topics[0].getMetadata());
-            assertNotNull(topics[0].getMetadata().getGrepCodes());
-            assertEquals(Set.of("GREP2"), topics[0].getMetadata().getGrepCodes());
-        }
-
-        verify(metadataApiService, times(1)).getMetadataByKeyAndValue("test", "value");
-        verify(metadataApiService, times(1)).getMetadataByKeyAndValue("test", "value2");
-    }
+    /*
+     * @Test public void can_get_topics_by_key_and_value() throws Exception { builder.node(NodeType.SUBJECT, s ->
+     * s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> { t.publicId("urn:topic:b8001");
+     * t.name("photo synthesis"); t.contentUri(URI.create("urn:test:1")); })); builder.node(NodeType.SUBJECT, s ->
+     * s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> { t.publicId("urn:topic:b8003");
+     * t.name("trigonometry"); t.contentUri(URI.create("urn:test:2")); }));
+     * 
+     * final var metadata1 = new MetadataDto(); metadata1.setPublicId("urn:topic:b8001");
+     * metadata1.setGrepCodes(Set.of("GREP1")); final var metadata2 = new MetadataDto();
+     * metadata2.setPublicId("urn:topic:b8003"); metadata2.setGrepCodes(Set.of("GREP2"));
+     * when(metadataApiService.getMetadataByKeyAndValue("test", "value")).thenReturn(Set.of(metadata1));
+     * when(metadataApiService.getMetadataByKeyAndValue("test", "value2")).thenReturn(Set.of(metadata2));
+     * 
+     * { final var response = testUtils.getResource("/v1/topics?key=test&value=value"); final var topics =
+     * testUtils.getObject(NodeDTO[].class, response); assertEquals(1, topics.length); assertEquals("photo synthesis",
+     * topics[0].getName()); assertNotNull(topics[0].getMetadata());
+     * assertNotNull(topics[0].getMetadata().getGrepCodes()); assertEquals(Set.of("GREP1"),
+     * topics[0].getMetadata().getGrepCodes()); }
+     * 
+     * { final var response = testUtils.getResource("/v1/topics?key=test&value=value2"); final var topics =
+     * testUtils.getObject(NodeDTO[].class, response); assertEquals(1, topics.length); assertEquals("trigonometry",
+     * topics[0].getName()); assertNotNull(topics[0].getMetadata());
+     * assertNotNull(topics[0].getMetadata().getGrepCodes()); assertEquals(Set.of("GREP2"),
+     * topics[0].getMetadata().getGrepCodes()); }
+     * 
+     * verify(metadataApiService, times(1)).getMetadataByKeyAndValue("test", "value"); verify(metadataApiService,
+     * times(1)).getMetadataByKeyAndValue("test", "value2"); }
+     */
 
     @Test
     public void can_get_all_topics() throws Exception {
@@ -161,7 +142,7 @@ public class TopicsTest extends RestTest {
 
         assertAllTrue(topics, t -> t.getMetadata() != null);
         assertAllTrue(topics, t -> t.getMetadata().isVisible());
-        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 1);
+        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 0);
     }
 
     /**
@@ -225,7 +206,7 @@ public class TopicsTest extends RestTest {
 
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() != null);
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().isVisible());
-        assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().getGrepCodes().size() == 1);
+        assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().getGrepCodes().size() == 0);
     }
 
     private void connectionsHaveCorrectTypes(ConnectionIndexDTO[] connections) {

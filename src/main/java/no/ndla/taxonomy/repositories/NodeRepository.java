@@ -20,7 +20,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             + " LEFT JOIN FETCH n.translations WHERE n.context = :context")
     List<Node> findAllByContextIncludingCachedUrlsAndTranslations(boolean context);
 
-    @Query("SELECT DISTINCT n FROM Node n LEFT JOIN FETCH n.cachedPaths" + " LEFT JOIN FETCH n.translations")
+    @Query("SELECT DISTINCT n FROM Node n LEFT JOIN FETCH n.cachedPaths LEFT JOIN FETCH n.translations")
     List<Node> findAllIncludingCachedUrlsAndTranslations();
 
     @Query("SELECT DISTINCT n FROM Node n LEFT JOIN FETCH n.cachedPaths"
@@ -40,7 +40,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
     List<Node> findAllByContentUriIncludingCachedUrlsAndTranslations(URI contentUri);
 
     @Query("SELECT DISTINCT n FROM Node n LEFT JOIN FETCH n.cachedPaths"
-            + " LEFT JOIN FETCH n.translations WHERE n.contentUri = :contentUri" + " AND n.nodeType = :nodeType")
+            + " LEFT JOIN FETCH n.translations WHERE n.contentUri = :contentUri AND n.nodeType = :nodeType")
     List<Node> findAllByContentUriAndNodeTypeIncludingCachedUrlsAndTranslations(URI contentUri, NodeType nodeType);
 
     @Query("SELECT DISTINCT n FROM Node n WHERE n.publicId = :publicId")

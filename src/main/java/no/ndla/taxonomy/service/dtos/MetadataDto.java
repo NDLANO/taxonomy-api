@@ -10,11 +10,15 @@ package no.ndla.taxonomy.service.dtos;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.CustomFieldValue;
+import no.ndla.taxonomy.domain.GrepCode;
+import no.ndla.taxonomy.domain.Metadata;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApiModel("Metadata")
 public class MetadataDto {
@@ -31,6 +35,13 @@ public class MetadataDto {
     private Map<String, String> customFields;
 
     public MetadataDto() {
+    }
+
+    public MetadataDto(Metadata metadata) {
+        this.visible = metadata.isVisible();
+        this.grepCodes = metadata.getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet());
+        this.customFields = metadata.getCustomFieldValues().stream()
+                .collect(Collectors.toMap(cfv -> cfv.getCustomField().getKey(), CustomFieldValue::getValue));
     }
 
     public MetadataDto(MetadataApiEntity metadataApiEntity) {

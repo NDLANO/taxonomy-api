@@ -8,6 +8,8 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.TestSeeder;
+import no.ndla.taxonomy.domain.CustomFieldValue;
+import no.ndla.taxonomy.domain.GrepCode;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
@@ -20,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
+import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,8 +47,7 @@ public class SubjectsTest extends RestTest {
 
         assertNotNull(subject.getMetadata());
         assertTrue(subject.getMetadata().isVisible());
-        assertTrue(subject.getMetadata().getGrepCodes().size() == 1
-                && subject.getMetadata().getGrepCodes().contains("SUBJECT1"));
+        assertTrue(subject.getMetadata().getGrepCodes().size() == 0);
     }
 
     @Test
@@ -65,7 +67,7 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(subjects, s -> s.getMetadata() != null);
 
         assertAllTrue(subjects, s -> s.getMetadata().isVisible());
-        assertAllTrue(subjects, s -> s.getMetadata().getGrepCodes().size() == 1);
+        assertAllTrue(subjects, s -> s.getMetadata().getGrepCodes().size() == 0);
     }
 
     @Test
@@ -141,6 +143,30 @@ public class SubjectsTest extends RestTest {
     }
 
     @Test
+    public void can_update_subject_without_changing_metadata() throws Exception {
+        URI publicId = builder.node(NodeType.SUBJECT,
+                s -> s.isVisible(false).grepCode("KM123").customField("key", "value")
+        ).getPublicId();
+
+        final var command = new SubjectCommand() {
+            {
+                id = publicId;
+                name = "physics";
+                contentUri = URI.create("urn:article:1");
+            }
+        };
+
+        testUtils.updateResource("/v1/subjects/" + publicId, command);
+
+        Node subject = nodeRepository.getByPublicId(publicId);
+        assertEquals(command.name, subject.getName());
+        assertEquals(command.contentUri, subject.getContentUri());
+        assertFalse(subject.getMetadata().isVisible());
+        assertTrue(subject.getMetadata().getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet()).contains("KM123"));
+        assertTrue(subject.getMetadata().getCustomFieldValues().stream().map(CustomFieldValue::getValue).collect(Collectors.toSet()).contains("value"));
+    }
+
+    @Test
     public void duplicate_ids_not_allowed() throws Exception {
         final var command = new SubjectCommand() {
             {
@@ -189,7 +215,7 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(topics, t -> t.getMetadata() != null);
 
         assertAllTrue(topics, t -> t.getMetadata().isVisible());
-        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 1);
+        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 0);
     }
 
     @Test
@@ -219,7 +245,7 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(topics, t -> t.getMetadata() != null);
 
         assertAllTrue(topics, t -> t.getMetadata().isVisible());
-        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 1);
+        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 0);
 
         Node subject = builder.node("subject");
         assertEquals(first(subject.getChildConnections()).getPublicId(), topics[0].connectionId);

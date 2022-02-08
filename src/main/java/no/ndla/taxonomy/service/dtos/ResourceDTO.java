@@ -13,7 +13,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceTranslation;
-import no.ndla.taxonomy.service.MetadataIdField;
 
 import java.net.URI;
 import java.util.HashSet;
@@ -25,7 +24,6 @@ import java.util.stream.Collectors;
 public class ResourceDTO {
     @JsonProperty
     @ApiModelProperty(example = "urn:resource:345")
-    @MetadataIdField
     private URI id;
 
     @JsonProperty
@@ -75,6 +73,8 @@ public class ResourceDTO {
 
         this.paths = resource.getAllPaths();
         this.path = resource.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(null));
+
+        this.metadata = new MetadataDto(resource.getMetadata());
     }
 
     public String getPath() {

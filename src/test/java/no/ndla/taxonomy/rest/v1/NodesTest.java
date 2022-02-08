@@ -8,10 +8,9 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.TestSeeder;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
+import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
 import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +20,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,8 +54,6 @@ public class NodesTest extends RestTest {
 
         assertNotNull(node.getMetadata());
         assertTrue(node.getMetadata().isVisible());
-        assertTrue(
-                node.getMetadata().getGrepCodes().size() == 1 && node.getMetadata().getGrepCodes().contains("TOPIC1"));
     }
 
     @Test
@@ -94,52 +92,32 @@ public class NodesTest extends RestTest {
         }
     }
 
-    @Test
-    public void can_get_nodes_by_key_and_value() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Basic science").child(t -> {
-            t.nodeType(NodeType.TOPIC);
-            t.publicId("urn:topic:b8001");
-            t.name("photo synthesis");
-            t.contentUri(URI.create("urn:test:1"));
-        }));
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> {
-            t.publicId("urn:topic:b8003");
-            t.name("trigonometry");
-            t.contentUri(URI.create("urn:test:2"));
-        }));
-
-        final var metadata1 = new MetadataDto();
-        metadata1.setPublicId("urn:topic:b8001");
-        metadata1.setGrepCodes(Set.of("GREP1"));
-        final var metadata2 = new MetadataDto();
-        metadata2.setPublicId("urn:topic:b8003");
-        metadata2.setGrepCodes(Set.of("GREP2"));
-        when(metadataApiService.getMetadataByKeyAndValue("test", "value")).thenReturn(Set.of(metadata1));
-        when(metadataApiService.getMetadataByKeyAndValue("test", "value2")).thenReturn(Set.of(metadata2));
-
-        {
-            final var response = testUtils.getResource("/v1/nodes?key=test&value=value");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
-            assertEquals(1, nodes.length);
-            assertEquals("photo synthesis", nodes[0].getName());
-            assertNotNull(nodes[0].getMetadata());
-            assertNotNull(nodes[0].getMetadata().getGrepCodes());
-            assertEquals(Set.of("GREP1"), nodes[0].getMetadata().getGrepCodes());
-        }
-
-        {
-            final var response = testUtils.getResource("/v1/nodes?key=test&value=value2");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
-            assertEquals(1, nodes.length);
-            assertEquals("trigonometry", nodes[0].getName());
-            assertNotNull(nodes[0].getMetadata());
-            assertNotNull(nodes[0].getMetadata().getGrepCodes());
-            assertEquals(Set.of("GREP2"), nodes[0].getMetadata().getGrepCodes());
-        }
-
-        verify(metadataApiService, times(1)).getMetadataByKeyAndValue("test", "value");
-        verify(metadataApiService, times(1)).getMetadataByKeyAndValue("test", "value2");
-    }
+    /*
+     * @Test public void can_get_nodes_by_key_and_value() throws Exception { builder.node(NodeType.SUBJECT, s ->
+     * s.isContext(true).name("Basic science").child(t -> { t.nodeType(NodeType.TOPIC); t.publicId("urn:topic:b8001");
+     * t.name("photo synthesis"); t.contentUri(URI.create("urn:test:1")); })); builder.node(NodeType.SUBJECT, s ->
+     * s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> { t.publicId("urn:topic:b8003");
+     * t.name("trigonometry"); t.contentUri(URI.create("urn:test:2")); }));
+     * 
+     * final var metadata1 = new MetadataDto(); metadata1.setPublicId("urn:topic:b8001");
+     * metadata1.setGrepCodes(Set.of("GREP1")); final var metadata2 = new MetadataDto();
+     * metadata2.setPublicId("urn:topic:b8003"); metadata2.setGrepCodes(Set.of("GREP2"));
+     * when(metadataApiService.getMetadataByKeyAndValue("test", "value")).thenReturn(Set.of(metadata1));
+     * when(metadataApiService.getMetadataByKeyAndValue("test", "value2")).thenReturn(Set.of(metadata2));
+     * 
+     * { final var response = testUtils.getResource("/v1/nodes?key=test&value=value"); final var nodes =
+     * testUtils.getObject(NodeDTO[].class, response); assertEquals(1, nodes.length); assertEquals("photo synthesis",
+     * nodes[0].getName()); assertNotNull(nodes[0].getMetadata()); assertNotNull(nodes[0].getMetadata().getGrepCodes());
+     * assertEquals(Set.of("GREP1"), nodes[0].getMetadata().getGrepCodes()); }
+     * 
+     * { final var response = testUtils.getResource("/v1/nodes?key=test&value=value2"); final var nodes =
+     * testUtils.getObject(NodeDTO[].class, response); assertEquals(1, nodes.length); assertEquals("trigonometry",
+     * nodes[0].getName()); assertNotNull(nodes[0].getMetadata()); assertNotNull(nodes[0].getMetadata().getGrepCodes());
+     * assertEquals(Set.of("GREP2"), nodes[0].getMetadata().getGrepCodes()); }
+     * 
+     * verify(metadataApiService, times(1)).getMetadataByKeyAndValue("test", "value"); verify(metadataApiService,
+     * times(1)).getMetadataByKeyAndValue("test", "value2"); }
+     */
 
     @Test
     public void can_get_all_nodes() throws Exception {
@@ -161,7 +139,7 @@ public class NodesTest extends RestTest {
 
         assertAllTrue(nodes, t -> t.getMetadata() != null);
         assertAllTrue(nodes, t -> t.getMetadata().isVisible());
-        assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 1);
+        assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
     }
 
     @Test
@@ -186,7 +164,7 @@ public class NodesTest extends RestTest {
 
         assertAllTrue(nodes, t -> t.getMetadata() != null);
         assertAllTrue(nodes, t -> t.getMetadata().isVisible());
-        assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 1);
+        assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
     }
 
     @Test
@@ -204,8 +182,7 @@ public class NodesTest extends RestTest {
 
         assertNotNull(node.getMetadata());
         assertTrue(node.getMetadata().isVisible());
-        assertTrue(node.getMetadata().getGrepCodes().size() == 1
-                && node.getMetadata().getGrepCodes().contains("SUBJECT2"));
+        assertTrue(node.getMetadata().getGrepCodes().size() == 0);
     }
 
     /**
@@ -267,7 +244,7 @@ public class NodesTest extends RestTest {
 
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() != null);
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().isVisible());
-        assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().getGrepCodes().size() == 1);
+        assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().getGrepCodes().size() == 0);
     }
 
     private void connectionsHaveCorrectTypes(ConnectionIndexDTO[] connections) {
@@ -422,6 +399,32 @@ public class NodesTest extends RestTest {
         assertEquals(NodeType.SUBJECT.getName() + ":" + ident, node.getPublicId().getSchemeSpecificPart());
         assertEquals("trigonometry", node.getName());
         assertEquals("urn:article:1", node.getContentUri().toString());
+    }
+
+    @Test
+    public void can_update_node_without_changing_metadata() throws Exception {
+        Node n = builder.node(s -> s.isVisible(false).grepCode("KM123").customField("key", "value"));
+        String ident = n.getIdent();
+
+        final var command = new NodeCommand() {
+            {
+                nodeType = NodeType.TOPIC;
+                nodeId = ident;
+                name = "physics";
+                contentUri = URI.create("urn:article:1");
+            }
+        };
+
+        testUtils.updateResource("/v1/nodes/" + n.getPublicId(), command);
+
+        Node node = nodeRepository.getByPublicId(command.getPublicId());
+        assertEquals(command.nodeType, node.getNodeType());
+        assertEquals(command.name, node.getName());
+        assertEquals(command.contentUri, node.getContentUri());
+
+        assertFalse(node.getMetadata().isVisible());
+        assertTrue(node.getMetadata().getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet()).contains("KM123"));
+        assertTrue(node.getMetadata().getCustomFieldValues().stream().map(CustomFieldValue::getValue).collect(Collectors.toSet()).contains("value"));
     }
 
     @Test

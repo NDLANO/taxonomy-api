@@ -56,7 +56,6 @@ public class NodeService {
         metadataApiService.deleteMetadataByPublicId(publicId);
     }
 
-    @InjectMetadata
     public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter,
             boolean isRoot) {
         final List<Node> filtered;
@@ -114,7 +113,6 @@ public class NodeService {
         }).map(node -> new NodeDTO(node, languageCode)).collect(Collectors.toList());
     }
 
-    @InjectMetadata
     public List<ConnectionIndexDTO> getAllConnections(URI nodePublicId) {
         final var node = nodeRepository.findFirstByPublicId(nodePublicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
@@ -127,7 +125,6 @@ public class NodeService {
                 .collect(Collectors.toUnmodifiableList());
     }
 
-    @InjectMetadata
     public List<TopicChildDTO> getFilteredChildConnections(URI nodePublicId, String languageCode) {
         final var node = nodeRepository.findFirstByPublicId(nodePublicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));

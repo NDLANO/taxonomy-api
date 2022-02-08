@@ -77,7 +77,6 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}")
     @ApiOperation("Gets a single node")
     @Transactional
-    @InjectMetadata
     public NodeDTO get(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return new NodeDTO(nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
@@ -105,7 +104,6 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}/nodes")
     @ApiOperation(value = "Gets all children for this node")
-    @InjectMetadata
     public List<EntityWithPathChildDTO> getChildren(@ApiParam(value = "id", required = true) @PathVariable("id") URI id,
             @ApiParam("If true, children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {

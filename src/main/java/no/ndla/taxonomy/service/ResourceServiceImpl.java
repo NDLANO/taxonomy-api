@@ -7,11 +7,16 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeResource;
+import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.dtos.ResourceDTO;
+import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -104,7 +109,6 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    @InjectMetadata
     public List<ResourceWithNodeConnectionDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds,
             URI relevancePublicId, String languageCode, boolean recursive) {
         final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
@@ -135,7 +139,6 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    @InjectMetadata
     public ResourceDTO getResourceByPublicId(URI publicId, String languageCode) {
         final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
@@ -144,7 +147,6 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    @InjectMetadata
     public ResourceWithParentsDTO getResourceWithParentNodesByPublicId(URI publicId, String languageCode) {
         final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
@@ -157,7 +159,6 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    @InjectMetadata
     public List<ResourceDTO> getResources(String languageCode, URI contentUriFilter) {
         final List<ResourceDTO> listToReturn = new ArrayList<>();
 

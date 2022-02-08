@@ -55,7 +55,6 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
     @GetMapping
     @ApiOperation("Gets all subjects")
-    @InjectMetadata
     public List<EntityWithPathDTO> index(
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
@@ -68,7 +67,6 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single subject", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
-    @InjectMetadata
     public EntityWithPathDTO get(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
@@ -96,7 +94,6 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}/topics")
     @ApiOperation(value = "Gets all children associated with a subject", notes = "This resource is read-only. To update the relationship between nodes, use the resource /subject-topics.")
-    @InjectMetadata
     public List<EntityWithPathChildDTO> getChildren(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @ApiParam("If true, subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,

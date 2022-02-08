@@ -69,7 +69,6 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
     @Transactional
-    @InjectMetadata
     public EntityWithPathDTO get(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return new NodeDTO(nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
@@ -108,7 +107,6 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @ApiOperation(value = "Gets all filters associated with this topic")
     @Deprecated(forRemoval = true)
     @Transactional
-    @InjectMetadata
     public List<Object> getFilters(@ApiParam(value = "id", required = true) @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return List.of();

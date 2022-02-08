@@ -11,8 +11,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.service.MetadataIdField;
+import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.NodeTranslation;
+import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.service.TreeSorter;
 
 import java.net.URI;
@@ -25,7 +26,6 @@ import java.util.Set;
 public class NodeConnectionIndexDTO implements TreeSorter.Sortable {
     @JsonProperty
     @ApiModelProperty(value = "Node id", example = "urn:topic:234")
-    @MetadataIdField
     private URI id;
 
     @JsonProperty

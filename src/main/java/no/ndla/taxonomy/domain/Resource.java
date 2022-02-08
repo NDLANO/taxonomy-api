@@ -33,6 +33,10 @@ public class Resource extends EntityWithPath {
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     protected Set<CachedPath> cachedPaths = new HashSet<>();
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "metadata_id")
+    private Metadata metadata = new Metadata();
+
     @Override
     public Set<CachedPath> getCachedPaths() {
         return cachedPaths;
@@ -185,6 +189,15 @@ public class Resource extends EntityWithPath {
         if (nodeResource.getResource().orElse(null) != this) {
             throw new IllegalArgumentException("NodeResource must have Resource relation set before adding");
         }
+    }
+
+    @Override
+    public Metadata getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Metadata metadata) {
+        this.metadata = metadata;
     }
 
     @PreRemove

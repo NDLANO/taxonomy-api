@@ -9,13 +9,11 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Translation;
-import no.ndla.taxonomy.service.MetadataIdField;
 import no.ndla.taxonomy.service.TreeSorter;
 
 import java.net.URI;
@@ -27,7 +25,6 @@ import java.util.Set;
  *
  */
 public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
-    @MetadataIdField
     public URI id;
 
     public String name;
@@ -84,6 +81,8 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
         this.connectionId = nodeConnection.getPublicId();
 
         this.isPrimary = nodeConnection.isPrimary().orElse(false);
+
+        this.metadata = new MetadataDto(node.getMetadata());
     }
 
     @Override
