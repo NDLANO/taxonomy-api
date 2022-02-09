@@ -92,6 +92,10 @@ public class Relevances extends CrudController<Relevance> {
         @ApiModelProperty(value = "All translations of this relevance")
         private Set<TranslationDTO> translations;
 
+        @JsonProperty
+        @ApiModelProperty(value = "List of language codes supported by translations")
+        private Set<String> supportedLanguages;
+
         public RelevanceIndexDocument() {
         }
 
@@ -100,6 +104,7 @@ public class Relevances extends CrudController<Relevance> {
 
             var translations = relevance.getTranslations();
             this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
+            this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
 
             this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), language)).findFirst()
                     .map(Translation::getName).orElse(relevance.getName());

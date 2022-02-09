@@ -37,6 +37,10 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
     @ApiModelProperty(value = "All translations of this resource type")
     private Set<TranslationDTO> translations;
 
+    @JsonProperty
+    @ApiModelProperty(value = "List of language codes supported by translations")
+    private Set<String> supportedLanguages;
+
     public ResourceTypeDTO() {
     }
 
@@ -45,6 +49,7 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
 
         var translations = resourceType.getTranslations();
         this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
+        this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
 
         resourceType.getParent().map(ResourceType::getPublicId).ifPresent(publicId -> this.parentId = publicId);
 

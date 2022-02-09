@@ -49,6 +49,10 @@ public abstract class EntityWithPathDTO {
     @ApiModelProperty(value = "All translations of this node")
     private Set<TranslationDTO> translations;
 
+    @JsonProperty
+    @ApiModelProperty(value = "List of language codes supported by translations")
+    private Set<String> supportedLanguages;
+
     public EntityWithPathDTO() {
     }
 
@@ -61,6 +65,7 @@ public abstract class EntityWithPathDTO {
 
         var translations = entity.getTranslations();
         this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
+        this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
 
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
                 .map(Translation::getName).orElse(entity.getName());

@@ -63,6 +63,10 @@ public class ResourceDTO {
     @ApiModelProperty(value = "All translations of this resource")
     private Set<TranslationDTO> translations;
 
+    @JsonProperty
+    @ApiModelProperty(value = "List of language codes supported by translations")
+    private Set<String> supportedLanguages;
+
     public ResourceDTO() {
     }
 
@@ -76,6 +80,7 @@ public class ResourceDTO {
         var translations = resource.getTranslations();
 
         this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
+        this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
 
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
                 .map(ResourceTranslation::getName).orElse(resource.getName());

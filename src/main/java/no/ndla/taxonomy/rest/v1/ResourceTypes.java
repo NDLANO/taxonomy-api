@@ -124,6 +124,10 @@ public class ResourceTypes extends CrudController<ResourceType> {
         @ApiModelProperty(value = "All translations of this resource type")
         private Set<TranslationDTO> translations;
 
+        @JsonProperty
+        @ApiModelProperty(value = "List of language codes supported by translations")
+        private Set<String> supportedLanguages;
+
         public ResourceTypeIndexDocument() {
         }
 
@@ -132,6 +136,8 @@ public class ResourceTypes extends CrudController<ResourceType> {
 
             var translations = resourceType.getTranslations();
             this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
+            this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
+
             this.name = resourceType.getTranslation(language).map(ResourceTypeTranslation::getName)
                     .orElse(resourceType.getName());
 
