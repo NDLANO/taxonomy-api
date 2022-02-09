@@ -10,8 +10,9 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
-import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.TopicChildDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +20,10 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import javax.persistence.EntityManager;
 import java.net.URI;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class NodesTest extends RestTest {
@@ -440,8 +439,6 @@ public class NodesTest extends RestTest {
         testUtils.deleteResource("/v1/nodes/" + parentId);
 
         assertNull(nodeRepository.findByPublicId(parentId));
-
-        verify(metadataApiService).deleteMetadataByPublicId(parentId);
     }
 
     @Test
@@ -455,8 +452,6 @@ public class NodesTest extends RestTest {
         testUtils.deleteResource("/v1/nodes/" + topicId);
 
         assertNull(nodeRepository.findByPublicId(topicId));
-
-        verify(metadataApiService).deleteMetadataByPublicId(topicId);
     }
 
     @Test
@@ -472,8 +467,6 @@ public class NodesTest extends RestTest {
 
         assertNull(nodeRepository.findByPublicId(parentId));
         assertNotNull(nodeRepository.findByPublicId(childTopic.getPublicId()));
-
-        verify(metadataApiService).deleteMetadataByPublicId(parentId);
     }
 
     @Test
@@ -487,8 +480,6 @@ public class NodesTest extends RestTest {
 
         assertNull(nodeRepository.findByPublicId(parentId));
         assertNotNull(resourceRepository.findByPublicId(resource.getPublicId()));
-
-        verify(metadataApiService).deleteMetadataByPublicId(parentId);
     }
 
     private static class ConnectionTypeCounter {

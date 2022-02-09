@@ -31,19 +31,16 @@ import java.util.stream.Collectors;
 public class ResourceServiceImpl implements ResourceService {
     private final ResourceRepository resourceRepository;
     private final EntityConnectionService connectionService;
-    private final MetadataApiService metadataApiService;
     private final DomainEntityHelperService domainEntityHelperService;
     private final NodeResourceRepository nodeResourceRepository;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
 
     public ResourceServiceImpl(ResourceRepository resourceRepository, EntityConnectionService connectionService,
-            MetadataApiService metadataApiService, DomainEntityHelperService domainEntityHelperService,
-            NodeResourceRepository nodeResourceRepository, RecursiveNodeTreeService recursiveNodeTreeService,
-            TreeSorter topicTreeSorter) {
+            DomainEntityHelperService domainEntityHelperService, NodeResourceRepository nodeResourceRepository,
+            RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter topicTreeSorter) {
         this.resourceRepository = resourceRepository;
         this.connectionService = connectionService;
-        this.metadataApiService = metadataApiService;
         this.domainEntityHelperService = domainEntityHelperService;
         this.nodeResourceRepository = nodeResourceRepository;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
@@ -62,8 +59,6 @@ public class ResourceServiceImpl implements ResourceService {
 
         resourceRepository.delete(resourceToDelete);
         resourceRepository.flush();
-
-        metadataApiService.deleteMetadataByPublicId(id);
     }
 
     private List<ResourceWithNodeConnectionDTO> filterNodeResourcesByIdsAndReturn(Set<Integer> nodeIds,
@@ -186,7 +181,6 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    @MetadataQuery
     public List<ResourceDTO> getResources(String languageCode, URI contentUriFilter,
             MetadataKeyValueQuery metadataKeyValueQuery) {
         Set<String> publicIds = metadataKeyValueQuery.getDtos().stream().map(MetadataDto::getPublicId)

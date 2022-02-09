@@ -28,22 +28,20 @@ public class ResourceServiceImplTest {
 
     private EntityConnectionService connectionService;
     private ResourceServiceImpl resourceService;
-    private MetadataApiService metadataApiService;
 
     @BeforeEach
     public void setUp(@Autowired ResourceRepository resourceRepository, @Autowired Builder builder) {
         this.builder = builder;
 
         connectionService = mock(EntityConnectionService.class);
-        metadataApiService = mock(MetadataApiService.class);
 
         final var domainEntityHelperService = mock(DomainEntityHelperService.class);
         final var recursiveNodeTreeService = mock(RecursiveNodeTreeService.class);
         final var nodeResourceRepository = mock(NodeResourceRepository.class);
         final var treeSorter = mock(TreeSorter.class);
 
-        resourceService = new ResourceServiceImpl(resourceRepository, connectionService, metadataApiService,
-                domainEntityHelperService, nodeResourceRepository, recursiveNodeTreeService, treeSorter);
+        resourceService = new ResourceServiceImpl(resourceRepository, connectionService, domainEntityHelperService,
+                nodeResourceRepository, recursiveNodeTreeService, treeSorter);
     }
 
     @Test
@@ -54,6 +52,5 @@ public class ResourceServiceImplTest {
         resourceService.delete(createdResource.getPublicId());
 
         verify(connectionService).disconnectAllChildren(createdResource);
-        verify(metadataApiService).deleteMetadataByPublicId(createdResource.getPublicId());
     }
 }

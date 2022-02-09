@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ResourcesTest extends RestTest {
@@ -242,8 +241,6 @@ public class ResourcesTest extends RestTest {
         URI id = builder.resource("resource").getPublicId();
         testUtils.deleteResource("/v1/resources/" + id);
         assertNull(resourceRepository.findByPublicId(id));
-
-        verify(metadataApiService).deleteMetadataByPublicId(id);
     }
 
     @Test
@@ -257,8 +254,6 @@ public class ResourcesTest extends RestTest {
 
         testUtils.deleteResource("/v1/resources/" + publicId);
         assertNull(resourceRepository.findByPublicId(publicId));
-
-        verify(metadataApiService).deleteMetadataByPublicId(publicId);
     }
 
     @Test

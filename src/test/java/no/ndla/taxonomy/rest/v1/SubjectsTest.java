@@ -13,7 +13,6 @@ import no.ndla.taxonomy.domain.GrepCode;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
-import no.ndla.taxonomy.service.dtos.EntityWithPathDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SubjectChildDTO;
@@ -26,7 +25,6 @@ import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class SubjectsTest extends RestTest {
@@ -189,8 +187,6 @@ public class SubjectsTest extends RestTest {
 
         testUtils.deleteResource("/v1/subjects/" + id);
         assertNull(nodeRepository.findByPublicId(id));
-
-        verify(metadataApiService).deleteMetadataByPublicId(id);
     }
 
     @Test

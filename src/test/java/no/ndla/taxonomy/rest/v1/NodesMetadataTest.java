@@ -26,8 +26,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
-public class NodesMetadataTest  extends RestTest {
+public class NodesMetadataTest extends RestTest {
 
     @BeforeEach
     void clearAllRepos() {
@@ -65,10 +64,13 @@ public class NodesMetadataTest  extends RestTest {
         Node node = nodeRepository.getByPublicId(publicId);
         assertNotNull(node.getMetadata());
         assertFalse(node.getMetadata().isVisible());
-        Set<String> codes = node.getMetadata().getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet());
+        Set<String> codes = node.getMetadata().getGrepCodes().stream().map(GrepCode::getCode)
+                .collect(Collectors.toSet());
         assertTrue(codes.contains("KM123"));
         Set<CustomFieldValue> customFieldValues = node.getMetadata().getCustomFieldValues();
-        assertTrue(customFieldValues.stream().map(CustomFieldValue::getCustomField).map(CustomField::getKey).collect(Collectors.toSet()).contains("key"));
-        assertTrue(customFieldValues.stream().map(CustomFieldValue::getValue).collect(Collectors.toSet()).contains("value"));
+        assertTrue(customFieldValues.stream().map(CustomFieldValue::getCustomField).map(CustomField::getKey)
+                .collect(Collectors.toSet()).contains("key"));
+        assertTrue(customFieldValues.stream().map(CustomFieldValue::getValue).collect(Collectors.toSet())
+                .contains("value"));
     }
 }

@@ -35,9 +35,8 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
 
     public Resources(ResourceRepository resourceRepository,
             ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceService resourceService,
-            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService,
-            MetadataUpdateService metadataUpdateService) {
-        super(resourceRepository, cachedUrlUpdaterService, metadataService, metadataUpdateService);
+            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
+        super(resourceRepository, cachedUrlUpdaterService, metadataService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.repository = resourceRepository;

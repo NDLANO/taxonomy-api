@@ -30,16 +30,13 @@ public class NodeService {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final EntityConnectionService connectionService;
-    private final MetadataApiService metadataApiService;
     private final TreeSorter topicTreeSorter;
 
     public NodeService(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            EntityConnectionService connectionService, MetadataApiService metadataApiService,
-            TreeSorter topicTreeSorter) {
+            EntityConnectionService connectionService, TreeSorter topicTreeSorter) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
-        this.metadataApiService = metadataApiService;
         this.topicTreeSorter = topicTreeSorter;
     }
 
@@ -52,8 +49,6 @@ public class NodeService {
 
         nodeRepository.delete(nodeToDelete);
         nodeRepository.flush();
-
-        metadataApiService.deleteMetadataByPublicId(publicId);
     }
 
     public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter,
@@ -79,7 +74,6 @@ public class NodeService {
                 .map(node -> new NodeDTO(node, languageCode)).collect(Collectors.toList());
     }
 
-    @MetadataQuery
     public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter,
             MetadataKeyValueQuery metadataKeyValueQuery) {
         Set<String> publicIds = metadataKeyValueQuery.getDtos().stream().map(MetadataDto::getPublicId)

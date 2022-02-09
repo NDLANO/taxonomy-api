@@ -7,7 +7,10 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Builder;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,9 +40,6 @@ public class NodeServiceTest {
     private Builder builder;
 
     @MockBean
-    private MetadataApiService metadataApiService;
-
-    @MockBean
     private EntityConnectionService entityConnectionService;
 
     @Autowired
@@ -56,8 +56,6 @@ public class NodeServiceTest {
 
         assertFalse(nodeRepository.findFirstByPublicId(topicId).isPresent());
         verify(entityConnectionService).disconnectAllChildren(createdTopic);
-
-        verify(metadataApiService).deleteMetadataByPublicId(topicId);
     }
 
     @Test

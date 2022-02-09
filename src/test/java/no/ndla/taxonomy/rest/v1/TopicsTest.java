@@ -13,7 +13,6 @@ import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
-import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,11 +21,9 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import javax.persistence.EntityManager;
 import java.net.URI;
-import java.util.Set;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TopicsTest extends RestTest {
@@ -306,8 +303,6 @@ public class TopicsTest extends RestTest {
         testUtils.deleteResource("/v1/topics/" + parentId);
 
         assertNull(nodeRepository.findByPublicId(parentId));
-
-        verify(metadataApiService).deleteMetadataByPublicId(parentId);
     }
 
     @Test
@@ -321,8 +316,6 @@ public class TopicsTest extends RestTest {
         testUtils.deleteResource("/v1/topics/" + topicId);
 
         assertNull(nodeRepository.findByPublicId(topicId));
-
-        verify(metadataApiService).deleteMetadataByPublicId(topicId);
     }
 
     @Test
@@ -338,8 +331,6 @@ public class TopicsTest extends RestTest {
 
         assertNull(nodeRepository.findByPublicId(parentId));
         assertNotNull(nodeRepository.findByPublicId(childTopic.getPublicId()));
-
-        verify(metadataApiService).deleteMetadataByPublicId(parentId);
     }
 
     @Test
@@ -353,8 +344,6 @@ public class TopicsTest extends RestTest {
 
         assertNull(nodeRepository.findByPublicId(parentId));
         assertNotNull(resourceRepository.findByPublicId(resource.getPublicId()));
-
-        verify(metadataApiService).deleteMetadataByPublicId(parentId);
     }
 
     private static class ConnectionTypeCounter {
