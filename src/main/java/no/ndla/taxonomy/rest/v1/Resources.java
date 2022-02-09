@@ -14,7 +14,9 @@ import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
 import no.ndla.taxonomy.service.*;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.dtos.ResourceDTO;
+import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,9 +35,9 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
 
     public Resources(ResourceRepository resourceRepository,
             ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceService resourceService,
-            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataApiService metadataApiService,
+            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService,
             MetadataUpdateService metadataUpdateService) {
-        super(resourceRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
+        super(resourceRepository, cachedUrlUpdaterService, metadataService, metadataUpdateService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.repository = resourceRepository;

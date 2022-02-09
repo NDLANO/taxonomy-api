@@ -23,16 +23,16 @@ import java.util.stream.Collectors;
 @ApiModel("Metadata")
 public class MetadataDto {
     @JsonIgnore
-    private String publicId;
+    public String publicId;
 
     @ApiModelProperty
-    private Set<String> grepCodes;
+    public Set<String> grepCodes;
 
     @ApiModelProperty
-    private Boolean visible;
+    public Boolean visible;
 
     @ApiModelProperty
-    private Map<String, String> customFields;
+    public Map<String, String> customFields;
 
     public MetadataDto() {
     }

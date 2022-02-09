@@ -41,9 +41,9 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
     public Subjects(TreeSorter treeSorter, CachedUrlUpdaterService cachedUrlUpdaterService,
             RecursiveNodeTreeService recursiveNodeTreeService, ResourceService resourceService,
-            MetadataApiService metadataApiService, MetadataUpdateService metadataUpdateService, NodeService nodeService,
+            MetadataService metadataService, MetadataUpdateService metadataUpdateService, NodeService nodeService,
             NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository) {
-        super(nodeRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
+        super(nodeRepository, cachedUrlUpdaterService, metadataService, metadataUpdateService);
 
         this.topicTreeSorter = treeSorter;
         this.recursiveNodeTreeService = recursiveNodeTreeService;

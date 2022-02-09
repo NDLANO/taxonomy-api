@@ -193,7 +193,8 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_update_resource_without_changing_metadata() throws Exception {
-        URI publicId = builder.resource(r -> r.isVisible(false).grepCode("KM123").customField("key", "value")).getPublicId();
+        URI publicId = builder.resource(r -> r.isVisible(false).grepCode("KM123").customField("key", "value"))
+                .getPublicId();
 
         final var command = new ResourceCommand() {
             {
@@ -210,8 +211,10 @@ public class ResourcesTest extends RestTest {
         assertEquals(command.contentUri, resource.getContentUri());
 
         assertFalse(resource.getMetadata().isVisible());
-        assertTrue(resource.getMetadata().getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet()).contains("KM123"));
-        assertTrue(resource.getMetadata().getCustomFieldValues().stream().map(CustomFieldValue::getValue).collect(Collectors.toSet()).contains("value"));
+        assertTrue(resource.getMetadata().getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet())
+                .contains("KM123"));
+        assertTrue(resource.getMetadata().getCustomFieldValues().stream().map(CustomFieldValue::getValue)
+                .collect(Collectors.toSet()).contains("value"));
 
     }
 

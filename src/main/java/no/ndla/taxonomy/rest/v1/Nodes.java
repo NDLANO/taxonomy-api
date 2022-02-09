@@ -42,9 +42,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     public Nodes(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
             NodeService nodeService, CachedUrlUpdaterService cachedUrlUpdaterService, ResourceService resourceService,
-            RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter,
-            MetadataApiService metadataApiService, MetadataUpdateService metadataUpdateService) {
-        super(nodeRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
+            RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter, MetadataService metadataService,
+            MetadataUpdateService metadataUpdateService) {
+        super(nodeRepository, cachedUrlUpdaterService, metadataService, metadataUpdateService);
 
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;

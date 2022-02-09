@@ -38,7 +38,7 @@ public class Metadata {
     // is deleted - makes sense - right? otherwise service level code would have to always delete values before
     // deleting this.
     @OneToMany(cascade = { CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE,
-            CascadeType.REFRESH }, orphanRemoval = true, mappedBy = "metadata")
+            CascadeType.REFRESH }, orphanRemoval = true, mappedBy = "metadata", fetch = FetchType.EAGER)
     private Set<CustomFieldValue> customFieldValues = new HashSet<>();
 
     @Column
@@ -67,7 +67,7 @@ public class Metadata {
     public void addCustomFieldValue(CustomFieldValue customFieldValue) {
         this.customFieldValues.add(customFieldValue);
 
-        if(customFieldValue.getMetadata() == null) {
+        if (customFieldValue.getMetadata() == null) {
             customFieldValue.setMetadata(this);
         }
     }

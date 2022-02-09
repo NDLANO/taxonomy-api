@@ -144,9 +144,9 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_update_subject_without_changing_metadata() throws Exception {
-        URI publicId = builder.node(NodeType.SUBJECT,
-                s -> s.isVisible(false).grepCode("KM123").customField("key", "value")
-        ).getPublicId();
+        URI publicId = builder
+                .node(NodeType.SUBJECT, s -> s.isVisible(false).grepCode("KM123").customField("key", "value"))
+                .getPublicId();
 
         final var command = new SubjectCommand() {
             {
@@ -162,8 +162,10 @@ public class SubjectsTest extends RestTest {
         assertEquals(command.name, subject.getName());
         assertEquals(command.contentUri, subject.getContentUri());
         assertFalse(subject.getMetadata().isVisible());
-        assertTrue(subject.getMetadata().getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet()).contains("KM123"));
-        assertTrue(subject.getMetadata().getCustomFieldValues().stream().map(CustomFieldValue::getValue).collect(Collectors.toSet()).contains("value"));
+        assertTrue(subject.getMetadata().getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet())
+                .contains("KM123"));
+        assertTrue(subject.getMetadata().getCustomFieldValues().stream().map(CustomFieldValue::getValue)
+                .collect(Collectors.toSet()).contains("value"));
     }
 
     @Test

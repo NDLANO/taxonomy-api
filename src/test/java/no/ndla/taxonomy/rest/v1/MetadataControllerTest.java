@@ -9,12 +9,10 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
-import no.ndla.taxonomy.service.MetadataApiService;
-import no.ndla.taxonomy.service.MetadataUpdateService;
-import no.ndla.taxonomy.service.ResourceService;
+import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.RecursiveMergeResultDto;
+import no.ndla.taxonomy.service.exceptions.InvalidDataException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +26,7 @@ import static org.mockito.Mockito.*;
 
 class MetadataControllerTest {
 
+    private MetadataService metadataService;
     private MetadataApiService metadataApiService;
     private MetadataUpdateService metadataUpdateService;
     private ResourceRepository resourceRepository;
@@ -38,6 +37,7 @@ class MetadataControllerTest {
 
     @BeforeEach
     public void setUp() {
+        metadataService = mock(MetadataService.class);
         metadataApiService = mock(MetadataApiService.class);
         metadataUpdateService = mock(MetadataUpdateService.class);
         resourceRepository = mock(ResourceRepository.class);
@@ -48,12 +48,12 @@ class MetadataControllerTest {
         when(metadataUpdateService.getMetadataApiService()).thenReturn(metadataApiService);
 
         controller = new Resources(resourceRepository, resourceResourceTypeRepository, resourceService,
-                cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
+                cachedUrlUpdaterService, metadataService, metadataUpdateService);
     }
 
     @Test
     public void getMetadata() {
-        when(metadataApiService.getMetadataByPublicId(URI.create("urn:test:1"))).thenAnswer(invocationOnMock -> {
+        when(metadataService.getMetadataByPublicId(URI.create("urn:test:1"))).thenAnswer(invocationOnMock -> {
             final var toReturn = mock(MetadataDto.class);
             when(toReturn.getGrepCodes()).thenReturn(Set.of("A", "B"));
 
@@ -66,8 +66,8 @@ class MetadataControllerTest {
     }
 
     @Test
-    public void putMetadata() {
-        when(metadataApiService.updateMetadataByPublicId(eq(URI.create(("urn:test:1"))), any(MetadataDto.class)))
+    public void putMetadata() throws InvalidDataException {
+        when(metadataService.updateMetadataByPublicId(eq(URI.create(("urn:test:1"))), any(MetadataDto.class)))
                 .thenAnswer(invocationOnMock -> {
                     final var toReturn = mock(MetadataDto.class);
                     when(toReturn.getGrepCodes()).thenReturn(Set.of("A", "B"));
@@ -83,7 +83,7 @@ class MetadataControllerTest {
         assertEquals(2, result.getGrepCodes().size());
         assertTrue(result.getGrepCodes().containsAll(Set.of("A", "B")));
 
-        verify(metadataApiService).updateMetadataByPublicId(eq(URI.create("urn:test:1")), any(MetadataDto.class));
+        verify(metadataService).updateMetadataByPublicId(eq(URI.create("urn:test:1")), any(MetadataDto.class));
     }
 
     @Test
