@@ -13,6 +13,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeTranslation;
+import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import org.springframework.http.HttpStatus;
@@ -44,12 +45,7 @@ public class NodeTranslations {
     public List<TranslationDTO> index(@PathVariable("id") URI id) {
         Node node = nodeRepository.getByPublicId(id);
         List<TranslationDTO> result = new ArrayList<>();
-        node.getTranslations().forEach(t -> result.add(new TranslationDTO() {
-            {
-                name = t.getName();
-                language = t.getLanguageCode();
-            }
-        }));
+        node.getTranslations().forEach(t -> result.add(new TranslationDTO(t)));
         return result;
     }
 
@@ -60,12 +56,7 @@ public class NodeTranslations {
         Node node = nodeRepository.getByPublicId(id);
         NodeTranslation translation = node.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for node", id));
-        return new TranslationDTO() {
-            {
-                name = translation.getName();
-                language = translation.getLanguageCode();
-            }
-        };
+        return new TranslationDTO(translation);
     }
 
     @PutMapping("/{language}")
@@ -95,6 +86,14 @@ public class NodeTranslations {
     }
 
     public static class TranslationDTO {
+        public TranslationDTO() {
+        }
+
+        public TranslationDTO(Translation translation) {
+            name = translation.getName();
+            language = translation.getLanguageCode();
+        }
+
         @JsonProperty
         @ApiModelProperty(value = "The translated name of the node", example = "Trigonometry")
         public String name;

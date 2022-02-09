@@ -13,10 +13,12 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceTranslation;
+import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 import no.ndla.taxonomy.service.MetadataIdField;
 
 import java.net.URI;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -57,6 +59,14 @@ public class ResourceDTO {
     @ApiModelProperty(value = "All paths that lead to this resource", example = "[\"/subject:1/topic:1/resource:1\", \"/subject:2/topic:3/resource:1\"]")
     private Set<String> paths;
 
+    @JsonProperty
+    @ApiModelProperty(value = "All translations of this resource")
+    private Set<TranslationDTO> translations;
+
+    @JsonProperty
+    @ApiModelProperty(value = "List of language codes supported by translations")
+    private Set<String> supportedLanguages;
+
     public ResourceDTO() {
     }
 
@@ -67,7 +77,13 @@ public class ResourceDTO {
     public ResourceDTO(Resource resource, String languageCode) {
         this.id = resource.getPublicId();
         this.contentUri = resource.getContentUri();
-        this.name = resource.getTranslation(languageCode).map(ResourceTranslation::getName).orElse(resource.getName());
+        var translations = resource.getTranslations();
+
+        this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
+        this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
+
+        this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
+                .map(ResourceTranslation::getName).orElse(resource.getName());
 
         this.resourceTypes = resource.getResourceResourceTypes().stream()
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
@@ -111,5 +127,9 @@ public class ResourceDTO {
 
     public Set<String> getPaths() {
         return paths;
+    }
+
+    public Set<TranslationDTO> getTranslations() {
+        return translations;
     }
 }
