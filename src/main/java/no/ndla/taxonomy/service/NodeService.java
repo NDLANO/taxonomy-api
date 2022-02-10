@@ -7,22 +7,25 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.service.dtos.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.criteria.Join;
 import java.net.URI;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.springframework.data.jpa.domain.Specification.where;
 
 @Transactional(readOnly = true)
 @Service
@@ -51,27 +54,68 @@ public class NodeService {
         nodeRepository.flush();
     }
 
-    public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter,
-            boolean isRoot) {
+    public Specification<Node> base() {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.isNotNull(root.get("id"));
+    }
+
+    public Specification<Node> nodeIsRoot() {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("root"), true);
+    }
+
+    public Specification<Node> nodeIsVisible() {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("metadata").get("visible"), true);
+    }
+
+    public Specification<Node> nodeHasNodeType(NodeType nodeType) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("nodeType"), nodeType);
+    }
+
+    public Specification<Node> nodeHasContentUri(URI contentUri) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("contentUri"), contentUri);
+    }
+
+    public Specification<Node> nodeHasCustomKey(String key) {
+        return (root, query, criteriaBuilder) -> {
+            Join<Node, Metadata> nodeMetadataJoin = root.join("metadata");
+            Join<Metadata, CustomFieldValue> join = nodeMetadataJoin.join("customFieldValues");
+            return criteriaBuilder.equal(join.get("customField").get("key"), key);
+        };
+    }
+
+    public Specification<Node> nodeHasCustomValue(String value) {
+        return (root, query, criteriaBuilder) -> {
+            Join<Node, Metadata> nodeMetadataJoin = root.join("metadata");
+            Join<Metadata, CustomFieldValue> join = nodeMetadataJoin.join("customFieldValues");
+            return criteriaBuilder.equal(join.get("value"), value);
+        };
+    }
+
+    public List<EntityWithPathDTO> getNodes(Optional<String> language, Optional<NodeType> nodeType,
+            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+
         final List<Node> filtered;
-
-        if (isRoot) {
-            filtered = nodeRepository.findAllRootsIncludingCachedUrlsAndTranslations();
-        } else {
-            if (contentUriFilter != null && nodeTypeFilter != null) {
-                filtered = nodeRepository.findAllByContentUriAndNodeTypeIncludingCachedUrlsAndTranslations(
-                        contentUriFilter, nodeTypeFilter);
-            } else if (contentUriFilter != null) {
-                filtered = nodeRepository.findAllByContentUriIncludingCachedUrlsAndTranslations(contentUriFilter);
-            } else if (nodeTypeFilter != null) {
-                filtered = nodeRepository.findAllByNodeTypeIncludingCachedUrlsAndTranslations(nodeTypeFilter);
-            } else {
-                filtered = nodeRepository.findAllIncludingCachedUrlsAndTranslations();
-            }
+        Specification<Node> specification = where(base());
+        if (isRoot.isPresent()) {
+            specification = specification.and(nodeIsRoot());
         }
+        if (contentUri.isPresent()) {
+            specification = specification.and(nodeHasContentUri(contentUri.get()));
+        }
+        if (nodeType.isPresent()) {
+            specification = specification.and(nodeHasNodeType(nodeType.get()));
+        }
+        if (metadataFilters.getVisible().isPresent()) {
+            specification = specification.and(nodeIsVisible());
+        }
+        if (metadataFilters.getKey().isPresent()) {
+            specification = specification.and(nodeHasCustomKey(metadataFilters.getKey().get()));
+        }
+        if (metadataFilters.getValue().isPresent()) {
+            specification = specification.and(nodeHasCustomValue(metadataFilters.getValue().get()));
+        }
+        filtered = nodeRepository.findAll(specification);
 
-        return filtered.stream().filter(node -> !isRoot || node.getParentNode().isEmpty())
-                .map(node -> new NodeDTO(node, languageCode)).collect(Collectors.toList());
+        return filtered.stream().map(n -> new NodeDTO(n, language.get())).collect(Collectors.toList());
     }
 
     public List<EntityWithPathDTO> getNodes(String languageCode, NodeType nodeTypeFilter, URI contentUriFilter,

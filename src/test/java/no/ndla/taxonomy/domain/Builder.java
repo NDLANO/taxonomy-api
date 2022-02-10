@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -462,8 +463,14 @@ public class Builder {
 
         public NodeBuilder customField(String key, String value) {
             CustomField customField = new CustomField();
-            customField.setKey(key);
-            entityManager.persist(customField);
+            List resultList = entityManager.createQuery("select cf from CustomField cf where cf.key = ?1")
+                    .setParameter(1, key).getResultList();
+            if (resultList.isEmpty()) {
+                customField.setKey(key);
+                entityManager.persist(customField);
+            } else {
+                customField = (CustomField) resultList.get(0);
+            }
             CustomFieldValue customFieldValue = new CustomFieldValue();
             customFieldValue.setCustomField(customField);
             customFieldValue.setValue(value);

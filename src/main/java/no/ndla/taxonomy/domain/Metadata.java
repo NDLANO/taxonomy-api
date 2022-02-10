@@ -67,17 +67,17 @@ public class Metadata {
     public void addCustomFieldValue(CustomFieldValue customFieldValue) {
         this.customFieldValues.add(customFieldValue);
 
-        if (customFieldValue.getMetadata() == null) {
-            customFieldValue.setMetadata(this);
-        }
+        // if (customFieldValue.getMetadata() == null) {
+        // customFieldValue.setMetadata(this);
+        // }
     }
 
     public void removeCustomFieldValue(CustomFieldValue customFieldValue) {
         this.customFieldValues.remove(customFieldValue);
 
-        if (customFieldValue.getMetadata() == this) {
-            customFieldValue.setMetadata(null);
-        }
+        // if (customFieldValue.getMetadata() == this) {
+        // customFieldValue.setMetadata(null);
+        // }
     }
 
     public Set<CustomFieldValue> getCustomFieldValues() {

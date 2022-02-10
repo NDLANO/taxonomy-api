@@ -56,13 +56,13 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @GetMapping
     @ApiOperation("Gets all subjects")
     public List<EntityWithPathDTO> index(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
-            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) String value) {
-        if (key != null) {
-            return nodeService.getNodes(language, NodeType.SUBJECT, null, new MetadataKeyValueQuery(key, value));
-        }
-        return nodeService.getNodes(language, NodeType.SUBJECT, null, false);
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
+            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
+            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible") Optional<Boolean> isVisible) {
+        MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
+        return nodeService.getNodes(language, Optional.of(NodeType.SUBJECT), Optional.empty(), Optional.empty(),
+                metadataFilters);
     }
 
     @GetMapping("/{id}")

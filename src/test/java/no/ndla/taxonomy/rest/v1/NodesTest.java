@@ -20,6 +20,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import javax.persistence.EntityManager;
 import java.net.URI;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
@@ -91,32 +92,50 @@ public class NodesTest extends RestTest {
         }
     }
 
-    /*
-     * @Test public void can_get_nodes_by_key_and_value() throws Exception { builder.node(NodeType.SUBJECT, s ->
-     * s.isContext(true).name("Basic science").child(t -> { t.nodeType(NodeType.TOPIC); t.publicId("urn:topic:b8001");
-     * t.name("photo synthesis"); t.contentUri(URI.create("urn:test:1")); })); builder.node(NodeType.SUBJECT, s ->
-     * s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> { t.publicId("urn:topic:b8003");
-     * t.name("trigonometry"); t.contentUri(URI.create("urn:test:2")); }));
-     * 
-     * final var metadata1 = new MetadataDto(); metadata1.setPublicId("urn:topic:b8001");
-     * metadata1.setGrepCodes(Set.of("GREP1")); final var metadata2 = new MetadataDto();
-     * metadata2.setPublicId("urn:topic:b8003"); metadata2.setGrepCodes(Set.of("GREP2"));
-     * when(metadataApiService.getMetadataByKeyAndValue("test", "value")).thenReturn(Set.of(metadata1));
-     * when(metadataApiService.getMetadataByKeyAndValue("test", "value2")).thenReturn(Set.of(metadata2));
-     * 
-     * { final var response = testUtils.getResource("/v1/nodes?key=test&value=value"); final var nodes =
-     * testUtils.getObject(NodeDTO[].class, response); assertEquals(1, nodes.length); assertEquals("photo synthesis",
-     * nodes[0].getName()); assertNotNull(nodes[0].getMetadata()); assertNotNull(nodes[0].getMetadata().getGrepCodes());
-     * assertEquals(Set.of("GREP1"), nodes[0].getMetadata().getGrepCodes()); }
-     * 
-     * { final var response = testUtils.getResource("/v1/nodes?key=test&value=value2"); final var nodes =
-     * testUtils.getObject(NodeDTO[].class, response); assertEquals(1, nodes.length); assertEquals("trigonometry",
-     * nodes[0].getName()); assertNotNull(nodes[0].getMetadata()); assertNotNull(nodes[0].getMetadata().getGrepCodes());
-     * assertEquals(Set.of("GREP2"), nodes[0].getMetadata().getGrepCodes()); }
-     * 
-     * verify(metadataApiService, times(1)).getMetadataByKeyAndValue("test", "value"); verify(metadataApiService,
-     * times(1)).getMetadataByKeyAndValue("test", "value2"); }
-     */
+    @Test
+    public void can_get_nodes_by_key_and_value() throws Exception {
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Basic science").child(t -> {
+            t.nodeType(NodeType.TOPIC);
+            t.name("photo synthesis");
+            t.contentUri(URI.create("urn:test:1"));
+            t.grepCode("GREP1");
+            t.customField("test", "value");
+        }));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> {
+            t.name("trigonometry");
+            t.contentUri(URI.create("urn:test:2"));
+            t.grepCode("GREP2");
+            t.customField("test", "value2");
+        }));
+
+        {
+            final var response = testUtils.getResource("/v1/nodes?value=value");
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertEquals("photo synthesis", nodes[0].getName());
+            assertNotNull(nodes[0].getMetadata());
+            assertNotNull(nodes[0].getMetadata().getGrepCodes());
+            assertEquals(Set.of("GREP1"), nodes[0].getMetadata().getGrepCodes());
+        }
+        {
+            final var response = testUtils.getResource("/v1/nodes?key=test&value=value");
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertEquals("photo synthesis", nodes[0].getName());
+            assertNotNull(nodes[0].getMetadata());
+            assertNotNull(nodes[0].getMetadata().getGrepCodes());
+            assertEquals(Set.of("GREP1"), nodes[0].getMetadata().getGrepCodes());
+        }
+        {
+            final var response = testUtils.getResource("/v1/nodes?key=test&value=value2");
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertEquals("trigonometry", nodes[0].getName());
+            assertNotNull(nodes[0].getMetadata());
+            assertNotNull(nodes[0].getMetadata().getGrepCodes());
+            assertEquals(Set.of("GREP2"), nodes[0].getMetadata().getGrepCodes());
+        }
+    }
 
     @Test
     public void can_get_all_nodes() throws Exception {
@@ -164,6 +183,36 @@ public class NodesTest extends RestTest {
         assertAllTrue(nodes, t -> t.getMetadata() != null);
         assertAllTrue(nodes, t -> t.getMetadata().isVisible());
         assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
+    }
+
+    @Test
+    public void can_filter_nodes() throws Exception {
+        builder.node(NodeType.SUBJECT, s -> s.isRoot(true).isContext(true).name("Basic science").child(NodeType.TOPIC,
+                t -> t.name("photo synthesis")));
+        builder.node(NodeType.SUBJECT, s -> s.isRoot(true).isContext(true).name("Maths").isVisible(false)
+                .child(NodeType.TOPIC, t -> t.name("trigonometry")));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Arts and crafts"));
+        builder.node(NodeType.NODE, n -> n.isRoot(true).name("Random node").child(NodeType.NODE,
+                c -> c.name("Subnode").contentUri("urn:article:1").isVisible(false)));
+
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/nodes?contentURI=urn:article:1");
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertAnyTrue(nodes, t -> "Subnode".equals(t.getName()));
+            assertAnyTrue(nodes, t -> t.getPath().contains("node"));
+            assertAllTrue(nodes, t -> isValidId(t.getId()));
+        }
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/nodes?isVisible=true");
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(5, nodes.length);
+            assertAnyTrue(nodes, t -> "Basic science".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "trigonometry".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "Arts and crafts".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "Random node".equals(t.getName()));
+        }
     }
 
     @Test

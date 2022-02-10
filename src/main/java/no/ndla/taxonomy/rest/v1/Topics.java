@@ -23,10 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @RestController
 @RequestMapping(path = { "/v1/topics" })
@@ -47,23 +44,16 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
     @GetMapping
     @ApiOperation("Gets all topics")
-    public List<EntityWithPathDTO> index(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
+    public List<EntityWithPathDTO> getAll(
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
+            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI") Optional<URI> contentUri,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
+            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible") Optional<Boolean> isVisible) {
 
-            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) URI contentUriFilter,
-
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
-
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) String value) {
-
-        if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
-            contentUriFilter = null;
-        }
-        if (key != null) {
-            return nodeService.getNodes(language, NodeType.TOPIC, contentUriFilter,
-                    new MetadataKeyValueQuery(key, value));
-        }
-        return nodeService.getNodes(language, NodeType.TOPIC, contentUriFilter, false);
+        MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
+        return nodeService.getNodes(language, Optional.of(NodeType.TOPIC), contentUri, Optional.empty(),
+                metadataFilters);
     }
 
     @GetMapping("/{id}")
