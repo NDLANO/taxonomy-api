@@ -14,9 +14,11 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.RelevanceTranslation;
+import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.service.UpdatableDto;
+import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,7 +27,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -84,13 +88,26 @@ public class Relevances extends CrudController<Relevance> {
         @ApiModelProperty(value = "The name of the relevance", example = "Core")
         public String name;
 
+        @JsonProperty
+        @ApiModelProperty(value = "All translations of this relevance")
+        private Set<TranslationDTO> translations;
+
+        @JsonProperty
+        @ApiModelProperty(value = "List of language codes supported by translations")
+        private Set<String> supportedLanguages;
+
         public RelevanceIndexDocument() {
         }
 
         public RelevanceIndexDocument(Relevance relevance, String language) {
             this.id = relevance.getPublicId();
-            this.name = relevance.getTranslation(language).map(RelevanceTranslation::getName)
-                    .orElse(relevance.getName());
+
+            var translations = relevance.getTranslations();
+            this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
+            this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
+
+            this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), language)).findFirst()
+                    .map(Translation::getName).orElse(relevance.getName());
         }
     }
 

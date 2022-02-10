@@ -9,14 +9,15 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModelProperty;
-import no.ndla.taxonomy.domain.EntityWithPath;
-import no.ndla.taxonomy.domain.EntityWithPathConnection;
-import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.Translation;
+import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
+import no.ndla.taxonomy.service.MetadataIdField;
 
 import java.net.URI;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class EntityWithPathDTO {
     @ApiModelProperty(value = "Node id", example = "urn:topic:234")
@@ -41,6 +42,14 @@ public abstract class EntityWithPathDTO {
     @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
     public URI relevanceId;
 
+    @JsonProperty
+    @ApiModelProperty(value = "All translations of this node")
+    private Set<TranslationDTO> translations;
+
+    @JsonProperty
+    @ApiModelProperty(value = "List of language codes supported by translations")
+    private Set<String> supportedLanguages;
+
     public EntityWithPathDTO() {
     }
 
@@ -51,7 +60,12 @@ public abstract class EntityWithPathDTO {
 
         this.path = entity.getPrimaryPath().orElse(null);
 
-        this.name = entity.getTranslation(languageCode).map(Translation::getName).orElse(entity.getName());
+        var translations = entity.getTranslations();
+        this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
+        this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
+
+        this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
+                .map(Translation::getName).orElse(entity.getName());
 
         Optional<Relevance> relevance = entity.getParentConnection().flatMap(EntityWithPathConnection::getRelevance);
         this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
@@ -85,6 +99,10 @@ public abstract class EntityWithPathDTO {
 
     public URI getRelevanceId() {
         return relevanceId;
+    }
+
+    public Set<TranslationDTO> getTranslations() {
+        return translations;
     }
 
     protected void setMetadata(MetadataDto metadata) {

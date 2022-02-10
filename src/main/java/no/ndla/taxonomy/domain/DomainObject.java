@@ -10,6 +10,7 @@ package no.ndla.taxonomy.domain;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import java.util.Optional;
+import java.util.Set;
 
 @MappedSuperclass
 public abstract class DomainObject extends DomainEntity {
@@ -25,4 +26,6 @@ public abstract class DomainObject extends DomainEntity {
     }
 
     abstract public Optional<? extends Translation> getTranslation(String languageCode);
+
+    abstract public Set<? extends Translation> getTranslations();
 }
