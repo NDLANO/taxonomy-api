@@ -9,9 +9,11 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModelProperty;
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.EntityWithPath;
+import no.ndla.taxonomy.domain.EntityWithPathConnection;
+import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
-import no.ndla.taxonomy.service.MetadataIdField;
 
 import java.net.URI;
 import java.util.Objects;
@@ -42,11 +44,9 @@ public abstract class EntityWithPathDTO {
     @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
     public URI relevanceId;
 
-    @JsonProperty
     @ApiModelProperty(value = "All translations of this node")
     private Set<TranslationDTO> translations;
 
-    @JsonProperty
     @ApiModelProperty(value = "List of language codes supported by translations")
     private Set<String> supportedLanguages;
 
@@ -103,6 +103,10 @@ public abstract class EntityWithPathDTO {
 
     public Set<TranslationDTO> getTranslations() {
         return translations;
+    }
+
+    public Set<String> getSupportedLanguages() {
+        return supportedLanguages;
     }
 
     protected void setMetadata(MetadataDto metadata) {
