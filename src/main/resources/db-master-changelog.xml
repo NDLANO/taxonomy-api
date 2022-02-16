@@ -1113,6 +1113,10 @@
                                  referencedTableName="metadata" referencedColumnNames="id"
                                  onDelete="RESTRICT" onUpdate="RESTRICT"/>
     </changeSet>
+
+    <changeSet id="20220216 merge metadata into local base" author="Gunnar Velle">
+        <customChange class="no.ndla.taxonomy.migration.CopyDataFromMetadataServiceSqlChange"/>
+    </changeSet>
     <!-- Adapted from taxonomy metadata -->
 
     <!--changeSet id="2021XXXX drop old tables" author="Gunnar Velle">
