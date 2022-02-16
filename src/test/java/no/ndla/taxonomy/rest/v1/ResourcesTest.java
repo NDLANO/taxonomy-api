@@ -74,7 +74,7 @@ public class ResourcesTest extends RestTest {
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
         final var resource = testUtils.getObject(ResourceDTO.class, response);
 
-        assertNull(resource.getPath());
+        assertEquals("", resource.getPath());
     }
 
     @Test

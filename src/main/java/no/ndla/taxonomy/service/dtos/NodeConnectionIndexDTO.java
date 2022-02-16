@@ -71,7 +71,7 @@ public class NodeConnectionIndexDTO implements TreeSorter.Sortable {
 
             this.contentUri = topic.getContentUri();
             this.paths = topic.getAllPaths();
-            this.path = topic.getPrimaryPath().orElse(null);
+            this.path = topic.getPrimaryPath().orElse("");
         });
 
         this.isPrimary = true;
