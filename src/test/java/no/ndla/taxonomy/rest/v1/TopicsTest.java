@@ -63,7 +63,7 @@ public class TopicsTest extends RestTest {
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
         final var topic = testUtils.getObject(NodeDTO.class, response);
 
-        assertNull(topic.getPath());
+        assertEquals("", topic.getPath());
     }
 
     @Test

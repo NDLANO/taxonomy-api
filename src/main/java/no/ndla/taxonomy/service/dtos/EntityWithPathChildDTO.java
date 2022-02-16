@@ -67,7 +67,7 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
 
         nodeConnection.getChild().ifPresent(child -> {
             this.populateFromNode(child);
-            this.path = child.getPathByContext(node).orElse(null);
+            this.path = child.getPathByContext(node).orElse("");
             this.paths = child.getAllPaths();
         });
 

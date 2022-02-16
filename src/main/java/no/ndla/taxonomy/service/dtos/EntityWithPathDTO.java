@@ -58,7 +58,7 @@ public abstract class EntityWithPathDTO {
         this.contentUri = entity.getContentUri();
         this.paths = entity.getAllPaths();
 
-        this.path = entity.getPrimaryPath().orElse(null);
+        this.path = entity.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
 
         var translations = entity.getTranslations();
         this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());

@@ -63,7 +63,7 @@ public class NodesTest extends RestTest {
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:node:1");
         final var node = testUtils.getObject(NodeDTO.class, response);
 
-        assertNull(node.getPath());
+        assertEquals("", node.getPath());
     }
 
     @Test

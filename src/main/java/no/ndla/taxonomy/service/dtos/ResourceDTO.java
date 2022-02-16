@@ -88,7 +88,7 @@ public class ResourceDTO {
                 .collect(Collectors.toCollection(TreeSet::new));
 
         this.paths = resource.getAllPaths();
-        this.path = resource.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(null));
+        this.path = resource.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
 
         this.metadata = new MetadataDto(resource.getMetadata());
     }
