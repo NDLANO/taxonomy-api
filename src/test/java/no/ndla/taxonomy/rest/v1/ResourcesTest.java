@@ -124,6 +124,30 @@ public class ResourcesTest extends RestTest {
     }
 
     @Test
+    public void can_get_resources_by_metadata() throws Exception {
+        builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).child(
+                t -> t.resource(true, r -> r.name("The inner planets").contentUri("urn:test:1").isVisible(false))));
+
+        builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).child(t -> t.resource(true,
+                r -> r.name("Gas giants").contentUri("urn:test:2").customField("custom", "field"))));
+
+        {
+            final var response = testUtils.getResource("/v1/resources?isVisible=true");
+            final var resources = testUtils.getObject(ResourceDTO[].class, response);
+
+            assertEquals(1, resources.length);
+            assertEquals("Gas giants", resources[0].getName());
+        }
+        {
+            final var response = testUtils.getResource("/v1/resources?key=custom&field=value");
+            final var resources = testUtils.getObject(ResourceDTO[].class, response);
+
+            assertEquals(1, resources.length);
+            assertEquals("Gas giants", resources[0].getName());
+        }
+    }
+
+    @Test
     public void can_create_resource() throws Exception {
         URI id = getId(testUtils.createResource("/v1/resources", new ResourceCommand() {
             {

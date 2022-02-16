@@ -37,8 +37,8 @@ class MetadataServiceImplTest {
 
     @BeforeEach
     void setUp(@Autowired CustomFieldService customFieldService,
-            @Autowired DomainEntityHelperService domainEntityHelperService,
-            @Autowired GrepCodeService grepCodeService, @Autowired Builder builder) {
+            @Autowired DomainEntityHelperService domainEntityHelperService, @Autowired GrepCodeService grepCodeService,
+            @Autowired Builder builder) {
         this.domainEntityHelperService = domainEntityHelperService;
         this.grepCodeService = grepCodeService;
         this.customFieldService = customFieldService;
@@ -56,7 +56,9 @@ class MetadataServiceImplTest {
     @Test
     @Transactional
     void get_metadata_for_node() {
-        URI publicId = builder.node(NodeType.SUBJECT, s -> s.isVisible(false).grepCode("GREP1").customField("key", "value")).getPublicId();
+        URI publicId = builder
+                .node(NodeType.SUBJECT, s -> s.isVisible(false).grepCode("GREP1").customField("key", "value"))
+                .getPublicId();
         MetadataDto metadata = metadataService.getMetadataByPublicId(publicId);
 
         assertFalse(metadata.isVisible());

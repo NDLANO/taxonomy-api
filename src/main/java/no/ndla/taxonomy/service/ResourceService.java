@@ -11,6 +11,7 @@ import no.ndla.taxonomy.service.dtos.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public interface ResourceService {
@@ -23,8 +24,6 @@ public interface ResourceService {
 
     ResourceWithParentsDTO getResourceWithParentNodesByPublicId(URI publicId, String languageCode);
 
-    List<ResourceDTO> getResources(String languageCode, URI contentUriFilter);
-
-    List<ResourceDTO> getResources(String languageCode, URI contentUriFilter,
-            MetadataKeyValueQuery metadataKeyValueQuery);
+    List<ResourceDTO> getResources(Optional<String> language, Optional<URI> contentUri,
+            MetadataFilters metadataFilters);
 }
