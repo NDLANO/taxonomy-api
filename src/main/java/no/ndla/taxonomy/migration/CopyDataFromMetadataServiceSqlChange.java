@@ -71,8 +71,8 @@ public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
                 MetadataApiEntity entity = restTemplate.getForEntity(baseUrl + publicId, MetadataApiEntity.class)
                         .getBody();
                 assert entity != null;
-                PreparedStatement insertMetadata = connection
-                        .prepareStatement("insert into metadata (id, visible, created_at) values (?, ?, ?) returning id");
+                PreparedStatement insertMetadata = connection.prepareStatement(
+                        "insert into metadata (id, visible, created_at) values (?, ?, ?) returning id");
                 insertMetadata.setObject(1, UUID.randomUUID());
                 insertMetadata.setBoolean(2, entity.isVisible().orElse(true));
                 insertMetadata.setTimestamp(3, Timestamp.from(Instant.now()));

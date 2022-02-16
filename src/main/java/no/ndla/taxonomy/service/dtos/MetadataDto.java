@@ -80,8 +80,8 @@ public class MetadataDto {
         return grepCodes;
     }
 
-    public void setGrepCodes(Set<String> competenceAims) {
-        this.grepCodes = competenceAims;
+    public void setGrepCodes(Set<String> grepCodes) {
+        this.grepCodes = grepCodes;
     }
 
     public String getPublicId() {

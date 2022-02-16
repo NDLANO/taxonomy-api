@@ -35,39 +35,11 @@ public class MetadataServiceImpl implements MetadataService {
         this.customFieldService = customFieldService;
     }
 
-    /*
-     * @Override
-     *
-     * @Transactional(propagation = MANDATORY) public Optional<Metadata> getMetadata(String publicId) { return
-     * metadataRepository.findFirstByPublicId(publicId); }
-     *
-     * @Override public List<Metadata> getMetadataList(Collection<String> publicIds) { if (publicIds.size() == 0) {
-     * return List.of(); }
-     *
-     * return metadataRepository.findAllByPublicIdInIncludingGrepCodes(publicIds); }
-     */
-
     @Override
     public MetadataDto getMetadataByPublicId(URI publicId) {
         EntityWithPath entity = domainEntityHelperService.getEntityByPublicId(publicId);
         return new MetadataDto(entity.getMetadata());
     }
-
-    /*
-     * @Override
-     *
-     * @Transactional(propagation = REQUIRED) public NewMetadataDto updateMetadataForPublicId(String publicId,
-     * NewMetadataDto updateDto) throws InvalidPublicIdException, InvalidDataException { var metadata =
-     * metadataService.getOrCreateMetadata(publicId);
-     *
-     * mergeMetadata(metadata, updateDto);
-     *
-     * metadata = metadataService.saveMetadata(metadata);
-     *
-     * updateCustomFields(metadata, updateDto);
-     *
-     * return getMetadataForPublicId(publicId); }
-     */
 
     @Override
     public MetadataDto updateMetadataByPublicId(URI publicId, MetadataDto metadataDto) throws InvalidDataException {
@@ -156,43 +128,4 @@ public class MetadataServiceImpl implements MetadataService {
             }
         }
     }
-
-    /*
-     * @Override
-     *
-     * @Transactional(propagation = MANDATORY) public Metadata getOrCreateMetadata(String publicId) { return
-     * metadataRepository.findFirstByPublicId(publicId) .orElseGet(() ->
-     * metadataRepository.saveAndFlush(createEmptyMetadata(publicId))); }
-     *
-     * @Override
-     *
-     * @Transactional(propagation = MANDATORY) public List<Metadata> getOrCreateMetadataList(Collection<String>
-     * publicIds) { if (publicIds.size() == 0) { return List.of(); }
-     *
-     * final var existingEntities = getMetadataList(publicIds).stream() .collect(Collectors.toMap(metadata ->
-     * metadata.getId().toString(), metadata -> metadata));
-     *
-     * final var entitiesToReturn = publicIds.stream() .map(publicId -> existingEntities.computeIfAbsent(publicId,
-     * this::createEmptyMetadata)) .collect(Collectors.toList());
-     *
-     * return metadataRepository.saveAll(entitiesToReturn); }
-     */
-    /*
-     * @Override
-     * 
-     * @Transactional(propagation = MANDATORY) public Metadata saveMetadata(Metadata metadata) { return
-     * metadataRepository.saveAndFlush(metadata); }
-     * 
-     * @Override
-     * 
-     * @Transactional(propagation = MANDATORY) public void saveMetadataList(Collection<Metadata> metadata) {
-     * metadataRepository.saveAll(metadata); metadataRepository.flush(); }
-     */
-
-    /*
-     * @Override
-     *
-     * @Transactional public void deleteMetadata(String publicId) {
-     * metadataRepository.findFirstByPublicId(publicId).ifPresent(metadataRepository::delete); }
-     */
 }

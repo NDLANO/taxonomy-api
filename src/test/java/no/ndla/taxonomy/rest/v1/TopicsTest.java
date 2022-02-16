@@ -13,6 +13,7 @@ import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,9 +22,12 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import javax.persistence.EntityManager;
 import java.net.URI;
+import java.util.Set;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TopicsTest extends RestTest {
@@ -92,34 +96,50 @@ public class TopicsTest extends RestTest {
         }
     }
 
-    /*
-     * @Test public void can_get_topics_by_key_and_value() throws Exception { builder.node(NodeType.SUBJECT, s ->
-     * s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> { t.publicId("urn:topic:b8001");
-     * t.name("photo synthesis"); t.contentUri(URI.create("urn:test:1")); })); builder.node(NodeType.SUBJECT, s ->
-     * s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> { t.publicId("urn:topic:b8003");
-     * t.name("trigonometry"); t.contentUri(URI.create("urn:test:2")); }));
-     * 
-     * final var metadata1 = new MetadataDto(); metadata1.setPublicId("urn:topic:b8001");
-     * metadata1.setGrepCodes(Set.of("GREP1")); final var metadata2 = new MetadataDto();
-     * metadata2.setPublicId("urn:topic:b8003"); metadata2.setGrepCodes(Set.of("GREP2"));
-     * when(metadataApiService.getMetadataByKeyAndValue("test", "value")).thenReturn(Set.of(metadata1));
-     * when(metadataApiService.getMetadataByKeyAndValue("test", "value2")).thenReturn(Set.of(metadata2));
-     * 
-     * { final var response = testUtils.getResource("/v1/topics?key=test&value=value"); final var topics =
-     * testUtils.getObject(NodeDTO[].class, response); assertEquals(1, topics.length); assertEquals("photo synthesis",
-     * topics[0].getName()); assertNotNull(topics[0].getMetadata());
-     * assertNotNull(topics[0].getMetadata().getGrepCodes()); assertEquals(Set.of("GREP1"),
-     * topics[0].getMetadata().getGrepCodes()); }
-     * 
-     * { final var response = testUtils.getResource("/v1/topics?key=test&value=value2"); final var topics =
-     * testUtils.getObject(NodeDTO[].class, response); assertEquals(1, topics.length); assertEquals("trigonometry",
-     * topics[0].getName()); assertNotNull(topics[0].getMetadata());
-     * assertNotNull(topics[0].getMetadata().getGrepCodes()); assertEquals(Set.of("GREP2"),
-     * topics[0].getMetadata().getGrepCodes()); }
-     * 
-     * verify(metadataApiService, times(1)).getMetadataByKeyAndValue("test", "value"); verify(metadataApiService,
-     * times(1)).getMetadataByKeyAndValue("test", "value2"); }
-     */
+    @Test
+    public void can_get_topics_by_key_and_value() throws Exception {
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Basic science").child(t -> {
+            t.nodeType(NodeType.TOPIC);
+            t.name("photo synthesis");
+            t.contentUri(URI.create("urn:test:1"));
+            t.grepCode("GREP1");
+            t.customField("test", "value");
+        }));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> {
+            t.name("trigonometry");
+            t.contentUri(URI.create("urn:test:2"));
+            t.grepCode("GREP2");
+            t.customField("test", "value2");
+        }));
+
+        {
+            final var response = testUtils.getResource("/v1/topics?value=value");
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertEquals("photo synthesis", nodes[0].getName());
+            assertNotNull(nodes[0].getMetadata());
+            assertNotNull(nodes[0].getMetadata().getGrepCodes());
+            assertEquals(Set.of("GREP1"), nodes[0].getMetadata().getGrepCodes());
+        }
+        {
+            final var response = testUtils.getResource("/v1/topics?key=test&value=value");
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertEquals("photo synthesis", nodes[0].getName());
+            assertNotNull(nodes[0].getMetadata());
+            assertNotNull(nodes[0].getMetadata().getGrepCodes());
+            assertEquals(Set.of("GREP1"), nodes[0].getMetadata().getGrepCodes());
+        }
+        {
+            final var response = testUtils.getResource("/v1/topics?key=test&value=value2");
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertEquals("trigonometry", nodes[0].getName());
+            assertNotNull(nodes[0].getMetadata());
+            assertNotNull(nodes[0].getMetadata().getGrepCodes());
+            assertEquals(Set.of("GREP2"), nodes[0].getMetadata().getGrepCodes());
+        }
+    }
 
     @Test
     public void can_get_all_topics() throws Exception {

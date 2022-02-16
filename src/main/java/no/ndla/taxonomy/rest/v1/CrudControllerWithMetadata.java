@@ -45,20 +45,4 @@ public abstract class CrudControllerWithMetadata<T extends DomainObject> extends
             throws InvalidDataException {
         return metadataService.updateMetadataByPublicId(id, entityToUpdate);
     }
-
-    /*
-     * @PutMapping("/{id}/metadata-recursive")
-     * 
-     * @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-     * 
-     * @ApiOperation(value = "Updates metadata for entity recursively") public RecursiveMergeResultDto
-     * updateRecursively(@PathVariable("id") URI id,
-     * 
-     * @ApiParam(value = "Apply also to resources (even if having multiple topics as parent)", defaultValue =
-     * "false") @RequestParam(value = "applyToResources", required = false, defaultValue = "false") boolean
-     * applyToResources,
-     * 
-     * @RequestBody MetadataDto metadataToMerge) { return metadataUpdateService.updateMetadataRecursivelyByPublicId(id,
-     * metadataToMerge, applyToResources); }
-     */
 }
