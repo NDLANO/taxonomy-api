@@ -73,4 +73,23 @@ public class NodesMetadataTest extends RestTest {
         assertTrue(customFieldValues.stream().map(CustomFieldValue::getValue).collect(Collectors.toSet())
                 .contains("value"));
     }
+
+    @Test
+    void can_remove_metadata_for_node() throws Exception {
+        URI publicId = builder.node(n -> n.customField("key", "value").grepCode("KM123")).getPublicId();
+
+        testUtils.updateResource("/v1/nodes/" + publicId + "/metadata", new MetadataDto() {
+            {
+                visible = true;
+                grepCodes = Set.of();
+                customFields = Map.of();
+            }
+        }, status().isOk());
+
+        Node node = nodeRepository.getByPublicId(publicId);
+        assertNotNull(node.getMetadata());
+        assertTrue(node.getMetadata().isVisible());
+        assertTrue(node.getMetadata().getGrepCodes().isEmpty());
+        assertTrue(node.getMetadata().getCustomFieldValues().isEmpty());
+    }
 }

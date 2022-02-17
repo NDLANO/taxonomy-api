@@ -55,9 +55,7 @@ public class MetadataServiceImpl implements MetadataService {
             mergeGrepCodes(metadata, updateDto.getGrepCodes());
         }
 
-        if (updateDto.getCustomFields() != null) {
-            updateCustomFields(metadata, updateDto);
-        }
+        updateCustomFields(metadata, updateDto);
 
         if (updateDto.isVisible() != null) {
             metadata.setVisible(updateDto.isVisible());

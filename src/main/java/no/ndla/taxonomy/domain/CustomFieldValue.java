@@ -33,6 +33,11 @@ public class CustomFieldValue {
         }
     }
 
+    @PreRemove
+    void preRemove() {
+        this.metadata.removeCustomFieldValue(this);
+    }
+
     public UUID getId() {
         return id;
     }
