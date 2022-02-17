@@ -35,12 +35,4 @@ public class MetadataFilters {
         return visible;
     }
 
-    public CustomFieldValue getCustomFieldValue() {
-        CustomField customField = new CustomField();
-        customField.setKey(getKey().orElse(null));
-        CustomFieldValue customFieldValue = new CustomFieldValue();
-        customFieldValue.setCustomField(customField);
-        customFieldValue.setValue(getValue().orElse(null));
-        return customFieldValue;
-    }
 }

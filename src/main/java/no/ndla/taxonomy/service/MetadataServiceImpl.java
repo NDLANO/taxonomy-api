@@ -29,7 +29,6 @@ public class MetadataServiceImpl implements MetadataService {
 
     public MetadataServiceImpl(DomainEntityHelperService domainEntityHelperService, GrepCodeService grepCodeService,
             CustomFieldService customFieldService) {
-        // this.metadataRepository = metadataRepository;
         this.domainEntityHelperService = domainEntityHelperService;
         this.grepCodeService = grepCodeService;
         this.customFieldService = customFieldService;

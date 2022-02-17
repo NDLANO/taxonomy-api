@@ -69,6 +69,7 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
             this.populateFromNode(child);
             this.path = child.getPathByContext(node).orElse("");
             this.paths = child.getAllPaths();
+            this.metadata = new MetadataDto(child.getMetadata());
         });
 
         nodeConnection.getParent().ifPresent(parent -> this.parent = parent.getPublicId());
@@ -81,8 +82,6 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
         this.connectionId = nodeConnection.getPublicId();
 
         this.isPrimary = nodeConnection.isPrimary().orElse(false);
-
-        this.metadata = new MetadataDto(node.getMetadata());
     }
 
     @Override
