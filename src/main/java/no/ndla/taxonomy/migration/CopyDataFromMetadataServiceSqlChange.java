@@ -63,54 +63,60 @@ public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
         logger.info(String.format("Updating %s with metadata", table));
         ResultSet result = connection.prepareStatement(String.format("SELECT id, public_id from %s", table))
                 .executeQuery();
+        Map<String, Integer> batch = new HashMap<>();
         if (result != null) {
             while (result.next()) {
-                int id = result.getInt(1);
-                String publicId = result.getString(2);
+                batch.put(result.getString(2), result.getInt(1));
+                if (batch.size() == 100 || result.isLast()) {
+                    String publicIds = String.join(",", batch.keySet());
+                    MetadataApiEntity[] entities = restTemplate
+                            .getForEntity(baseUrl + "?publicIds=" + publicIds, MetadataApiEntity[].class).getBody();
+                    assert entities != null;
+                    for (MetadataApiEntity entity : entities) {
+                        assert entity != null;
+                        PreparedStatement insertMetadata = connection.prepareStatement(
+                                "insert into metadata (id, visible, created_at) values (?, ?, ?) returning id");
+                        insertMetadata.setObject(1, UUID.randomUUID());
+                        insertMetadata.setBoolean(2, entity.isVisible().orElse(true));
+                        insertMetadata.setTimestamp(3, Timestamp.from(Instant.now()));
+                        ResultSet resultSet = insertMetadata.executeQuery();
+                        UUID metadataId = resultSet.next() ? resultSet.getObject(1, UUID.class) : UUID.randomUUID();
 
-                MetadataApiEntity entity = restTemplate.getForEntity(baseUrl + publicId, MetadataApiEntity.class)
-                        .getBody();
-                assert entity != null;
-                PreparedStatement insertMetadata = connection.prepareStatement(
-                        "insert into metadata (id, visible, created_at) values (?, ?, ?) returning id");
-                insertMetadata.setObject(1, UUID.randomUUID());
-                insertMetadata.setBoolean(2, entity.isVisible().orElse(true));
-                insertMetadata.setTimestamp(3, Timestamp.from(Instant.now()));
-                ResultSet resultSet = insertMetadata.executeQuery();
-                UUID metadataId = resultSet.next() ? resultSet.getObject(1, UUID.class) : UUID.randomUUID();
+                        PreparedStatement updateTable = connection
+                                .prepareStatement(String.format("update %s set metadata_id = ? where id = ?", table));
+                        updateTable.setObject(1, metadataId);
+                        updateTable.setInt(2, batch.get(entity.getPublicId()));
+                        updateTable.executeUpdate();
 
-                PreparedStatement updateTable = connection
-                        .prepareStatement(String.format("update %s set metadata_id = ? where id = ?", table));
-                updateTable.setObject(1, metadataId);
-                updateTable.setInt(2, id);
-                updateTable.executeUpdate();
+                        if (entity.getCompetenceAims().isPresent()) {
+                            for (MetadataApiEntity.CompetenceAim competanceAim : entity.getCompetenceAims().get()) {
+                                UUID grepId = createOrGetGrepCodeId(competanceAim.getCode(), connection);
+                                PreparedStatement insertGrepCode = connection.prepareStatement(
+                                        "insert into metadata_grep_code (metadata_id, grep_code_id) values (?, ?)");
+                                insertGrepCode.setObject(1, metadataId);
+                                insertGrepCode.setObject(2, grepId);
+                                insertGrepCode.executeUpdate();
+                            }
+                        }
 
-                if (entity.getCompetenceAims().isPresent()) {
-                    for (MetadataApiEntity.CompetenceAim competanceAim : entity.getCompetenceAims().get()) {
-                        UUID grepId = createOrGetGrepCodeId(competanceAim.getCode(), connection);
-                        PreparedStatement insertGrepCode = connection.prepareStatement(
-                                "insert into metadata_grep_code (metadata_id, grep_code_id) values (?, ?)");
-                        insertGrepCode.setObject(1, metadataId);
-                        insertGrepCode.setObject(2, grepId);
-                        insertGrepCode.executeUpdate();
+                        if (entity.getCustomFields().isPresent()) {
+                            Map<String, String> customFieldMap = entity.getCustomFields().get();
+                            for (String customField : customFieldMap.keySet()) {
+                                UUID customFieldId = createOrGetCustomFieldId(customField, connection);
+                                String value = customFieldMap.get(customField);
+                                PreparedStatement statement = connection.prepareStatement(
+                                        "insert into custom_field_value (id, metadata_id, custom_field_id, value) values (?, ?, ?, ?)");
+                                statement.setObject(1, UUID.randomUUID());
+                                statement.setObject(2, metadataId);
+                                statement.setObject(3, customFieldId);
+                                statement.setString(4, value);
+                                statement.executeUpdate();
+                            }
+                        }
+
                     }
+                    batch.clear();
                 }
-
-                if (entity.getCustomFields().isPresent()) {
-                    Map<String, String> customFieldMap = entity.getCustomFields().get();
-                    for (String customField : customFieldMap.keySet()) {
-                        UUID customFieldId = createOrGetCustomFieldId(customField, connection);
-                        String value = customFieldMap.get(customField);
-                        PreparedStatement statement = connection.prepareStatement(
-                                "insert into custom_field_value (id, metadata_id, custom_field_id, value) values (?, ?, ?, ?)");
-                        statement.setObject(1, UUID.randomUUID());
-                        statement.setObject(2, metadataId);
-                        statement.setObject(3, customFieldId);
-                        statement.setString(4, value);
-                        statement.executeUpdate();
-                    }
-                }
-
             }
         }
     }
