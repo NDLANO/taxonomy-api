@@ -160,8 +160,8 @@ public class ResourceServiceImpl implements ResourceService {
         return (root, query, criteriaBuilder) -> criteriaBuilder.isNotNull(root.get("id"));
     }
 
-    public Specification<Resource> resourceIsVisible() {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("metadata").get("visible"), true);
+    public Specification<Resource> resourceIsVisible(Boolean visible) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("metadata").get("visible"), visible);
     }
 
     public Specification<Resource> resourceHasContentUri(URI contentUri) {
@@ -193,7 +193,7 @@ public class ResourceServiceImpl implements ResourceService {
             specification = specification.and(resourceHasContentUri(contentUri.get()));
         }
         if (metadataFilters.getVisible().isPresent()) {
-            specification = specification.and(resourceIsVisible());
+            specification = specification.and(resourceIsVisible(metadataFilters.getVisible().get()));
         }
         if (metadataFilters.getKey().isPresent()) {
             specification = specification.and(resourceHasCustomKey(metadataFilters.getKey().get()));

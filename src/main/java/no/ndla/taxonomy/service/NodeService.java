@@ -62,8 +62,8 @@ public class NodeService {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("root"), true);
     }
 
-    public Specification<Node> nodeIsVisible() {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("metadata").get("visible"), true);
+    public Specification<Node> nodeIsVisible(Boolean visible) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("metadata").get("visible"), visible);
     }
 
     public Specification<Node> nodeHasNodeType(NodeType nodeType) {
@@ -105,7 +105,7 @@ public class NodeService {
             specification = specification.and(nodeHasNodeType(nodeType.get()));
         }
         if (metadataFilters.getVisible().isPresent()) {
-            specification = specification.and(nodeIsVisible());
+            specification = specification.and(nodeIsVisible(metadataFilters.getVisible().get()));
         }
         if (metadataFilters.getKey().isPresent()) {
             specification = specification.and(nodeHasCustomKey(metadataFilters.getKey().get()));

@@ -132,11 +132,11 @@ public class ResourcesTest extends RestTest {
                 r -> r.name("Gas giants").contentUri("urn:test:2").customField("custom", "field"))));
 
         {
-            final var response = testUtils.getResource("/v1/resources?isVisible=true");
+            final var response = testUtils.getResource("/v1/resources?isVisible=false");
             final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
             assertEquals(1, resources.length);
-            assertEquals("Gas giants", resources[0].getName());
+            assertEquals("The inner planets", resources[0].getName());
         }
         {
             final var response = testUtils.getResource("/v1/resources?key=custom&field=value");
