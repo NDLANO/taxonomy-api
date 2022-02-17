@@ -30,22 +30,16 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
         Integer getRank();
     }
 
-    @Query("SELECT nc" + "   FROM NodeConnection nc" + "   JOIN FETCH nc.parent" + "   JOIN FETCH nc.child")
+    @Query("SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child")
     List<NodeConnection> findAllIncludingParentAndChild();
 
-    @Query("SELECT DISTINCT nc" + "   FROM NodeConnection nc" + "   JOIN FETCH nc.parent p" + "   JOIN FETCH nc.child c"
-            + "   LEFT JOIN FETCH p.cachedPaths" + "   WHERE c.publicId = :childPublicId")
-    List<NodeConnection> findAllByChildPublicIdIncludingParentAndChildAndCachedUrls(URI childPublicId);
-
-    @Query("SELECT DISTINCT nc" + "   FROM NodeConnection nc" + "   JOIN FETCH nc.child child"
-            + "   JOIN nc.parent parent" + "   LEFT JOIN FETCH child.translations"
-            + "   WHERE parent.publicId = :publicId")
+    @Query("SELECT DISTINCT nc FROM NodeConnection nc JOIN FETCH nc.child child"
+            + " JOIN nc.parent parent LEFT JOIN FETCH child.translations WHERE parent.publicId = :publicId")
     List<NodeConnection> findAllByParentPublicIdIncludingChildAndChildTranslations(URI publicId);
 
-    @Query("SELECT DISTINCT nc" + "   FROM NodeConnection nc" + "   LEFT JOIN FETCH nc.parent p"
-            + "   LEFT JOIN FETCH nc.child c" + "   LEFT JOIN FETCH p.translations"
-            + "   LEFT JOIN FETCH c.translations" + "   LEFT JOIN FETCH c.cachedPaths"
-            + "  WHERE nc.child.id IN :nodeId")
+    @Query("SELECT DISTINCT nc FROM NodeConnection nc LEFT JOIN FETCH nc.parent p"
+            + " LEFT JOIN FETCH nc.child c LEFT JOIN FETCH p.translations"
+            + " LEFT JOIN FETCH c.translations LEFT JOIN FETCH c.cachedPaths WHERE nc.child.id IN :nodeId")
     List<NodeConnection> doFindAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<Integer> nodeId);
 
     default List<NodeConnection> findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(
