@@ -58,7 +58,6 @@ public class CustomFieldServiceImplTest {
     public void testSetCustomFieldForTheFirstTime() {
         assertFalse(customFieldRepository.findByKey("new-field").isPresent());
         Metadata metadata = new Metadata();
-        metadata.setPublicId("urn:test:1");
         metadata = metadataRepository.save(metadata);
         assertNotNull(metadata.getId());
         assertTrue(customFieldService.getCustomFields(metadata).isEmpty());
@@ -86,7 +85,6 @@ public class CustomFieldServiceImplTest {
         assertNotNull(customField.getId());
         assertNotNull(customField.getCreatedAt());
         Metadata metadata = new Metadata();
-        metadata.setPublicId("urn:test:1");
         metadata = metadataRepository.save(metadata);
         assertNotNull(metadata.getId());
         assertTrue(customFieldService.getCustomFields(metadata).isEmpty());

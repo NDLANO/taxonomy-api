@@ -80,14 +80,6 @@ public class Metadata {
         return id;
     }
 
-    public String getPublicId() {
-        return "";
-    }
-
-    public void setPublicId(String publicId) {
-
-    }
-
     @PrePersist
     void prePersist() {
         if (this.id == null) {
