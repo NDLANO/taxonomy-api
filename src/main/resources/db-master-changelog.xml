@@ -1030,6 +1030,95 @@
         <dropColumn tableName="cached_path" columnName="subject_id"/>
         <dropColumn tableName="cached_path" columnName="topic_id"/>
     </changeSet>
+
+    <!-- Adapted from taxonomy metadata -->
+    <changeSet id="20200212 create metadata table" author="jon-eirik.pettersen@cerpus.com">
+        <createTable tableName="metadata">
+            <column name="id" type="uuid"><constraints primaryKey="true" nullable="false" /></column>
+            <column name="created_at" type="datetime"><constraints nullable="false" /></column>
+            <column name="updated_at" type="datetime" />
+            <column name="visible" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20200212 create grep_code table" author="jon-eirik.pettersen@cerpus.com">
+        <createTable tableName="grep_code">
+            <column name="id" type="uuid"><constraints primaryKey="true" nullable="false" /></column>
+            <column name="code" type="varchar(50)"><constraints uniqueConstraintName="unique_grep_code_code" unique="true" nullable="false" /></column>
+            <column name="created_at" type="datetime"><constraints nullable="false" /></column>
+            <column name="updated_at" type="datetime" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20200212 create metadata_grep_code table" author="jon-eirik.pettersen@cerpus.com">
+        <createTable tableName="metadata_grep_code">
+            <column name="metadata_id" type="uuid"><constraints nullable="false" /></column>
+            <column name="grep_code_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="metadata_grep_code" columnNames="metadata_id,grep_code_id"/>
+
+        <addForeignKeyConstraint baseTableName="metadata_grep_code" baseColumnNames="metadata_id"
+                                 constraintName="fk_metadata_grep_code_entity_id"
+                                 referencedTableName="metadata" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="metadata_grep_code" baseColumnNames="grep_code_id"
+                                 constraintName="fk_metadata_grep_code_grep_code_id"
+                                 referencedTableName="grep_code" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20210408 create custom field table" author="jan.espen.oversand@cerpus.com">
+        <createTable tableName="custom_field">
+            <column name="id" type="uuid"><constraints primaryKey="true" nullable="false" /></column>
+            <column name="created_at" type="datetime"><constraints nullable="false" /></column>
+            <column name="updated_at" type="datetime" />
+            <column name="key" type="varchar(100)"><constraints unique="true" uniqueConstraintName="unique_taxonomy_custom_fields_key" nullable="false" /></column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20210408 create custom field value table" author="jan.espen.oversand@cerpus.com">
+        <createTable tableName="custom_field_value">
+            <column name="id" type="uuid"><constraints primaryKey="true" nullable="false" /></column>
+            <column name="metadata_id" type="uuid"><constraints nullable="false" /></column>
+            <column name="custom_field_id" type="uuid"><constraints nullable="false" /></column>
+            <column name="value" type="text"/>
+        </createTable>
+
+        <addUniqueConstraint constraintName="unique_metadata_id_custom_field_value" tableName="custom_field_value" columnNames="metadata_id,custom_field_id"/>
+
+        <addForeignKeyConstraint baseTableName="custom_field_value" baseColumnNames="metadata_id"
+                                 constraintName="fk_metadata_custom_field_value_id"
+                                 referencedTableName="metadata" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="custom_field_value" baseColumnNames="custom_field_id"
+                                 constraintName="fk_custom_field_custom_field_value_id"
+                                 referencedTableName="custom_field" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20220208 add metadata references" author="Gunnar Velle">
+        <addColumn tableName="node">
+            <column name="metadata_id" type="uuid"/>
+        </addColumn>
+        <addColumn tableName="resource">
+            <column name="metadata_id" type="uuid"/>
+        </addColumn>
+        <addForeignKeyConstraint baseTableName="node" baseColumnNames="metadata_id"
+                                 constraintName="fk_node_metadata_id"
+                                 referencedTableName="metadata" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+        <addForeignKeyConstraint baseTableName="resource" baseColumnNames="metadata_id"
+                                 constraintName="fk_resource_metadata_id"
+                                 referencedTableName="metadata" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+    </changeSet>
+
+    <changeSet id="20220216 merge metadata into local base" author="Gunnar Velle">
+        <customChange class="no.ndla.taxonomy.migration.CopyDataFromMetadataServiceSqlChange"/>
+    </changeSet>
+    <!-- Adapted from taxonomy metadata -->
+
     <!--changeSet id="2021XXXX drop old tables" author="Gunnar Velle">
         <dropTable tableName="subject_topic"/>
         <dropTable tableName="topic_subtopic"/>

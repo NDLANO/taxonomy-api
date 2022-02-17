@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping(path = { "/v1/queries" })
@@ -32,19 +33,21 @@ public class Queries {
 
     @GetMapping("/resources")
     @ApiOperation(value = "Gets a list of resources matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/resources?contentURI= instead")
-    public List<ResourceDTO> queryResources(@RequestParam("contentURI") URI contentURI,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return resourceController.index(language, contentURI, null, null);
+    public List<ResourceDTO> queryResources(@RequestParam("contentURI") Optional<URI> contentURI,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key") Optional<String> key,
+            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value") Optional<String> value,
+            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible") Optional<Boolean> isVisible) {
+        return resourceController.getAll(language, contentURI, key, value, isVisible);
     }
 
     @GetMapping("/topics")
     @ApiOperation(value = "Gets a list of topics matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/topics?contentURI= instead")
     public List<EntityWithPathDTO> queryTopics(@RequestParam("contentURI") URI contentURI,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
-
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
-
-            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) String value) {
-        return topicController.index(language, contentURI, null, null);
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key") Optional<String> key,
+            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value") Optional<String> value,
+            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible") Optional<Boolean> isVisible) {
+        return topicController.getAll(language, Optional.of(contentURI), key, value, isVisible);
     }
 }

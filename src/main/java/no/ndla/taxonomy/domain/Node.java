@@ -39,6 +39,10 @@ public class Node extends EntityWithPath {
     @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
     protected Set<CachedPath> cachedPaths = new HashSet<>();
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, optional = false)
+    @JoinColumn(name = "metadata_id")
+    private Metadata metadata = new Metadata();
+
     @Column
     private boolean context;
 
@@ -262,6 +266,15 @@ public class Node extends EntityWithPath {
     public Node name(String name) {
         setName(name);
         return this;
+    }
+
+    @Override
+    public Metadata getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Metadata metadata) {
+        this.metadata = metadata;
     }
 
     @PreRemove

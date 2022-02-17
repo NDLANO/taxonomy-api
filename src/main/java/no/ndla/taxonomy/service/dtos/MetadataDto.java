@@ -10,27 +10,38 @@ package no.ndla.taxonomy.service.dtos;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import no.ndla.taxonomy.domain.CustomFieldValue;
+import no.ndla.taxonomy.domain.GrepCode;
+import no.ndla.taxonomy.domain.Metadata;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApiModel("Metadata")
 public class MetadataDto {
     @JsonIgnore
-    private String publicId;
+    public String publicId;
 
     @ApiModelProperty
-    private Set<String> grepCodes;
+    public Set<String> grepCodes;
 
     @ApiModelProperty
-    private Boolean visible;
+    public Boolean visible;
 
     @ApiModelProperty
-    private Map<String, String> customFields;
+    public Map<String, String> customFields;
 
     public MetadataDto() {
+    }
+
+    public MetadataDto(Metadata metadata) {
+        this.visible = metadata.isVisible();
+        this.grepCodes = metadata.getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet());
+        this.customFields = metadata.getCustomFieldValues().stream()
+                .collect(Collectors.toMap(cfv -> cfv.getCustomField().getKey(), CustomFieldValue::getValue));
     }
 
     public MetadataDto(MetadataApiEntity metadataApiEntity) {
@@ -69,8 +80,8 @@ public class MetadataDto {
         return grepCodes;
     }
 
-    public void setGrepCodes(Set<String> competenceAims) {
-        this.grepCodes = competenceAims;
+    public void setGrepCodes(Set<String> grepCodes) {
+        this.grepCodes = grepCodes;
     }
 
     public String getPublicId() {

@@ -11,34 +11,39 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.dtos.ResourceDTO;
+import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.criteria.Join;
 import java.net.URI;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.springframework.data.jpa.domain.Specification.where;
 
 @Service
 @Transactional(readOnly = true)
 public class ResourceServiceImpl implements ResourceService {
     private final ResourceRepository resourceRepository;
     private final EntityConnectionService connectionService;
-    private final MetadataApiService metadataApiService;
     private final DomainEntityHelperService domainEntityHelperService;
     private final NodeResourceRepository nodeResourceRepository;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
 
     public ResourceServiceImpl(ResourceRepository resourceRepository, EntityConnectionService connectionService,
-            MetadataApiService metadataApiService, DomainEntityHelperService domainEntityHelperService,
-            NodeResourceRepository nodeResourceRepository, RecursiveNodeTreeService recursiveNodeTreeService,
-            TreeSorter topicTreeSorter) {
+            DomainEntityHelperService domainEntityHelperService, NodeResourceRepository nodeResourceRepository,
+            RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter topicTreeSorter) {
         this.resourceRepository = resourceRepository;
         this.connectionService = connectionService;
-        this.metadataApiService = metadataApiService;
         this.domainEntityHelperService = domainEntityHelperService;
         this.nodeResourceRepository = nodeResourceRepository;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
@@ -57,8 +62,6 @@ public class ResourceServiceImpl implements ResourceService {
 
         resourceRepository.delete(resourceToDelete);
         resourceRepository.flush();
-
-        metadataApiService.deleteMetadataByPublicId(id);
     }
 
     private List<ResourceWithNodeConnectionDTO> filterNodeResourcesByIdsAndReturn(Set<Integer> nodeIds,
@@ -104,7 +107,6 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    @InjectMetadata
     public List<ResourceWithNodeConnectionDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds,
             URI relevancePublicId, String languageCode, boolean recursive) {
         final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
@@ -135,7 +137,6 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    @InjectMetadata
     public ResourceDTO getResourceByPublicId(URI publicId, String languageCode) {
         final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
@@ -144,7 +145,6 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    @InjectMetadata
     public ResourceWithParentsDTO getResourceWithParentNodesByPublicId(URI publicId, String languageCode) {
         final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
@@ -156,58 +156,53 @@ public class ResourceServiceImpl implements ResourceService {
         return resources.stream().map(resource -> new ResourceDTO(resource, languageCode)).collect(Collectors.toList());
     }
 
-    @Override
-    @InjectMetadata
-    public List<ResourceDTO> getResources(String languageCode, URI contentUriFilter) {
-        final List<ResourceDTO> listToReturn = new ArrayList<>();
+    public Specification<Resource> base() {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.isNotNull(root.get("id"));
+    }
 
-        if (contentUriFilter != null) {
-            return createDto(resourceRepository
-                    .findAllByContentUriIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(contentUriFilter),
-                    languageCode);
-        } else {
-            // Get all resource ids and chunk it in requests with all relations small enough to not
-            // create a huge heap space usage peak
+    public Specification<Resource> resourceIsVisible(Boolean visible) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("metadata").get("visible"), visible);
+    }
 
-            final var allResourceIds = resourceRepository.getAllResourceIds();
+    public Specification<Resource> resourceHasContentUri(URI contentUri) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("contentUri"), contentUri);
+    }
 
-            final var counter = new AtomicInteger();
+    public Specification<Resource> resourceHasCustomKey(String key) {
+        return (root, query, criteriaBuilder) -> {
+            Join<Resource, Metadata> resourceMetadataJoin = root.join("metadata");
+            Join<Metadata, CustomFieldValue> join = resourceMetadataJoin.join("customFieldValues");
+            return criteriaBuilder.equal(join.get("customField").get("key"), key);
+        };
+    }
 
-            allResourceIds.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values()
-                    .forEach(idChunk -> {
-                        final var resources = resourceRepository
-                                .findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
-                        listToReturn.addAll(createDto(resources, languageCode));
-                    });
-        }
-
-        return listToReturn;
+    public Specification<Resource> resourceHasCustomValue(String value) {
+        return (root, query, criteriaBuilder) -> {
+            Join<Resource, Metadata> resourceMetadataJoin = root.join("metadata");
+            Join<Metadata, CustomFieldValue> join = resourceMetadataJoin.join("customFieldValues");
+            return criteriaBuilder.equal(join.get("value"), value);
+        };
     }
 
     @Override
-    @MetadataQuery
-    public List<ResourceDTO> getResources(String languageCode, URI contentUriFilter,
-            MetadataKeyValueQuery metadataKeyValueQuery) {
-        Set<String> publicIds = metadataKeyValueQuery.getDtos().stream().map(MetadataDto::getPublicId)
-                .collect(Collectors.toSet());
+    public List<ResourceDTO> getResources(Optional<String> language, Optional<URI> contentUri,
+            MetadataFilters metadataFilters) {
+        final List<Resource> filtered;
+        Specification<Resource> specification = where(base());
+        if (contentUri.isPresent()) {
+            specification = specification.and(resourceHasContentUri(contentUri.get()));
+        }
+        if (metadataFilters.getVisible().isPresent()) {
+            specification = specification.and(resourceIsVisible(metadataFilters.getVisible().get()));
+        }
+        if (metadataFilters.getKey().isPresent()) {
+            specification = specification.and(resourceHasCustomKey(metadataFilters.getKey().get()));
+        }
+        if (metadataFilters.getValue().isPresent()) {
+            specification = specification.and(resourceHasCustomValue(metadataFilters.getValue().get()));
+        }
+        filtered = resourceRepository.findAll(specification);
 
-        final var counter = new AtomicInteger();
-        return publicIds.stream().map(resourceId -> {
-            try {
-                return new URI(resourceId);
-            } catch (Exception e) {
-                return null;
-            }
-        }).filter(Objects::nonNull).collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values()
-                .stream().flatMap(idChunk -> {
-                    final var resources = resourceRepository
-                            .findByPublicIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
-                    return createDto(resources, languageCode).stream();
-                }).filter(Objects::nonNull).filter(resource -> {
-                    if (contentUriFilter == null)
-                        return true;
-                    else
-                        return contentUriFilter.equals(resource.getContentUri());
-                }).collect(Collectors.toList());
+        return createDto(filtered, language.get());
     }
 }

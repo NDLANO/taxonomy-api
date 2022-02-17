@@ -8,10 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.TestSeeder;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.domain.ResourceType;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
 import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,10 +17,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
+import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ResourcesTest extends RestTest {
@@ -50,8 +47,7 @@ public class ResourcesTest extends RestTest {
         assertEquals("/subject:1/topic:1/resource:1", resource.getPath());
 
         assertTrue(resource.getMetadata().isVisible());
-        assertTrue(resource.getMetadata().getGrepCodes().size() == 1
-                && resource.getMetadata().getGrepCodes().contains("RESOURCE1"));
+        assertTrue(resource.getMetadata().getGrepCodes().size() == 0);
     }
 
     @Test
@@ -95,7 +91,7 @@ public class ResourcesTest extends RestTest {
 
         assertAllTrue(resources, r -> r.getMetadata() != null);
         assertAllTrue(resources, r -> r.getMetadata().isVisible());
-        assertAllTrue(resources, r -> r.getMetadata().getGrepCodes().size() == 1);
+        assertAllTrue(resources, r -> r.getMetadata().getGrepCodes().size() == 0);
     }
 
     @Test
@@ -120,6 +116,30 @@ public class ResourcesTest extends RestTest {
 
         {
             final var response = testUtils.getResource("/v1/resources?contentURI=urn:test:2");
+            final var resources = testUtils.getObject(ResourceDTO[].class, response);
+
+            assertEquals(1, resources.length);
+            assertEquals("Gas giants", resources[0].getName());
+        }
+    }
+
+    @Test
+    public void can_get_resources_by_metadata() throws Exception {
+        builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).child(
+                t -> t.resource(true, r -> r.name("The inner planets").contentUri("urn:test:1").isVisible(false))));
+
+        builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).child(t -> t.resource(true,
+                r -> r.name("Gas giants").contentUri("urn:test:2").customField("custom", "field"))));
+
+        {
+            final var response = testUtils.getResource("/v1/resources?isVisible=false");
+            final var resources = testUtils.getObject(ResourceDTO[].class, response);
+
+            assertEquals(1, resources.length);
+            assertEquals("The inner planets", resources[0].getName());
+        }
+        {
+            final var response = testUtils.getResource("/v1/resources?key=custom&field=value");
             final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
             assertEquals(1, resources.length);
@@ -195,6 +215,33 @@ public class ResourcesTest extends RestTest {
     }
 
     @Test
+    public void can_update_resource_without_changing_metadata() throws Exception {
+        URI publicId = builder.resource(r -> r.isVisible(false).grepCode("KM123").customField("key", "value"))
+                .getPublicId();
+
+        final var command = new ResourceCommand() {
+            {
+                id = publicId;
+                name = "physics";
+                contentUri = URI.create("urn:article:1");
+            }
+        };
+
+        testUtils.updateResource("/v1/resources/" + publicId, command);
+
+        Resource resource = resourceRepository.getByPublicId(publicId);
+        assertEquals(command.name, resource.getName());
+        assertEquals(command.contentUri, resource.getContentUri());
+
+        assertFalse(resource.getMetadata().isVisible());
+        assertTrue(resource.getMetadata().getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet())
+                .contains("KM123"));
+        assertTrue(resource.getMetadata().getCustomFieldValues().stream().map(CustomFieldValue::getValue)
+                .collect(Collectors.toSet()).contains("value"));
+
+    }
+
+    @Test
     public void duplicate_ids_not_allowed() throws Exception {
         final var command = new ResourceCommand() {
             {
@@ -218,8 +265,6 @@ public class ResourcesTest extends RestTest {
         URI id = builder.resource("resource").getPublicId();
         testUtils.deleteResource("/v1/resources/" + id);
         assertNull(resourceRepository.findByPublicId(id));
-
-        verify(metadataApiService).deleteMetadataByPublicId(id);
     }
 
     @Test
@@ -233,8 +278,6 @@ public class ResourcesTest extends RestTest {
 
         testUtils.deleteResource("/v1/resources/" + publicId);
         assertNull(resourceRepository.findByPublicId(publicId));
-
-        verify(metadataApiService).deleteMetadataByPublicId(publicId);
     }
 
     @Test
@@ -348,7 +391,7 @@ public class ResourcesTest extends RestTest {
         assertEquals(first(topic.getNodeResources()).getPublicId(), result[0].getConnectionId());
         assertAllTrue(result, connection -> connection.getMetadata() != null);
         assertAllTrue(result, connection -> connection.getMetadata().isVisible());
-        assertAllTrue(result, connection -> connection.getMetadata().getGrepCodes().size() == 1);
+        assertAllTrue(result, connection -> connection.getMetadata().getGrepCodes().size() == 0);
     }
 
     @Test
@@ -619,7 +662,7 @@ public class ResourcesTest extends RestTest {
 
         assertAllTrue(resources, r -> r.getMetadata() != null);
         assertAllTrue(resources, r -> r.getMetadata().isVisible());
-        assertAllTrue(resources, r -> r.getMetadata().getGrepCodes().size() == 1);
+        assertAllTrue(resources, r -> r.getMetadata().getGrepCodes().size() == 0);
     }
 
     @Test

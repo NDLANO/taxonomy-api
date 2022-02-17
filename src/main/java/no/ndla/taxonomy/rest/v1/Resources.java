@@ -14,7 +14,9 @@ import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
 import no.ndla.taxonomy.service.*;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.dtos.ResourceDTO;
+import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -33,9 +36,8 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
 
     public Resources(ResourceRepository resourceRepository,
             ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceService resourceService,
-            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataApiService metadataApiService,
-            MetadataUpdateService metadataUpdateService) {
-        super(resourceRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
+            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
+        super(resourceRepository, cachedUrlUpdaterService, metadataService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.repository = resourceRepository;
@@ -50,19 +52,14 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @GetMapping
     @ApiOperation(value = "Lists all resources")
     @Transactional(readOnly = true)
-    public List<ResourceDTO> index(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
-            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) URI contentUriFilter,
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
-            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) String value) {
-        if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
-            contentUriFilter = null;
-        }
-
-        if (key != null) {
-            return resourceService.getResources(language, contentUriFilter, new MetadataKeyValueQuery(key, value));
-        }
-        return resourceService.getResources(language, contentUriFilter);
+    public List<ResourceDTO> getAll(
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
+            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI") Optional<URI> contentUri,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key") Optional<String> key,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value") Optional<String> value,
+            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible") Optional<Boolean> isVisible) {
+        MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
+        return resourceService.getResources(language, contentUri, metadataFilters);
     }
 
     @GetMapping("{id}")

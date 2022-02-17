@@ -8,12 +8,12 @@
 package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.EntityWithPath;
+import no.ndla.taxonomy.domain.EntityWithPathConnection;
+import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
-import no.ndla.taxonomy.service.MetadataIdField;
 
 import java.net.URI;
 import java.util.Objects;
@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 
 public abstract class EntityWithPathDTO {
     @ApiModelProperty(value = "Node id", example = "urn:topic:234")
-    @MetadataIdField
     private URI id;
 
     @ApiModelProperty(value = "The name of the node", example = "Trigonometry")
@@ -45,11 +44,9 @@ public abstract class EntityWithPathDTO {
     @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
     public URI relevanceId;
 
-    @JsonProperty
     @ApiModelProperty(value = "All translations of this node")
     private Set<TranslationDTO> translations;
 
-    @JsonProperty
     @ApiModelProperty(value = "List of language codes supported by translations")
     private Set<String> supportedLanguages;
 
@@ -72,6 +69,8 @@ public abstract class EntityWithPathDTO {
 
         Optional<Relevance> relevance = entity.getParentConnection().flatMap(EntityWithPathConnection::getRelevance);
         this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
+
+        this.metadata = new MetadataDto(entity.getMetadata());
     }
 
     public URI getId() {
@@ -104,6 +103,10 @@ public abstract class EntityWithPathDTO {
 
     public Set<TranslationDTO> getTranslations() {
         return translations;
+    }
+
+    public Set<String> getSupportedLanguages() {
+        return supportedLanguages;
     }
 
     protected void setMetadata(MetadataDto metadata) {

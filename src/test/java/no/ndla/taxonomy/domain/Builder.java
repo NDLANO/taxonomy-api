@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -352,6 +353,36 @@ public class Builder {
 
             return this;
         }
+
+        public ResourceBuilder isVisible(boolean visible) {
+            resource.getMetadata().setVisible(visible);
+            return this;
+        }
+
+        public ResourceBuilder grepCode(String code) {
+            GrepCode grepCode = new GrepCode();
+            grepCode.setCode(code);
+            grepCode.addMetadata(resource.getMetadata());
+            entityManager.persist(grepCode);
+
+            resource.getMetadata().addGrepCode(grepCode);
+            return this;
+        }
+
+        public ResourceBuilder customField(String key, String value) {
+            CustomField customField = new CustomField();
+            customField.setKey(key);
+            entityManager.persist(customField);
+            CustomFieldValue customFieldValue = new CustomFieldValue();
+            customFieldValue.setCustomField(customField);
+            customFieldValue.setValue(value);
+            customFieldValue.setMetadata(resource.getMetadata());
+            entityManager.persist(customFieldValue);
+
+            resource.getMetadata().addCustomFieldValue(customFieldValue);
+            return this;
+        }
+
     }
 
     public UrlMapping urlMapping(Consumer<UrlMappingBuilder> consumer) {
@@ -412,6 +443,41 @@ public class Builder {
             node.setRoot(root);
 
             cachedUrlUpdaterService.updateCachedUrls(node);
+            return this;
+        }
+
+        public NodeBuilder isVisible(boolean visible) {
+            node.getMetadata().setVisible(visible);
+            return this;
+        }
+
+        public NodeBuilder grepCode(String code) {
+            GrepCode grepCode = new GrepCode();
+            grepCode.setCode(code);
+            grepCode.addMetadata(node.getMetadata());
+            entityManager.persist(grepCode);
+
+            node.getMetadata().addGrepCode(grepCode);
+            return this;
+        }
+
+        public NodeBuilder customField(String key, String value) {
+            CustomField customField = new CustomField();
+            List resultList = entityManager.createQuery("select cf from CustomField cf where cf.key = ?1")
+                    .setParameter(1, key).getResultList();
+            if (resultList.isEmpty()) {
+                customField.setKey(key);
+                entityManager.persist(customField);
+            } else {
+                customField = (CustomField) resultList.get(0);
+            }
+            CustomFieldValue customFieldValue = new CustomFieldValue();
+            customFieldValue.setCustomField(customField);
+            customFieldValue.setValue(value);
+            customFieldValue.setMetadata(node.getMetadata());
+            entityManager.persist(customFieldValue);
+
+            node.getMetadata().addCustomFieldValue(customFieldValue);
             return this;
         }
 

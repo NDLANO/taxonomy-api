@@ -23,10 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @RestController
 @RequestMapping(path = { "/v1/topics" })
@@ -37,8 +34,8 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
     public Topics(NodeRepository nodeRepository, NodeService nodeService,
             CachedUrlUpdaterService cachedUrlUpdaterService, ResourceService resourceService,
-            MetadataApiService metadataApiService, MetadataUpdateService metadataUpdateService) {
-        super(nodeRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
+            MetadataService metadataService) {
+        super(nodeRepository, cachedUrlUpdaterService, metadataService);
 
         this.nodeRepository = nodeRepository;
         this.nodeService = nodeService;
@@ -47,29 +44,21 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
     @GetMapping
     @ApiOperation("Gets all topics")
-    public List<EntityWithPathDTO> index(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
+    public List<EntityWithPathDTO> getAll(
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
+            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI") Optional<URI> contentUri,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
+            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible") Optional<Boolean> isVisible) {
 
-            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) URI contentUriFilter,
-
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
-
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) String value) {
-
-        if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
-            contentUriFilter = null;
-        }
-        if (key != null) {
-            return nodeService.getNodes(language, NodeType.TOPIC, contentUriFilter,
-                    new MetadataKeyValueQuery(key, value));
-        }
-        return nodeService.getNodes(language, NodeType.TOPIC, contentUriFilter, false);
+        MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
+        return nodeService.getNodes(language, Optional.of(NodeType.TOPIC), contentUri, Optional.empty(),
+                metadataFilters);
     }
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
     @Transactional
-    @InjectMetadata
     public EntityWithPathDTO get(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return new NodeDTO(nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
@@ -108,7 +97,6 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @ApiOperation(value = "Gets all filters associated with this topic")
     @Deprecated(forRemoval = true)
     @Transactional
-    @InjectMetadata
     public List<Object> getFilters(@ApiParam(value = "id", required = true) @PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return List.of();

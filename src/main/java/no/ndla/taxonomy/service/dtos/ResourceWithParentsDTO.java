@@ -11,7 +11,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.service.InjectMetadata;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -23,7 +22,6 @@ public class ResourceWithParentsDTO extends ResourceDTO {
             + "{\"id\": \"urn:topic:1:181900\"," + "\"name\": \"I dyrehagen\","
             + "\"contentUri\": \"urn:article:6662\"," + "\"path\": \"/subject:2/topic:1:181900\","
             + "\"primary\": \"true\"}]")
-    @InjectMetadata
     private Set<NodeWithResourceConnectionDTO> parents = new HashSet<>();
 
     public ResourceWithParentsDTO() {

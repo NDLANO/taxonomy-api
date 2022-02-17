@@ -42,9 +42,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     public Nodes(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
             NodeService nodeService, CachedUrlUpdaterService cachedUrlUpdaterService, ResourceService resourceService,
-            RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter,
-            MetadataApiService metadataApiService, MetadataUpdateService metadataUpdateService) {
-        super(nodeRepository, cachedUrlUpdaterService, metadataApiService, metadataUpdateService);
+            RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter, MetadataService metadataService) {
+        super(nodeRepository, cachedUrlUpdaterService, metadataService);
 
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
@@ -56,28 +55,22 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     @GetMapping
     @ApiOperation("Gets all nodes")
-    public List<EntityWithPathDTO> index(
-            @ApiParam(value = "Filter by nodeType") @RequestParam(value = "nodeType", required = false) NodeType nodeTypeFilter,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
-            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) URI contentUriFilter,
-            @ApiParam(value = "Only root level") @RequestParam(value = "isRoot", required = false) boolean isRoot,
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) String key,
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) String value) {
+    public List<EntityWithPathDTO> getAll(
+            @ApiParam(value = "Filter by nodeType") @RequestParam(value = "nodeType") Optional<NodeType> nodeType,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
+            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI") Optional<URI> contentUri,
+            @ApiParam(value = "Only root level") @RequestParam(value = "isRoot") Optional<Boolean> isRoot,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key") Optional<String> key,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value") Optional<String> value,
+            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible") Optional<Boolean> isVisible) {
 
-        if (contentUriFilter != null && contentUriFilter.toString().equals("")) {
-            contentUriFilter = null;
-        }
-        if (key != null) {
-            return nodeService.getNodes(language, nodeTypeFilter, contentUriFilter,
-                    new MetadataKeyValueQuery(key, value));
-        }
-        return nodeService.getNodes(language, nodeTypeFilter, contentUriFilter, isRoot);
+        MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
+        return nodeService.getNodes(language, nodeType, contentUri, isRoot, metadataFilters);
     }
 
     @GetMapping("/{id}")
     @ApiOperation("Gets a single node")
     @Transactional
-    @InjectMetadata
     public NodeDTO get(@PathVariable("id") URI id,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return new NodeDTO(nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
@@ -105,7 +98,6 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}/nodes")
     @ApiOperation(value = "Gets all children for this node")
-    @InjectMetadata
     public List<EntityWithPathChildDTO> getChildren(@ApiParam(value = "id", required = true) @PathVariable("id") URI id,
             @ApiParam("If true, children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
