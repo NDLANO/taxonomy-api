@@ -1128,4 +1128,30 @@
         <dropTable tableName="subject_translation"/>
         <dropTable tableName="subject"/>
     </changeSet-->
+
+    <changeSet id="20211110 add version table" author="Gunnar Velle">
+        <createTable tableName="version">
+            <column name="id" type="serial" autoIncrement="true">
+                <constraints primaryKey="true" uniqueConstraintName="version_pkey"/>
+            </column>
+            <column name="public_id" type="varchar(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="version_public_id"/>
+            </column>
+            <column name="version_type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="hash" type="varchar(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="version_hash"/>
+            </column>
+            <column name="published" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+            <column name="archived" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
 </databaseChangeLog>

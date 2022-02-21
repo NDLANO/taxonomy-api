@@ -8,7 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
-import no.ndla.taxonomy.domain.DomainObject;
+import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Transactional
-public abstract class CrudController<T extends DomainObject> {
+public abstract class CrudController<T extends DomainEntity> {
     protected TaxonomyRepository<T> repository;
     protected CachedUrlUpdaterService cachedUrlUpdaterService;
 

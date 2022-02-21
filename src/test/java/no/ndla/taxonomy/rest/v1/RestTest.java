@@ -34,6 +34,9 @@ public abstract class RestTest {
     EntityManager entityManager;
 
     @Autowired
+    VersionRepository versionRepository;
+
+    @Autowired
     ResourceResourceTypeRepository resourceResourceTypeRepository;
 
     @Autowired
