@@ -41,28 +41,13 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
     List<Integer> getAllResourceIds();
 
     @Query("SELECT r.id FROM Resource r LEFT JOIN r.metadata m WHERE m.visible = :visible")
-    List<Integer> getAllResourceIdsWithVisible(Boolean visible);
+    List<Integer> getAllResourceIdsWithMetadataVisible(Boolean visible);
 
-    @Query("SELECT distinct r FROM Resource r LEFT JOIN FETCH r.cachedPaths LEFT JOIN FETCH r.metadata m"
-            + " LEFT JOIN FETCH m.grepCodes LEFT JOIN m.customFieldValues cfv LEFT JOIN cfv.customField cf"
-            + " LEFT JOIN FETCH r.resourceResourceTypes rrt LEFT JOIN FETCH rrt.resourceType rt"
-            + " LEFT JOIN FETCH rt.resourceTypeTranslations LEFT JOIN FETCH r.resourceTranslations"
-            + " WHERE cf.key = :key")
-    List<Resource> findByMetadataKeyIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(String key);
+    @Query("SELECT r.id FROM Resource r LEFT JOIN r.metadata m LEFT JOIN m.customFieldValues cfv"
+            + " LEFT JOIN cfv.customField cf WHERE cf.key = :key")
+    List<Integer> getAllResourceIdsWithMetadataKey(String key);
 
-    @Query("SELECT distinct r FROM Resource r LEFT JOIN FETCH r.cachedPaths LEFT JOIN FETCH r.metadata m"
-            + " LEFT JOIN FETCH m.grepCodes LEFT JOIN m.customFieldValues cfv LEFT JOIN cfv.customField cf"
-            + " LEFT JOIN FETCH r.resourceResourceTypes rrt LEFT JOIN FETCH rrt.resourceType rt"
-            + " LEFT JOIN FETCH rt.resourceTypeTranslations LEFT JOIN FETCH r.resourceTranslations"
-            + " WHERE cfv.value = :value")
-    List<Resource> findByMetadataValueIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(String value);
-
-    @Query("SELECT distinct r FROM Resource r LEFT JOIN FETCH r.cachedPaths LEFT JOIN FETCH r.metadata m"
-            + " LEFT JOIN FETCH m.grepCodes LEFT JOIN m.customFieldValues cfv LEFT JOIN cfv.customField cf"
-            + " LEFT JOIN FETCH r.resourceResourceTypes rrt LEFT JOIN FETCH rrt.resourceType rt"
-            + " LEFT JOIN FETCH rt.resourceTypeTranslations LEFT JOIN FETCH r.resourceTranslations"
-            + " WHERE cf.key = :key AND cfv.value = :value")
-    List<Resource> findByMetadataKeyValueIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(String key,
-            String value);
-
+    @Query("SELECT r.id FROM Resource r LEFT JOIN r.metadata m LEFT JOIN m.customFieldValues cfv"
+            + " LEFT JOIN cfv.customField cf WHERE cfv.value = :value")
+    List<Integer> getAllResourceIdsWithMetadataValue(String value);
 }

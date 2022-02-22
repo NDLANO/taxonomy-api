@@ -15,11 +15,10 @@ import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.cglib.core.CollectionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.criteria.Join;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -157,34 +156,39 @@ public class ResourceServiceImpl implements ResourceService {
             MetadataFilters metadataFilters) {
         final List<ResourceDTO> listToReturn = new ArrayList<>();
         if (metadataFilters.hasFilters()) {
+            List<Integer> resourceIds = new ArrayList<>();
             if (metadataFilters.getVisible().isPresent()) {
-                final var allResourceIds = resourceRepository
-                        .getAllResourceIdsWithVisible(metadataFilters.getVisible().get());
-                final var counter = new AtomicInteger();
-                allResourceIds.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values()
-                        .forEach(idChunk -> {
-                            final var resources = resourceRepository
-                                    .findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
-                            listToReturn.addAll(createDto(resources, language.get()));
-                        });
+                resourceIds.addAll(
+                        resourceRepository.getAllResourceIdsWithMetadataVisible(metadataFilters.getVisible().get()));
             }
-            if (metadataFilters.getKey().isPresent() && metadataFilters.getValue().isPresent()) {
-                listToReturn.addAll(createDto(
-                        resourceRepository
-                                .findByMetadataKeyValueIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(
-                                        metadataFilters.getKey().get(), metadataFilters.getValue().get()),
-                        language.get()));
-            } else if (metadataFilters.getKey().isPresent()) {
-                listToReturn.addAll(createDto(resourceRepository
-                        .findByMetadataKeyIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(
-                                metadataFilters.getKey().get()),
-                        language.get()));
-            } else if (metadataFilters.getValue().isPresent()) {
-                listToReturn.addAll(createDto(resourceRepository
-                        .findByMetadataValueIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(
-                                metadataFilters.getValue().get()),
-                        language.get()));
+            if (metadataFilters.getKey().isPresent()) {
+                var idsWithMetadataKey = resourceRepository
+                        .getAllResourceIdsWithMetadataKey(metadataFilters.getKey().get());
+                if (resourceIds.isEmpty()) {
+                    resourceIds.addAll(idsWithMetadataKey);
+                } else {
+                    resourceIds = resourceIds.stream().filter(idsWithMetadataKey::contains)
+                            .collect(Collectors.toList());
+                }
             }
+            if (metadataFilters.getValue().isPresent()) {
+                var idsWithMetadataValue = resourceRepository
+                        .getAllResourceIdsWithMetadataValue(metadataFilters.getValue().get());
+                if (resourceIds.isEmpty()) {
+                    resourceIds.addAll(idsWithMetadataValue);
+                } else {
+                    resourceIds = resourceIds.stream().filter(idsWithMetadataValue::contains)
+                            .collect(Collectors.toList());
+                }
+            }
+            final var counter = new AtomicInteger();
+            resourceIds.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values()
+                    .forEach(idChunk -> {
+                        final var resources = resourceRepository
+                                .findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
+                        listToReturn.addAll(createDto(resources, language.get()));
+                    });
+
         } else if (contentUri.isPresent()) {
             listToReturn.addAll(
                     createDto(resourceRepository.findByContentUriIncludingCachedUrlsAndTranslations(contentUri.get()),

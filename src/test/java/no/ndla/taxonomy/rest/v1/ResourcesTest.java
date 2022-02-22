@@ -129,21 +129,40 @@ public class ResourcesTest extends RestTest {
                 t -> t.resource(true, r -> r.name("The inner planets").contentUri("urn:test:1").isVisible(false))));
 
         builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).child(t -> t.resource(true,
-                r -> r.name("Gas giants").contentUri("urn:test:2").customField("custom", "field"))));
+                r -> r.name("Gas giants").contentUri("urn:test:2").customField("custom", "value").isVisible(true))));
+
+        builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).child(t -> t.resource(true, r -> r
+                .name("Observing Uranus").contentUri("urn:test:3").customField("key", "value").isVisible(false))));
 
         {
             final var response = testUtils.getResource("/v1/resources?isVisible=false");
             final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
-            assertEquals(1, resources.length);
-            assertEquals("The inner planets", resources[0].getName());
+            assertEquals(2, resources.length);
+            assertAnyTrue(resources, s -> "The inner planets".equals(s.getName()));
+            assertAnyTrue(resources, s -> "Observing Uranus".equals(s.getName()));
         }
         {
-            final var response = testUtils.getResource("/v1/resources?key=custom&field=value");
+            final var response = testUtils.getResource("/v1/resources?key=custom&value=value");
             final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
             assertEquals(1, resources.length);
             assertEquals("Gas giants", resources[0].getName());
+        }
+        {
+            final var response = testUtils.getResource("/v1/resources?value=value");
+            final var resources = testUtils.getObject(ResourceDTO[].class, response);
+
+            assertEquals(2, resources.length);
+            assertAnyTrue(resources, s -> "Gas giants".equals(s.getName()));
+            assertAnyTrue(resources, s -> "Observing Uranus".equals(s.getName()));
+        }
+        {
+            final var response = testUtils.getResource("/v1/resources?key=key&isVisible=false");
+            final var resources = testUtils.getObject(ResourceDTO[].class, response);
+
+            assertEquals(1, resources.length);
+            assertEquals("Observing Uranus", resources[0].getName());
         }
     }
 
