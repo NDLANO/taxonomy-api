@@ -200,31 +200,5 @@ public class ResourceServiceImpl implements ResourceService {
                     });
         }
         return listToReturn;
-
-        /*
-         * if (contentUri.isPresent()) { filtered =
-         * resourceRepository.findByContentUriIncludingCachedUrlsAndTranslations(contentUri.get()); } else if
-         * (metadataFilters.getVisible().isPresent()) { final var allResourceIds =
-         * resourceRepository.getAllResourceIdsWithVisible(metadataFilters.getVisible().get()); final var counter = new
-         * AtomicInteger(); allResourceIds.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() /
-         * 1000)).values() .forEach(idChunk -> { final var resources = resourceRepository
-         * .findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
-         * listToReturn.addAll(createDto(resources, language.get())); }); return listToReturn; } else { final var
-         * allResourceIds = resourceRepository.getAllResourceIds(); final var counter = new AtomicInteger();
-         * allResourceIds.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values()
-         * .forEach(idChunk -> { final var resources = resourceRepository
-         * .findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
-         * listToReturn.addAll(createDto(resources, language.get())); }); return listToReturn; }
-         * 
-         * if (metadataFilters.getVisible().isPresent()) { specification =
-         * specification.and(resourceIsVisible(metadataFilters.getVisible().get())); } if
-         * (metadataFilters.getKey().isPresent()) { specification =
-         * specification.and(resourceHasCustomKey(metadataFilters.getKey().get())); } if
-         * (metadataFilters.getValue().isPresent()) { specification =
-         * specification.and(resourceHasCustomValue(metadataFilters.getValue().get())); filtered =
-         * resourceRepository.findAll(specification); }
-         * 
-         * return createDto(filtered, language.get());
-         */
     }
 }
