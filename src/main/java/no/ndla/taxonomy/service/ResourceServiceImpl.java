@@ -21,13 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.Join;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-
-import static org.springframework.data.jpa.domain.Specification.where;
 
 @Service
 @Transactional(readOnly = true)
@@ -156,53 +152,79 @@ public class ResourceServiceImpl implements ResourceService {
         return resources.stream().map(resource -> new ResourceDTO(resource, languageCode)).collect(Collectors.toList());
     }
 
-    public Specification<Resource> base() {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.isNotNull(root.get("id"));
-    }
-
-    public Specification<Resource> resourceIsVisible(Boolean visible) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("metadata").get("visible"), visible);
-    }
-
-    public Specification<Resource> resourceHasContentUri(URI contentUri) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("contentUri"), contentUri);
-    }
-
-    public Specification<Resource> resourceHasCustomKey(String key) {
-        return (root, query, criteriaBuilder) -> {
-            Join<Resource, Metadata> resourceMetadataJoin = root.join("metadata");
-            Join<Metadata, CustomFieldValue> join = resourceMetadataJoin.join("customFieldValues");
-            return criteriaBuilder.equal(join.get("customField").get("key"), key);
-        };
-    }
-
-    public Specification<Resource> resourceHasCustomValue(String value) {
-        return (root, query, criteriaBuilder) -> {
-            Join<Resource, Metadata> resourceMetadataJoin = root.join("metadata");
-            Join<Metadata, CustomFieldValue> join = resourceMetadataJoin.join("customFieldValues");
-            return criteriaBuilder.equal(join.get("value"), value);
-        };
-    }
-
     @Override
     public List<ResourceDTO> getResources(Optional<String> language, Optional<URI> contentUri,
             MetadataFilters metadataFilters) {
-        final List<Resource> filtered;
-        Specification<Resource> specification = where(base());
-        if (contentUri.isPresent()) {
-            specification = specification.and(resourceHasContentUri(contentUri.get()));
+        final List<ResourceDTO> listToReturn = new ArrayList<>();
+        if (metadataFilters.hasFilters()) {
+            if (metadataFilters.getVisible().isPresent()) {
+                final var allResourceIds = resourceRepository
+                        .getAllResourceIdsWithVisible(metadataFilters.getVisible().get());
+                final var counter = new AtomicInteger();
+                allResourceIds.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values()
+                        .forEach(idChunk -> {
+                            final var resources = resourceRepository
+                                    .findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
+                            listToReturn.addAll(createDto(resources, language.get()));
+                        });
+            }
+            if (metadataFilters.getKey().isPresent() && metadataFilters.getValue().isPresent()) {
+                listToReturn.addAll(createDto(
+                        resourceRepository
+                                .findByMetadataKeyValueIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(
+                                        metadataFilters.getKey().get(), metadataFilters.getValue().get()),
+                        language.get()));
+            } else if (metadataFilters.getKey().isPresent()) {
+                listToReturn.addAll(createDto(resourceRepository
+                        .findByMetadataKeyIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(
+                                metadataFilters.getKey().get()),
+                        language.get()));
+            } else if (metadataFilters.getValue().isPresent()) {
+                listToReturn.addAll(createDto(resourceRepository
+                        .findByMetadataValueIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(
+                                metadataFilters.getValue().get()),
+                        language.get()));
+            }
+        } else if (contentUri.isPresent()) {
+            listToReturn.addAll(
+                    createDto(resourceRepository.findByContentUriIncludingCachedUrlsAndTranslations(contentUri.get()),
+                            language.get()));
+        } else {
+            final var allResourceIds = resourceRepository.getAllResourceIds();
+            final var counter = new AtomicInteger();
+            allResourceIds.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values()
+                    .forEach(idChunk -> {
+                        final var resources = resourceRepository
+                                .findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
+                        listToReturn.addAll(createDto(resources, language.get()));
+                    });
         }
-        if (metadataFilters.getVisible().isPresent()) {
-            specification = specification.and(resourceIsVisible(metadataFilters.getVisible().get()));
-        }
-        if (metadataFilters.getKey().isPresent()) {
-            specification = specification.and(resourceHasCustomKey(metadataFilters.getKey().get()));
-        }
-        if (metadataFilters.getValue().isPresent()) {
-            specification = specification.and(resourceHasCustomValue(metadataFilters.getValue().get()));
-        }
-        filtered = resourceRepository.findAll(specification);
+        return listToReturn;
 
-        return createDto(filtered, language.get());
+        /*
+         * if (contentUri.isPresent()) { filtered =
+         * resourceRepository.findByContentUriIncludingCachedUrlsAndTranslations(contentUri.get()); } else if
+         * (metadataFilters.getVisible().isPresent()) { final var allResourceIds =
+         * resourceRepository.getAllResourceIdsWithVisible(metadataFilters.getVisible().get()); final var counter = new
+         * AtomicInteger(); allResourceIds.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() /
+         * 1000)).values() .forEach(idChunk -> { final var resources = resourceRepository
+         * .findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
+         * listToReturn.addAll(createDto(resources, language.get())); }); return listToReturn; } else { final var
+         * allResourceIds = resourceRepository.getAllResourceIds(); final var counter = new AtomicInteger();
+         * allResourceIds.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values()
+         * .forEach(idChunk -> { final var resources = resourceRepository
+         * .findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(idChunk);
+         * listToReturn.addAll(createDto(resources, language.get())); }); return listToReturn; }
+         * 
+         * if (metadataFilters.getVisible().isPresent()) { specification =
+         * specification.and(resourceIsVisible(metadataFilters.getVisible().get())); } if
+         * (metadataFilters.getKey().isPresent()) { specification =
+         * specification.and(resourceHasCustomKey(metadataFilters.getKey().get())); } if
+         * (metadataFilters.getValue().isPresent()) { specification =
+         * specification.and(resourceHasCustomValue(metadataFilters.getValue().get())); filtered =
+         * resourceRepository.findAll(specification); }
+         * 
+         * return createDto(filtered, language.get());
+         */
     }
 }
