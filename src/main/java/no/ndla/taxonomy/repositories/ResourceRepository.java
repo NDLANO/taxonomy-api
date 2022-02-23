@@ -8,6 +8,8 @@
 package no.ndla.taxonomy.repositories;
 
 import no.ndla.taxonomy.domain.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
@@ -29,6 +31,8 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
 
     @Query("SELECT DISTINCT r FROM Resource r LEFT JOIN FETCH r.cachedPaths WHERE r.publicId = :publicId")
     Optional<Resource> findFirstByPublicIdIncludingCachedUrls(URI publicId);
+
+    Page<Resource> searchAllByNameContainingIgnoreCase(String name, Pageable pageable);
 
     @Query("SELECT distinct r FROM Resource r LEFT JOIN FETCH r.cachedPaths LEFT JOIN FETCH r.metadata m"
             + " LEFT JOIN FETCH m.grepCodes LEFT JOIN m.customFieldValues cfv LEFT JOIN cfv.customField"

@@ -17,6 +17,7 @@ import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -60,6 +61,19 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
             @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible") Optional<Boolean> isVisible) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         return resourceService.getResources(language, contentUri, metadataFilters);
+    }
+
+    @GetMapping("/search")
+    @ApiOperation(value = "Search all resources")
+    @Transactional(readOnly = true)
+    public SearchResultDTO<ResourceDTO> search(
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
+            @ApiParam(value = "How many results to return pr page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
+            @ApiParam(value = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
+            @ApiParam(value = "Query to search names") @RequestParam(value = "query") Optional<String> query
+
+    ) {
+        return resourceService.searchResources(query, language, pageSize, page);
     }
 
     @GetMapping("{id}")

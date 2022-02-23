@@ -26,4 +26,7 @@ public interface ResourceService {
 
     List<ResourceDTO> getResources(Optional<String> language, Optional<URI> contentUri,
             MetadataFilters metadataFilters);
+
+    SearchResultDTO<ResourceDTO> searchResources(Optional<String> query, Optional<String> language, int pageSize,
+            int page);
 }

@@ -14,8 +14,9 @@ import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import org.springframework.cglib.core.CollectionUtils;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -204,5 +205,23 @@ public class ResourceServiceImpl implements ResourceService {
                     });
         }
         return listToReturn;
+    }
+
+    @Override
+    public SearchResultDTO<ResourceDTO> searchResources(Optional<String> query, Optional<String> language, int pageSize,
+            int page) {
+        if (page < 1)
+            throw new IllegalArgumentException("page parameter must be bigger than 0");
+
+        var pageRequest = PageRequest.of(page - 1, pageSize);
+        var fetched = query.isPresent()
+                ? resourceRepository.searchAllByNameContainingIgnoreCase(query.get(), pageRequest)
+                : resourceRepository.findAll(pageRequest);
+
+        var languageCode = language.orElse("");
+
+        var dtos = fetched.get().map(r -> new ResourceDTO(r, languageCode)).collect(Collectors.toList());
+
+        return new SearchResultDTO<>(fetched.getTotalElements(), page, pageSize, dtos);
     }
 }
