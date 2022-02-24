@@ -68,6 +68,21 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         return nodeService.getNodes(language, nodeType, contentUri, isRoot, metadataFilters);
     }
 
+    @GetMapping("/search")
+    @ApiOperation(value = "Search all nodes")
+    @Transactional(readOnly = true)
+    public SearchResultDTO<NodeDTO> search(
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
+            @ApiParam(value = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
+            @ApiParam(value = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
+            @ApiParam(value = "Query to search names") @RequestParam(value = "query") Optional<String> query,
+            @ApiParam(value = "Ids to fetch for query") @RequestParam(value = "ids") Optional<List<String>> ids,
+            @ApiParam(value = "Filter by nodeType") @RequestParam(value = "nodeType") Optional<NodeType> nodeType
+
+    ) {
+        return nodeService.searchByNodeType(query, ids, language, pageSize, page, nodeType);
+    }
+
     @GetMapping("/{id}")
     @ApiOperation("Gets a single node")
     @Transactional

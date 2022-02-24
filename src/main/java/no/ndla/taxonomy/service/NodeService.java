@@ -19,9 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.criteria.Join;
 import java.net.URI;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -29,7 +27,7 @@ import static org.springframework.data.jpa.domain.Specification.where;
 
 @Transactional(readOnly = true)
 @Service
-public class NodeService {
+public class NodeService implements SearchService<NodeDTO, Node, NodeRepository> {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final EntityConnectionService connectionService;
@@ -141,5 +139,20 @@ public class NodeService {
                 .collect(Collectors.toUnmodifiableList());
 
         return topicTreeSorter.sortList(wrappedList);
+    }
+
+    @Override
+    public NodeRepository getRepository() {
+        return nodeRepository;
+    }
+
+    @Override
+    public NodeDTO createDTO(Node node, String languageCode) {
+        return new NodeDTO(node, languageCode);
+    }
+
+    public SearchResultDTO<NodeDTO> searchByNodeType(Optional<String> query, Optional<List<String>> ids, Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
+        Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
+        return SearchService.super.search(query, ids, language, pageSize, page, nodeSpecLambda);
     }
 }

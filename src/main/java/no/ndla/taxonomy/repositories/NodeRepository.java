@@ -8,7 +8,6 @@
 package no.ndla.taxonomy.repositories;
 
 import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeType;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;

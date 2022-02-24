@@ -7,16 +7,17 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeResource;
+import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
-import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
-public class ResourceServiceImpl implements ResourceService {
+public class ResourceServiceImpl implements ResourceService, SearchService<ResourceDTO, Resource, ResourceRepository> {
     private final ResourceRepository resourceRepository;
     private final EntityConnectionService connectionService;
     private final DomainEntityHelperService domainEntityHelperService;
@@ -208,20 +209,24 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    public SearchResultDTO<ResourceDTO> searchResources(Optional<String> query, Optional<String> language, int pageSize,
-            int page) {
-        if (page < 1)
-            throw new IllegalArgumentException("page parameter must be bigger than 0");
+    public ResourceRepository getRepository() {
+        return resourceRepository;
+    }
 
-        var pageRequest = PageRequest.of(page - 1, pageSize);
-        var fetched = query.isPresent()
-                ? resourceRepository.searchAllByNameContainingIgnoreCase(query.get(), pageRequest)
-                : resourceRepository.findAll(pageRequest);
+    @Override
+    public ResourceDTO createDTO(Resource resource, String languageCode) {
+        return new ResourceDTO(resource, languageCode);
+    }
 
-        var languageCode = language.orElse("");
+    private Specification<Resource> base() {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.isNotNull(root.get("id"));
+    }
 
-        var dtos = fetched.get().map(r -> new ResourceDTO(r, languageCode)).collect(Collectors.toList());
+    private Specification<Resource> withNameLike(String name) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("name"), name);
+    }
 
-        return new SearchResultDTO<>(fetched.getTotalElements(), page, pageSize, dtos);
+    private Specification<Resource> withPublicIdsIn(List<URI> ids) {
+        return (root, query, criteriaBuilder) -> root.get("publicId").in(ids);
     }
 }
