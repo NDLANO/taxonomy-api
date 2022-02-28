@@ -15,7 +15,6 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(schema="taxonomy_api")
 public class Version extends DomainEntity {
     @Column
     @Enumerated(EnumType.STRING)

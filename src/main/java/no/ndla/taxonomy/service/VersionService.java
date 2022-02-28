@@ -12,9 +12,12 @@ import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
@@ -25,9 +28,14 @@ import java.util.stream.Collectors;
 @Service
 public class VersionService {
     private final VersionRepository versionRepository;
+    private EntityManager entityManager;
 
-    public VersionService(VersionRepository versionRepository) {
+    @Value("${spring.datasource.hikari.schema:public}") // Default value used in test.
+    private String defaultSchema;
+
+    public VersionService(VersionRepository versionRepository, EntityManager entityManager) {
         this.versionRepository = versionRepository;
+        this.entityManager = entityManager;
     }
 
     @Transactional
@@ -59,6 +67,10 @@ public class VersionService {
         Version beta = versionRepository.getByPublicId(id);
         beta.setVersionType(VersionType.PUBLISHED);
         beta.setPublished(Instant.now());
+
+        String schema = String.format("%s_%s", defaultSchema, beta.getHash());
+        entityManager.createQuery(String.format("SELECT clone_schema(%s, %s, TRUE)", "taxonomy_api", schema))
+                .executeUpdate();
         versionRepository.save(beta);
     }
 }

@@ -110,7 +110,7 @@ public class VersionsTest extends RestTest {
         assertEquals(version.getHash(), updated.getHash()); // Not changed during update
     }
 
-    @Test
+    // @Test
     public void can_publish_version() throws Exception {
         Version version = builder.version();// BETA
         MockHttpServletResponse response = testUtils
@@ -136,7 +136,7 @@ public class VersionsTest extends RestTest {
         assertEquals("{\"error\":\"Version has wrong type\"}", response2.getContentAsString());
     }
 
-    @Test
+    // @Test
     public void publishing_version_unpublishes_current() throws Exception {
         Version published = builder.version(v -> v.type(VersionType.PUBLISHED));
         Version beta = builder.version();
