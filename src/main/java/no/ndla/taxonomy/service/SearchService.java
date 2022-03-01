@@ -19,6 +19,7 @@ interface ExtraSpecification<T> {
 
 public interface SearchService<DTO, DOMAIN, REPO extends TaxonomyRepository<DOMAIN>> {
     REPO getRepository();
+
     DTO createDTO(DOMAIN domain, String languageCode);
 
     private Specification<DOMAIN> base() {
@@ -34,9 +35,8 @@ public interface SearchService<DTO, DOMAIN, REPO extends TaxonomyRepository<DOMA
         return (root, query, criteriaBuilder) -> root.get("publicId").in(ids);
     }
 
-
     default SearchResultDTO<DTO> search(Optional<String> query, Optional<List<String>> ids, Optional<String> language,
-                                        int pageSize, int page) {
+            int pageSize, int page) {
         return search(query, ids, language, pageSize, page, Optional.empty());
     }
 
@@ -65,7 +65,7 @@ public interface SearchService<DTO, DOMAIN, REPO extends TaxonomyRepository<DOMA
                 spec = spec.and(withPublicIdsIn(urisToPass));
         }
 
-        if(applySpecLambda.isPresent()){
+        if (applySpecLambda.isPresent()) {
             spec = applySpecLambda.get().applySpecification(spec);
         }
 

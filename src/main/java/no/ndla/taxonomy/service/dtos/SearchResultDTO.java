@@ -31,8 +31,19 @@ public class SearchResultDTO<T> {
         this.results = results;
     }
 
-    public int getPage() { return page; }
-    public int getPageSize() { return pageSize; }
-    public List<T> getResults() { return results; }
-    public long getTotalCount() { return totalCount; }
+    public int getPage() {
+        return page;
+    }
+
+    public int getPageSize() {
+        return pageSize;
+    }
+
+    public List<T> getResults() {
+        return results;
+    }
+
+    public long getTotalCount() {
+        return totalCount;
+    }
 }

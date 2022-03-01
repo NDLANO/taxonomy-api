@@ -151,7 +151,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return new NodeDTO(node, languageCode);
     }
 
-    public SearchResultDTO<NodeDTO> searchByNodeType(Optional<String> query, Optional<List<String>> ids, Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
+    public SearchResultDTO<NodeDTO> searchByNodeType(Optional<String> query, Optional<List<String>> ids,
+            Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
         Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
         return SearchService.super.search(query, ids, language, pageSize, page, nodeSpecLambda);
     }

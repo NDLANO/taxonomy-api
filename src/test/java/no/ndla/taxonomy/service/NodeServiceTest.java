@@ -21,8 +21,10 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -98,6 +100,65 @@ public class NodeServiceTest {
                 fail();
             }
         });
+    }
+
+    @Test
+    public void allSearch() {
+        builder.node(n -> n.nodeType(NodeType.TOPIC));
+        builder.node(n -> n.nodeType(NodeType.TOPIC));
+        builder.node(n -> n.nodeType(NodeType.TOPIC));
+        builder.node(n -> n.nodeType(NodeType.TOPIC));
+        var subject = builder.node(n -> n.nodeType(NodeType.SUBJECT));
+
+        var subjects = nodeService.searchByNodeType(Optional.empty(), Optional.empty(), Optional.empty(), 10, 1,
+                Optional.of(NodeType.SUBJECT));
+
+        var topics = nodeService.searchByNodeType(Optional.empty(), Optional.empty(), Optional.empty(), 10, 1,
+                Optional.of(NodeType.TOPIC));
+        var all = nodeService.searchByNodeType(Optional.empty(), Optional.empty(), Optional.empty(), 10, 1,
+                Optional.empty());
+
+        assertEquals(subjects.getResults().get(0).getId(), subject.getPublicId());
+
+        assertEquals(subjects.getTotalCount(), 1);
+        assertEquals(topics.getTotalCount(), 4);
+        assertEquals(all.getTotalCount(), 5);
+    }
+
+    @Test
+    public void querySearchWorks() {
+        builder.node(n -> n.nodeType(NodeType.TOPIC).name("Apekatt"));
+        builder.node(n -> n.nodeType(NodeType.TOPIC).name("Katt"));
+        builder.node(n -> n.nodeType(NodeType.TOPIC).name("Hund"));
+        var tiger = builder.node(n -> n.nodeType(NodeType.TOPIC).name("Tiger"));
+
+        var result = nodeService.search(Optional.of("tiger"), Optional.empty(), Optional.empty(), 10, 1);
+
+        assertEquals(result.getResults().get(0).getId(), tiger.getPublicId());
+        assertEquals(result.getTotalCount(), 1);
+    }
+
+    @Test
+    public void idsAndQuerySearch() throws URISyntaxException {
+        builder.node(n -> n.nodeType(NodeType.TOPIC).name("Apekatt").publicId("urn:topic:1"));
+        builder.node(n -> n.nodeType(NodeType.TOPIC).name("Katt").publicId("urn:topic:2"));
+        builder.node(n -> n.nodeType(NodeType.TOPIC).name("Hund").publicId("urn:topic:3"));
+        builder.node(n -> n.nodeType(NodeType.TOPIC).name("Tiger").publicId("urn:topic:4"));
+
+        var idList = new ArrayList<String>();
+        idList.add("urn:topic:1");
+        idList.add("urn:topic:2");
+
+        var result = nodeService.search(Optional.empty(), Optional.of(idList), Optional.empty(), 10, 1);
+
+        assertEquals(result.getResults().get(0).getId(), new URI("urn:topic:1"));
+        assertEquals(result.getResults().get(1).getId(), new URI("urn:topic:2"));
+        assertEquals(result.getTotalCount(), 2);
+
+        var result2 = nodeService.search(Optional.of("Ape"), Optional.of(idList), Optional.empty(), 10, 1);
+
+        assertEquals(result2.getResults().get(0).getId(), new URI("urn:topic:1"));
+        assertEquals(result2.getTotalCount(), 1);
     }
 
     static class MockedSortedArrayList<E> extends ArrayList<E> {
