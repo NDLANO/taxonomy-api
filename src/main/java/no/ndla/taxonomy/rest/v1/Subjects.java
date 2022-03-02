@@ -65,6 +65,19 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                 metadataFilters);
     }
 
+    @GetMapping("/search")
+    @ApiOperation(value = "Search all subjects")
+    public SearchResultDTO<NodeDTO> search(
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
+            @ApiParam(value = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
+            @ApiParam(value = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
+            @ApiParam(value = "Query to search names") @RequestParam(value = "query") Optional<String> query,
+            @ApiParam(value = "Ids to fetch for query") @RequestParam(value = "ids") Optional<List<String>> ids
+
+    ) {
+        return nodeService.searchByNodeType(query, ids, language, pageSize, page, Optional.of(NodeType.SUBJECT));
+    }
+
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single subject", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
     public EntityWithPathDTO get(@PathVariable("id") URI id,

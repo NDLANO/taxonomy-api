@@ -7,6 +7,8 @@
 
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.service.dtos.*;
 
 import java.net.URI;
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public interface ResourceService {
+public interface ResourceService extends SearchService<ResourceDTO, Resource, ResourceRepository> {
     void delete(URI id);
 
     List<ResourceWithNodeConnectionDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds,

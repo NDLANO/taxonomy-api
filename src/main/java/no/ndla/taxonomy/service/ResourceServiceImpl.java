@@ -7,7 +7,9 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeResource;
+import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
@@ -15,7 +17,7 @@ import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import org.springframework.cglib.core.CollectionUtils;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
-public class ResourceServiceImpl implements ResourceService {
+public class ResourceServiceImpl implements ResourceService, SearchService<ResourceDTO, Resource, ResourceRepository> {
     private final ResourceRepository resourceRepository;
     private final EntityConnectionService connectionService;
     private final DomainEntityHelperService domainEntityHelperService;
@@ -204,5 +206,27 @@ public class ResourceServiceImpl implements ResourceService {
                     });
         }
         return listToReturn;
+    }
+
+    @Override
+    public ResourceRepository getRepository() {
+        return resourceRepository;
+    }
+
+    @Override
+    public ResourceDTO createDTO(Resource resource, String languageCode) {
+        return new ResourceDTO(resource, languageCode);
+    }
+
+    private Specification<Resource> base() {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.isNotNull(root.get("id"));
+    }
+
+    private Specification<Resource> withNameLike(String name) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("name"), name);
+    }
+
+    private Specification<Resource> withPublicIdsIn(List<URI> ids) {
+        return (root, query, criteriaBuilder) -> root.get("publicId").in(ids);
     }
 }
