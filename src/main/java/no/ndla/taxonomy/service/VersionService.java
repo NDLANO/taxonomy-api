@@ -56,6 +56,7 @@ public class VersionService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void publishBetaAndArchiveCurrent(URI id) {
         Optional<Version> published = versionRepository.findFirstByVersionType(VersionType.PUBLISHED);
         if (published.isPresent()) {
@@ -69,8 +70,7 @@ public class VersionService {
         beta.setPublished(Instant.now());
 
         String schema = String.format("%s_%s", defaultSchema, beta.getHash());
-        entityManager.createQuery(String.format("SELECT clone_schema(%s, %s, TRUE)", "taxonomy_api", schema))
-                .executeUpdate();
+        entityManager.createNativeQuery(String.format("SELECT clone_schema('%s', '%s', true, false)", defaultSchema, schema)).executeUpdate();
         versionRepository.save(beta);
     }
 }

@@ -110,7 +110,7 @@ public class VersionsTest extends RestTest {
         assertEquals(version.getHash(), updated.getHash()); // Not changed during update
     }
 
-    // @Test
+    @Test
     public void can_publish_version() throws Exception {
         Version version = builder.version();// BETA
         MockHttpServletResponse response = testUtils
