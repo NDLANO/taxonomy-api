@@ -1159,7 +1159,7 @@
         <!-- Cannot define functions in H2, but can emulate with alias to java function -->
         <sql splitStatements="false">
             CREATE ALIAS clone_schema AS $$
-            void cloneSchema(java.lang.String source, java.lang.String destination, boolean recursive, boolean ddl_only) {
+            void cloneSchema(java.lang.String source_schema, java.lang.String dest_schema, boolean include_recs, boolean ddl_only) {
                 return;
             }
             $$

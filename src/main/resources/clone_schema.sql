@@ -20,6 +20,7 @@
 
 -- SELECT * FROM get_table_ddl('sample', 'address', True);
 
+-- 2022-03-01 Removed public from def public.get_table_ddl
 CREATE OR REPLACE FUNCTION get_table_ddl(
   in_schema varchar,
   in_table varchar,
@@ -50,7 +51,8 @@ $$
     -- Issue#61 FIX: set search_path = public before we do anything to force explicit schema qualification but dont forget to set it back before exiting...
     SELECT setting INTO v_src_path_old FROM pg_settings WHERE name = 'search_path';
     SELECT REPLACE(REPLACE(setting, '"$user"', '$user'), '$user', '"$user"') INTO v_src_path_old FROM pg_settings WHERE name = 'search_path';
-    EXECUTE 'SET search_path = "public"';
+    -- 2022-03-01 Removed public from search_path
+    -- EXECUTE 'SET search_path = "public"';
     SELECT setting INTO v_src_path_new FROM pg_settings WHERE name='search_path';
     -- RAISE NOTICE 'get_ddl: Old Search Path=%  New search_path=%', v_src_path_old, v_src_path_new;
 
@@ -169,6 +171,7 @@ $$;
 
 -- DROP FUNCTION clone_schema(text, text, boolean, boolean);
 
+-- 2022-03-01 Removed public from def public.clone_schema
 CREATE OR REPLACE FUNCTION clone_schema(
     source_schema text,
     dest_schema text,
@@ -489,6 +492,7 @@ BEGIN
     IF relknd = 'r' THEN
       IF ddl_only THEN
         IF data_type = 'USER-DEFINED' THEN
+          -- 2022-03-01 Removed public from public.get_table_ddl
           SELECT * INTO buffer3 FROM get_table_ddl(quote_ident(source_schema), tblname, False);
           buffer3 := REPLACE(buffer3, quote_ident(source_schema) || '.', quote_ident(dest_schema) || '.');
           RAISE INFO '%', buffer3;
@@ -498,6 +502,7 @@ BEGIN
 
       ELSE
         IF data_type = 'USER-DEFINED' THEN
+          -- 2022-03-01 Removed public from public.get_table_ddl
           SELECT * INTO buffer3 FROM get_table_ddl(quote_ident(source_schema), tblname, False);
           buffer3 := REPLACE(buffer3, quote_ident(source_schema) || '.', quote_ident(dest_schema) || '.');
           EXECUTE buffer3;

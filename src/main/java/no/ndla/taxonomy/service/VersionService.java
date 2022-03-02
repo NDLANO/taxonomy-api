@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
@@ -70,7 +69,10 @@ public class VersionService {
         beta.setPublished(Instant.now());
 
         String schema = String.format("%s_%s", defaultSchema, beta.getHash());
-        entityManager.createNativeQuery(String.format("SELECT clone_schema('%s', '%s', true, false)", defaultSchema, schema)).executeUpdate();
+        // JPA does not like functions returning void so adds a count(*) to sql.
+        entityManager.createNativeQuery(
+                String.format("SELECT count(*) from clone_schema('%s', '%s', true, false)", defaultSchema, schema))
+                .getSingleResult();
         versionRepository.save(beta);
     }
 }
