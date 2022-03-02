@@ -22,6 +22,7 @@ import org.springframework.core.io.ResourceLoader;
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -43,11 +44,11 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
     @Override
     public void afterPropertiesSet() throws Exception {
         try {
-            List<String> schemas = List.of();
+            List<String> schemas = new ArrayList<>();
             ResultSet resultSet = dataSource.getConnection().prepareStatement("SELECT hash FROM version")
                     .executeQuery();
             while (resultSet.next()) {
-                schemas.add(String.format("%s_%s", defaultSchema, resultSet.getString(0)));
+                schemas.add(String.format("%s_%s", defaultSchema, resultSet.getString(1)));
             }
             this.runOnAllSchemas(dataSource, schemas);
         } catch (SQLException exception) {

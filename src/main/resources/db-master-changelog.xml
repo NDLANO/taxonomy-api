@@ -1119,16 +1119,6 @@
     </changeSet>
     <!-- Adapted from taxonomy metadata -->
 
-    <!--changeSet id="2021XXXX drop old tables" author="Gunnar Velle">
-        <dropTable tableName="subject_topic"/>
-        <dropTable tableName="topic_subtopic"/>
-        <dropTable tableName="topic_resource"/>
-        <dropTable tableName="topic_translation"/>
-        <dropTable tableName="topic"/>
-        <dropTable tableName="subject_translation"/>
-        <dropTable tableName="subject"/>
-    </changeSet-->
-
     <changeSet id="20220228 add version table" author="Gunnar Velle">
         <createTable tableName="version">
             <column name="id" type="serial" autoIncrement="true">
@@ -1171,5 +1161,15 @@
         <!-- and https://github.com/denishpatel/pg-clone-schema/blob/master/clone_schema.sql -->
         <!-- NB! Original script is changed so the functions is created in current schema and not public! -->
         <sqlFile path="clone_schema.sql" splitStatements="false"/>
+    </changeSet>
+
+    <changeSet id="20220302 drop old tables" author="Gunnar Velle">
+        <dropTable tableName="subject_topic"/>
+        <dropTable tableName="topic_subtopic"/>
+        <dropTable tableName="topic_resource"/>
+        <dropTable tableName="topic_translation"/>
+        <dropTable tableName="topic"/>
+        <dropTable tableName="subject_translation"/>
+        <dropTable tableName="subject"/>
     </changeSet>
 </databaseChangeLog>
