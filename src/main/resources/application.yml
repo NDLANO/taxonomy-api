@@ -21,12 +21,6 @@ management:
       exposure:
         include: health
 
-cloud:
-  aws:
-    region:
-      static: eu-west-1
-      auto: false
-
 ---
 
 spring:
