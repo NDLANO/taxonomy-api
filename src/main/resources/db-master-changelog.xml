@@ -1034,7 +1034,7 @@
     <!-- Adapted from taxonomy metadata -->
     <changeSet id="20200212 create metadata table" author="jon-eirik.pettersen@cerpus.com">
         <createTable tableName="metadata">
-            <column name="id" type="uuid"><constraints primaryKey="true" nullable="false" /></column>
+            <column name="id" type="serial" autoIncrement="true"><constraints primaryKey="true" nullable="false" /></column>
             <column name="created_at" type="datetime"><constraints nullable="false" /></column>
             <column name="updated_at" type="datetime" />
             <column name="visible" type="boolean" defaultValueBoolean="true">
@@ -1045,7 +1045,7 @@
 
     <changeSet id="20200212 create grep_code table" author="jon-eirik.pettersen@cerpus.com">
         <createTable tableName="grep_code">
-            <column name="id" type="uuid"><constraints primaryKey="true" nullable="false" /></column>
+            <column name="id" type="serial" autoIncrement="true"><constraints primaryKey="true" nullable="false" /></column>
             <column name="code" type="varchar(50)"><constraints uniqueConstraintName="unique_grep_code_code" unique="true" nullable="false" /></column>
             <column name="created_at" type="datetime"><constraints nullable="false" /></column>
             <column name="updated_at" type="datetime" />
@@ -1054,8 +1054,8 @@
 
     <changeSet id="20200212 create metadata_grep_code table" author="jon-eirik.pettersen@cerpus.com">
         <createTable tableName="metadata_grep_code">
-            <column name="metadata_id" type="uuid"><constraints nullable="false" /></column>
-            <column name="grep_code_id" type="uuid">
+            <column name="metadata_id" type="integer"><constraints nullable="false" /></column>
+            <column name="grep_code_id" type="integer">
                 <constraints nullable="false"/>
             </column>
         </createTable>
@@ -1072,7 +1072,7 @@
 
     <changeSet id="20210408 create custom field table" author="jan.espen.oversand@cerpus.com">
         <createTable tableName="custom_field">
-            <column name="id" type="uuid"><constraints primaryKey="true" nullable="false" /></column>
+            <column name="id" type="serial" autoIncrement="true"><constraints primaryKey="true" nullable="false" /></column>
             <column name="created_at" type="datetime"><constraints nullable="false" /></column>
             <column name="updated_at" type="datetime" />
             <column name="key" type="varchar(100)"><constraints unique="true" uniqueConstraintName="unique_taxonomy_custom_fields_key" nullable="false" /></column>
@@ -1081,9 +1081,9 @@
 
     <changeSet id="20210408 create custom field value table" author="jan.espen.oversand@cerpus.com">
         <createTable tableName="custom_field_value">
-            <column name="id" type="uuid"><constraints primaryKey="true" nullable="false" /></column>
-            <column name="metadata_id" type="uuid"><constraints nullable="false" /></column>
-            <column name="custom_field_id" type="uuid"><constraints nullable="false" /></column>
+            <column name="id" type="serial" autoIncrement="true"><constraints primaryKey="true" nullable="false" /></column>
+            <column name="metadata_id" type="integer"><constraints nullable="false" /></column>
+            <column name="custom_field_id" type="integer"><constraints nullable="false" /></column>
             <column name="value" type="text"/>
         </createTable>
 
@@ -1099,10 +1099,10 @@
 
     <changeSet id="20220208 add metadata references" author="Gunnar Velle">
         <addColumn tableName="node">
-            <column name="metadata_id" type="uuid"/>
+            <column name="metadata_id" type="integer"/>
         </addColumn>
         <addColumn tableName="resource">
-            <column name="metadata_id" type="uuid"/>
+            <column name="metadata_id" type="integer"/>
         </addColumn>
         <addForeignKeyConstraint baseTableName="node" baseColumnNames="metadata_id"
                                  constraintName="fk_node_metadata_id"

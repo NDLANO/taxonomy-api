@@ -20,8 +20,8 @@ import java.util.stream.Collectors;
 @Entity
 public class GrepCode {
     @Id
-    @Column
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
     @Column
     private String code;
@@ -35,7 +35,7 @@ public class GrepCode {
     @ManyToMany(mappedBy = "grepCodes")
     private Set<Metadata> metadata = new HashSet<>();
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
 
@@ -61,12 +61,5 @@ public class GrepCode {
 
     boolean containsMetadata(Metadata metadata) {
         return this.metadata.contains(metadata);
-    }
-
-    @PrePersist
-    void prePersist() {
-        if (this.id == null) {
-            this.id = UUID.randomUUID();
-        }
     }
 }

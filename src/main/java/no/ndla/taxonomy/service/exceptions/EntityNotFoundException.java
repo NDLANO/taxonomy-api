@@ -7,14 +7,12 @@
 
 package no.ndla.taxonomy.service.exceptions;
 
-import java.util.UUID;
-
 public class EntityNotFoundException extends Exception {
     public EntityNotFoundException(String id) {
         super("Entity not found: " + id);
     }
 
-    public EntityNotFoundException(UUID id) {
+    public EntityNotFoundException(Integer id) {
         this(id != null ? id.toString() : "null");
     }
 }

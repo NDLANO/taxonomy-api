@@ -13,7 +13,8 @@ import java.util.UUID;
 @Entity
 public class CustomFieldValue {
     @Id
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "metadata_id")
@@ -26,23 +27,16 @@ public class CustomFieldValue {
     @Column
     private String value;
 
-    @PrePersist
-    void prePersist() {
-        if (this.id == null) {
-            this.id = UUID.randomUUID();
-        }
-    }
-
     @PreRemove
     void preRemove() {
         this.metadata.removeCustomFieldValue(this);
     }
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

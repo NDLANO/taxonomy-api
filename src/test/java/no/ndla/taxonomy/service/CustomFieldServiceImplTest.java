@@ -117,7 +117,7 @@ public class CustomFieldServiceImplTest {
 
     @Test
     public void testDeleteUnknownValue() {
-        final var id = UUID.randomUUID();
+        final var id = 1;
         assertThrows(EntityNotFoundException.class, () -> {
             customFieldService.unsetCustomField(id);
         });
