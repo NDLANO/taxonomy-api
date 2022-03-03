@@ -25,23 +25,16 @@ public class CustomFieldTest {
 
     @Test
     public void getId() {
-        final var id = randomUUID();
+        final var id = 1;
         setField(customField, "id", id);
         assertEquals(id, customField.getId());
     }
 
     @Test
     public void setId() {
-        final var id = randomUUID();
+        final var id = 1;
         customField.setId(id);
         assertEquals(id, getField(customField, "id"));
-    }
-
-    @Test
-    public void testPrePersistRandomId() {
-        assertNull(customField.getId());
-        customField.prePersist();
-        assertNotNull(customField.getId());
     }
 
     @Test

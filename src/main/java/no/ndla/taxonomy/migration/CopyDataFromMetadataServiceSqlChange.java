@@ -29,14 +29,13 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final HashMap<String, UUID> grepCodes = new HashMap<>();
-    private final HashMap<String, UUID> customFields = new HashMap<>();
+    private final HashMap<String, Integer> grepCodes = new HashMap<>();
+    private final HashMap<String, Integer> customFields = new HashMap<>();
 
     @Override
     public SqlStatement[] generateStatements(Database database) throws CustomChangeException {
@@ -75,26 +74,26 @@ public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
                     for (MetadataApiEntity entity : entities) {
                         assert entity != null;
                         PreparedStatement insertMetadata = connection.prepareStatement(
-                                "insert into metadata (id, visible, created_at) values (?, ?, ?) returning id");
-                        insertMetadata.setObject(1, UUID.randomUUID());
-                        insertMetadata.setBoolean(2, entity.isVisible().orElse(true));
-                        insertMetadata.setTimestamp(3, Timestamp.from(Instant.now()));
+                                "insert into metadata (visible, created_at) values (?, ?) returning id");
+                        insertMetadata.setBoolean(1, entity.isVisible().orElse(true));
+                        insertMetadata.setTimestamp(2, Timestamp.from(Instant.now()));
                         ResultSet resultSet = insertMetadata.executeQuery();
-                        UUID metadataId = resultSet.next() ? resultSet.getObject(1, UUID.class) : UUID.randomUUID();
+                        resultSet.next();
+                        Integer metadataId = resultSet.getObject(1, Integer.class);
 
                         PreparedStatement updateTable = connection
                                 .prepareStatement(String.format("update %s set metadata_id = ? where id = ?", table));
-                        updateTable.setObject(1, metadataId);
+                        updateTable.setInt(1, metadataId);
                         updateTable.setInt(2, batch.get(entity.getPublicId()));
                         updateTable.executeUpdate();
 
                         if (entity.getCompetenceAims().isPresent()) {
                             for (MetadataApiEntity.CompetenceAim competanceAim : entity.getCompetenceAims().get()) {
-                                UUID grepId = createOrGetGrepCodeId(competanceAim.getCode(), connection);
+                                Integer grepId = createOrGetGrepCodeId(competanceAim.getCode(), connection);
                                 PreparedStatement insertGrepCode = connection.prepareStatement(
                                         "insert into metadata_grep_code (metadata_id, grep_code_id) values (?, ?)");
-                                insertGrepCode.setObject(1, metadataId);
-                                insertGrepCode.setObject(2, grepId);
+                                insertGrepCode.setInt(1, metadataId);
+                                insertGrepCode.setInt(2, grepId);
                                 insertGrepCode.executeUpdate();
                             }
                         }
@@ -102,14 +101,13 @@ public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
                         if (entity.getCustomFields().isPresent()) {
                             Map<String, String> customFieldMap = entity.getCustomFields().get();
                             for (String customField : customFieldMap.keySet()) {
-                                UUID customFieldId = createOrGetCustomFieldId(customField, connection);
+                                Integer customFieldId = createOrGetCustomFieldId(customField, connection);
                                 String value = customFieldMap.get(customField);
                                 PreparedStatement statement = connection.prepareStatement(
-                                        "insert into custom_field_value (id, metadata_id, custom_field_id, value) values (?, ?, ?, ?)");
-                                statement.setObject(1, UUID.randomUUID());
-                                statement.setObject(2, metadataId);
-                                statement.setObject(3, customFieldId);
-                                statement.setString(4, value);
+                                        "insert into custom_field_value (metadata_id, custom_field_id, value) values (?, ?, ?)");
+                                statement.setInt(1, metadataId);
+                                statement.setInt(2, customFieldId);
+                                statement.setString(3, value);
                                 statement.executeUpdate();
                             }
                         }
@@ -121,33 +119,34 @@ public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
         }
     }
 
-    private UUID createOrGetCustomFieldId(String customField, JdbcConnection connection)
+    private Integer createOrGetCustomFieldId(String customField, JdbcConnection connection)
             throws SQLException, DatabaseException {
         if (customFields.containsKey(customField)) {
             return customFields.get(customField);
         }
         PreparedStatement statement = connection
-                .prepareStatement("insert into custom_field (id, key, created_at) values (?, ?, ?) returning id");
-        statement.setObject(1, UUID.randomUUID());
-        statement.setString(2, customField);
-        statement.setTimestamp(3, Timestamp.from(Instant.now()));
+                .prepareStatement("insert into custom_field (key, created_at) values (?, ?) returning id");
+        statement.setString(1, customField);
+        statement.setTimestamp(2, Timestamp.from(Instant.now()));
         ResultSet resultSet = statement.executeQuery();
-        UUID customFieldId = resultSet.next() ? resultSet.getObject(1, UUID.class) : UUID.randomUUID();
+        resultSet.next();
+        Integer customFieldId = resultSet.getInt(1);
         customFields.put(customField, customFieldId);
         return customFieldId;
     }
 
-    private UUID createOrGetGrepCodeId(String code, JdbcConnection connection) throws DatabaseException, SQLException {
+    private Integer createOrGetGrepCodeId(String code, JdbcConnection connection)
+            throws DatabaseException, SQLException {
         if (grepCodes.containsKey(code)) {
             return grepCodes.get(code);
         }
         PreparedStatement statement = connection
-                .prepareStatement("insert into grep_code (id, code, created_at) values (?, ?, ?) returning id");
-        statement.setObject(1, UUID.randomUUID());
-        statement.setString(2, code);
-        statement.setTimestamp(3, Timestamp.from(Instant.now()));
+                .prepareStatement("insert into grep_code (code, created_at) values (?, ?) returning id");
+        statement.setString(1, code);
+        statement.setTimestamp(2, Timestamp.from(Instant.now()));
         ResultSet resultSet = statement.executeQuery();
-        UUID grepId = resultSet.next() ? resultSet.getObject(1, UUID.class) : UUID.randomUUID();
+        resultSet.next();
+        Integer grepId = resultSet.getInt(1);
         grepCodes.put(code, grepId);
         return grepId;
     }

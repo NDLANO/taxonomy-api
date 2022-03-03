@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
-import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.util.ReflectionTestUtils.getField;
@@ -28,9 +27,8 @@ class GrepCodeTest {
 
     @Test
     void getId() {
-        final var id = randomUUID();
+        final var id = 1;
         setField(grepCode, "id", id);
-
         assertEquals(id, grepCode.getId());
     }
 
