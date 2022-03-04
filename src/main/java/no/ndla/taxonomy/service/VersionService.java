@@ -10,6 +10,7 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
+import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,9 +28,10 @@ import java.util.stream.Collectors;
 @Service
 public class VersionService {
     private final VersionRepository versionRepository;
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
+    private final URNValidator validator = new URNValidator();
 
-    @Value("${spring.datasource.hikari.schema:public}") // Default value used in test.
+    @Value("${spring.datasource.hikari.schema:public}")
     private String defaultSchema;
 
     public VersionService(VersionRepository versionRepository, EntityManager entityManager) {
@@ -67,12 +69,24 @@ public class VersionService {
         Version beta = versionRepository.getByPublicId(id);
         beta.setVersionType(VersionType.PUBLISHED);
         beta.setPublished(Instant.now());
+        versionRepository.save(beta);
+    }
 
-        String schema = String.format("%s_%s", defaultSchema, beta.getHash());
+    public Version createNewVersion(VersionCommand command) {
+        Version entity = new Version();
+        command.getId().ifPresent(id -> {
+            validator.validate(id, entity);
+            entity.setPublicId(id);
+        });
+        command.apply(entity);
+        Version version = versionRepository.save(entity);
+
+        String schema = String.format("%s_%s", defaultSchema, version.getHash());
         // JPA does not like functions returning void so adds a count(*) to sql.
         entityManager.createNativeQuery(
                 String.format("SELECT count(*) from clone_schema('%s', '%s', true, false)", defaultSchema, schema))
                 .getSingleResult();
-        versionRepository.save(beta);
+        return version;
+
     }
 }

@@ -1146,11 +1146,12 @@
     </changeSet>
 
     <changeSet id="20220225 add script to clone schema" author="Gunnar Velle" dbms="h2">
-        <!-- Cannot define functions in H2, but can emulate with alias to java function -->
+        <!-- Cannot define functions in H2, but can emulate with alias to java function, which returns ResultSet -->
         <sql splitStatements="false">
             CREATE ALIAS clone_schema AS $$
-            void cloneSchema(java.lang.String source_schema, java.lang.String dest_schema, boolean include_recs, boolean ddl_only) {
-                return;
+            java.sql.ResultSet cloneSchema(java.lang.String source_schema, java.lang.String dest_schema, boolean
+            include_recs, boolean ddl_only) {
+                return new org.h2.tools.SimpleResultSet();
             }
             $$
         </sql>

@@ -64,8 +64,10 @@ public class Versions extends CrudController<Version> {
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public ResponseEntity<Void> post(
             @ApiParam(name = "version", value = "The new version") @RequestBody VersionCommand command) {
-        final var version = new Version();
-        return doPost(version, command);
+        // Don't call doPost because we need to create new schema
+        Version version = versionService.createNewVersion(command);
+        URI location = URI.create(getLocation() + "/" + version.getPublicId());
+        return ResponseEntity.created(location).build();
     }
 
     @PutMapping("/{id}")
