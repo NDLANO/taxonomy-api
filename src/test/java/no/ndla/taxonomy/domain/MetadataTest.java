@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
-import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.getField;
@@ -28,8 +27,7 @@ class MetadataTest {
 
     @Test
     void getId() {
-        final var id = randomUUID();
-
+        final var id = 1;
         setField(metadata, "id", id);
         assertEquals(id, metadata.getId());
     }
@@ -75,17 +73,6 @@ class MetadataTest {
         verify(grepCode2).removeMetadata(metadata);
 
         assertEquals(0, metadata.getGrepCodes().size());
-    }
-
-    @Test
-    void prePersist() {
-        assertNull(metadata.getId());
-        metadata.prePersist();
-        assertNotNull(metadata.getId());
-
-        final var id = metadata.getId();
-        metadata.prePersist();
-        assertSame(id, metadata.getId());
     }
 
     @Test

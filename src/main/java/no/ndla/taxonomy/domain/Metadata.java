@@ -18,8 +18,8 @@ import java.util.stream.Collectors;
 @Entity
 public class Metadata {
     @Id
-    @Column
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
     @UpdateTimestamp
     private Instant updatedAt;
@@ -76,15 +76,8 @@ public class Metadata {
         return customFieldValues.stream().collect(Collectors.toUnmodifiableSet());
     }
 
-    public UUID getId() {
+    public Integer getId() {
         return id;
-    }
-
-    @PrePersist
-    void prePersist() {
-        if (this.id == null) {
-            this.id = UUID.randomUUID();
-        }
     }
 
     @PreRemove

@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -64,14 +63,14 @@ public class CustomFieldServiceImpl implements CustomFieldService {
     }
 
     @Override
-    public void unsetCustomField(UUID id) throws EntityNotFoundException {
+    public void unsetCustomField(Integer id) throws EntityNotFoundException {
         customFieldValueRepository
                 .delete(customFieldValueRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(id)));
     }
 
     @Override
     public List<Metadata> getMetadataListByCustomFieldKeyValue(String key, String value) {
-        final UUID customFieldId;
+        final Integer customFieldId;
         {
             final CustomField customField;
             {
@@ -95,16 +94,16 @@ public class CustomFieldServiceImpl implements CustomFieldService {
     }
 
     static class FieldValueImpl implements FieldValue {
-        private UUID id;
+        private Integer id;
         private String value;
 
-        FieldValueImpl(UUID id, String value) {
+        FieldValueImpl(Integer id, String value) {
             this.id = id;
             this.value = value;
         }
 
         @Override
-        public UUID getId() {
+        public Integer getId() {
             return id;
         }
 

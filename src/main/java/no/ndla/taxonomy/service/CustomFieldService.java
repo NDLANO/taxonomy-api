@@ -12,19 +12,18 @@ import no.ndla.taxonomy.service.exceptions.EntityNotFoundException;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public interface CustomFieldService {
     void setCustomField(Metadata metadata, String customField, String value);
 
     Map<String, FieldValue> getCustomFields(Metadata metadata);
 
-    void unsetCustomField(UUID id) throws EntityNotFoundException;
+    void unsetCustomField(Integer id) throws EntityNotFoundException;
 
     List<Metadata> getMetadataListByCustomFieldKeyValue(String key, String value);
 
     interface FieldValue {
-        UUID getId();
+        Integer getId();
 
         String getValue();
     }
