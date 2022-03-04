@@ -14,12 +14,15 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Translation;
+import no.ndla.taxonomy.rest.v1.NodeTranslations;
+import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 import no.ndla.taxonomy.service.TreeSorter;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -53,6 +56,12 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
     @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
     public URI relevanceId;
 
+    @ApiModelProperty(value = "All translations of this resource")
+    public Set<NodeTranslations.TranslationDTO> translations;
+
+    @ApiModelProperty(value = "List of language codes supported by translations")
+    public Set<String> supportedLanguages;
+
     @JsonIgnore
     public List<EntityWithPathChildDTO> children = new ArrayList<>();
 
@@ -70,6 +79,10 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
             this.path = child.getPathByContext(node).orElse("");
             this.paths = child.getAllPaths();
             this.metadata = new MetadataDto(child.getMetadata());
+
+            var translations = child.getTranslations();
+            this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
+            this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
         });
 
         nodeConnection.getParent().ifPresent(parent -> this.parent = parent.getPublicId());
