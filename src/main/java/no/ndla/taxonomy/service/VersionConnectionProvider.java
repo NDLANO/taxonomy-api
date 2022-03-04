@@ -16,15 +16,18 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+/**
+ * Updates the Connection object with the correct schema, based on the tenant identifier
+ */
 @Component
-public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl {
+public class VersionConnectionProvider extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl {
     private final DataSource dataSource;
 
-    @Value("${spring.datasource.hikari.schema:public}") // Default value used in test.
+    @Value("${spring.datasource.hikari.schema:public}")
     private String defaultSchema;
 
     @Autowired
-    public MultiTenantConnectionProvider(DataSource dataSource) {
+    public VersionConnectionProvider(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -34,14 +37,14 @@ public class MultiTenantConnectionProvider extends AbstractDataSourceBasedMultiT
     }
 
     @Override
-    protected DataSource selectDataSource(String tenantIdentifier) {
+    protected DataSource selectDataSource(String versionSchemaName) {
         return dataSource;
     }
 
     @Override
-    public Connection getConnection(String tenantIdentifier) throws SQLException {
+    public Connection getConnection(String versionSchemaName) throws SQLException {
         final Connection connection = getAnyConnection();
-        connection.setSchema(tenantIdentifier);
+        connection.setSchema(versionSchemaName);
         return connection;
     }
 

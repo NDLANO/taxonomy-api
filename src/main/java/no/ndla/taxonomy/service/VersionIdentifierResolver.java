@@ -13,11 +13,13 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+/**
+ * Gets the database schema name from the version context to be used in the multi tenancy provider.
+ */
 @Component
-// @Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)
-public class TenantIdentifierResolver implements CurrentTenantIdentifierResolver {
+public class VersionIdentifierResolver implements CurrentTenantIdentifierResolver {
 
-    @Value("${spring.datasource.hikari.schema:public}") // Default value used in test.
+    @Value("${spring.datasource.hikari.schema:public}")
     private String defaultSchema;
 
     @Override

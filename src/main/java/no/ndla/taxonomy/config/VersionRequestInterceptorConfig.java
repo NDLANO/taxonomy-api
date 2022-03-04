@@ -14,7 +14,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class VersionSchemaInterceptorConfig implements WebMvcConfigurer {
+public class VersionRequestInterceptorConfig implements WebMvcConfigurer {
     @Autowired
     private VersionRequestInterceptor tenantInterceptor;
 

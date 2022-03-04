@@ -15,6 +15,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Optional;
 
+/**
+ * Interceptor which extracts http header and places a database schemaname in the VersionContext object.
+ */
 @Component
 public class VersionRequestInterceptor implements AsyncHandlerInterceptor {
 

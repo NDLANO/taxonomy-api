@@ -16,10 +16,13 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
+/**
+ * Takes a http request and extracts a given header. Returns a database schema name.
+ */
 @Component
 public class VersionHeaderExtractor {
 
-    @Value("${spring.datasource.hikari.schema:public}") // Default value used in test.
+    @Value("${spring.datasource.hikari.schema:public}")
     private String defaultSchema;
 
     private final VersionRepository versionRepository;
