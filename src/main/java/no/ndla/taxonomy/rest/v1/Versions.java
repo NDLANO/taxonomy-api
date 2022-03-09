@@ -79,6 +79,15 @@ public class Versions extends CrudController<Version> {
         doPut(id, command);
     }
 
+    @DeleteMapping("/{id}")
+    @ApiOperation(value = "Deletes a single entity by id")
+    @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Override
+    public void delete(@PathVariable("id") URI id) {
+        versionService.delete(id);
+    }
+
     @PutMapping("/{id}/publish")
     @ApiOperation("Publishes a version")
     @ResponseStatus(HttpStatus.NO_CONTENT)

@@ -44,6 +44,8 @@ public class VersionService {
         final var versionToDelete = versionRepository.findFirstByPublicId(publicId)
                 .orElseThrow(() -> new NotFoundServiceException("Version was not found"));
 
+        String schema = String.format("%s_%s", defaultSchema, versionToDelete.getHash());
+        entityManager.createNativeQuery(String.format("DROP SCHEMA %s CASCADE", schema)).executeUpdate();
         versionRepository.delete(versionToDelete);
         versionRepository.flush();
     }
