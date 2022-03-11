@@ -38,6 +38,10 @@ public class VersionDTO {
     private String hash;
 
     @JsonProperty
+    @ApiModelProperty(notes = "Is the version locked")
+    private Boolean locked;
+
+    @JsonProperty
     @ApiModelProperty(notes = "Timestamp for when version was published")
     private Instant published;
 
@@ -53,6 +57,7 @@ public class VersionDTO {
         this.versionType = version.getVersionType();
         this.name = version.getName();
         this.hash = version.getHash();
+        this.locked = version.isLocked();
         this.published = version.getPublished();
         this.archived = version.getArchived();
     }

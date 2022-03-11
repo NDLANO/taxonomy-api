@@ -13,11 +13,14 @@ import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
@@ -27,6 +30,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 @Service
 public class VersionService {
+    final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final VersionRepository versionRepository;
     private final EntityManager entityManager;
     private final URNValidator validator = new URNValidator();
@@ -45,7 +49,11 @@ public class VersionService {
                 .orElseThrow(() -> new NotFoundServiceException("Version was not found"));
 
         String schema = String.format("%s_%s", defaultSchema, versionToDelete.getHash());
-        entityManager.createNativeQuery(String.format("DROP SCHEMA %s CASCADE", schema)).executeUpdate();
+        try {
+            entityManager.createNativeQuery(String.format("DROP SCHEMA %s CASCADE", schema)).executeUpdate();
+        } catch (PersistenceException pe) {
+            logger.warn("Failed to drop schema. Possible manual cleanup required");
+        }
         versionRepository.delete(versionToDelete);
         versionRepository.flush();
     }

@@ -85,6 +85,10 @@ public class Versions extends CrudController<Version> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
     public void delete(@PathVariable("id") URI id) {
+        Version version = versionRepository.getByPublicId(id);
+        if (version == null || version.isLocked() || version.getVersionType() == VersionType.PUBLISHED) {
+            throw new InvalidArgumentServiceException("Cannot delete published or locked version");
+        }
         versionService.delete(id);
     }
 

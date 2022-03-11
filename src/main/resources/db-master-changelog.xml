@@ -1136,6 +1136,7 @@
             <column name="hash" type="varchar(255)">
                 <constraints nullable="false" unique="true" uniqueConstraintName="version_hash"/>
             </column>
+            <column name="locked" type="boolean" defaultValueBoolean="false"/>
             <column name="published" type="timestamp with time zone">
                 <constraints nullable="true"/>
             </column>

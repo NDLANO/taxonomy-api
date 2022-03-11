@@ -24,6 +24,10 @@ public class VersionCommand implements UpdatableDto<Version> {
     @ApiModelProperty(notes = "If specified, set the name to this value.", example = "Beta 2022")
     public String name;
 
+    @JsonProperty
+    @ApiModelProperty(notes = "If specified, set the locked property to this value.")
+    public Boolean locked;
+
     @Override
     public Optional<URI> getId() {
         return Optional.ofNullable(id);
@@ -35,6 +39,9 @@ public class VersionCommand implements UpdatableDto<Version> {
             entity.setPublicId(id);
         if (name != null) {
             entity.setName(name);
+        }
+        if (locked != null) {
+            entity.setLocked(locked);
         }
     }
 }

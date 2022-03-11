@@ -26,6 +26,8 @@ public class Version extends DomainEntity {
     @Column
     private final String hash;
 
+    private boolean locked = false;
+
     @Column
     private Instant published;
 
@@ -55,6 +57,14 @@ public class Version extends DomainEntity {
 
     public String getHash() {
         return hash;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 
     public Instant getPublished() {

@@ -9,6 +9,8 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
+import no.ndla.taxonomy.domain.exceptions.NotFoundException;
+import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,6 +92,36 @@ public class VersionsTest extends RestTest {
     }
 
     @Test
+    public void can_delete_version() throws Exception {
+        Version version = builder.version();// BETA
+        testUtils.deleteResource("/v1/versions/" + version.getPublicId());
+        try {
+            versionRepository.getByPublicId(version.getPublicId());
+            fail("Failed to delete version");
+        } catch (NotFoundException nfe) {
+            // All OK
+        }
+    }
+
+    @Test
+    public void cannot_delete_published_or_locked_version() throws Exception {
+        Version published = builder.version(v -> v.type(VersionType.PUBLISHED));
+        Version locked = builder.version(v -> v.locked(true));
+        {
+            MockHttpServletResponse response = testUtils.deleteResource("/v1/versions/" + published.getPublicId(),
+                    status().is4xxClientError());
+            assertEquals(400, response.getStatus());
+            assertEquals("{\"error\":\"Cannot delete published or locked version\"}", response.getContentAsString());
+        }
+        {
+            MockHttpServletResponse response = testUtils.deleteResource("/v1/versions/" + locked.getPublicId(),
+                    status().is4xxClientError());
+            assertEquals(400, response.getStatus());
+            assertEquals("{\"error\":\"Cannot delete published or locked version\"}", response.getContentAsString());
+        }
+    }
+
+    @Test
     public void can_update_version() throws Exception {
         Version version = builder.version();// BETA
         URI newUri = URI.create("urn:version:1");
@@ -97,6 +129,7 @@ public class VersionsTest extends RestTest {
             {
                 id = newUri;
                 name = "New name";
+                locked = true;
             }
         };
 
@@ -107,6 +140,7 @@ public class VersionsTest extends RestTest {
         assertEquals(updateVersionCommand.id, updated.getPublicId());
         assertEquals(VersionType.BETA, updated.getVersionType());
         assertEquals("New name", updated.getName());
+        assertTrue(updated.isLocked());
         assertEquals(version.getHash(), updated.getHash()); // Not changed during update
     }
 

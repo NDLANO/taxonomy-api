@@ -81,8 +81,12 @@ public class TestUtils {
     }
 
     public MockHttpServletResponse deleteResource(String path) throws Exception {
+        return deleteResource(path, status().isNoContent());
+    }
+
+    public MockHttpServletResponse deleteResource(String path, ResultMatcher resultMatcher) throws Exception {
         entityManager.flush();
-        return mockMvc.perform(delete(path)).andExpect(status().isNoContent()).andReturn().getResponse();
+        return mockMvc.perform(delete(path)).andExpect(resultMatcher).andReturn().getResponse();
     }
 
     public MockHttpServletResponse updateResource(String path, Object command) throws Exception {

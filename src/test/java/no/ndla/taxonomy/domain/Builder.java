@@ -214,6 +214,11 @@ public class Builder {
             return this;
         }
 
+        public VersionBuilder locked(Boolean locked) {
+            version.setLocked(locked);
+            return this;
+        }
+
     }
 
     @Transactional
