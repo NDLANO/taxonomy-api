@@ -9,7 +9,6 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
-import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.VersionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

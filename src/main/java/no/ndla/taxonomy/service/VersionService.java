@@ -48,7 +48,7 @@ public class VersionService {
         final var versionToDelete = versionRepository.findFirstByPublicId(publicId)
                 .orElseThrow(() -> new NotFoundServiceException("Version was not found"));
 
-        String schema = String.format("%s_%s", defaultSchema, versionToDelete.getHash());
+        String schema = schemaFromHash(versionToDelete.getHash());
         try {
             entityManager.createNativeQuery(String.format("DROP SCHEMA %s CASCADE", schema)).executeUpdate();
         } catch (PersistenceException pe) {
@@ -82,7 +82,7 @@ public class VersionService {
         versionRepository.save(beta);
     }
 
-    public Version createNewVersion(VersionCommand command) {
+    public Version createNewVersion(Optional<URI> sourceId, VersionCommand command) {
         Version entity = new Version();
         command.getId().ifPresent(id -> {
             validator.validate(id, entity);
@@ -91,12 +91,23 @@ public class VersionService {
         command.apply(entity);
         Version version = versionRepository.save(entity);
 
-        String schema = String.format("%s_%s", defaultSchema, version.getHash());
+        String sourceSchema = defaultSchema;
+        if (sourceId.isPresent()) {
+            Version source = versionRepository.getByPublicId(sourceId.get());
+            if (source != null) {
+                sourceSchema = schemaFromHash(source.getHash());
+            }
+        }
+
+        String schema = schemaFromHash(version.getHash());
         // JPA does not like functions returning void so adds a count(*) to sql.
         entityManager.createNativeQuery(
-                String.format("SELECT count(*) from clone_schema('%s', '%s', true, false)", defaultSchema, schema))
+                String.format("SELECT count(*) from clone_schema('%s', '%s', true, false)", sourceSchema, schema))
                 .getSingleResult();
         return version;
+    }
 
+    public String schemaFromHash(String hash) {
+        return String.format("%s_%s", defaultSchema, hash);
     }
 }

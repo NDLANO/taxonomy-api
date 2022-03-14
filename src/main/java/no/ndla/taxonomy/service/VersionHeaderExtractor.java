@@ -25,10 +25,13 @@ public class VersionHeaderExtractor {
     @Value("${spring.datasource.hikari.schema:public}")
     private String defaultSchema;
 
+    private final VersionService versionService;
+
     private final VersionRepository versionRepository;
 
-    public VersionHeaderExtractor(VersionRepository versionRepository) {
+    public VersionHeaderExtractor(VersionRepository versionRepository, VersionService versionService) {
         this.versionRepository = versionRepository;
+        this.versionService = versionService;
     }
 
     public String getVersionSchemaFromHeader(HttpServletRequest req) {
@@ -38,13 +41,13 @@ public class VersionHeaderExtractor {
             Optional<Version> published = versionRepository.findFirstByVersionType(VersionType.PUBLISHED);
             if (published.isPresent() && req.getMethod().equals("GET")) {
                 // Use published for all GETs
-                return String.format("%s_%s", defaultSchema, published.get().getHash());
+                return versionService.schemaFromHash(published.get().getHash());
             }
         } else {
             // Header supplied, use that version if in database
             Optional<Version> version = versionRepository.findFirstByHash(versionHash);
             if (version.isPresent()) {
-                return String.format("%s_%s", defaultSchema, version.get().getHash());
+                return versionService.schemaFromHash(version.get().getHash());
             }
         }
         // Either no header or no version matching header. Use default schema.

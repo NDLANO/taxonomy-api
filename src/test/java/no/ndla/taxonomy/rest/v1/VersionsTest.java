@@ -92,6 +92,26 @@ public class VersionsTest extends RestTest {
     }
 
     @Test
+    public void can_create_version_based_on_existing() throws Exception {
+        Version published = builder.version(v -> v.type(VersionType.PUBLISHED));
+        final var createVersionCommand = new VersionCommand() {
+            {
+                id = URI.create("urn:version:1");
+                name = "Beta";
+            }
+        };
+
+        MockHttpServletResponse response = testUtils.createResource("/v1/versions?sourceId=" + published.getPublicId(),
+                createVersionCommand);
+        URI id = getId(response);
+
+        Version version = versionRepository.getByPublicId(id);
+        assertEquals(createVersionCommand.id, version.getPublicId());
+        assertEquals(VersionType.BETA, version.getVersionType());
+        assertEquals("Beta", version.getName());
+    }
+
+    @Test
     public void can_delete_version() throws Exception {
         Version version = builder.version();// BETA
         testUtils.deleteResource("/v1/versions/" + version.getPublicId());

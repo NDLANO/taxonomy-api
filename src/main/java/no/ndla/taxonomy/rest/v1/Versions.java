@@ -7,17 +7,13 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
 import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
-import no.ndla.taxonomy.service.UpdatableDto;
 import no.ndla.taxonomy.service.VersionService;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
@@ -27,7 +23,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,9 +58,10 @@ public class Versions extends CrudController<Version> {
     @ApiOperation(value = "Creates a new version")
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public ResponseEntity<Void> post(
+            @ApiParam(value = "Base new version on version with this id") @RequestParam(value = "sourceId") Optional<URI> sourceId,
             @ApiParam(name = "version", value = "The new version") @RequestBody VersionCommand command) {
         // Don't call doPost because we need to create new schema
-        Version version = versionService.createNewVersion(command);
+        Version version = versionService.createNewVersion(sourceId, command);
         URI location = URI.create(getLocation() + "/" + version.getPublicId());
         return ResponseEntity.created(location).build();
     }
