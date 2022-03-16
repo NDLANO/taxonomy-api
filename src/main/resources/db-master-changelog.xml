@@ -1146,7 +1146,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20220225 add script to clone schema" author="Gunnar Velle" dbms="h2">
+    <changeSet id="20220225 add script to clone schema" author="Gunnar Velle" dbms="h2" runOnChange="true">
         <!-- Cannot define functions in H2, but can emulate with alias to java function, which returns ResultSet -->
         <sql splitStatements="false">
             CREATE ALIAS clone_schema AS $$
@@ -1158,7 +1158,7 @@
         </sql>
     </changeSet>
 
-    <changeSet id="20220225 add script to clone schema" author="Gunnar Velle" dbms="!h2">
+    <changeSet id="20220225 add script to clone schema" author="Gunnar Velle" dbms="!h2" runOnChange="true">
         <!-- Fetched from http://pateldenish.com/2019/08/clone-schema-in-postgres.html -->
         <!-- and https://github.com/denishpatel/pg-clone-schema/blob/master/clone_schema.sql -->
         <!-- NB! Original script is changed so the functions is created in current schema and not public! -->

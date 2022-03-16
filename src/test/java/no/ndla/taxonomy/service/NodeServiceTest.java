@@ -7,14 +7,12 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.Builder;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -24,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 
@@ -167,9 +164,31 @@ public class NodeServiceTest {
         assertEquals(result2.getTotalCount(), 1);
     }
 
-    static class MockedSortedArrayList<E> extends ArrayList<E> {
-        private MockedSortedArrayList(Collection<E> collection) {
-            super(collection);
+    // @Test
+    void publishNodeFromDefaultToAnotherSchema() {
+        Node node = builder.node();
+        Version target = builder.version();
+
+        try (MockedStatic<VersionContext> mockedStatic = mockStatic(VersionContext.class)) {
+            mockedStatic.when(() -> VersionContext.setCurrentVersion(anyString())).thenCallRealMethod();
+            nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+            // switch schema once
+            mockedStatic.verify(times(1), () -> VersionContext.setCurrentVersion(anyString()));
         }
     }
+
+    // @Test
+    void publishNodeFromSourceToTargetSchema() {
+        Node node = builder.node();
+        Version source = builder.version();
+        Version target = builder.version();
+
+        try (MockedStatic<VersionContext> mockedStatic = mockStatic(VersionContext.class)) {
+            mockedStatic.when(() -> VersionContext.setCurrentVersion(anyString())).thenCallRealMethod();
+            nodeService.publishNode(node.getPublicId(), Optional.of(source.getPublicId()), target.getPublicId());
+            // switch schema twice
+            mockedStatic.verify(times(2), () -> VersionContext.setCurrentVersion(anyString()));
+        }
+    }
+
 }

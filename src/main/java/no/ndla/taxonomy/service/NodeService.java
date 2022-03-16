@@ -10,6 +10,7 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.service.dtos.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.springframework.data.jpa.domain.Specification;
@@ -20,6 +21,10 @@ import javax.persistence.criteria.Join;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,14 +36,24 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final EntityConnectionService connectionService;
+    private final VersionService versionService;
+    private final VersionRepository versionRepository;
     private final TreeSorter topicTreeSorter;
+    private final NodeFetchcher nodeFetchcher;
+    private final NodeSaver nodeSaver;
 
     public NodeService(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            EntityConnectionService connectionService, TreeSorter topicTreeSorter) {
+            EntityConnectionService connectionService, VersionRepository versionRepository,
+            VersionService versionService, TreeSorter topicTreeSorter, NodeFetchcher nodeFetchcher,
+            NodeSaver nodeSaver) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
+        this.versionRepository = versionRepository;
+        this.versionService = versionService;
         this.topicTreeSorter = topicTreeSorter;
+        this.nodeFetchcher = nodeFetchcher;
+        this.nodeSaver = nodeSaver;
     }
 
     @Transactional
@@ -155,5 +170,58 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
         Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
         return SearchService.super.search(query, ids, language, pageSize, page, nodeSpecLambda);
+    }
+
+    /**
+     * Gets node including children, and copies from one schema to another
+     * 
+     * @param nodeId
+     *            The node to copy
+     * @param sourceId
+     *            The version id of source schema. If null use default.
+     * @param targetId
+     *            The version id of target shenma. Fail if not present.
+     */
+    @Transactional
+    public void publishNode(URI nodeId, Optional<URI> sourceId, URI targetId) {
+        Version target = versionRepository.findFirstByPublicId(targetId)
+                .orElseThrow(() -> new NotFoundServiceException("Target version not found! Aborting"));
+        nodeFetchcher.setVersion(versionService.schemaFromHash(null)); // Defaults to current
+        if (sourceId.isPresent()) {
+            Version source = versionRepository.getByPublicId(sourceId.get());
+            if (source != null) {
+                // Use source to fetch object to publish
+                // VersionContext.setCurrentVersion(versionService.schemaFromHash(source.getHash()));
+                nodeFetchcher.setVersion(versionService.schemaFromHash(source.getHash()));
+            }
+        }
+        Node node;
+        try {
+            nodeFetchcher.setPublicId(nodeId);
+            ExecutorService es = Executors.newSingleThreadExecutor();
+            Future<Node> future = es.submit(nodeFetchcher);
+            node = future.get();
+            es.shutdown();
+        } catch (Exception e) {
+            throw new NotFoundServiceException("Node was not found");
+        }
+        // Set target schema for updating
+        try {
+            // VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
+            nodeSaver.setVersion(versionService.schemaFromHash(target.getHash()));
+            nodeSaver.setType(node);
+            ExecutorService es = Executors.newSingleThreadExecutor();
+            Future<Node> future = es.submit(nodeSaver);
+            node = future.get();
+            es.shutdown();
+        } catch (Exception e) {
+            throw new NotFoundServiceException("Node was not found", e);
+        }
+        /*
+         * for (Node child: children) { publishNode(child.getPublicId(), sourceId, targetId); }
+         */
+        /*
+         * for (Resource resource: resources) { publishResource(resource); }
+         */
     }
 }

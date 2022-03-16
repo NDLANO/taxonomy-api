@@ -55,7 +55,7 @@ public class VersionService {
             logger.warn("Failed to drop schema. Possible manual cleanup required");
         }
         versionRepository.delete(versionToDelete);
-        versionRepository.flush();
+        // versionRepository.flush();
     }
 
     public List<VersionDTO> getVersions() {
@@ -82,6 +82,7 @@ public class VersionService {
         versionRepository.save(beta);
     }
 
+    @Transactional
     public Version createNewVersion(Optional<URI> sourceId, VersionCommand command) {
         Version entity = new Version();
         command.getId().ifPresent(id -> {
@@ -108,6 +109,8 @@ public class VersionService {
     }
 
     public String schemaFromHash(String hash) {
-        return String.format("%s_%s", defaultSchema, hash);
+        if (hash != null)
+            return String.format("%s_%s", defaultSchema, hash);
+        return defaultSchema;
     }
 }

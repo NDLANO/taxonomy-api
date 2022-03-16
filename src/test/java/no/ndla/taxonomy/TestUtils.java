@@ -89,6 +89,10 @@ public class TestUtils {
         return mockMvc.perform(delete(path)).andExpect(resultMatcher).andReturn().getResponse();
     }
 
+    public MockHttpServletResponse updateResource(String path) throws Exception {
+        return updateResource(path, null, status().isNoContent());
+    }
+
     public MockHttpServletResponse updateResource(String path, Object command) throws Exception {
         return updateResource(path, command, status().isNoContent());
     }

@@ -1,0 +1,68 @@
+/*
+ * Part of NDLA taxonomy-api
+ * Copyright (C) 2022 NDLA
+ *
+ * See LICENSE
+ */
+
+package no.ndla.taxonomy.service;
+
+import no.ndla.taxonomy.domain.Version;
+import no.ndla.taxonomy.domain.VersionType;
+import no.ndla.taxonomy.repositories.VersionRepository;
+import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Profile;
+import org.springframework.test.context.ActiveProfiles;
+
+import javax.persistence.EntityManager;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+public class VersionServiceTest extends AbstractIntegrationTest {
+
+    @Autowired
+    VersionRepository versionRepository;
+
+    @Autowired
+    VersionService versionService;
+
+    @BeforeEach
+    void clearAllRepos() {
+        versionRepository.deleteAllAndFlush();
+    }
+
+    @Test
+    void can_create_new_version_with_own_schema() {
+        final var command = new VersionCommand() {
+            {
+                name = "Beta";
+            }
+        };
+        Version version = versionService.createNewVersion(Optional.empty(), command);
+        assertEquals(VersionType.BETA, version.getVersionType());
+
+        // Check that specified schema exists
+        assertTrue(checkSchemaExists(versionService.schemaFromHash(version.getHash())));
+    }
+
+    @Test
+    public void can_publish_version() {
+        final var command = new VersionCommand() {
+            {
+                name = "Beta";
+            }
+        };
+        Version version = versionService.createNewVersion(Optional.empty(), command);
+        versionService.publishBetaAndArchiveCurrent(version.getPublicId());
+
+        Version published = versionRepository.getByPublicId(version.getPublicId());
+        assertEquals(VersionType.PUBLISHED, published.getVersionType());
+        assertNotNull(published.getPublished());
+    }
+}

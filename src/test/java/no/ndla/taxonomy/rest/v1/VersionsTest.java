@@ -118,7 +118,7 @@ public class VersionsTest extends RestTest {
         try {
             versionRepository.getByPublicId(version.getPublicId());
             fail("Failed to delete version");
-        } catch (NotFoundException nfe) {
+        } catch (Exception nfe) {
             // All OK
         }
     }
