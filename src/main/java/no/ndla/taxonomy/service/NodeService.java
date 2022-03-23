@@ -13,8 +13,11 @@ import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.service.dtos.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import no.ndla.taxonomy.service.task.NodeFetcher;
+import no.ndla.taxonomy.service.task.NodeUpdater;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.Join;
@@ -39,13 +42,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final VersionService versionService;
     private final VersionRepository versionRepository;
     private final TreeSorter topicTreeSorter;
-    private final NodeFetchcher nodeFetchcher;
-    private final NodeSaver nodeSaver;
+    private final NodeFetcher nodeFetchcher;
+    private final NodeUpdater nodeUpdater;
 
     public NodeService(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
             EntityConnectionService connectionService, VersionRepository versionRepository,
-            VersionService versionService, TreeSorter topicTreeSorter, NodeFetchcher nodeFetchcher,
-            NodeSaver nodeSaver) {
+            VersionService versionService, TreeSorter topicTreeSorter, NodeFetcher nodeFetchcher,
+            NodeUpdater nodeSaver) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -53,7 +56,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         this.versionService = versionService;
         this.topicTreeSorter = topicTreeSorter;
         this.nodeFetchcher = nodeFetchcher;
-        this.nodeSaver = nodeSaver;
+        this.nodeUpdater = nodeSaver;
     }
 
     @Transactional
@@ -190,8 +193,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         if (sourceId.isPresent()) {
             Version source = versionRepository.getByPublicId(sourceId.get());
             if (source != null) {
-                // Use source to fetch object to publish
-                // VersionContext.setCurrentVersion(versionService.schemaFromHash(source.getHash()));
+                // Use source to fetch object
                 nodeFetchcher.setVersion(versionService.schemaFromHash(source.getHash()));
             }
         }
@@ -203,19 +205,18 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             node = future.get();
             es.shutdown();
         } catch (Exception e) {
-            throw new NotFoundServiceException("Node was not found");
+            throw new NotFoundServiceException("Failed to fetch object from schema", e);
         }
         // Set target schema for updating
         try {
-            // VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
-            nodeSaver.setVersion(versionService.schemaFromHash(target.getHash()));
-            nodeSaver.setType(node);
+            nodeUpdater.setVersion(versionService.schemaFromHash(target.getHash()));
+            nodeUpdater.setType(node);
             ExecutorService es = Executors.newSingleThreadExecutor();
-            Future<Node> future = es.submit(nodeSaver);
+            Future<Node> future = es.submit(nodeUpdater);
             node = future.get();
             es.shutdown();
         } catch (Exception e) {
-            throw new NotFoundServiceException("Node was not found", e);
+            throw new NotFoundServiceException("Failed to update object in schema", e);
         }
         /*
          * for (Node child: children) { publishNode(child.getPublicId(), sourceId, targetId); }

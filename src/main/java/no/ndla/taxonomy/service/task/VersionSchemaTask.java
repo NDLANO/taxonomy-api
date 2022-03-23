@@ -5,26 +5,18 @@
  * See LICENSE
  */
 
-package no.ndla.taxonomy.service;
+package no.ndla.taxonomy.service.task;
+
+import no.ndla.taxonomy.service.VersionContext;
 
 import java.net.URI;
 import java.util.concurrent.Callable;
 
 public abstract class VersionSchemaTask<TYPE> implements Callable<TYPE> {
     private String version;
-    protected URI publicId;
-    protected TYPE type;
 
     public void setVersion(String version) {
         this.version = version;
-    }
-
-    public void setPublicId(URI publicId) {
-        this.publicId = publicId;
-    }
-
-    public void setType(TYPE type) {
-        this.type = type;
     }
 
     @Override
