@@ -24,6 +24,10 @@ public class DomainEntity implements Serializable {
         return id;
     }
 
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
     public URI getPublicId() {
         return publicId;
     }

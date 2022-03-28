@@ -171,7 +171,7 @@ public class NodeServiceTest {
 
     @Test
     void publishNodeFromDefaultToAnotherSchema() {
-        Node node = builder.node();
+        Node node = builder.node(NodeType.SUBJECT, n -> n.child(c -> c.nodeType(NodeType.TOPIC)));
         Version version = versionService.createNewVersion(Optional.empty(), new VersionCommand());
 
         // Force saving of above objects to make sure threads can find them.

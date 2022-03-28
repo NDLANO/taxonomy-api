@@ -71,6 +71,11 @@ public class NodeConnection extends DomainEntity implements EntityWithPathConnec
         return Optional.ofNullable(child);
     }
 
+    // only for publishing
+    public void setChild(Node child) {
+        this.child = child;
+    }
+
     public int getRank() {
         return rank;
     }

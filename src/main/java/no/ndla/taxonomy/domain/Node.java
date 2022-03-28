@@ -12,6 +12,11 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@NamedEntityGraph(name = "node-with-connections", attributeNodes = {
+        @NamedAttributeNode(value = "childConnections", subgraph = "child-connection"),
+        @NamedAttributeNode("nodeResources"), @NamedAttributeNode("translations"),
+        @NamedAttributeNode("metadata") }, subgraphs = {
+                @NamedSubgraph(name = "child-connection", attributeNodes = { @NamedAttributeNode("child") }) })
 @Entity
 public class Node extends EntityWithPath {
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -101,6 +106,10 @@ public class Node extends EntityWithPath {
         toReturn.addAll(getNodeResources());
 
         return toReturn;
+    }
+
+    public Set<NodeConnection> getChildren() {
+        return childConnections;
     }
 
     public void addChildConnection(NodeConnection nodeConnection) {

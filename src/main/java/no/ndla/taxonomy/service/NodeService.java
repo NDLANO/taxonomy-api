@@ -17,7 +17,6 @@ import no.ndla.taxonomy.service.task.NodeFetcher;
 import no.ndla.taxonomy.service.task.NodeUpdater;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.Join;
@@ -186,7 +185,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
      *            The version id of target shenma. Fail if not present.
      */
     @Transactional
-    public void publishNode(URI nodeId, Optional<URI> sourceId, URI targetId) {
+    public Node publishNode(URI nodeId, Optional<URI> sourceId, URI targetId) {
         Version target = versionRepository.findFirstByPublicId(targetId)
                 .orElseThrow(() -> new NotFoundServiceException("Target version not found! Aborting"));
         nodeFetchcher.setVersion(versionService.schemaFromHash(null)); // Defaults to current
@@ -198,31 +197,37 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             }
         }
         Node node;
+        Set<NodeConnection> children;
         try {
             nodeFetchcher.setPublicId(nodeId);
             ExecutorService es = Executors.newSingleThreadExecutor();
             Future<Node> future = es.submit(nodeFetchcher);
             node = future.get();
+            children = node.getChildren();
             es.shutdown();
         } catch (Exception e) {
             throw new NotFoundServiceException("Failed to fetch object from schema", e);
+        }
+        // Need to save children first to avoid saving missing nodes.
+        for (NodeConnection connection : children) {
+            if (connection.getChild().isPresent()) {
+                Node child = connection.getChild().get();
+                Node published = publishNode(child.getPublicId(), sourceId, targetId);
+                connection.setChild(published);
+            }
         }
         // Set target schema for updating
         try {
             nodeUpdater.setVersion(versionService.schemaFromHash(target.getHash()));
             nodeUpdater.setType(node);
+            nodeUpdater.setChildren(children);
             ExecutorService es = Executors.newSingleThreadExecutor();
             Future<Node> future = es.submit(nodeUpdater);
             node = future.get();
             es.shutdown();
+            return node;
         } catch (Exception e) {
             throw new NotFoundServiceException("Failed to update object in schema", e);
         }
-        /*
-         * for (Node child: children) { publishNode(child.getPublicId(), sourceId, targetId); }
-         */
-        /*
-         * for (Resource resource: resources) { publishResource(resource); }
-         */
     }
 }
