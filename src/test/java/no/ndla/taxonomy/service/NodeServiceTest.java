@@ -12,6 +12,7 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,11 @@ public class NodeServiceTest {
 
     @MockBean
     private TreeSorter treeSorter;
+
+    @BeforeEach
+    void clearAllRepos() {
+        nodeRepository.deleteAllAndFlush();
+    }
 
     @Test
     public void delete() {
