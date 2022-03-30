@@ -81,7 +81,7 @@ public class SwaggerConfiguration {
     }
 
     /*
-    Needed to make springfox work. Should rather replace with https://springdoc.org/
+     * Needed to make springfox work. Should rather replace with https://springdoc.org/
      */
     @Bean
     public WebMvcEndpointHandlerMapping webEndpointServletHandlerMapping(WebEndpointsSupplier webEndpointsSupplier,
