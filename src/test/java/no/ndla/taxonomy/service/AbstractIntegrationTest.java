@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -19,7 +20,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.persistence.EntityManager;
 
-@SpringBootTest
 @Testcontainers
 @DirtiesContext
 @ActiveProfiles("integration")
@@ -36,6 +36,7 @@ public class AbstractIntegrationTest {
         registry.add("spring.datasource.url", postgresDB::getJdbcUrl);
         registry.add("spring.datasource.username", postgresDB::getUsername);
         registry.add("spring.datasource.password", postgresDB::getPassword);
+        registry.add("spring.datasource.hikari.schema", () -> "taxonomy_api");
     }
 
     protected boolean checkSchemaExists(String schemaName) {

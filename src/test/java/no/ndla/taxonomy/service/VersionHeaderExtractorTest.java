@@ -35,7 +35,7 @@ public class VersionHeaderExtractorTest {
     @Autowired
     private VersionHeaderExtractor versionHeaderExtractor;
 
-    @Value("${spring.datasource.hikari.schema:public}")
+    @Value("${spring.datasource.hikari.schema:PUBLIC}")
     private String defaultSchema;
 
     @BeforeEach

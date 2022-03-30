@@ -169,39 +169,4 @@ public class NodeServiceTest {
         assertEquals(result2.getTotalCount(), 1);
     }
 
-    @Test
-    void publishNodeFromDefaultToAnotherSchema() {
-        Node node = builder.node(NodeType.SUBJECT, n -> n.child(c -> c.nodeType(NodeType.TOPIC)));
-        Version version = versionService.createNewVersion(Optional.empty(), new VersionCommand());
-
-        // Force saving of above objects to make sure threads can find them.
-        TestTransaction.flagForCommit();
-        TestTransaction.end();
-
-        try (MockedStatic<VersionContext> mockedStatic = mockStatic(VersionContext.class)) {
-            mockedStatic.when(() -> VersionContext.setCurrentVersion(anyString())).thenCallRealMethod();
-            nodeService.publishNode(node.getPublicId(), Optional.empty(), version.getPublicId());
-            // switch schema once
-            mockedStatic.verify(times(1), VersionContext::getCurrentVersion);
-        }
-    }
-
-    @Test
-    void publishNodeFromSourceToTargetSchema() {
-        Node node = builder.node();
-        Version source = versionService.createNewVersion(Optional.empty(), new VersionCommand());
-        Version target = versionService.createNewVersion(Optional.empty(), new VersionCommand());
-
-        // Force saving of above objects to make sure threads can find them.
-        TestTransaction.flagForCommit();
-        TestTransaction.end();
-
-        try (MockedStatic<VersionContext> mockedStatic = mockStatic(VersionContext.class)) {
-            mockedStatic.when(() -> VersionContext.setCurrentVersion(anyString())).thenCallRealMethod();
-            nodeService.publishNode(node.getPublicId(), Optional.of(source.getPublicId()), target.getPublicId());
-            // switch schema twice
-            mockedStatic.verify(times(1), VersionContext::getCurrentVersion);
-        }
-    }
-
 }

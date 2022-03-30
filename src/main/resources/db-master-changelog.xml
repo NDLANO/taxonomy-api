@@ -517,10 +517,10 @@
     </changeSet>
 
     <changeSet id="20200506 add auto_increment to serial columns" author="Jon-Eirik Pettersen">
+        <validCheckSum>8:8a8f66f412d323763364dacdf98e5ddf</validCheckSum>
         <!--
             This was correctly set up by flyway migrations, but newly created databases after flyway
             migration had some issues both on Postgres and H2, but not the embedded postgres used before on tests
-        -->
 
         <addAutoIncrement tableName="subject" columnName="id" columnDataType="int"/>
         <addAutoIncrement tableName="subject_translation" columnName="id" columnDataType="int"/>
@@ -541,6 +541,7 @@
         <addAutoIncrement tableName="relevance_translation" columnName="id" columnDataType="int"/>
         <addAutoIncrement tableName="resource_resource_type" columnName="id" columnDataType="int"/>
         <addAutoIncrement tableName="topic_resource_type" columnName="id" columnDataType="int"/>
+        -->
     </changeSet>
 
     <changeSet id="20200508 delete view topic_tree_by_subject_id_view" author="Jon-Eirik Pettersen">

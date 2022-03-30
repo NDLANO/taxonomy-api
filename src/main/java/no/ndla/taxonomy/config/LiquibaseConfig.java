@@ -33,7 +33,7 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
     @Autowired
     private DataSource dataSource;
 
-    @Value("${spring.datasource.hikari.schema:public}")
+    @Value("${spring.datasource.hikari.schema:PUBLIC}")
     private String defaultSchema;
 
     @Autowired
