@@ -34,20 +34,20 @@ public class Queries {
     @GetMapping("/resources")
     @ApiOperation(value = "Gets a list of resources matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/resources?contentURI= instead")
     public List<ResourceDTO> queryResources(@RequestParam("contentURI") Optional<URI> contentURI,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key") Optional<String> key,
-            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value") Optional<String> value,
-            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible") Optional<Boolean> isVisible) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
+            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
+            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         return resourceController.getAll(language, contentURI, key, value, isVisible);
     }
 
     @GetMapping("/topics")
     @ApiOperation(value = "Gets a list of topics matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/topics?contentURI= instead")
     public List<EntityWithPathDTO> queryTopics(@RequestParam("contentURI") URI contentURI,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key") Optional<String> key,
-            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value") Optional<String> value,
-            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible") Optional<Boolean> isVisible) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
+            @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
+            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         return topicController.getAll(language, Optional.of(contentURI), key, value, isVisible);
     }
 }
