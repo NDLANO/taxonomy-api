@@ -54,11 +54,11 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @ApiOperation(value = "Lists all resources")
     @Transactional(readOnly = true)
     public List<ResourceDTO> getAll(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
-            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI") Optional<URI> contentUri,
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key") Optional<String> key,
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value") Optional<String> value,
-            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible") Optional<Boolean> isVisible) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
+            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
+            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         return resourceService.getResources(language, contentUri, metadataFilters);
     }
@@ -67,11 +67,11 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @ApiOperation(value = "Search all resources")
     @Transactional(readOnly = true)
     public SearchResultDTO<ResourceDTO> search(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @ApiParam(value = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @ApiParam(value = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
-            @ApiParam(value = "Query to search names") @RequestParam(value = "query") Optional<String> query,
-            @ApiParam(value = "Ids to fetch for query") @RequestParam(value = "ids") Optional<List<String>> ids
+            @ApiParam(value = "Query to search names") @RequestParam(value = "query", required = false) Optional<String> query,
+            @ApiParam(value = "Ids to fetch for query") @RequestParam(value = "ids", required = false) Optional<List<String>> ids
 
     ) {
         return resourceService.search(query, ids, language, pageSize, page);

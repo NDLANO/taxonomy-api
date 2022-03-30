@@ -56,13 +56,13 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping
     @ApiOperation("Gets all nodes")
     public List<EntityWithPathDTO> getAll(
-            @ApiParam(value = "Filter by nodeType") @RequestParam(value = "nodeType") Optional<NodeType> nodeType,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
-            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI") Optional<URI> contentUri,
-            @ApiParam(value = "Only root level") @RequestParam(value = "isRoot") Optional<Boolean> isRoot,
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key") Optional<String> key,
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value") Optional<String> value,
-            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible") Optional<Boolean> isVisible) {
+            @ApiParam(value = "Filter by nodeType") @RequestParam(value = "nodeType", required = false) Optional<NodeType> nodeType,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
+            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
+            @ApiParam(value = "Only root level") @RequestParam(value = "isRoot", required = false) Optional<Boolean> isRoot,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
+            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
+            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
 
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         return nodeService.getNodes(language, nodeType, contentUri, isRoot, metadataFilters);
@@ -72,12 +72,12 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @ApiOperation(value = "Search all nodes")
     @Transactional(readOnly = true)
     public SearchResultDTO<NodeDTO> search(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "") Optional<String> language,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @ApiParam(value = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @ApiParam(value = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
-            @ApiParam(value = "Query to search names") @RequestParam(value = "query") Optional<String> query,
-            @ApiParam(value = "Ids to fetch for query") @RequestParam(value = "ids") Optional<List<String>> ids,
-            @ApiParam(value = "Filter by nodeType") @RequestParam(value = "nodeType") Optional<NodeType> nodeType
+            @ApiParam(value = "Query to search names") @RequestParam(value = "query", required = false) Optional<String> query,
+            @ApiParam(value = "Ids to fetch for query") @RequestParam(value = "ids", required = false) Optional<List<String>> ids,
+            @ApiParam(value = "Filter by nodeType") @RequestParam(value = "nodeType", required = false) Optional<NodeType> nodeType
 
     ) {
         return nodeService.searchByNodeType(query, ids, language, pageSize, page, nodeType);
