@@ -78,6 +78,7 @@ public class VersionService {
         }
         Version beta = versionRepository.getByPublicId(id);
         beta.setVersionType(VersionType.PUBLISHED);
+        beta.setLocked(true);
         beta.setPublished(Instant.now());
         versionRepository.save(beta);
     }

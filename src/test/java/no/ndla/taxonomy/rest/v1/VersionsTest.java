@@ -124,20 +124,13 @@ public class VersionsTest extends RestTest {
     }
 
     @Test
-    public void cannot_delete_published_or_locked_version() throws Exception {
-        Version published = builder.version(v -> v.type(VersionType.PUBLISHED));
+    public void cannot_delete_locked_version() throws Exception {
         Version locked = builder.version(v -> v.locked(true));
-        {
-            MockHttpServletResponse response = testUtils.deleteResource("/v1/versions/" + published.getPublicId(),
-                    status().is4xxClientError());
-            assertEquals(400, response.getStatus());
-            assertEquals("{\"error\":\"Cannot delete published or locked version\"}", response.getContentAsString());
-        }
         {
             MockHttpServletResponse response = testUtils.deleteResource("/v1/versions/" + locked.getPublicId(),
                     status().is4xxClientError());
             assertEquals(400, response.getStatus());
-            assertEquals("{\"error\":\"Cannot delete published or locked version\"}", response.getContentAsString());
+            assertEquals("{\"error\":\"Cannot delete locked version\"}", response.getContentAsString());
         }
     }
 
@@ -172,6 +165,7 @@ public class VersionsTest extends RestTest {
 
         Version updated = versionRepository.getByPublicId(version.getPublicId());
         assertEquals(VersionType.PUBLISHED, updated.getVersionType());
+        assertTrue(updated.isLocked());
         assertNotNull(updated.getPublished());
     }
 
