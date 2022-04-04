@@ -13,7 +13,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface CustomFieldRepository extends JpaRepository<CustomField, UUID> {
+public interface CustomFieldRepository extends JpaRepository<CustomField, Integer> {
     Optional<CustomField> findFirstByKey(String key);
 
     default Optional<CustomField> findByKey(String key) {

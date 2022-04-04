@@ -12,11 +12,13 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@NamedEntityGraph(name = "node-with-connections", attributeNodes = {
+@NamedEntityGraph(name = "node-with-connections", includeAllAttributes = true, attributeNodes = {
+        @NamedAttributeNode("translations"), @NamedAttributeNode(value = "metadata"),
         @NamedAttributeNode(value = "childConnections", subgraph = "child-connection"),
-        @NamedAttributeNode("nodeResources"), @NamedAttributeNode("translations"),
-        @NamedAttributeNode("metadata") }, subgraphs = {
-                @NamedSubgraph(name = "child-connection", attributeNodes = { @NamedAttributeNode("child") }) })
+        @NamedAttributeNode(value = "nodeResources", subgraph = "resource-connections") }, subgraphs = {
+                @NamedSubgraph(name = "child-connection", attributeNodes = { @NamedAttributeNode("child") }),
+                @NamedSubgraph(name = "resource-connections", attributeNodes = {
+                        @NamedAttributeNode(value = "resource", subgraph = "resource-with-data") }) })
 @Entity
 public class Node extends EntityWithPath {
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -62,6 +64,15 @@ public class Node extends EntityWithPath {
         setNodeType(nodeType);
         setIdent(UUID.randomUUID().toString());
         updatePublicID();
+    }
+
+    public Node(Node node) {
+        this.contentUri = node.getContentUri();
+        this.nodeType = node.getNodeType();
+        this.ident = node.getIdent();
+        this.context = node.isContext();
+        this.root = node.isRoot();
+        setPublicId(node.getPublicId());
     }
 
     private void updatePublicID() {

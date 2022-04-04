@@ -15,6 +15,8 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@NamedEntityGraph(name = "resource-with-data", attributeNodes = { @NamedAttributeNode(value = "metadata"),
+        @NamedAttributeNode(value = "nodes", subgraph = "node-with-connections") })
 @Entity
 public class Resource extends EntityWithPath {
 
@@ -54,6 +56,11 @@ public class Resource extends EntityWithPath {
 
     public Resource() {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
+    }
+
+    public Resource(Resource resource) {
+        this.contentUri = resource.getContentUri();
+        setPublicId(resource.getPublicId());
     }
 
     public Collection<Node> getNodes() {

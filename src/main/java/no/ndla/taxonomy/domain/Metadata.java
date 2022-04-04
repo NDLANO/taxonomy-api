@@ -11,12 +11,14 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.Instant;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
-public class Metadata {
+public class Metadata implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -28,7 +30,7 @@ public class Metadata {
     private Instant createdAt;
 
     @SuppressWarnings("JpaDataSourceORMInspection")
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinTable(name = "metadata_grep_code", joinColumns = @JoinColumn(name = "metadata_id"), inverseJoinColumns = @JoinColumn(name = "grep_code_id"))
     private Set<GrepCode> grepCodes = new HashSet<>();
 
@@ -43,6 +45,23 @@ public class Metadata {
 
     @Column
     private boolean visible = true;
+
+    public Metadata() {
+    }
+
+    public Metadata(Metadata metadata) {
+        this.visible = metadata.isVisible();
+        Set<GrepCode> gcSet = new HashSet<>();
+        for (GrepCode code : metadata.getGrepCodes()) {
+            gcSet.add(new GrepCode(code, this));
+        }
+        this.grepCodes = gcSet;
+        Set<CustomFieldValue> cfvSet = new HashSet<>();
+        for (CustomFieldValue customFieldValue : metadata.getCustomFieldValues()) {
+            cfvSet.add(new CustomFieldValue(customFieldValue, this));
+        }
+        this.customFieldValues = cfvSet;
+    }
 
     public void addGrepCode(GrepCode grepCode) {
         this.grepCodes.add(grepCode);
@@ -78,6 +97,10 @@ public class Metadata {
 
     public Integer getId() {
         return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     @PreRemove

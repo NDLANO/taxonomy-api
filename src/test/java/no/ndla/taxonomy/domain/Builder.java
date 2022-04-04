@@ -510,7 +510,14 @@ public class Builder {
 
         public NodeBuilder grepCode(String code) {
             GrepCode grepCode = new GrepCode();
-            grepCode.setCode(code);
+            List resultList = entityManager.createQuery("select gc from GrepCode gc where gc.code = ?1")
+                    .setParameter(1, code).getResultList();
+            if (resultList.isEmpty()) {
+                grepCode.setCode(code);
+                entityManager.persist(grepCode);
+            } else {
+                grepCode = (GrepCode) resultList.get(0);
+            }
             grepCode.addMetadata(node.getMetadata());
             entityManager.persist(grepCode);
 

@@ -15,16 +15,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Must be run separately in IDE, excluded from mvn build because of shared database state.
+ */
 @SpringBootTest
-public class VersionServiceTest extends AbstractIntegrationTest {
+@Transactional
+public class VersionServiceIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     VersionRepository versionRepository;

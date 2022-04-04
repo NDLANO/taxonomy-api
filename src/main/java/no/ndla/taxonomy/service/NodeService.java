@@ -198,12 +198,14 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         }
         Node node;
         Set<NodeConnection> children;
+        Set<NodeResource> resources;
         try {
             nodeFetchcher.setPublicId(nodeId);
             ExecutorService es = Executors.newSingleThreadExecutor();
             Future<Node> future = es.submit(nodeFetchcher);
             node = future.get();
             children = node.getChildren();
+            resources = node.getNodeResources();
             es.shutdown();
         } catch (Exception e) {
             throw new NotFoundServiceException("Failed to fetch object from schema", e);
@@ -221,6 +223,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             nodeUpdater.setVersion(versionService.schemaFromHash(target.getHash()));
             nodeUpdater.setType(node);
             nodeUpdater.setChildren(children);
+            nodeUpdater.setResources(resources);
             ExecutorService es = Executors.newSingleThreadExecutor();
             Future<Node> future = es.submit(nodeUpdater);
             node = future.get();

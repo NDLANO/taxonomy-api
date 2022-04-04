@@ -8,10 +8,7 @@
 package no.ndla.taxonomy.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -22,7 +19,6 @@ import javax.persistence.EntityManager;
 
 @Testcontainers
 @DirtiesContext
-@ActiveProfiles("integration")
 public class AbstractIntegrationTest {
 
     @Container

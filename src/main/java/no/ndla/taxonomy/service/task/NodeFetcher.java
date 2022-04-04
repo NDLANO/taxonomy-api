@@ -24,7 +24,7 @@ public class NodeFetcher extends VersionSchemaFetcher<Node> {
     protected Node callInternal() {
         EntityGraph entityGraph = entityManager.getEntityGraph("node-with-connections");
         return entityManager.createQuery("select n from Node n where n.publicId = :id", Node.class)
-                .setParameter("id", this.publicId).setHint("javax.persistence.fetchgraph", entityGraph)
+                .setParameter("id", this.publicId).setHint("javax.persistence.loadgraph", entityGraph)
                 .getSingleResult();
     }
 }
