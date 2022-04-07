@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.repositories;
 
 import no.ndla.taxonomy.domain.Node;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
@@ -29,4 +30,8 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
     Optional<Node> findFirstByPublicIdIncludingCachedUrls(URI publicId);
 
     Optional<Node> findFirstByPublicId(URI publicId);
+
+    @EntityGraph(value = Node.GRAPH, type = EntityGraph.EntityGraphType.LOAD)
+    @Query("SELECT DISTINCT n FROM Node n LEFT JOIN FETCH n.cachedPaths WHERE n.publicId = :publicId")
+    Optional<Node> fetchNodeGraphByPublicId(URI publicId);
 }

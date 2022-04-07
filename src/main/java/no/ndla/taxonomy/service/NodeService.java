@@ -17,13 +17,13 @@ import no.ndla.taxonomy.service.task.NodeFetcher;
 import no.ndla.taxonomy.service.task.NodeUpdater;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.Join;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -39,19 +39,16 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final NodeConnectionRepository nodeConnectionRepository;
     private final EntityConnectionService connectionService;
     private final VersionService versionService;
-    private final VersionRepository versionRepository;
     private final TreeSorter topicTreeSorter;
     private final NodeFetcher nodeFetchcher;
     private final NodeUpdater nodeUpdater;
 
     public NodeService(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            EntityConnectionService connectionService, VersionRepository versionRepository,
-            VersionService versionService, TreeSorter topicTreeSorter, NodeFetcher nodeFetchcher,
-            NodeUpdater nodeSaver) {
+            EntityConnectionService connectionService, VersionService versionService, TreeSorter topicTreeSorter,
+            NodeFetcher nodeFetchcher, NodeUpdater nodeSaver) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
-        this.versionRepository = versionRepository;
         this.versionService = versionService;
         this.topicTreeSorter = topicTreeSorter;
         this.nodeFetchcher = nodeFetchcher;
@@ -186,32 +183,26 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
      */
     @Transactional
     public Node publishNode(URI nodeId, Optional<URI> sourceId, URI targetId) {
-        Version target = versionRepository.findFirstByPublicId(targetId)
+        Version target = versionService.findVersionByPublicId(targetId)
                 .orElseThrow(() -> new NotFoundServiceException("Target version not found! Aborting"));
         nodeFetchcher.setVersion(versionService.schemaFromHash(null)); // Defaults to current
         if (sourceId.isPresent()) {
-            Version source = versionRepository.getByPublicId(sourceId.get());
-            if (source != null) {
-                // Use source to fetch object
-                nodeFetchcher.setVersion(versionService.schemaFromHash(source.getHash()));
-            }
+            Optional<Version> source = versionService.findVersionByPublicId(sourceId.get());
+            // Use source to fetch object
+            source.ifPresent(version -> nodeFetchcher.setVersion(versionService.schemaFromHash(version.getHash())));
         }
         Node node;
-        Set<NodeConnection> children;
-        Set<NodeResource> resources;
         try {
             nodeFetchcher.setPublicId(nodeId);
             ExecutorService es = Executors.newSingleThreadExecutor();
             Future<Node> future = es.submit(nodeFetchcher);
             node = future.get();
-            children = node.getChildren();
-            resources = node.getNodeResources();
             es.shutdown();
         } catch (Exception e) {
             throw new NotFoundServiceException("Failed to fetch object from schema", e);
         }
         // Need to save children first to avoid saving missing nodes.
-        for (NodeConnection connection : children) {
+        for (NodeConnection connection : node.getChildren()) {
             if (connection.getChild().isPresent()) {
                 Node child = connection.getChild().get();
                 Node published = publishNode(child.getPublicId(), sourceId, targetId);
@@ -220,10 +211,10 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         }
         // Set target schema for updating
         try {
+            nodeUpdater.setSourceId(sourceId);
+            nodeUpdater.setTargetId(targetId);
             nodeUpdater.setVersion(versionService.schemaFromHash(target.getHash()));
-            nodeUpdater.setType(node);
-            nodeUpdater.setChildren(children);
-            nodeUpdater.setResources(resources);
+            nodeUpdater.setElement(node);
             ExecutorService es = Executors.newSingleThreadExecutor();
             Future<Node> future = es.submit(nodeUpdater);
             node = future.get();

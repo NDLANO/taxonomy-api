@@ -117,8 +117,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @Transactional
     public void publish(@PathVariable("id") URI id,
-            @ApiParam(value = "Version id to publish from", example = "urn:version:1") @RequestParam(value = "sourceId", required = false) Optional<URI> sourceId,
-            @ApiParam(value = "Version id to publish to", example = "urn:version:2") @RequestParam(value = "targetId") URI targetId) {
+            @ApiParam(value = "Version id to publish from. Can be omitted to publish from default.", example = "urn:version:1") @RequestParam(value = "sourceId", required = false) Optional<URI> sourceId,
+            @ApiParam(value = "Version id to publish to.", example = "urn:version:2") @RequestParam(value = "targetId") URI targetId) {
         nodeService.publishNode(id, sourceId, targetId);
     }
 

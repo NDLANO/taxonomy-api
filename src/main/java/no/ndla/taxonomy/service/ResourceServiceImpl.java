@@ -7,9 +7,7 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeResource;
-import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
@@ -17,12 +15,18 @@ import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import no.ndla.taxonomy.service.task.ResourceFetcher;
+import no.ndla.taxonomy.service.task.ResourceUpdater;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -35,16 +39,23 @@ public class ResourceServiceImpl implements ResourceService, SearchService<Resou
     private final NodeResourceRepository nodeResourceRepository;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
+    private final VersionService versionService;
+    private final ResourceFetcher resourceFetcher;
+    private final ResourceUpdater resourceUpdater;
 
     public ResourceServiceImpl(ResourceRepository resourceRepository, EntityConnectionService connectionService,
             DomainEntityHelperService domainEntityHelperService, NodeResourceRepository nodeResourceRepository,
-            RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter topicTreeSorter) {
+            RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter topicTreeSorter,
+            VersionService versionService, ResourceFetcher resourceFetcher, ResourceUpdater resourceUpdater) {
         this.resourceRepository = resourceRepository;
         this.connectionService = connectionService;
         this.domainEntityHelperService = domainEntityHelperService;
         this.nodeResourceRepository = nodeResourceRepository;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.treeSorter = topicTreeSorter;
+        this.versionService = versionService;
+        this.resourceFetcher = resourceFetcher;
+        this.resourceUpdater = resourceUpdater;
     }
 
     @Override
@@ -206,6 +217,51 @@ public class ResourceServiceImpl implements ResourceService, SearchService<Resou
                     });
         }
         return listToReturn;
+    }
+
+    /**
+     * Gets resource, and copies from one schema to another
+     *
+     * @param resourceId
+     *            The resource to copy
+     * @param sourceId
+     *            The version id of source schema. If null use default.
+     * @param targetId
+     *            The version id of target shenma. Fail if not present.
+     */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Resource publishResource(URI resourceId, Optional<URI> sourceId, URI targetId) {
+        Version target = versionService.findVersionByPublicId(targetId)
+                .orElseThrow(() -> new NotFoundServiceException("Target version not found! Aborting"));
+        resourceFetcher.setVersion(versionService.schemaFromHash(null)); // Defaults to current
+        if (sourceId.isPresent()) {
+            Optional<Version> source = versionService.findVersionByPublicId(sourceId.get());
+            // Use source to fetch object
+            source.ifPresent(version -> resourceFetcher.setVersion(versionService.schemaFromHash(version.getHash())));
+        }
+        Resource resource;
+        try {
+            resourceFetcher.setPublicId(resourceId);
+            ExecutorService es = Executors.newSingleThreadExecutor();
+            Future<Resource> future = es.submit(resourceFetcher);
+            resource = future.get();
+            es.shutdown();
+        } catch (Exception e) {
+            throw new NotFoundServiceException("Failed to fetch resource from schema", e);
+        }
+        // Set target schema for updating
+        try {
+            resourceUpdater.setVersion(versionService.schemaFromHash(target.getHash()));
+            resourceUpdater.setElement(resource);
+            ExecutorService es = Executors.newSingleThreadExecutor();
+            Future<Resource> future = es.submit(resourceUpdater);
+            resource = future.get();
+            es.shutdown();
+            return resource;
+        } catch (Exception e) {
+            throw new NotFoundServiceException("Failed to update resource in schema", e);
+        }
     }
 
     @Override

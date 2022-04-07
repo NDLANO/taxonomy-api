@@ -28,6 +28,12 @@ public class NodeTranslation implements Translation {
     NodeTranslation() {
     }
 
+    NodeTranslation(NodeTranslation translation, Node node) {
+        this.name = translation.name;
+        this.languageCode = translation.languageCode;
+        this.node = node;
+    }
+
     public NodeTranslation(Node node, String languageCode) {
         setNode(node);
         this.languageCode = languageCode;

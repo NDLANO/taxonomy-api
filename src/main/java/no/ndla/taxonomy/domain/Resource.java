@@ -15,10 +15,12 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@NamedEntityGraph(name = "resource-with-data", attributeNodes = { @NamedAttributeNode(value = "metadata"),
+@NamedEntityGraph(name = Resource.GRAPH, attributeNodes = { @NamedAttributeNode(value = "metadata"),
+        @NamedAttributeNode(value = "resourceTranslations"),
         @NamedAttributeNode(value = "nodes", subgraph = "node-with-connections") })
 @Entity
 public class Resource extends EntityWithPath {
+    public static final String GRAPH = "resource-with-data";
 
     @Column
     private URI contentUri;
@@ -60,6 +62,17 @@ public class Resource extends EntityWithPath {
 
     public Resource(Resource resource) {
         this.contentUri = resource.getContentUri();
+        Set<ResourceTranslation> trs = new HashSet<>();
+        for (ResourceTranslation tr : resource.getTranslations()) {
+            trs.add(new ResourceTranslation(tr, this));
+        }
+        this.resourceTranslations = trs;
+        /*
+         * Set<CachedPath> paths = new HashSet<>(); for (CachedPath cachedPath : resource.getCachedPaths()) {
+         * paths.add(new CachedPath(cachedPath)); } cachedPaths = paths;
+         */
+        setMetadata(new Metadata(resource.getMetadata()));
+        setName(resource.getName());
         setPublicId(resource.getPublicId());
     }
 

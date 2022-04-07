@@ -9,6 +9,9 @@ package no.ndla.taxonomy.service.task;
 
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.ResourceService;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -33,28 +36,26 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
     NodeConnectionRepository nodeConnectionRepository;
 
     @Autowired
-    ResourceRepository resourceRepository;
+    ResourceService resourceService;
 
     @Autowired
     NodeResourceRepository nodeResourceRepository;
 
-    protected Set<NodeConnection> children;
-    protected Set<NodeResource> resources;
-
-    public void setChildren(Set<NodeConnection> children) {
-        this.children = children;
-    }
-
-    public void setResources(Set<NodeResource> resources) {
-        this.resources = resources;
-    }
+    @Autowired
+    CachedUrlUpdaterService cachedUrlUpdaterService;
 
     @Override
-    protected Node callInternal() {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    protected Optional<Node> callInternal() {
         Map<URI, Resource> resourceMap = updateAllResources();
-        Node updatedNode = persistNode(this.type);
-        // Connect children
-        for (NodeConnection connection : children) {
+        Node updated = persistNode(this.element);
+        // Connect parent if present
+        if (this.element.getParentNode().isPresent()) {
+            Optional<Node> parent = nodeRepository
+                    .findFirstByPublicId(this.element.getParentNode().get().getPublicId());
+            parent.ifPresent(p -> nodeConnectionRepository.save(NodeConnection.create(p, this.element)));
+        }
+        for (NodeConnection connection : this.element.getChildren()) {
             Optional<NodeConnection> connToUpdate = nodeConnectionRepository
                     .findFirstByPublicId(connection.getPublicId());
             if (connToUpdate.isPresent()) {
@@ -64,22 +65,34 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
                 // Connect updated with child from connection
                 Optional<Node> child = nodeRepository.findFirstByPublicId(connection.getChild().get().getPublicId());
                 if (child.isPresent()) {
-                    connection.setParent(updatedNode);
+                    connection.setParent(updated);
+                    connection.setChild(child.get());
+                    nodeConnectionRepository.save(new NodeConnection(connection));
+                }
+            }
+        }
+
+        // Connect children
+        for (NodeConnection connection : this.element.getChildren()) {
+            Optional<NodeConnection> connToUpdate = nodeConnectionRepository
+                    .findFirstByPublicId(connection.getPublicId());
+            if (connToUpdate.isPresent()) {
+                connection.setId(connToUpdate.get().getId());
+                nodeConnectionRepository.save(connToUpdate.get());
+            } else {
+                // Connect updated with child from connection
+                Optional<Node> child = nodeRepository.findFirstByPublicId(connection.getChild().get().getPublicId());
+                if (child.isPresent()) {
+                    connection.setParent(updated);
                     connection.setChild(child.get());
                     nodeConnectionRepository.save(new NodeConnection(connection));
                 }
             }
         }
         // resources
-        for (NodeResource nodeResource : resources) {
-            Resource toSave = nodeResource.getResource().get();
-            Optional<Resource> toUpdate = resourceRepository
-                    .findFirstByPublicId(nodeResource.getResource().get().getPublicId());
-            if (toUpdate.isPresent()) {
-                toSave.setId(toUpdate.get().getId());
-            } else {
-                toSave.setId(null);
-            }
+        for (NodeResource nodeResource : this.element.getNodeResources()) {
+            Resource resource = nodeResource.getResource().get();
+            Resource existing = resourceMap.get(resource.getPublicId());
             // Resource updatedResource = resourceRepository.save(toSave);
             // Connect node and resource
             Optional<NodeConnection> connToUpdate = nodeConnectionRepository
@@ -88,27 +101,35 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
                 nodeResource.setId(connToUpdate.get().getId());
                 nodeResourceRepository.save(nodeResource);
             } else {
-                nodeResourceRepository.save(NodeResource.create(updatedNode, resourceMap.get(toSave.getPublicId())));
+                nodeResource.setNode(updated);
+                nodeResource.setResource(existing);
+                nodeResourceRepository.save(new NodeResource(nodeResource));
             }
         }
-        return updatedNode;
+        return Optional.of(updated);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     private Node persistNode(Node toSave) {
+        Node updated;
         ensureMetadataRefsExist(toSave.getMetadata());
-        Optional<Node> toUpdate = nodeRepository.findFirstByPublicId(toSave.getPublicId());
-        Node node = new Node(toSave);
-        if (toUpdate.isPresent()) {
-            node.setId(toUpdate.get().getId());
-            toSave = nodeRepository.save(node);
+        Optional<Node> existing = nodeRepository.fetchNodeGraphByPublicId(toSave.getPublicId());
+        if (!existing.isPresent()) {
+            // Node is new
+            Node node = new Node(toSave);
+            updated = nodeRepository.save(node);
         } else {
-            toSave = nodeRepository.save(node);
+            // Node exists, update current
+            Node present = existing.get();
+            present.setName(toSave.getName());
+            present.setContentUri(toSave.getContentUri());
+            present.setNodeType(toSave.getNodeType());
+            mergeMetadata(present, toSave.getMetadata());
+            updated = nodeRepository.save(present);
         }
-        return toSave;
+        cachedUrlUpdaterService.updateCachedUrls(updated);
+        return updated;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     private void ensureMetadataRefsExist(Metadata metadata) {
         if (!metadata.getCustomFieldValues().isEmpty()) {
             metadata.getCustomFieldValues().forEach(customFieldValue -> {
@@ -130,18 +151,10 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
     @Transactional
     private Map<URI, Resource> updateAllResources() {
         Map<URI, Resource> resourceMap = new HashMap();
-        for (NodeResource nodeResource : resources) {
-            Resource resource = nodeResource.getResource().get();
-            ensureMetadataRefsExist(resource.getMetadata());
-            Resource toSave = new Resource(resource);
-            toSave.setMetadata(new Metadata(resource.getMetadata()));
-            Optional<Resource> toUpdate = resourceRepository
-                    .findFirstByPublicId(nodeResource.getResource().get().getPublicId());
-            if (toUpdate.isPresent()) {
-                toSave.setId(toUpdate.get().getId());
-            }
-            Resource updated = resourceRepository.save(toSave);
-            resourceMap.put(updated.getPublicId(), updated);
+        for (NodeResource nodeResource : this.element.getNodeResources()) {
+            URI publicId = nodeResource.getResource().get().getPublicId();
+            Resource published = resourceService.publishResource(publicId, sourceId, targetId);
+            resourceMap.put(publicId, published);
         }
         return resourceMap;
     }

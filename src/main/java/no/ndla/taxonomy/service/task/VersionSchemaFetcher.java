@@ -7,9 +7,11 @@
 
 package no.ndla.taxonomy.service.task;
 
+import no.ndla.taxonomy.domain.EntityWithPath;
+
 import java.net.URI;
 
-public abstract class VersionSchemaFetcher<TYPE> extends VersionSchemaTask<TYPE> {
+public abstract class VersionSchemaFetcher<TYPE extends EntityWithPath> extends VersionSchemaTask<TYPE> {
     protected TYPE type;
     protected URI publicId;
 

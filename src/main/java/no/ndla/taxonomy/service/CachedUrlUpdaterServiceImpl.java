@@ -53,7 +53,7 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
      * ones
      */
     @Override
-    @Transactional(propagation = Propagation.MANDATORY)
+    @Transactional // (propagation = Propagation.MANDATORY)
     public void updateCachedUrls(EntityWithPath entity) {
         Set.copyOf(entity.getChildConnections())
                 .forEach(childEntity -> childEntity.getConnectedChild().ifPresent(this::updateCachedUrls));
@@ -76,7 +76,7 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.MANDATORY)
+    @Transactional // (propagation = Propagation.MANDATORY)
     public void clearCachedUrls(EntityWithPath entity) {
         Set.copyOf(entity.getCachedPaths()).forEach(CachedPath::disable);
 

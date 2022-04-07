@@ -8,23 +8,20 @@
 package no.ndla.taxonomy.service.task;
 
 import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
+import java.util.Optional;
 
 @Component
 public class NodeFetcher extends VersionSchemaFetcher<Node> {
 
     @Autowired
-    EntityManager entityManager;
+    NodeRepository nodeRepository;
 
     @Override
-    protected Node callInternal() {
-        EntityGraph entityGraph = entityManager.getEntityGraph("node-with-connections");
-        return entityManager.createQuery("select n from Node n where n.publicId = :id", Node.class)
-                .setParameter("id", this.publicId).setHint("javax.persistence.loadgraph", entityGraph)
-                .getSingleResult();
+    protected Optional<Node> callInternal() {
+        return nodeRepository.fetchNodeGraphByPublicId(this.publicId);
     }
 }

@@ -37,6 +37,15 @@ public class NodeResource extends DomainEntity implements EntityWithPathConnecti
         setPublicId(URI.create("urn:node-resource:" + UUID.randomUUID()));
     }
 
+    public NodeResource(NodeResource nodeResource) {
+        this.primary = nodeResource.primary;
+        this.rank = nodeResource.rank;
+        this.relevance = nodeResource.relevance;
+        this.node = nodeResource.node;
+        this.resource = nodeResource.resource;
+        setPublicId(nodeResource.getPublicId());
+    }
+
     public static NodeResource create(Node node, Resource resource) {
         return create(node, resource, false);
     }
@@ -81,6 +90,10 @@ public class NodeResource extends DomainEntity implements EntityWithPathConnecti
         return Optional.ofNullable(node);
     }
 
+    public void setNode(Node node) {
+        this.node = node;
+    }
+
     public Optional<Boolean> isPrimary() {
         return Optional.of(primary);
     }
@@ -91,6 +104,10 @@ public class NodeResource extends DomainEntity implements EntityWithPathConnecti
 
     public Optional<Resource> getResource() {
         return Optional.ofNullable(resource);
+    }
+
+    public void setResource(Resource resource) {
+        this.resource = resource;
     }
 
     public void setRank(int rank) {

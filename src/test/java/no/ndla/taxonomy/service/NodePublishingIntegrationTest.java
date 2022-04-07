@@ -17,15 +17,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.transaction.TestTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Must be run separately in IDE, excluded from mvn build because of shared database state.
  */
 @SpringBootTest
-@Transactional
 public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
@@ -44,6 +45,9 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     NodeResourceRepository nodeResourceRepository;
 
     @Autowired
+    GrepCodeRepository grepCodeRepository;
+
+    @Autowired
     NodeService nodeService;
 
     @Autowired
@@ -54,14 +58,17 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void clearAllRepos() {
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
         versionRepository.deleteAllAndFlush();
         nodeRepository.deleteAllAndFlush();
         nodeConnectionRepository.deleteAllAndFlush();
         resourceRepository.deleteAllAndFlush();
         nodeResourceRepository.deleteAllAndFlush();
+        grepCodeRepository.deleteAll();
     }
 
     @Test
+    @Transactional
     void can_publish_node_to_schema() {
         final var command = new VersionCommand() {
             {
@@ -71,16 +78,42 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
 
-        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
-        Node node = builder.node(n -> n.publicId("urn:node:1").grepCode("KM123").customField("key", "value"));
+        // some nodes to make sure testnode is not the first
+        builder.node();
+        builder.node();
+        Node node = builder
+                .node(n -> n.publicId("urn:node:1").name("Node").grepCode("KM123").customField("key", "value")
+                        .translation("nn", tr -> tr.name("NN Node")).translation("nb", tr -> tr.name("NB Node")));
 
         TestTransaction.flagForCommit();
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
+        Node published = nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(node.getPublicId()).get();
+        assertNotNull(published);
+        assertNotEquals(node.getId(), published.getId());// node should have 1, published 3
+        assertEquals(node.getName(), published.getName());
+        assertEquals(node.getNodeType(), published.getNodeType());
+        assertNotNull(published.getMetadata());
+        assertEquals(node.getMetadata().isVisible(), published.getMetadata().isVisible());
+        assertEquals(node.getMetadata().getGrepCodes().size(), published.getMetadata().getGrepCodes().size());
+        assertAnyTrue(published.getMetadata().getGrepCodes(), grepCode -> grepCode.getCode().equals("KM123"));
+        assertEquals(node.getMetadata().getCustomFieldValues().size(),
+                published.getMetadata().getCustomFieldValues().size());
+        assertAnyTrue(published.getMetadata().getCustomFieldValues(),
+                customFieldValue -> customFieldValue.getCustomField().getKey().equals("key"));
+        assertAnyTrue(published.getMetadata().getCustomFieldValues(),
+                customFieldValue -> customFieldValue.getValue().equals("value"));
+        assertNotNull(published.getTranslations());
+        assertAnyTrue(published.getTranslations(), translation -> translation.getName().contains("NN Node"));
+        assertAnyTrue(published.getTranslations(), translation -> translation.getName().contains("NB Node"));
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
     }
 
     @Test
+    @Transactional
     void can_publish_node_with_resource_to_schema() {
         final var command = new VersionCommand() {
             {
@@ -90,17 +123,42 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
 
-        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
+        // some nodes to make sure testnode is not the first
+        builder.node();
+        builder.node();
         Node node = builder.node(n -> n.publicId("urn:node:1").grepCode("KM123").customField("key", "value")
-                .resource(r -> r.publicId("urn:resource:1").grepCode("KM234").customField("key2", "value2")));
+                .resource(r -> r.publicId("urn:resource:1").name("Resource").grepCode("KM234")
+                        .customField("key2", "value2").translation("nb", tr -> tr.name("Resource NB"))
+                        .translation("nn", tr -> tr.name("Resource NN"))));
 
         TestTransaction.flagForCommit();
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
+        Node published = nodeRepository.fetchNodeGraphByPublicId(node.getPublicId()).get();
+        assertEquals(node.getNodeResources().size(), published.getNodeResources().size());
+        assertNotEquals(node.getId(), published.getId());
+        Resource connected = published.getNodeResources().stream().findFirst().get().getResource().get();
+        assertEquals("urn:resource:1", connected.getPublicId().toString());
+        assertEquals("Resource", connected.getName());
+        assertNotNull(connected.getMetadata());
+        assertAnyTrue(connected.getMetadata().getGrepCodes(), grepCode -> grepCode.getCode().equals("KM234"));
+        assertAnyTrue(connected.getMetadata().getCustomFieldValues(),
+                customFieldValue -> customFieldValue.getCustomField().getKey().equals("key2"));
+        assertAnyTrue(connected.getMetadata().getCustomFieldValues(),
+                customFieldValue -> customFieldValue.getValue().equals("value2"));
+        Resource resource = resourceRepository
+                .findFirstByPublicIdIncludingCachedUrlsAndTranslations(connected.getPublicId()).get();
+        assertNotNull(resource.getTranslations());
+        assertAnyTrue(resource.getTranslations(), translation -> translation.getName().contains("Resource NB"));
+        assertAnyTrue(resource.getTranslations(), translation -> translation.getName().contains("Resource NN"));
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
     }
 
     @Test
+    @Transactional
     void can_publish_node_tree_to_schema() {
         final var command = new VersionCommand() {
             {
@@ -110,7 +168,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
 
-        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
         Node node = builder.node(NodeType.SUBJECT,
                 s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC,
                         t -> t.publicId("urn:topic:1").child(NodeType.TOPIC, st -> st.publicId("urn:topic:2"))));
@@ -119,9 +176,21 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
+        Node published = nodeRepository.fetchNodeGraphByPublicId(URI.create("urn:topic:1")).get();
+        assertFalse(published.isContext());
+        assertFalse(published.isRoot());
+        assertNotNull(published.getMetadata());
+        assertNotNull(published.getChildren());
+        assertAnyTrue(published.getChildren(), nodeConnection -> nodeConnection.getChild().isPresent());
+        assertEquals(URI.create("urn:topic:2"),
+                published.getChildren().stream().findFirst().get().getChild().get().getPublicId());
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
     }
 
     @Test
+    @Transactional
     void can_publish_sub_node_with_resource_to_schema() {
         final var command = new VersionCommand() {
             {
@@ -131,17 +200,26 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
 
-        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
-        Node node = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1")
-                .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1").resource(r -> r.publicId("urn:resource:1"))));
+        Node node = builder.node(NodeType.SUBJECT,
+                s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC, t -> t.publicId("urn:topic:1")
+                        .resource(r -> r.publicId("urn:resource:1").name("Resource").isVisible(false))));
 
         TestTransaction.flagForCommit();
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
+        Optional<Resource> resource = resourceRepository.findFirstByPublicId(URI.create("urn:resource:1"));
+        assertTrue(resource.isPresent());
+        assertNotNull(resource.get().getMetadata());
+        assertFalse(resource.get().getMetadata().isVisible());
+        assertEquals("Resource", resource.get().getName());
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
     }
 
     @Test
+    @Transactional
     void can_publish_node_tree_with_resources_to_schema() {
         final var command = new VersionCommand() {
             {
@@ -151,7 +229,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
 
-        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
         Node node = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1")
                 .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1").resource(r -> r.publicId("urn:resource:1")))
                 .child(NodeType.TOPIC, t2 -> t2.publicId("urn:topic:2").resource(r2 -> r2.publicId("urn:resource:2"))
@@ -161,9 +238,22 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
+        Optional<Resource> resource = resourceRepository.fetchRepositoryGraphByPublicId(URI.create("urn:resource:1"));
+        assertTrue(resource.isPresent());
+        Optional<Node> subnode = nodeRepository.fetchNodeGraphByPublicId(URI.create("urn:topic:2"));
+        assertTrue(subnode.isPresent());
+        assertFalse(subnode.get().getNodeResources().isEmpty());
+        Optional<Node> subsubnode = nodeRepository.fetchNodeGraphByPublicId(URI.create("urn:topic:3"));
+        assertTrue(subsubnode.isPresent());
+        assertNotNull(subsubnode.get().getMetadata());
+        assertAnyTrue(subsubnode.get().getMetadata().getGrepCodes(), grepCode -> grepCode.getCode().equals("TT2"));
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
     }
 
     @Test
+    @Transactional
     void can_publish_node_tree_with_reused_resource_to_schema() {
         final var command = new VersionCommand() {
             {
@@ -173,7 +263,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
 
-        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
         Resource resource = builder.resource(r -> r.publicId("urn:resource:1"));
         Node node = builder
                 .node(NodeType.SUBJECT,
@@ -187,9 +276,21 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
+        Optional<Resource> updated = resourceRepository.fetchRepositoryGraphByPublicId(URI.create("urn:resource:1"));
+        assertTrue(updated.isPresent());
+        assertFalse(updated.get().getNodeResources().isEmpty());
+        assertEquals(2, updated.get().getNodeResources().size()); // Should be used twice
+        assertAnyTrue(updated.get().getNodeResources(),
+                nodeResource -> nodeResource.getNode().get().getPublicId().equals(URI.create("urn:topic:1")));
+        assertAnyTrue(updated.get().getNodeResources(),
+                nodeResource -> nodeResource.getNode().get().getPublicId().equals(URI.create("urn:topic:2")));
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
     }
 
     @Test
+    @Transactional
     void can_publish_node_in_tree_to_schema() {
         final var command = new VersionCommand() {
             {
@@ -199,7 +300,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
 
-        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
         Node child = builder
                 .node(n -> n.publicId("urn:node:1").isVisible(false).resource(r2 -> r2.publicId("urn:resource:2")));
         Node node = builder.node(NodeType.SUBJECT,
@@ -211,5 +311,14 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
+        Optional<Node> updatedChild = nodeRepository.fetchNodeGraphByPublicId(child.getPublicId());
+        assertTrue(updatedChild.isPresent());
+        assertFalse(updatedChild.get().getMetadata().isVisible());
+        assertFalse(updatedChild.get().getNodeResources().isEmpty());
+        assertTrue(updatedChild.get().getParentNode().isPresent());
+        assertEquals(node.getPublicId(), updatedChild.get().getParentNode().get().getPublicId());
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
     }
 }

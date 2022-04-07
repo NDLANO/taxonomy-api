@@ -7,13 +7,26 @@
 
 package no.ndla.taxonomy.service.task;
 
+import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.service.VersionContext;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
-public abstract class VersionSchemaTask<TYPE> implements Callable<TYPE> {
+public abstract class VersionSchemaTask<TYPE extends EntityWithPath> implements Callable<TYPE> {
+
+    protected Optional<URI> sourceId;
+    protected URI targetId;
     private String version;
+
+    public void setSourceId(Optional<URI> sourceId) {
+        this.sourceId = sourceId;
+    }
+
+    public void setTargetId(URI targetId) {
+        this.targetId = targetId;
+    }
 
     public void setVersion(String version) {
         this.version = version;
@@ -22,8 +35,8 @@ public abstract class VersionSchemaTask<TYPE> implements Callable<TYPE> {
     @Override
     public final TYPE call() throws Exception {
         VersionContext.setCurrentVersion(this.version);
-        return callInternal();
+        return callInternal().get();
     }
 
-    protected abstract TYPE callInternal();
+    protected abstract Optional<TYPE> callInternal();
 }
