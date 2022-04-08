@@ -10,14 +10,13 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.service.dtos.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.service.task.NodeFetcher;
 import no.ndla.taxonomy.service.task.NodeUpdater;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.Join;
@@ -40,19 +39,22 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final EntityConnectionService connectionService;
     private final VersionService versionService;
     private final TreeSorter topicTreeSorter;
-    private final NodeFetcher nodeFetchcher;
-    private final NodeUpdater nodeUpdater;
+    private final CachedUrlUpdaterService cachedUrlUpdaterService;
+
+    @Autowired
+    private NodeFetcher nodeFetchcher;
+    @Autowired
+    private NodeUpdater nodeUpdater;
 
     public NodeService(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
             EntityConnectionService connectionService, VersionService versionService, TreeSorter topicTreeSorter,
-            NodeFetcher nodeFetchcher, NodeUpdater nodeSaver) {
+            CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
         this.versionService = versionService;
         this.topicTreeSorter = topicTreeSorter;
-        this.nodeFetchcher = nodeFetchcher;
-        this.nodeUpdater = nodeSaver;
+        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
 
     @Transactional
@@ -169,6 +171,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
         Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
         return SearchService.super.search(query, ids, language, pageSize, page, nodeSpecLambda);
+    }
+
+    @Transactional
+    public Node updatePaths(Node node) {
+        Node saved = nodeRepository.save(node);
+        cachedUrlUpdaterService.updateCachedUrls(saved);
+        return saved;
     }
 
     /**

@@ -67,10 +67,6 @@ public class Resource extends EntityWithPath {
             trs.add(new ResourceTranslation(tr, this));
         }
         this.resourceTranslations = trs;
-        /*
-         * Set<CachedPath> paths = new HashSet<>(); for (CachedPath cachedPath : resource.getCachedPaths()) {
-         * paths.add(new CachedPath(cachedPath)); } cachedPaths = paths;
-         */
         setMetadata(new Metadata(resource.getMetadata()));
         setName(resource.getName());
         setPublicId(resource.getPublicId());

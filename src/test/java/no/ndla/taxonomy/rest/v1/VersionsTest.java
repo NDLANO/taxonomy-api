@@ -56,7 +56,8 @@ public class VersionsTest extends RestTest {
             assertNull(version.getArchived());
         }
         {
-            MockHttpServletResponse response = testUtils.getResource("/v1/versions/urn:version:2", status().is4xxClientError());
+            MockHttpServletResponse response = testUtils.getResource("/v1/versions/urn:version:2",
+                    status().is4xxClientError());
             assertEquals(404, response.getStatus());
             assertEquals("{\"error\":\"Version not found\"}", response.getContentAsString());
         }
@@ -72,7 +73,8 @@ public class VersionsTest extends RestTest {
             assertEquals(version.getHash(), versions[0].getHash());
         }
         {
-            MockHttpServletResponse response = testUtils.getResource("/v1/versions/?hash=random", status().is4xxClientError());
+            MockHttpServletResponse response = testUtils.getResource("/v1/versions/?hash=random",
+                    status().is4xxClientError());
             assertEquals(404, response.getStatus());
             assertEquals("{\"error\":\"Version not found\"}", response.getContentAsString());
         }

@@ -54,5 +54,5 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
 
     @EntityGraph(value = Resource.GRAPH, type = EntityGraph.EntityGraphType.LOAD)
     @Query("SELECT DISTINCT r FROM Resource r LEFT JOIN FETCH r.cachedPaths WHERE r.publicId = :publicId")
-    Optional<Resource> fetchRepositoryGraphByPublicId(URI publicId);
+    Optional<Resource> fetchResourceGraphByPublicId(URI publicId);
 }

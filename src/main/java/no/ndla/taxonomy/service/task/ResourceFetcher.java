@@ -22,6 +22,6 @@ public class ResourceFetcher extends VersionSchemaFetcher<Resource> {
 
     @Override
     protected Optional<Resource> callInternal() {
-        return resourceRepository.fetchRepositoryGraphByPublicId(this.publicId);
+        return resourceRepository.fetchResourceGraphByPublicId(this.publicId);
     }
 }

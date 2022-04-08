@@ -7,15 +7,17 @@
 
 package no.ndla.taxonomy.service.task;
 
-import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.repositories.*;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.ResourceTranslation;
+import no.ndla.taxonomy.repositories.CustomFieldRepository;
+import no.ndla.taxonomy.repositories.ResourceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Component
 public class ResourceUpdater extends VersionSchemaUpdater<Resource> {
@@ -26,15 +28,12 @@ public class ResourceUpdater extends VersionSchemaUpdater<Resource> {
     @Autowired
     ResourceRepository resourceRepository;
 
-    @Autowired
-    CachedUrlUpdaterService cachedUrlUpdaterService;
-
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     protected Optional<Resource> callInternal() {
         Resource updated;
-        ensureMetadataRefsExist(this.element.getMetadata());
-        Optional<Resource> existing = resourceRepository.fetchRepositoryGraphByPublicId(this.element.getPublicId());
+        ensureMetadataRefsExist(this.element.getMetadata(), customFieldRepository);
+        Optional<Resource> existing = resourceRepository.fetchResourceGraphByPublicId(this.element.getPublicId());
         if (existing.isEmpty()) {
             // Resource is new
             Resource resource = new Resource(this.element);
@@ -45,27 +44,12 @@ public class ResourceUpdater extends VersionSchemaUpdater<Resource> {
             present.setName(this.element.getName());
             present.setContentUri(this.element.getContentUri());
             mergeMetadata(present, this.element.getMetadata());
+            mergeTranslations(present, this.element.getTranslations());
             updated = resourceRepository.save(present);
         }
-        // cachedUrlUpdaterService.updateCachedUrls(updated);
         return Optional.of(updated);
     }
 
-    private void ensureMetadataRefsExist(Metadata metadata) {
-        if (!metadata.getCustomFieldValues().isEmpty()) {
-            metadata.getCustomFieldValues().forEach(customFieldValue -> {
-                CustomField toSave = customFieldValue.getCustomField();
-                CustomField saved;
-                Optional<CustomField> byKey = customFieldRepository.findByKey(toSave.getKey());
-                if (byKey.isPresent()) {
-                    // Same customField, do nothing
-                    saved = byKey.get();
-                } else {
-                    toSave.setId(null);
-                    saved = customFieldRepository.save(toSave);
-                }
-                customFieldValue.setCustomField(saved);
-            });
-        }
+    private void mergeTranslations(Resource present, Set<ResourceTranslation> translations) {
     }
 }

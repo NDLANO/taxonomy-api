@@ -45,7 +45,10 @@ public class Versions extends CrudController<Version> {
             @ApiParam(value = "Version hash", example = "ndla") @RequestParam(value = "hash", required = false) Optional<String> hash) {
         if (versionType.isPresent())
             return versionService.getVersionsOfType(versionType.get());
-        return hash.map(s -> List.of(versionRepository.findFirstByHash(s).map(VersionDTO::new).orElseThrow(() -> new NotFoundHttpResponseException("Version not found")))).orElseGet(versionService::getVersions);
+        return hash
+                .map(s -> List.of(versionRepository.findFirstByHash(s).map(VersionDTO::new)
+                        .orElseThrow(() -> new NotFoundHttpResponseException("Version not found"))))
+                .orElseGet(versionService::getVersions);
     }
 
     @GetMapping("/{id}")

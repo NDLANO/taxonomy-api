@@ -59,7 +59,7 @@ public class ResourceDTO {
 
     @JsonProperty
     @ApiModelProperty(value = "All translations of this resource")
-    private Set<TranslationDTO> translations;
+    private TreeSet<TranslationDTO> translations = new TreeSet<>();
 
     @JsonProperty
     @ApiModelProperty(value = "List of language codes supported by translations")
@@ -77,7 +77,8 @@ public class ResourceDTO {
         this.contentUri = resource.getContentUri();
         var translations = resource.getTranslations();
 
-        this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
+        this.translations = translations.stream().map(TranslationDTO::new)
+                .collect(Collectors.toCollection(TreeSet::new));
         this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
 
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
