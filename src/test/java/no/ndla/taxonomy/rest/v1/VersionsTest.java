@@ -47,13 +47,35 @@ public class VersionsTest extends RestTest {
         URI versionId = URI.create("urn:version:1");
         builder.version(v -> v.publicId(versionId));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/versions/" + versionId);
-        VersionDTO version = testUtils.getObject(VersionDTO.class, response);
-        assertEquals(versionId, version.getId());
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/versions/" + versionId);
+            VersionDTO version = testUtils.getObject(VersionDTO.class, response);
+            assertEquals(versionId, version.getId());
+            assertNotNull(version.getHash());
+            assertNull(version.getPublished());
+            assertNull(version.getArchived());
+        }
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/versions/urn:version:2", status().is4xxClientError());
+            assertEquals(404, response.getStatus());
+            assertEquals("{\"error\":\"Version not found\"}", response.getContentAsString());
+        }
+    }
 
-        assertNotNull(version.getHash());
-        assertNull(version.getPublished());
-        assertNull(version.getArchived());
+    @Test
+    public void can_get_versions_from_hash() throws Exception {
+        Version version = builder.version();
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/versions/?hash=" + version.getHash());
+            VersionDTO[] versions = testUtils.getObject(VersionDTO[].class, response);
+            assertEquals(1, versions.length);
+            assertEquals(version.getHash(), versions[0].getHash());
+        }
+        {
+            MockHttpServletResponse response = testUtils.getResource("/v1/versions/?hash=random", status().is4xxClientError());
+            assertEquals(404, response.getStatus());
+            assertEquals("{\"error\":\"Version not found\"}", response.getContentAsString());
+        }
     }
 
     @Test
