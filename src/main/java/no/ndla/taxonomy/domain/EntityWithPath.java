@@ -11,6 +11,7 @@ import javax.persistence.MappedSuperclass;
 import java.net.URI;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @MappedSuperclass
@@ -92,9 +93,9 @@ public abstract class EntityWithPath extends DomainObject {
         }).map(CachedPath::getPath).findFirst();
     }
 
-    public Set<String> getAllPaths() {
+    public TreeSet<String> getAllPaths() {
         return getCachedPaths().stream().filter(CachedPath::isActive).map(CachedPath::getPath)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(TreeSet::new));
     }
 
     abstract public Metadata getMetadata();
