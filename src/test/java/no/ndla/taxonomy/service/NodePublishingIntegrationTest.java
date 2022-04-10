@@ -98,9 +98,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertNotEquals(node.getId(), published.getId());// node should have 1, published 3
         assertEquals(node.getName(), published.getName());
         assertEquals(node.getNodeType(), published.getNodeType());
-        assertNotNull(published.getCachedPaths());
         assertEquals(1, published.getCachedPaths().size());
-        assertNotNull(published.getMetadata());
         assertEquals(node.getMetadata().isVisible(), published.getMetadata().isVisible());
         assertEquals(node.getMetadata().getGrepCodes().size(), published.getMetadata().getGrepCodes().size());
         assertAnyTrue(published.getMetadata().getGrepCodes(), grepCode -> grepCode.getCode().equals("KM123"));
@@ -150,13 +148,11 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertNotEquals(node.getId(), published.getId());
         assertEquals("urn:resource:1", connected.getPublicId().toString());
         assertEquals("Resource", connected.getName());
-        assertNotNull(connected.getMetadata());
         assertAnyTrue(connected.getMetadata().getGrepCodes(), grepCode -> grepCode.getCode().equals("KM234"));
         assertAnyTrue(connected.getMetadata().getCustomFieldValues(),
                 customFieldValue -> customFieldValue.getCustomField().getKey().equals("key2"));
         assertAnyTrue(connected.getMetadata().getCustomFieldValues(),
                 customFieldValue -> customFieldValue.getValue().equals("value2"));
-        assertNotNull(resource.getTranslations());
         assertAnyTrue(resource.getTranslations(), translation -> translation.getName().contains("Resource NB"));
         assertAnyTrue(resource.getTranslations(), translation -> translation.getName().contains("Resource NN"));
     }
@@ -187,8 +183,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
         assertFalse(published.isContext());
         assertFalse(published.isRoot());
-        assertNotNull(published.getMetadata());
-        assertNotNull(published.getChildren());
         assertAnyTrue(published.getChildren(), nodeConnection -> nodeConnection.getChild().isPresent());
         assertEquals(URI.create("urn:topic:2"),
                 published.getChildren().stream().findFirst().get().getChild().get().getPublicId());
@@ -220,7 +214,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertTrue(resource.isPresent());
-        assertNotNull(resource.get().getMetadata());
         assertFalse(resource.get().getMetadata().isVisible());
         assertEquals("Resource", resource.get().getName());
         assertAnyTrue(resource.get().getAllPaths(), path -> path.equals("/subject:1/topic:1/resource:1"));
@@ -257,7 +250,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertTrue(subnode.isPresent());
         assertFalse(subnode.get().getNodeResources().isEmpty());
         assertTrue(subsubnode.isPresent());
-        assertNotNull(subsubnode.get().getMetadata());
         assertAnyTrue(subsubnode.get().getMetadata().getGrepCodes(), grepCode -> grepCode.getCode().equals("TT2"));
         assertAnyTrue(resource.get().getAllPaths(), path -> path.equals("/subject:1/topic:1/resource:1"));
         assertAnyTrue(subnode.get().getAllPaths(), path -> path.equals("/subject:1/topic:2"));
@@ -295,7 +287,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
         assertTrue(updated.isPresent());
         assertNotNull(updated.get().getCachedPaths());
-        assertFalse(updated.get().getNodeResources().isEmpty());
         assertEquals(2, updated.get().getNodeResources().size()); // Should be used twice
         assertAnyTrue(updated.get().getNodeResources(),
                 nodeResource -> nodeResource.getNode().get().getPublicId().equals(URI.create("urn:topic:1")));
@@ -338,5 +329,43 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertTrue(updatedChild.get().getParentNode().isPresent());
         assertEquals(node.getPublicId(), updatedChild.get().getParentNode().get().getPublicId());
         assertAnyTrue(updatedChild.get().getAllPaths(), path -> path.equals("/subject:1/node:1"));
+    }
+
+    @Test
+    @Transactional
+    void can_publish_node_tree_with_reused_resource_twice_to_schema() {
+        final var command = new VersionCommand() {
+            {
+                name = "Beta";
+            }
+        };
+        Version target = versionService.createNewVersion(Optional.empty(), command);
+        assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
+
+        Resource resource = builder.resource(r -> r.publicId("urn:resource:1"));
+        Node node = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1")
+                .child(NodeType.TOPIC, t2 -> t2.publicId("urn:topic:1").resource(resource)));
+        Node second = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:2")
+                .child(NodeType.TOPIC, t -> t.publicId("urn:topic:2").resource(resource)));
+
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+        nodeService.publishNode(second.getPublicId(), Optional.empty(), target.getPublicId());
+
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
+        Optional<Resource> updated = resourceRepository.fetchResourceGraphByPublicId(URI.create("urn:resource:1"));
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
+
+        assertTrue(updated.isPresent());
+        assertNotNull(updated.get().getCachedPaths());
+        assertEquals(2, updated.get().getNodeResources().size()); // Should be used twice
+        assertAnyTrue(updated.get().getNodeResources(),
+                nodeResource -> nodeResource.getNode().get().getPublicId().equals(URI.create("urn:topic:1")));
+        assertAnyTrue(updated.get().getNodeResources(),
+                nodeResource -> nodeResource.getNode().get().getPublicId().equals(URI.create("urn:topic:2")));
+        assertAnyTrue(updated.get().getAllPaths(), path -> path.equals("/subject:1/topic:1/resource:1"));
+        assertAnyTrue(updated.get().getAllPaths(), path -> path.equals("/subject:2/topic:2/resource:1"));
     }
 }
