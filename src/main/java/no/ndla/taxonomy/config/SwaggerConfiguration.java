@@ -7,6 +7,7 @@
 
 package no.ndla.taxonomy.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.CorsEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementPortType;
@@ -21,10 +22,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.ApiKey;
-import springfox.documentation.service.AuthorizationScope;
-import springfox.documentation.service.SecurityReference;
+import springfox.documentation.service.*;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spi.service.contexts.SecurityContext;
 import springfox.documentation.spring.web.plugins.Docket;
@@ -33,7 +31,6 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import static com.google.common.collect.Sets.newHashSet;
@@ -44,20 +41,23 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 @EnableSwagger2
 public class SwaggerConfiguration {
 
+    @Value(value = "${auth0.issuer}")
+    private String issuer;
+
     @Bean
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2).select()
                 .apis(RequestHandlerSelectors.basePackage("no.ndla.taxonomy.rest.v1"))
                 .paths(PathSelectors.regex("/v1/.*")).build().pathMapping("/").apiInfo(apiInfo())
                 .directModelSubstitute(URI.class, String.class).directModelSubstitute(URI[].class, String[].class)
-                .securitySchemes(Collections.singletonList(apiKey()))
-                .securityContexts(Collections.singletonList(securityContext())).useDefaultResponseMessages(true)
-                .produces(newHashSet(APPLICATION_JSON_UTF8.toString()))
+                .securitySchemes(List.of(securitySchema())).securityContexts(List.of(securityContext()))
+                .useDefaultResponseMessages(true).produces(newHashSet(APPLICATION_JSON_UTF8.toString()))
                 .consumes(newHashSet(APPLICATION_JSON_UTF8.toString()));
     }
 
-    private ApiKey apiKey() {
-        return new ApiKey("apiKey", "Authorization", "header");
+    private OAuth securitySchema() {
+        return new OAuth("oauth", List.of(),
+                List.of(new ImplicitGrant(new LoginEndpoint(issuer + "authorize"), "access_token")));
     }
 
     private SecurityContext securityContext() {
@@ -66,10 +66,11 @@ public class SwaggerConfiguration {
     }
 
     private List<SecurityReference> defaultAuth() {
-        AuthorizationScope authorizationScope = new AuthorizationScope("global", "accessEverything");
-        AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];
-        authorizationScopes[0] = authorizationScope;
-        return List.of(new SecurityReference("apiKey", authorizationScopes));
+        return List.of(new SecurityReference("oauth", new AuthorizationScope[0]));
+    }
+
+    private Contact contact() {
+        return new Contact("NDLA", "https://ndla.no", "support+api@ndla.no");
     }
 
     private ApiInfo apiInfo() {
@@ -77,7 +78,8 @@ public class SwaggerConfiguration {
                 + "Unless otherwise specified, all PUT and POST requests must use Content-Type: application/json;charset=UTF-8. If charset is omitted, UTF-8 will be assumed. All GET requests will return data using the same content type.\n\n"
                 + "When you remove an entity, its associations are also deleted. E.g., if you remove a subject, its associations to any topics are removed. The topics themselves are not affected.\n\n"
                 + "If you are using Swagger in an environment that requires authentication you will need a valid JWT token to PUT/POST/DELETE. Apply this by typing 'Bearer [YOUR TOKEN]' in the 'Authorize' dialog",
-                "v1", null, null, "GPL 3.0", "https://www.gnu.org/licenses/gpl-3.0.en.html", emptyList());
+                "v1", "https://om.ndla.no/tos", contact(), "GPL 3.0", "https://www.gnu.org/licenses/gpl-3.0.en.html",
+                emptyList());
     }
 
     /*
