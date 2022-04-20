@@ -57,7 +57,7 @@ public class SwaggerConfiguration {
                 .directModelSubstitute(URI.class, String.class).directModelSubstitute(URI[].class, String[].class)
                 .securitySchemes(List.of(securitySchema())).securityContexts(List.of(securityContext()))
                 .globalRequestParameters(List.of(new RequestParameterBuilder().name("VersionHash")
-                        .description("Hash code indentifying taxonomy version.").in(ParameterType.HEADER)
+                        .description("Hash code identifying taxonomy version.").in(ParameterType.HEADER)
                         .query(q -> q.model(m -> m.scalarModel(ScalarType.STRING))).build()))
                 .useDefaultResponseMessages(true).produces(newHashSet(APPLICATION_JSON_UTF8.toString()))
                 .consumes(newHashSet(APPLICATION_JSON_UTF8.toString()));
