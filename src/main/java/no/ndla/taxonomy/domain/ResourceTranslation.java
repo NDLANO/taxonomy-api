@@ -28,7 +28,7 @@ public class ResourceTranslation implements Translation {
     ResourceTranslation() {
     }
 
-    ResourceTranslation(ResourceTranslation translation, Resource resource) {
+    public ResourceTranslation(ResourceTranslation translation, Resource resource) {
         this.name = translation.name;
         this.languageCode = translation.languageCode;
         this.resource = resource;

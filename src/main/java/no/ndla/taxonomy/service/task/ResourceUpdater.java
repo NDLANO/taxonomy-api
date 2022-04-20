@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -51,5 +52,23 @@ public class ResourceUpdater extends VersionSchemaUpdater<Resource> {
     }
 
     private void mergeTranslations(Resource present, Set<ResourceTranslation> translations) {
+        Set<ResourceTranslation> updated = new HashSet<>();
+        for (ResourceTranslation translation : translations) {
+            Optional<ResourceTranslation> t = present.getTranslations().stream()
+                    .filter(tr -> tr.getLanguageCode().equals(translation.getLanguageCode())).findFirst();
+            if (t.isPresent()) {
+                ResourceTranslation tr = t.get();
+                tr.setName(translation.getName());
+                updated.add(tr);
+            } else {
+                updated.add(new ResourceTranslation(translation, present));
+            }
+        }
+        if (!updated.isEmpty()) {
+            present.clearTranslations();
+            for (ResourceTranslation translation : updated) {
+                present.addTranslation(translation);
+            }
+        }
     }
 }

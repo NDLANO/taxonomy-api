@@ -138,6 +138,10 @@ public class Resource extends EntityWithPath {
         return resourceTranslations.stream().collect(Collectors.toUnmodifiableSet());
     }
 
+    public void clearTranslations() {
+        resourceTranslations.clear();
+    }
+
     public void removeTranslation(String languageCode) {
         getTranslation(languageCode).ifPresent(this::removeTranslation);
     }

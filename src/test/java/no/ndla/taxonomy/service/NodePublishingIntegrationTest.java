@@ -368,4 +368,113 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertAnyTrue(updated.get().getAllPaths(), path -> path.equals("/subject:1/topic:1/resource:1"));
         assertAnyTrue(updated.get().getAllPaths(), path -> path.equals("/subject:2/topic:2/resource:1"));
     }
+
+    @Test
+    @Transactional
+    void can_publish_reused_resource_with_translations_to_schema() {
+        final var command = new VersionCommand() {
+            {
+                name = "Beta";
+            }
+        };
+        Version target = versionService.createNewVersion(Optional.empty(), command);
+        assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
+
+        Resource resource = builder.resource(r -> r.publicId("urn:resource:1")
+                .translation("nb", tr -> tr.name("Resource nb")).translation("nn", tr -> tr.name("Resource nn")));
+        Node node = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1")
+                .child(NodeType.TOPIC, t2 -> t2.publicId("urn:topic:1").resource(resource)));
+        Node second = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:2")
+                .child(NodeType.TOPIC, t -> t.publicId("urn:topic:2").resource(resource)));
+
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+
+        // Update translations to resource in standard schema for updating
+        TestTransaction.start();
+        TestTransaction.flagForCommit();
+        Resource r = resourceRepository.findByPublicId(resource.getPublicId());
+        Optional<ResourceTranslation> nb = r.getTranslation("nb");
+        // Update
+        nb.get().setName("Resource nb updated");
+        // Add new
+        ResourceTranslation resourceTranslation = new ResourceTranslation(r, "en");
+        resourceTranslation.setName("Resource en");
+        // Remove
+        r.removeTranslation("nn");
+        entityManager.persist(r);
+        TestTransaction.end();
+
+        nodeService.publishNode(second.getPublicId(), Optional.empty(), target.getPublicId());
+
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
+        Optional<Resource> updated = resourceRepository.fetchResourceGraphByPublicId(URI.create("urn:resource:1"));
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
+
+        assertTrue(updated.isPresent());
+        assertNotNull(updated.get().getCachedPaths());
+        assertEquals(2, updated.get().getNodeResources().size()); // Should be used twice
+        assertAnyTrue(updated.get().getNodeResources(),
+                nodeResource -> nodeResource.getNode().get().getPublicId().equals(URI.create("urn:topic:1")));
+        assertAnyTrue(updated.get().getNodeResources(),
+                nodeResource -> nodeResource.getNode().get().getPublicId().equals(URI.create("urn:topic:2")));
+        assertAnyTrue(updated.get().getAllPaths(), path -> path.equals("/subject:1/topic:1/resource:1"));
+        assertAnyTrue(updated.get().getAllPaths(), path -> path.equals("/subject:2/topic:2/resource:1"));
+
+        assertEquals(2, updated.get().getTranslations().size());
+        assertAnyTrue(updated.get().getTranslations(),
+                translation -> translation.getName().equals("Resource nb updated"));
+        assertAnyTrue(updated.get().getTranslations(), translation -> translation.getName().equals("Resource en"));
+    }
+
+    @Test
+    @Transactional
+    void can_publish_node_twice_to_schema() {
+        final var command = new VersionCommand() {
+            {
+                name = "Beta";
+            }
+        };
+        Version target = versionService.createNewVersion(Optional.empty(), command);
+        assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
+
+        // some nodes to make sure testnode is not the first
+        builder.node();
+        builder.node();
+        Node node = builder.node(n -> n.publicId("urn:node:1").name("Node").isContext(true)
+                .translation("nn", tr -> tr.name("NN Node")).translation("nb", tr -> tr.name("NB Node")));
+
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+
+        // Update translations to node in standard schema for updating
+        TestTransaction.start();
+        TestTransaction.flagForCommit();
+        Node n = nodeRepository.findByPublicId(node.getPublicId());
+        Optional<NodeTranslation> nb = n.getTranslation("nb");
+        // Update
+        nb.get().setName("NB Node updated");
+        // Add new
+        NodeTranslation en = new NodeTranslation(n, "en");
+        en.setName("EN Node");
+        // Remove
+        n.removeTranslation("nn");
+        entityManager.persist(n);
+        TestTransaction.end();
+
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
+        Node published = nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(node.getPublicId()).get();
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
+
+        assertNotNull(published);
+        assertEquals(2, published.getTranslations().size());
+        assertAnyTrue(published.getTranslations(), translation -> translation.getName().contains("EN Node"));
+        assertAnyTrue(published.getTranslations(), translation -> translation.getName().contains("NB Node updated"));
+    }
 }

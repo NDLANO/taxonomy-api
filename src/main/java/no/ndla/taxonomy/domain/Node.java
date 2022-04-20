@@ -246,6 +246,10 @@ public class Node extends EntityWithPath {
         return translations.stream().collect(Collectors.toUnmodifiableSet());
     }
 
+    public void clearTranslations() {
+        translations.clear();
+    }
+
     public void addTranslation(NodeTranslation nodeTranslation) {
         this.translations.add(nodeTranslation);
         if (nodeTranslation.getNode() != this) {

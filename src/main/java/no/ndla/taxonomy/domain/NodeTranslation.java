@@ -25,10 +25,10 @@ public class NodeTranslation implements Translation {
     @Column
     private String languageCode;
 
-    NodeTranslation() {
+    public NodeTranslation() {
     }
 
-    NodeTranslation(NodeTranslation translation, Node node) {
+    public NodeTranslation(NodeTranslation translation, Node node) {
         this.name = translation.name;
         this.languageCode = translation.languageCode;
         this.node = node;

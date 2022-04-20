@@ -7,10 +7,7 @@
 
 package no.ndla.taxonomy.service.task;
 
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.NodeResource;
-import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.CustomFieldRepository;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -25,9 +22,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 public class NodeUpdater extends VersionSchemaUpdater<Node> {
@@ -117,9 +112,31 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
             present.setContentUri(toSave.getContentUri());
             present.setNodeType(toSave.getNodeType());
             mergeMetadata(present, toSave.getMetadata());
+            mergeTranslations(present, toSave.getTranslations());
             updated = nodeRepository.save(present);
         }
         return updated;
+    }
+
+    private void mergeTranslations(Node present, Set<NodeTranslation> translations) {
+        Set<NodeTranslation> updated = new HashSet<>();
+        for (NodeTranslation translation : translations) {
+            Optional<NodeTranslation> t = present.getTranslations().stream()
+                    .filter(tr -> tr.getLanguageCode().equals(translation.getLanguageCode())).findFirst();
+            if (t.isPresent()) {
+                NodeTranslation tr = t.get();
+                tr.setName(translation.getName());
+                updated.add(tr);
+            } else {
+                updated.add(new NodeTranslation(translation, present));
+            }
+        }
+        if (!updated.isEmpty()) {
+            present.clearTranslations();
+            for (NodeTranslation translation : updated) {
+                present.addTranslation(translation);
+            }
+        }
     }
 
     @Transactional
