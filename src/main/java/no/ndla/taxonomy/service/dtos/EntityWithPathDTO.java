@@ -9,16 +9,11 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModelProperty;
-import no.ndla.taxonomy.domain.EntityWithPath;
-import no.ndla.taxonomy.domain.EntityWithPathConnection;
-import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.Translation;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 
 import java.net.URI;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class EntityWithPathDTO {
@@ -50,6 +45,9 @@ public abstract class EntityWithPathDTO {
     @ApiModelProperty(value = "List of language codes supported by translations")
     private Set<String> supportedLanguages;
 
+    @ApiModelProperty(value = "List of names in the path")
+    private List<String> breadcrumbs;
+
     public EntityWithPathDTO() {
     }
 
@@ -71,7 +69,21 @@ public abstract class EntityWithPathDTO {
         this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
 
         this.metadata = new MetadataDto(entity.getMetadata());
+
+        this.breadcrumbs = buildCrumbs(entity, languageCode);
     }
+
+    private List<String> buildCrumbs(EntityWithPath entity, String languageCode) {
+        List<String> parentCrumbs = entity.getParentConnection()
+                .flatMap(parentConnection -> parentConnection.getConnectedParent().map(parent -> buildCrumbs(parent, languageCode)))
+                .orElse(List.of());
+
+        var crumbs = new ArrayList<>(parentCrumbs);
+        var name = entity.getTranslation(languageCode).map(Translation::getName).orElse(entity.getName());
+        crumbs.add(name);
+        return crumbs;
+    }
+
 
     public URI getId() {
         return id;
@@ -103,6 +115,10 @@ public abstract class EntityWithPathDTO {
 
     public Set<TranslationDTO> getTranslations() {
         return translations;
+    }
+
+    public List<String> getBreadcrumbs() {
+        return breadcrumbs;
     }
 
     public Set<String> getSupportedLanguages() {
