@@ -22,7 +22,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Must be run separately in IDE, excluded from mvn build because of shared database state.
+ * Will only be run in maven using '-P integration'
  */
 @SpringBootTest
 @Transactional

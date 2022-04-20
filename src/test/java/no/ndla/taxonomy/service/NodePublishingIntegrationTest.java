@@ -24,7 +24,7 @@ import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Must be run separately in IDE, excluded from mvn build because of shared database state.
+ * Will only be run in maven using '-P integration'
  */
 @SpringBootTest
 public class NodePublishingIntegrationTest extends AbstractIntegrationTest {

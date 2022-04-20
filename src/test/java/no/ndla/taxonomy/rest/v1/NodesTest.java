@@ -537,7 +537,6 @@ public class NodesTest extends RestTest {
         MockHttpServletResponse response = testUtils.updateResource("/v1/nodes/" + node.getPublicId() + "/publish",
                 null, status().is4xxClientError());
         assertEquals(400, response.getStatus());
-        // assertEquals("{\"error\":\"Target version not found! Aborting\"}", response.getContentAsString());
     }
 
     @Test
@@ -545,23 +544,6 @@ public class NodesTest extends RestTest {
         MockHttpServletResponse response = testUtils.updateResource("/v1/nodes/urn:node:random/publish", null,
                 status().is4xxClientError());
         assertEquals(400, response.getStatus());
-    }
-
-    // @Test
-    void can_publish_node() throws Exception {
-        Node node = builder.node();
-        Version source = builder.version();
-        Version target = builder.version();
-        {
-            MockHttpServletResponse response = testUtils
-                    .updateResource("/v1/nodes/" + node.getPublicId() + "/publish?targetId=" + target.getPublicId());
-            assertEquals(204, response.getStatus());
-        }
-        {
-            MockHttpServletResponse response = testUtils.updateResource("/v1/nodes/" + node.getPublicId()
-                    + "/publish?sourceId=" + source.getPublicId() + "&targetId=" + target.getPublicId());
-            assertEquals(204, response.getStatus());
-        }
     }
 
     private static class ConnectionTypeCounter {

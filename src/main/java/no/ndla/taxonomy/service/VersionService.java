@@ -55,7 +55,6 @@ public class VersionService {
             logger.warn("Failed to drop schema. Possible manual cleanup required");
         }
         versionRepository.delete(versionToDelete);
-        // versionRepository.flush();
     }
 
     public List<VersionDTO> getVersions() {
