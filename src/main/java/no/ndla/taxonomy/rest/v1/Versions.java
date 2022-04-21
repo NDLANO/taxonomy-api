@@ -80,7 +80,7 @@ public class Versions extends CrudController<Version> {
     }
 
     @DeleteMapping("/{id}")
-    @ApiOperation(value = "Deletes a single entity by id")
+    @ApiOperation(value = "Deletes a version by publicId")
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
