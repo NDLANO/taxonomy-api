@@ -380,7 +380,11 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
 
-        Resource resource = builder.resource(r -> r.publicId("urn:resource:1")
+        ResourceType subResourceType = builder.resourceType(rt -> rt.name("Fagartikkel")
+                .translation("nb", t -> t.name("Fagartikkel nb")).translation("nn", t -> t.name("Fagartikkel nn")));
+        builder.resourceType(rt -> rt.name("Fagstoff").translation("nb", t -> t.name("Fagstoff nb"))
+                .translation("nn", t -> t.name("Fagstoff nn")).subtype(subResourceType));
+        Resource resource = builder.resource(r -> r.publicId("urn:resource:1").resourceType(subResourceType)
                 .translation("nb", tr -> tr.name("Resource nb")).translation("nn", tr -> tr.name("Resource nn")));
         Node node = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1")
                 .child(NodeType.TOPIC, t2 -> t2.publicId("urn:topic:1").resource(resource)));
@@ -422,6 +426,9 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
                 nodeResource -> nodeResource.getNode().get().getPublicId().equals(URI.create("urn:topic:2")));
         assertAnyTrue(updated.get().getAllPaths(), path -> path.equals("/subject:1/topic:1/resource:1"));
         assertAnyTrue(updated.get().getAllPaths(), path -> path.equals("/subject:2/topic:2/resource:1"));
+
+        assertNotNull(updated.get().getResourceTypes());
+        assertEquals(1, updated.get().getResourceTypes().size());
 
         assertEquals(2, updated.get().getTranslations().size());
         assertAnyTrue(updated.get().getTranslations(),

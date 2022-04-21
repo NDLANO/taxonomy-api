@@ -32,7 +32,6 @@ public class ResourceTranslation implements Translation {
         this.name = translation.name;
         this.languageCode = translation.languageCode;
         this.resource = resource;
-
     }
 
     public ResourceTranslation(Resource resource, String languageCode) {

@@ -17,7 +17,15 @@ import java.util.stream.Collectors;
 
 @NamedEntityGraph(name = Resource.GRAPH, attributeNodes = { @NamedAttributeNode(value = "metadata"),
         @NamedAttributeNode(value = "resourceTranslations"),
-        @NamedAttributeNode(value = "nodes", subgraph = "node-with-connections") })
+        @NamedAttributeNode(value = "resourceResourceTypes", subgraph = "resourceResourceTypes"),
+        @NamedAttributeNode(value = "nodes", subgraph = "node-with-connections") }, subgraphs = {
+                @NamedSubgraph(name = "resourceResourceTypes", attributeNodes = {
+                        @NamedAttributeNode(value = "resourceType", subgraph = "resourceType") }),
+                @NamedSubgraph(name = "resourceType", attributeNodes = {
+                        @NamedAttributeNode("resourceTypeTranslations"),
+                        @NamedAttributeNode(value = "parent", subgraph = "resourceTypeParent") }),
+                @NamedSubgraph(name = "resourceTypeParent", attributeNodes = {
+                        @NamedAttributeNode("resourceTypeTranslations") }) })
 @Entity
 public class Resource extends EntityWithPath {
     public static final String GRAPH = "resource-with-data";
@@ -67,6 +75,15 @@ public class Resource extends EntityWithPath {
             trs.add(new ResourceTranslation(tr, this));
         }
         this.resourceTranslations = trs;
+        Set<ResourceResourceType> rrts = new HashSet<>();
+        for (ResourceResourceType rt : resource.getResourceResourceTypes()) {
+            ResourceResourceType rrt = new ResourceResourceType();
+            rrt.setPublicId(rt.getPublicId());
+            rrt.setResource(this);
+            rrt.setResourceType(rt.getResourceType());
+            rrts.add(rrt);
+        }
+        this.resourceResourceTypes = rrts;
         setMetadata(new Metadata(resource.getMetadata()));
         setName(resource.getName());
         setPublicId(resource.getPublicId());

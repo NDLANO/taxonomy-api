@@ -22,7 +22,7 @@ public class ResourceResourceType extends DomainEntity {
     @JoinColumn(name = "resource_type_id")
     private ResourceType resourceType;
 
-    private ResourceResourceType() {
+    public ResourceResourceType() {
         setPublicId(URI.create("urn:resource-resourcetype:" + UUID.randomUUID()));
     }
 
@@ -58,8 +58,16 @@ public class ResourceResourceType extends DomainEntity {
         return resource;
     }
 
+    public void setResource(Resource resource) {
+        this.resource = resource;
+    }
+
     public ResourceType getResourceType() {
         return resourceType;
+    }
+
+    public void setResourceType(ResourceType resourceType) {
+        this.resourceType = resourceType;
     }
 
     @PreRemove

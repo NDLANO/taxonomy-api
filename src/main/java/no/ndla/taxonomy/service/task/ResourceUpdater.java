@@ -8,17 +8,22 @@
 package no.ndla.taxonomy.service.task;
 
 import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceTranslation;
+import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.repositories.CustomFieldRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
+import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class ResourceUpdater extends VersionSchemaUpdater<Resource> {
@@ -29,11 +34,15 @@ public class ResourceUpdater extends VersionSchemaUpdater<Resource> {
     @Autowired
     ResourceRepository resourceRepository;
 
+    @Autowired
+    ResourceTypeRepository resourceTypeRepository;
+
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     protected Optional<Resource> callInternal() {
         Resource updated;
         ensureMetadataRefsExist(this.element.getMetadata(), customFieldRepository);
+        this.element.getResourceTypes().stream().map(this::ensureResourceTypesExists).collect(Collectors.toList());
         Optional<Resource> existing = resourceRepository.fetchResourceGraphByPublicId(this.element.getPublicId());
         if (existing.isEmpty()) {
             // Resource is new
@@ -49,6 +58,21 @@ public class ResourceUpdater extends VersionSchemaUpdater<Resource> {
             updated = resourceRepository.save(present);
         }
         return Optional.of(updated);
+    }
+
+    private ResourceType ensureResourceTypesExists(ResourceType resourceType) {
+        ResourceType parent = null;
+        if (resourceType.getParent().isPresent()) {
+            parent = ensureResourceTypesExists(resourceType.getParent().get());
+        }
+        Optional<ResourceType> existing = resourceTypeRepository
+                .findFirstByPublicIdIncludingTranslations(resourceType.getPublicId());
+        if (existing.isEmpty()) {
+            // Create resource type
+            ResourceType rt = new ResourceType(resourceType, parent);
+            return resourceTypeRepository.save(rt);
+        }
+        return existing.get();
     }
 
     private void mergeTranslations(Resource present, Set<ResourceTranslation> translations) {
