@@ -81,8 +81,16 @@ public class TestUtils {
     }
 
     public MockHttpServletResponse deleteResource(String path) throws Exception {
+        return deleteResource(path, status().isNoContent());
+    }
+
+    public MockHttpServletResponse deleteResource(String path, ResultMatcher resultMatcher) throws Exception {
         entityManager.flush();
-        return mockMvc.perform(delete(path)).andExpect(status().isNoContent()).andReturn().getResponse();
+        return mockMvc.perform(delete(path)).andExpect(resultMatcher).andReturn().getResponse();
+    }
+
+    public MockHttpServletResponse updateResource(String path) throws Exception {
+        return updateResource(path, null, status().isNoContent());
     }
 
     public MockHttpServletResponse updateResource(String path, Object command) throws Exception {
@@ -92,8 +100,12 @@ public class TestUtils {
     public MockHttpServletResponse updateResource(String path, Object command, ResultMatcher resultMatcher)
             throws Exception {
         entityManager.flush();
-        return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
-                .andExpect(resultMatcher).andReturn().getResponse();
+        if (command == null)
+            return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8)).andExpect(resultMatcher).andReturn()
+                    .getResponse();
+        else
+            return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
+                    .andExpect(resultMatcher).andReturn().getResponse();
     }
 
     public static URI getId(MockHttpServletResponse response) {

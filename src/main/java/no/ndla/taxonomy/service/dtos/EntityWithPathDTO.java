@@ -19,6 +19,7 @@ import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 public abstract class EntityWithPathDTO {
@@ -35,7 +36,7 @@ public abstract class EntityWithPathDTO {
     private String path;
 
     @ApiModelProperty(value = "List of all paths to this node")
-    private Set<String> paths;
+    private TreeSet<String> paths;
 
     @ApiModelProperty(value = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -45,10 +46,10 @@ public abstract class EntityWithPathDTO {
     public URI relevanceId;
 
     @ApiModelProperty(value = "All translations of this node")
-    private Set<TranslationDTO> translations;
+    private TreeSet<TranslationDTO> translations = new TreeSet<>();
 
     @ApiModelProperty(value = "List of language codes supported by translations")
-    private Set<String> supportedLanguages;
+    private TreeSet<String> supportedLanguages;
 
     public EntityWithPathDTO() {
     }
@@ -61,8 +62,10 @@ public abstract class EntityWithPathDTO {
         this.path = entity.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
 
         var translations = entity.getTranslations();
-        this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
-        this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
+        this.translations = translations.stream().map(TranslationDTO::new)
+                .collect(Collectors.toCollection(TreeSet::new));
+        this.supportedLanguages = this.translations.stream().map(t -> t.language)
+                .collect(Collectors.toCollection(TreeSet::new));
 
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
                 .map(Translation::getName).orElse(entity.getName());

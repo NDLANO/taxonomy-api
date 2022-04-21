@@ -11,6 +11,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,7 +19,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Entity
-public class GrepCode {
+public class GrepCode implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -34,6 +35,14 @@ public class GrepCode {
 
     @ManyToMany(mappedBy = "grepCodes")
     private Set<Metadata> metadata = new HashSet<>();
+
+    public GrepCode() {
+    }
+
+    public GrepCode(GrepCode code, Metadata metadata) {
+        this.code = code.getCode();
+        this.metadata.add(metadata);
+    }
 
     public Integer getId() {
         return id;

@@ -31,6 +31,7 @@
     <changeSet id="20190606 migrate flyway migration table to liquibase" author="Jon-Eirik Pettersen">
         <validCheckSum>7:0d8987d7bed681702f0fa9c76e01cefd</validCheckSum>
         <validCheckSum>8:699deff96141ec765b41b6b70b795734</validCheckSum>
+        <validCheckSum>8:9d6a6e1ba3cb90de77398b191af91d0c</validCheckSum>
 
         <preConditions onFail="MARK_RAN">
             <tableExists tableName="schema_version" />

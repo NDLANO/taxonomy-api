@@ -12,6 +12,9 @@ import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.service.dtos.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import no.ndla.taxonomy.service.task.NodeFetcher;
+import no.ndla.taxonomy.service.task.NodeUpdater;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +23,9 @@ import javax.persistence.criteria.Join;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,14 +37,24 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final EntityConnectionService connectionService;
+    private final VersionService versionService;
     private final TreeSorter topicTreeSorter;
+    private final CachedUrlUpdaterService cachedUrlUpdaterService;
+
+    @Autowired
+    private NodeFetcher nodeFetchcher;
+    @Autowired
+    private NodeUpdater nodeUpdater;
 
     public NodeService(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            EntityConnectionService connectionService, TreeSorter topicTreeSorter) {
+            EntityConnectionService connectionService, VersionService versionService, TreeSorter topicTreeSorter,
+            CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
+        this.versionService = versionService;
         this.topicTreeSorter = topicTreeSorter;
+        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
 
     @Transactional
@@ -155,5 +171,66 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
         Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
         return SearchService.super.search(query, ids, language, pageSize, page, nodeSpecLambda);
+    }
+
+    @Transactional
+    public Node updatePaths(Node node) {
+        Node saved = nodeRepository.save(node);
+        cachedUrlUpdaterService.updateCachedUrls(saved);
+        return saved;
+    }
+
+    /**
+     * Gets node including children, and copies from one schema to another
+     * 
+     * @param nodeId
+     *            The node to copy
+     * @param sourceId
+     *            The version id of source schema. If null use default.
+     * @param targetId
+     *            The version id of target shenma. Fail if not present.
+     */
+    @Transactional
+    public Node publishNode(URI nodeId, Optional<URI> sourceId, URI targetId) {
+        Version target = versionService.findVersionByPublicId(targetId)
+                .orElseThrow(() -> new NotFoundServiceException("Target version not found! Aborting"));
+        nodeFetchcher.setVersion(versionService.schemaFromHash(null)); // Defaults to current
+        if (sourceId.isPresent()) {
+            Optional<Version> source = versionService.findVersionByPublicId(sourceId.get());
+            // Use source to fetch object
+            source.ifPresent(version -> nodeFetchcher.setVersion(versionService.schemaFromHash(version.getHash())));
+        }
+        Node node;
+        try {
+            nodeFetchcher.setPublicId(nodeId);
+            ExecutorService es = Executors.newSingleThreadExecutor();
+            Future<Node> future = es.submit(nodeFetchcher);
+            node = future.get();
+            es.shutdown();
+        } catch (Exception e) {
+            throw new NotFoundServiceException("Failed to fetch object from schema", e);
+        }
+        // Need to save children first to avoid saving missing nodes.
+        for (NodeConnection connection : node.getChildren()) {
+            if (connection.getChild().isPresent()) {
+                Node child = connection.getChild().get();
+                Node published = publishNode(child.getPublicId(), sourceId, targetId);
+                connection.setChild(published);
+            }
+        }
+        // Set target schema for updating
+        try {
+            nodeUpdater.setSourceId(sourceId);
+            nodeUpdater.setTargetId(targetId);
+            nodeUpdater.setVersion(versionService.schemaFromHash(target.getHash()));
+            nodeUpdater.setElement(node);
+            ExecutorService es = Executors.newSingleThreadExecutor();
+            Future<Node> future = es.submit(nodeUpdater);
+            node = future.get();
+            es.shutdown();
+            return node;
+        } catch (Exception e) {
+            throw new NotFoundServiceException("Failed to update object in schema", e);
+        }
     }
 }

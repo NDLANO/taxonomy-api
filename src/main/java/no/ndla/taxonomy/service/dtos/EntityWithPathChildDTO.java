@@ -22,6 +22,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -42,7 +43,7 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
     public String path;
 
     @ApiModelProperty(value = "List of all paths to this node")
-    private Set<String> paths;
+    private TreeSet<String> paths;
 
     @ApiModelProperty(value = "The id of the node connection which causes this node to be included in the result set.", example = "urn:node-connection:1")
     public URI connectionId;
@@ -57,10 +58,10 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
     public URI relevanceId;
 
     @ApiModelProperty(value = "All translations of this resource")
-    public Set<NodeTranslations.TranslationDTO> translations;
+    public TreeSet<NodeTranslations.TranslationDTO> translations;
 
     @ApiModelProperty(value = "List of language codes supported by translations")
-    public Set<String> supportedLanguages;
+    public TreeSet<String> supportedLanguages;
 
     @JsonIgnore
     public List<EntityWithPathChildDTO> children = new ArrayList<>();
@@ -81,8 +82,10 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
             this.metadata = new MetadataDto(child.getMetadata());
 
             var translations = child.getTranslations();
-            this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
-            this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
+            this.translations = translations.stream().map(TranslationDTO::new)
+                    .collect(Collectors.toCollection(TreeSet::new));
+            this.supportedLanguages = this.translations.stream().map(t -> t.language)
+                    .collect(Collectors.toCollection(TreeSet::new));
         });
 
         nodeConnection.getParent().ifPresent(parent -> this.parent = parent.getPublicId());

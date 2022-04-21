@@ -28,6 +28,12 @@ public class ResourceTranslation implements Translation {
     ResourceTranslation() {
     }
 
+    public ResourceTranslation(ResourceTranslation translation, Resource resource) {
+        this.name = translation.name;
+        this.languageCode = translation.languageCode;
+        this.resource = resource;
+    }
+
     public ResourceTranslation(Resource resource, String languageCode) {
         setResource(resource);
         this.languageCode = languageCode;

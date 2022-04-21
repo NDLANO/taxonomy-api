@@ -36,15 +36,6 @@ logging.level:
   springfox.documentation.spring.web.readers.operation.CachingOperationNameGenerator: WARN
 
 ---
-
-spring:
-  profiles:
-    activate:
-      on-profile: dev
-
-service: ndla-taxonomy-dev
-
----
 spring:
   profiles:
     activate:

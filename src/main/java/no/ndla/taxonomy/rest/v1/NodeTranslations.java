@@ -85,7 +85,7 @@ public class NodeTranslations {
         });
     }
 
-    public static class TranslationDTO {
+    public static class TranslationDTO implements Comparable<TranslationDTO> {
         public TranslationDTO() {
         }
 
@@ -101,6 +101,11 @@ public class NodeTranslations {
         @JsonProperty
         @ApiModelProperty(value = "ISO 639-1 language code", example = "en")
         public String language;
+
+        @Override
+        public int compareTo(TranslationDTO o) {
+            return language.compareTo(o.language);
+        }
     }
 
     public static class UpdateTranslationCommand {

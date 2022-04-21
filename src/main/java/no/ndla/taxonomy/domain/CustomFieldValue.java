@@ -8,10 +8,11 @@
 package no.ndla.taxonomy.domain;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.UUID;
 
 @Entity
-public class CustomFieldValue {
+public class CustomFieldValue implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -30,6 +31,15 @@ public class CustomFieldValue {
     @PreRemove
     void preRemove() {
         this.metadata.removeCustomFieldValue(this);
+    }
+
+    public CustomFieldValue() {
+    }
+
+    public CustomFieldValue(CustomFieldValue customFieldValue, Metadata metadata) {
+        this.value = customFieldValue.getValue();
+        this.customField = customFieldValue.getCustomField();
+        this.metadata = metadata;
     }
 
     public Integer getId() {

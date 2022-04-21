@@ -22,6 +22,17 @@ public class ResourceType extends DomainObject {
         setPublicId(URI.create("urn:resourcetype:" + UUID.randomUUID()));
     }
 
+    public ResourceType(ResourceType resourceType, ResourceType parent) {
+        setName(resourceType.getName());
+        setParent(parent);
+        setPublicId(resourceType.getPublicId());
+        Set<ResourceTypeTranslation> trs = new HashSet<>();
+        for (ResourceTypeTranslation translation : resourceType.getTranslations()) {
+            trs.add(new ResourceTypeTranslation(translation, this));
+        }
+        this.resourceTypeTranslations = trs;
+    }
+
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private ResourceType parent;

@@ -17,6 +17,7 @@ import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 import java.net.URI;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @ApiModel("ResourceType")
@@ -35,11 +36,11 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
 
     @JsonProperty
     @ApiModelProperty(value = "All translations of this resource type")
-    private Set<TranslationDTO> translations;
+    private TreeSet<TranslationDTO> translations;
 
     @JsonProperty
     @ApiModelProperty(value = "List of language codes supported by translations")
-    private Set<String> supportedLanguages;
+    private TreeSet<String> supportedLanguages;
 
     public ResourceTypeDTO() {
     }
@@ -48,8 +49,10 @@ public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
         this.id = resourceType.getPublicId();
 
         var translations = resourceType.getTranslations();
-        this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
-        this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
+        this.translations = translations.stream().map(TranslationDTO::new)
+                .collect(Collectors.toCollection(TreeSet::new));
+        this.supportedLanguages = this.translations.stream().map(t -> t.language)
+                .collect(Collectors.toCollection(TreeSet::new));
 
         resourceType.getParent().map(ResourceType::getPublicId).ifPresent(publicId -> this.parentId = publicId);
 

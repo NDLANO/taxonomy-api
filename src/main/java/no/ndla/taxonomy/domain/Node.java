@@ -12,8 +12,19 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@NamedEntityGraph(name = Node.GRAPH, includeAllAttributes = true, attributeNodes = {
+        @NamedAttributeNode("translations"), @NamedAttributeNode(value = "metadata"),
+        @NamedAttributeNode(value = "parentConnections", subgraph = "parent-connection"),
+        @NamedAttributeNode(value = "childConnections", subgraph = "child-connection"),
+        @NamedAttributeNode(value = "nodeResources", subgraph = "resource-connections") }, subgraphs = {
+                @NamedSubgraph(name = "parent-connection", attributeNodes = { @NamedAttributeNode("parent") }),
+                @NamedSubgraph(name = "child-connection", attributeNodes = { @NamedAttributeNode("child") }),
+                @NamedSubgraph(name = "resource-connections", attributeNodes = {
+                        @NamedAttributeNode(value = "resource", subgraph = Resource.GRAPH) }) })
 @Entity
 public class Node extends EntityWithPath {
+    public static final String GRAPH = "node-with-connections";
+
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<NodeConnection> parentConnections = new HashSet<>();
 
@@ -59,6 +70,22 @@ public class Node extends EntityWithPath {
         updatePublicID();
     }
 
+    public Node(Node node) {
+        this.contentUri = node.getContentUri();
+        this.nodeType = node.getNodeType();
+        this.ident = node.getIdent();
+        this.context = node.isContext();
+        this.root = node.isRoot();
+        Set<NodeTranslation> trs = new HashSet<>();
+        for (NodeTranslation tr : node.getTranslations()) {
+            trs.add(new NodeTranslation(tr, this));
+        }
+        this.translations = trs;
+        setMetadata(new Metadata(node.getMetadata()));
+        setName(node.getName());
+        setPublicId(node.getPublicId());
+    }
+
     private void updatePublicID() {
         super.setPublicId(URI.create("urn:" + nodeType.getName() + ":" + getIdent()));
     }
@@ -101,6 +128,10 @@ public class Node extends EntityWithPath {
         toReturn.addAll(getNodeResources());
 
         return toReturn;
+    }
+
+    public Set<NodeConnection> getChildren() {
+        return childConnections;
     }
 
     public void addChildConnection(NodeConnection nodeConnection) {
@@ -213,6 +244,10 @@ public class Node extends EntityWithPath {
 
     public Set<NodeTranslation> getTranslations() {
         return translations.stream().collect(Collectors.toUnmodifiableSet());
+    }
+
+    public void clearTranslations() {
+        translations.clear();
     }
 
     public void addTranslation(NodeTranslation nodeTranslation) {

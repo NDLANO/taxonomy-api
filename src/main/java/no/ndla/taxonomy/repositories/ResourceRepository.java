@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.repositories;
 
 import no.ndla.taxonomy.domain.Resource;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
@@ -50,4 +51,8 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
     @Query("SELECT r.id FROM Resource r LEFT JOIN r.metadata m LEFT JOIN m.customFieldValues cfv"
             + " LEFT JOIN cfv.customField cf WHERE cfv.value = :value")
     List<Integer> getAllResourceIdsWithMetadataValue(String value);
+
+    @EntityGraph(value = Resource.GRAPH, type = EntityGraph.EntityGraphType.LOAD)
+    @Query("SELECT DISTINCT r FROM Resource r LEFT JOIN FETCH r.cachedPaths WHERE r.publicId = :publicId")
+    Optional<Resource> fetchResourceGraphByPublicId(URI publicId);
 }

@@ -34,6 +34,9 @@ public abstract class RestTest {
     EntityManager entityManager;
 
     @Autowired
+    VersionRepository versionRepository;
+
+    @Autowired
     ResourceResourceTypeRepository resourceResourceTypeRepository;
 
     @Autowired
@@ -78,6 +81,10 @@ public abstract class RestTest {
     @BeforeEach
     public void restTestSetUp() {
         builder = new Builder(entityManager, cachedUrlUpdaterService);
+        resourceRepository.deleteAllAndFlush();
+        nodeRepository.deleteAllAndFlush();
+        nodeResourceRepository.deleteAllAndFlush();
+        nodeConnectionRepository.deleteAllAndFlush();
     }
 
     <T> T save(T entity) {

@@ -531,6 +531,21 @@ public class NodesTest extends RestTest {
         assertNotNull(resourceRepository.findByPublicId(resource.getPublicId()));
     }
 
+    @Test
+    void publishing_node_fails_if_no_target_version() throws Exception {
+        Node node = builder.node();
+        MockHttpServletResponse response = testUtils.updateResource("/v1/nodes/" + node.getPublicId() + "/publish",
+                null, status().is4xxClientError());
+        assertEquals(400, response.getStatus());
+    }
+
+    @Test
+    void publishing_node_fails_if_node_not_found() throws Exception {
+        MockHttpServletResponse response = testUtils.updateResource("/v1/nodes/urn:node:random/publish", null,
+                status().is4xxClientError());
+        assertEquals(400, response.getStatus());
+    }
+
     private static class ConnectionTypeCounter {
         private final ConnectionIndexDTO[] connections;
         private int subjectCount;
