@@ -30,7 +30,7 @@ public abstract class EntityWithPathDTO {
     private String path;
 
     @ApiModelProperty(value = "List of all paths to this node")
-    private Set<String> paths;
+    private TreeSet<String> paths;
 
     @ApiModelProperty(value = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -40,10 +40,10 @@ public abstract class EntityWithPathDTO {
     public URI relevanceId;
 
     @ApiModelProperty(value = "All translations of this node")
-    private Set<TranslationDTO> translations;
+    private TreeSet<TranslationDTO> translations = new TreeSet<>();
 
     @ApiModelProperty(value = "List of language codes supported by translations")
-    private Set<String> supportedLanguages;
+    private TreeSet<String> supportedLanguages;
 
     @ApiModelProperty(value = "List of names in the path")
     private List<String> breadcrumbs;
@@ -59,8 +59,10 @@ public abstract class EntityWithPathDTO {
         this.path = entity.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
 
         var translations = entity.getTranslations();
-        this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
-        this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
+        this.translations = translations.stream().map(TranslationDTO::new)
+                .collect(Collectors.toCollection(TreeSet::new));
+        this.supportedLanguages = this.translations.stream().map(t -> t.language)
+                .collect(Collectors.toCollection(TreeSet::new));
 
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
                 .map(Translation::getName).orElse(entity.getName());
@@ -74,16 +76,14 @@ public abstract class EntityWithPathDTO {
     }
 
     private List<String> buildCrumbs(EntityWithPath entity, String languageCode) {
-        List<String> parentCrumbs = entity.getParentConnection()
-                .flatMap(parentConnection -> parentConnection.getConnectedParent().map(parent -> buildCrumbs(parent, languageCode)))
-                .orElse(List.of());
+        List<String> parentCrumbs = entity.getParentConnection().flatMap(parentConnection -> parentConnection
+                .getConnectedParent().map(parent -> buildCrumbs(parent, languageCode))).orElse(List.of());
 
         var crumbs = new ArrayList<>(parentCrumbs);
         var name = entity.getTranslation(languageCode).map(Translation::getName).orElse(entity.getName());
         crumbs.add(name);
         return crumbs;
     }
-
 
     public URI getId() {
         return id;

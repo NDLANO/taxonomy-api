@@ -11,11 +11,12 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-public class CustomField {
+public class CustomField implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -27,6 +28,13 @@ public class CustomField {
 
     @Column
     private String key;
+
+    public CustomField() {
+    }
+
+    public CustomField(CustomField customField) {
+        this.key = customField.getKey();
+    }
 
     public Integer getId() {
         return id;

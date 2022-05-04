@@ -15,8 +15,20 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@NamedEntityGraph(name = Resource.GRAPH, attributeNodes = { @NamedAttributeNode(value = "metadata"),
+        @NamedAttributeNode(value = "resourceTranslations"),
+        @NamedAttributeNode(value = "resourceResourceTypes", subgraph = "resourceResourceTypes"),
+        @NamedAttributeNode(value = "nodes", subgraph = "node-with-connections") }, subgraphs = {
+                @NamedSubgraph(name = "resourceResourceTypes", attributeNodes = {
+                        @NamedAttributeNode(value = "resourceType", subgraph = "resourceType") }),
+                @NamedSubgraph(name = "resourceType", attributeNodes = {
+                        @NamedAttributeNode("resourceTypeTranslations"),
+                        @NamedAttributeNode(value = "parent", subgraph = "resourceTypeParent") }),
+                @NamedSubgraph(name = "resourceTypeParent", attributeNodes = {
+                        @NamedAttributeNode("resourceTypeTranslations") }) })
 @Entity
 public class Resource extends EntityWithPath {
+    public static final String GRAPH = "resource-with-data";
 
     @Column
     private URI contentUri;
@@ -54,6 +66,27 @@ public class Resource extends EntityWithPath {
 
     public Resource() {
         setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
+    }
+
+    public Resource(Resource resource) {
+        this.contentUri = resource.getContentUri();
+        Set<ResourceTranslation> trs = new HashSet<>();
+        for (ResourceTranslation tr : resource.getTranslations()) {
+            trs.add(new ResourceTranslation(tr, this));
+        }
+        this.resourceTranslations = trs;
+        Set<ResourceResourceType> rrts = new HashSet<>();
+        for (ResourceResourceType rt : resource.getResourceResourceTypes()) {
+            ResourceResourceType rrt = new ResourceResourceType();
+            rrt.setPublicId(rt.getPublicId());
+            rrt.setResource(this);
+            rrt.setResourceType(rt.getResourceType());
+            rrts.add(rrt);
+        }
+        this.resourceResourceTypes = rrts;
+        setMetadata(new Metadata(resource.getMetadata()));
+        setName(resource.getName());
+        setPublicId(resource.getPublicId());
     }
 
     public Collection<Node> getNodes() {
@@ -120,6 +153,10 @@ public class Resource extends EntityWithPath {
 
     public Set<ResourceTranslation> getTranslations() {
         return resourceTranslations.stream().collect(Collectors.toUnmodifiableSet());
+    }
+
+    public void clearTranslations() {
+        resourceTranslations.clear();
     }
 
     public void removeTranslation(String languageCode) {

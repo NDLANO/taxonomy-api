@@ -33,6 +33,14 @@ public class NodeConnection extends DomainEntity implements EntityWithPathConnec
         setPublicId(URI.create("urn:node-connection:" + UUID.randomUUID()));
     }
 
+    public NodeConnection(NodeConnection nodeConnection) {
+        setPublicId(nodeConnection.getPublicId());
+        this.rank = nodeConnection.rank;
+        this.relevance = nodeConnection.relevance;
+        this.parent = nodeConnection.parent;
+        this.child = nodeConnection.child;
+    }
+
     public static NodeConnection create(Node parent, Node child) {
         if (child == null || parent == null) {
             throw new NullPointerException("Both parent and child must be present.");
@@ -69,6 +77,16 @@ public class NodeConnection extends DomainEntity implements EntityWithPathConnec
 
     public Optional<Node> getChild() {
         return Optional.ofNullable(child);
+    }
+
+    // only for publishing
+    public void setParent(Node parent) {
+        this.parent = parent;
+    }
+
+    // only for publishing
+    public void setChild(Node child) {
+        this.child = child;
     }
 
     public int getRank() {
