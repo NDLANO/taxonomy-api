@@ -37,7 +37,7 @@ public class CustomFieldServiceImplTest {
     private CustomFieldServiceImpl customFieldService;
 
     @BeforeEach
-    public void setUp(@Autowired MetadataRepository metadataRepository,
+    public void setUp(@Autowired NodeRepository nodeRepository, @Autowired MetadataRepository metadataRepository,
             @Autowired CustomFieldRepository customFieldRepository,
             @Autowired CustomFieldValueRepository customFieldValueRepository) {
         this.metadataRepository = metadataRepository;
