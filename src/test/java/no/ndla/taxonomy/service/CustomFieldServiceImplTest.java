@@ -44,6 +44,7 @@ public class CustomFieldServiceImplTest {
         this.customFieldRepository = customFieldRepository;
         this.customFieldValueRepository = customFieldValueRepository;
         this.customFieldService = new CustomFieldServiceImpl(customFieldRepository, customFieldValueRepository);
+        nodeRepository.deleteAll();
         metadataRepository.deleteAll();
         customFieldRepository.deleteAll();
         customFieldValueRepository.deleteAll();
