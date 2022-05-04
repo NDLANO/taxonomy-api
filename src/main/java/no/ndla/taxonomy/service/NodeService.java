@@ -14,6 +14,8 @@ import no.ndla.taxonomy.service.dtos.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.service.task.NodeFetcher;
 import no.ndla.taxonomy.service.task.NodeUpdater;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,7 @@ import static org.springframework.data.jpa.domain.Specification.where;
 @Transactional(readOnly = true)
 @Service
 public class NodeService implements SearchService<NodeDTO, Node, NodeRepository> {
+    Logger logger = LoggerFactory.getLogger(getClass().getName());
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final EntityConnectionService connectionService;
@@ -208,7 +211,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             node = future.get();
             es.shutdown();
         } catch (Exception e) {
-            throw new NotFoundServiceException("Failed to fetch object from schema", e);
+            logger.info(e.getMessage(), e);
+            throw new NotFoundServiceException("Failed to fetch node from source schema", e);
         }
         // Need to save children first to avoid saving missing nodes.
         for (NodeConnection connection : node.getChildren()) {
@@ -230,7 +234,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             es.shutdown();
             return node;
         } catch (Exception e) {
-            throw new NotFoundServiceException("Failed to update object in schema", e);
+            logger.info(e.getMessage(), e);
+            throw new NotFoundServiceException("Failed to update node in target schema", e);
         }
     }
 }
