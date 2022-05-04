@@ -17,6 +17,8 @@ import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.service.task.ResourceFetcher;
 import no.ndla.taxonomy.service.task.ResourceUpdater;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -33,6 +35,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 public class ResourceServiceImpl implements ResourceService, SearchService<ResourceDTO, Resource, ResourceRepository> {
+    Logger logger = LoggerFactory.getLogger(getClass().getName());
+
     private final ResourceRepository resourceRepository;
     private final EntityConnectionService connectionService;
     private final DomainEntityHelperService domainEntityHelperService;
@@ -248,7 +252,8 @@ public class ResourceServiceImpl implements ResourceService, SearchService<Resou
             resource = future.get();
             es.shutdown();
         } catch (Exception e) {
-            throw new NotFoundServiceException("Failed to fetch resource from schema", e);
+            logger.info(e.getMessage(), e);
+            throw new NotFoundServiceException("Failed to fetch resource from source schema", e);
         }
         // Set target schema for updating
         try {
@@ -260,7 +265,8 @@ public class ResourceServiceImpl implements ResourceService, SearchService<Resou
             es.shutdown();
             return resource;
         } catch (Exception e) {
-            throw new NotFoundServiceException("Failed to update resource in schema", e);
+            logger.info(e.getMessage(), e);
+            throw new NotFoundServiceException("Failed to update resource in target schema", e);
         }
     }
 

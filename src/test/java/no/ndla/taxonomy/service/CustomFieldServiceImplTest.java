@@ -13,6 +13,7 @@ import no.ndla.taxonomy.domain.Metadata;
 import no.ndla.taxonomy.repositories.CustomFieldRepository;
 import no.ndla.taxonomy.repositories.CustomFieldValueRepository;
 import no.ndla.taxonomy.repositories.MetadataRepository;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.service.exceptions.EntityNotFoundException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,20 +37,23 @@ public class CustomFieldServiceImplTest {
     private CustomFieldServiceImpl customFieldService;
 
     @BeforeEach
-    public void setUp(@Autowired MetadataRepository metadataRepository,
+    public void setUp(@Autowired NodeRepository nodeRepository, @Autowired MetadataRepository metadataRepository,
             @Autowired CustomFieldRepository customFieldRepository,
             @Autowired CustomFieldValueRepository customFieldValueRepository) {
         this.metadataRepository = metadataRepository;
         this.customFieldRepository = customFieldRepository;
         this.customFieldValueRepository = customFieldValueRepository;
         this.customFieldService = new CustomFieldServiceImpl(customFieldRepository, customFieldValueRepository);
+        nodeRepository.deleteAll();
         metadataRepository.deleteAll();
         customFieldRepository.deleteAll();
+        customFieldValueRepository.deleteAll();
     }
 
     @AfterAll
-    public static void cleanUp(@Autowired MetadataRepository metadataRepository,
-            @Autowired CustomFieldRepository customFieldRepository) {
+    public static void cleanUp(@Autowired NodeRepository nodeRepository,
+            @Autowired MetadataRepository metadataRepository, @Autowired CustomFieldRepository customFieldRepository) {
+        nodeRepository.deleteAll();
         metadataRepository.deleteAll();
         customFieldRepository.deleteAll();
     }
