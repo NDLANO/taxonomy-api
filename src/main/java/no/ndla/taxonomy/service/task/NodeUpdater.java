@@ -81,7 +81,7 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
             Resource resource = nodeResource.getResource().get();
             Resource existing = resourceMap.get(resource.getPublicId());
             // Connect node and resource
-            Optional<NodeConnection> connToUpdate = nodeConnectionRepository
+            Optional<NodeResource> connToUpdate = nodeResourceRepository
                     .findFirstByPublicId(nodeResource.getPublicId());
             if (connToUpdate.isPresent()) {
                 nodeResource.setId(connToUpdate.get().getId());
