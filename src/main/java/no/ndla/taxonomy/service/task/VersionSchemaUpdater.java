@@ -11,6 +11,7 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.CustomFieldRepository;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public abstract class VersionSchemaUpdater<TYPE extends EntityWithPath> extends VersionSchemaTask<TYPE> {
     protected TYPE element;
@@ -23,14 +24,25 @@ public abstract class VersionSchemaUpdater<TYPE extends EntityWithPath> extends 
         Metadata presentMetadata = present.getMetadata();
         presentMetadata.setVisible(metadata.isVisible());
         for (GrepCode grepCode : metadata.getGrepCodes()) {
-            if (!presentMetadata.getGrepCodes().contains(grepCode)) {
-                presentMetadata.addGrepCode(grepCode);
+            if (!presentMetadata.getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toList())
+                    .contains(grepCode.getCode())) {
+                presentMetadata.addGrepCode(new GrepCode(grepCode, presentMetadata));
             }
         }
         for (CustomFieldValue customFieldValue : metadata.getCustomFieldValues()) {
-            if (presentMetadata.getCustomFieldValues().contains(customFieldValue)) {
-                presentMetadata.addCustomFieldValue(customFieldValue);
+            // New custom field
+            if (!presentMetadata.getCustomFieldValues().stream()
+                    .map(customFieldValue1 -> customFieldValue1.getCustomField().getKey()).collect(Collectors.toList())
+                    .contains(customFieldValue.getCustomField().getKey())) {
+                presentMetadata.addCustomFieldValue(new CustomFieldValue(customFieldValue, presentMetadata));
             }
+            // Update existing field
+            presentMetadata.getCustomFieldValues().forEach(cfv -> {
+                if (cfv.getCustomField().getKey().equals(customFieldValue.getCustomField().getKey())) {
+                    cfv.setValue(customFieldValue.getValue());
+                }
+            });
+
         }
     }
 

@@ -52,11 +52,6 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
         Node toSave = this.element;
         Map<URI, Resource> resourceMap = updateAllResources();
         Node updated = persistNode(toSave);
-        // Connect parent if present
-        if (toSave.getParentNode().isPresent()) {
-            Optional<Node> parent = nodeRepository.findFirstByPublicId(toSave.getParentNode().get().getPublicId());
-            parent.ifPresent(p -> nodeConnectionRepository.save(NodeConnection.create(p, toSave)));
-        }
         // Connect children
         for (NodeConnection connection : toSave.getChildren()) {
             Optional<NodeConnection> connToUpdate = nodeConnectionRepository
