@@ -29,7 +29,7 @@ public class NodeResource extends DomainEntity implements EntityWithPathConnecti
     @Column(name = "rank")
     private int rank;
 
-    @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE })
+    @ManyToOne
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 

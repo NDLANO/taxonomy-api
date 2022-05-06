@@ -25,7 +25,7 @@ public class NodeConnection extends DomainEntity implements EntityWithPathConnec
     @Column(name = "rank")
     private int rank;
 
-    @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.REFRESH, CascadeType.MERGE })
+    @ManyToOne
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 
@@ -35,6 +35,7 @@ public class NodeConnection extends DomainEntity implements EntityWithPathConnec
 
     public NodeConnection(NodeConnection nodeConnection) {
         setPublicId(nodeConnection.getPublicId());
+        setPrimary(nodeConnection.isPrimary().orElse(false));
         this.rank = nodeConnection.rank;
         this.relevance = nodeConnection.relevance;
         this.parent = nodeConnection.parent;
