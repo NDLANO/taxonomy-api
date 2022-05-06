@@ -64,11 +64,15 @@ public class Resource extends EntityWithPath {
         return Set.of();
     }
 
-    public Resource() {
-        setPublicId(URI.create("urn:resource:" + UUID.randomUUID()));
+    private URI generateId() {
+        return URI.create("urn:resource:" + UUID.randomUUID());
     }
 
-    public Resource(Resource resource) {
+    public Resource() {
+        setPublicId(generateId());
+    }
+
+    public Resource(Resource resource, boolean keepPublicId) {
         this.contentUri = resource.getContentUri();
         Set<ResourceTranslation> trs = new HashSet<>();
         for (ResourceTranslation tr : resource.getTranslations()) {
@@ -78,7 +82,9 @@ public class Resource extends EntityWithPath {
         Set<ResourceResourceType> rrts = new HashSet<>();
         for (ResourceResourceType rt : resource.getResourceResourceTypes()) {
             ResourceResourceType rrt = new ResourceResourceType();
-            rrt.setPublicId(rt.getPublicId());
+            if (keepPublicId) {
+                rrt.setPublicId(rt.getPublicId());
+            }
             rrt.setResource(this);
             rrt.setResourceType(rt.getResourceType());
             rrts.add(rrt);
@@ -86,7 +92,7 @@ public class Resource extends EntityWithPath {
         this.resourceResourceTypes = rrts;
         setMetadata(new Metadata(resource.getMetadata()));
         setName(resource.getName());
-        setPublicId(resource.getPublicId());
+        setPublicId(keepPublicId ? resource.getPublicId() : generateId());
     }
 
     public Collection<Node> getNodes() {

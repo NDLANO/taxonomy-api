@@ -10,7 +10,6 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.service.dtos.*;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.util.List;
@@ -31,4 +30,6 @@ public interface ResourceService extends SearchService<ResourceDTO, Resource, Re
             MetadataFilters metadataFilters);
 
     Resource publishResource(URI resourceId, Optional<URI> sourceId, URI targetId);
+
+    Resource cloneResource(URI publicId, URI contentUri);
 }
