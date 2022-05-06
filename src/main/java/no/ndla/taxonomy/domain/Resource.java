@@ -15,7 +15,7 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@NamedEntityGraph(name = Resource.GRAPH, attributeNodes = { @NamedAttributeNode(value = "metadata"),
+@NamedEntityGraph(name = Resource.GRAPH, includeAllAttributes = true, attributeNodes = { @NamedAttributeNode(value = "metadata"),
         @NamedAttributeNode(value = "resourceTranslations"),
         @NamedAttributeNode(value = "resourceResourceTypes", subgraph = "resourceResourceTypes"),
         @NamedAttributeNode(value = "nodes", subgraph = "node-with-connections") }, subgraphs = {
