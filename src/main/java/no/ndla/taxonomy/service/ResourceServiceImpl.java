@@ -271,6 +271,15 @@ public class ResourceServiceImpl implements ResourceService, SearchService<Resou
     }
 
     @Override
+    public Resource cloneResource(URI publicId, URI contentUri) {
+        final var resource = resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
+                .orElseThrow(() -> new NotFoundHttpResponseException("No such resource found"));
+        Resource cloned = new Resource(resource, false);
+        cloned.setContentUri(contentUri);
+        return resourceRepository.save(cloned);
+    }
+
+    @Override
     public ResourceRepository getRepository() {
         return resourceRepository;
     }

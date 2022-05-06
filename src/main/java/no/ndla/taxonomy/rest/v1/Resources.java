@@ -104,6 +104,18 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
         return doPost(new Resource(), command);
     }
 
+    @PostMapping("{id}/clone")
+    @ApiOperation(value = "Clones a resource, including resource-types and translations")
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
+    public ResponseEntity<Void> clone(
+            @ApiParam(name = "id", value = "Id of resource to clone", example = "urn:resource:1") @PathVariable("id") URI publicId,
+            @ApiParam(name = "resource", value = "Object containing contentUri. Other values are ignored.") @RequestBody ResourceCommand command) {
+        Resource entity = resourceService.cloneResource(publicId, command.contentUri);
+        URI location = URI.create(getLocation() + "/" + entity.getPublicId());
+        return ResponseEntity.created(location).build();
+    }
+
     @GetMapping("{id}/resource-types")
     @ApiOperation(value = "Gets all resource types associated with this resource")
     @Transactional(readOnly = true)

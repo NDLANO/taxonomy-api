@@ -195,6 +195,37 @@ public class ResourcesTest extends RestTest {
     }
 
     @Test
+    public void can_clone_resource() throws Exception {
+        URI publicId = builder.resource(r -> r.name("Resource").resourceType(rt -> rt.name("Fagstoff"))
+                .translation("nb", tr -> tr.name("Fagstoff nb")).contentUri("urn:article:1")).getPublicId();
+
+        final var command = new ResourceCommand() {
+            {
+                contentUri = URI.create("urn:article:2");
+            }
+        };
+        URI id = getId(testUtils.createResource("/v1/resources/" + publicId + "/clone", command));
+        assertNotNull(id);
+
+        Resource oldRes = resourceRepository.getByPublicId(publicId);
+        Resource newRes = resourceRepository.getByPublicId(id);
+        assertNotEquals(publicId, id);
+        assertEquals(oldRes.getName(), newRes.getName());
+        assertEquals("urn:article:1", oldRes.getContentUri().toString());
+        assertEquals("urn:article:2", newRes.getContentUri().toString());
+        assertNotEquals(oldRes.getContentUri().toString(), newRes.getContentUri().toString());
+        assertEquals(oldRes.getTranslations().size(), newRes.getTranslations().size());
+        assertEquals(oldRes.getResourceTypes().size(), newRes.getResourceTypes().size());
+
+        // contentUri can be null
+        URI id2 = getId(testUtils.createResource("/v1/resources/" + publicId + "/clone", new ResourceCommand()));
+        assertNotNull(id2);
+        Resource resWithoutContentUri = resourceRepository.findByPublicId(id2);
+        assertNull(resWithoutContentUri.getContentUri());
+
+    }
+
+    @Test
     public void can_update_resource() throws Exception {
         URI publicId = newResource().getPublicId();
 

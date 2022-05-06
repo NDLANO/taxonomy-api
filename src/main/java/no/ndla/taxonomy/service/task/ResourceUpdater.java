@@ -8,7 +8,6 @@
 package no.ndla.taxonomy.service.task;
 
 import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceTranslation;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.repositories.CustomFieldRepository;
@@ -20,7 +19,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -46,7 +44,7 @@ public class ResourceUpdater extends VersionSchemaUpdater<Resource> {
         Optional<Resource> existing = resourceRepository.fetchResourceGraphByPublicId(this.element.getPublicId());
         if (existing.isEmpty()) {
             // Resource is new
-            Resource resource = new Resource(this.element);
+            Resource resource = new Resource(this.element, true);
             updated = resourceRepository.save(resource);
         } else {
             // Resource exists, update current
