@@ -14,6 +14,7 @@ import no.ndla.taxonomy.service.ResourceService;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -76,7 +77,12 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
                     Relevance relevance = connection.getRelevance()
                             .map(rel -> relevanceRepository.getByPublicId(rel.getPublicId())).orElse(null);
                     connection.setRelevance(relevance);
-                    updated.addChildConnection(nodeConnectionRepository.save(new NodeConnection(connection)));
+                    try {
+                        NodeConnection nodeConnection = nodeConnectionRepository.save(new NodeConnection(connection));
+                        updated.addChildConnection(nodeConnection);
+                    } catch (DataIntegrityViolationException e) {
+                        // connection exist with other name. Do nothing
+                    }
                 }
             }
         }
@@ -101,7 +107,11 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
                 Relevance relevance = nodeResource.getRelevance()
                         .map(rel -> relevanceRepository.getByPublicId(rel.getPublicId())).orElse(null);
                 nodeResource.setRelevance(relevance);
-                nodeResourceRepository.save(new NodeResource(nodeResource));
+                try {
+                    nodeResourceRepository.save(new NodeResource(nodeResource));
+                } catch (DataIntegrityViolationException e) {
+                    // connection exist with other name. Do nothing
+                }
             }
         }
         nodeService.updatePaths(updated);
