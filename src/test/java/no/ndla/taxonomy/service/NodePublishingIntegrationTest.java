@@ -14,11 +14,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.transaction.TestTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,6 +58,9 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     Builder builder;
 
+    @Autowired
+    private ThreadPoolTaskExecutor executor;
+
     @BeforeEach
     void clearAllRepos() {
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
@@ -69,7 +74,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     @Transactional
-    void can_publish_node_to_schema() {
+    void can_publish_node_to_schema() throws InterruptedException {
         final var command = new VersionCommand() {
             {
                 name = "Beta";
@@ -88,7 +93,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.flagForCommit();
         TestTransaction.end();
 
-        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false);
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
         Node published = nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(node.getPublicId()).get();
@@ -115,7 +121,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     @Transactional
-    void can_publish_node_with_resource_to_schema() {
+    void can_publish_node_with_resource_to_schema() throws InterruptedException {
         final var command = new VersionCommand() {
             {
                 name = "Beta";
@@ -135,7 +141,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.flagForCommit();
         TestTransaction.end();
 
-        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false);
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
         Node published = nodeRepository.fetchNodeGraphByPublicId(node.getPublicId()).get();
@@ -159,7 +166,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     @Transactional
-    void can_publish_node_tree_to_schema() {
+    void can_publish_node_tree_to_schema() throws InterruptedException {
         final var command = new VersionCommand() {
             {
                 name = "Beta";
@@ -175,7 +182,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.flagForCommit();
         TestTransaction.end();
 
-        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false);
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
         Node published = nodeRepository.fetchNodeGraphByPublicId(URI.create("urn:topic:1")).get();
@@ -190,7 +198,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     @Transactional
-    void can_publish_sub_node_with_resource_to_schema() {
+    void can_publish_sub_node_with_resource_to_schema() throws InterruptedException {
         final var command = new VersionCommand() {
             {
                 name = "Beta";
@@ -206,7 +214,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.flagForCommit();
         TestTransaction.end();
 
-        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false);
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
         Optional<Resource> resource = resourceRepository
@@ -221,7 +230,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     @Transactional
-    void can_publish_node_tree_with_resources_to_schema() {
+    void can_publish_node_tree_with_resources_to_schema() throws InterruptedException {
         final var command = new VersionCommand() {
             {
                 name = "Beta";
@@ -238,7 +247,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.flagForCommit();
         TestTransaction.end();
 
-        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false);
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
         Optional<Resource> resource = resourceRepository.fetchResourceGraphByPublicId(URI.create("urn:resource:1"));
@@ -258,7 +268,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     @Transactional
-    void can_publish_node_tree_with_reused_resource_to_schema() {
+    void can_publish_node_tree_with_reused_resource_to_schema() throws InterruptedException {
         final var command = new VersionCommand() {
             {
                 name = "Beta";
@@ -279,7 +289,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.flagForCommit();
         TestTransaction.end();
 
-        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false);
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
         Optional<Resource> updated = resourceRepository.fetchResourceGraphByPublicId(URI.create("urn:resource:1"));
@@ -298,7 +309,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     @Transactional
-    void can_publish_node_in_tree_to_schema() {
+    void can_publish_node_in_tree_to_schema() throws InterruptedException {
         final var command = new VersionCommand() {
             {
                 name = "Beta";
@@ -317,7 +328,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.flagForCommit();
         TestTransaction.end();
 
-        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false);
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
         Optional<Node> updatedChild = nodeRepository.fetchNodeGraphByPublicId(child.getPublicId());
@@ -333,7 +345,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     @Transactional
-    void can_publish_node_tree_with_reused_resource_twice_to_schema() {
+    void can_publish_node_tree_with_reused_resource_twice_to_schema() throws InterruptedException {
         final var command = new VersionCommand() {
             {
                 name = "Beta";
@@ -351,8 +363,10 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.flagForCommit();
         TestTransaction.end();
 
-        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
-        nodeService.publishNode(second.getPublicId(), Optional.empty(), target.getPublicId());
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false);
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
+        nodeService.publishNode(second.getPublicId(), Optional.empty(), target.getPublicId(), false);
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
         Optional<Resource> updated = resourceRepository.fetchResourceGraphByPublicId(URI.create("urn:resource:1"));
@@ -371,7 +385,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     @Transactional
-    void can_publish_reused_resource_with_translations_to_schema() {
+    void can_publish_reused_resource_with_translations_to_schema() throws InterruptedException {
         final var command = new VersionCommand() {
             {
                 name = "Beta";
@@ -394,7 +408,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.flagForCommit();
         TestTransaction.end();
 
-        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false);
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
 
         // Update translations to resource in standard schema for updating
         TestTransaction.start();
@@ -411,7 +426,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         entityManager.persist(r);
         TestTransaction.end();
 
-        nodeService.publishNode(second.getPublicId(), Optional.empty(), target.getPublicId());
+        nodeService.publishNode(second.getPublicId(), Optional.empty(), target.getPublicId(), false);
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
         Optional<Resource> updated = resourceRepository.fetchResourceGraphByPublicId(URI.create("urn:resource:1"));
@@ -438,7 +454,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     @Transactional
-    void can_publish_node_twice_to_schema() {
+    void can_publish_node_twice_to_schema() throws InterruptedException {
         final var command = new VersionCommand() {
             {
                 name = "Beta";
@@ -446,6 +462,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         };
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
 
         // some nodes to make sure testnode is not the first
         builder.node();
@@ -456,7 +473,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.flagForCommit();
         TestTransaction.end();
 
-        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false);
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
 
         // Update translations to node in standard schema for updating
         TestTransaction.start();
@@ -473,7 +491,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         entityManager.persist(n);
         TestTransaction.end();
 
-        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId());
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false);
+        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
         Node published = nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(node.getPublicId()).get();

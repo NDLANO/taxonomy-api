@@ -29,7 +29,14 @@ public class CustomField implements Serializable {
     @Column
     private String key;
 
+    public static final String IS_PUBLISHING = "isPublishing";
+    public static final String REQUEST_PUBLISH = "requestPublish";
+
     public CustomField() {
+    }
+
+    public CustomField(String key) {
+        this.key = key;
     }
 
     public CustomField(CustomField customField) {

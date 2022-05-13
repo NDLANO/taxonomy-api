@@ -176,6 +176,10 @@ public class Node extends EntityWithPath {
         return this.nodeResources.stream().collect(Collectors.toUnmodifiableSet());
     }
 
+    public void setNodeResources(Set<NodeResource> nodeResources) {
+        this.nodeResources = nodeResources;
+    }
+
     public void addNodeResource(NodeResource nodeResource) {
         if (nodeResource.getNode().orElse(null) != this) {
             throw new IllegalArgumentException(

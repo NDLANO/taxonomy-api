@@ -34,7 +34,9 @@ public abstract class VersionSchemaUpdater<TYPE extends EntityWithPath> extends 
             if (!presentMetadata.getCustomFieldValues().stream()
                     .map(customFieldValue1 -> customFieldValue1.getCustomField().getKey()).collect(Collectors.toList())
                     .contains(customFieldValue.getCustomField().getKey())) {
-                presentMetadata.addCustomFieldValue(new CustomFieldValue(customFieldValue, presentMetadata));
+                if (!customFieldValue.getCustomField().getKey().equals(CustomField.IS_PUBLISHING)) {
+                    presentMetadata.addCustomFieldValue(new CustomFieldValue(customFieldValue, presentMetadata));
+                }
             }
             // Update existing field
             presentMetadata.getCustomFieldValues().forEach(cfv -> {
