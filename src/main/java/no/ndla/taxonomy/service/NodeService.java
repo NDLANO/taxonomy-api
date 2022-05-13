@@ -132,7 +132,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         }
         filtered = nodeRepository.findAll(specification);
 
-        return filtered.stream().map(n -> new NodeDTO(n, language.get())).collect(Collectors.toList());
+        return filtered.stream().distinct().map(n -> new NodeDTO(n, language.get())).collect(Collectors.toList());
     }
 
     public List<ConnectionIndexDTO> getAllConnections(URI nodePublicId) {

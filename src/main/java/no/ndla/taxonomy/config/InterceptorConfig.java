@@ -14,12 +14,16 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class VersionRequestInterceptorConfig implements WebMvcConfigurer {
+public class InterceptorConfig implements WebMvcConfigurer {
     @Autowired
     private VersionRequestInterceptor tenantInterceptor;
 
+    @Autowired
+    private RequestLoggerInterceptor requestLoggerInterceptor;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(requestLoggerInterceptor).addPathPatterns("/**");
         registry.addInterceptor(tenantInterceptor).addPathPatterns("/**");
     }
 }
