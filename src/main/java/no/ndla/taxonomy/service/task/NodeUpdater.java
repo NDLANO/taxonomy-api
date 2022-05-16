@@ -74,19 +74,21 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
                 Optional<Node> child = nodeRepository
                         .fetchNodeGraphByPublicId(connection.getChild().get().getPublicId());
                 if (child.isPresent()) {
-                    Node unproxied = Hibernate.unproxy(child.get(), Node.class);
+                    Node node = child.get();
+                    if (node.getParentConnection().isPresent()) {
+                        // Child already have parent, the node must have been moved!
+                        URI publicId = node.getParentConnection().get().getPublicId();
+                        node.releaseParentConnections();
+                        node = nodeRepository.save(node);
+                        nodeConnectionRepository.deleteByPublicId(publicId);
+                    }
                     connection.setParent(updated);
-                    connection.setChild(unproxied);
+                    connection.setChild(node);
                     Relevance relevance = connection.getRelevance()
                             .map(rel -> relevanceRepository.getByPublicId(rel.getPublicId())).orElse(null);
                     connection.setRelevance(relevance);
-                    try {
-                        NodeConnection nodeConnection = nodeConnectionRepository.save(new NodeConnection(connection));
-                        updated.addChildConnection(nodeConnection);
-                    } catch (DataIntegrityViolationException e) {
-                        logger.info("Connection already exists", e);
-                        // connection exist with other name. Do nothing
-                    }
+                    NodeConnection nodeConnection = nodeConnectionRepository.save(new NodeConnection(connection));
+                    updated.addChildConnection(nodeConnection);
                 }
             }
         }
