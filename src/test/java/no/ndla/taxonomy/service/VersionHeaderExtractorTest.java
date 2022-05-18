@@ -46,6 +46,7 @@ public class VersionHeaderExtractorTest {
     @Test
     void no_headers_without_versions_returns_default_schema() {
         HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getRequestURI()).thenReturn("/v1/versions");
         when(request.getHeader(anyString())).thenReturn(null);
         String versionSchemaFromHeader = versionHeaderExtractor.getVersionSchemaFromHeader(request);
         assertEquals(defaultSchema, versionSchemaFromHeader);
@@ -55,6 +56,7 @@ public class VersionHeaderExtractorTest {
     void header_with_no_matching_version_returns_default_schema() {
         {
             HttpServletRequest request = mock(HttpServletRequest.class);
+            when(request.getRequestURI()).thenReturn("/v1/versions");
             when(request.getHeader(anyString())).thenReturn("abcd");
             when(request.getMethod()).thenReturn("POST");
             String versionSchemaFromHeader = versionHeaderExtractor.getVersionSchemaFromHeader(request);
@@ -62,6 +64,7 @@ public class VersionHeaderExtractorTest {
         }
         {
             HttpServletRequest request = mock(HttpServletRequest.class);
+            when(request.getRequestURI()).thenReturn("/v1/versions");
             when(request.getHeader(anyString())).thenReturn("abcd");
             when(request.getMethod()).thenReturn("GET");
             String versionSchemaFromHeader = versionHeaderExtractor.getVersionSchemaFromHeader(request);
@@ -76,6 +79,7 @@ public class VersionHeaderExtractorTest {
         Version saved = versionRepository.save(version);
         {
             HttpServletRequest request = mock(HttpServletRequest.class);
+            when(request.getRequestURI()).thenReturn("/v1/subjects");
             when(request.getHeader(anyString())).thenReturn(saved.getHash());
             when(request.getMethod()).thenReturn("POST");
             String versionSchemaFromHeader = versionHeaderExtractor.getVersionSchemaFromHeader(request);
@@ -83,6 +87,7 @@ public class VersionHeaderExtractorTest {
         }
         {
             HttpServletRequest request = mock(HttpServletRequest.class);
+            when(request.getRequestURI()).thenReturn("/v1/subjects");
             when(request.getHeader(anyString())).thenReturn(saved.getHash());
             when(request.getMethod()).thenReturn("GET");
             String versionSchemaFromHeader = versionHeaderExtractor.getVersionSchemaFromHeader(request);
@@ -97,6 +102,7 @@ public class VersionHeaderExtractorTest {
         Version saved = versionRepository.save(version);
         {
             HttpServletRequest request = mock(HttpServletRequest.class);
+            when(request.getRequestURI()).thenReturn("/v1/subjects");
             when(request.getHeader(anyString())).thenReturn(null);
             when(request.getMethod()).thenReturn("GET");
             String versionSchemaFromHeader = versionHeaderExtractor.getVersionSchemaFromHeader(request);
@@ -104,6 +110,7 @@ public class VersionHeaderExtractorTest {
         }
         {
             HttpServletRequest request = mock(HttpServletRequest.class);
+            when(request.getRequestURI()).thenReturn("/v1/subjects");
             when(request.getHeader(anyString())).thenReturn(null);
             when(request.getMethod()).thenReturn("POST");
             String versionSchemaFromHeader = versionHeaderExtractor.getVersionSchemaFromHeader(request);
