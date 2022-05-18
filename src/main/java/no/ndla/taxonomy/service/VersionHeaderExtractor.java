@@ -36,6 +36,9 @@ public class VersionHeaderExtractor {
 
     public String getVersionSchemaFromHeader(HttpServletRequest req) {
         String versionHash = req.getHeader("VersionHash");
+        if (req.getRequestURI().startsWith("/v1/versions")) {
+            return defaultSchema;
+        }
         if (versionHash == null) {
             // No header, check published and use for gets
             Optional<Version> published = versionRepository.findFirstByVersionType(VersionType.PUBLISHED);
