@@ -36,6 +36,11 @@ public class CustomFieldValue implements Serializable {
     public CustomFieldValue() {
     }
 
+    public CustomFieldValue(CustomField customField, String value) {
+        this.value = value;
+        this.customField = customField;
+    }
+
     public CustomFieldValue(CustomFieldValue customFieldValue, Metadata metadata) {
         this.value = customFieldValue.getValue();
         this.customField = customFieldValue.getCustomField();

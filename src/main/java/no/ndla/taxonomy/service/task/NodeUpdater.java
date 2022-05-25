@@ -12,8 +12,11 @@ import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.ResourceService;
 import org.hibernate.Hibernate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +26,7 @@ import java.util.*;
 
 @Component
 public class NodeUpdater extends VersionSchemaUpdater<Node> {
+    Logger logger = LoggerFactory.getLogger(getClass().getName());
 
     @Autowired
     CustomFieldRepository customFieldRepository;
@@ -47,7 +51,7 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
     RelevanceRepository relevanceRepository;
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     protected Optional<Node> callInternal() {
         Node toSave = this.element;
         Map<URI, Resource> resourceMap = updateAllResources();
@@ -70,17 +74,26 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
                 Optional<Node> child = nodeRepository
                         .fetchNodeGraphByPublicId(connection.getChild().get().getPublicId());
                 if (child.isPresent()) {
-                    Node unproxied = Hibernate.unproxy(child.get(), Node.class);
+                    Node node = child.get();
+                    if (node.getParentConnection().isPresent()) {
+                        // Child already have parent, the node must have been moved!
+                        URI publicId = node.getParentConnection().get().getPublicId();
+                        node.releaseParentConnections();
+                        node = nodeRepository.save(node);
+                        nodeConnectionRepository.deleteByPublicId(publicId);
+                    }
                     connection.setParent(updated);
-                    connection.setChild(unproxied);
+                    connection.setChild(node);
                     Relevance relevance = connection.getRelevance()
                             .map(rel -> relevanceRepository.getByPublicId(rel.getPublicId())).orElse(null);
                     connection.setRelevance(relevance);
-                    updated.addChildConnection(nodeConnectionRepository.save(new NodeConnection(connection)));
+                    NodeConnection nodeConnection = nodeConnectionRepository.save(new NodeConnection(connection));
+                    updated.addChildConnection(nodeConnection);
                 }
             }
         }
         // Resources
+        Set<NodeResource> nodeResources = new HashSet<>();
         for (NodeResource nodeResource : toSave.getNodeResources()) {
             Resource resource = nodeResource.getResource().get();
             Resource existing = resourceMap.get(resource.getPublicId());
@@ -89,23 +102,35 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
                     .findFirstByPublicId(nodeResource.getPublicId());
             if (connToUpdate.isPresent()) {
                 NodeResource res = connToUpdate.get();
+                res.setNode(updated);
+                res.setResource(existing);
                 res.setPrimary(nodeResource.isPrimary().orElse(false));
                 res.setRank(nodeResource.getRank());
                 Relevance relevance = nodeResource.getRelevance()
                         .map(rel -> relevanceRepository.getByPublicId(rel.getPublicId())).orElse(null);
                 res.setRelevance(relevance);
-                nodeResourceRepository.save(res);
+                nodeResources.add(persistNodeResource(res));
             } else {
                 nodeResource.setNode(updated);
                 nodeResource.setResource(existing);
                 Relevance relevance = nodeResource.getRelevance()
                         .map(rel -> relevanceRepository.getByPublicId(rel.getPublicId())).orElse(null);
                 nodeResource.setRelevance(relevance);
-                nodeResourceRepository.save(new NodeResource(nodeResource));
+                try {
+                    nodeResources.add(persistNodeResource(new NodeResource(nodeResource)));
+                } catch (DataIntegrityViolationException e) {
+                    logger.info("Connection already exists", e);
+                    // connection exist with other name. Do nothing
+                }
             }
         }
-        nodeService.updatePaths(updated);
-        return Optional.of(updated);
+        updated.setNodeResources(nodeResources);
+        return Optional.of(nodeService.updatePaths(updated));
+    }
+
+    @Transactional
+    private NodeResource persistNodeResource(NodeResource nodeResource) {
+        return nodeResourceRepository.saveAndFlush(nodeResource);
     }
 
     @Transactional

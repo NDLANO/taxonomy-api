@@ -29,8 +29,11 @@ public class VersionRequestInterceptor implements AsyncHandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        return Optional.ofNullable(request).map(versionHeaderExtractor::getVersionSchemaFromHeader)
-                .map(this::setVersionContext).orElse(false);
+        if (request.getRequestURI().startsWith("/v1/versions")) {
+            VersionContext.clear();
+        }
+        return Optional.of(request).map(versionHeaderExtractor::getVersionSchemaFromHeader).map(this::setVersionContext)
+                .orElse(false);
     }
 
     @Override

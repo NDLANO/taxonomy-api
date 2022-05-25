@@ -84,6 +84,9 @@ public class Metadata implements Serializable {
     }
 
     public void addCustomFieldValue(CustomFieldValue customFieldValue) {
+        if (customFieldValue.getMetadata() == null) {
+            customFieldValue.setMetadata(this);
+        }
         this.customFieldValues.add(customFieldValue);
     }
 

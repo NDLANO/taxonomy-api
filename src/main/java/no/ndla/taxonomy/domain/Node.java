@@ -162,6 +162,10 @@ public class Node extends EntityWithPath {
         nodeConnection.disassociate();
     }
 
+    public void releaseParentConnections() {
+        this.parentConnections.clear();
+    }
+
     public Set<Node> getChildNodes() {
         return childConnections.stream().map(NodeConnection::getChild).map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
@@ -174,6 +178,10 @@ public class Node extends EntityWithPath {
 
     public Set<NodeResource> getNodeResources() {
         return this.nodeResources.stream().collect(Collectors.toUnmodifiableSet());
+    }
+
+    public void setNodeResources(Set<NodeResource> nodeResources) {
+        this.nodeResources = nodeResources;
     }
 
     public void addNodeResource(NodeResource nodeResource) {
