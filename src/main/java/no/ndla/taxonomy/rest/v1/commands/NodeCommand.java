@@ -28,7 +28,7 @@ public class NodeCommand implements UpdatableDto<Node> {
 
     @JsonProperty
     @Enumerated(EnumType.STRING)
-    @ApiModelProperty(required = true, value = "Type of node. Values are subject, topic", example = "topic")
+    @ApiModelProperty(value = "Type of node. Values are subject, topic. Required on create.", example = "topic")
     public NodeType nodeType;
 
     @JsonProperty
@@ -36,7 +36,7 @@ public class NodeCommand implements UpdatableDto<Node> {
     public URI contentUri;
 
     @JsonProperty
-    @ApiModelProperty(required = true, value = "The name of the node", example = "Trigonometry")
+    @ApiModelProperty(value = "The name of the node. Required on create.", example = "Trigonometry")
     public String name;
 
     @JsonProperty
