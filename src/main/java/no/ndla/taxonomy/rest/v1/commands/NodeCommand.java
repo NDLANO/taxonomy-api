@@ -54,18 +54,23 @@ public class NodeCommand implements UpdatableDto<Node> {
 
     @Override
     public void apply(Node node) {
-        node.setIdent(nodeId);
-        if (getNodeId().isPresent()) {
-            node.setPublicId(getPublicId());
-        }
         if (node.getIdent() == null) {
             node.setIdent(UUID.randomUUID().toString());
+        }
+        if (getNodeId().isPresent()) {
+            node.setPublicId(getPublicId());
         }
         if (root != null) {
             node.setRoot(root);
         }
-        node.setNodeType(nodeType);
-        node.setName(name);
-        node.setContentUri(contentUri);
+        if (nodeType != null) {
+            node.setNodeType(nodeType);
+        }
+        if (name != null) {
+            node.setName(name);
+        }
+        if (contentUri != null) {
+            node.setContentUri(contentUri);
+        }
     }
 }

@@ -452,12 +452,10 @@ public class NodesTest extends RestTest {
     @Test
     public void can_update_node_without_changing_metadata() throws Exception {
         Node n = builder.node(s -> s.isVisible(false).grepCode("KM123").customField("key", "value"));
-        String ident = n.getIdent();
 
         final var command = new NodeCommand() {
             {
                 nodeType = NodeType.TOPIC;
-                nodeId = ident;
                 name = "physics";
                 contentUri = URI.create("urn:article:1");
             }
@@ -465,7 +463,7 @@ public class NodesTest extends RestTest {
 
         testUtils.updateResource("/v1/nodes/" + n.getPublicId(), command);
 
-        Node node = nodeRepository.getByPublicId(command.getPublicId());
+        Node node = nodeRepository.getByPublicId(n.getPublicId());
         assertEquals(command.nodeType, node.getNodeType());
         assertEquals(command.name, node.getName());
         assertEquals(command.contentUri, node.getContentUri());
