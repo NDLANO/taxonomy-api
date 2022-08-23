@@ -28,7 +28,7 @@ public class NodeCommand implements UpdatableDto<Node> {
 
     @JsonProperty
     @Enumerated(EnumType.STRING)
-    @ApiModelProperty(required = true, value = "Type of node. Values are subject, topic", example = "topic")
+    @ApiModelProperty(value = "Type of node. Values are subject, topic. Required on create.", example = "topic")
     public NodeType nodeType;
 
     @JsonProperty
@@ -36,7 +36,7 @@ public class NodeCommand implements UpdatableDto<Node> {
     public URI contentUri;
 
     @JsonProperty
-    @ApiModelProperty(required = true, value = "The name of the node", example = "Trigonometry")
+    @ApiModelProperty(value = "The name of the node. Required on create.", example = "Trigonometry")
     public String name;
 
     @JsonProperty
@@ -54,18 +54,23 @@ public class NodeCommand implements UpdatableDto<Node> {
 
     @Override
     public void apply(Node node) {
-        node.setIdent(nodeId);
-        if (getNodeId().isPresent()) {
-            node.setPublicId(getPublicId());
-        }
         if (node.getIdent() == null) {
             node.setIdent(UUID.randomUUID().toString());
+        }
+        if (getNodeId().isPresent()) {
+            node.setPublicId(getPublicId());
         }
         if (root != null) {
             node.setRoot(root);
         }
-        node.setNodeType(nodeType);
-        node.setName(name);
-        node.setContentUri(contentUri);
+        if (nodeType != null) {
+            node.setNodeType(nodeType);
+        }
+        if (name != null) {
+            node.setName(name);
+        }
+        if (contentUri != null) {
+            node.setContentUri(contentUri);
+        }
     }
 }
