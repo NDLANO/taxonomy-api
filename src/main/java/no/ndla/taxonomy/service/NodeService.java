@@ -232,8 +232,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         for (NodeConnection connection : node.getChildren()) {
             if (connection.getChild().isPresent()) {
                 Node child = connection.getChild().get();
-                Node published = publishNode(child.getPublicId(), sourceId, targetId, false);
-                connection.setChild(published);
+                publishNode(child.getPublicId(), sourceId, targetId, false);
             }
         }
         // Set target schema for updating
