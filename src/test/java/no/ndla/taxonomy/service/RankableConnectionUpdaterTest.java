@@ -10,6 +10,7 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.EntityWithPathConnection;
 import no.ndla.taxonomy.domain.Relevance;
+import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -110,6 +111,46 @@ public class RankableConnectionUpdaterTest {
         assertEquals(20, rankable6.getRank());
         assertEquals(100, rankable7.getRank());
         assertEquals(11, rankable8.getRank());
+    }
+
+    @Test
+    public void rank_cascading() throws URISyntaxException {
+        final var relevance = new Relevance();
+
+        final var rankable1 = new TestRankable("urn:1", relevance, 0);
+        final var rankable2 = new TestRankable("urn:2", relevance, 1);
+        final var rankable3 = new TestRankable("urn:3", relevance, 10);
+        final var rankable4 = new TestRankable("urn:4", relevance, 10);
+        final var rankable5 = new TestRankable("urn:5", relevance, 10);
+        final var rankable6 = new TestRankable("urn:6", relevance, 10);
+        final var rankable7 = new TestRankable("urn:7", relevance, 13);
+        final var rankable8 = new TestRankable("urn:8", relevance, 20);
+
+        final var rankableList = Arrays.nonNullElementsIn(
+                new TestRankable[] { rankable1, rankable2, rankable3, rankable4, rankable5, rankable6, rankable7, rankable8 });
+
+        assertEquals(0, rankable1.getRank());
+        assertEquals(1, rankable2.getRank());
+        assertEquals(10, rankable3.getRank());
+        assertEquals(10, rankable4.getRank());
+        assertEquals(10, rankable5.getRank());
+        assertEquals(10, rankable6.getRank());
+        assertEquals(13, rankable7.getRank());
+        assertEquals(20, rankable8.getRank());
+
+        verifyOrder(rankableList, List.of("urn:1", "urn:2", "urn:3", "urn:4", "urn:5", "urn:6", "urn:7", "urn:8"));
+
+        RankableConnectionUpdater.rank(rankableList, rankable5, 10);
+        verifyOrder(rankableList, List.of("urn:1", "urn:2", "urn:5", "urn:3", "urn:4", "urn:6", "urn:7", "urn:8"));
+
+        assertEquals(0, rankable1.getRank());
+        assertEquals(1, rankable2.getRank());
+        assertEquals(11, rankable3.getRank());
+        assertEquals(12, rankable4.getRank());
+        assertEquals(10, rankable5.getRank());
+        assertEquals(13, rankable6.getRank());
+        assertEquals(14, rankable7.getRank());
+        assertEquals(20, rankable8.getRank());
     }
 
     private static class TestRankable implements EntityWithPathConnection {

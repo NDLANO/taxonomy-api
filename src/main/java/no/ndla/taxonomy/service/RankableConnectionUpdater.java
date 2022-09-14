@@ -41,9 +41,9 @@ public class RankableConnectionUpdater {
         for (int i = startFromIndex; i < existingConnections.size(); i++) {
             EntityWithPathConnection currentItem = existingConnections.get(i);
             int currentRank = currentItem.getRank();
-            if (currentRank == lastUpdatedConnectionRank) {
-                currentItem.setRank(currentRank + 1);
-                lastUpdatedConnectionRank = currentRank + 1;
+            if (currentRank <= lastUpdatedConnectionRank) {
+                currentItem.setRank(lastUpdatedConnectionRank + 1);
+                lastUpdatedConnectionRank = lastUpdatedConnectionRank + 1;
             } else
                 return;
         }
