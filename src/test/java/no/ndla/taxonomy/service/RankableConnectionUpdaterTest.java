@@ -48,7 +48,7 @@ public class RankableConnectionUpdaterTest {
         RankableConnectionUpdater.rank(rankableList, rankable1, 0);
         RankableConnectionUpdater.rank(rankableList, rankable2, 1);
         RankableConnectionUpdater.rank(rankableList, rankable3, 10);
-        RankableConnectionUpdater.rank(rankableList, rankable4, 10);
+        RankableConnectionUpdater.rank(rankableList, rankable4, 11);
         RankableConnectionUpdater.rank(rankableList, rankable5, 12);
         RankableConnectionUpdater.rank(rankableList, rankable6, 20);
         RankableConnectionUpdater.rank(rankableList, rankable7, 100);
@@ -122,16 +122,17 @@ public class RankableConnectionUpdaterTest {
         final var rankable3 = new TestRankable("urn:3", relevance, 10);
         final var rankable4 = new TestRankable("urn:4", relevance, 10);
         final var rankable5 = new TestRankable("urn:5", relevance, 10);
-        final var rankable6 = new TestRankable("urn:6", relevance, 10);
+        final var rankable6 = new TestRankable("urn:6", relevance, 20);
 
-        final var rankableList = Arrays.nonNullElementsIn(new TestRankable[]{rankable1, rankable2, rankable3, rankable4, rankable5, rankable6});
+        final var rankableList = Arrays.nonNullElementsIn(
+                new TestRankable[] { rankable1, rankable2, rankable3, rankable4, rankable5, rankable6 });
 
         assertEquals(0, rankable1.getRank());
         assertEquals(1, rankable2.getRank());
         assertEquals(10, rankable3.getRank());
         assertEquals(10, rankable4.getRank());
         assertEquals(10, rankable5.getRank());
-        assertEquals(10, rankable6.getRank());
+        assertEquals(20, rankable6.getRank());
 
         verifyOrder(rankableList, List.of("urn:1", "urn:2", "urn:3", "urn:4", "urn:5", "urn:6"));
 
@@ -143,7 +144,7 @@ public class RankableConnectionUpdaterTest {
         assertEquals(11, rankable3.getRank());
         assertEquals(12, rankable4.getRank());
         assertEquals(10, rankable5.getRank());
-        assertEquals(13, rankable6.getRank());
+        assertEquals(20, rankable6.getRank());
     }
 
     private static class TestRankable implements EntityWithPathConnection {
