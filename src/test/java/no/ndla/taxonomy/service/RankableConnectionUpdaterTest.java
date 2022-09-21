@@ -126,8 +126,8 @@ public class RankableConnectionUpdaterTest {
         final var rankable7 = new TestRankable("urn:7", relevance, 13);
         final var rankable8 = new TestRankable("urn:8", relevance, 20);
 
-        final var rankableList = Arrays.nonNullElementsIn(
-                new TestRankable[] { rankable1, rankable2, rankable3, rankable4, rankable5, rankable6, rankable7, rankable8 });
+        final var rankableList = Arrays.nonNullElementsIn(new TestRankable[] { rankable1, rankable2, rankable3,
+                rankable4, rankable5, rankable6, rankable7, rankable8 });
 
         assertEquals(0, rankable1.getRank());
         assertEquals(1, rankable2.getRank());

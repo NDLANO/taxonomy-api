@@ -983,4 +983,26 @@
         <dropTable tableName="subject_translation"/>
         <dropTable tableName="subject"/>
     </changeSet>
+
+    <!-- metadata for connection object -->
+    <changeSet id="20220920 add metadata to connections" author="Gunnar Velle">
+        <addColumn tableName="node_connection">
+            <column name="metadata_id" type="integer"/>
+        </addColumn>
+        <addColumn tableName="node_resource">
+            <column name="metadata_id" type="integer"/>
+        </addColumn>
+        <addForeignKeyConstraint baseTableName="node_connection" baseColumnNames="metadata_id"
+                                 constraintName="fk_node_connection_metadata_id"
+                                 referencedTableName="metadata" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+        <addForeignKeyConstraint baseTableName="node_resource" baseColumnNames="metadata_id"
+                                 constraintName="fk_node_resource_metadata_id"
+                                 referencedTableName="metadata" referencedColumnNames="id"
+                                 onDelete="RESTRICT" onUpdate="RESTRICT"/>
+    </changeSet>
+    <changeSet id="20220920 populate connections with metadata" author="Gunnar Velle">
+        <customChange class="no.ndla.taxonomy.migration.CreateMetadataForConnectionsSqlChange"/>
+    </changeSet>
+    <!-- end metadata for connection object -->
 </databaseChangeLog>

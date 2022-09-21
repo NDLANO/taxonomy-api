@@ -15,7 +15,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @MappedSuperclass
-public abstract class EntityWithPath extends DomainObject {
+public abstract class EntityWithPath extends DomainObject implements EntityWithMetadata {
     public abstract Set<CachedPath> getCachedPaths();
 
     public void addCachedPath(CachedPath cachedPath) {
@@ -97,8 +97,6 @@ public abstract class EntityWithPath extends DomainObject {
         return getCachedPaths().stream().filter(CachedPath::isActive).map(CachedPath::getPath)
                 .collect(Collectors.toCollection(TreeSet::new));
     }
-
-    abstract public Metadata getMetadata();
 
     abstract public URI getContentUri();
 

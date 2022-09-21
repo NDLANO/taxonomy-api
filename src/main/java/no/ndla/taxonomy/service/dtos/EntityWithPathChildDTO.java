@@ -74,12 +74,13 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
 
     public EntityWithPathChildDTO(Node node, NodeConnection nodeConnection, String language) {
         this.language = language;
+        this.metadata = new MetadataDto(nodeConnection.getMetadata());
 
         nodeConnection.getChild().ifPresent(child -> {
             this.populateFromNode(child);
             this.path = child.getPathByContext(node).orElse("");
             this.paths = child.getAllPaths();
-            this.metadata = new MetadataDto(child.getMetadata());
+            // this.metadata = new MetadataDto(child.getMetadata());
 
             var translations = child.getTranslations();
             this.translations = translations.stream().map(TranslationDTO::new)

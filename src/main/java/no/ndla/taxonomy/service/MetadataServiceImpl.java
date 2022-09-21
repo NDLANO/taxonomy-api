@@ -7,6 +7,7 @@
 
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.domain.EntityWithMetadata;
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.GrepCode;
 import no.ndla.taxonomy.domain.Metadata;
@@ -36,13 +37,13 @@ public class MetadataServiceImpl implements MetadataService {
 
     @Override
     public MetadataDto getMetadataByPublicId(URI publicId) {
-        EntityWithPath entity = domainEntityHelperService.getEntityByPublicId(publicId);
+        EntityWithMetadata entity = domainEntityHelperService.getEntityByPublicId(publicId);
         return new MetadataDto(entity.getMetadata());
     }
 
     @Override
     public MetadataDto updateMetadataByPublicId(URI publicId, MetadataDto metadataDto) throws InvalidDataException {
-        EntityWithPath entity = domainEntityHelperService.getEntityByPublicId(publicId);
+        EntityWithMetadata entity = domainEntityHelperService.getEntityByPublicId(publicId);
         Metadata metadata = entity.getMetadata();
 
         mergeMetadata(metadata, metadataDto);

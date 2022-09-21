@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
+import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.DomainObject;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.net.URI;
 
-public abstract class CrudControllerWithMetadata<T extends DomainObject> extends CrudController<T> {
+public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends CrudController<T> {
     private final MetadataService metadataService;
 
     protected CrudControllerWithMetadata(TaxonomyRepository<T> repository,
