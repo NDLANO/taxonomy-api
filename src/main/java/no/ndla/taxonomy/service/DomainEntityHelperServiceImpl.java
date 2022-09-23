@@ -49,11 +49,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     public EntityWithMetadata getEntityByPublicId(URI publicId) {
         switch (publicId.getSchemeSpecificPart().split(":")[0]) {
         case "subject":
-            return nodeRepository.findFirstByPublicId(publicId)
-                    .orElseThrow(() -> new NotFoundServiceException("Subject by id was not found"));
         case "topic":
-            return nodeRepository.findFirstByPublicId(publicId)
-                    .orElseThrow(() -> new NotFoundServiceException("Topic by id was not found"));
         case "node":
             return nodeRepository.findFirstByPublicId(publicId)
                     .orElseThrow(() -> new NotFoundServiceException("Node by id was not found"));

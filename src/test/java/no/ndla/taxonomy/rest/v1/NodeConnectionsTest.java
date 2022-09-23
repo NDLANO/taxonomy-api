@@ -7,17 +7,14 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -180,8 +177,7 @@ public class NodeConnectionsTest extends RestTest {
     @Test
     public void update_child_rank_modifies_other_contiguous_ranks() throws Exception {
         List<NodeConnection> nodeConnections = createTenContiguousRankedConnections(); // creates ranks 1, 2, 3, 4, 5,
-                                                                                       // 6,
-                                                                                       // 7, 8, 9, 10
+                                                                                       // 6, 7, 8, 9, 10
         Map<String, Integer> mappedRanks = mapConnectionRanks(nodeConnections);
 
         // make the last object the first
@@ -214,8 +210,7 @@ public class NodeConnectionsTest extends RestTest {
     public void update_child_rank_does_not_alter_noncontiguous_ranks() throws Exception {
 
         List<NodeConnection> nodeConnections = createTenNonContiguousRankedConnections(); // creates ranks 1, 2, 3, 4,
-                                                                                          // 5,
-                                                                                          // 60, 70, 80, 90, 100
+                                                                                          // 5, 60, 70, 80, 90, 100
         Map<String, Integer> mappedRanks = mapConnectionRanks(nodeConnections);
 
         // make the last object the first
@@ -275,6 +270,29 @@ public class NodeConnectionsTest extends RestTest {
                 assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);
             }
         }
+    }
+
+    @Test
+    public void update_metadata_for_connection() throws Exception {
+        URI id = save(NodeConnection.create(newTopic(), newTopic())).getPublicId();
+        testUtils.updateResource("/v1/node-connections/" + id + "/metadata", new MetadataDto() {
+            {
+                visible = false;
+                grepCodes = Set.of("KM123");
+                customFields = Map.of("key", "value");
+            }
+        }, status().isOk());
+        NodeConnection connection = nodeConnectionRepository.getByPublicId(id);
+        assertFalse(connection.getMetadata().isVisible());
+        Set<String> codes = connection.getMetadata().getGrepCodes().stream().map(GrepCode::getCode)
+                .collect(Collectors.toSet());
+        assertTrue(codes.contains("KM123"));
+        Set<CustomFieldValue> customFieldValues = connection.getMetadata().getCustomFieldValues();
+        assertTrue(customFieldValues.stream().map(CustomFieldValue::getCustomField).map(CustomField::getKey)
+                .collect(Collectors.toSet()).contains("key"));
+        assertTrue(customFieldValues.stream().map(CustomFieldValue::getValue).collect(Collectors.toSet())
+                .contains("value"));
+
     }
 
     private Map<String, Integer> mapConnectionRanks(List<NodeConnection> nodeConnections) {

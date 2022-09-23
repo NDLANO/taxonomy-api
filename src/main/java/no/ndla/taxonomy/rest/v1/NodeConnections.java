@@ -7,6 +7,7 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
@@ -21,6 +22,7 @@ import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.EntityConnectionService;
 import no.ndla.taxonomy.service.MetadataService;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -167,6 +169,10 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
+        @JsonProperty
+        @ApiModelProperty(value = "Metadata for entity. Read only.")
+        private MetadataDto metadata;
+
         ParentChildIndexDocument() {
         }
 
@@ -177,6 +183,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
             relevanceId = nodeConnection.getRelevance().map(Relevance::getPublicId).orElse(null);
             primary = true;
             rank = nodeConnection.getRank();
+            metadata = new MetadataDto(nodeConnection.getMetadata());
         }
     }
 }
