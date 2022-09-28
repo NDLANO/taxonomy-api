@@ -7,10 +7,7 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.EntityWithMetadata;
-import no.ndla.taxonomy.domain.EntityWithPath;
-import no.ndla.taxonomy.domain.GrepCode;
-import no.ndla.taxonomy.domain.Metadata;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.exceptions.EntityNotFoundException;
 import no.ndla.taxonomy.service.exceptions.InvalidDataException;
@@ -45,8 +42,17 @@ public class MetadataServiceImpl implements MetadataService {
     public MetadataDto updateMetadataByPublicId(URI publicId, MetadataDto metadataDto) throws InvalidDataException {
         EntityWithMetadata entity = domainEntityHelperService.getEntityByPublicId(publicId);
         Metadata metadata = entity.getMetadata();
-
         mergeMetadata(metadata, metadataDto);
+
+        // Temporary update child relation when updating connection
+        if (entity instanceof NodeResource) {
+            Metadata resourceMetadata = ((NodeResource) entity).getResource().get().getMetadata();
+            mergeMetadata(resourceMetadata, metadataDto);
+        }
+        if (entity instanceof NodeConnection) {
+            Metadata connectionMetadata = ((NodeConnection) entity).getChild().get().getMetadata();
+            mergeMetadata(connectionMetadata, metadataDto);
+        }
 
         return new MetadataDto(metadata);
     }
