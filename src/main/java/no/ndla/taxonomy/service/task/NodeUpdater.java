@@ -125,7 +125,7 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
             }
         }
         updated.setNodeResources(nodeResources);
-        return Optional.of(nodeService.updatePaths(updated));
+        return Optional.of(nodeService.updatePaths(persistNode(updated)));
     }
 
     @Transactional
