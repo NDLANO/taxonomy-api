@@ -185,7 +185,6 @@ public class NodeResources extends CrudControllerWithMetadata<NodeResource> {
         @ApiModelProperty(value = "Metadata for entity. Read only.")
         private MetadataDto metadata;
 
-
         NodeResourceDto() {
         }
 
