@@ -1,10 +1,10 @@
-FROM ubuntu:18.04
-RUN apt-get update && apt-get -y install maven openjdk-11-jdk-headless
+FROM ubuntu:22.04
+RUN apt-get update && apt-get -y install maven openjdk-17-jdk-headless
 COPY ./ src/
 WORKDIR /src
 RUN mvn clean package -DskipTests
 
-FROM adoptopenjdk/openjdk11:alpine-slim
+FROM eclipse-temurin:17-alpine
 RUN apk add fontconfig && apk add ttf-dejavu
 EXPOSE 5000
 COPY --from=0 /src/target/taxonomy-service.jar /app.jar
