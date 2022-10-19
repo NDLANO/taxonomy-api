@@ -36,11 +36,11 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
 
     @Query("SELECT DISTINCT nc FROM NodeConnection nc JOIN FETCH nc.child child JOIN FETCH nc.parent parent"
             + " JOIN FETCH nc.metadata m LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf"
-            + " LEFT JOIN cvf.customField LEFT JOIN child.translations WHERE parent.publicId = :publicId")
+            + " LEFT JOIN cvf.customField LEFT JOIN FETCH child.translations WHERE parent.publicId = :publicId")
     List<NodeConnection> findAllByParentPublicIdIncludingChildAndChildTranslations(URI publicId);
 
     @Query("SELECT DISTINCT nc FROM NodeConnection nc JOIN FETCH nc.parent p JOIN FETCH nc.child c"
-            + " LEFT JOIN p.translations LEFT JOIN c.translations LEFT JOIN c.cachedPaths"
+            + " LEFT JOIN p.translations LEFT JOIN FETCH c.translations LEFT JOIN c.cachedPaths"
             + " JOIN FETCH nc.metadata m LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf"
             + " LEFT JOIN cvf.customField WHERE nc.child.id IN :nodeId")
     List<NodeConnection> doFindAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<Integer> nodeId);

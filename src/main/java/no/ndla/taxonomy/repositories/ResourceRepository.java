@@ -17,24 +17,25 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ResourceRepository extends TaxonomyRepository<Resource> {
-    @Query("SELECT DISTINCT r FROM Resource r LEFT JOIN r.cachedPaths JOIN FETCH r.metadata"
-            + " LEFT JOIN r.resourceTranslations WHERE r.publicId = :publicId")
+    @Query("SELECT DISTINCT r FROM Resource r LEFT JOIN FETCH r.cachedPaths JOIN FETCH r.metadata"
+            + " LEFT JOIN FETCH r.resourceTranslations WHERE r.publicId = :publicId")
     Optional<Resource> findFirstByPublicIdIncludingCachedUrlsAndTranslations(URI publicId);
 
     Optional<Resource> findFirstByPublicId(URI publicId);
 
-    @Query("SELECT DISTINCT r FROM Resource r LEFT JOIN r.cachedPaths JOIN FETCH r.metadata m"
+    @Query("SELECT DISTINCT r FROM Resource r LEFT JOIN FETCH r.cachedPaths JOIN FETCH r.metadata m"
             + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cfv LEFT JOIN cfv.customField"
-            + " LEFT JOIN r.resourceTranslations WHERE r.contentUri = :contentUri")
+            + " LEFT JOIN FETCH r.resourceTranslations WHERE r.contentUri = :contentUri")
     List<Resource> findByContentUriIncludingCachedUrlsAndTranslations(URI contentUri);
 
-    @Query("SELECT DISTINCT r FROM Resource r LEFT JOIN r.cachedPaths WHERE r.publicId = :publicId")
+    @Query("SELECT DISTINCT r FROM Resource r LEFT JOIN FETCH r.cachedPaths WHERE r.publicId = :publicId")
     Optional<Resource> findFirstByPublicIdIncludingCachedUrls(URI publicId);
 
-    @Query("SELECT distinct r FROM Resource r LEFT JOIN r.cachedPaths JOIN FETCH r.metadata m"
+    @Query("SELECT distinct r FROM Resource r LEFT JOIN FETCH r.cachedPaths JOIN FETCH r.metadata m"
             + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cfv LEFT JOIN cfv.customField"
             + " LEFT JOIN FETCH r.resourceResourceTypes rrt LEFT JOIN FETCH rrt.resourceType rt"
-            + " LEFT JOIN rt.resourceTypeTranslations LEFT JOIN r.resourceTranslations" + " WHERE r.id IN (:idSet)")
+            + " LEFT JOIN FETCH rt.resourceTypeTranslations LEFT JOIN FETCH r.resourceTranslations"
+            + " WHERE r.id IN (:idSet)")
     List<Resource> findByIdIncludingCachedUrlsAndResourceTypesAndFiltersAndTranslations(Collection<Integer> idSet);
 
     @Query("SELECT r.id FROM Resource r")
