@@ -1002,7 +1002,13 @@
                                  onDelete="RESTRICT" onUpdate="RESTRICT"/>
     </changeSet>
     <changeSet id="20220920 populate connections with metadata" author="Gunnar Velle">
-        <customChange class="no.ndla.taxonomy.migration.CreateMetadataForConnectionsSqlChange"/>
+        <customChange class="no.ndla.taxonomy.migration.CreateMetadataForConnectionsSqlChange">
+            <param name="schema" value="${schema}"/>
+        </customChange>
     </changeSet>
     <!-- end metadata for connection object -->
+
+    <changeSet id="20221019 change language-code length" author="Gunnar Velle">
+        <modifyDataType tableName="node_translation" columnName="language_code" newDataType="varchar(7)"/>
+    </changeSet>
 </databaseChangeLog>
