@@ -1011,4 +1011,17 @@
     <changeSet id="20221019 change language-code length" author="Gunnar Velle">
         <modifyDataType tableName="node_translation" columnName="language_code" newDataType="varchar(7)"/>
     </changeSet>
+
+    <changeSet id="20221019 add index to improve composite index" author="Gunnar Velle">
+        <createIndex tableName="node_connection" indexName="node_connection_parent_id">
+            <column name="parent_id"/>
+        </createIndex>
+        <createIndex tableName="node_resource" indexName="node_resource_node_id">
+            <column name="node_id"/>
+        </createIndex>
+        <createIndex tableName="node_resource" indexName="node_resource_resource_id">
+            <column name="resource_id"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>
