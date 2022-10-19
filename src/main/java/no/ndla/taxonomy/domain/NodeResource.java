@@ -149,6 +149,7 @@ public class NodeResource extends DomainEntity
         this.relevance = relevance;
     }
 
+    @Override
     public Metadata getMetadata() {
         return metadata;
     }

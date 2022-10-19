@@ -142,6 +142,7 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
         this.relevance = relevance;
     }
 
+    @Override
     public Metadata getMetadata() {
         return metadata;
     }

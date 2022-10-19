@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
@@ -71,6 +72,7 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
         liquibase.setResourceLoader(getResourceLoader());
         liquibase.setDataSource(dataSource);
         liquibase.setDefaultSchema(schema);
+        liquibase.setChangeLogParameters(Map.of("schema", schema));
         liquibase.setChangeLog(liquibaseProperties.getChangeLog());
         liquibase.setContexts(liquibaseProperties.getContexts());
         return liquibase;

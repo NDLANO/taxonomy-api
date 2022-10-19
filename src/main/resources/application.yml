@@ -10,6 +10,8 @@ spring:
         globally_quoted_identifiers: true
   liquibase:
     change-log: classpath:db-master-changelog.xml
+    parameters:
+      schema: ${spring.datasource.hikari.schema:public}
   mvc:
     pathmatch:
       matching-strategy: ant-path-matcher
