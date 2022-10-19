@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Entity
-public class NodeConnection extends DomainEntity implements EntityWithPathConnection {
+public class NodeConnection extends DomainEntity implements EntityWithMetadata, EntityWithPathConnection {
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private Node parent;
@@ -29,6 +29,10 @@ public class NodeConnection extends DomainEntity implements EntityWithPathConnec
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, optional = false)
+    @JoinColumn(name = "metadata_id")
+    private Metadata metadata = new Metadata();
+
     private NodeConnection() {
         setPublicId(URI.create("urn:node-connection:" + UUID.randomUUID()));
     }
@@ -40,6 +44,7 @@ public class NodeConnection extends DomainEntity implements EntityWithPathConnec
         this.relevance = nodeConnection.relevance;
         this.parent = nodeConnection.parent;
         this.child = nodeConnection.child;
+        setMetadata(new Metadata(nodeConnection.getMetadata()));
     }
 
     public static NodeConnection create(Node parent, Node child) {
@@ -135,5 +140,13 @@ public class NodeConnection extends DomainEntity implements EntityWithPathConnec
     @Override
     public void setRelevance(Relevance relevance) {
         this.relevance = relevance;
+    }
+
+    public Metadata getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Metadata metadata) {
+        this.metadata = metadata;
     }
 }

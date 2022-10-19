@@ -9,7 +9,10 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModelProperty;
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.EntityWithPath;
+import no.ndla.taxonomy.domain.EntityWithPathConnection;
+import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 
 import java.net.URI;

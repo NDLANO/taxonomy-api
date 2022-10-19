@@ -7,19 +7,15 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeResource;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -400,6 +396,29 @@ public class NodeResourcesTest extends RestTest {
                 assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);
             }
         }
+    }
+
+    @Test
+    public void update_metadata_for_connection() throws Exception {
+        URI id = save(NodeResource.create(newTopic(), newResource())).getPublicId();
+        testUtils.updateResource("/v1/node-resources/" + id + "/metadata", new MetadataDto() {
+            {
+                visible = false;
+                grepCodes = Set.of("KM123");
+                customFields = Map.of("key", "value");
+            }
+        }, status().isOk());
+        NodeResource connection = nodeResourceRepository.getByPublicId(id);
+        assertFalse(connection.getMetadata().isVisible());
+        Set<String> codes = connection.getMetadata().getGrepCodes().stream().map(GrepCode::getCode)
+                .collect(Collectors.toSet());
+        assertTrue(codes.contains("KM123"));
+        Set<CustomFieldValue> customFieldValues = connection.getMetadata().getCustomFieldValues();
+        assertTrue(customFieldValues.stream().map(CustomFieldValue::getCustomField).map(CustomField::getKey)
+                .collect(Collectors.toSet()).contains("key"));
+        assertTrue(customFieldValues.stream().map(CustomFieldValue::getValue).collect(Collectors.toSet())
+                .contains("value"));
+
     }
 
     private Map<String, Integer> mapConnectionRanks(List<NodeResource> nodeResources) {

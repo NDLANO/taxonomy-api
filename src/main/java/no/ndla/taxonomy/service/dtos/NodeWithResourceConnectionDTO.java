@@ -7,8 +7,10 @@
 
 package no.ndla.taxonomy.service.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.NodeResource;
 import no.ndla.taxonomy.domain.Relevance;
@@ -31,6 +33,10 @@ public class NodeWithResourceConnectionDTO extends NodeDTO {
     @ApiParam
     private URI relevanceId;
 
+    @ApiModelProperty(value = "Metadata for entity. Read only.")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private MetadataDto metadata;
+
     public NodeWithResourceConnectionDTO(NodeResource nodeResource, String language) {
         super(nodeResource.getNode().orElseThrow(() -> new NotFoundException("Node was not found")), language);
 
@@ -39,6 +45,7 @@ public class NodeWithResourceConnectionDTO extends NodeDTO {
         this.rank = nodeResource.getRank();
         this.relevanceId = nodeResource.getRelevance().map(Relevance::getPublicId)
                 .orElse(URI.create("urn:relevance:core"));
+        this.metadata = new MetadataDto(nodeResource.getMetadata());
     }
 
     public NodeWithResourceConnectionDTO() {
@@ -60,6 +67,11 @@ public class NodeWithResourceConnectionDTO extends NodeDTO {
     @Override
     public URI getRelevanceId() {
         return relevanceId;
+    }
+
+    @Override
+    public MetadataDto getMetadata() {
+        return metadata;
     }
 
     @Override

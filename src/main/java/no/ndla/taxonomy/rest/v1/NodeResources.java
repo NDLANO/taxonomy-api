@@ -20,7 +20,10 @@ import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
+import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.EntityConnectionService;
+import no.ndla.taxonomy.service.MetadataService;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,7 +37,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping(path = { "/v1/node-resources" })
 @Transactional
-public class NodeResources {
+public class NodeResources extends CrudControllerWithMetadata<NodeResource> {
 
     private final NodeRepository nodeRepository;
     private final ResourceRepository resourceRepository;
@@ -44,7 +47,9 @@ public class NodeResources {
 
     public NodeResources(NodeRepository nodeRepository, ResourceRepository resourceRepository,
             NodeResourceRepository nodeResourceRepository, EntityConnectionService connectionService,
-            RelevanceRepository relevanceRepository) {
+            RelevanceRepository relevanceRepository, CachedUrlUpdaterService cachedUrlUpdaterService,
+            MetadataService metadataService) {
+        super(nodeResourceRepository, cachedUrlUpdaterService, metadataService);
         this.nodeRepository = nodeRepository;
         this.resourceRepository = resourceRepository;
         this.nodeResourceRepository = nodeResourceRepository;
@@ -177,6 +182,9 @@ public class NodeResources {
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
+        @ApiModelProperty(value = "Metadata for entity. Read only.")
+        private MetadataDto metadata;
+
         NodeResourceDto() {
         }
 
@@ -187,6 +195,7 @@ public class NodeResources {
             primary = nodeResource.isPrimary().orElse(false);
             rank = nodeResource.getRank();
             relevanceId = nodeResource.getRelevance().map(Relevance::getPublicId).orElse(null);
+            metadata = new MetadataDto(nodeResource.getMetadata());
         }
     }
 }

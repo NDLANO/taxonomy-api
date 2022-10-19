@@ -77,6 +77,7 @@ public class NodeConnectionIndexDTO implements TreeSorter.Sortable {
         this.isPrimary = true;
 
         this.rank = nodeConnection.getRank();
+        this.metadata = new MetadataDto(nodeConnection.getMetadata());
 
         nodeConnection.getParent().ifPresent(topic -> this.parentId = topic.getPublicId());
 

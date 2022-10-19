@@ -7,12 +7,11 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.EntityWithPath;
-import no.ndla.taxonomy.domain.GrepCode;
-import no.ndla.taxonomy.domain.Metadata;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.exceptions.EntityNotFoundException;
 import no.ndla.taxonomy.service.exceptions.InvalidDataException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -27,6 +26,13 @@ public class MetadataServiceImpl implements MetadataService {
     private final GrepCodeService grepCodeService;
     private final CustomFieldService customFieldService;
 
+    @Value("${update.child.relation:true}")
+    private boolean updateChildRelation = true;
+
+    void setUpdateChildRelation(boolean updateChildRelation) {
+        this.updateChildRelation = updateChildRelation;
+    }
+
     public MetadataServiceImpl(DomainEntityHelperService domainEntityHelperService, GrepCodeService grepCodeService,
             CustomFieldService customFieldService) {
         this.domainEntityHelperService = domainEntityHelperService;
@@ -36,16 +42,27 @@ public class MetadataServiceImpl implements MetadataService {
 
     @Override
     public MetadataDto getMetadataByPublicId(URI publicId) {
-        EntityWithPath entity = domainEntityHelperService.getEntityByPublicId(publicId);
+        EntityWithMetadata entity = domainEntityHelperService.getEntityByPublicId(publicId);
         return new MetadataDto(entity.getMetadata());
     }
 
     @Override
     public MetadataDto updateMetadataByPublicId(URI publicId, MetadataDto metadataDto) throws InvalidDataException {
-        EntityWithPath entity = domainEntityHelperService.getEntityByPublicId(publicId);
+        EntityWithMetadata entity = domainEntityHelperService.getEntityByPublicId(publicId);
         Metadata metadata = entity.getMetadata();
-
         mergeMetadata(metadata, metadataDto);
+
+        // Temporary update child relation when updating connection. Turn off after ed is updated
+        if (updateChildRelation) {
+            if (entity instanceof NodeResource) {
+                Metadata resourceMetadata = ((NodeResource) entity).getResource().get().getMetadata();
+                mergeMetadata(resourceMetadata, metadataDto);
+            }
+            if (entity instanceof NodeConnection) {
+                Metadata connectionMetadata = ((NodeConnection) entity).getChild().get().getMetadata();
+                mergeMetadata(connectionMetadata, metadataDto);
+            }
+        }
 
         return new MetadataDto(metadata);
     }

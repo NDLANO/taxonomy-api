@@ -10,7 +10,9 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,8 +44,11 @@ class DomainEntityHelperServiceImplTest {
     private DomainEntityHelperServiceImpl service;
 
     @BeforeEach
-    void setUp(@Autowired NodeRepository nodeRepository, @Autowired ResourceRepository resourceRepository) {
-        service = new DomainEntityHelperServiceImpl(nodeRepository, resourceRepository);
+    void setUp(@Autowired NodeRepository nodeRepository, @Autowired ResourceRepository resourceRepository,
+            @Autowired NodeConnectionRepository nodeConnectionRepository,
+            @Autowired NodeResourceRepository nodeResourceRepository) {
+        service = new DomainEntityHelperServiceImpl(nodeRepository, resourceRepository, nodeConnectionRepository,
+                nodeResourceRepository);
 
         topic1 = new Node(NodeType.TOPIC);
         topic1.setPublicId(URI.create("urn:topic:test:1"));
