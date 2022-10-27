@@ -182,6 +182,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeResource> {
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
+        @JsonProperty
         @ApiModelProperty(value = "Metadata for entity. Read only.")
         private MetadataDto metadata;
 

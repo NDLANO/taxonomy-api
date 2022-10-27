@@ -17,20 +17,22 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface NodeResourceRepository extends TaxonomyRepository<NodeResource> {
-    @Query("SELECT nr FROM NodeResource nr JOIN FETCH nr.node JOIN FETCH nr.resource")
+    @Query("SELECT nr FROM NodeResource nr JOIN FETCH nr.node JOIN FETCH nr.resource JOIN FETCH nr.metadata m"
+            + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField")
     List<NodeResource> findAllIncludingNodeAndResource();
 
-    @Query("SELECT DISTINCT nr FROM NodeResource nr LEFT JOIN FETCH nr.node n"
-            + " LEFT JOIN FETCH nr.resource r LEFT JOIN FETCH nr.relevance rel"
-            + " LEFT JOIN FETCH r.resourceTranslations LEFT JOIN FETCH r.cachedPaths"
-            + " LEFT JOIN FETCH r.resourceResourceTypes rrtFetch LEFT JOIN FETCH rrtFetch.resourceType rtFetch"
-            + " LEFT JOIN FETCH rtFetch.resourceTypeTranslations WHERE n.id IN :nodeIds")
+    @Query("SELECT DISTINCT nr FROM NodeResource nr LEFT JOIN FETCH nr.node n LEFT JOIN FETCH nr.resource r"
+            + " JOIN FETCH nr.metadata m LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf"
+            + " LEFT JOIN cvf.customField LEFT JOIN FETCH nr.relevance rel LEFT JOIN FETCH r.resourceTranslations"
+            + " LEFT JOIN r.cachedPaths LEFT JOIN FETCH r.resourceResourceTypes rrtFetch"
+            + " LEFT JOIN FETCH rrtFetch.resourceType rtFetch LEFT JOIN FETCH rtFetch.resourceTypeTranslations"
+            + " WHERE n.id IN :nodeIds")
     List<NodeResource> findAllByNodeIdsIncludingRelationsForResourceDocuments(Collection<Integer> nodeIds);
 
-    @Query("SELECT DISTINCT nr FROM NodeResource nr JOIN FETCH nr.resource r"
-            + " LEFT JOIN FETCH nr.node n LEFT JOIN nr.relevance rel"
-            + " LEFT JOIN r.resourceResourceTypes rrt LEFT JOIN rrt.resourceType rt"
-            + " LEFT JOIN FETCH r.resourceTranslations LEFT JOIN FETCH r.cachedPaths"
+    @Query("SELECT DISTINCT nr FROM NodeResource nr JOIN FETCH nr.resource r LEFT JOIN FETCH nr.node n"
+            + " JOIN FETCH nr.metadata m LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf"
+            + " LEFT JOIN cvf.customField LEFT JOIN nr.relevance rel LEFT JOIN r.resourceResourceTypes rrt"
+            + " LEFT JOIN rrt.resourceType rt LEFT JOIN FETCH r.resourceTranslations LEFT JOIN r.cachedPaths"
             + " LEFT JOIN FETCH r.resourceResourceTypes rrtFetch LEFT JOIN FETCH nr.relevance"
             + " LEFT JOIN FETCH rrtFetch.resourceType rtFetch LEFT JOIN FETCH rtFetch.resourceTypeTranslations"
             + " WHERE n.id IN :nodeIds AND (rt.publicId IN :resourceTypePublicIds) AND"
