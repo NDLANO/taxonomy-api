@@ -9,10 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.EntityWithPath;
-import no.ndla.taxonomy.domain.EntityWithPathConnection;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -134,9 +131,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             childrenIds = recursiveNodeTreeService.getRecursiveNodes(node).stream()
                     .map(RecursiveNodeTreeService.TreeElement::getId).collect(Collectors.toList());
         } else {
-            childrenIds = node.getChildConnections().stream().map(EntityWithPathConnection::getConnectedChild)
-                    .filter(Optional::isPresent).map(Optional::get).map(EntityWithPath::getId)
-                    .collect(Collectors.toList());
+            childrenIds = node.getChildren().stream().map(NodeConnection::getChild).filter(Optional::isPresent)
+                    .map(Optional::get).map(EntityWithPath::getId).collect(Collectors.toList());
         }
         final var children = nodeConnectionRepository
                 .findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(childrenIds);

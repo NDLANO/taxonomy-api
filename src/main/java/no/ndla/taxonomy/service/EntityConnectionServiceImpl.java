@@ -109,8 +109,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         }
 
         if (rank == null) {
-            rank = parent.getChildConnections().stream().map(EntityWithPathConnection::getRank).max(Integer::compare)
-                    .orElse(0) + 1;
+            rank = parent.getChildren().stream().map(NodeConnection::getRank).max(Integer::compare).orElse(0) + 1;
         }
 
         return nodeConnectionRepository.saveAndFlush(createConnection(parent, child, relevance, rank));
@@ -133,11 +132,9 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     @Override
     public void disconnectParentChild(Node parent, Node child) {
-        new HashSet<>(parent.getChildConnections()).stream()
+        new HashSet<>(parent.getChildren()).stream()
                 .filter(connection -> connection.getConnectedChild().orElse(null) == child)
-                .forEach(connection -> disconnectParentChildConnection((NodeConnection) connection)); // (It will never
-                                                                                                      // be more than
-                                                                                                      // one record)
+                .forEach(this::disconnectParentChildConnection); // (It will never be more than one record)
     }
 
     @Override

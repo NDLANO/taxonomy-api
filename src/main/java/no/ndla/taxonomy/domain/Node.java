@@ -128,7 +128,7 @@ public class Node extends EntityWithPath {
                 .map(entity -> (EntityWithPathConnection) entity).collect(Collectors.toUnmodifiableSet());
 
         toReturn.addAll(children);
-        toReturn.addAll(getNodeResources());
+        toReturn.addAll(getNodeResources()); // Needed to generate cached paths
 
         return toReturn;
     }
