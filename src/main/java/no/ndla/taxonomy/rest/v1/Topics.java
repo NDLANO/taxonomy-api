@@ -161,4 +161,12 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
         return resourceService.getResourcesByNodeId(topicId, resourceTypeIdSet, relevance, language, recursive);
     }
+
+    @PutMapping("/{id}/makeResourcesPrimary")
+    @ApiOperation(value = "Makes all connected resources primary")
+    @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
+    public ResponseEntity<Boolean> makeResourcesPrimary(
+            @ApiParam(value = "id", required = true) @PathVariable("id") URI nodeId) {
+        return ResponseEntity.of(Optional.of(nodeService.makeAllResourcesPrimary(nodeId)));
+    }
 }
