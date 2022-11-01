@@ -11,14 +11,13 @@ import liquibase.exception.LiquibaseException;
 import liquibase.integration.spring.SpringLiquibase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ResourceLoaderAware;
-import org.springframework.context.event.EventListener;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
@@ -28,8 +27,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-@Component
-public class LiquibaseConfig implements ResourceLoaderAware {
+@Configuration
+public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
@@ -43,8 +42,8 @@ public class LiquibaseConfig implements ResourceLoaderAware {
 
     private ResourceLoader resourceLoader;
 
-    @EventListener
-    public void onApplicationReady(ApplicationReadyEvent event) throws Exception {
+    @Override
+    public void afterPropertiesSet() throws Exception {
         try {
             List<String> schemas = new ArrayList<>();
             ResultSet resultSet = dataSource.getConnection().prepareStatement("SELECT hash FROM version")
