@@ -10,6 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.service.UrlResolverService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.net.URI;
 import java.util.Optional;
@@ -49,11 +52,15 @@ public class UrlResolverMockTest {
     @MockBean
     JdbcTemplate jdbcTemplate;
 
-    @Autowired
     private MockMvc mvc;
 
     @Autowired
     private TestUtils testUtils;
+
+    @BeforeEach
+    public void setUp(WebApplicationContext context) {
+        mvc = MockMvcBuilders.webAppContextSetup(context).build();
+    }
 
     @Test
     public void resolveOldUrl404WhenNotImported() throws Exception {

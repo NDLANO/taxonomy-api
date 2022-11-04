@@ -16,13 +16,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface NodeRepository extends TaxonomyRepository<Node> {
-    @Query("SELECT DISTINCT n FROM Node n LEFT JOIN FETCH n.cachedPaths LEFT JOIN FETCH n.metadata m"
-            + " LEFT JOIN FETCH m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField"
+    @Query("SELECT DISTINCT n FROM Node n LEFT JOIN FETCH n.cachedPaths JOIN FETCH n.metadata m"
+            + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField"
             + " LEFT JOIN FETCH n.translations WHERE n.context = :context")
     List<Node> findAllByContextIncludingCachedUrlsAndTranslations(boolean context);
 
-    @Query("SELECT DISTINCT n FROM Node n LEFT JOIN FETCH n.cachedPaths LEFT JOIN FETCH n.metadata m"
-            + " LEFT JOIN FETCH m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField"
+    @Query("SELECT DISTINCT n FROM Node n LEFT JOIN FETCH n.cachedPaths JOIN FETCH n.metadata m"
+            + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField"
             + " LEFT JOIN FETCH n.translations WHERE n.publicId = :publicId")
     Optional<Node> findFirstByPublicIdIncludingCachedUrlsAndTranslations(URI publicId);
 

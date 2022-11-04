@@ -68,6 +68,8 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
                 Relevance relevance = connection.getRelevance()
                         .map(rel -> relevanceRepository.getByPublicId(rel.getPublicId())).orElse(null);
                 conn.setRelevance(relevance);
+                ensureMetadataRefsExist(connection.getMetadata(), customFieldRepository);
+                conn.setMetadata(connection.getMetadata());
                 nodeConnectionRepository.save(conn);
             } else {
                 // Connect updated with child from connection
@@ -109,6 +111,8 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
                 Relevance relevance = nodeResource.getRelevance()
                         .map(rel -> relevanceRepository.getByPublicId(rel.getPublicId())).orElse(null);
                 res.setRelevance(relevance);
+                ensureMetadataRefsExist(nodeResource.getMetadata(), customFieldRepository);
+                res.setMetadata(nodeResource.getMetadata());
                 nodeResources.add(persistNodeResource(res));
             } else {
                 nodeResource.setNode(updated);

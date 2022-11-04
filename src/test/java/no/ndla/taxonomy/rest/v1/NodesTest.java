@@ -544,6 +544,21 @@ public class NodesTest extends RestTest {
         assertEquals(400, response.getStatus());
     }
 
+    @Test
+    void making_resources_primariy_sets_other_contexts_not_primary() throws Exception {
+        var resource = builder.resource();
+        var node1 = builder.node(NodeType.TOPIC, n -> n.resource(resource, false));
+        var node2 = builder.node(NodeType.TOPIC, n -> n.resource(resource, true));
+
+        MockHttpServletResponse response = testUtils
+                .updateResource("/v1/nodes/" + node1.getPublicId() + "/makeResourcesPrimary", null, status().isOk());
+        assertEquals(200, response.getStatus());
+        var updated1 = nodeRepository.getByPublicId(node1.getPublicId());
+        assertTrue(updated1.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+        var updated2 = nodeRepository.getByPublicId(node2.getPublicId());
+        assertFalse(updated2.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+    }
+
     private static class ConnectionTypeCounter {
         private final ConnectionIndexDTO[] connections;
         private int subjectCount;

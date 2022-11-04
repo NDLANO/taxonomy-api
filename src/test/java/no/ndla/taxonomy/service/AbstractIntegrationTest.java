@@ -21,8 +21,12 @@ import javax.persistence.EntityManager;
 @DirtiesContext
 public class AbstractIntegrationTest {
 
-    @Container
-    public static PostgreSQLContainer<?> postgresDB = new PostgreSQLContainer<>("postgres:12.5");
+    static final PostgreSQLContainer<?> postgresDB;
+
+    static {
+        postgresDB = new PostgreSQLContainer<>("postgres:13.7");
+        postgresDB.start();
+    }
 
     @Autowired
     EntityManager entityManager;

@@ -17,9 +17,12 @@ import java.util.stream.Collectors;
         @NamedAttributeNode(value = "parentConnections", subgraph = "parent-connection"),
         @NamedAttributeNode(value = "childConnections", subgraph = "child-connection"),
         @NamedAttributeNode(value = "nodeResources", subgraph = "resource-connections") }, subgraphs = {
-                @NamedSubgraph(name = "parent-connection", attributeNodes = { @NamedAttributeNode("parent") }),
-                @NamedSubgraph(name = "child-connection", attributeNodes = { @NamedAttributeNode("child") }),
+                @NamedSubgraph(name = "parent-connection", attributeNodes = { @NamedAttributeNode("parent"),
+                        @NamedAttributeNode(value = "metadata") }),
+                @NamedSubgraph(name = "child-connection", attributeNodes = { @NamedAttributeNode("child"),
+                        @NamedAttributeNode(value = "metadata") }),
                 @NamedSubgraph(name = "resource-connections", attributeNodes = {
+                        @NamedAttributeNode(value = "metadata"),
                         @NamedAttributeNode(value = "resource", subgraph = Resource.GRAPH) }) })
 @Entity
 public class Node extends EntityWithPath {
@@ -125,7 +128,7 @@ public class Node extends EntityWithPath {
                 .map(entity -> (EntityWithPathConnection) entity).collect(Collectors.toUnmodifiableSet());
 
         toReturn.addAll(children);
-        toReturn.addAll(getNodeResources());
+        toReturn.addAll(getNodeResources()); // Needed to generate cached paths
 
         return toReturn;
     }
