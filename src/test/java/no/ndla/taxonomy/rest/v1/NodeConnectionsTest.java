@@ -101,22 +101,20 @@ public class NodeConnectionsTest extends RestTest {
     public void can_get_node_connections_paginated() throws Exception {
         List<NodeConnection> connections = createTenContiguousRankedConnections();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/node-connections?page=0&pageSize=5");
-        NodeConnections.ParentChildIndexDocument[] parentChildren = testUtils
-                .getObject(NodeConnections.ParentChildIndexDocument[].class, response);
-        assertEquals(5, parentChildren.length);
+        MockHttpServletResponse response = testUtils.getResource("/v1/node-connections/page?page=0&pageSize=5");
+        NodeConnections.NodeConnectionPage page1 = testUtils.getObject(NodeConnections.NodeConnectionPage.class,
+                response);
+        assertEquals(5, page1.page.size());
 
-        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-connections?page=1&pageSize=5");
-        NodeConnections.ParentChildIndexDocument[] parentChildren2 = testUtils
-                .getObject(NodeConnections.ParentChildIndexDocument[].class, response2);
-        assertEquals(5, parentChildren2.length);
+        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-connections/page?page=1&pageSize=5");
+        NodeConnections.NodeConnectionPage page2 = testUtils.getObject(NodeConnections.NodeConnectionPage.class,
+                response2);
+        assertEquals(5, page2.page.size());
 
-        var results = new NodeConnections.ParentChildIndexDocument[parentChildren.length + parentChildren2.length];
-        System.arraycopy(parentChildren, 0, results, 0, parentChildren.length);
-        System.arraycopy(parentChildren, 0, results, parentChildren.length, parentChildren2.length);
+        var result = Stream.concat(page1.page.stream(), page2.page.stream()).collect(Collectors.toList());
 
-        assertAllTrue(results,
-                t -> connections.stream().map(DomainEntity::getPublicId).collect(Collectors.toList()).contains(t.id));
+        assertTrue(connections.stream().map(DomainEntity::getPublicId).collect(Collectors.toList())
+                .containsAll(result.stream().map(r -> r.id).collect(Collectors.toList())));
     }
 
     @Test

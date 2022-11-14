@@ -49,15 +49,20 @@ public class TopicSubtopics {
 
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and subtopics")
-    public List<TopicSubtopicIndexDocument> index(
-            @ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
-            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
-        if (page.isPresent() && pageSize.isPresent()) {
-            return nodeConnectionRepository.findAllPaginated(PageRequest.of(page.get(), pageSize.get())).stream()
-                    .map(TopicSubtopicIndexDocument::new).collect(Collectors.toList());
-        }
+    public List<TopicSubtopicIndexDocument> index() {
         return nodeConnectionRepository.findAllIncludingParentAndChild().stream().map(TopicSubtopicIndexDocument::new)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/page")
+    @ApiOperation("Gets all connections between topics and subtopics paginated")
+    public TopicSubtopicPage allPaginated(@ApiParam(name = "page", value = "The page to fetch") Integer page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch") Integer pageSize) {
+        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page, pageSize));
+        var results = nodeConnectionRepository.findByIds(ids.getContent());
+        var contents = results.stream().map(TopicSubtopics.TopicSubtopicIndexDocument::new)
+                .collect(Collectors.toList());
+        return new TopicSubtopicPage(ids.getTotalElements(), contents);
     }
 
     @GetMapping("/{id}")
@@ -143,6 +148,24 @@ public class TopicSubtopics {
         @JsonProperty
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
+    }
+
+    public static class TopicSubtopicPage {
+        @JsonProperty
+        @ApiModelProperty(value = "Total number of elements")
+        public long totalCount;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Page containing results")
+        public List<TopicSubtopicIndexDocument> page;
+
+        TopicSubtopicPage() {
+        }
+
+        TopicSubtopicPage(long totalCount, List<TopicSubtopicIndexDocument> page) {
+            this.totalCount = totalCount;
+            this.page = page;
+        }
     }
 
     public static class TopicSubtopicIndexDocument {

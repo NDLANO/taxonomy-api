@@ -16,6 +16,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -191,22 +192,20 @@ public class NodeResourcesTest extends RestTest {
     public void can_get_resource_connections_paginated() throws Exception {
         List<NodeResource> connections = createTenContiguousRankedConnections();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/node-resources?page=0&pageSize=5");
-        NodeResources.NodeResourceDto[] parentChildren = testUtils.getObject(NodeResources.NodeResourceDto[].class,
+        MockHttpServletResponse response = testUtils.getResource("/v1/node-resources/page?page=0&pageSize=5");
+        NodeResources.NodeResourceDtoPage page1 = testUtils.getObject(NodeResources.NodeResourceDtoPage.class,
                 response);
-        assertEquals(5, parentChildren.length);
+        assertEquals(5, page1.page.size());
 
-        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-resources?page=1&pageSize=5");
-        NodeResources.NodeResourceDto[] parentChildren2 = testUtils.getObject(NodeResources.NodeResourceDto[].class,
-                response2);
-        assertEquals(5, parentChildren2.length);
+        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-resources/page?page=1&pageSize=5");
+        NodeResources.NodeResourceDtoPage page2 = testUtils.getObject(NodeResources.NodeResourceDtoPage.class,
+                response);
+        assertEquals(5, page2.page.size());
 
-        var results = new NodeResources.NodeResourceDto[parentChildren.length + parentChildren2.length];
-        System.arraycopy(parentChildren, 0, results, 0, parentChildren.length);
-        System.arraycopy(parentChildren, 0, results, parentChildren.length, parentChildren2.length);
+        var result = Stream.concat(page1.page.stream(), page2.page.stream()).collect(Collectors.toList());
 
-        assertAllTrue(results,
-                t -> connections.stream().map(DomainEntity::getPublicId).collect(Collectors.toList()).contains(t.id));
+        assertTrue(connections.stream().map(DomainEntity::getPublicId).collect(Collectors.toList())
+                .containsAll(result.stream().map(r -> r.id).collect(Collectors.toList())));
     }
 
     @Test

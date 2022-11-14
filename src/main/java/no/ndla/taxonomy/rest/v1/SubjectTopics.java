@@ -47,15 +47,19 @@ public class SubjectTopics {
 
     @GetMapping
     @ApiOperation("Gets all connections between subjects and topics")
-    public List<SubjectTopicIndexDocument> index(
-            @ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
-            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
-        if (page.isPresent() && pageSize.isPresent()) {
-            return nodeConnectionRepository.findAllPaginated(PageRequest.of(page.get(), pageSize.get())).stream()
-                    .map(SubjectTopicIndexDocument::new).collect(Collectors.toList());
-        }
+    public List<SubjectTopicIndexDocument> index() {
         return nodeConnectionRepository.findAllIncludingParentAndChild().stream().map(SubjectTopicIndexDocument::new)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/page")
+    @ApiOperation("Gets all connections between subjects and topics paginated")
+    public SubjectTopicPage allPaginated(@ApiParam(name = "page", value = "The page to fetch") Integer page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch") Integer pageSize) {
+        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page, pageSize));
+        var results = nodeConnectionRepository.findByIds(ids.getContent());
+        var contents = results.stream().map(SubjectTopicIndexDocument::new).collect(Collectors.toList());
+        return new SubjectTopicPage(ids.getTotalElements(), contents);
     }
 
     @GetMapping("/{id}")
@@ -142,6 +146,24 @@ public class SubjectTopics {
         @JsonProperty
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
+    }
+
+    public static class SubjectTopicPage {
+        @JsonProperty
+        @ApiModelProperty(value = "Total number of elements")
+        public long totalCount;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Page containing results")
+        public List<SubjectTopicIndexDocument> page;
+
+        SubjectTopicPage() {
+        }
+
+        SubjectTopicPage(long totalCount, List<SubjectTopicIndexDocument> page) {
+            this.totalCount = totalCount;
+            this.page = page;
+        }
     }
 
     public static class SubjectTopicIndexDocument {

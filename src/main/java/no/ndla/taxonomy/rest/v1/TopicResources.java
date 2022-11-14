@@ -50,15 +50,21 @@ public class TopicResources {
 
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and resources")
-    public List<TopicResourceIndexDocument> index(
-            @ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
-            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
-        if (page.isPresent() && pageSize.isPresent()) {
-            return nodeResourceRepository.findAllPaginated(PageRequest.of(page.get(), pageSize.get())).stream()
-                    .map(TopicResourceIndexDocument::new).collect(Collectors.toList());
-        }
+    public List<TopicResourceIndexDocument> index() {
         return nodeResourceRepository.findAllIncludingNodeAndResource().stream().map(TopicResourceIndexDocument::new)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/page")
+    @ApiOperation(value = "Gets all connections between topic and resources paginated")
+    public TopicResourcePage allPaginated(
+            @ApiParam(name = "page", value = "The page to fetch", required = true) Integer page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch", required = true) Integer pageSize) {
+
+        var ids = nodeResourceRepository.findIdsPaginated(PageRequest.of(page, pageSize));
+        var results = nodeResourceRepository.findByIds(ids.getContent());
+        var contents = results.stream().map(TopicResourceIndexDocument::new).collect(Collectors.toList());
+        return new TopicResourcePage(ids.getTotalElements(), contents);
     }
 
     @GetMapping("/{id}")
@@ -151,6 +157,24 @@ public class TopicResources {
         @JsonProperty
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
+    }
+
+    public static class TopicResourcePage {
+        @JsonProperty
+        @ApiModelProperty(value = "Total number of elements")
+        public long totalCount;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Page containing results")
+        public List<TopicResourceIndexDocument> page;
+
+        TopicResourcePage() {
+        }
+
+        TopicResourcePage(long totalCount, List<TopicResourceIndexDocument> page) {
+            this.totalCount = totalCount;
+            this.page = page;
+        }
     }
 
     public static class TopicResourceIndexDocument {

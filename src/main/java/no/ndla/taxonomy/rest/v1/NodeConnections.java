@@ -56,15 +56,19 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
 
     @GetMapping
     @ApiOperation(value = "Gets all connections between node and children")
-    public List<ParentChildIndexDocument> index(
-            @ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
-            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
-        if (page.isPresent() && pageSize.isPresent()) {
-            return nodeConnectionRepository.findAllPaginated(PageRequest.of(page.get(), pageSize.get())).stream()
-                    .map(ParentChildIndexDocument::new).collect(Collectors.toList());
-        }
+    public List<ParentChildIndexDocument> index() {
         return nodeConnectionRepository.findAllIncludingParentAndChild().stream().map(ParentChildIndexDocument::new)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/page")
+    @ApiOperation(value = "Gets all connections between node and children paginated")
+    public NodeConnectionPage allPaginated(@ApiParam(name = "page", value = "The page to fetch") Integer page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch") Integer pageSize) {
+        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page, pageSize));
+        var results = nodeConnectionRepository.findByIds(ids.getContent());
+        var contents = results.stream().map(ParentChildIndexDocument::new).collect(Collectors.toList());
+        return new NodeConnectionPage(ids.getTotalElements(), contents);
     }
 
     @GetMapping("/{id}")
@@ -150,6 +154,24 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
         @JsonProperty
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
+    }
+
+    public static class NodeConnectionPage {
+        @JsonProperty
+        @ApiModelProperty(value = "Total number of elements")
+        public long totalCount;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Page containing results")
+        public List<ParentChildIndexDocument> page;
+
+        NodeConnectionPage() {
+        }
+
+        NodeConnectionPage(long totalCount, List<ParentChildIndexDocument> page) {
+            this.totalCount = totalCount;
+            this.page = page;
+        }
     }
 
     public static class ParentChildIndexDocument {

@@ -24,6 +24,7 @@ import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.EntityConnectionService;
 import no.ndla.taxonomy.service.MetadataService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,14 +62,21 @@ public class NodeResources extends CrudControllerWithMetadata<NodeResource> {
 
     @GetMapping
     @ApiOperation(value = "Gets all connections between node and resources")
-    public List<NodeResourceDto> index(@ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
-            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
-        if (page.isPresent() && pageSize.isPresent()) {
-            return nodeResourceRepository.findAllPaginated(PageRequest.of(page.get(), pageSize.get())).stream()
-                    .map(NodeResourceDto::new).collect(Collectors.toList());
-        }
+    public List<NodeResourceDto> index() {
         return nodeResourceRepository.findAllIncludingNodeAndResource().stream().map(NodeResourceDto::new)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/page")
+    @ApiOperation(value = "Gets all connections between node and resources paginated")
+    public NodeResourceDtoPage allPaginated(
+            @ApiParam(name = "page", value = "The page to fetch", required = true) Integer page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch", required = true) Integer pageSize) {
+
+        var ids = nodeResourceRepository.findIdsPaginated(PageRequest.of(page, pageSize));
+        var results = nodeResourceRepository.findByIds(ids.getContent());
+        var contents = results.stream().map(NodeResourceDto::new).collect(Collectors.toList());
+        return new NodeResourceDtoPage(ids.getTotalElements(), contents);
     }
 
     @GetMapping("/{id}")
@@ -161,6 +169,24 @@ public class NodeResources extends CrudControllerWithMetadata<NodeResource> {
         @JsonProperty
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
+    }
+
+    public static class NodeResourceDtoPage {
+        @JsonProperty
+        @ApiModelProperty(value = "Total number of elements")
+        public long totalCount;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Page containing results")
+        public List<NodeResourceDto> page;
+
+        NodeResourceDtoPage() {
+        }
+
+        NodeResourceDtoPage(long totalCount, List<NodeResourceDto> page) {
+            this.totalCount = totalCount;
+            this.page = page;
+        }
     }
 
     public static class NodeResourceDto {
