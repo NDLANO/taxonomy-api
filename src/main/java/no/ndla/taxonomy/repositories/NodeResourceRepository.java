@@ -23,7 +23,7 @@ public interface NodeResourceRepository extends TaxonomyRepository<NodeResource>
             + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField")
     List<NodeResource> findAllIncludingNodeAndResource();
 
-    @Query(value = "SELECT nr.id FROM NodeResource nr", countQuery = "SELECT count(*) FROM NodeResource")
+    @Query(value = "SELECT nr.id FROM NodeResource nr ORDER BY nr.id", countQuery = "SELECT count(*) FROM NodeResource")
     Page<Integer> findIdsPaginated(Pageable pageable);
 
     @Query("SELECT nr FROM NodeResource nr JOIN FETCH nr.node JOIN FETCH nr.resource JOIN FETCH nr.metadata m"

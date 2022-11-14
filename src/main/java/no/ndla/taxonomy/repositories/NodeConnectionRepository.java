@@ -36,7 +36,7 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField")
     List<NodeConnection> findAllIncludingParentAndChild();
 
-    @Query(value = "SELECT nc.id FROM NodeConnection nc", countQuery = "SELECT count(*) from NodeConnection")
+    @Query(value = "SELECT nc.id FROM NodeConnection nc ORDER BY nc.id", countQuery = "SELECT count(*) from NodeConnection")
     Page<Integer> findIdsPaginated(Pageable pageable);
 
     @Query("SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child JOIN FETCH nc.metadata m"
