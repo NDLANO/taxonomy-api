@@ -16,6 +16,7 @@ import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.EntityConnectionService;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -45,7 +47,13 @@ public class SubjectTopics {
 
     @GetMapping
     @ApiOperation("Gets all connections between subjects and topics")
-    public List<SubjectTopicIndexDocument> index() {
+    public List<SubjectTopicIndexDocument> index(
+            @ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
+        if (page.isPresent() && pageSize.isPresent()) {
+            return nodeConnectionRepository.findAllPaginated(PageRequest.of(page.get(), pageSize.get())).stream()
+                    .map(SubjectTopicIndexDocument::new).collect(Collectors.toList());
+        }
         return nodeConnectionRepository.findAllIncludingParentAndChild().stream().map(SubjectTopicIndexDocument::new)
                 .collect(Collectors.toList());
     }

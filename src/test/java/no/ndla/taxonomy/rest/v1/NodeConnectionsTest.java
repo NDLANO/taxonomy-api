@@ -15,6 +15,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -94,6 +95,28 @@ public class NodeConnectionsTest extends RestTest {
         assertAnyTrue(parentChildren, t -> electricityId.equals(t.parentId) && alternatingCurrentId.equals(t.childId));
         assertAnyTrue(parentChildren, t -> calculusId.equals(t.parentId) && integrationId.equals(t.childId));
         assertAllTrue(parentChildren, t -> isValidId(t.id));
+    }
+
+    @Test
+    public void can_get_node_connections_paginated() throws Exception {
+        List<NodeConnection> connections = createTenContiguousRankedConnections();
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/node-connections?page=0&pageSize=5");
+        NodeConnections.ParentChildIndexDocument[] parentChildren = testUtils
+                .getObject(NodeConnections.ParentChildIndexDocument[].class, response);
+        assertEquals(5, parentChildren.length);
+
+        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-connections?page=1&pageSize=5");
+        NodeConnections.ParentChildIndexDocument[] parentChildren2 = testUtils
+                .getObject(NodeConnections.ParentChildIndexDocument[].class, response2);
+        assertEquals(5, parentChildren2.length);
+
+        var results = new NodeConnections.ParentChildIndexDocument[parentChildren.length + parentChildren2.length];
+        System.arraycopy(parentChildren, 0, results, 0, parentChildren.length);
+        System.arraycopy(parentChildren, 0, results, parentChildren.length, parentChildren2.length);
+
+        assertAllTrue(results,
+                t -> connections.stream().map(DomainEntity::getPublicId).collect(Collectors.toList()).contains(t.id));
     }
 
     @Test

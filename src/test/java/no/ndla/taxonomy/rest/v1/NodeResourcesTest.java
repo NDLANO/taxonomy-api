@@ -188,6 +188,28 @@ public class NodeResourcesTest extends RestTest {
     }
 
     @Test
+    public void can_get_resource_connections_paginated() throws Exception {
+        List<NodeResource> connections = createTenContiguousRankedConnections();
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/node-resources?page=0&pageSize=5");
+        NodeResources.NodeResourceDto[] parentChildren = testUtils.getObject(NodeResources.NodeResourceDto[].class,
+                response);
+        assertEquals(5, parentChildren.length);
+
+        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-resources?page=1&pageSize=5");
+        NodeResources.NodeResourceDto[] parentChildren2 = testUtils.getObject(NodeResources.NodeResourceDto[].class,
+                response2);
+        assertEquals(5, parentChildren2.length);
+
+        var results = new NodeResources.NodeResourceDto[parentChildren.length + parentChildren2.length];
+        System.arraycopy(parentChildren, 0, results, 0, parentChildren.length);
+        System.arraycopy(parentChildren, 0, results, parentChildren.length, parentChildren2.length);
+
+        assertAllTrue(results,
+                t -> connections.stream().map(DomainEntity::getPublicId).collect(Collectors.toList()).contains(t.id));
+    }
+
+    @Test
     public void can_get_topic_resource() throws Exception {
         Node electricity = newTopic().name("electricity");
         Resource alternatingCurrent = newResource();

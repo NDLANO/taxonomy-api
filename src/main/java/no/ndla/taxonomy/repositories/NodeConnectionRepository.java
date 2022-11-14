@@ -8,6 +8,8 @@
 package no.ndla.taxonomy.repositories;
 
 import no.ndla.taxonomy.domain.NodeConnection;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
@@ -33,6 +35,10 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
     @Query("SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child JOIN FETCH nc.metadata m"
             + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField")
     List<NodeConnection> findAllIncludingParentAndChild();
+
+    @Query(value = "SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child JOIN FETCH nc.metadata m"
+            + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField", countQuery = "SELECT count(*) from NodeConnection")
+    Page<NodeConnection> findAllPaginated(Pageable pageable);
 
     @Query("SELECT DISTINCT nc FROM NodeConnection nc JOIN FETCH nc.child child JOIN FETCH nc.parent parent"
             + " JOIN FETCH nc.metadata m LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf"
