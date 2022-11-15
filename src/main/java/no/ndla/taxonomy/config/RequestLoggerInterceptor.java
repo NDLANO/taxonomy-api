@@ -21,12 +21,12 @@ public class RequestLoggerInterceptor implements AsyncHandlerInterceptor {
     Logger logger = LoggerFactory.getLogger(getClass().getName());
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)
             throws Exception {
-        logger.info(String.format("(%s) %s %s?%s (%s)",
+        logger.info(String.format("(%s) %s %s?%s (%s) with code %s",
                 Optional.ofNullable(request.getHeader("X-Correlation-ID")).orElse(""), request.getMethod(),
                 request.getRequestURI(), Optional.ofNullable(request.getQueryString()).orElse(""),
-                Optional.ofNullable(request.getHeader("VersionHash")).orElse("")));
-        return true;
+                Optional.ofNullable(request.getHeader("VersionHash")).orElse(""), response.getStatus()));
+        AsyncHandlerInterceptor.super.afterCompletion(request, response, handler, ex);
     }
 }
