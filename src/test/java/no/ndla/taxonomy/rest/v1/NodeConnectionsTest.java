@@ -15,6 +15,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -94,6 +95,37 @@ public class NodeConnectionsTest extends RestTest {
         assertAnyTrue(parentChildren, t -> electricityId.equals(t.parentId) && alternatingCurrentId.equals(t.childId));
         assertAnyTrue(parentChildren, t -> calculusId.equals(t.parentId) && integrationId.equals(t.childId));
         assertAllTrue(parentChildren, t -> isValidId(t.id));
+    }
+
+    @Test
+    public void can_get_node_connections_paginated() throws Exception {
+        List<NodeConnection> connections = createTenContiguousRankedConnections();
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/node-connections/page?page=0&pageSize=5");
+        NodeConnections.NodeConnectionPage page1 = testUtils.getObject(NodeConnections.NodeConnectionPage.class,
+                response);
+        assertEquals(5, page1.page.size());
+
+        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-connections/page?page=1&pageSize=5");
+        NodeConnections.NodeConnectionPage page2 = testUtils.getObject(NodeConnections.NodeConnectionPage.class,
+                response2);
+        assertEquals(5, page2.page.size());
+
+        var result = Stream.concat(page1.page.stream(), page2.page.stream()).collect(Collectors.toList());
+
+        assertTrue(connections.stream().map(DomainEntity::getPublicId).collect(Collectors.toList())
+                .containsAll(result.stream().map(r -> r.id).collect(Collectors.toList())));
+    }
+
+    @Test
+    public void pagination_fails_if_param_not_present() throws Exception {
+        MockHttpServletResponse response = testUtils.getResource("/v1/node-connections/page?page=0",
+                status().isBadRequest());
+        assertEquals(400, response.getStatus());
+
+        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-connections/page?pageSize=5",
+                status().isBadRequest());
+        assertEquals(400, response2.getStatus());
     }
 
     @Test

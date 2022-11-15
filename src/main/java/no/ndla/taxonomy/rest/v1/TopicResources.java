@@ -15,6 +15,7 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.EntityConnectionService;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -51,6 +53,20 @@ public class TopicResources {
     public List<TopicResourceIndexDocument> index() {
         return nodeResourceRepository.findAllIncludingNodeAndResource().stream().map(TopicResourceIndexDocument::new)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/page")
+    @ApiOperation(value = "Gets all connections between topic and resources paginated")
+    public TopicResourcePage allPaginated(
+            @ApiParam(name = "page", value = "The page to fetch", required = true) Optional<Integer> page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
+        if (page.isEmpty() || pageSize.isEmpty()) {
+            throw new IllegalArgumentException("Need both page and pageSize to return data");
+        }
+        var ids = nodeResourceRepository.findIdsPaginated(PageRequest.of(page.get(), pageSize.get()));
+        var results = nodeResourceRepository.findByIds(ids.getContent());
+        var contents = results.stream().map(TopicResourceIndexDocument::new).collect(Collectors.toList());
+        return new TopicResourcePage(ids.getTotalElements(), contents);
     }
 
     @GetMapping("/{id}")
@@ -143,6 +159,24 @@ public class TopicResources {
         @JsonProperty
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
+    }
+
+    public static class TopicResourcePage {
+        @JsonProperty
+        @ApiModelProperty(value = "Total number of elements")
+        public long totalCount;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Page containing results")
+        public List<TopicResourceIndexDocument> page;
+
+        TopicResourcePage() {
+        }
+
+        TopicResourcePage(long totalCount, List<TopicResourceIndexDocument> page) {
+            this.totalCount = totalCount;
+            this.page = page;
+        }
     }
 
     public static class TopicResourceIndexDocument {

@@ -18,6 +18,7 @@ import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.service.EntityConnectionService;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -50,6 +52,20 @@ public class TopicSubtopics {
     public List<TopicSubtopicIndexDocument> index() {
         return nodeConnectionRepository.findAllIncludingParentAndChild().stream().map(TopicSubtopicIndexDocument::new)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/page")
+    @ApiOperation("Gets all connections between topics and subtopics paginated")
+    public TopicSubtopicPage allPaginated(@ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
+        if (page.isEmpty() || pageSize.isEmpty()) {
+            throw new IllegalArgumentException("Need both page and pageSize to return data");
+        }
+        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page.get(), pageSize.get()));
+        var results = nodeConnectionRepository.findByIds(ids.getContent());
+        var contents = results.stream().map(TopicSubtopics.TopicSubtopicIndexDocument::new)
+                .collect(Collectors.toList());
+        return new TopicSubtopicPage(ids.getTotalElements(), contents);
     }
 
     @GetMapping("/{id}")
@@ -135,6 +151,24 @@ public class TopicSubtopics {
         @JsonProperty
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
+    }
+
+    public static class TopicSubtopicPage {
+        @JsonProperty
+        @ApiModelProperty(value = "Total number of elements")
+        public long totalCount;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Page containing results")
+        public List<TopicSubtopicIndexDocument> page;
+
+        TopicSubtopicPage() {
+        }
+
+        TopicSubtopicPage(long totalCount, List<TopicSubtopicIndexDocument> page) {
+            this.totalCount = totalCount;
+            this.page = page;
+        }
     }
 
     public static class TopicSubtopicIndexDocument {
