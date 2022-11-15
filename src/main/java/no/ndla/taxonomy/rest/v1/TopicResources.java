@@ -58,10 +58,12 @@ public class TopicResources {
     @GetMapping("/page")
     @ApiOperation(value = "Gets all connections between topic and resources paginated")
     public TopicResourcePage allPaginated(
-            @ApiParam(name = "page", value = "The page to fetch", required = true) Integer page,
-            @ApiParam(name = "pageSize", value = "Size of page to fetch", required = true) Integer pageSize) {
-
-        var ids = nodeResourceRepository.findIdsPaginated(PageRequest.of(page, pageSize));
+            @ApiParam(name = "page", value = "The page to fetch", required = true) Optional<Integer> page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
+        if (page.isEmpty() || pageSize.isEmpty()) {
+            throw new IllegalArgumentException("Need both page and pageSize to return data");
+        }
+        var ids = nodeResourceRepository.findIdsPaginated(PageRequest.of(page.get(), pageSize.get()));
         var results = nodeResourceRepository.findByIds(ids.getContent());
         var contents = results.stream().map(TopicResourceIndexDocument::new).collect(Collectors.toList());
         return new TopicResourcePage(ids.getTotalElements(), contents);

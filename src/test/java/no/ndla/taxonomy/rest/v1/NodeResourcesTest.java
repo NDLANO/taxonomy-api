@@ -209,6 +209,18 @@ public class NodeResourcesTest extends RestTest {
     }
 
     @Test
+    public void pagination_fails_if_param_not_present() throws Exception {
+        MockHttpServletResponse response = testUtils.getResource("/v1/node-resources/page?page=0",
+                status().isBadRequest());
+        assertEquals(400, response.getStatus());
+
+        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-resources/page?pageSize=5",
+                status().isBadRequest());
+        assertEquals(400, response2.getStatus());
+    }
+
+
+    @Test
     public void can_get_topic_resource() throws Exception {
         Node electricity = newTopic().name("electricity");
         Resource alternatingCurrent = newResource();

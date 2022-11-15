@@ -56,9 +56,12 @@ public class TopicSubtopics {
 
     @GetMapping("/page")
     @ApiOperation("Gets all connections between topics and subtopics paginated")
-    public TopicSubtopicPage allPaginated(@ApiParam(name = "page", value = "The page to fetch") Integer page,
-            @ApiParam(name = "pageSize", value = "Size of page to fetch") Integer pageSize) {
-        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page, pageSize));
+    public TopicSubtopicPage allPaginated(@ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
+        if (page.isEmpty() || pageSize.isEmpty()) {
+            throw new IllegalArgumentException("Need both page and pageSize to return data");
+        }
+        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page.get(), pageSize.get()));
         var results = nodeConnectionRepository.findByIds(ids.getContent());
         var contents = results.stream().map(TopicSubtopics.TopicSubtopicIndexDocument::new)
                 .collect(Collectors.toList());

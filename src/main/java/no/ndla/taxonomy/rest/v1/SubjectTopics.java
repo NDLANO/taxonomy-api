@@ -54,9 +54,12 @@ public class SubjectTopics {
 
     @GetMapping("/page")
     @ApiOperation("Gets all connections between subjects and topics paginated")
-    public SubjectTopicPage allPaginated(@ApiParam(name = "page", value = "The page to fetch") Integer page,
-            @ApiParam(name = "pageSize", value = "Size of page to fetch") Integer pageSize) {
-        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page, pageSize));
+    public SubjectTopicPage allPaginated(@ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
+        if (page.isEmpty() || pageSize.isEmpty()) {
+            throw new IllegalArgumentException("Need both page and pageSize to return data");
+        }
+        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page.get(), pageSize.get()));
         var results = nodeConnectionRepository.findByIds(ids.getContent());
         var contents = results.stream().map(SubjectTopicIndexDocument::new).collect(Collectors.toList());
         return new SubjectTopicPage(ids.getTotalElements(), contents);

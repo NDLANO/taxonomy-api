@@ -70,10 +70,13 @@ public class NodeResources extends CrudControllerWithMetadata<NodeResource> {
     @GetMapping("/page")
     @ApiOperation(value = "Gets all connections between node and resources paginated")
     public NodeResourceDtoPage allPaginated(
-            @ApiParam(name = "page", value = "The page to fetch", required = true) Integer page,
-            @ApiParam(name = "pageSize", value = "Size of page to fetch", required = true) Integer pageSize) {
+            @ApiParam(name = "page", value = "The page to fetch", required = true) Optional<Integer> page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
 
-        var ids = nodeResourceRepository.findIdsPaginated(PageRequest.of(page, pageSize));
+        if (page.isEmpty() || pageSize.isEmpty()) {
+            throw new IllegalArgumentException("Need both page and pageSize to return data");
+        }
+        var ids = nodeResourceRepository.findIdsPaginated(PageRequest.of(page.get(), pageSize.get()));
         var results = nodeResourceRepository.findByIds(ids.getContent());
         var contents = results.stream().map(NodeResourceDto::new).collect(Collectors.toList());
         return new NodeResourceDtoPage(ids.getTotalElements(), contents);
