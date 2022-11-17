@@ -23,6 +23,7 @@ import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.EntityConnectionService;
 import no.ndla.taxonomy.service.MetadataService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -57,6 +59,19 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     public List<ParentChildIndexDocument> index() {
         return nodeConnectionRepository.findAllIncludingParentAndChild().stream().map(ParentChildIndexDocument::new)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/page")
+    @ApiOperation(value = "Gets all connections between node and children paginated")
+    public NodeConnectionPage allPaginated(@ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
+        if (page.isEmpty() || pageSize.isEmpty()) {
+            throw new IllegalArgumentException("Need both page and pageSize to return data");
+        }
+        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page.get(), pageSize.get()));
+        var results = nodeConnectionRepository.findByIds(ids.getContent());
+        var contents = results.stream().map(ParentChildIndexDocument::new).collect(Collectors.toList());
+        return new NodeConnectionPage(ids.getTotalElements(), contents);
     }
 
     @GetMapping("/{id}")
@@ -142,6 +157,24 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
         @JsonProperty
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
+    }
+
+    public static class NodeConnectionPage {
+        @JsonProperty
+        @ApiModelProperty(value = "Total number of elements")
+        public long totalCount;
+
+        @JsonProperty
+        @ApiModelProperty(value = "Page containing results")
+        public List<ParentChildIndexDocument> page;
+
+        NodeConnectionPage() {
+        }
+
+        NodeConnectionPage(long totalCount, List<ParentChildIndexDocument> page) {
+            this.totalCount = totalCount;
+            this.page = page;
+        }
     }
 
     public static class ParentChildIndexDocument {

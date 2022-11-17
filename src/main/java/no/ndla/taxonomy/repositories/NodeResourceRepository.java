@@ -8,6 +8,8 @@
 package no.ndla.taxonomy.repositories;
 
 import no.ndla.taxonomy.domain.NodeResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
@@ -20,6 +22,14 @@ public interface NodeResourceRepository extends TaxonomyRepository<NodeResource>
     @Query("SELECT nr FROM NodeResource nr JOIN FETCH nr.node JOIN FETCH nr.resource JOIN FETCH nr.metadata m"
             + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField")
     List<NodeResource> findAllIncludingNodeAndResource();
+
+    @Query(value = "SELECT nr.id FROM NodeResource nr ORDER BY nr.id", countQuery = "SELECT count(*) FROM NodeResource")
+    Page<Integer> findIdsPaginated(Pageable pageable);
+
+    @Query("SELECT nr FROM NodeResource nr JOIN FETCH nr.node JOIN FETCH nr.resource JOIN FETCH nr.metadata m"
+            + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField"
+            + " WHERE nr.id in :ids")
+    List<NodeResource> findByIds(Collection<Integer> ids);
 
     @Query("SELECT DISTINCT nr FROM NodeResource nr LEFT JOIN FETCH nr.node n LEFT JOIN FETCH nr.resource r"
             + " JOIN FETCH nr.metadata m LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf"
