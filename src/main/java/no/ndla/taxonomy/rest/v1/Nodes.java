@@ -183,7 +183,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @ApiOperation(value = "Makes all connected resources primary")
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public ResponseEntity<Boolean> makeResourcesPrimary(
-            @ApiParam(value = "id", required = true) @PathVariable("id") URI nodeId) {
-        return ResponseEntity.of(Optional.of(nodeService.makeAllResourcesPrimary(nodeId)));
+            @ApiParam(value = "id", required = true) @PathVariable("id") URI nodeId,
+            @ApiParam("If true, children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive) {
+        return ResponseEntity.of(Optional.of(nodeService.makeAllResourcesPrimary(nodeId, recursive)));
     }
 }

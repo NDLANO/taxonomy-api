@@ -545,18 +545,45 @@ public class NodesTest extends RestTest {
     }
 
     @Test
-    void making_resources_primariy_sets_other_contexts_not_primary() throws Exception {
+    void making_resources_primary_sets_other_contexts_not_primary() throws Exception {
         var resource = builder.resource();
-        var node1 = builder.node(NodeType.TOPIC, n -> n.resource(resource, false));
-        var node2 = builder.node(NodeType.TOPIC, n -> n.resource(resource, true));
+        var resource2 = builder.resource();
+        var node1 = builder.node(NodeType.TOPIC, n -> n.resource(resource, false).child(NodeType.TOPIC,
+                c -> c.publicId("urn:topic:1").resource(resource2, false)));
+        var node2 = builder.node(NodeType.TOPIC, n -> n.resource(resource, true).child(NodeType.TOPIC,
+                c -> c.publicId("urn:topic:2").resource(resource2, true)));
 
-        MockHttpServletResponse response = testUtils
-                .updateResource("/v1/nodes/" + node1.getPublicId() + "/makeResourcesPrimary", null, status().isOk());
-        assertEquals(200, response.getStatus());
-        var updated1 = nodeRepository.getByPublicId(node1.getPublicId());
-        assertTrue(updated1.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
-        var updated2 = nodeRepository.getByPublicId(node2.getPublicId());
-        assertFalse(updated2.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+        {
+            // Only set primary on one level
+            MockHttpServletResponse response = testUtils.updateResource(
+                    "/v1/nodes/" + node1.getPublicId() + "/makeResourcesPrimary", null, status().isOk());
+            assertEquals(200, response.getStatus());
+            var updated1 = nodeRepository.getByPublicId(node1.getPublicId());
+            assertTrue(updated1.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            var updated2 = nodeRepository.getByPublicId(node2.getPublicId());
+            assertFalse(updated2.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            // Following should be unchanged
+            var updated3 = nodeRepository.getByPublicId(URI.create("urn:topic:1"));
+            assertFalse(updated3.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            var updated4 = nodeRepository.getByPublicId(URI.create("urn:topic:2"));
+            assertTrue(updated4.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+        }
+        {
+            // Recursive flag updates all levels
+            MockHttpServletResponse response = testUtils.updateResource(
+                    "/v1/nodes/" + node1.getPublicId() + "/makeResourcesPrimary?recursive=true", null, status().isOk());
+            assertEquals(200, response.getStatus());
+            var updated1 = nodeRepository.getByPublicId(node1.getPublicId());
+            assertTrue(updated1.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            var updated2 = nodeRepository.getByPublicId(node2.getPublicId());
+            assertFalse(updated2.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            // Switched order from previous block
+            var updated3 = nodeRepository.getByPublicId(URI.create("urn:topic:1"));
+            assertTrue(updated3.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            var updated4 = nodeRepository.getByPublicId(URI.create("urn:topic:2"));
+            assertFalse(updated4.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+        }
+
     }
 
     private static class ConnectionTypeCounter {
