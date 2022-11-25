@@ -27,7 +27,6 @@ import javax.persistence.criteria.Join;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -191,9 +190,12 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     @Transactional
-    public boolean makeAllResourcesPrimary(URI nodePublicId) {
+    public boolean makeAllResourcesPrimary(URI nodePublicId, boolean recursive) {
         final var node = nodeRepository.findFirstByPublicId(nodePublicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
+        if (recursive) {
+            node.getChildren().forEach(nc -> nc.getChild().map(n -> makeAllResourcesPrimary(n.getPublicId(), true)));
+        }
         node.getNodeResources().forEach(
                 nr -> connectionService.updateNodeResource(nr, nr.getRelevance().orElse(null), true, nr.getRank()));
         return node.getNodeResources().stream()
