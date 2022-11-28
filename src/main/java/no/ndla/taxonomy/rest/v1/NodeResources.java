@@ -24,7 +24,6 @@ import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.EntityConnectionService;
 import no.ndla.taxonomy.service.MetadataService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -76,7 +75,10 @@ public class NodeResources extends CrudControllerWithMetadata<NodeResource> {
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
         }
-        var ids = nodeResourceRepository.findIdsPaginated(PageRequest.of(page.get(), pageSize.get()));
+        if (page.get() < 1)
+            throw new IllegalArgumentException("page parameter must be bigger than 0");
+
+        var ids = nodeResourceRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
         var results = nodeResourceRepository.findByIds(ids.getContent());
         var contents = results.stream().map(NodeResourceDto::new).collect(Collectors.toList());
         return new NodeResourceDtoPage(ids.getTotalElements(), contents);
@@ -181,14 +183,14 @@ public class NodeResources extends CrudControllerWithMetadata<NodeResource> {
 
         @JsonProperty
         @ApiModelProperty(value = "Page containing results")
-        public List<NodeResourceDto> page;
+        public List<NodeResourceDto> results;
 
         NodeResourceDtoPage() {
         }
 
-        NodeResourceDtoPage(long totalCount, List<NodeResourceDto> page) {
+        NodeResourceDtoPage(long totalCount, List<NodeResourceDto> results) {
             this.totalCount = totalCount;
-            this.page = page;
+            this.results = results;
         }
     }
 

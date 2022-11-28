@@ -63,7 +63,10 @@ public class TopicResources {
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
         }
-        var ids = nodeResourceRepository.findIdsPaginated(PageRequest.of(page.get(), pageSize.get()));
+        if (page.get() < 1)
+            throw new IllegalArgumentException("page parameter must be bigger than 0");
+
+        var ids = nodeResourceRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
         var results = nodeResourceRepository.findByIds(ids.getContent());
         var contents = results.stream().map(TopicResourceIndexDocument::new).collect(Collectors.toList());
         return new TopicResourcePage(ids.getTotalElements(), contents);
@@ -168,14 +171,14 @@ public class TopicResources {
 
         @JsonProperty
         @ApiModelProperty(value = "Page containing results")
-        public List<TopicResourceIndexDocument> page;
+        public List<TopicResourceIndexDocument> results;
 
         TopicResourcePage() {
         }
 
-        TopicResourcePage(long totalCount, List<TopicResourceIndexDocument> page) {
+        TopicResourcePage(long totalCount, List<TopicResourceIndexDocument> results) {
             this.totalCount = totalCount;
-            this.page = page;
+            this.results = results;
         }
     }
 

@@ -192,17 +192,17 @@ public class NodeResourcesTest extends RestTest {
     public void can_get_resource_connections_paginated() throws Exception {
         List<NodeResource> connections = createTenContiguousRankedConnections();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/node-resources/page?page=0&pageSize=5");
+        MockHttpServletResponse response = testUtils.getResource("/v1/node-resources/page?page=1&pageSize=5");
         NodeResources.NodeResourceDtoPage page1 = testUtils.getObject(NodeResources.NodeResourceDtoPage.class,
                 response);
-        assertEquals(5, page1.page.size());
+        assertEquals(5, page1.results.size());
 
-        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-resources/page?page=1&pageSize=5");
+        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-resources/page?page=2&pageSize=5");
         NodeResources.NodeResourceDtoPage page2 = testUtils.getObject(NodeResources.NodeResourceDtoPage.class,
                 response);
-        assertEquals(5, page2.page.size());
+        assertEquals(5, page2.results.size());
 
-        var result = Stream.concat(page1.page.stream(), page2.page.stream()).collect(Collectors.toList());
+        var result = Stream.concat(page1.results.stream(), page2.results.stream()).collect(Collectors.toList());
 
         assertTrue(connections.stream().map(DomainEntity::getPublicId).collect(Collectors.toList())
                 .containsAll(result.stream().map(r -> r.id).collect(Collectors.toList())));
@@ -218,7 +218,6 @@ public class NodeResourcesTest extends RestTest {
                 status().isBadRequest());
         assertEquals(400, response2.getStatus());
     }
-
 
     @Test
     public void can_get_topic_resource() throws Exception {

@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
@@ -15,7 +14,6 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
@@ -68,7 +66,10 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
         }
-        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page.get(), pageSize.get()));
+        if (page.get() < 1)
+            throw new IllegalArgumentException("page parameter must be bigger than 0");
+
+        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
         var results = nodeConnectionRepository.findByIds(ids.getContent());
         var contents = results.stream().map(ParentChildIndexDocument::new).collect(Collectors.toList());
         return new NodeConnectionPage(ids.getTotalElements(), contents);
@@ -166,14 +167,14 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
 
         @JsonProperty
         @ApiModelProperty(value = "Page containing results")
-        public List<ParentChildIndexDocument> page;
+        public List<ParentChildIndexDocument> results;
 
         NodeConnectionPage() {
         }
 
-        NodeConnectionPage(long totalCount, List<ParentChildIndexDocument> page) {
+        NodeConnectionPage(long totalCount, List<ParentChildIndexDocument> results) {
             this.totalCount = totalCount;
-            this.page = page;
+            this.results = results;
         }
     }
 
