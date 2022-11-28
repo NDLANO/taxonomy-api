@@ -20,6 +20,7 @@ import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -85,8 +86,8 @@ public class Versions extends CrudController<Version> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
     public void delete(@PathVariable("id") URI id) {
-        Version version = versionRepository.getByPublicId(id);
-        if (version == null || version.isLocked()) {
+        Optional<Version> version = versionRepository.findFirstByPublicId(id);
+        if (version.isEmpty() || version.get().isLocked()) {
             throw new InvalidArgumentServiceException("Cannot delete locked version");
         }
         versionService.delete(id);
@@ -97,8 +98,8 @@ public class Versions extends CrudController<Version> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public void publish(@PathVariable("id") URI id) {
-        Version version = versionRepository.getByPublicId(id);
-        if (version == null || version.getVersionType() != VersionType.BETA) {
+        Optional<Version> version = versionRepository.findFirstByPublicId(id);
+        if (version.isEmpty() || version.get().getVersionType() != VersionType.BETA) {
             throw new InvalidArgumentServiceException("Version has wrong type");
         }
         versionService.publishBetaAndArchiveCurrent(id);
