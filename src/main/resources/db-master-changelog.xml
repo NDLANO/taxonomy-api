@@ -1004,6 +1004,8 @@
     <changeSet id="20220920 populate connections with metadata" author="Gunnar Velle">
         <validCheckSum>8:9d3e2073674e106346e4666c72561c31</validCheckSum>
         <validCheckSum>8:c34e1a14bed131c7de78f219111122fe</validCheckSum>
+        <validCheckSum>8:f34eb824fabc27e81ad3b4f343d56c39</validCheckSum>
+        <validCheckSum>8:a43d485e5e6901c1b154579abe9753b3</validCheckSum>
         <customChange class="no.ndla.taxonomy.migration.CreateMetadataForConnectionsSqlChange">
             <param name="schema" value="${schema}"/>
         </customChange>
