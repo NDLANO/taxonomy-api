@@ -59,7 +59,10 @@ public class SubjectTopics {
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
         }
-        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page.get(), pageSize.get()));
+        if (page.get() < 1)
+            throw new IllegalArgumentException("page parameter must be bigger than 0");
+
+        var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
         var results = nodeConnectionRepository.findByIds(ids.getContent());
         var contents = results.stream().map(SubjectTopicIndexDocument::new).collect(Collectors.toList());
         return new SubjectTopicPage(ids.getTotalElements(), contents);
@@ -158,14 +161,14 @@ public class SubjectTopics {
 
         @JsonProperty
         @ApiModelProperty(value = "Page containing results")
-        public List<SubjectTopicIndexDocument> page;
+        public List<SubjectTopicIndexDocument> results;
 
         SubjectTopicPage() {
         }
 
-        SubjectTopicPage(long totalCount, List<SubjectTopicIndexDocument> page) {
+        SubjectTopicPage(long totalCount, List<SubjectTopicIndexDocument> results) {
             this.totalCount = totalCount;
-            this.page = page;
+            this.results = results;
         }
     }
 
