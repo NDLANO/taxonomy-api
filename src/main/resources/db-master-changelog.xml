@@ -1002,6 +1002,8 @@
                                  onDelete="RESTRICT" onUpdate="RESTRICT"/>
     </changeSet>
     <changeSet id="20220920 populate connections with metadata" author="Gunnar Velle">
+        <validCheckSum>8:9d3e2073674e106346e4666c72561c31</validCheckSum>
+        <validCheckSum>8:c34e1a14bed131c7de78f219111122fe</validCheckSum>
         <customChange class="no.ndla.taxonomy.migration.CreateMetadataForConnectionsSqlChange">
             <param name="schema" value="${schema}"/>
         </customChange>
