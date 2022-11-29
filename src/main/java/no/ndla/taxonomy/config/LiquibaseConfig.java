@@ -54,7 +54,7 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
             this.runOnAllSchemas(dataSource, schemas);
         } catch (SQLException | LiquibaseException exception) {
             // No version table
-            logger.info("Failed to find version table in database. Does not run migration on alternative schemas");
+            logger.info("Failed to find version table in database. Does not run migration on alternative schemas", exception);
         }
     }
 
