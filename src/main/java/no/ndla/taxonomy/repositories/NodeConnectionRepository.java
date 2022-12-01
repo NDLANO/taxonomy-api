@@ -39,20 +39,19 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
     @Query(value = "SELECT nc.id FROM NodeConnection nc ORDER BY nc.id", countQuery = "SELECT count(*) from NodeConnection")
     Page<Integer> findIdsPaginated(Pageable pageable);
 
-    @Query("SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child JOIN FETCH nc.metadata m"
-            + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField"
-            + " WHERE nc.id in :ids")
+    @Query("SELECT DISTINCT nc FROM NodeConnection nc " + NODE_CONNECTION_METADATA + " JOIN FETCH nc.parent n "
+            + NODE_METADATA + " JOIN FETCH nc.child c " + CHILD_METADATA + " WHERE nc.id in :ids")
     List<NodeConnection> findByIds(Collection<Integer> ids);
 
-    @Query("SELECT DISTINCT nc FROM NodeConnection nc JOIN FETCH nc.child child JOIN FETCH nc.parent parent"
-            + " JOIN FETCH nc.metadata m LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf"
-            + " LEFT JOIN cvf.customField LEFT JOIN FETCH child.translations WHERE parent.publicId = :publicId")
+    @Query("SELECT DISTINCT nc FROM NodeConnection nc " + NODE_CONNECTION_METADATA + " JOIN FETCH nc.child c "
+            + CHILD_METADATA + " JOIN FETCH nc.parent n" + NODE_METADATA
+            + " LEFT JOIN FETCH c.translations WHERE n.publicId = :publicId")
     List<NodeConnection> findAllByParentPublicIdIncludingChildAndChildTranslations(URI publicId);
 
-    @Query("SELECT DISTINCT nc FROM NodeConnection nc JOIN FETCH nc.parent p JOIN FETCH nc.child c"
-            + " LEFT JOIN p.translations LEFT JOIN FETCH c.translations LEFT JOIN c.cachedPaths"
-            + " JOIN FETCH nc.metadata m LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf"
-            + " LEFT JOIN cvf.customField WHERE nc.child.id IN :nodeId")
+    @Query("SELECT DISTINCT nc FROM NodeConnection nc " + NODE_CONNECTION_METADATA + " JOIN FETCH nc.parent n "
+            + NODE_METADATA + " JOIN FETCH nc.child c" + CHILD_METADATA
+            + " LEFT JOIN n.translations LEFT JOIN FETCH c.translations LEFT JOIN c.cachedPaths"
+            + " WHERE nc.child.id IN :nodeId")
     List<NodeConnection> doFindAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<Integer> nodeId);
 
     default List<NodeConnection> findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(

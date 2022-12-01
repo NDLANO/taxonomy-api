@@ -13,11 +13,15 @@ import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
-import no.ndla.taxonomy.service.*;
+import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.MetadataFilters;
+import no.ndla.taxonomy.service.MetadataService;
+import no.ndla.taxonomy.service.ResourceService;
 import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,6 +39,8 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ResourceService resourceService;
 
+    private final ResourceRepository resourceRepository;
+
     public Resources(ResourceRepository resourceRepository,
             ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceService resourceService,
             CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
@@ -42,6 +48,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.repository = resourceRepository;
+        this.resourceRepository = resourceRepository;
         this.resourceService = resourceService;
     }
 
@@ -75,6 +82,25 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
 
     ) {
         return resourceService.search(query, ids, language, pageSize, page);
+    }
+
+    @GetMapping("/page")
+    @ApiOperation(value = "Gets all connections between node and children paginated")
+    public SearchResultDTO<ResourceDTO> allPaginated(
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
+            @ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
+            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
+        if (page.isEmpty() || pageSize.isEmpty()) {
+            throw new IllegalArgumentException("Need both page and pageSize to return data");
+        }
+        if (page.get() < 1)
+            throw new IllegalArgumentException("page parameter must be bigger than 0");
+
+        var ids = resourceRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
+        var results = resourceRepository.findByIds(ids.getContent());
+        var contents = results.stream().map(node -> new ResourceDTO(node, language.orElse("nb")))
+                .collect(Collectors.toList());
+        return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
     @GetMapping("{id}")

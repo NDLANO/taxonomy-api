@@ -16,32 +16,29 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public interface NodeResourceRepository extends TaxonomyRepository<NodeResource> {
-    @Query("SELECT nr FROM NodeResource nr JOIN FETCH nr.node JOIN FETCH nr.resource JOIN FETCH nr.metadata m"
-            + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField")
+    @Query("SELECT nr FROM NodeResource nr " + NODE_RESOURCE_METADATA + " JOIN FETCH nr.node n " + NODE_METADATA
+            + " JOIN FETCH nr.resource r " + RESOURCE_METADATA)
     List<NodeResource> findAllIncludingNodeAndResource();
 
     @Query(value = "SELECT nr.id FROM NodeResource nr ORDER BY nr.id", countQuery = "SELECT count(*) FROM NodeResource")
     Page<Integer> findIdsPaginated(Pageable pageable);
 
-    @Query("SELECT nr FROM NodeResource nr JOIN FETCH nr.node JOIN FETCH nr.resource JOIN FETCH nr.metadata m"
-            + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField"
-            + " WHERE nr.id in :ids")
+    @Query("SELECT nr FROM NodeResource nr" + NODE_RESOURCE_METADATA + " JOIN FETCH nr.node n " + NODE_METADATA
+            + " JOIN FETCH nr.resource r " + RESOURCE_METADATA + " WHERE nr.id in :ids")
     List<NodeResource> findByIds(Collection<Integer> ids);
 
-    @Query("SELECT DISTINCT nr FROM NodeResource nr LEFT JOIN FETCH nr.node n LEFT JOIN FETCH nr.resource r"
-            + " JOIN FETCH nr.metadata m LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf"
-            + " LEFT JOIN cvf.customField LEFT JOIN FETCH nr.relevance rel LEFT JOIN FETCH r.resourceTranslations"
+    @Query("SELECT DISTINCT nr FROM NodeResource nr " + NODE_RESOURCE_METADATA + " LEFT JOIN FETCH nr.node n "
+            + NODE_METADATA + " LEFT JOIN FETCH nr.resource r" + RESOURCE_METADATA
             + " LEFT JOIN r.cachedPaths LEFT JOIN FETCH r.resourceResourceTypes rrtFetch"
             + " LEFT JOIN FETCH rrtFetch.resourceType rtFetch LEFT JOIN FETCH rtFetch.resourceTypeTranslations"
             + " WHERE n.id IN :nodeIds")
     List<NodeResource> findAllByNodeIdsIncludingRelationsForResourceDocuments(Collection<Integer> nodeIds);
 
-    @Query("SELECT DISTINCT nr FROM NodeResource nr JOIN FETCH nr.resource r LEFT JOIN FETCH nr.node n"
-            + " JOIN FETCH nr.metadata m LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf"
-            + " LEFT JOIN cvf.customField LEFT JOIN nr.relevance rel LEFT JOIN r.resourceResourceTypes rrt"
+    @Query("SELECT DISTINCT nr FROM NodeResource nr " + NODE_RESOURCE_METADATA + " JOIN FETCH nr.resource r "
+            + RESOURCE_METADATA + " LEFT JOIN FETCH nr.node n " + NODE_METADATA
+            + " LEFT JOIN nr.relevance rel LEFT JOIN r.resourceResourceTypes rrt"
             + " LEFT JOIN rrt.resourceType rt LEFT JOIN FETCH r.resourceTranslations LEFT JOIN r.cachedPaths"
             + " LEFT JOIN FETCH r.resourceResourceTypes rrtFetch LEFT JOIN FETCH nr.relevance"
             + " LEFT JOIN FETCH rrtFetch.resourceType rtFetch LEFT JOIN FETCH rtFetch.resourceTypeTranslations"
