@@ -241,6 +241,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             logger.info(e.getMessage(), e);
             throw new NotFoundServiceException("Failed to fetch node from source schema", e);
         }
+        // Need to save resources in this thread to avoid fetching resources in wrong schema
+        for (NodeResource resource : node.getNodeResources()) {
+            if (resource.getResource().isPresent()) {
+                Resource res = resource.getResource().get();
+                resourceService.publishResource(res.getPublicId(), sourceId, targetId);
+            }
+        }
         // Need to save children first to avoid saving missing nodes.
         for (NodeConnection connection : node.getChildren()) {
             if (connection.getChild().isPresent()) {

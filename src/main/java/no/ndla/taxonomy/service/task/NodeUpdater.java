@@ -10,8 +10,6 @@ package no.ndla.taxonomy.service.task;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.NodeService;
-import no.ndla.taxonomy.service.ResourceService;
-import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +40,7 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
     NodeConnectionRepository nodeConnectionRepository;
 
     @Autowired
-    ResourceService resourceService;
+    ResourceRepository resourceRepository;
 
     @Autowired
     NodeResourceRepository nodeResourceRepository;
@@ -185,7 +183,7 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
         Map<URI, Resource> resourceMap = new HashMap();
         for (NodeResource nodeResource : this.element.getNodeResources()) {
             URI publicId = nodeResource.getResource().get().getPublicId();
-            Resource published = resourceService.publishResource(publicId, sourceId, targetId);
+            Resource published = resourceRepository.findByPublicId(publicId);
             resourceMap.put(publicId, published);
         }
         return resourceMap;
