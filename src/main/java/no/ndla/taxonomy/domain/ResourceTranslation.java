@@ -8,9 +8,10 @@
 package no.ndla.taxonomy.domain;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
-public class ResourceTranslation implements Translation {
+public class ResourceTranslation implements Translation, Comparable<ResourceTranslation> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -65,5 +66,23 @@ public class ResourceTranslation implements Translation {
 
     public String getLanguageCode() {
         return languageCode;
+    }
+
+    @Override
+    public int compareTo(ResourceTranslation o) {
+        if (this.languageCode == null || o.languageCode == null) {
+            return 0;
+        }
+        return getLanguageCode().compareTo(o.getLanguageCode());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        ResourceTranslation that = (ResourceTranslation) o;
+        return Objects.equals(name, that.name) && Objects.equals(languageCode, that.languageCode);
     }
 }

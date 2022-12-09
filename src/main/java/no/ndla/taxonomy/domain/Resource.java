@@ -34,13 +34,13 @@ public class Resource extends EntityWithPath {
     private URI contentUri;
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ResourceResourceType> resourceResourceTypes = new HashSet<>();
+    private Set<ResourceResourceType> resourceResourceTypes = new TreeSet<>();
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ResourceTranslation> resourceTranslations = new HashSet<>();
+    private Set<ResourceTranslation> resourceTranslations = new TreeSet<>();
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<NodeResource> nodes = new HashSet<>();
+    private final Set<NodeResource> nodes = new TreeSet<>();
 
     @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     protected Set<CachedPath> cachedPaths = new HashSet<>();
@@ -55,12 +55,12 @@ public class Resource extends EntityWithPath {
     }
 
     @Override
-    public Set<EntityWithPathConnection> getParentConnections() {
-        return nodes.stream().collect(Collectors.toUnmodifiableSet());
+    public Collection<EntityWithPathConnection> getParentConnections() {
+        return nodes.stream().collect(Collectors.toUnmodifiableList());
     }
 
     @Override
-    public Set<EntityWithPathConnection> getChildConnections() {
+    public Collection<EntityWithPathConnection> getChildConnections() {
         return Set.of();
     }
 
@@ -74,12 +74,12 @@ public class Resource extends EntityWithPath {
 
     public Resource(Resource resource, boolean keepPublicId) {
         this.contentUri = resource.getContentUri();
-        Set<ResourceTranslation> trs = new HashSet<>();
+        TreeSet<ResourceTranslation> trs = new TreeSet<>();
         for (ResourceTranslation tr : resource.getTranslations()) {
             trs.add(new ResourceTranslation(tr, this));
         }
         this.resourceTranslations = trs;
-        Set<ResourceResourceType> rrts = new HashSet<>();
+        TreeSet<ResourceResourceType> rrts = new TreeSet<>();
         for (ResourceResourceType rt : resource.getResourceResourceTypes()) {
             ResourceResourceType rrt = new ResourceResourceType();
             if (keepPublicId) {
@@ -96,13 +96,13 @@ public class Resource extends EntityWithPath {
     }
 
     public Collection<Node> getNodes() {
-        return getNodeResources().stream().map(NodeResource::getNode).map(Optional::get)
-                .collect(Collectors.toUnmodifiableSet());
+        return getNodeResources().stream().map(NodeResource::getNode).filter(Optional::isPresent).map(Optional::get)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     public Collection<ResourceType> getResourceTypes() {
         return getResourceResourceTypes().stream().map(ResourceResourceType::getResourceType)
-                .collect(Collectors.toUnmodifiableSet());
+                .collect(Collectors.toUnmodifiableList());
     }
 
     public ResourceResourceType addResourceType(ResourceType resourceType) {
@@ -157,8 +157,9 @@ public class Resource extends EntityWithPath {
                 .filter(resourceTranslation -> resourceTranslation.getLanguageCode().equals(languageCode)).findFirst();
     }
 
-    public Set<ResourceTranslation> getTranslations() {
-        return resourceTranslations.stream().collect(Collectors.toUnmodifiableSet());
+    @Override
+    public Collection<ResourceTranslation> getTranslations() {
+        return resourceTranslations.stream().collect(Collectors.toUnmodifiableList());
     }
 
     public void clearTranslations() {
@@ -210,12 +211,12 @@ public class Resource extends EntityWithPath {
         return null;
     }
 
-    public Set<ResourceResourceType> getResourceResourceTypes() {
-        return this.resourceResourceTypes.stream().collect(Collectors.toUnmodifiableSet());
+    public Collection<ResourceResourceType> getResourceResourceTypes() {
+        return this.resourceResourceTypes.stream().collect(Collectors.toUnmodifiableList());
     }
 
-    public Set<NodeResource> getNodeResources() {
-        return this.nodes.stream().collect(Collectors.toUnmodifiableSet());
+    public Collection<NodeResource> getNodeResources() {
+        return this.nodes.stream().collect(Collectors.toUnmodifiableList());
     }
 
     public void removeNodeResource(NodeResource nodeResource) {
@@ -243,6 +244,11 @@ public class Resource extends EntityWithPath {
         this.metadata = metadata;
     }
 
+    @Override
+    public boolean isContext() {
+        return false;
+    }
+
     @PreRemove
     void preRemove() {
         Set.copyOf(resourceResourceTypes).forEach(ResourceResourceType::disassociate);
@@ -250,7 +256,15 @@ public class Resource extends EntityWithPath {
     }
 
     @Override
-    public boolean isContext() {
-        return false;
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        Resource that = (Resource) o;
+        return Objects.equals(contentUri, that.contentUri)
+                && Objects.equals(getResourceResourceTypes(), that.getResourceResourceTypes())
+                && Objects.equals(getTranslations(), that.getTranslations()) && metadata.equals(that.metadata);
     }
+
 }

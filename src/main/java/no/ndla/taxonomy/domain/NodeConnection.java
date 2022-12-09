@@ -9,11 +9,13 @@ package no.ndla.taxonomy.domain;
 
 import javax.persistence.*;
 import java.net.URI;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 @Entity
-public class NodeConnection extends DomainEntity implements EntityWithMetadata, EntityWithPathConnection {
+public class NodeConnection extends DomainEntity
+        implements EntityWithMetadata, EntityWithPathConnection, Comparable<NodeConnection> {
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private Node parent;
@@ -149,5 +151,22 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
 
     public void setMetadata(Metadata metadata) {
         this.metadata = metadata;
+    }
+
+    @Override
+    public int compareTo(NodeConnection o) {
+        return getPublicId().compareTo(o.getPublicId());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        NodeConnection that = (NodeConnection) o;
+        return rank == that.rank && parent.getPublicId().equals(that.parent.getPublicId())
+                && child.getPublicId().equals(that.child.getPublicId()) && Objects.equals(relevance, that.relevance)
+                && metadata.equals(that.metadata);
     }
 }

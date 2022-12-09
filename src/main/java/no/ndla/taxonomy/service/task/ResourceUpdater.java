@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -47,13 +48,17 @@ public class ResourceUpdater extends VersionSchemaUpdater<Resource> {
             Resource resource = new Resource(this.element, true);
             updated = resourceRepository.save(resource);
         } else {
-            // Resource exists, update current
             Resource present = existing.get();
-            present.setName(this.element.getName());
-            present.setContentUri(this.element.getContentUri());
-            mergeMetadata(present, this.element.getMetadata());
-            mergeTranslations(present, this.element.getTranslations());
-            updated = resourceRepository.save(present);
+            if (present.equals(this.element)) {
+                updated = present;
+            } else {
+                // Resource is changed, update current
+                present.setName(this.element.getName());
+                present.setContentUri(this.element.getContentUri());
+                mergeMetadata(present, this.element.getMetadata());
+                mergeTranslations(present, this.element.getTranslations());
+                updated = resourceRepository.save(present);
+            }
         }
         return Optional.of(updated);
     }
@@ -73,7 +78,7 @@ public class ResourceUpdater extends VersionSchemaUpdater<Resource> {
         return existing.get();
     }
 
-    private void mergeTranslations(Resource present, Set<ResourceTranslation> translations) {
+    private void mergeTranslations(Resource present, Collection<ResourceTranslation> translations) {
         Set<ResourceTranslation> updated = new HashSet<>();
         for (ResourceTranslation translation : translations) {
             Optional<ResourceTranslation> t = present.getTranslations().stream()

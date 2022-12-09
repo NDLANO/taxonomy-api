@@ -199,7 +199,7 @@ public class NodeResourcesTest extends RestTest {
 
         MockHttpServletResponse response2 = testUtils.getResource("/v1/node-resources/page?page=2&pageSize=5");
         NodeResources.NodeResourceDtoPage page2 = testUtils.getObject(NodeResources.NodeResourceDtoPage.class,
-                response);
+                response2);
         assertEquals(5, page2.results.size());
 
         var result = Stream.concat(page1.results.stream(), page2.results.stream()).collect(Collectors.toList());
@@ -445,7 +445,7 @@ public class NodeResourcesTest extends RestTest {
         Set<String> codes = connection.getMetadata().getGrepCodes().stream().map(GrepCode::getCode)
                 .collect(Collectors.toSet());
         assertTrue(codes.contains("KM123"));
-        Set<CustomFieldValue> customFieldValues = connection.getMetadata().getCustomFieldValues();
+        Collection<CustomFieldValue> customFieldValues = connection.getMetadata().getCustomFieldValues();
         assertTrue(customFieldValues.stream().map(CustomFieldValue::getCustomField).map(CustomField::getKey)
                 .collect(Collectors.toSet()).contains("key"));
         assertTrue(customFieldValues.stream().map(CustomFieldValue::getValue).collect(Collectors.toSet())

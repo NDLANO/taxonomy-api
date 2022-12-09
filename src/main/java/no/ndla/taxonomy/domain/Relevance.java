@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class Relevance extends DomainObject {
 
     @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<RelevanceTranslation> translations = new HashSet<>();
+    private final Set<RelevanceTranslation> translations = new HashSet<>();
 
     public Relevance() {
         setPublicId(URI.create("urn:relevance:" + UUID.randomUUID()));
@@ -37,6 +37,7 @@ public class Relevance extends DomainObject {
         return relevanceTranslation;
     }
 
+    @Override
     public Set<RelevanceTranslation> getTranslations() {
         return translations.stream().collect(Collectors.toUnmodifiableSet());
     }
@@ -67,4 +68,5 @@ public class Relevance extends DomainObject {
     public void removeTranslation(String language) {
         getTranslation(language).ifPresent(this::removeTranslation);
     }
+
 }
