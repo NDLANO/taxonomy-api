@@ -29,7 +29,5 @@ public interface ResourceService extends SearchService<ResourceDTO, Resource, Re
     List<ResourceDTO> getResources(Optional<String> language, Optional<URI> contentUri,
             MetadataFilters metadataFilters);
 
-    Resource publishResource(URI resourceId, Optional<URI> sourceId, URI targetId);
-
     Resource cloneResource(URI publicId, URI contentUri);
 }

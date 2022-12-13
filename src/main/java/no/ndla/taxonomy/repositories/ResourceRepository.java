@@ -65,4 +65,9 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
             + " LEFT JOIN FETCH rt.resourceTypeTranslations LEFT JOIN FETCH r.resourceTranslations"
             + " WHERE r.id IN (:ids)")
     List<Resource> findByIds(Collection<Integer> ids);
+
+    @Override
+    @EntityGraph(value = Resource.GRAPH, type = EntityGraph.EntityGraphType.LOAD)
+    @Query("SELECT DISTINCT r FROM Resource r LEFT JOIN FETCH r.cachedPaths WHERE r.publicId = :id")
+    Resource findByPublicId(URI id);
 }

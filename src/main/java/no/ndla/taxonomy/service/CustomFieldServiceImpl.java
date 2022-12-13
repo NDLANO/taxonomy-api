@@ -14,14 +14,13 @@ import no.ndla.taxonomy.repositories.CustomFieldRepository;
 import no.ndla.taxonomy.repositories.CustomFieldValueRepository;
 import no.ndla.taxonomy.service.exceptions.EntityNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-
-import static javax.transaction.Transactional.TxType.MANDATORY;
 
 @Service
 public class CustomFieldServiceImpl implements CustomFieldService {
@@ -35,27 +34,29 @@ public class CustomFieldServiceImpl implements CustomFieldService {
     }
 
     @Override
-    @Transactional(MANDATORY)
+    @Transactional
     public void setCustomField(final Metadata metadata, final String customField, final String value) {
         final CustomField customFieldObject = customFieldRepository.findByKey(customField).orElseGet(() -> {
             CustomField customFieldObj = new CustomField();
             customFieldObj.setKey(customField);
-            return customFieldRepository.save(customFieldObj);
+            return customFieldRepository.saveAndFlush(customFieldObj);
         });
-        final CustomFieldValue valueObject = customFieldValueRepository
-                .findByMetadataAndCustomField(metadata.getId(), customFieldObject.getId()).orElseGet(() -> {
-                    CustomFieldValue newObject = new CustomFieldValue();
-                    newObject.setCustomField(customFieldObject);
-                    newObject.setMetadata(metadata);
-                    return newObject;
-                });
-        valueObject.setValue(value);
-        customFieldValueRepository.save(valueObject);
-        metadata.addCustomFieldValue(valueObject);
+        if (value != null) {
+            final CustomFieldValue valueObject = customFieldValueRepository
+                    .findByMetadataAndCustomField(metadata.getId(), customFieldObject.getId()).orElseGet(() -> {
+                        CustomFieldValue newObject = new CustomFieldValue();
+                        newObject.setCustomField(customFieldObject);
+                        newObject.setMetadata(metadata);
+                        return newObject;
+                    });
+            valueObject.setValue(value);
+            customFieldValueRepository.save(valueObject);
+            metadata.addCustomFieldValue(valueObject);
+        }
     }
 
     @Override
-    @Transactional(MANDATORY)
+    @Transactional
     public Map<String, FieldValue> getCustomFields(Metadata metadata) {
         return StreamSupport.stream(customFieldValueRepository.findAllByMetadata(metadata.getId()).spliterator(), false)
                 .collect(Collectors.toMap(value -> value.getCustomField().getKey(),
@@ -94,8 +95,8 @@ public class CustomFieldServiceImpl implements CustomFieldService {
     }
 
     static class FieldValueImpl implements FieldValue {
-        private Integer id;
-        private String value;
+        private final Integer id;
+        private final String value;
 
         FieldValueImpl(Integer id, String value) {
             this.id = id;

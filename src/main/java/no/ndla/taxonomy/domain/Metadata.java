@@ -13,10 +13,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
@@ -98,6 +95,10 @@ public class Metadata implements Serializable {
 
     public Collection<CustomFieldValue> getCustomFieldValues() {
         return customFieldValues.stream().collect(Collectors.toUnmodifiableList());
+    }
+
+    public Optional<CustomFieldValue> getCustomFieldValueByKey(String key) {
+        return customFieldValues.stream().filter(customFieldValue -> customFieldValue.getCustomField().getKey().equals(key)).findFirst();
     }
 
     public Integer getId() {

@@ -114,7 +114,7 @@ public class VersionService {
 
     public String schemaFromHash(String hash) {
         if (hash != null)
-            return String.format("%s_%s", defaultSchema, hash);
+            return String.format("%s%s", defaultSchema, "_" + hash);
         return defaultSchema;
     }
 }

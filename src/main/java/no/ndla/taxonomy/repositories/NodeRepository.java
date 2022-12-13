@@ -34,6 +34,12 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
 
     Optional<Node> findFirstByPublicId(URI publicId);
 
+    @Override
+    @EntityGraph(value = Node.GRAPH, type = EntityGraph.EntityGraphType.LOAD)
+    @Query("SELECT DISTINCT n FROM Node n " + NODE_METADATA + " LEFT JOIN FETCH n.cachedPaths"
+            + " LEFT JOIN FETCH n.translations WHERE n.publicId = :id")
+    Node findByPublicId(URI id);
+
     @EntityGraph(value = Node.GRAPH, type = EntityGraph.EntityGraphType.LOAD)
     @Query("SELECT DISTINCT n FROM Node n " + NODE_METADATA
             + " LEFT JOIN FETCH n.cachedPaths WHERE n.publicId = :publicId")

@@ -46,9 +46,10 @@ class DomainEntityHelperServiceImplTest {
     @BeforeEach
     void setUp(@Autowired NodeRepository nodeRepository, @Autowired ResourceRepository resourceRepository,
             @Autowired NodeConnectionRepository nodeConnectionRepository,
-            @Autowired NodeResourceRepository nodeResourceRepository) {
+            @Autowired NodeResourceRepository nodeResourceRepository,
+            @Autowired CachedUrlUpdaterService cachedUrlUpdaterService) {
         service = new DomainEntityHelperServiceImpl(nodeRepository, resourceRepository, nodeConnectionRepository,
-                nodeResourceRepository);
+                nodeResourceRepository, cachedUrlUpdaterService);
 
         topic1 = new Node(NodeType.TOPIC);
         topic1.setPublicId(URI.create("urn:topic:test:1"));

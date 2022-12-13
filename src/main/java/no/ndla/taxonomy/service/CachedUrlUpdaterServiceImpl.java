@@ -79,8 +79,6 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
     @Transactional(propagation = Propagation.MANDATORY)
     public void clearCachedUrls(EntityWithPath entity) {
         Set.copyOf(entity.getCachedPaths()).forEach(CachedPath::disable);
-
-        cachedPathRepository.flush();
     }
 
     private static class PathToEntity {
