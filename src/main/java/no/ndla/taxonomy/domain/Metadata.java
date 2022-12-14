@@ -13,7 +13,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -79,8 +81,8 @@ public class Metadata implements Serializable {
         }
     }
 
-    public Set<GrepCode> getGrepCodes() {
-        return grepCodes.stream().collect(Collectors.toUnmodifiableSet());
+    public Collection<GrepCode> getGrepCodes() {
+        return grepCodes.stream().collect(Collectors.toUnmodifiableList());
     }
 
     public void addCustomFieldValue(CustomFieldValue customFieldValue) {
@@ -94,8 +96,8 @@ public class Metadata implements Serializable {
         this.customFieldValues.remove(customFieldValue);
     }
 
-    public Set<CustomFieldValue> getCustomFieldValues() {
-        return customFieldValues.stream().collect(Collectors.toUnmodifiableSet());
+    public Collection<CustomFieldValue> getCustomFieldValues() {
+        return customFieldValues.stream().collect(Collectors.toUnmodifiableList());
     }
 
     public Integer getId() {
@@ -104,6 +106,14 @@ public class Metadata implements Serializable {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 
     @PreRemove
@@ -115,11 +125,15 @@ public class Metadata implements Serializable {
         }
     }
 
-    public boolean isVisible() {
-        return visible;
-    }
-
-    public void setVisible(boolean visible) {
-        this.visible = visible;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        Metadata that = (Metadata) o;
+        return visible == that.visible && Objects.equals(updatedAt, that.updatedAt)
+                && Objects.equals(createdAt, that.createdAt) && Objects.equals(grepCodes, that.grepCodes)
+                && Objects.equals(customFieldValues, that.customFieldValues);
     }
 }

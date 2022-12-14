@@ -9,10 +9,11 @@ package no.ndla.taxonomy.domain;
 
 import javax.persistence.*;
 import java.net.URI;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-public class ResourceResourceType extends DomainEntity {
+public class ResourceResourceType extends DomainEntity implements Comparable<ResourceResourceType> {
 
     @ManyToOne(cascade = { CascadeType.MERGE })
     @JoinColumn(name = "resource_id")
@@ -73,5 +74,24 @@ public class ResourceResourceType extends DomainEntity {
     @PreRemove
     void preRemove() {
         this.disassociate();
+    }
+
+    @Override
+    public int compareTo(ResourceResourceType o) {
+        if (this.resourceType == null || o.resourceType == null) {
+            return 0;
+        }
+        return this.getResourceType().compareTo(o.getResourceType());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        ResourceResourceType that = (ResourceResourceType) o;
+        return Objects.equals(resource.getPublicId(), that.resource.getPublicId())
+                && Objects.equals(resourceType.getPublicId(), that.resourceType.getPublicId());
     }
 }

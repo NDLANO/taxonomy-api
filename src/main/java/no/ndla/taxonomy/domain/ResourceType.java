@@ -9,14 +9,11 @@ package no.ndla.taxonomy.domain;
 
 import javax.persistence.*;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
-public class ResourceType extends DomainObject {
+public class ResourceType extends DomainObject implements Comparable<ResourceType> {
 
     public ResourceType() {
         setPublicId(URI.create("urn:resourcetype:" + UUID.randomUUID()));
@@ -157,5 +154,23 @@ public class ResourceType extends DomainObject {
         setParent(null);
         new HashSet<>(subtypes).forEach(resourceType -> resourceType.setParent(null));
         new HashSet<>(resourceResourceTypes).forEach(ResourceResourceType::disassociate);
+    }
+
+    @Override
+    public int compareTo(ResourceType o) {
+        return this.getPublicId().compareTo(o.getPublicId());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        ResourceType that = (ResourceType) o;
+        return Objects.equals(getPublicId(), that.getPublicId()) && Objects.equals(parent, that.parent)
+                && Objects.equals(subtypes, that.subtypes)
+                && Objects.equals(resourceTypeTranslations, that.resourceTypeTranslations)
+                && Objects.equals(resourceResourceTypes, that.resourceResourceTypes);
     }
 }

@@ -93,7 +93,7 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
             }
         }
         // Resources
-        Set<NodeResource> nodeResources = new HashSet<>();
+        TreeSet<NodeResource> nodeResources = new TreeSet<>();
         for (NodeResource nodeResource : toSave.getNodeResources()) {
             Resource resource = nodeResource.getResource().get();
             Resource existing = resourceMap.get(resource.getPublicId());
@@ -145,19 +145,23 @@ public class NodeUpdater extends VersionSchemaUpdater<Node> {
             Node node = new Node(toSave);
             updated = nodeRepository.save(node);
         } else {
-            // Node exists, update current
             Node present = existing.get();
-            present.setName(toSave.getName());
-            present.setContentUri(toSave.getContentUri());
-            present.setNodeType(toSave.getNodeType());
-            mergeMetadata(present, toSave.getMetadata());
-            mergeTranslations(present, toSave.getTranslations());
-            updated = nodeRepository.save(present);
+            if (present.equals(toSave)) {
+                updated = present;
+            } else {
+                // Node is changed, update current
+                present.setName(toSave.getName());
+                present.setContentUri(toSave.getContentUri());
+                present.setNodeType(toSave.getNodeType());
+                mergeMetadata(present, toSave.getMetadata());
+                mergeTranslations(present, toSave.getTranslations());
+                updated = nodeRepository.save(present);
+            }
         }
         return updated;
     }
 
-    private void mergeTranslations(Node present, Set<NodeTranslation> translations) {
+    private void mergeTranslations(Node present, Collection<NodeTranslation> translations) {
         Set<NodeTranslation> updated = new HashSet<>();
         for (NodeTranslation translation : translations) {
             Optional<NodeTranslation> t = present.getTranslations().stream()

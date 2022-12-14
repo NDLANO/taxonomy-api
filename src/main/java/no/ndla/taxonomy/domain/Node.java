@@ -29,16 +29,16 @@ public class Node extends EntityWithPath {
     public static final String GRAPH = "node-with-connections";
 
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<NodeConnection> parentConnections = new HashSet<>();
+    private final Set<NodeConnection> parentConnections = new TreeSet<>();
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<NodeConnection> childConnections = new HashSet<>();
+    private final Set<NodeConnection> childConnections = new TreeSet<>();
 
     @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<NodeResource> nodeResources = new HashSet<>();
+    private Set<NodeResource> nodeResources = new TreeSet<>();
 
     @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<NodeTranslation> translations = new HashSet<>();
+    private Set<NodeTranslation> translations = new TreeSet<>();
 
     @Column
     private URI contentUri;
@@ -79,7 +79,7 @@ public class Node extends EntityWithPath {
         this.ident = node.getIdent();
         this.context = node.isContext();
         this.root = node.isRoot();
-        Set<NodeTranslation> trs = new HashSet<>();
+        TreeSet<NodeTranslation> trs = new TreeSet<>();
         for (NodeTranslation tr : node.getTranslations()) {
             trs.add(new NodeTranslation(tr, this));
         }
@@ -116,16 +116,16 @@ public class Node extends EntityWithPath {
      */
 
     @Override
-    public Set<EntityWithPathConnection> getParentConnections() {
+    public Collection<EntityWithPathConnection> getParentConnections() {
         return parentConnections.stream().map(entity -> (EntityWithPathConnection) entity)
-                .collect(Collectors.toUnmodifiableSet());
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
-    public Set<EntityWithPathConnection> getChildConnections() {
+    public Collection<EntityWithPathConnection> getChildConnections() {
         final var toReturn = new HashSet<EntityWithPathConnection>();
-        final Set<EntityWithPathConnection> children = childConnections.stream()
-                .map(entity -> (EntityWithPathConnection) entity).collect(Collectors.toUnmodifiableSet());
+        final Collection<EntityWithPathConnection> children = childConnections.stream()
+                .map(entity -> (EntityWithPathConnection) entity).collect(Collectors.toUnmodifiableList());
 
         toReturn.addAll(children);
         toReturn.addAll(getNodeResources()); // Needed to generate cached paths
@@ -133,7 +133,7 @@ public class Node extends EntityWithPath {
         return toReturn;
     }
 
-    public Set<NodeConnection> getChildren() {
+    public Collection<NodeConnection> getChildren() {
         return childConnections;
     }
 
@@ -169,9 +169,9 @@ public class Node extends EntityWithPath {
         this.parentConnections.clear();
     }
 
-    public Set<Node> getChildNodes() {
-        return childConnections.stream().map(NodeConnection::getChild).map(Optional::get)
-                .collect(Collectors.toUnmodifiableSet());
+    public Collection<Node> getChildNodes() {
+        return childConnections.stream().map(NodeConnection::getChild).filter(Optional::isPresent).map(Optional::get)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     public Optional<Node> getParentNode() {
@@ -179,11 +179,11 @@ public class Node extends EntityWithPath {
                 .findFirst();
     }
 
-    public Set<NodeResource> getNodeResources() {
-        return this.nodeResources.stream().collect(Collectors.toUnmodifiableSet());
+    public Collection<NodeResource> getNodeResources() {
+        return this.nodeResources.stream().collect(Collectors.toUnmodifiableList());
     }
 
-    public void setNodeResources(Set<NodeResource> nodeResources) {
+    public void setNodeResources(TreeSet<NodeResource> nodeResources) {
         this.nodeResources = nodeResources;
     }
 
@@ -206,9 +206,9 @@ public class Node extends EntityWithPath {
         }
     }
 
-    public Set<Resource> getResources() {
+    public Collection<Resource> getResources() {
         return nodeResources.stream().map(NodeResource::getResource).filter(Optional::isPresent).map(Optional::get)
-                .collect(Collectors.toUnmodifiableSet());
+                .collect(Collectors.toUnmodifiableList());
     }
 
     public void setIdent(String ident) {
@@ -253,8 +253,9 @@ public class Node extends EntityWithPath {
                 .findFirst();
     }
 
-    public Set<NodeTranslation> getTranslations() {
-        return translations.stream().collect(Collectors.toUnmodifiableSet());
+    @Override
+    public Collection<NodeTranslation> getTranslations() {
+        return translations.stream().collect(Collectors.toUnmodifiableList());
     }
 
     public void clearTranslations() {
@@ -328,5 +329,17 @@ public class Node extends EntityWithPath {
         Set.copyOf(childConnections).forEach(NodeConnection::disassociate);
         Set.copyOf(parentConnections).forEach(NodeConnection::disassociate);
         Set.copyOf(nodeResources).forEach(NodeResource::disassociate);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        Node that = (Node) o;
+        return context == that.context && root == that.root && Objects.equals(translations, that.translations)
+                && Objects.equals(contentUri, that.contentUri) && nodeType == that.nodeType && ident.equals(that.ident)
+                && metadata.equals(that.metadata);
     }
 }

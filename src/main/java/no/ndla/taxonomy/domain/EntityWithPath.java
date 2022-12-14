@@ -9,6 +9,7 @@ package no.ndla.taxonomy.domain;
 
 import javax.persistence.MappedSuperclass;
 import java.net.URI;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -40,9 +41,9 @@ public abstract class EntityWithPath extends DomainObject implements EntityWithM
                 .map(CachedPath::getPath).findFirst();
     }
 
-    public abstract Set<EntityWithPathConnection> getParentConnections();
+    public abstract Collection<EntityWithPathConnection> getParentConnections();
 
-    public abstract Set<EntityWithPathConnection> getChildConnections();
+    public abstract Collection<EntityWithPathConnection> getChildConnections();
 
     public Optional<EntityWithPathConnection> getParentConnection() {
         return this.getParentConnections().stream().findFirst();

@@ -41,7 +41,7 @@ public class NodeConnectionsTest extends RestTest {
         Node calculus = nodeRepository.getByPublicId(calculusId);
         assertEquals(1, calculus.getChildNodes().size());
         assertAnyTrue(calculus.getChildNodes(), t -> "integration".equals(t.getName()));
-        assertNotNull(nodeConnectionRepository.getByPublicId(id));
+        assertNotNull(connection);
     }
 
     @Test
@@ -319,7 +319,7 @@ public class NodeConnectionsTest extends RestTest {
         Set<String> codes = connection.getMetadata().getGrepCodes().stream().map(GrepCode::getCode)
                 .collect(Collectors.toSet());
         assertTrue(codes.contains("KM123"));
-        Set<CustomFieldValue> customFieldValues = connection.getMetadata().getCustomFieldValues();
+        Collection<CustomFieldValue> customFieldValues = connection.getMetadata().getCustomFieldValues();
         assertTrue(customFieldValues.stream().map(CustomFieldValue::getCustomField).map(CustomField::getKey)
                 .collect(Collectors.toSet()).contains("key"));
         assertTrue(customFieldValues.stream().map(CustomFieldValue::getValue).collect(Collectors.toSet())
