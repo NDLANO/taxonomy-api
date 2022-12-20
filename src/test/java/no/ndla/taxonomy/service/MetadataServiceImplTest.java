@@ -58,8 +58,7 @@ class MetadataServiceImplTest {
     @Test
     @Transactional
     void get_metadata_for_nonexistent_uri() {
-        assertThrows(NotFoundServiceException.class,
-                () -> domainEntityHelperService.getEntityByPublicId(URI.create("urn:topic:test:3")));
+        assertNull(domainEntityHelperService.getEntityByPublicId(URI.create("urn:topic:test:3")));
     }
 
     @Test

@@ -110,9 +110,9 @@ public class ChangelogService implements DisposableBean {
     public Optional<DomainEntity> updateNode(Node node, boolean cleanUp) {
         Node result;
         TaxonomyRepository<DomainEntity> repository = domainEntityHelperService.getRepository(node.getPublicId());
-        Node existing = (Node) repository.findByPublicId(node.getPublicId());
+        Node existing = (Node) domainEntityHelperService.getEntityByPublicId(node.getPublicId());
         if (existing == null) {
-            mergeMetadata(null, node.getMetadata(), cleanUp);
+            mergeMetadata(null, node.getMetadata(), node.getPublicId(), cleanUp);
             result = repository.save(new Node(node));
         } else if (existing.equals(node)) {
             result = existing;
@@ -146,7 +146,7 @@ public class ChangelogService implements DisposableBean {
             }
 
             // Metadata
-            mergeMetadata(existing, node.getMetadata(), cleanUp);
+            mergeMetadata(existing, node.getMetadata(), node.getPublicId(), cleanUp);
             result = repository.save(existing);
 
             // delete orphans
@@ -176,10 +176,10 @@ public class ChangelogService implements DisposableBean {
     public Optional<DomainEntity> updateResource(Resource resource, boolean cleanUp) {
         Resource result;
         TaxonomyRepository<DomainEntity> repository = domainEntityHelperService.getRepository(resource.getPublicId());
-        Resource existing = (Resource) repository.findByPublicId(resource.getPublicId());
+        Resource existing = (Resource) domainEntityHelperService.getEntityByPublicId(resource.getPublicId());
         resource.getResourceTypes().forEach(this::ensureResourceTypesExists);
         if (existing == null) {
-            mergeMetadata(null, resource.getMetadata(), cleanUp);
+            mergeMetadata(null, resource.getMetadata(), resource.getPublicId(), cleanUp);
             result = repository.save(new Resource(resource, true));
         } else if (existing.equals(resource)) {
             logger.debug("Resource " + resource.getPublicId() + " is equal, continue");
@@ -211,7 +211,7 @@ public class ChangelogService implements DisposableBean {
             }
 
             // Metadata
-            mergeMetadata(existing, resource.getMetadata(), cleanUp);
+            mergeMetadata(existing, resource.getMetadata(), resource.getPublicId(), cleanUp);
             result = repository.save(existing);
         }
         if (cleanUp) {
@@ -228,9 +228,10 @@ public class ChangelogService implements DisposableBean {
         TaxonomyRepository<DomainEntity> nodeRepository = domainEntityHelperService
                 .getRepository(URI.create("urn:node:dummy"));
 
-        NodeConnection existing = (NodeConnection) repository.findByPublicId(nodeConnection.getPublicId());
+        NodeConnection existing = (NodeConnection) domainEntityHelperService
+                .getEntityByPublicId(nodeConnection.getPublicId());
         if (existing == null) {
-            mergeMetadata(null, nodeConnection.getMetadata(), cleanUp);
+            mergeMetadata(null, nodeConnection.getMetadata(), nodeConnection.getPublicId(), cleanUp);
             // Use correct objects when copying
             nodeConnection
                     .setParent((Node) nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId()));
@@ -254,7 +255,7 @@ public class ChangelogService implements DisposableBean {
                 existing.setPrimary(nodeConnection.isPrimary().get());
             }
 
-            mergeMetadata(existing, nodeConnection.getMetadata(), cleanUp);
+            mergeMetadata(existing, nodeConnection.getMetadata(), nodeConnection.getPublicId(), cleanUp);
             result = repository.save(existing);
         }
         if (cleanUp) {
@@ -273,9 +274,10 @@ public class ChangelogService implements DisposableBean {
         TaxonomyRepository<DomainEntity> resourceRepository = domainEntityHelperService
                 .getRepository(URI.create("urn:resource:dummy"));
 
-        NodeResource existing = (NodeResource) repository.findByPublicId(nodeResource.getPublicId());
+        NodeResource existing = (NodeResource) domainEntityHelperService
+                .getEntityByPublicId(nodeResource.getPublicId());
         if (existing == null) {
-            mergeMetadata(null, nodeResource.getMetadata(), cleanUp);
+            mergeMetadata(null, nodeResource.getMetadata(), nodeResource.getPublicId(), cleanUp);
             // Use correct objects when copying
             nodeResource.setNode((Node) nodeRepository.findByPublicId(nodeResource.getNode().get().getPublicId()));
             nodeResource.setResource(
@@ -297,7 +299,7 @@ public class ChangelogService implements DisposableBean {
             if (nodeResource.isPrimary().isPresent()) {
                 existing.setPrimary(nodeResource.isPrimary().get());
             }
-            mergeMetadata(existing, nodeResource.getMetadata(), cleanUp);
+            mergeMetadata(existing, nodeResource.getMetadata(), nodeResource.getPublicId(), cleanUp);
             result = repository.save(existing);
         }
         if (cleanUp) {
@@ -321,7 +323,7 @@ public class ChangelogService implements DisposableBean {
         return existing.get();
     }
 
-    protected void mergeMetadata(EntityWithMetadata present, Metadata metadata, boolean cleanUp) {
+    protected void mergeMetadata(EntityWithMetadata present, Metadata metadata, URI publicId, boolean cleanUp) {
         if (present == null) {
             // Make sure custom fields exists
             metadata.getCustomFieldValues().forEach(customFieldValue -> customFieldService.setCustomField(null,
@@ -348,7 +350,7 @@ public class ChangelogService implements DisposableBean {
                 String key = customFieldValue.getCustomField().getKey();
                 if (!List.of(CustomField.IS_PUBLISHING, CustomField.IS_CHANGED, CustomField.REQUEST_PUBLISH)
                         .contains(key)) {
-                    if(!existingKeys.contains(key)) {
+                    if (!existingKeys.contains(key)) {
                         customFieldService.setCustomField(presentMetadata, key, customFieldValue.getValue());
                     } else {
                         // Update customfield
@@ -365,6 +367,9 @@ public class ChangelogService implements DisposableBean {
                 if (Arrays.asList(CustomField.IS_PUBLISHING, CustomField.IS_CHANGED, CustomField.REQUEST_PUBLISH)
                         .contains(key)) {
                     presentMetadata.removeCustomFieldValue(customFieldValue);
+                    if (key.equals(CustomField.IS_PUBLISHING)) {
+                        logger.info(String.format("Publishing of node %s finished", publicId));
+                    }
                 }
             });
         }

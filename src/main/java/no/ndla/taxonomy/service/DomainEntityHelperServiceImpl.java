@@ -46,27 +46,22 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Override
     @Transactional
     public DomainEntity getEntityByPublicId(URI publicId) {
-        Optional<DomainEntity> result = null;
         switch (publicId.getSchemeSpecificPart().split(":")[0]) {
         case "subject":
         case "topic":
         case "node":
-            result = Optional.ofNullable(nodeRepository.findByPublicId(publicId));
-            break;
+            return nodeRepository.findNodeGraphByPublicId(publicId);
         case "resource":
-            result = Optional.ofNullable(resourceRepository.findByPublicId(publicId));
-            break;
+            return resourceRepository.findResourceGraphByPublicId(publicId);
         case "node-connection":
         case "subject-topic":
         case "topic-subtopic":
-            result = Optional.ofNullable(nodeConnectionRepository.findByPublicId(publicId));
-            break;
+            return nodeConnectionRepository.findByPublicId(publicId);
         case "node-resource":
         case "topic-resource":
-            result = Optional.ofNullable(nodeResourceRepository.findByPublicId(publicId));
-            break;
+            return nodeResourceRepository.findByPublicId(publicId);
         }
-        return result.orElseThrow(() -> new NotFoundServiceException("Entity with id not found"));
+        throw new NotFoundServiceException("Entity of type not found");
     }
 
     @Override

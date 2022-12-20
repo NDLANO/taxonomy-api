@@ -65,9 +65,4 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
     }
 
     Optional<NodeConnection> findFirstByPublicId(URI publicId);
-
-    @Override
-    @Query("SELECT DISTINCT nc FROM NodeConnection nc " + NODE_CONNECTION_METADATA + " JOIN FETCH nc.parent n "
-            + NODE_METADATA + " JOIN FETCH nc.child c " + CHILD_METADATA + " WHERE nc.publicId = :id")
-    NodeConnection findByPublicId(URI id);
 }

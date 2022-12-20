@@ -55,7 +55,7 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
 
     @EntityGraph(value = Resource.GRAPH, type = EntityGraph.EntityGraphType.LOAD)
     @Query("SELECT DISTINCT r FROM Resource r LEFT JOIN FETCH r.cachedPaths WHERE r.publicId = :publicId")
-    Optional<Resource> fetchResourceGraphByPublicId(URI publicId);
+    Resource findResourceGraphByPublicId(URI publicId);
 
     @Query(value = "SELECT r.id FROM Resource r ORDER BY r.id", countQuery = "SELECT count(*) from Resource")
     Page<Integer> findIdsPaginated(Pageable pageable);
@@ -66,8 +66,4 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
             + " WHERE r.id IN (:ids)")
     List<Resource> findByIds(Collection<Integer> ids);
 
-    @Override
-    @EntityGraph(value = Resource.GRAPH, type = EntityGraph.EntityGraphType.LOAD)
-    @Query("SELECT DISTINCT r FROM Resource r LEFT JOIN FETCH r.cachedPaths WHERE r.publicId = :id")
-    Resource findByPublicId(URI id);
 }

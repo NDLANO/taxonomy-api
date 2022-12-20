@@ -98,7 +98,8 @@ public class Metadata implements Serializable {
     }
 
     public Optional<CustomFieldValue> getCustomFieldValueByKey(String key) {
-        return customFieldValues.stream().filter(customFieldValue -> customFieldValue.getCustomField().getKey().equals(key)).findFirst();
+        return customFieldValues.stream()
+                .filter(customFieldValue -> customFieldValue.getCustomField().getKey().equals(key)).findFirst();
     }
 
     public Integer getId() {

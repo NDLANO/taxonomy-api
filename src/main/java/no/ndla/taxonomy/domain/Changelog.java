@@ -21,10 +21,8 @@ public class Changelog extends DomainEntity {
     private String destinationSchema;
     @Column
     private Timestamp timestamp;
-
     @Column
     private boolean cleanUp;
-
     @Column
     private boolean done;
 

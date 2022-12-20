@@ -32,7 +32,7 @@ public class SchedulingConfig implements TaskSchedulerCustomizer {
 
         @Override
         public void handleError(Throwable t) {
-            if (t instanceof DataAccessException){
+            if (t instanceof DataAccessException) {
                 logger.info("Scheduled task threw an exception, ignoring: {}", t.getMessage());
             } else {
                 logger.error("Scheduled task threw an exception: {}", t.getMessage(), t);

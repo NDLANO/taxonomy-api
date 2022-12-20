@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -120,10 +121,9 @@ class DomainEntityHelperServiceImplTest {
         assertSame(resource1, service.getEntityByPublicId(URI.create("urn:resource:test:1")));
         assertSame(resource2, service.getEntityByPublicId(URI.create("urn:resource:test:2")));
 
-        assertThrows(NotFoundServiceException.class, () -> service.getEntityByPublicId(URI.create("urn:topic:test:3")));
-        assertThrows(NotFoundServiceException.class, () -> service.getEntityByPublicId(URI.create("urn:topic:test:3")));
-        assertThrows(NotFoundServiceException.class, () -> service.getEntityByPublicId(URI.create("urn:node:test:3")));
-        assertThrows(NotFoundServiceException.class,
-                () -> service.getEntityByPublicId(URI.create("urn:resource:test:3")));
+        assertNull(service.getEntityByPublicId(URI.create("urn:topic:test:3")));
+        assertNull(service.getEntityByPublicId(URI.create("urn:topic:test:3")));
+        assertNull(service.getEntityByPublicId(URI.create("urn:node:test:3")));
+        assertNull(service.getEntityByPublicId(URI.create("urn:resource:test:3")));
     }
 }

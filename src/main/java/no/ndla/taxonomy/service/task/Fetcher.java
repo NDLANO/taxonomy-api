@@ -49,7 +49,6 @@ public class Fetcher extends Task<DomainEntity> {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     protected Optional<DomainEntity> execute() {
-        // TaxonomyRepository<DomainEntity> repository = domainEntityHelperService.getRepository(this.publicId);
         DomainEntity entity = domainEntityHelperService.getEntityByPublicId(this.publicId);
         if (entity instanceof EntityWithMetadata) {
             EntityWithMetadata entityWithMetadata = (EntityWithMetadata) entity;

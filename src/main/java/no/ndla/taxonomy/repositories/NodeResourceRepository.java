@@ -62,9 +62,4 @@ public interface NodeResourceRepository extends TaxonomyRepository<NodeResource>
     }
 
     Optional<NodeResource> findFirstByPublicId(URI publicId);
-
-    @Override
-    @Query("SELECT nr FROM NodeResource nr" + NODE_RESOURCE_METADATA + " JOIN FETCH nr.node n " + NODE_METADATA
-            + " JOIN FETCH nr.resource r " + RESOURCE_METADATA + " WHERE nr.publicId = :id")
-    NodeResource findByPublicId(URI id);
 }

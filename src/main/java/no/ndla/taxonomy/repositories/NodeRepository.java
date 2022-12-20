@@ -34,16 +34,10 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
 
     Optional<Node> findFirstByPublicId(URI publicId);
 
-    @Override
     @EntityGraph(value = Node.GRAPH, type = EntityGraph.EntityGraphType.LOAD)
     @Query("SELECT DISTINCT n FROM Node n " + NODE_METADATA + " LEFT JOIN FETCH n.cachedPaths"
-            + " LEFT JOIN FETCH n.translations WHERE n.publicId = :id")
-    Node findByPublicId(URI id);
-
-    @EntityGraph(value = Node.GRAPH, type = EntityGraph.EntityGraphType.LOAD)
-    @Query("SELECT DISTINCT n FROM Node n " + NODE_METADATA
-            + " LEFT JOIN FETCH n.cachedPaths WHERE n.publicId = :publicId")
-    Optional<Node> fetchNodeGraphByPublicId(URI publicId);
+            + " LEFT JOIN FETCH n.translations WHERE n.publicId = :publicId")
+    Node findNodeGraphByPublicId(URI publicId);
 
     @Query(value = "SELECT n.id FROM Node n ORDER BY n.id", countQuery = "SELECT count(*) from Node")
     Page<Integer> findIdsPaginated(Pageable pageable);
