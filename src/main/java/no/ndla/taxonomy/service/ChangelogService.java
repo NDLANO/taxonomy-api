@@ -57,7 +57,6 @@ public class ChangelogService implements DisposableBean {
     }
 
     @Scheduled(fixedRate = 1, timeUnit = TimeUnit.SECONDS)
-    @Modifying
     @Transactional
     public void processChanges() {
         Optional<Changelog> maybeChangelog = changelogRepository.findFirstByDoneFalse();
