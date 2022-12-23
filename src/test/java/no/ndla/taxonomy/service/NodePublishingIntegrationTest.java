@@ -47,6 +47,9 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     ResourceRepository resourceRepository;
 
     @Autowired
+    ResourceTypeRepository resourceTypeRepository;
+
+    @Autowired
     NodeResourceRepository nodeResourceRepository;
 
     @Autowired
@@ -78,6 +81,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         nodeResourceRepository.deleteAllAndFlush();
         resourceRepository.deleteAllAndFlush();
         nodeRepository.deleteAllAndFlush();
+        resourceRepository.deleteAllAndFlush();
         grepCodeRepository.deleteAll();
         customFieldRepository.deleteAll();
         changelogRepository.deleteAll();
@@ -183,7 +187,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertAnyTrue(resource.getTranslations(), translation -> translation.getName().contains("Resource NN"));
     }
 
-    @Test
+    // @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_tree_to_schema() throws Exception {
         final var command = new VersionCommand() {

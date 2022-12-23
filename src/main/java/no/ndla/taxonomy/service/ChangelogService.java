@@ -178,7 +178,7 @@ public class ChangelogService implements DisposableBean {
         return Optional.of(result);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public Optional<DomainEntity> updateResource(Resource resource, boolean cleanUp) {
         Resource result;
         TaxonomyRepository<DomainEntity> repository = domainEntityHelperService.getRepository(resource.getPublicId());
