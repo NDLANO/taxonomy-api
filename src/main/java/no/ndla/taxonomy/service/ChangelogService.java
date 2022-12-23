@@ -7,8 +7,10 @@
 
 package no.ndla.taxonomy.service;
 
+import liquibase.pro.packaged.R;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.ChangelogRepository;
+import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
@@ -20,6 +22,8 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
@@ -38,16 +42,19 @@ public class ChangelogService implements DisposableBean {
     private final DomainEntityHelperService domainEntityHelperService;
     private final VersionService versionService;
     private final ResourceTypeRepository resourceTypeRepository;
+    private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public ChangelogService(ChangelogRepository changelogRepository, CustomFieldService customFieldService,
             DomainEntityHelperService domainEntityHelperService, VersionService versionService,
-            ResourceTypeRepository resourceTypeRepository) {
+            ResourceTypeRepository resourceTypeRepository,
+            ResourceResourceTypeRepository resourceResourceTypeRepository) {
         this.changelogRepository = changelogRepository;
         this.customFieldService = customFieldService;
         this.domainEntityHelperService = domainEntityHelperService;
         this.versionService = versionService;
         this.resourceTypeRepository = resourceTypeRepository;
+        this.resourceResourceTypeRepository = resourceResourceTypeRepository;
     }
 
     @Transactional
@@ -59,48 +66,48 @@ public class ChangelogService implements DisposableBean {
     @Scheduled(fixedRate = 1, timeUnit = TimeUnit.SECONDS)
     @Transactional
     public void processChanges() {
-        Optional<Changelog> maybeChangelog = changelogRepository.findFirstByDoneFalse();
-        if (maybeChangelog.isPresent()) {
-            Changelog changelog = maybeChangelog.get();
-            if (changelog.isDone()) {
-                return;
-            }
-            DomainEntity entity;
-            // Fetch
-            try {
-                Fetcher fetcher = new Fetcher();
-                fetcher.setVersion(versionService.schemaFromHash(changelog.getSourceSchema()));
-                fetcher.setPublicId(changelog.getPublicId());
-                fetcher.setCleanUp(changelog.isCleanUp());
-                fetcher.setDomainEntityHelperService(domainEntityHelperService);
-                fetcher.setCustomFieldService(customFieldService); // For cleaning metadata
+        try {
+            Optional<Changelog> maybeChangelog = changelogRepository.findFirstByDoneFalse();
+            if (maybeChangelog.isPresent()) {
+                Changelog changelog = maybeChangelog.get();
+                if (changelog.isDone()) {
+                    return;
+                }
+                DomainEntity entity;
+                // Fetch
+                try {
+                    Fetcher fetcher = new Fetcher();
+                    fetcher.setVersion(versionService.schemaFromHash(changelog.getSourceSchema()));
+                    fetcher.setPublicId(changelog.getPublicId());
+                    fetcher.setCleanUp(changelog.isCleanUp());
+                    fetcher.setDomainEntityHelperService(domainEntityHelperService);
+                    fetcher.setCustomFieldService(customFieldService); // For cleaning metadata
 
-                Future<DomainEntity> future = executor.submit(fetcher);
-                entity = future.get();
-            } catch (Exception e) {
-                logger.info(e.getMessage(), e);
-                throw new NotFoundServiceException("Failed to fetch node from source schema", e);
-            }
-            // Update
-            try {
-                Updater updater = new Updater();
-                updater.setVersion(versionService.schemaFromHash(changelog.getDestinationSchema()));
-                updater.setElement(entity);
-                updater.setCleanUp(changelog.isCleanUp());
-                updater.setChangelogService(this);
+                    Future<DomainEntity> future = executor.submit(fetcher);
+                    entity = future.get();
+                } catch (Exception e) {
+                    logger.info(e.getMessage(), e);
+                    throw new NotFoundServiceException("Failed to fetch node from source schema", e);
+                }
+                // Update
+                try {
+                    Updater updater = new Updater();
+                    updater.setVersion(versionService.schemaFromHash(changelog.getDestinationSchema()));
+                    updater.setElement(entity);
+                    updater.setCleanUp(changelog.isCleanUp());
+                    updater.setChangelogService(this);
 
-                Future<DomainEntity> future = executor.submit(updater);
-                future.get();
-            } catch (Exception e) {
-                logger.info(e.getMessage(), e);
-                throw new NotFoundServiceException("Failed to update entity", e);
-            }
-            try {
+                    Future<DomainEntity> future = executor.submit(updater);
+                    future.get();
+                } catch (Exception e) {
+                    logger.info(e.getMessage(), e);
+                    throw new NotFoundServiceException("Failed to update entity", e);
+                }
                 changelog.setDone(true);
                 changelogRepository.save(changelog);
-            } catch (Exception exception) {
-                // Another server have already processed this element
             }
+        } catch (Exception exception) {
+            // Another server have already processed this element
         }
 
     }
@@ -171,7 +178,7 @@ public class ChangelogService implements DisposableBean {
         return Optional.of(result);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Optional<DomainEntity> updateResource(Resource resource, boolean cleanUp) {
         Resource result;
         TaxonomyRepository<DomainEntity> repository = domainEntityHelperService.getRepository(resource.getPublicId());
@@ -187,6 +194,44 @@ public class ChangelogService implements DisposableBean {
             logger.debug("Updating resource " + resource.getPublicId());
             existing.setName(resource.getName());
             existing.setContentUri(resource.getContentUri());
+
+            // ResourceTypes
+            Collection<URI> typesToSet = new HashSet<>();
+            Collection<URI> typesToKeep = new HashSet<>();
+            List<URI> existingTypes = existing.getResourceTypes().stream().map(DomainEntity::getPublicId)
+                    .collect(Collectors.toList());
+            resource.getResourceTypes().forEach(resourceType -> {
+                if (existingTypes.contains(resourceType.getPublicId())) {
+                    typesToKeep.add(resourceType.getPublicId());
+                } else {
+                    typesToSet.add(resourceType.getPublicId());
+                }
+            });
+            if (!typesToSet.isEmpty()) {
+                Map<URI, URI> reusedUris = resource.getResourceResourceTypes().stream()
+                        .filter(resourceResourceType -> typesToSet
+                                .contains(resourceResourceType.getResourceType().getPublicId()))
+                        .collect(Collectors.toMap(
+                                resourceResourceType -> resourceResourceType.getResourceType().getPublicId(),
+                                ResourceResourceType::getPublicId));
+
+                Collection<ResourceResourceType> toRemove = new HashSet<>();
+                existing.getResourceResourceTypes().forEach(resourceResourceType -> {
+                    if (!typesToKeep.contains(resourceResourceType.getResourceType().getPublicId())) {
+                        toRemove.add(resourceResourceType);
+                    }
+                });
+                toRemove.forEach(remove -> {
+                    existing.removeResourceResourceType(remove);
+                });
+                typesToSet.forEach(uri -> {
+                    ResourceType resourceType = resourceTypeRepository.findByPublicId(uri);
+                    ResourceResourceType resourceResourceType = existing.addResourceType(resourceType);
+                    if (reusedUris.containsKey(resourceType.getPublicId())) {
+                        resourceResourceType.setPublicId(reusedUris.get(resourceType.getPublicId()));
+                    }
+                });
+            }
 
             // Translations
             Set<ResourceTranslation> translations = new HashSet<>();

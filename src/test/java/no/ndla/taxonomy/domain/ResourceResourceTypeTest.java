@@ -26,7 +26,6 @@ public class ResourceResourceTypeTest {
         resourceResourceType = ResourceResourceType.create(resource, resourceType);
 
         verify(resource).addResourceResourceType(resourceResourceType);
-        verify(resourceType).addResourceResourceType(resourceResourceType);
     }
 
     @Test

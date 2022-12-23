@@ -17,7 +17,7 @@ import java.util.Optional;
 public interface ChangelogRepository extends JpaRepository<Changelog, Integer> {
     Optional<Changelog> findFirstByDoneFalse();
 
-    @Modifying
+    @Modifying(flushAutomatically = true)
     @Query("delete Changelog c where c.done = true")
     int deleteByDoneTrue();
 }

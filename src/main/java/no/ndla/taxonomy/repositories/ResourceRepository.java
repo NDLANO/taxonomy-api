@@ -54,7 +54,9 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
     List<Integer> getAllResourceIdsWithMetadataValue(String value);
 
     @EntityGraph(value = Resource.GRAPH, type = EntityGraph.EntityGraphType.LOAD)
-    @Query("SELECT DISTINCT r FROM Resource r LEFT JOIN FETCH r.cachedPaths WHERE r.publicId = :publicId")
+    @Query("SELECT DISTINCT r FROM Resource r " + RESOURCE_METADATA + " LEFT JOIN FETCH r.cachedPaths"
+            + " LEFT JOIN FETCH r.resourceResourceTypes rrt LEFT JOIN FETCH rrt.resourceType rt"
+            + " WHERE r.publicId = :publicId")
     Resource findResourceGraphByPublicId(URI publicId);
 
     @Query(value = "SELECT r.id FROM Resource r ORDER BY r.id", countQuery = "SELECT count(*) from Resource")
