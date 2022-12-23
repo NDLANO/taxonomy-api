@@ -460,11 +460,12 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
         // a node to make sure testnode is not the first
         builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
-        ResourceType subResourceType = builder.resourceType(rt -> rt.name("Fagartikkel")
-                .translation("nb", t -> t.name("Fagartikkel nb")).translation("nn", t -> t.name("Fagartikkel nn")));
         builder.resourceType(rt -> rt.name("Fagstoff").translation("nb", t -> t.name("Fagstoff nb"))
-                .translation("nn", t -> t.name("Fagstoff nn")).subtype(subResourceType));
-        Resource resource = builder.resource(r -> r.publicId("urn:resource:1").resourceType(subResourceType)
+                .translation("nn", t -> t.name("Fagstoff nn")).subtype("urn:resourcetype:1",
+                        st -> st.name("Fagartikkel").publicId("urn:resourcetype:1")
+                                .translation("nb", t -> t.name("Fagartikkel nb"))
+                                .translation("nn", t -> t.name("Fagartikkel nn"))));
+        Resource resource = builder.resource(r -> r.publicId("urn:resource:1").resourceType("urn:resourcetype:1")
                 .translation("nb", tr -> tr.name("Resource nb")).translation("nn", tr -> tr.name("Resource nn")));
         Node node = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1")
                 .child(NodeType.TOPIC, t2 -> t2.publicId("urn:topic:1").resource(resource)));
