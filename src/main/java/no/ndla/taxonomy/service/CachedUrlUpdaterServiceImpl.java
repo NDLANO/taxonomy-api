@@ -72,7 +72,6 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
         }).collect(Collectors.toSet());
 
         cachedPathRepository.saveAll(newCachedPathObjects);
-        cachedPathRepository.flush();
     }
 
     @Override
