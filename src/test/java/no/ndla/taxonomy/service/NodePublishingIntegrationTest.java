@@ -187,46 +187,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertAnyTrue(resource.getTranslations(), translation -> translation.getName().contains("Resource NN"));
     }
 
-    // @Test
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    void can_publish_node_tree_to_schema() throws Exception {
-        final var command = new VersionCommand() {
-            {
-                name = "Beta";
-            }
-        };
-        Version target = versionService.createNewVersion(Optional.empty(), command);
-        assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
-        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
-
-        // a node to make sure testnode is not the first
-        builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
-        Node node = builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC,
-                        t -> t.publicId("urn:topic:1").child(NodeType.TOPIC, st -> st.publicId("urn:topic:2"))));
-
-        TestTransaction.flagForCommit();
-        TestTransaction.end();
-
-        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false, false);
-        executor.getThreadPoolExecutor().awaitTermination(6, TimeUnit.SECONDS);
-
-        while (!changelogRepository.findAll().isEmpty()) {
-            executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
-        }
-
-        VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
-        Node published = nodeRepository.findNodeGraphByPublicId(URI.create("urn:topic:1"));
-        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
-
-        assertNotNull(published);
-        assertFalse(published.isContext());
-        assertFalse(published.isRoot());
-        assertAnyTrue(published.getChildren(), nodeConnection -> nodeConnection.getChild().isPresent());
-        assertEquals(URI.create("urn:topic:2"),
-                published.getChildren().stream().findFirst().get().getChild().get().getPublicId());
-    }
-
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_sub_node_with_resource_to_schema() throws Exception {
