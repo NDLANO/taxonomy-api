@@ -77,7 +77,7 @@ public class Fetcher extends Task<DomainEntity> {
                 try {
                     customFieldService.unsetCustomField(customFieldValue.getId());
                 } catch (EntityNotFoundException e) {
-                    throw new RuntimeException(e);
+                    // Already deleted. Do nothing.
                 }
             }
         });
