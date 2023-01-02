@@ -123,44 +123,4 @@ public class ResourceTypeTest {
         assertEquals(returnedTranslation, resourceType.getTranslation("nb").get());
         assertEquals(returnedTranslation2, resourceType.getTranslation("en").orElse(null));
     }
-
-    @Test
-    public void getAddAndRemoveResourceResourceTypes() {
-        final var resourceResourceType1 = mock(ResourceResourceType.class);
-        final var resourceResourceType2 = mock(ResourceResourceType.class);
-
-        assertEquals(0, resourceType.getResourceResourceTypes().size());
-
-        try {
-            resourceType.addResourceResourceType(resourceResourceType1);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException ignored) {
-        }
-        when(resourceResourceType1.getResourceType()).thenReturn(resourceType);
-        resourceType.addResourceResourceType(resourceResourceType1);
-
-        assertEquals(1, resourceType.getResourceResourceTypes().size());
-        assertTrue(resourceType.getResourceResourceTypes().contains(resourceResourceType1));
-
-        try {
-            resourceType.addResourceResourceType(resourceResourceType2);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException ignored) {
-        }
-        when(resourceResourceType2.getResourceType()).thenReturn(resourceType);
-        resourceType.addResourceResourceType(resourceResourceType2);
-
-        assertEquals(2, resourceType.getResourceResourceTypes().size());
-        assertTrue(resourceType.getResourceResourceTypes()
-                .containsAll(Set.of(resourceResourceType1, resourceResourceType2)));
-
-        resourceType.removeResourceResourceType(resourceResourceType1);
-        assertEquals(1, resourceType.getResourceResourceTypes().size());
-        assertTrue(resourceType.getResourceResourceTypes().contains(resourceResourceType2));
-        verify(resourceResourceType1).disassociate();
-
-        resourceType.removeResourceResourceType(resourceResourceType2);
-        assertEquals(0, resourceType.getResourceResourceTypes().size());
-        verify(resourceResourceType2).disassociate();
-    }
 }

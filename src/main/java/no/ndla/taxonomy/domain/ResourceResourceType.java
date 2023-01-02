@@ -34,7 +34,6 @@ public class ResourceResourceType extends DomainEntity implements Comparable<Res
         resourceResourceType.resourceType = resourceType;
 
         resource.addResourceResourceType(resourceResourceType);
-        resourceType.addResourceResourceType(resourceResourceType);
 
         return resourceResourceType;
     }
@@ -48,10 +47,6 @@ public class ResourceResourceType extends DomainEntity implements Comparable<Res
 
         if (resource != null) {
             resource.removeResourceResourceType(this);
-        }
-
-        if (resourceType != null) {
-            resourceType.removeResourceResourceType(this);
         }
     }
 

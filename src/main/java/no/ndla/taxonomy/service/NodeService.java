@@ -8,16 +8,15 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.repositories.ChangelogRepository;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.service.dtos.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import no.ndla.taxonomy.service.task.NodeFetcher;
-import no.ndla.taxonomy.service.task.NodeMetadataCleaner;
-import no.ndla.taxonomy.service.task.NodeUpdater;
+import no.ndla.taxonomy.service.task.Fetcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -37,33 +36,39 @@ import static org.springframework.data.jpa.domain.Specification.where;
 
 @Transactional(readOnly = true)
 @Service
-public class NodeService implements SearchService<NodeDTO, Node, NodeRepository> {
+public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>, DisposableBean {
     Logger logger = LoggerFactory.getLogger(getClass().getName());
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final EntityConnectionService connectionService;
     private final VersionService versionService;
-    private final ResourceService resourceService;
     private final TreeSorter topicTreeSorter;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    @Autowired
-    private NodeFetcher nodeFetchcher;
-    @Autowired
-    private NodeUpdater nodeUpdater;
-    @Autowired
-    private NodeMetadataCleaner nodeMetadataCleaner;
+    private final ChangelogRepository changelogRepository;
+    private final DomainEntityHelperService domainEntityHelperService;
+    private final CustomFieldService customFieldService;
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    @Override
+    public void destroy() throws Exception {
+        executor.shutdown();
+    }
 
     public NodeService(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            EntityConnectionService connectionService, VersionService versionService, ResourceService resourceService,
-            TreeSorter topicTreeSorter, CachedUrlUpdaterService cachedUrlUpdaterService) {
+            EntityConnectionService connectionService, VersionService versionService, TreeSorter topicTreeSorter,
+            CachedUrlUpdaterService cachedUrlUpdaterService, ChangelogRepository changelogRepository,
+            DomainEntityHelperService domainEntityHelperService, CustomFieldService customFieldService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
         this.versionService = versionService;
-        this.resourceService = resourceService;
         this.topicTreeSorter = topicTreeSorter;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.changelogRepository = changelogRepository;
+        this.domainEntityHelperService = domainEntityHelperService;
+        this.customFieldService = customFieldService;
     }
 
     @Transactional
@@ -203,86 +208,66 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     /**
-     * Gets node including children, and copies from one schema to another
+     * Adds node and children to table to be processed later
      *
      * @param nodeId
-     *            The node to copy
+     *            Public ID of the node to publish
      * @param sourceId
-     *            The version id of source schema. If null use default.
+     *            Public ID of source schema. Default schema if not present
      * @param targetId
-     *            The version id of target shenma. Fail if not present.
-     * @param addCustomField
-     *            Only update temp metadata if true
+     *            Public ID of target schema. Mandatory
+     * @param isRoot
+     *            Used to save meta-field to track publishing
+     * @param cleanUp
+     *            Used to clean up metadata after publishing
      */
     @Async
     @Transactional
-    public Node publishNode(URI nodeId, Optional<URI> sourceId, URI targetId, boolean addCustomField) {
-        Version target = versionService.findVersionByPublicId(targetId)
+    public void publishNode(URI nodeId, Optional<URI> sourceId, URI targetId, boolean isRoot, boolean cleanUp) {
+        String source = sourceId.flatMap(sid -> versionService.findVersionByPublicId(sid).map(Version::getHash))
+                .orElse(null);
+        String target = versionService.findVersionByPublicId(targetId).map(Version::getHash)
                 .orElseThrow(() -> new NotFoundServiceException("Target version not found! Aborting"));
-        nodeFetchcher.setVersion(versionService.schemaFromHash(null)); // Defaults to current
-        nodeMetadataCleaner.setVersion(versionService.schemaFromHash(null));
-        if (sourceId.isPresent()) {
-            Optional<Version> source = versionService.findVersionByPublicId(sourceId.get());
-            // Use source to fetch object
-            source.ifPresent(version -> {
-                nodeFetchcher.setVersion(versionService.schemaFromHash(version.getHash()));
-                nodeMetadataCleaner.setVersion(versionService.schemaFromHash(version.getHash()));
-            });
-        }
+
         Node node;
         try {
-            nodeFetchcher.setPublicId(nodeId);
-            nodeFetchcher.setAddCustomField(addCustomField);
-            ExecutorService es = Executors.newSingleThreadExecutor();
-            Future<Node> future = es.submit(nodeFetchcher);
-            node = future.get();
-            es.shutdown();
+            Fetcher fetcher = new Fetcher();
+            fetcher.setDomainEntityHelperService(domainEntityHelperService);
+            fetcher.setCustomFieldService(customFieldService);
+            fetcher.setVersion(versionService.schemaFromHash(source));
+            fetcher.setPublicId(nodeId);
+            fetcher.setAddIsPublishing(isRoot);
+            Future<DomainEntity> future = executor.submit(fetcher);
+            node = (Node) future.get();
         } catch (Exception e) {
             logger.info(e.getMessage(), e);
             throw new NotFoundServiceException("Failed to fetch node from source schema", e);
         }
-        // Need to save resources in this thread to avoid fetching resources in wrong schema
-        for (NodeResource resource : node.getNodeResources()) {
-            if (resource.getResource().isPresent()) {
-                Resource res = resource.getResource().get();
-                resourceService.publishResource(res.getPublicId(), sourceId, targetId);
-            }
+        // At first run, makes sure node exists in db for node-connection to be saved.
+        if (!cleanUp) {
+            changelogRepository.save(new Changelog(source, target, nodeId, false));
         }
-        // Need to save children first to avoid saving missing nodes.
         for (NodeConnection connection : node.getChildren()) {
             if (connection.getChild().isPresent()) {
                 Node child = connection.getChild().get();
-                publishNode(child.getPublicId(), sourceId, targetId, false);
+                publishNode(child.getPublicId(), sourceId, targetId, false, cleanUp);
             }
+            changelogRepository.save(new Changelog(source, target, connection.getPublicId(), cleanUp));
         }
-        // Set target schema for updating
-        try {
-            nodeUpdater.setSourceId(sourceId);
-            nodeUpdater.setTargetId(targetId);
-            nodeUpdater.setVersion(versionService.schemaFromHash(target.getHash()));
-            nodeUpdater.setElement(node);
-            ExecutorService es = Executors.newSingleThreadExecutor();
-            Future<Node> future = es.submit(nodeUpdater);
-            node = future.get();
-            es.shutdown();
-        } catch (Exception e) {
-            logger.info(e.getMessage(), e);
-            throw new NotFoundServiceException("Failed to update node in target schema", e);
+        for (NodeResource nodeResource : node.getNodeResources()) {
+            nodeResource.getResource().map(
+                    child -> changelogRepository.save(new Changelog(source, target, child.getPublicId(), cleanUp)));
+            changelogRepository.save(new Changelog(source, target, nodeResource.getPublicId(), cleanUp));
         }
-        // clean metadata after updating if root
-        if (addCustomField) {
-            try {
-                nodeMetadataCleaner.setPublicId(nodeId);
-                ExecutorService es = Executors.newSingleThreadExecutor();
-                Future<Node> future = es.submit(nodeMetadataCleaner);
-                future.get();
-                es.shutdown();
-            } catch (Exception e) {
-                logger.info(e.getMessage(), e);
-                throw new NotFoundServiceException("Failed to reset metadata for source node", e);
-            }
-            logger.info("Node " + nodeId + " published to target " + targetId.toString());
+        // When cleaning, node can be cleaned last to end with publish request to be stripped
+        if (cleanUp) {
+            changelogRepository.save(new Changelog(source, target, nodeId, true));
+        } else {
+            // Once more, with cleaning
+            publishNode(nodeId, sourceId, targetId, false, true);
         }
-        return node;
+        if (isRoot) {
+            logger.info("Node " + nodeId + " added to changelog for publishing to " + target);
+        }
     }
 }

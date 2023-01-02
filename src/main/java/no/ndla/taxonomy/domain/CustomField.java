@@ -31,6 +31,7 @@ public class CustomField implements Serializable {
 
     public static final String IS_PUBLISHING = "isPublishing";
     public static final String REQUEST_PUBLISH = "requestPublish";
+    public static final String IS_CHANGED = "isChanged";
 
     public CustomField() {
     }

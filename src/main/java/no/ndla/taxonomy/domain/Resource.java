@@ -212,7 +212,7 @@ public class Resource extends EntityWithPath {
     }
 
     public Collection<ResourceResourceType> getResourceResourceTypes() {
-        return this.resourceResourceTypes.stream().collect(Collectors.toUnmodifiableList());
+        return this.resourceResourceTypes;
     }
 
     public Collection<NodeResource> getNodeResources() {

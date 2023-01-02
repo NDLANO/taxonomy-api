@@ -26,10 +26,10 @@ public class GrepCodeServiceImpl implements GrepCodeService {
     @Transactional(propagation = MANDATORY)
     public GrepCode getOrCreateGrepCode(String code) {
         return grepCodeRepository.findFirstByCode(code).orElseGet(() -> {
-            final var competenceAim = new GrepCode();
-            competenceAim.setCode(code);
+            final var grepCode = new GrepCode();
+            grepCode.setCode(code);
 
-            return grepCodeRepository.saveAndFlush(competenceAim);
+            return grepCodeRepository.saveAndFlush(grepCode);
         });
     }
 }

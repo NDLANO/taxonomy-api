@@ -1028,4 +1028,18 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="20221129 add async changelog table" author="Gunnar Velle">
+        <createTable tableName="changelog">
+            <column name="id" type="serial" autoIncrement="true">
+                <constraints primaryKey="true" uniqueConstraintName="changelog_pkey"/>
+            </column>
+            <column name="public_id" type="varchar(255)"/>
+            <column name="source_schema" type="varchar(64)"/>
+            <column name="destination_schema" type="varchar(64)"/>
+            <column name="timestamp" type="timestamp with time zone"/>
+            <column name="clean_up" type="boolean" defaultValueBoolean="false"/>
+            <column name="done" type="boolean" defaultValueBoolean="false"/>
+        </createTable>
+    </changeSet>
+
 </databaseChangeLog>

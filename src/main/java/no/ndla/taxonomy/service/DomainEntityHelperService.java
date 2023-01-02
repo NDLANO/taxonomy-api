@@ -7,14 +7,20 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.EntityWithMetadata;
-import no.ndla.taxonomy.domain.EntityWithPath;
+import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.repositories.TaxonomyRepository;
 
 import java.net.URI;
 
 public interface DomainEntityHelperService {
     Node getNodeByPublicId(URI publicId);
 
-    EntityWithMetadata getEntityByPublicId(URI publicId);
+    DomainEntity getEntityByPublicId(URI publicId);
+
+    TaxonomyRepository<DomainEntity> getRepository(URI publicId);
+
+    void buildPathsForEntity(URI publicId);
+
+    void deleteEntityByPublicId(URI publicId);
 }

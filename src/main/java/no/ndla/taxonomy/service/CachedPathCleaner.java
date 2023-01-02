@@ -12,17 +12,17 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class CachedPathCleaner {
     private final CachedPathRepository cachedPathRepository;
-    private final int rate = 5 * 60 * 1000; // Every five minutes
 
     public CachedPathCleaner(CachedPathRepository cachedPathRepository) {
         this.cachedPathRepository = cachedPathRepository;
     }
 
-    @Scheduled(fixedRate = rate)
+    @Scheduled(fixedRate = 5, timeUnit = TimeUnit.MINUTES)
     @Transactional
     public void removeInactivePaths() {
         cachedPathRepository.deleteByActiveFalse();

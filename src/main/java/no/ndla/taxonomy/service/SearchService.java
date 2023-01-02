@@ -1,5 +1,6 @@
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
@@ -17,7 +18,7 @@ interface ExtraSpecification<T> {
     Specification<T> applySpecification(Specification<T> spec);
 }
 
-public interface SearchService<DTO, DOMAIN, REPO extends TaxonomyRepository<DOMAIN>> {
+public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends TaxonomyRepository<DOMAIN>> {
     REPO getRepository();
 
     DTO createDTO(DOMAIN domain, String languageCode);
