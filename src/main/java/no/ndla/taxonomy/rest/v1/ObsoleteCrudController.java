@@ -7,17 +7,11 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import io.swagger.annotations.ApiOperation;
-import no.ndla.taxonomy.domain.EntityWithPath;
-import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
-import no.ndla.taxonomy.repositories.TaxonomyRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.URNValidator;
-import no.ndla.taxonomy.service.UpdatableDto;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,7 +27,7 @@ public class ObsoleteCrudController {
     private final URNValidator validator = new URNValidator();
 
     @DeleteMapping("/{id}")
-    @ApiOperation(value = "Deletes a single entity by id")
+    @Operation(summary = "Deletes a single entity by id", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {

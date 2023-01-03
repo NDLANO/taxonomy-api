@@ -8,20 +8,17 @@
 package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.exceptions.NotFoundException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -33,55 +30,56 @@ public class FilterTranslations {
     }
 
     @GetMapping
-    @ApiOperation("Gets all relevanceTranslations for a single filter")
+    @Operation(summary = "Gets all relevanceTranslations for a single filter")
     @Deprecated(forRemoval = true)
     public List<FilterTranslations.FilterTranslationIndexDocument> index(@PathVariable("id") URI id) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
     @GetMapping("/{language}")
-    @ApiOperation("Gets a single translation for a single filter")
+    @Operation(summary = "Gets a single translation for a single filter")
     @Deprecated(forRemoval = true)
     public FilterTranslations.FilterTranslationIndexDocument get(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
     @PutMapping("/{language}")
-    @ApiOperation("Creates or updates a translation of a filter")
+    @Operation(summary = "Creates or updates a translation of a filter", security = {
+            @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public void put(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @ApiParam(name = "filter", value = "The new or updated translation") @RequestBody FilterTranslations.UpdateFilterTranslationCommand command) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
+            @Parameter(name = "filter", description = "The new or updated translation") @RequestBody FilterTranslations.UpdateFilterTranslationCommand command) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
     @DeleteMapping("/{language}")
-    @ApiOperation("Deletes a translation")
+    @Operation(summary = "Deletes a translation", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public void delete(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
-    @ApiModel("FilterTranslationIndexDocument")
+    @Schema(name = "FilterTranslationIndexDocument")
     public static class FilterTranslationIndexDocument {
         @JsonProperty
-        @ApiModelProperty(value = "The translated name of the filter", example = "Carpenter")
+        @Schema(description = "The translated name of the filter", example = "Carpenter")
         public String name;
 
         @JsonProperty
-        @ApiModelProperty(value = "ISO 639-1 language code", example = "en")
+        @Schema(description = "ISO 639-1 language code", example = "en")
         public String language;
     }
 
     public static class UpdateFilterTranslationCommand {
         @JsonProperty
-        @ApiModelProperty(value = "The translated name of the filter", example = "Carpenter")
+        @Schema(description = "The translated name of the filter", example = "Carpenter")
         public String name;
     }
 }

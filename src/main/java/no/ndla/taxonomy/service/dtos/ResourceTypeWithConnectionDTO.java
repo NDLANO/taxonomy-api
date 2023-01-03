@@ -8,16 +8,15 @@
 package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 
 import java.net.URI;
 
-@ApiModel("ResourceTypeWithConnection")
+@Schema(name = "ResourceTypeWithConnection")
 public class ResourceTypeWithConnectionDTO extends ResourceTypeDTO {
     @JsonProperty
-    @ApiModelProperty(value = "The id of the resource resource type connection", example = "urn:resource-resourcetype:1")
+    @Schema(description = "The id of the resource resource type connection", example = "urn:resource-resourcetype:1")
     private URI connectionId;
 
     public ResourceTypeWithConnectionDTO() {

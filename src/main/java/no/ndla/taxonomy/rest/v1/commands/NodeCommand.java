@@ -9,38 +9,37 @@ package no.ndla.taxonomy.rest.v1.commands;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.service.UpdatableDto;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.Transient;
 import java.net.URI;
 import java.util.Optional;
 import java.util.UUID;
 
 public class NodeCommand implements UpdatableDto<Node> {
     @JsonProperty
-    @ApiModelProperty(notes = "If specified, set the node_id to this value. If omitted, an uuid will be assigned automatically.")
+    @Schema(description = "If specified, set the node_id to this value. If omitted, an uuid will be assigned automatically.")
     public String nodeId;
 
     @JsonProperty
     @Enumerated(EnumType.STRING)
-    @ApiModelProperty(value = "Type of node. Values are subject, topic. Required on create.", example = "topic")
+    @Schema(description = "Type of node. Values are subject, topic. Required on create.", example = "topic")
     public NodeType nodeType;
 
     @JsonProperty
-    @ApiModelProperty(value = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+    @Schema(description = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
     public URI contentUri;
 
     @JsonProperty
-    @ApiModelProperty(value = "The name of the node. Required on create.", example = "Trigonometry")
+    @Schema(description = "The name of the node. Required on create.", example = "Trigonometry")
     public String name;
 
     @JsonProperty
-    @ApiModelProperty(value = "The node is a root node. Default is false. Only used if present.")
+    @Schema(description = "The node is a root node. Default is false. Only used if present.")
     public Boolean root;
 
     public Optional<String> getNodeId() {

@@ -17,7 +17,13 @@ spring:
       matching-strategy: ant-path-matcher
 logging.graylog.host: ""
 
-springfox.documentation.swagger.v2.path: /api-docs
+springdoc:
+  writer-with-order-by-keys: true
+  packagesToScan: no.ndla.taxonomy.rest.v1
+  pathsToMatch: /v1/**
+  api-docs:
+    path: /api-docs
+    enabled: true
 
 management:
   endpoints:

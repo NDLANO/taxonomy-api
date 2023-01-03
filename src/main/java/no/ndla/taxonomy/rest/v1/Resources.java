@@ -7,8 +7,9 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
@@ -58,38 +59,38 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     }
 
     @GetMapping
-    @ApiOperation(value = "Lists all resources")
+    @Operation(summary = "Lists all resources")
     @Transactional(readOnly = true)
     public List<ResourceDTO> getAll(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
-            @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
-            @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
-            @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
+            @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
+            @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
+            @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
+            @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         return resourceService.getResources(language, contentUri, metadataFilters);
     }
 
     @GetMapping("/search")
-    @ApiOperation(value = "Search all resources")
+    @Operation(summary = "Search all resources")
     @Transactional(readOnly = true)
     public SearchResultDTO<ResourceDTO> search(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
-            @ApiParam(value = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
-            @ApiParam(value = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
-            @ApiParam(value = "Query to search names") @RequestParam(value = "query", required = false) Optional<String> query,
-            @ApiParam(value = "Ids to fetch for query") @RequestParam(value = "ids", required = false) Optional<List<String>> ids
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
+            @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
+            @Parameter(description = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
+            @Parameter(description = "Query to search names") @RequestParam(value = "query", required = false) Optional<String> query,
+            @Parameter(description = "Ids to fetch for query") @RequestParam(value = "ids", required = false) Optional<List<String>> ids
 
     ) {
         return resourceService.search(query, ids, language, pageSize, page);
     }
 
     @GetMapping("/page")
-    @ApiOperation(value = "Gets all connections between node and children paginated")
+    @Operation(summary = "Gets all connections between node and children paginated")
     public SearchResultDTO<ResourceDTO> allPaginated(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
-            @ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
-            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
+            @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
+            @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
         }
@@ -104,49 +105,50 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     }
 
     @GetMapping("{id}")
-    @ApiOperation(value = "Gets a single resource")
+    @Operation(summary = "Gets a single resource")
     public ResourceDTO get(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
         return resourceService.getResourceByPublicId(id, language);
     }
 
     @PutMapping("{id}")
-    @ApiOperation(value = "Updates a resource")
+    @Operation(summary = "Updates a resource", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable("id") URI id,
-            @ApiParam(name = "resource", value = "the updated resource. Fields not included will be set to null.") @RequestBody ResourceCommand command) {
+            @Parameter(name = "resource", description = "the updated resource. Fields not included will be set to null.") @RequestBody ResourceCommand command) {
         doPut(id, command);
     }
 
     @PostMapping
-    @ApiOperation(value = "Adds a new resource")
+    @Operation(summary = "Adds a new resource", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @ApiParam(name = "resource", value = "the new resource") @RequestBody ResourceCommand command) {
+            @Parameter(name = "resource", description = "the new resource") @RequestBody ResourceCommand command) {
         return doPost(new Resource(), command);
     }
 
     @PostMapping("{id}/clone")
-    @ApiOperation(value = "Clones a resource, including resource-types and translations")
+    @Operation(summary = "Clones a resource, including resource-types and translations", security = {
+            @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> clone(
-            @ApiParam(name = "id", value = "Id of resource to clone", example = "urn:resource:1") @PathVariable("id") URI publicId,
-            @ApiParam(name = "resource", value = "Object containing contentUri. Other values are ignored.") @RequestBody ResourceCommand command) {
+            @Parameter(name = "id", description = "Id of resource to clone", example = "urn:resource:1") @PathVariable("id") URI publicId,
+            @Parameter(name = "resource", description = "Object containing contentUri. Other values are ignored.") @RequestBody ResourceCommand command) {
         Resource entity = resourceService.cloneResource(publicId, command.contentUri);
         URI location = URI.create(getLocation() + "/" + entity.getPublicId());
         return ResponseEntity.created(location).build();
     }
 
     @GetMapping("{id}/resource-types")
-    @ApiOperation(value = "Gets all resource types associated with this resource")
+    @Operation(summary = "Gets all resource types associated with this resource")
     @Transactional(readOnly = true)
     public List<ResourceTypeWithConnectionDTO> getResourceTypes(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
         return resourceResourceTypeRepository
                 .findAllByResourcePublicIdIncludingResourceAndResourceTypeAndResourceTypeParent(id).stream()
@@ -155,15 +157,15 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     }
 
     @GetMapping("{id}/full")
-    @ApiOperation(value = "Gets all parent topics, all filters and resourceTypes for this resource")
+    @Operation(summary = "Gets all parent topics, all filters and resourceTypes for this resource")
     @Transactional(readOnly = true)
     public ResourceWithParentsDTO getResourceFull(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return resourceService.getResourceWithParentNodesByPublicId(id, language);
     }
 
     @DeleteMapping("{id}")
-    @ApiOperation(value = "Deletes a single entity by id")
+    @Operation(summary = "Deletes a single entity by id", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {

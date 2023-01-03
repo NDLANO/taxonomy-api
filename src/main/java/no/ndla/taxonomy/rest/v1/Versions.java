@@ -7,8 +7,9 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
@@ -20,7 +21,6 @@ import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -40,10 +40,10 @@ public class Versions extends CrudController<Version> {
     }
 
     @GetMapping
-    @ApiOperation("Gets all versions")
+    @Operation(summary = "Gets all versions")
     public List<VersionDTO> getAll(
-            @ApiParam(value = "Version type", example = "PUBLISHED") @RequestParam(value = "type", required = false, defaultValue = "") Optional<VersionType> versionType,
-            @ApiParam(value = "Version hash", example = "ndla") @RequestParam(value = "hash", required = false) Optional<String> hash) {
+            @Parameter(description = "Version type", example = "PUBLISHED") @RequestParam(value = "type", required = false, defaultValue = "") Optional<VersionType> versionType,
+            @Parameter(description = "Version hash", example = "ndla") @RequestParam(value = "hash", required = false) Optional<String> hash) {
         if (versionType.isPresent())
             return versionService.getVersionsOfType(versionType.get());
         return hash
@@ -53,18 +53,18 @@ public class Versions extends CrudController<Version> {
     }
 
     @GetMapping("/{id}")
-    @ApiOperation(value = "Gets a single version")
+    @Operation(summary = "Gets a single version")
     public VersionDTO get(@PathVariable("id") URI id) {
         return versionRepository.findFirstByPublicId(id).map(VersionDTO::new)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Version not found"));
     }
 
     @PostMapping
-    @ApiOperation(value = "Creates a new version")
+    @Operation(summary = "Creates a new version", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public ResponseEntity<Void> post(
-            @ApiParam(value = "Base new version on version with this id") @RequestParam(value = "sourceId") Optional<URI> sourceId,
-            @ApiParam(name = "version", value = "The new version") @RequestBody VersionCommand command) {
+            @Parameter(description = "Base new version on version with this id") @RequestParam(value = "sourceId") Optional<URI> sourceId,
+            @Parameter(name = "version", description = "The new version") @RequestBody VersionCommand command) {
         // Don't call doPost because we need to create new schema
         Version version = versionService.createNewVersion(sourceId, command);
         URI location = URI.create(getLocation() + "/" + version.getPublicId());
@@ -72,16 +72,16 @@ public class Versions extends CrudController<Version> {
     }
 
     @PutMapping("/{id}")
-    @ApiOperation("Updates a version")
+    @Operation(summary = "Updates a version", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public void put(@PathVariable("id") URI id,
-            @ApiParam(name = "version", value = "The updated version.") @RequestBody VersionCommand command) {
+            @Parameter(name = "version", description = "The updated version.") @RequestBody VersionCommand command) {
         doPut(id, command);
     }
 
     @DeleteMapping("/{id}")
-    @ApiOperation(value = "Deletes a version by publicId")
+    @Operation(summary = "Deletes a version by publicId", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
@@ -94,7 +94,7 @@ public class Versions extends CrudController<Version> {
     }
 
     @PutMapping("/{id}/publish")
-    @ApiOperation("Publishes a version")
+    @Operation(summary = "Publishes a version", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public void publish(@PathVariable("id") URI id) {

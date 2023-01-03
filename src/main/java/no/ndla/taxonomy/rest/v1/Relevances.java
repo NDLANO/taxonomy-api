@@ -8,17 +8,16 @@
 package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.RelevanceTranslation;
 import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.service.UpdatableDto;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
+import no.ndla.taxonomy.service.UpdatableDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,55 +44,55 @@ public class Relevances extends CrudController<Relevance> {
     }
 
     @GetMapping
-    @ApiOperation("Gets all relevances")
+    @Operation(summary = "Gets all relevances")
     public List<RelevanceIndexDocument> index(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return relevanceRepository.findAllIncludingTranslations().stream()
                 .map(relevance -> new RelevanceIndexDocument(relevance, language)).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    @ApiOperation(value = "Gets a single relevance", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
+    @Operation(summary = "Gets a single relevance", description = "Default language will be returned if desired language not found or if parameter is omitted.")
     public RelevanceIndexDocument get(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return relevanceRepository.findFirstByPublicIdIncludingTranslations(id)
                 .map(relevance -> new RelevanceIndexDocument(relevance, language))
                 .orElseThrow(() -> new NotFoundException("Relevance", id));
     }
 
     @PostMapping
-    @ApiOperation(value = "Creates a new relevance")
+    @Operation(summary = "Creates a new relevance", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "relevance", value = "The new relevance") @RequestBody RelevanceCommand command) {
+            @Parameter(name = "relevance", description = "The new relevance") @RequestBody RelevanceCommand command) {
         return doPost(new Relevance(), command);
     }
 
     @PutMapping("/{id}")
-    @ApiOperation("Updates a relevance")
+    @Operation(summary = "Updates a relevance", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-            @ApiParam(name = "relevance", value = "The updated relevance. Fields not included will be set to null.") @RequestBody RelevanceCommand command) {
+            @Parameter(name = "relevance", description = "The updated relevance. Fields not included will be set to null.") @RequestBody RelevanceCommand command) {
         doPut(id, command);
     }
 
-    @ApiModel("RelevanceIndexDocument")
+    @Schema(name = "RelevanceIndexDocument")
     public static class RelevanceIndexDocument {
         @JsonProperty
-        @ApiModelProperty(example = "urn:relevance:core")
+        @Schema(example = "urn:relevance:core")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(value = "The name of the relevance", example = "Core")
+        @Schema(description = "The name of the relevance", example = "Core")
         public String name;
 
         @JsonProperty
-        @ApiModelProperty(value = "All translations of this relevance")
+        @Schema(description = "All translations of this relevance")
         private Set<TranslationDTO> translations;
 
         @JsonProperty
-        @ApiModelProperty(value = "List of language codes supported by translations")
+        @Schema(description = "List of language codes supported by translations")
         private Set<String> supportedLanguages;
 
         public RelevanceIndexDocument() {
@@ -113,11 +112,11 @@ public class Relevances extends CrudController<Relevance> {
 
     public static class RelevanceCommand implements UpdatableDto<Relevance> {
         @JsonProperty
-        @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:relevance: and be a valid URI. If ommitted, an id will be assigned automatically. Ignored on update", example = "urn:relevance:supplementary")
+        @Schema(description = "If specified, set the id to this value. Must start with urn:relevance: and be a valid URI. If ommitted, an id will be assigned automatically. Ignored on update", example = "urn:relevance:supplementary")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "The name of the relevance", example = "Supplementary")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "The name of the relevance", example = "Supplementary")
         public String name;
 
         @Override

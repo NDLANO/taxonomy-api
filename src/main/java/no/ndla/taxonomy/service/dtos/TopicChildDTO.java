@@ -7,12 +7,11 @@
 
 package no.ndla.taxonomy.service.dtos;
 
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.service.TreeSorter;
 
-@ApiModel("NodeChild")
+@Schema(name = "NodeChild")
 public class TopicChildDTO extends EntityWithPathChildDTO {
     public TopicChildDTO() {
     }

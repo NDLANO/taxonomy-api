@@ -8,9 +8,10 @@
 package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
@@ -53,16 +54,17 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     }
 
     @GetMapping
-    @ApiOperation(value = "Gets all connections between node and children")
+    @Operation(summary = "Gets all connections between node and children")
     public List<ParentChildIndexDocument> index() {
         return nodeConnectionRepository.findAllIncludingParentAndChild().stream().map(ParentChildIndexDocument::new)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/page")
-    @ApiOperation(value = "Gets all connections between node and children paginated")
-    public NodeConnectionPage allPaginated(@ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
-            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
+    @Operation(summary = "Gets all connections between node and children paginated")
+    public NodeConnectionPage allPaginated(
+            @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
+            @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
         }
@@ -76,17 +78,17 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     }
 
     @GetMapping("/{id}")
-    @ApiOperation(value = "Gets a single connection between a node and a child")
+    @Operation(summary = "Gets a single connection between a node and a child")
     public ParentChildIndexDocument get(@PathVariable("id") URI id) {
         NodeConnection topicSubtopic = nodeConnectionRepository.getByPublicId(id);
         return new ParentChildIndexDocument(topicSubtopic);
     }
 
     @PostMapping
-    @ApiOperation(value = "Adds a node to a parent")
+    @Operation(summary = "Adds a node to a parent", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "connection", value = "The new connection") @RequestBody AddChildToParentCommand command) {
+            @Parameter(name = "connection", description = "The new connection") @RequestBody AddChildToParentCommand command) {
         Node parent = nodeRepository.getByPublicId(command.parentId);
         Node child = nodeRepository.getByPublicId(command.childId);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
@@ -101,7 +103,8 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation(value = "Removes a connection between a node and a child")
+    @Operation(summary = "Removes a connection between a node and a child", security = {
+            @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
         connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id));
@@ -109,10 +112,11 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation(value = "Updates a connection between a node and a child", notes = "Use to update which node is primary to a child or to alter sorting order")
+    @Operation(summary = "Updates a connection between a node and a child", description = "Use to update which node is primary to a child or to alter sorting order", security = {
+            @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-            @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateNodeChildCommand command) {
+            @Parameter(name = "connection", description = "The updated connection") @RequestBody UpdateNodeChildCommand command) {
         final var topicSubtopic = nodeConnectionRepository.getByPublicId(id);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
                 : null;
@@ -122,51 +126,51 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
 
     public static class AddChildToParentCommand {
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Parent id", example = "urn:topic:234")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, title = "Parent id", example = "urn:topic:234")
         public URI parentId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Child id", example = "urn:topic:234")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Child id", example = "urn:topic:234")
         public URI childId;
 
         @JsonProperty
-        @ApiModelProperty(value = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
+        @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
         public boolean primary = true;
 
         @JsonProperty
-        @ApiModelProperty(value = "Order in which to sort the child for the parent", example = "1")
+        @Schema(description = "Order in which to sort the child for the parent", example = "1")
         public int rank;
 
         @JsonProperty
-        @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+        @Schema(description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
     }
 
     public static class UpdateNodeChildCommand {
         @JsonProperty
-        @ApiModelProperty(value = "Connection id", example = "urn:node-has-child:345")
+        @Schema(description = "Connection id", example = "urn:node-has-child:345")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(value = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
+        @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
         public boolean primary;
 
         @JsonProperty
-        @ApiModelProperty(value = "Order in which subtopic is sorted for the topic", example = "1")
+        @Schema(description = "Order in which subtopic is sorted for the topic", example = "1")
         public int rank;
 
         @JsonProperty
-        @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+        @Schema(description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
     }
 
     public static class NodeConnectionPage {
         @JsonProperty
-        @ApiModelProperty(value = "Total number of elements")
+        @Schema(description = "Total number of elements")
         public long totalCount;
 
         @JsonProperty
-        @ApiModelProperty(value = "Page containing results")
+        @Schema(description = "Page containing results")
         public List<ParentChildIndexDocument> results;
 
         NodeConnectionPage() {
@@ -180,31 +184,31 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
 
     public static class ParentChildIndexDocument {
         @JsonProperty
-        @ApiModelProperty(value = "Parent id", example = "urn:topic:234")
+        @Schema(description = "Parent id", example = "urn:topic:234")
         public URI parentId;
 
         @JsonProperty
-        @ApiModelProperty(value = "Child id", example = "urn:topic:234")
+        @Schema(description = "Child id", example = "urn:topic:234")
         public URI childId;
 
         @JsonProperty
-        @ApiModelProperty(value = "Connection id", example = "urn:topic-has-subtopics:345")
+        @Schema(description = "Connection id", example = "urn:topic-has-subtopics:345")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(value = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
+        @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
         public boolean primary;
 
         @JsonProperty
-        @ApiModelProperty(value = "Order in which subtopic is sorted for the topic", example = "1")
+        @Schema(description = "Order in which subtopic is sorted for the topic", example = "1")
         public int rank;
 
         @JsonProperty
-        @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+        @Schema(description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
         @JsonProperty
-        @ApiModelProperty(value = "Metadata for entity. Read only.")
+        @Schema(description = "Metadata for entity. Read only.")
         private MetadataDto metadata;
 
         ParentChildIndexDocument() {

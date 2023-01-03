@@ -9,31 +9,29 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.NodeResource;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 
 import java.net.URI;
 
-@ApiModel("NodeWithResourceConnection")
+@Schema(name = "NodeWithResourceConnection")
 public class NodeWithResourceConnectionDTO extends NodeDTO {
-    @ApiParam
+    @Schema
     private URI connectionId;
 
-    @ApiParam
+    @Schema
     @JsonProperty("isPrimary")
     private boolean isPrimary;
 
-    @ApiParam
+    @Schema
     private int rank;
 
-    @ApiParam
+    @Schema
     private URI relevanceId;
 
-    @ApiModelProperty(value = "Metadata for entity. Read only.")
+    @Schema(description = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 
