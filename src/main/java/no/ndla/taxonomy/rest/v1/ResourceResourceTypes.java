@@ -8,10 +8,10 @@
 package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceType;
@@ -45,10 +45,10 @@ public class ResourceResourceTypes {
     }
 
     @PostMapping
-    @ApiOperation(value = "Adds a resource type to a resource")
+    @Operation(summary = "Adds a resource type to a resource", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "connection", value = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) {
+            @Parameter(name = "connection", description = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) {
 
         Resource resource = resourceRepository.getByPublicId(command.resourceId);
         ResourceType resourceType = resourceTypeRepository.getByPublicId(command.resourceTypeId);
@@ -62,7 +62,7 @@ public class ResourceResourceTypes {
 
     @DeleteMapping({ "/{id}" })
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation("Removes a resource type from a resource")
+    @Operation(summary = "Removes a resource type from a resource", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
         resourceResourceTypeRepository.delete(resourceResourceTypeRepository.getByPublicId(id));
@@ -70,14 +70,14 @@ public class ResourceResourceTypes {
     }
 
     @GetMapping
-    @ApiOperation("Gets all connections between resources and resource types")
+    @Operation(summary = "Gets all connections between resources and resource types")
     public List<ResourceResourceTypeIndexDocument> index() {
         return resourceResourceTypeRepository.findAllIncludingResourceAndResourceType().stream()
                 .map(ResourceResourceTypeIndexDocument::new).collect(Collectors.toList());
     }
 
     @GetMapping({ "/{id}" })
-    @ApiOperation("Gets a single connection between resource and resource type")
+    @Operation(summary = "Gets a single connection between resource and resource type")
     public ResourceResourceTypeIndexDocument get(@PathVariable("id") URI id) {
         ResourceResourceType result = resourceResourceTypeRepository.getByPublicId(id);
         return new ResourceResourceTypeIndexDocument(result);
@@ -85,26 +85,26 @@ public class ResourceResourceTypes {
 
     public static class CreateResourceResourceTypeCommand {
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource id", example = "urn:resource:123")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource id", example = "urn:resource:123")
         URI resourceId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resourcetype:234")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource type id", example = "urn:resourcetype:234")
         URI resourceTypeId;
     }
 
-    @ApiModel("ResourceTypeIndexDocument")
+    @Schema(name = "ResourceTypeIndexDocument")
     public static class ResourceResourceTypeIndexDocument {
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resource:123")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource type id", example = "urn:resource:123")
         URI resourceId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resourcetype:234")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource type id", example = "urn:resourcetype:234")
         URI resourceTypeId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource to resource type connection id", example = "urn:resource-has-resourcetypes:12")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource to resource type connection id", example = "urn:resource-has-resourcetypes:12")
         URI id;
 
         public ResourceResourceTypeIndexDocument() {

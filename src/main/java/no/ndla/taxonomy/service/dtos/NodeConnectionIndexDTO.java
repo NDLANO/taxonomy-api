@@ -9,8 +9,7 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeTranslation;
 import no.ndla.taxonomy.domain.Relevance;
@@ -22,38 +21,38 @@ import java.util.Set;
 /**
  *
  */
-@ApiModel("NodeConnectionIndexDocument")
+@Schema(name = "NodeConnectionIndexDocument")
 public class NodeConnectionIndexDTO implements TreeSorter.Sortable {
     @JsonProperty
-    @ApiModelProperty(value = "Node id", example = "urn:topic:234")
+    @Schema(description = "Node id", example = "urn:topic:234")
     private URI id;
 
     @JsonProperty
-    @ApiModelProperty(value = "The name of the subnode", example = "Trigonometry")
+    @Schema(description = "The name of the subnode", example = "Trigonometry")
     private String name;
 
     @JsonProperty
-    @ApiModelProperty(value = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+    @Schema(description = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
     private URI contentUri;
 
     @JsonProperty
-    @ApiModelProperty(value = "True if owned by this node, false if it has its primary connection elsewhere", example = "true")
+    @Schema(description = "True if owned by this node, false if it has its primary connection elsewhere", example = "true")
     private Boolean isPrimary;
 
     @JsonProperty
-    @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+    @Schema(description = "Relevance id", example = "urn:relevance:core")
     public URI relevanceId;
 
-    @ApiModelProperty(value = "Metadata for entity. Read only.")
+    @Schema(description = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 
     @JsonProperty
-    @ApiModelProperty(value = "List of all paths to this subnode")
+    @Schema(description = "List of all paths to this subnode")
     private Set<String> paths;
 
     @JsonProperty
-    @ApiModelProperty(value = "The primary path for this subnode", example = "/subject:1/topic:1")
+    @Schema(description = "The primary path for this subnode", example = "/subject:1/topic:1")
     private String path;
 
     private int rank;

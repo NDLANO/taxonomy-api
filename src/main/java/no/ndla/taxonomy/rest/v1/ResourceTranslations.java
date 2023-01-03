@@ -8,9 +8,10 @@
 package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceTranslation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
@@ -40,7 +41,7 @@ public class ResourceTranslations {
     }
 
     @GetMapping
-    @ApiOperation("Gets all relevanceTranslations for a single resource")
+    @Operation(summary = "Gets all relevanceTranslations for a single resource")
     public List<ResourceTranslations.ResourceTranslationIndexDocument> index(@PathVariable("id") URI id) {
         Resource resource = resourceRepository.getByPublicId(id);
         List<ResourceTranslations.ResourceTranslationIndexDocument> result = new ArrayList<>();
@@ -54,9 +55,9 @@ public class ResourceTranslations {
     }
 
     @GetMapping("/{language}")
-    @ApiOperation("Gets a single translation for a single resource")
+    @Operation(summary = "Gets a single translation for a single resource")
     public ResourceTranslations.ResourceTranslationIndexDocument get(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Resource resource = resourceRepository.getByPublicId(id);
         ResourceTranslation translation = resource.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for resource", id));
@@ -69,12 +70,13 @@ public class ResourceTranslations {
     }
 
     @PutMapping("/{language}")
-    @ApiOperation("Creates or updates a translation of a resource")
+    @Operation(summary = "Creates or updates a translation of a resource", security = {
+            @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @ApiParam(name = "resource", value = "The new or updated translation") @RequestBody ResourceTranslations.UpdateResourceTranslationCommand command) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
+            @Parameter(name = "resource", description = "The new or updated translation") @RequestBody ResourceTranslations.UpdateResourceTranslationCommand command) {
         Resource resource = resourceRepository.getByPublicId(id);
         ResourceTranslation translation = resource.addTranslation(language);
         entityManager.persist(translation);
@@ -82,11 +84,11 @@ public class ResourceTranslations {
     }
 
     @DeleteMapping("/{language}")
-    @ApiOperation("Deletes a translation")
+    @Operation(summary = "Deletes a translation", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         final var resource = resourceRepository.getByPublicId(id);
         resource.getTranslation(language).ifPresent((translation) -> {
             resource.removeTranslation(language);
@@ -96,17 +98,17 @@ public class ResourceTranslations {
 
     public static class ResourceTranslationIndexDocument {
         @JsonProperty
-        @ApiModelProperty(value = "The translated name of the resource", example = "Introduction to algebra")
+        @Schema(description = "The translated name of the resource", example = "Introduction to algebra")
         public String name;
 
         @JsonProperty
-        @ApiModelProperty(value = "ISO 639-1 language code", example = "en")
+        @Schema(description = "ISO 639-1 language code", example = "en")
         public String language;
     }
 
     public static class UpdateResourceTranslationCommand {
         @JsonProperty
-        @ApiModelProperty(value = "The translated name of the resource", example = "Introduction to algebra")
+        @Schema(description = "The translated name of the resource", example = "Introduction to algebra")
         public String name;
     }
 }

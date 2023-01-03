@@ -8,8 +8,7 @@
 package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
@@ -20,26 +19,26 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-@ApiModel("ResourceType")
+@Schema(name = "ResourceType")
 public class ResourceTypeDTO implements Comparable<ResourceTypeDTO> {
     @JsonProperty
-    @ApiModelProperty(example = "urn:resourcetype:2")
+    @Schema(example = "urn:resourcetype:2")
     private URI id;
 
     @JsonProperty
-    @ApiModelProperty(example = "urn:resourcetype:1")
+    @Schema(example = "urn:resourcetype:1")
     private URI parentId;
 
     @JsonProperty
-    @ApiModelProperty(value = "The name of the resource type", example = "Lecture")
+    @Schema(description = "The name of the resource type", example = "Lecture")
     private String name;
 
     @JsonProperty
-    @ApiModelProperty(value = "All translations of this resource type")
+    @Schema(description = "All translations of this resource type")
     private TreeSet<TranslationDTO> translations;
 
     @JsonProperty
-    @ApiModelProperty(value = "List of language codes supported by translations")
+    @Schema(description = "List of language codes supported by translations")
     private TreeSet<String> supportedLanguages;
 
     public ResourceTypeDTO() {

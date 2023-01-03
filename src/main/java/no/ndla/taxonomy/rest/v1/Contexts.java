@@ -7,9 +7,11 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import org.springframework.http.HttpStatus;
@@ -37,8 +39,9 @@ public class Contexts {
     }
 
     @GetMapping
+    @Operation(summary = "Gets all contexts")
     public List<ContextIndexDocument> get(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
         final var nodes = nodeRepository.findAllByContextIncludingCachedUrlsAndTranslations(true);
 
@@ -56,11 +59,12 @@ public class Contexts {
     }
 
     @PostMapping
-    @ApiOperation(value = "Adds a new context", notes = "All subjects are already contexts and may not be added again. Only topics may be added as a context. The topic must exist already.")
+    @Operation(summary = "Adds a new context", description = "All subjects are already contexts and may not be added again. Only topics may be added as a context. The topic must exist already.", security = {
+            @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @ApiParam(name = "context", value = "the new context") @RequestBody CreateContextCommand command) {
+            @Parameter(name = "context", description = "the new context") @RequestBody CreateContextCommand command) {
         Node topic = nodeRepository.getByPublicId(command.id);
         topic.setContext(true);
         URI location = URI.create("/v1/contexts/" + topic.getPublicId());
@@ -71,7 +75,8 @@ public class Contexts {
     }
 
     @DeleteMapping("/{id}")
-    @ApiOperation(value = "Removes a context", notes = "Does not remove the underlying resource, only marks it as not being a context")
+    @Operation(summary = "Removes a context", description = "Does not remove the underlying resource, only marks it as not being a context", security = {
+            @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional

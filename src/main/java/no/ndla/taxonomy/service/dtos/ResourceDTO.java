@@ -9,8 +9,7 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceTranslation;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
@@ -22,47 +21,47 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-@ApiModel("Resource")
+@Schema(name = "Resource")
 public class ResourceDTO {
     @JsonProperty
-    @ApiModelProperty(example = "urn:resource:345")
+    @Schema(example = "urn:resource:345")
     private URI id;
 
     @JsonProperty
-    @ApiModelProperty(value = "The name of the resource", example = "Introduction to integration")
+    @Schema(description = "The name of the resource", example = "Introduction to integration")
     private String name;
 
     @JsonProperty
-    @ApiModelProperty(value = "The ID of this resource in the system where the content is stored. ", notes = "This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier "
+    @Schema(description = "The ID of this resource in the system where the content is stored. This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier "
             + "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
     private URI contentUri;
 
     @JsonProperty
-    @ApiModelProperty(value = "The path part of the url to this resource", example = "/subject:1/topic:1/resource:1")
+    @Schema(description = "The path part of the url to this resource", example = "/subject:1/topic:1/resource:1")
     private String path;
 
-    @ApiModelProperty(value = "Metadata for entity. Read only.")
+    @Schema(description = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 
     @JsonProperty
-    @ApiModelProperty(value = "Resource type(s)", example = "[{\"id\": \"urn:resourcetype:1\",\"name\":\"lecture\"}]")
+    @Schema(description = "Resource type(s)", example = "[{\"id\": \"urn:resourcetype:1\",\"name\":\"lecture\"}]")
     private TreeSet<ResourceTypeDTO> resourceTypes = new TreeSet<>();
 
     @JsonProperty
-    @ApiModelProperty(value = "Filters this resource is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
+    @Schema(description = "Filters this resource is associated with, directly or by inheritance", example = "[{\"id\":\"urn:filter:1\", \"relevanceId\":\"urn:relevance:core\"}]")
     private Set<Object> filters = new HashSet<>();
 
     @JsonProperty
-    @ApiModelProperty(value = "All paths that lead to this resource", example = "[\"/subject:1/topic:1/resource:1\", \"/subject:2/topic:3/resource:1\"]")
+    @Schema(description = "All paths that lead to this resource", example = "[\"/subject:1/topic:1/resource:1\", \"/subject:2/topic:3/resource:1\"]")
     private TreeSet<String> paths;
 
     @JsonProperty
-    @ApiModelProperty(value = "All translations of this resource")
+    @Schema(description = "All translations of this resource")
     private TreeSet<TranslationDTO> translations;
 
     @JsonProperty
-    @ApiModelProperty(value = "List of language codes supported by translations")
+    @Schema(description = "List of language codes supported by translations")
     private TreeSet<String> supportedLanguages;
 
     public ResourceDTO() {

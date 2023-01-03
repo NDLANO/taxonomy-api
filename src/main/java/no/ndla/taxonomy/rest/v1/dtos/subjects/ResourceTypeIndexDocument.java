@@ -9,22 +9,21 @@ package no.ndla.taxonomy.rest.v1.dtos.subjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.ResourceTypeTranslation;
 
 import java.net.URI;
 
 /** */
-@ApiModel("SubjectResourceTypeIndexDocument")
+@Schema(name = "SubjectResourceTypeIndexDocument")
 public class ResourceTypeIndexDocument {
     @JsonProperty
-    @ApiModelProperty(value = "Resource type id", example = "urn:resourcetype:12")
+    @Schema(description = "Resource type id", example = "urn:resourcetype:12")
     public URI id;
 
     @JsonProperty
-    @ApiModelProperty(value = "Resource type name", example = "Assignment")
+    @Schema(description = "Resource type name", example = "Assignment")
     public String name;
 
     @Override

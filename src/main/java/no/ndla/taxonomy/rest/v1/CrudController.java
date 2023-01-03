@@ -7,7 +7,8 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
@@ -47,7 +48,7 @@ public abstract class CrudController<T extends DomainEntity> {
     }
 
     @DeleteMapping("/{id}")
-    @ApiOperation(value = "Deletes a single entity by id")
+    @Operation(summary = "Deletes a single entity by id", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
@@ -55,6 +56,7 @@ public abstract class CrudController<T extends DomainEntity> {
         repository.flush();
     }
 
+    @Operation(summary = "Updates a single entity by id", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     protected T doPut(URI id, UpdatableDto<T> command) {
         T entity = repository.getByPublicId(id);
@@ -68,6 +70,7 @@ public abstract class CrudController<T extends DomainEntity> {
         return entity;
     }
 
+    @Operation(summary = "Creates a single entity", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     protected ResponseEntity<Void> doPost(T entity, UpdatableDto<T> command) {
         try {

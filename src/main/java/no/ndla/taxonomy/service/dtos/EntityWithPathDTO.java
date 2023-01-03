@@ -8,7 +8,7 @@
 package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.EntityWithPathConnection;
 import no.ndla.taxonomy.domain.Relevance;
@@ -20,35 +20,35 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class EntityWithPathDTO {
-    @ApiModelProperty(value = "Node id", example = "urn:topic:234")
+    @Schema(description = "Node id", example = "urn:topic:234")
     private URI id;
 
-    @ApiModelProperty(value = "The name of the node", example = "Trigonometry")
+    @Schema(description = "The name of the node", example = "Trigonometry")
     private String name;
 
-    @ApiModelProperty(value = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+    @Schema(description = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
     private URI contentUri;
 
-    @ApiModelProperty(value = "The primary path for this node", example = "/subject:1/topic:1")
+    @Schema(description = "The primary path for this node", example = "/subject:1/topic:1")
     private String path;
 
-    @ApiModelProperty(value = "List of all paths to this node")
+    @Schema(description = "List of all paths to this node")
     private TreeSet<String> paths;
 
-    @ApiModelProperty(value = "Metadata for entity. Read only.")
+    @Schema(description = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 
-    @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+    @Schema(description = "Relevance id", example = "urn:relevance:core")
     public URI relevanceId;
 
-    @ApiModelProperty(value = "All translations of this node")
+    @Schema(description = "All translations of this node")
     private TreeSet<TranslationDTO> translations = new TreeSet<>();
 
-    @ApiModelProperty(value = "List of language codes supported by translations")
+    @Schema(description = "List of language codes supported by translations")
     private TreeSet<String> supportedLanguages;
 
-    @ApiModelProperty(value = "List of names in the path")
+    @Schema(description = "List of names in the path")
     private List<String> breadcrumbs;
 
     public EntityWithPathDTO() {

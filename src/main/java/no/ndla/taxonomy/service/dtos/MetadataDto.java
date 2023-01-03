@@ -8,8 +8,7 @@
 package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.CustomFieldValue;
 import no.ndla.taxonomy.domain.GrepCode;
 import no.ndla.taxonomy.domain.Metadata;
@@ -20,18 +19,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@ApiModel("Metadata")
+@Schema(name = "Metadata")
 public class MetadataDto {
     @JsonIgnore
     public String publicId;
 
-    @ApiModelProperty
+    @Schema
     public Set<String> grepCodes;
 
-    @ApiModelProperty
+    @Schema
     public Boolean visible;
 
-    @ApiModelProperty
+    @Schema
     public Map<String, String> customFields;
 
     public MetadataDto() {

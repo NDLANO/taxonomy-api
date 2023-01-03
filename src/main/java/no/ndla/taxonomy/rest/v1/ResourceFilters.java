@@ -8,10 +8,10 @@
 package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,42 +32,43 @@ public class ResourceFilters {
     }
 
     @PostMapping
-    @ApiOperation(value = "Adds a filter to a resource")
+    @Operation(summary = "Adds a filter to a resource", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public ResponseEntity<Void> post(
-            @ApiParam(name = "resource filter", value = "The new resource filter") @RequestBody AddFilterToResourceCommand command) {
+            @Parameter(name = "resource filter", description = "The new resource filter") @RequestBody AddFilterToResourceCommand command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
     @PutMapping("/{id}")
-    @ApiOperation(value = "Updates a resource filter connection")
+    @Operation(summary = "Updates a resource filter connection", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public void put(@PathVariable("id") URI id,
-            @ApiParam(name = "resource filter", value = "The updated resource filter", required = true) @RequestBody UpdateResourceFilterCommand command) {
+            @Parameter(name = "resource filter", description = "The updated resource filter", required = true) @RequestBody UpdateResourceFilterCommand command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Deletes a resource filter connection", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public void delete(
-            @ApiParam(name = "id", value = "The id of the connection to delete", required = true) @PathVariable URI id) {
+            @Parameter(name = "id", description = "The id of the connection to delete", required = true) @PathVariable URI id) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
     @GetMapping("/{id}")
     @Deprecated(forRemoval = true)
     public ResourceFilterIndexDocument get(
-            @ApiParam(name = "id", value = "The id of the connection to get", required = true) @PathVariable URI id) {
+            @Parameter(name = "id", description = "The id of the connection to get", required = true) @PathVariable URI id) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
     @GetMapping
-    @ApiOperation("Gets all connections between resources and filters")
+    @Operation(summary = "Gets all connections between resources and filters")
     @Deprecated(forRemoval = true)
     public List<ResourceFilterIndexDocument> index() {
         return List.of();
@@ -75,15 +76,15 @@ public class ResourceFilters {
 
     public static class AddFilterToResourceCommand {
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource id", example = "urn:resource:123")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource id", example = "urn:resource:123")
         public URI resourceId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Filter id", example = "urn:filter:234")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Filter id", example = "urn:filter:234")
         public URI filterId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Relevance id", example = "urn:relevance:core")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
     }
 
@@ -91,22 +92,22 @@ public class ResourceFilters {
         public URI relevanceId;
     }
 
-    @ApiModel("ResourceFilterIndexDocument")
+    @Schema(name = "ResourceFilterIndexDocument")
     public static class ResourceFilterIndexDocument {
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource id", example = "urn:resource:123")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource id", example = "urn:resource:123")
         public URI resourceId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Filter id", example = "urn:filter:234")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Filter id", example = "urn:filter:234")
         public URI filterId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource to filter connection id", example = "urn:resource-filter:12")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource to filter connection id", example = "urn:resource-filter:12")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Relevance id", example = "urn:relevance:core")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
         public ResourceFilterIndexDocument() {

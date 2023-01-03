@@ -8,9 +8,10 @@
 package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeTranslation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
@@ -40,7 +41,7 @@ public class TopicTranslations {
     }
 
     @GetMapping
-    @ApiOperation("Gets all relevanceTranslations for a single topic")
+    @Operation(summary = "Gets all relevanceTranslations for a single topic")
     public List<TopicTranslations.TopicTranslationIndexDocument> index(@PathVariable("id") URI id) {
         Node topic = nodeRepository.getByPublicId(id);
         List<TopicTranslations.TopicTranslationIndexDocument> result = new ArrayList<>();
@@ -54,9 +55,9 @@ public class TopicTranslations {
     }
 
     @GetMapping("/{language}")
-    @ApiOperation("Gets a single translation for a single topic")
+    @Operation(summary = "Gets a single translation for a single topic")
     public TopicTranslations.TopicTranslationIndexDocument get(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node topic = nodeRepository.getByPublicId(id);
         NodeTranslation translation = topic.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for topic", id));
@@ -69,12 +70,13 @@ public class TopicTranslations {
     }
 
     @PutMapping("/{language}")
-    @ApiOperation("Creates or updates a translation of a topic")
+    @Operation(summary = "Creates or updates a translation of a topic", security = {
+            @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @ApiParam(name = "topic", value = "The new or updated translation") @RequestBody TopicTranslations.UpdateTopicTranslationCommand command) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
+            @Parameter(name = "topic", description = "The new or updated translation") @RequestBody TopicTranslations.UpdateTopicTranslationCommand command) {
         Node topic = nodeRepository.getByPublicId(id);
         NodeTranslation translation = topic.addTranslation(language);
         entityManager.persist(translation);
@@ -82,11 +84,11 @@ public class TopicTranslations {
     }
 
     @DeleteMapping("/{language}")
-    @ApiOperation("Deletes a translation")
+    @Operation(summary = "Deletes a translation", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node topic = nodeRepository.getByPublicId(id);
         topic.getTranslation(language).ifPresent(topicTranslation -> {
             topic.removeTranslation(language);
@@ -96,17 +98,17 @@ public class TopicTranslations {
 
     public static class TopicTranslationIndexDocument {
         @JsonProperty
-        @ApiModelProperty(value = "The translated name of the topic", example = "Trigonometry")
+        @Schema(description = "The translated name of the topic", example = "Trigonometry")
         public String name;
 
         @JsonProperty
-        @ApiModelProperty(value = "ISO 639-1 language code", example = "en")
+        @Schema(description = "ISO 639-1 language code", example = "en")
         public String language;
     }
 
     public static class UpdateTopicTranslationCommand {
         @JsonProperty
-        @ApiModelProperty(value = "The translated name of the topic", example = "Trigonometry")
+        @Schema(description = "The translated name of the topic", example = "Trigonometry")
         public String name;
     }
 }

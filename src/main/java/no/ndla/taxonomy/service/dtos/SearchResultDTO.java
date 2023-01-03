@@ -1,27 +1,26 @@
 package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
-@ApiModel("SearchResult")
+@Schema(name = "SearchResult")
 public class SearchResultDTO<T> {
     @JsonProperty
-    @ApiModelProperty(example = "Total search result count, useful for fetching multiple pages")
+    @Schema(example = "Total search result count, useful for fetching multiple pages")
     private long totalCount;
 
     @JsonProperty
-    @ApiModelProperty(example = "The page number")
+    @Schema(example = "The page number")
     private int page;
 
     @JsonProperty
-    @ApiModelProperty(example = "The page size")
+    @Schema(example = "The page size")
     private int pageSize;
 
     @JsonProperty
-    @ApiModelProperty(example = "List of search results")
+    @Schema(example = "List of search results")
     private List<T> results;
 
     public SearchResultDTO(long totalCount, int pageNumber, int pageSize, List<T> results) {

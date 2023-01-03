@@ -7,10 +7,10 @@
 
 package no.ndla.taxonomy.service.dtos;
 
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.Node;
 
-@ApiModel("Node")
+@Schema(name = "Node")
 public class NodeDTO extends EntityWithPathDTO {
     public NodeDTO() {
 
