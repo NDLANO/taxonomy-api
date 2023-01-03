@@ -8,8 +8,8 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.rest.v1.dtos.queries.ResourceIndexDocument;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -24,16 +24,16 @@ public class QueryTest extends RestTest {
                 .resourceType(rt -> rt.name("Subject material")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/resources?contentURI=urn:article:345");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        ResourceDTO[] resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(1, resources.length);
-        assertEquals(resources[0].resourceTypes.size(), 1);
+        assertEquals(resources[0].getResourceTypes().size(), 1);
     }
 
     @Test
     public void no_resources_matching_contentURI() throws Exception {
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/resources?contentURI=urn:article:345");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        ResourceDTO[] resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(0, resources.length);
     }
@@ -46,10 +46,10 @@ public class QueryTest extends RestTest {
         builder.resource(r -> r.publicId("urn:resource:2").contentUri("urn:article:3"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/resources?contentURI=urn:article:345");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        ResourceDTO[] resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(1, resources.length);
-        assertAnyTrue(resources, r -> "urn:resource:1".equals(r.id.toString()));
+        assertAnyTrue(resources, r -> "urn:resource:1".equals(r.getId().toString()));
     }
 
     @Test
@@ -58,10 +58,10 @@ public class QueryTest extends RestTest {
                 .resourceType(rt -> rt.name("Subject material")).resourceType(rt -> rt.name("Learning path")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/resources?contentURI=urn:article:345");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        ResourceDTO[] resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(1, resources.length);
-        assertEquals(2, resources[0].resourceTypes.size());
+        assertEquals(2, resources[0].getResourceTypes().size());
     }
 
     @Test
@@ -71,11 +71,11 @@ public class QueryTest extends RestTest {
 
         MockHttpServletResponse response = testUtils
                 .getResource("/v1/queries/resources?contentURI=urn:article:345&language=nb");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        ResourceDTO[] resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(1, resources.length);
-        assertEquals(resources[0].resourceTypes.size(), 1);
-        assertEquals("ressurs", resources[0].name);
+        assertEquals(resources[0].getResourceTypes().size(), 1);
+        assertEquals("ressurs", resources[0].getName());
     }
 
     @Test
@@ -86,10 +86,10 @@ public class QueryTest extends RestTest {
         builder.node(NodeType.TOPIC, r -> r.publicId("urn:topic:2").contentUri("urn:article:345"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/topics?contentURI=urn:article:345");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        ResourceDTO[] resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(1, resources.length);
-        assertAnyTrue(resources, r -> "urn:topic:2".equals(r.id.toString()));
+        assertAnyTrue(resources, r -> "urn:topic:2".equals(r.getId().toString()));
     }
 
     @Test
@@ -99,11 +99,11 @@ public class QueryTest extends RestTest {
         builder.node(NodeType.TOPIC, r -> r.publicId("urn:topic:3").contentUri("urn:article:345"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/topics?contentURI=urn:article:345");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        ResourceDTO[] resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(2, resources.length);
-        assertAnyTrue(resources, r -> "urn:topic:2".equals(r.id.toString()));
-        assertAnyTrue(resources, r -> "urn:topic:3".equals(r.id.toString()));
+        assertAnyTrue(resources, r -> "urn:topic:2".equals(r.getId().toString()));
+        assertAnyTrue(resources, r -> "urn:topic:3".equals(r.getId().toString()));
     }
 
     @Test
@@ -121,10 +121,10 @@ public class QueryTest extends RestTest {
 
         MockHttpServletResponse response = testUtils
                 .getResource("/v1/queries/topics?contentURI=urn:article:345&language=nb");
-        ResourceIndexDocument[] resources = testUtils.getObject(ResourceIndexDocument[].class, response);
+        ResourceDTO[] resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(1, resources.length);
-        assertEquals("Emne", resources[0].name);
-        assertAnyTrue(resources, r -> "urn:topic:2".equals(r.id.toString()));
+        assertEquals("Emne", resources[0].getName());
+        assertAnyTrue(resources, r -> "urn:topic:2".equals(r.getId().toString()));
     }
 }

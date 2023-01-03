@@ -15,7 +15,6 @@ import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
-import no.ndla.taxonomy.service.dtos.SubjectChildDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -260,7 +259,7 @@ public class SubjectsTest extends RestTest {
         testSeeder.recursiveNodesBySubjectNodeIdTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/topics?recursive=true");
-        SubjectChildDTO[] topics = testUtils.getObject(SubjectChildDTO[].class, response);
+        NodeChildDTO[] topics = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(8, topics.length);
         assertEquals("urn:topic:1", topics[0].id.toString());
         assertEquals("urn:topic:2", topics[1].id.toString());
@@ -278,13 +277,13 @@ public class SubjectsTest extends RestTest {
         // test core relevance
         MockHttpServletResponse response = testUtils
                 .getResource("/v1/subjects/urn:subject:1/topics?recursive=true&relevance=urn:relevance:core");
-        SubjectChildDTO[] topics = testUtils.getObject(SubjectChildDTO[].class, response);
+        NodeChildDTO[] topics = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(5, topics.length);
 
         // test supplementary relevance
         MockHttpServletResponse response2 = testUtils
                 .getResource("/v1/subjects/urn:subject:1/topics?recursive=true&relevance=urn:relevance:supplementary");
-        SubjectChildDTO[] topics2 = testUtils.getObject(SubjectChildDTO[].class, response2);
+        NodeChildDTO[] topics2 = testUtils.getObject(NodeChildDTO[].class, response2);
         assertEquals(4, topics2.length);
     }
 }
