@@ -9,6 +9,7 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
 
+import java.net.URI;
 import java.util.Collection;
 
 public interface EntityConnectionService {
@@ -23,7 +24,7 @@ public interface EntityConnectionService {
 
     void disconnectNodeResource(Node node, Resource resource);
 
-    void disconnectNodeResource(NodeResource topicResource);
+    void disconnectNodeResource(URI resourceId);
 
     void updateNodeResource(NodeResource topicResource, Relevance relevance, boolean isPrimary, Integer newRank);
 

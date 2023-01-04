@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -24,14 +25,11 @@ import java.util.logging.Logger;
 @Service
 public class EntityConnectionServiceImpl implements EntityConnectionService {
     private final NodeConnectionRepository nodeConnectionRepository;
-    private final NodeResourceRepository nodeResourceRepository;
-
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
     public EntityConnectionServiceImpl(NodeConnectionRepository nodeConnectionRepository,
-            NodeResourceRepository nodeResourceRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
+            CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.nodeConnectionRepository = nodeConnectionRepository;
-        this.nodeResourceRepository = nodeResourceRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
 
@@ -116,21 +114,6 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public NodeResource connectNodeResource(Node node, Resource resource, Relevance relevance, boolean isPrimary,
-            Integer rank) {
-        if (node.getNodeResources().stream()
-                .anyMatch(nodeResource -> nodeResource.getResource().orElse(null) == resource)) {
-            throw new DuplicateConnectionException();
-        }
-
-        if (rank == null) {
-            rank = node.getNodeResources().stream().map(NodeResource::getRank).max(Integer::compare).orElse(0) + 1;
-        }
-
-        return nodeResourceRepository.saveAndFlush(createConnection(node, resource, relevance, isPrimary, rank));
-    }
-
-    @Override
     public void disconnectParentChild(Node parent, Node child) {
         new HashSet<>(parent.getChildren()).stream()
                 .filter(connection -> connection.getConnectedChild().orElse(null) == child)
@@ -147,37 +130,6 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         child.ifPresent(cachedUrlUpdaterService::updateCachedUrls);
 
         nodeConnectionRepository.flush();
-    }
-
-    @Override
-    public void disconnectNodeResource(Node node, Resource resource) {
-        new HashSet<>(node.getNodeResources()).stream()
-                .filter(nodeResource -> nodeResource.getResource().orElse(null) == resource)
-                .forEach(this::disconnectNodeResource); // (It will never be more than one record)
-    }
-
-    @Override
-    public void disconnectNodeResource(NodeResource nodeResource) {
-        boolean setNewPrimary = nodeResource.isPrimary().orElse(false) && nodeResource.getResource().isPresent();
-        final var resourceOptional = nodeResource.getResource();
-
-        nodeResource.disassociate();
-        nodeResourceRepository.delete(nodeResource);
-
-        resourceOptional.ifPresent(resource -> {
-            if (setNewPrimary) {
-                resource.getNodeResources().stream().findFirst().ifPresent(resource1 -> {
-                    resource1.setPrimary(true);
-                    nodeResourceRepository.saveAndFlush(resource1);
-
-                    resource1.getResource().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
-                });
-            }
-
-            cachedUrlUpdaterService.updateCachedUrls(resource);
-        });
-
-        nodeResourceRepository.flush();
     }
 
     private void saveConnections(Collection<EntityWithPathConnection> connections) {
@@ -289,12 +241,15 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
+    void disconnectNodeResource(URI resourceId) {
+
+    }
+
+    @Override
     public void disconnectAllChildren(EntityWithPath entity) {
         Set.copyOf(entity.getChildConnections()).forEach(connection -> {
             if (connection instanceof NodeConnection) {
                 disconnectParentChildConnection((NodeConnection) connection);
-            } else if (connection instanceof NodeResource) {
-                disconnectNodeResource((NodeResource) connection);
             } else {
                 throw new IllegalStateException("Unknown child object on entity trying to disconnect children from");
             }

@@ -15,15 +15,12 @@ import java.util.stream.Collectors;
 @NamedEntityGraph(name = Node.GRAPH, includeAllAttributes = true, attributeNodes = {
         @NamedAttributeNode("translations"), @NamedAttributeNode(value = "metadata"),
         @NamedAttributeNode(value = "parentConnections", subgraph = "parent-connection"),
-        @NamedAttributeNode(value = "childConnections", subgraph = "child-connection"),
-        @NamedAttributeNode(value = "nodeResources", subgraph = "resource-connections") }, subgraphs = {
-                @NamedSubgraph(name = "parent-connection", attributeNodes = { @NamedAttributeNode("parent"),
-                        @NamedAttributeNode(value = "metadata") }),
-                @NamedSubgraph(name = "child-connection", attributeNodes = { @NamedAttributeNode("child"),
-                        @NamedAttributeNode(value = "metadata") }),
-                @NamedSubgraph(name = "resource-connections", attributeNodes = {
-                        @NamedAttributeNode(value = "metadata"),
-                        @NamedAttributeNode(value = "resource", subgraph = Resource.GRAPH) }) })
+        @NamedAttributeNode(value = "childConnections", subgraph = "child-connection")}, subgraphs = {
+        @NamedSubgraph(name = "parent-connection", attributeNodes = {@NamedAttributeNode("parent"),
+                @NamedAttributeNode(value = "metadata")}),
+        @NamedSubgraph(name = "child-connection", attributeNodes = {@NamedAttributeNode("child"),
+                @NamedAttributeNode(value = "metadata")})
+})
 @Entity
 public class Node extends EntityWithPath {
     public static final String GRAPH = "node-with-connections";
@@ -33,9 +30,6 @@ public class Node extends EntityWithPath {
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<NodeConnection> childConnections = new TreeSet<>();
-
-    @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<NodeResource> nodeResources = new TreeSet<>();
 
     @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<NodeTranslation> translations = new TreeSet<>();
@@ -107,11 +101,11 @@ public class Node extends EntityWithPath {
      * public Optional<String> getPrimaryPath() { return getCachedPaths() .stream()
      * .map(CachedPath::getPath).min((path1, path2) -> { if (path1.startsWith("/topic") && path2.startsWith("/topic")) {
      * return 0; }
-     * 
+     *
      * if (path1.startsWith("/topic")) { return -1; }
-     * 
+     *
      * if (path2.startsWith("/topic")) { return 1; }
-     * 
+     *
      * return 0; }); }
      */
 
@@ -123,14 +117,9 @@ public class Node extends EntityWithPath {
 
     @Override
     public Collection<EntityWithPathConnection> getChildConnections() {
-        final var toReturn = new HashSet<EntityWithPathConnection>();
         final Collection<EntityWithPathConnection> children = childConnections.stream()
                 .map(entity -> (EntityWithPathConnection) entity).collect(Collectors.toUnmodifiableList());
-
-        toReturn.addAll(children);
-        toReturn.addAll(getNodeResources()); // Needed to generate cached paths
-
-        return toReturn;
+        return children;
     }
 
     public Collection<NodeConnection> getChildren() {
@@ -183,10 +172,6 @@ public class Node extends EntityWithPath {
         return this.nodeResources.stream().collect(Collectors.toUnmodifiableList());
     }
 
-    public void setNodeResources(TreeSet<NodeResource> nodeResources) {
-        this.nodeResources = nodeResources;
-    }
-
     public void addNodeResource(NodeResource nodeResource) {
         if (nodeResource.getNode().orElse(null) != this) {
             throw new IllegalArgumentException(
@@ -206,7 +191,7 @@ public class Node extends EntityWithPath {
         }
     }
 
-    public Collection<Resource> getResources() {
+    public Collection<Node> getResources() {
         return nodeResources.stream().map(NodeResource::getResource).filter(Optional::isPresent).map(Optional::get)
                 .collect(Collectors.toUnmodifiableList());
     }

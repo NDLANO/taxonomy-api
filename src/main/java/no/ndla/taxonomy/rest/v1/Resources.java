@@ -9,18 +9,13 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
-import no.ndla.taxonomy.service.MetadataFilters;
-import no.ndla.taxonomy.service.MetadataService;
-import no.ndla.taxonomy.service.ResourceService;
-import no.ndla.taxonomy.service.dtos.ResourceDTO;
-import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
-import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
-import no.ndla.taxonomy.service.dtos.SearchResultDTO;
+import no.ndla.taxonomy.service.*;
+import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,18 +33,20 @@ import java.util.stream.Collectors;
 public class Resources extends CrudControllerWithMetadata<Resource> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ResourceService resourceService;
+    private final NodeService nodeService;
 
     private final ResourceRepository resourceRepository;
 
     public Resources(ResourceRepository resourceRepository,
             ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceService resourceService,
-            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
+            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService, NodeService nodeService) {
         super(resourceRepository, cachedUrlUpdaterService, metadataService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.repository = resourceRepository;
         this.resourceRepository = resourceRepository;
         this.resourceService = resourceService;
+        this.nodeService = nodeService;
     }
 
     @Override
@@ -60,14 +57,15 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @GetMapping
     @ApiOperation(value = "Lists all resources")
     @Transactional(readOnly = true)
-    public List<ResourceDTO> getAll(
+    public List<EntityWithPathDTO> getAll(
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @ApiParam(value = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        return resourceService.getResources(language, contentUri, metadataFilters);
+        return nodeService.getNodes(language, Optional.of(NodeType.RESOURCE), contentUri, Optional.empty(),
+                metadataFilters);
     }
 
     @GetMapping("/search")

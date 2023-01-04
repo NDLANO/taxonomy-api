@@ -27,6 +27,9 @@ public class NodeConnection extends DomainEntity
     @Column(name = "rank")
     private int rank;
 
+    @Column(name = "is_primary")
+    private boolean isPrimary;
+
     @ManyToOne
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
@@ -122,16 +125,17 @@ public class NodeConnection extends DomainEntity
 
     @Override
     public Optional<Boolean> isPrimary() {
-        return Optional.of(true);
+        return Optional.of(this.isPrimary);
     }
 
     @Override
     public void setPrimary(boolean isPrimary) {
-        if (isPrimary) {
-            return;
+        var childType = this.child.getNodeType();
+        if(childType != NodeType.RESOURCE) {
+            throw new UnsupportedOperationException("NodeConnection with child of type '" + childType.toString() + "' can not be non-primary");
         }
 
-        throw new UnsupportedOperationException("NodeConnection can not be non-primary");
+        this.isPrimary = isPrimary;
     }
 
     @Override

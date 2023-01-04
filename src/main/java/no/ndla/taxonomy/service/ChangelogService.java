@@ -164,13 +164,6 @@ public class ChangelogService implements DisposableBean {
                     domainEntityHelperService.deleteEntityByPublicId(nodeConnection.getPublicId());
                 }
             });
-            List<URI> resources = node.getNodeResources().stream().map(DomainEntity::getPublicId)
-                    .collect(Collectors.toList());
-            result.getNodeResources().forEach(nodeResource -> {
-                if (!resources.contains(nodeResource.getPublicId())) {
-                    domainEntityHelperService.deleteEntityByPublicId(nodeResource.getPublicId());
-                }
-            });
         }
         if (cleanUp) {
             domainEntityHelperService.buildPathsForEntity(result.getPublicId());

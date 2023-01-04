@@ -140,7 +140,7 @@ public class CachedPathTest {
 
         assertSame(topic, cachedPath.getOwningEntity().orElseThrow());
 
-        final var resource = mock(Resource.class);
+        final var resource = mock(Node.class);
 
         setField(cachedPath, "resource", resource);
 
@@ -153,41 +153,5 @@ public class CachedPathTest {
         setField(cachedPath, "node", null);
 
         assertSame(resource, cachedPath.getOwningEntity().orElseThrow());
-    }
-
-    @Test
-    public void getResource() {
-        assertFalse(cachedPath.getResource().isPresent());
-
-        final var resource = mock(Resource.class);
-
-        setField(cachedPath, "resource", resource);
-
-        assertSame(resource, cachedPath.getResource().orElseThrow());
-    }
-
-    @Test
-    public void setResource() {
-        assertNull(getField(cachedPath, "resource"));
-
-        final var resource1 = mock(Resource.class);
-        final var resource2 = mock(Resource.class);
-
-        final var resource1CachedPaths = new HashSet<CachedPath>();
-        final var resource2CachedPaths = new HashSet<CachedPath>();
-
-        when(resource1.getCachedPaths()).thenReturn(resource1CachedPaths);
-        when(resource2.getCachedPaths()).thenReturn(resource2CachedPaths);
-
-        cachedPath.setResource(resource1);
-        verify(resource1, atLeastOnce()).addCachedPath(cachedPath);
-
-        resource1CachedPaths.add(cachedPath);
-        verify(resource1, times(0)).removeCachedPath(cachedPath);
-
-        cachedPath.setResource(resource2);
-
-        verify(resource2).addCachedPath(cachedPath);
-        verify(resource1).removeCachedPath(cachedPath);
     }
 }

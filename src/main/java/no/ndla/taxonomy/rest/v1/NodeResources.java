@@ -115,7 +115,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeResource> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
-        connectionService.disconnectNodeResource(nodeResourceRepository.getByPublicId(id));
+        connectionService.disconnectNodeResource(id);
     }
 
     @PutMapping("/{id}")
