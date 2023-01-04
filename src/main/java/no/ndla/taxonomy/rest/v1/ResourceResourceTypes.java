@@ -15,6 +15,7 @@ import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceType;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
@@ -35,13 +36,16 @@ public class ResourceResourceTypes {
 
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ResourceTypeRepository resourceTypeRepository;
-    private final ResourceRepository resourceRepository;
+    private final NodeRepository nodeRepository;
 
-    public ResourceResourceTypes(ResourceResourceTypeRepository resourceResourceTypeRepository,
-            ResourceTypeRepository resourceTypeRepository, ResourceRepository resourceRepository) {
+    public ResourceResourceTypes(
+            ResourceResourceTypeRepository resourceResourceTypeRepository,
+            ResourceTypeRepository resourceTypeRepository,
+            NodeRepository nodeRepository
+    ) {
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceTypeRepository = resourceTypeRepository;
-        this.resourceRepository = resourceRepository;
+        this.nodeRepository = nodeRepository;
     }
 
     @PostMapping
@@ -50,7 +54,8 @@ public class ResourceResourceTypes {
     public ResponseEntity<Void> post(
             @ApiParam(name = "connection", value = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) {
 
-        Resource resource = resourceRepository.getByPublicId(command.resourceId);
+        var resource = nodeRepository.getByPublicId(command.resourceId);
+
         ResourceType resourceType = resourceTypeRepository.getByPublicId(command.resourceTypeId);
 
         ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);

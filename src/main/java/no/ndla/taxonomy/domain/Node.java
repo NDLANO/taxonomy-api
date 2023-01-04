@@ -7,6 +7,8 @@
 
 package no.ndla.taxonomy.domain;
 
+import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
+
 import javax.persistence.*;
 import java.net.URI;
 import java.util.*;
@@ -56,6 +58,9 @@ public class Node extends EntityWithPath {
 
     @Column
     private boolean root;
+
+    @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ResourceResourceType> resourceResourceTypes = new TreeSet<>();
 
     // Needed for hibernate
     public Node() {
@@ -126,6 +131,52 @@ public class Node extends EntityWithPath {
         return childConnections;
     }
 
+    public Collection<NodeConnection> getResourceChildren() {
+        return childConnections.stream().filter(cc ->
+                cc.getChild().map(child -> child.getNodeType() == NodeType.RESOURCE).orElse(false)
+        ).collect(Collectors.toUnmodifiableList());
+    }
+
+    public Collection<ResourceType> getResourceTypes() {
+        return getResourceResourceTypes().stream().map(ResourceResourceType::getResourceType)
+                .collect(Collectors.toUnmodifiableList());
+    }
+
+    public Collection<ResourceResourceType> getResourceResourceTypes() {
+        return this.resourceResourceTypes;
+    }
+
+    public ResourceResourceType addResourceType(ResourceType resourceType) {
+        if (getResourceTypes().contains(resourceType)) {
+            throw new DuplicateIdException("Resource with id " + getPublicId()
+                    + " is already marked with resource type with id " + resourceType.getPublicId());
+        }
+
+        ResourceResourceType resourceResourceType = ResourceResourceType.create(this, resourceType);
+        addResourceResourceType(resourceResourceType);
+        return resourceResourceType;
+    }
+
+    public void addResourceResourceType(ResourceResourceType resourceResourceType) {
+        if (this.getNodeType() != NodeType.RESOURCE)
+            throw new IllegalArgumentException("ResourceResourceType can only be associated with " + NodeType.RESOURCE.toString());
+
+        this.resourceResourceTypes.add(resourceResourceType);
+
+        if (resourceResourceType.getResource() != this) {
+            throw new IllegalArgumentException(
+                    "ResourceResourceType must have Resource set before being associated with Resource");
+        }
+    }
+
+    public void removeResourceResourceType(ResourceResourceType resourceResourceType) {
+        this.resourceResourceTypes.remove(resourceResourceType);
+
+        if (resourceResourceType.getResource() == this) {
+            resourceResourceType.disassociate();
+        }
+    }
+
     public void addChildConnection(NodeConnection nodeConnection) {
         if (nodeConnection.getParent().orElse(null) != this) {
             throw new IllegalArgumentException("Parent must be set on NodeConnection before associating with child");
@@ -168,31 +219,13 @@ public class Node extends EntityWithPath {
                 .findFirst();
     }
 
-    public Collection<NodeResource> getNodeResources() {
-        return this.nodeResources.stream().collect(Collectors.toUnmodifiableList());
-    }
-
-    public void addNodeResource(NodeResource nodeResource) {
-        if (nodeResource.getNode().orElse(null) != this) {
-            throw new IllegalArgumentException(
-                    "NodeResource must have Node set before it can be associated with Resource");
-        }
-
-        this.nodeResources.add(nodeResource);
-    }
-
-    public void removeNodeResource(NodeResource nodeResource) {
-        this.nodeResources.remove(nodeResource);
-
-        final var resource = nodeResource.getResource();
-
-        if (nodeResource.getNode().orElse(null) == this) {
-            nodeResource.disassociate();
-        }
-    }
-
     public Collection<Node> getResources() {
-        return nodeResources.stream().map(NodeResource::getResource).filter(Optional::isPresent).map(Optional::get)
+        return childConnections
+                .stream()
+                .map(NodeConnection::getChild)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(s -> s.getNodeType() == NodeType.RESOURCE)
                 .collect(Collectors.toUnmodifiableList());
     }
 
@@ -313,7 +346,6 @@ public class Node extends EntityWithPath {
     void preRemove() {
         Set.copyOf(childConnections).forEach(NodeConnection::disassociate);
         Set.copyOf(parentConnections).forEach(NodeConnection::disassociate);
-        Set.copyOf(nodeResources).forEach(NodeResource::disassociate);
     }
 
     @Override

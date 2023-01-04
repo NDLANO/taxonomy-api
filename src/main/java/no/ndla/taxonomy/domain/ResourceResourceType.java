@@ -17,7 +17,7 @@ public class ResourceResourceType extends DomainEntity implements Comparable<Res
 
     @ManyToOne(cascade = { CascadeType.MERGE })
     @JoinColumn(name = "resource_id")
-    private Resource resource;
+    private Node resource;
 
     @ManyToOne(cascade = { CascadeType.MERGE })
     @JoinColumn(name = "resource_type_id")
@@ -27,7 +27,7 @@ public class ResourceResourceType extends DomainEntity implements Comparable<Res
         setPublicId(URI.create("urn:resource-resourcetype:" + UUID.randomUUID()));
     }
 
-    public static ResourceResourceType create(Resource resource, ResourceType resourceType) {
+    public static ResourceResourceType create(Node resource, ResourceType resourceType) {
         final var resourceResourceType = new ResourceResourceType();
 
         resourceResourceType.resource = resource;
@@ -50,11 +50,11 @@ public class ResourceResourceType extends DomainEntity implements Comparable<Res
         }
     }
 
-    public Resource getResource() {
+    public Node getResource() {
         return resource;
     }
 
-    public void setResource(Resource resource) {
+    public void setResource(Node resource) {
         this.resource = resource;
     }
 

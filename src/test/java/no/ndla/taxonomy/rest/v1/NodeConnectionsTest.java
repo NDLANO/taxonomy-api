@@ -8,6 +8,8 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeConnectionPage;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.ParentChildIndexDocument;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -88,8 +90,8 @@ public class NodeConnectionsTest extends RestTest {
                 .getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/node-connections");
-        NodeConnections.ParentChildIndexDocument[] parentChildren = testUtils
-                .getObject(NodeConnections.ParentChildIndexDocument[].class, response);
+        ParentChildIndexDocument[] parentChildren = testUtils
+                .getObject(ParentChildIndexDocument[].class, response);
 
         assertEquals(2, parentChildren.length);
         assertAnyTrue(parentChildren, t -> electricityId.equals(t.parentId) && alternatingCurrentId.equals(t.childId));
@@ -102,12 +104,12 @@ public class NodeConnectionsTest extends RestTest {
         List<NodeConnection> connections = createTenContiguousRankedConnections();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/node-connections/page?page=1&pageSize=5");
-        NodeConnections.NodeConnectionPage page1 = testUtils.getObject(NodeConnections.NodeConnectionPage.class,
+        NodeConnectionPage page1 = testUtils.getObject(NodeConnectionPage.class,
                 response);
         assertEquals(5, page1.results.size());
 
         MockHttpServletResponse response2 = testUtils.getResource("/v1/node-connections/page?page=2&pageSize=5");
-        NodeConnections.NodeConnectionPage page2 = testUtils.getObject(NodeConnections.NodeConnectionPage.class,
+        NodeConnectionPage page2 = testUtils.getObject(NodeConnectionPage.class,
                 response2);
         assertEquals(5, page2.results.size());
 
@@ -140,8 +142,8 @@ public class NodeConnectionsTest extends RestTest {
         id = topicSubtopic.getPublicId();
 
         MockHttpServletResponse resource = testUtils.getResource("/v1/node-connections/" + id);
-        NodeConnections.ParentChildIndexDocument parentChildIndexDocument = testUtils
-                .getObject(NodeConnections.ParentChildIndexDocument.class, resource);
+        ParentChildIndexDocument parentChildIndexDocument = testUtils
+                .getObject(ParentChildIndexDocument.class, resource);
 
         assertEquals(topicid, parentChildIndexDocument.parentId);
         assertEquals(subtopicid, parentChildIndexDocument.childId);
@@ -153,8 +155,8 @@ public class NodeConnectionsTest extends RestTest {
                 t -> t.name("electricity").child(NodeType.TOPIC, st -> st.name("alternating currents"))
                         .child(NodeType.TOPIC, st -> st.name("wiring")));
         MockHttpServletResponse response = testUtils.getResource(("/v1/node-connections"));
-        NodeConnections.ParentChildIndexDocument[] children = testUtils
-                .getObject(NodeConnections.ParentChildIndexDocument[].class, response);
+        ParentChildIndexDocument[] children = testUtils
+                .getObject(ParentChildIndexDocument[].class, response);
 
         assertAllTrue(children, st -> st.rank == 0);
     }
@@ -228,8 +230,8 @@ public class NodeConnectionsTest extends RestTest {
         for (NodeConnection nodeConnection : nodeConnections) {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/node-connections/" + nodeConnection.getPublicId().toString());
-            NodeConnections.ParentChildIndexDocument connectionFromDb = testUtils
-                    .getObject(NodeConnections.ParentChildIndexDocument.class, response);
+            ParentChildIndexDocument connectionFromDb = testUtils
+                    .getObject(ParentChildIndexDocument.class, response);
             // verify that the other connections have had their rank bumped up 1
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
@@ -261,8 +263,8 @@ public class NodeConnectionsTest extends RestTest {
         for (NodeConnection nodeConnection : nodeConnections) {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/node-connections/" + nodeConnection.getPublicId().toString());
-            NodeConnections.ParentChildIndexDocument connectionFromDb = testUtils
-                    .getObject(NodeConnections.ParentChildIndexDocument.class, response);
+            ParentChildIndexDocument connectionFromDb = testUtils
+                    .getObject(ParentChildIndexDocument.class, response);
             // verify that only the contiguous connections are updated
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
@@ -296,8 +298,8 @@ public class NodeConnectionsTest extends RestTest {
         for (NodeConnection nodeConnection : nodeConnections) {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/node-connections/" + nodeConnection.getPublicId().toString());
-            NodeConnections.ParentChildIndexDocument connection = testUtils
-                    .getObject(NodeConnections.ParentChildIndexDocument.class, response);
+            ParentChildIndexDocument connection = testUtils
+                    .getObject(ParentChildIndexDocument.class, response);
             if (!connection.id.equals(updatedConnection.getPublicId())) {
                 assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);
             }

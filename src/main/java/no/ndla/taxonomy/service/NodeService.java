@@ -57,9 +57,9 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public NodeService(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            EntityConnectionService connectionService, VersionService versionService, TreeSorter topicTreeSorter,
-            CachedUrlUpdaterService cachedUrlUpdaterService, ChangelogRepository changelogRepository,
-            DomainEntityHelperService domainEntityHelperService, CustomFieldService customFieldService) {
+                       EntityConnectionService connectionService, VersionService versionService, TreeSorter topicTreeSorter,
+                       CachedUrlUpdaterService cachedUrlUpdaterService, ChangelogRepository changelogRepository,
+                       DomainEntityHelperService domainEntityHelperService, CustomFieldService customFieldService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -119,7 +119,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public List<EntityWithPathDTO> getNodes(Optional<String> language, Optional<NodeType> nodeType,
-            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+                                            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
 
         final List<Node> filtered;
         Specification<Node> specification = where(base());
@@ -182,7 +182,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public SearchResultDTO<NodeDTO> searchByNodeType(Optional<String> query, Optional<List<String>> ids,
-            Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
+                                                     Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
         Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
         return SearchService.super.search(query, ids, language, pageSize, page, nodeSpecLambda);
     }
@@ -201,25 +201,21 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         if (recursive) {
             node.getChildren().forEach(nc -> nc.getChild().map(n -> makeAllResourcesPrimary(n.getPublicId(), true)));
         }
-        node.getNodeResources().forEach(
-                nr -> connectionService.updateNodeResource(nr, nr.getRelevance().orElse(null), true, nr.getRank()));
-        return node.getNodeResources().stream()
+
+        node.getResourceChildren().forEach(cc -> cc.setPrimary(true));
+
+        return node.getResourceChildren().stream()
                 .allMatch(resourceConnection -> resourceConnection.isPrimary().orElse(false));
     }
 
     /**
      * Adds node and children to table to be processed later
      *
-     * @param nodeId
-     *            Public ID of the node to publish
-     * @param sourceId
-     *            Public ID of source schema. Default schema if not present
-     * @param targetId
-     *            Public ID of target schema. Mandatory
-     * @param isRoot
-     *            Used to save meta-field to track publishing
-     * @param cleanUp
-     *            Used to clean up metadata after publishing
+     * @param nodeId   Public ID of the node to publish
+     * @param sourceId Public ID of source schema. Default schema if not present
+     * @param targetId Public ID of target schema. Mandatory
+     * @param isRoot   Used to save meta-field to track publishing
+     * @param cleanUp  Used to clean up metadata after publishing
      */
     @Async
     @Transactional
@@ -253,11 +249,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 publishNode(child.getPublicId(), sourceId, targetId, false, cleanUp);
             }
             changelogRepository.save(new Changelog(source, target, connection.getPublicId(), cleanUp));
-        }
-        for (NodeResource nodeResource : node.getNodeResources()) {
-            nodeResource.getResource().map(
-                    child -> changelogRepository.save(new Changelog(source, target, child.getPublicId(), cleanUp)));
-            changelogRepository.save(new Changelog(source, target, nodeResource.getPublicId(), cleanUp));
         }
         // When cleaning, node can be cleaned last to end with publish request to be stripped
         if (cleanUp) {

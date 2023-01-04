@@ -33,14 +33,8 @@ public class Updater extends Task<DomainEntity> {
         if (element instanceof Node) {
             return changelogService.updateNode((Node) element, this.cleanUp);
         }
-        if (element instanceof Resource) {
-            return changelogService.updateResource((Resource) element, this.cleanUp);
-        }
         if (element instanceof NodeConnection) {
             return changelogService.updateNodeConnection((NodeConnection) element, this.cleanUp);
-        }
-        if (element instanceof NodeResource) {
-            return changelogService.updateNodeResource((NodeResource) element, this.cleanUp);
         }
         throw new IllegalArgumentException("Wrong type of element to update: " + element.getEntityName());
     }

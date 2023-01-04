@@ -8,7 +8,7 @@
 package no.ndla.taxonomy.repositories;
 
 import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.NodeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -37,8 +37,27 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField")
     List<NodeConnection> findAllIncludingParentAndChild();
 
+    @Query("SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child c JOIN FETCH nc.metadata m"
+            + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField WHERE c.nodeType = :nodeType")
+    List<NodeConnection> findAllByChildNodeType(NodeType childNodeType);
+
     @Query(value = "SELECT nc.id FROM NodeConnection nc ORDER BY nc.id", countQuery = "SELECT count(*) from NodeConnection")
     Page<Integer> findIdsPaginated(Pageable pageable);
+
+    @Query(
+            value = """
+                    SELECT nc.id FROM NodeConnection nc
+                    JOIN FETCH nc.child c
+                    WHERE c.nodeType = :nodeType
+                    ORDER BY nc.id
+                    """,
+            countQuery = """
+                    SELECT count(nc.id) FROM NodeConnection nc
+                    JOIN FETCH nc.child c
+                    WHERE c.nodeType = :nodeType
+                    ORDER BY nc.id
+                    """)
+    Page<Integer> findIdsPaginatedByChildNodeType(Pageable pageable, NodeType nodeType);
 
     @Query("SELECT DISTINCT nc FROM NodeConnection nc " + NODE_CONNECTION_METADATA + " JOIN FETCH nc.parent n "
             + NODE_METADATA + " JOIN FETCH nc.child c " + CHILD_METADATA + " WHERE nc.id in :ids")

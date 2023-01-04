@@ -11,24 +11,18 @@ import no.ndla.taxonomy.domain.*;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.Optional;
 
 public interface EntityConnectionService {
-    NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank);
-
-    NodeResource connectNodeResource(Node node, Resource resource, Relevance relevance, boolean isPrimary,
-            Integer rank);
+    NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank, Optional<Boolean> isPrimary);
 
     void disconnectParentChild(Node parent, Node child);
 
     void disconnectParentChildConnection(NodeConnection nodeConnection);
 
-    void disconnectNodeResource(Node node, Resource resource);
+    void disconnectAllParents(URI nodeId);
 
-    void disconnectNodeResource(URI resourceId);
-
-    void updateNodeResource(NodeResource topicResource, Relevance relevance, boolean isPrimary, Integer newRank);
-
-    void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank);
+    void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank, Optional<Boolean> isPrimary);
 
     void replacePrimaryConnectionsFor(EntityWithPath entity);
 
