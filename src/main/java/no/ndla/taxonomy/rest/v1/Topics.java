@@ -33,16 +33,13 @@ import java.util.stream.Collectors;
 public class Topics extends CrudControllerWithMetadata<Node> {
     private final NodeRepository nodeRepository;
     private final NodeService nodeService;
-    private final ResourceService resourceService;
 
     public Topics(NodeRepository nodeRepository, NodeService nodeService,
-            CachedUrlUpdaterService cachedUrlUpdaterService, ResourceService resourceService,
-            MetadataService metadataService) {
+            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
         super(nodeRepository, cachedUrlUpdaterService, metadataService);
 
         this.nodeRepository = nodeRepository;
         this.nodeService = nodeService;
-        this.resourceService = resourceService;
     }
 
     @GetMapping
@@ -96,8 +93,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @Transactional
     public EntityWithPathDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return new NodeDTO(nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
-                .orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found")), language);
+        return nodeService.getNode(id, language);
     }
 
     @PostMapping
@@ -181,7 +177,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             resourceTypeIdSet = new HashSet<>(Arrays.asList(resourceTypeIds));
         }
 
-        return resourceService.getResourcesByNodeId(topicId, resourceTypeIdSet, relevance, language, recursive);
+        return nodeService.getResourcesByNodeId(topicId, resourceTypeIdSet, relevance, language, recursive);
     }
 
     @PutMapping("/{id}/makeResourcesPrimary")

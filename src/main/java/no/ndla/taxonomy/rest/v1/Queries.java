@@ -9,12 +9,10 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import no.ndla.taxonomy.service.MetadataFilters;
+import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.EntityWithPathDTO;
-import no.ndla.taxonomy.service.dtos.ResourceDTO;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
@@ -25,15 +23,26 @@ import java.util.Optional;
 public class Queries {
     private final Topics topicController;
     private final Resources resourceController;
+    private final NodeService nodeService;
 
-    public Queries(Topics topicController, Resources resourceController) {
+    public Queries(Topics topicController, Resources resourceController, NodeService nodeService) {
         this.topicController = topicController;
         this.resourceController = resourceController;
+        this.nodeService = nodeService;
+    }
+
+    @GetMapping("/{contentURI}")
+    @Operation(summary = "Gets all related data for a given contentURI")
+    public List<EntityWithPathDTO> queryAll(@PathVariable("contentURI") URI contentURI,
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language) {
+        MetadataFilters metadataFilters = MetadataFilters.empty();
+        return nodeService.getNodes(language, Optional.empty(), Optional.of(contentURI), Optional.empty(),
+                metadataFilters);
     }
 
     @GetMapping("/resources")
     @Operation(summary = "Gets a list of resources matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/resources?contentURI= instead")
-    public List<ResourceDTO> queryResources(@RequestParam("contentURI") Optional<URI> contentURI,
+    public List<EntityWithPathDTO> queryResources(@RequestParam("contentURI") Optional<URI> contentURI,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,

@@ -23,6 +23,10 @@ public class MetadataFilters {
         this.visible = visible;
     }
 
+    public static MetadataFilters empty() {
+        return new MetadataFilters(Optional.empty(), Optional.empty(), Optional.empty());
+    }
+
     public Optional<String> getKey() {
         return key;
     }

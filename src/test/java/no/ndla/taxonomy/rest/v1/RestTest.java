@@ -11,6 +11,7 @@ import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,9 +41,6 @@ public abstract class RestTest {
     ResourceResourceTypeRepository resourceResourceTypeRepository;
 
     @Autowired
-    ResourceRepository resourceRepository;
-
-    @Autowired
     ResourceTypeRepository resourceTypeRepository;
 
     @Autowired
@@ -52,10 +50,10 @@ public abstract class RestTest {
     NodeRepository nodeRepository;
 
     @Autowired
-    NodeConnectionRepository nodeConnectionRepository;
+    NodeService nodeService;
 
     @Autowired
-    NodeResourceRepository nodeResourceRepository;
+    NodeConnectionRepository nodeConnectionRepository;
 
     @Autowired
     protected TestUtils testUtils;
@@ -81,9 +79,7 @@ public abstract class RestTest {
     @BeforeEach
     public void restTestSetUp() {
         builder = new Builder(entityManager, cachedUrlUpdaterService);
-        resourceRepository.deleteAllAndFlush();
         nodeRepository.deleteAllAndFlush();
-        nodeResourceRepository.deleteAllAndFlush();
         nodeConnectionRepository.deleteAllAndFlush();
     }
 
@@ -103,8 +99,9 @@ public abstract class RestTest {
         return save(node);
     }
 
-    Resource newResource() {
-        return save(new Resource());
+    Node newResource() {
+        var node = new Node(NodeType.RESOURCE);
+        return save(node);
     }
 
     ResourceType newResourceType() {

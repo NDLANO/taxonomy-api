@@ -38,12 +38,11 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final NodeService nodeService;
-    private final ResourceService resourceService;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
 
     public Nodes(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            NodeService nodeService, CachedUrlUpdaterService cachedUrlUpdaterService, ResourceService resourceService,
+            NodeService nodeService, CachedUrlUpdaterService cachedUrlUpdaterService,
             RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter, MetadataService metadataService) {
         super(nodeRepository, cachedUrlUpdaterService, metadataService);
 
@@ -51,7 +50,6 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.nodeService = nodeService;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
-        this.resourceService = resourceService;
         this.treeSorter = treeSorter;
     }
 
@@ -200,7 +198,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             resourceTypeIdSet = new HashSet<>(Arrays.asList(resourceTypeIds));
         }
 
-        return resourceService.getResourcesByNodeId(nodeId, resourceTypeIdSet, relevance, language, recursive);
+        return nodeService.getResourcesByNodeId(nodeId, resourceTypeIdSet, relevance, language, recursive);
     }
 
     @PutMapping("/{id}/makeResourcesPrimary")

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -72,29 +73,25 @@ public class CachedPathTest {
         when(subject.getPublicId()).thenReturn(URI.create("urn:subject:1"));
         final var topic = mock(Node.class);
         when(topic.getPublicId()).thenReturn(URI.create("urn:topic:1"));
-        final var resource = mock(Resource.class);
+        final var resource = mock(Node.class);
         when(resource.getPublicId()).thenReturn(URI.create("urn:resource:1"));
         final var unknown = mock(EntityWithPath.class);
 
         assertNull(getField(cachedPath, "node"));
-        assertNull(getField(cachedPath, "resource"));
 
         cachedPath.setOwningEntity(subject);
 
         assertSame(subject, getField(cachedPath, "node"));
-        assertNull(getField(cachedPath, "resource"));
         assertEquals("urn:subject:1", cachedPath.getPublicId().toString());
 
         cachedPath.setOwningEntity(topic);
 
         assertSame(topic, getField(cachedPath, "node"));
-        assertNull(getField(cachedPath, "resource"));
         assertEquals("urn:topic:1", cachedPath.getPublicId().toString());
 
         cachedPath.setOwningEntity(resource);
 
-        assertNull(getField(cachedPath, "node"));
-        assertSame(resource, getField(cachedPath, "resource"));
+        assertSame(resource, getField(cachedPath, "node"));
         assertEquals("urn:resource:1", cachedPath.getPublicId().toString());
 
         try {
@@ -106,19 +103,16 @@ public class CachedPathTest {
         cachedPath.setOwningEntity(null);
 
         assertNull(getField(cachedPath, "node"));
-        assertNull(getField(cachedPath, "resource"));
 
         cachedPath.setOwningEntity(subject);
         cachedPath.setOwningEntity(null);
 
         assertNull(getField(cachedPath, "node"));
-        assertNull(getField(cachedPath, "resource"));
 
         cachedPath.setOwningEntity(topic);
         cachedPath.setOwningEntity(null);
 
         assertNull(getField(cachedPath, "node"));
-        assertNull(getField(cachedPath, "resource"));
     }
 
     @Test
@@ -130,64 +124,18 @@ public class CachedPathTest {
         assertSame(subject, cachedPath.getOwningEntity().orElseThrow());
 
         final var topic = mock(Node.class);
-
         setField(cachedPath, "node", topic);
-
         try {
             cachedPath.getOwningEntity();
         } catch (IllegalStateException ignored) {
         }
-
         assertSame(topic, cachedPath.getOwningEntity().orElseThrow());
 
-        final var resource = mock(Resource.class);
-
-        setField(cachedPath, "resource", resource);
-
-        try {
-            cachedPath.getOwningEntity();
-            fail("Expected IllegalStateException");
-        } catch (IllegalStateException ignored) {
-        }
+        final var resource = mock(Node.class);
+        setField(cachedPath, "node", resource);
+        assertSame(resource, cachedPath.getOwningEntity().orElseThrow());
 
         setField(cachedPath, "node", null);
-
-        assertSame(resource, cachedPath.getOwningEntity().orElseThrow());
-    }
-
-    @Test
-    public void getResource() {
-        assertFalse(cachedPath.getResource().isPresent());
-
-        final var resource = mock(Resource.class);
-
-        setField(cachedPath, "resource", resource);
-
-        assertSame(resource, cachedPath.getResource().orElseThrow());
-    }
-
-    @Test
-    public void setResource() {
-        assertNull(getField(cachedPath, "resource"));
-
-        final var resource1 = mock(Resource.class);
-        final var resource2 = mock(Resource.class);
-
-        final var resource1CachedPaths = new HashSet<CachedPath>();
-        final var resource2CachedPaths = new HashSet<CachedPath>();
-
-        when(resource1.getCachedPaths()).thenReturn(resource1CachedPaths);
-        when(resource2.getCachedPaths()).thenReturn(resource2CachedPaths);
-
-        cachedPath.setResource(resource1);
-        verify(resource1, atLeastOnce()).addCachedPath(cachedPath);
-
-        resource1CachedPaths.add(cachedPath);
-        verify(resource1, times(0)).removeCachedPath(cachedPath);
-
-        cachedPath.setResource(resource2);
-
-        verify(resource2).addCachedPath(cachedPath);
-        verify(resource1).removeCachedPath(cachedPath);
+        assertTrue(cachedPath.getOwningEntity().isEmpty());
     }
 }

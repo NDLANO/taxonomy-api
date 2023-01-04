@@ -30,14 +30,11 @@ class CachedUrlUpdaterServiceImplTest {
     private CachedUrlUpdaterServiceImpl service;
 
     private NodeRepository nodeRepository;
-    private ResourceRepository resourceRepository;
 
     @BeforeEach
-    void setup(@Autowired CachedPathRepository cachedPathRepository, @Autowired NodeRepository nodeRepository,
-            @Autowired ResourceRepository resourceRepository) {
+    void setup(@Autowired CachedPathRepository cachedPathRepository, @Autowired NodeRepository nodeRepository) {
         this.cachedPathRepository = cachedPathRepository;
         this.nodeRepository = nodeRepository;
-        this.resourceRepository = resourceRepository;
 
         service = new CachedUrlUpdaterServiceImpl(cachedPathRepository);
     }
@@ -132,9 +129,9 @@ class CachedUrlUpdaterServiceImplTest {
                     .containsAll(Set.of("/subject:1/topic:1/topic:2", "/topic:1/topic:2")));
         }
 
-        final var resource1 = new Resource();
+        final var resource1 = new Node(NodeType.RESOURCE);
         resource1.setPublicId(URI.create("urn:resource:1"));
-        resourceRepository.save(resource1);
+        nodeRepository.save(resource1);
 
         service.updateCachedUrls(resource1);
 
@@ -142,7 +139,7 @@ class CachedUrlUpdaterServiceImplTest {
             assertEquals(0, cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).size());
         }
 
-        topic1.addNodeResource(NodeResource.create(topic1, resource1));
+        topic1.addChildConnection(NodeConnection.create(topic1, resource1));
 
         service.updateCachedUrls(resource1);
 
@@ -153,7 +150,7 @@ class CachedUrlUpdaterServiceImplTest {
                     .containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1")));
         }
 
-        topic2.addNodeResource(NodeResource.create(topic2, resource1));
+        topic2.addChildConnection(NodeConnection.create(topic2, resource1));
 
         service.updateCachedUrls(resource1);
 
@@ -165,7 +162,7 @@ class CachedUrlUpdaterServiceImplTest {
                             "/subject:1/topic:1/topic:2/resource:1", "/topic:1/topic:2/resource:1")));
         }
 
-        resourceRepository.delete(resource1);
+        nodeRepository.delete(resource1);
 
         {
             assertEquals(0, cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).size());

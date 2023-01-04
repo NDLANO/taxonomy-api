@@ -26,8 +26,6 @@ public interface TaxonomyRepository<T> extends JpaRepository<T, Integer>, JpaSpe
             + " LEFT JOIN FETCH cm.customFieldValues ccfv LEFT JOIN FETCH ccfv.customField ";
     String NODE_CONNECTION_METADATA = " LEFT JOIN FETCH nc.metadata ncm LEFT JOIN FETCH ncm.grepCodes"
             + " LEFT JOIN FETCH ncm.customFieldValues nccfv LEFT JOIN FETCH nccfv.customField ";
-    String NODE_RESOURCE_METADATA = " LEFT JOIN FETCH nr.metadata nrm LEFT JOIN FETCH nrm.grepCodes"
-            + " LEFT JOIN FETCH nrm.customFieldValues nrcfv LEFT JOIN FETCH nrcfv.customField ";
 
     T findByPublicId(URI id);
 

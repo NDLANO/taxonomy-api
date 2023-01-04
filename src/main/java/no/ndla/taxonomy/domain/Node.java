@@ -7,6 +7,9 @@
 
 package no.ndla.taxonomy.domain;
 
+import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
+import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
+
 import javax.persistence.*;
 import java.net.URI;
 import java.util.*;
@@ -15,15 +18,11 @@ import java.util.stream.Collectors;
 @NamedEntityGraph(name = Node.GRAPH, includeAllAttributes = true, attributeNodes = {
         @NamedAttributeNode("translations"), @NamedAttributeNode(value = "metadata"),
         @NamedAttributeNode(value = "parentConnections", subgraph = "parent-connection"),
-        @NamedAttributeNode(value = "childConnections", subgraph = "child-connection"),
-        @NamedAttributeNode(value = "nodeResources", subgraph = "resource-connections") }, subgraphs = {
+        @NamedAttributeNode(value = "childConnections", subgraph = "child-connection") }, subgraphs = {
                 @NamedSubgraph(name = "parent-connection", attributeNodes = { @NamedAttributeNode("parent"),
                         @NamedAttributeNode(value = "metadata") }),
                 @NamedSubgraph(name = "child-connection", attributeNodes = { @NamedAttributeNode("child"),
-                        @NamedAttributeNode(value = "metadata") }),
-                @NamedSubgraph(name = "resource-connections", attributeNodes = {
-                        @NamedAttributeNode(value = "metadata"),
-                        @NamedAttributeNode(value = "resource", subgraph = Resource.GRAPH) }) })
+                        @NamedAttributeNode(value = "metadata") }) })
 @Entity
 public class Node extends EntityWithPath {
     public static final String GRAPH = "node-with-connections";
@@ -33,9 +32,6 @@ public class Node extends EntityWithPath {
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<NodeConnection> childConnections = new TreeSet<>();
-
-    @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<NodeResource> nodeResources = new TreeSet<>();
 
     @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<NodeTranslation> translations = new TreeSet<>();
@@ -63,6 +59,9 @@ public class Node extends EntityWithPath {
     @Column
     private boolean root;
 
+    @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ResourceResourceType> resourceResourceTypes = new TreeSet<>();
+
     // Needed for hibernate
     public Node() {
     }
@@ -74,19 +73,41 @@ public class Node extends EntityWithPath {
     }
 
     public Node(Node node) {
+        this(node, true);
+    }
+
+    public Node(Node node, boolean keepPublicId) {
         this.contentUri = node.getContentUri();
         this.nodeType = node.getNodeType();
         this.ident = node.getIdent();
         this.context = node.isContext();
         this.root = node.isRoot();
+
+        if (keepPublicId) {
+            setPublicId(node.getPublicId());
+        } else {
+            setIdent(UUID.randomUUID().toString());
+            updatePublicID();
+        }
+
         TreeSet<NodeTranslation> trs = new TreeSet<>();
         for (NodeTranslation tr : node.getTranslations()) {
             trs.add(new NodeTranslation(tr, this));
         }
         this.translations = trs;
+        TreeSet<ResourceResourceType> rrts = new TreeSet<>();
+        for (ResourceResourceType rt : node.getResourceResourceTypes()) {
+            ResourceResourceType rrt = new ResourceResourceType();
+            if (keepPublicId) {
+                rrt.setPublicId(rt.getPublicId());
+            }
+            rrt.setNode(this);
+            rrt.setResourceType(rt.getResourceType());
+            rrts.add(rrt);
+        }
+        this.resourceResourceTypes = rrts;
         setMetadata(new Metadata(node.getMetadata()));
         setName(node.getName());
-        setPublicId(node.getPublicId());
     }
 
     private void updatePublicID() {
@@ -107,39 +128,102 @@ public class Node extends EntityWithPath {
      * public Optional<String> getPrimaryPath() { return getCachedPaths() .stream()
      * .map(CachedPath::getPath).min((path1, path2) -> { if (path1.startsWith("/topic") && path2.startsWith("/topic")) {
      * return 0; }
-     * 
+     *
      * if (path1.startsWith("/topic")) { return -1; }
-     * 
+     *
      * if (path2.startsWith("/topic")) { return 1; }
-     * 
+     *
      * return 0; }); }
      */
 
     @Override
     public Collection<EntityWithPathConnection> getParentConnections() {
-        return parentConnections.stream().map(entity -> (EntityWithPathConnection) entity)
-                .collect(Collectors.toUnmodifiableList());
+        return parentConnections.stream().map(entity -> (EntityWithPathConnection) entity).toList();
+    }
+
+    public Set<NodeConnection> getParentNodeConnections() {
+        return this.parentConnections;
     }
 
     @Override
     public Collection<EntityWithPathConnection> getChildConnections() {
-        final var toReturn = new HashSet<EntityWithPathConnection>();
-        final Collection<EntityWithPathConnection> children = childConnections.stream()
-                .map(entity -> (EntityWithPathConnection) entity).collect(Collectors.toUnmodifiableList());
-
-        toReturn.addAll(children);
-        toReturn.addAll(getNodeResources()); // Needed to generate cached paths
-
-        return toReturn;
+        return childConnections.stream().map(entity -> (EntityWithPathConnection) entity).collect(Collectors.toSet());
     }
 
     public Collection<NodeConnection> getChildren() {
         return childConnections;
     }
 
+    public Collection<NodeConnection> getResourceChildren() {
+        return childConnections.stream()
+                .filter(cc -> cc.getChild().map(child -> child.getNodeType() == NodeType.RESOURCE).orElse(false))
+                .collect(Collectors.toSet());
+    }
+
+    public Collection<ResourceType> getResourceTypes() {
+        return getResourceResourceTypes().stream().map(ResourceResourceType::getResourceType)
+                .collect(Collectors.toSet());
+    }
+
+    public Collection<ResourceResourceType> getResourceResourceTypes() {
+        return this.resourceResourceTypes;
+    }
+
+    public ResourceResourceType addResourceType(ResourceType resourceType) {
+        if (getResourceTypes().contains(resourceType)) {
+            throw new DuplicateIdException("Resource with id " + getPublicId()
+                    + " is already marked with resource type with id " + resourceType.getPublicId());
+        }
+
+        ResourceResourceType resourceResourceType = ResourceResourceType.create(this, resourceType);
+        addResourceResourceType(resourceResourceType);
+        return resourceResourceType;
+    }
+
+    public void removeResourceType(ResourceType resourceType) {
+        var resourceResourceType = getResourceType(resourceType);
+        if (resourceResourceType.isEmpty())
+            throw new ChildNotFoundException(
+                    "Resource with id " + this.getPublicId() + " is not of type " + resourceType.getPublicId());
+
+        resourceResourceTypes.remove(resourceResourceType.get());
+    }
+
+    private Optional<ResourceResourceType> getResourceType(ResourceType resourceType) {
+        for (ResourceResourceType resourceResourceType : resourceResourceTypes) {
+            if (resourceResourceType.getResourceType().equals(resourceType))
+                return Optional.of(resourceResourceType);
+        }
+        return Optional.empty();
+    }
+
+    public void addResourceResourceType(ResourceResourceType resourceResourceType) {
+        if (this.getNodeType() != NodeType.RESOURCE)
+            throw new IllegalArgumentException(
+                    "ResourceResourceType can only be associated with " + NodeType.RESOURCE.toString());
+
+        this.resourceResourceTypes.add(resourceResourceType);
+
+        if (resourceResourceType.getNode() != this) {
+            throw new IllegalArgumentException(
+                    "ResourceResourceType must have Resource set before being associated with Resource");
+        }
+    }
+
+    public void removeResourceResourceType(ResourceResourceType resourceResourceType) {
+        this.resourceResourceTypes.remove(resourceResourceType);
+
+        if (resourceResourceType.getNode() == this) {
+            resourceResourceType.disassociate();
+        }
+    }
+
     public void addChildConnection(NodeConnection nodeConnection) {
         if (nodeConnection.getParent().orElse(null) != this) {
             throw new IllegalArgumentException("Parent must be set on NodeConnection before associating with child");
+        }
+        if (this.nodeType == NodeType.RESOURCE) {
+            throw new IllegalArgumentException("'" + NodeType.RESOURCE + "' nodes cannot have children");
         }
 
         this.childConnections.add(nodeConnection);
@@ -179,36 +263,14 @@ public class Node extends EntityWithPath {
                 .findFirst();
     }
 
-    public Collection<NodeResource> getNodeResources() {
-        return this.nodeResources.stream().collect(Collectors.toUnmodifiableList());
+    public Collection<Node> getParentNodes() {
+        return parentConnections.stream().map(NodeConnection::getParent).filter(Optional::isPresent).map(Optional::get)
+                .toList();
     }
 
-    public void setNodeResources(TreeSet<NodeResource> nodeResources) {
-        this.nodeResources = nodeResources;
-    }
-
-    public void addNodeResource(NodeResource nodeResource) {
-        if (nodeResource.getNode().orElse(null) != this) {
-            throw new IllegalArgumentException(
-                    "NodeResource must have Node set before it can be associated with Resource");
-        }
-
-        this.nodeResources.add(nodeResource);
-    }
-
-    public void removeNodeResource(NodeResource nodeResource) {
-        this.nodeResources.remove(nodeResource);
-
-        final var resource = nodeResource.getResource();
-
-        if (nodeResource.getNode().orElse(null) == this) {
-            nodeResource.disassociate();
-        }
-    }
-
-    public Collection<Resource> getResources() {
-        return nodeResources.stream().map(NodeResource::getResource).filter(Optional::isPresent).map(Optional::get)
-                .collect(Collectors.toUnmodifiableList());
+    public Collection<Node> getResources() {
+        return childConnections.stream().map(NodeConnection::getChild).filter(Optional::isPresent).map(Optional::get)
+                .filter(s -> s.getNodeType() == NodeType.RESOURCE).collect(Collectors.toUnmodifiableList());
     }
 
     public void setIdent(String ident) {
@@ -328,7 +390,6 @@ public class Node extends EntityWithPath {
     void preRemove() {
         Set.copyOf(childConnections).forEach(NodeConnection::disassociate);
         Set.copyOf(parentConnections).forEach(NodeConnection::disassociate);
-        Set.copyOf(nodeResources).forEach(NodeResource::disassociate);
     }
 
     @Override
@@ -342,4 +403,13 @@ public class Node extends EntityWithPath {
                 && Objects.equals(contentUri, that.contentUri) && nodeType == that.nodeType && ident.equals(that.ident)
                 && metadata.equals(that.metadata);
     }
+
+    public Optional<Node> getPrimaryNode() {
+        for (var node : this.parentConnections) {
+            if (node.isPrimary().orElse(false))
+                return node.getParent();
+        }
+        return Optional.empty();
+    }
+
 }
