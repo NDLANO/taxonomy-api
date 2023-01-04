@@ -7,6 +7,8 @@
 
 package no.ndla.taxonomy.config;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import liquibase.exception.LiquibaseException;
 import liquibase.integration.spring.SpringLiquibase;
 import org.slf4j.Logger;
@@ -73,6 +75,7 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
         liquibase.setResourceLoader(getResourceLoader());
         liquibase.setDataSource(dataSource);
         liquibase.setDefaultSchema(schema);
+        liquibase.setLiquibaseSchema(schema);
         liquibase.setChangeLogParameters(Map.of("schema", schema));
         liquibase.setChangeLog(liquibaseProperties.getChangeLog());
         liquibase.setContexts(liquibaseProperties.getContexts());
