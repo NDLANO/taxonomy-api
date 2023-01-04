@@ -620,7 +620,7 @@
         <modifyDataType tableName="subject_translation" columnName="language_code" newDataType="varchar(7)"/>
         <modifyDataType tableName="topic_translation" columnName="language_code" newDataType="varchar(7)"/>
     </changeSet>
-    
+
     <changeSet id="20211020 01 create tables for node" author="Gunnar Velle">
         <createTable tableName="node">
             <column name="id" type="serial" autoIncrement="true">
@@ -695,7 +695,7 @@
                                  constraintName="fk_node_resource_resource_id"
                                  referencedTableName="resource" referencedColumnNames="id"
                                  onDelete="RESTRICT" onUpdate="RESTRICT"/>
-        
+
         <createTable tableName="node_translation">
             <column name="id" type="serial" autoIncrement="true">
                 <constraints primaryKey="true" uniqueConstraintName="node_translation_pkey"/>
@@ -712,7 +712,7 @@
                                  constraintName="fk_node_translation_node_id"
                                  referencedTableName="node" referencedColumnNames="id"
                                  onDelete="RESTRICT" onUpdate="RESTRICT"/>
-        
+
         <addColumn tableName="cached_path">
             <column name="node_id" type="integer"/>
         </addColumn>
@@ -1040,6 +1040,88 @@
             <column name="clean_up" type="boolean" defaultValueBoolean="false"/>
             <column name="done" type="boolean" defaultValueBoolean="false"/>
         </createTable>
+    </changeSet>
+
+    <changeSet id="20230103 Stop constraining max 1 node-parents" author="Jonas Natten">
+        <dropUniqueConstraint tableName="node_connection" constraintName="unique_node_connection_child_id"/>
+    </changeSet>
+
+    <changeSet id="20230103 Add primary to node-connections :^)" author="Jonas Natten">
+        <addColumn tableName="node_connection">
+            <column name="is_primary" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20230103 Copy resources to nodes" author="Jonas Natten">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO node (public_id, ident, node_type, name, content_uri, context)
+            SELECT public_id, REPLACE(public_id, 'urn:resource:', '') as ident, 'RESOURCE' as node_type, name, content_uri, false as context FROM resource;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20230103 Copy resources-connections to nodes" author="Jonas Natten">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO node_connection (public_id, parent_id, child_id, rank, relevance_id, metadata_id, is_primary)
+            SELECT
+                rc.public_id AS public_id,
+                rc.node_id,
+                (SELECT n.id FROM node n WHERE n.public_id = (SELECT r.public_id FROM resource r WHERE r.id = rc.resource_id)) AS child_id,
+                rc.rank AS rank,
+                rc.relevance_id AS relevance_id,
+                rc.metadata_id,
+                rc.is_primary
+            FROM node_resource rc;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20230103 Copy translations from resources to nodes" author="Jonas Natten">
+        <sql splitStatements="false" stripComments="false">
+            INSERT INTO node_translation
+                (node_id, language_code, name)
+            SELECT
+                (SELECT n.id FROM node n WHERE n.public_id =
+                                               (SELECT r.public_id FROM resource r WHERE r.id = rt.resource_id)
+                ) AS node_id,
+                rt.language_code AS language_code,
+                rt.name as name
+            FROM resource_translation rt;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20230103 Move to node ids for resource_resource_type" author="Jonas Natten">
+        <sql splitStatements="false" stripComments="false">
+            ALTER TABLE resource_resource_type DROP CONSTRAINT resource_resource_type_unique;
+            ALTER TABLE resource_resource_type DROP CONSTRAINT resource_resource_type_resource_id_fkey;
+            UPDATE resource_resource_type rrt
+                SET resource_id=(
+                    SELECT n.id FROM node n WHERE n.public_id = (
+                        SELECT r.public_id FROM resource r WHERE r.id = rrt.resource_id
+                    )
+                );
+            ALTER TABLE resource_resource_type ADD CONSTRAINT resource_resource_type_unique UNIQUE (resource_id, resource_type_id);
+            ALTER TABLE resource_resource_type ADD CONSTRAINT resource_resource_type_resource_id_fkey FOREIGN KEY (resource_type_id) REFERENCES node(id)
+        </sql>
+    </changeSet>
+
+    <changeSet id="20230103 Move to node ids for cached_paths for resources" author="Jonas Natten">
+        <sql splitStatements="false" stripComments="false">
+            UPDATE cached_path cp
+            SET node_id=(
+                SELECT n.id FROM node n WHERE n.public_id = (
+                    SELECT r.public_id FROM resource r WHERE r.id = cp.resource_id
+                )
+            )
+            WHERE resource_id IS NOT NULL;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20230103 Drop old resource tables" author="Jonas Natten">
+        <dropColumn tableName="cached_path" columnName="resource_id"/>
+        <dropTable tableName="resource_translation"/>
+        <dropTable tableName="node_resource"/>
+        <dropTable tableName="resource"/>
     </changeSet>
 
 </databaseChangeLog>
