@@ -13,14 +13,14 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeResource;
+import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.DomainEntity;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
+import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.repositories.NodeResourceRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.service.EntityConnectionService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -40,26 +40,23 @@ import java.util.stream.Collectors;
 public class TopicResources {
 
     private final NodeRepository nodeRepository;
-    private final ResourceRepository resourceRepository;
-    private final NodeResourceRepository nodeResourceRepository;
+    private final NodeConnectionRepository nodeConnectionRepository;
     private final EntityConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
 
-    public TopicResources(NodeRepository nodeRepository, ResourceRepository resourceRepository,
-            NodeResourceRepository nodeResourceRepository, EntityConnectionService connectionService,
-            RelevanceRepository relevanceRepository) {
+    public TopicResources(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
+            EntityConnectionService connectionService, RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
-        this.resourceRepository = resourceRepository;
-        this.nodeResourceRepository = nodeResourceRepository;
         this.connectionService = connectionService;
+        this.nodeConnectionRepository = nodeConnectionRepository;
         this.relevanceRepository = relevanceRepository;
     }
 
     @GetMapping
     @Operation(summary = "Gets all connections between topics and resources")
     public List<TopicResourceIndexDocument> index() {
-        return nodeResourceRepository.findAllIncludingNodeAndResource().stream().map(TopicResourceIndexDocument::new)
-                .collect(Collectors.toList());
+        return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream()
+                .map(TopicResourceIndexDocument::new).collect(Collectors.toList());
     }
 
     @GetMapping("/page")
@@ -73,17 +70,19 @@ public class TopicResources {
         if (page.get() < 1)
             throw new IllegalArgumentException("page parameter must be bigger than 0");
 
-        var ids = nodeResourceRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
-        var results = nodeResourceRepository.findByIds(ids.getContent());
+        var pageRequest = PageRequest.of(page.get() - 1, pageSize.get());
+        var connections = nodeConnectionRepository.findIdsPaginatedByChildNodeType(pageRequest, NodeType.RESOURCE);
+        var ids = connections.stream().map(DomainEntity::getId).collect(Collectors.toList());
+        var results = nodeConnectionRepository.findByIds(ids);
         var contents = results.stream().map(TopicResourceIndexDocument::new).collect(Collectors.toList());
-        return new TopicResourcePage(ids.getTotalElements(), contents);
+        return new TopicResourcePage(connections.getTotalElements(), contents);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a specific connection between a topic and a resource")
     public TopicResourceIndexDocument get(@PathVariable("id") URI id) {
-        NodeResource topicResource = nodeResourceRepository.getByPublicId(id);
-        return new TopicResourceIndexDocument(topicResource);
+        var resourceConnection = nodeConnectionRepository.getByPublicId(id);
+        return new TopicResourceIndexDocument(resourceConnection);
     }
 
     @PostMapping
@@ -93,15 +92,17 @@ public class TopicResources {
             @Parameter(name = "connection", description = "new topic/resource connection ") @RequestBody AddResourceToTopicCommand command) {
 
         Node topic = nodeRepository.getByPublicId(command.topicid);
-        Resource resource = resourceRepository.getByPublicId(command.resourceId);
+        Node resource = nodeRepository.getByPublicId(command.resourceId);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
                 : null;
 
-        final NodeResource topicResource;
-        topicResource = connectionService.connectNodeResource(topic, resource, relevance, command.primary,
-                command.rank == 0 ? null : command.rank);
+        var primary = Optional.of(command.primary);
+        var rank = command.rank == 0 ? null : command.rank;
 
-        URI location = URI.create("/topic-resources/" + topicResource.getPublicId());
+        final NodeConnection topicResource;
+        topicResource = connectionService.connectParentChild(topic, resource, relevance, rank, primary);
+
+        URI location = URI.create("/node-child/" + topicResource.getPublicId());
         return ResponseEntity.created(location).build();
     }
 
@@ -110,7 +111,8 @@ public class TopicResources {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
-        connectionService.disconnectNodeResource(nodeResourceRepository.getByPublicId(id));
+        var connection = nodeConnectionRepository.getByPublicId(id);
+        connectionService.disconnectParentChildConnection(connection);
     }
 
     @PutMapping("/{id}")
@@ -120,16 +122,16 @@ public class TopicResources {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand command) {
-        NodeResource topicResource = nodeResourceRepository.getByPublicId(id);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
-                : null;
+        var topicResource = nodeConnectionRepository.getByPublicId(id);
+        var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
 
         if (topicResource.isPrimary().orElse(false) && !command.primary) {
             throw new PrimaryParentRequiredException();
         }
+        var rank = command.rank > 0 ? command.rank : null;
+        var primary = Optional.of(command.primary);
 
-        connectionService.updateNodeResource(topicResource, relevance, command.primary,
-                command.rank > 0 ? command.rank : null);
+        connectionService.updateParentChild(topicResource, relevance, rank, primary);
     }
 
     public static class AddResourceToTopicCommand {
@@ -216,16 +218,18 @@ public class TopicResources {
         @Schema(description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
-        TopicResourceIndexDocument() {
-        }
-
-        TopicResourceIndexDocument(NodeResource topicResource) {
+        TopicResourceIndexDocument(NodeConnection topicResource) {
             id = topicResource.getPublicId();
-            topicResource.getNode().ifPresent(topic -> topicid = topic.getPublicId());
+            topicResource.getParent().ifPresent(topic -> topicid = topic.getPublicId());
             topicResource.getResource().ifPresent(resource -> resourceId = resource.getPublicId());
             primary = topicResource.isPrimary().orElse(false);
             rank = topicResource.getRank();
             relevanceId = topicResource.getRelevance().map(Relevance::getPublicId).orElse(null);
         }
+
+        TopicResourceIndexDocument() {
+
+        }
+
     }
 }

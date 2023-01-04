@@ -12,10 +12,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.domain.ResourceTranslation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
-import no.ndla.taxonomy.repositories.ResourceRepository;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -31,21 +29,21 @@ import java.util.List;
 @Transactional
 public class ResourceTranslations {
 
-    private final ResourceRepository resourceRepository;
+    private final NodeRepository nodeRepository;
 
     private final EntityManager entityManager;
 
-    public ResourceTranslations(ResourceRepository resourceRepository, EntityManager entityManager) {
-        this.resourceRepository = resourceRepository;
+    public ResourceTranslations(NodeRepository resourceRepository, EntityManager entityManager) {
+        this.nodeRepository = resourceRepository;
         this.entityManager = entityManager;
     }
 
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single resource")
-    public List<ResourceTranslations.ResourceTranslationIndexDocument> index(@PathVariable("id") URI id) {
-        Resource resource = resourceRepository.getByPublicId(id);
-        List<ResourceTranslations.ResourceTranslationIndexDocument> result = new ArrayList<>();
-        resource.getTranslations().forEach(t -> result.add(new ResourceTranslations.ResourceTranslationIndexDocument() {
+    public List<ResourceTranslationIndexDocument> index(@PathVariable("id") URI id) {
+        var resource = nodeRepository.getByPublicId(id);
+        List<ResourceTranslationIndexDocument> result = new ArrayList<>();
+        resource.getTranslations().forEach(t -> result.add(new ResourceTranslationIndexDocument() {
             {
                 name = t.getName();
                 language = t.getLanguageCode();
@@ -56,12 +54,12 @@ public class ResourceTranslations {
 
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single resource")
-    public ResourceTranslations.ResourceTranslationIndexDocument get(@PathVariable("id") URI id,
+    public ResourceTranslationIndexDocument get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
-        Resource resource = resourceRepository.getByPublicId(id);
-        ResourceTranslation translation = resource.getTranslation(language).orElseThrow(
+        var resource = nodeRepository.getByPublicId(id);
+        var translation = resource.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for resource", id));
-        return new ResourceTranslations.ResourceTranslationIndexDocument() {
+        return new ResourceTranslationIndexDocument() {
             {
                 name = translation.getName();
                 language = translation.getLanguageCode();
@@ -76,9 +74,9 @@ public class ResourceTranslations {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @Parameter(name = "resource", description = "The new or updated translation") @RequestBody ResourceTranslations.UpdateResourceTranslationCommand command) {
-        Resource resource = resourceRepository.getByPublicId(id);
-        ResourceTranslation translation = resource.addTranslation(language);
+            @Parameter(name = "resource", description = "The new or updated translation") @RequestBody UpdateResourceTranslationCommand command) {
+        var resource = nodeRepository.getByPublicId(id);
+        var translation = resource.addTranslation(language);
         entityManager.persist(translation);
         translation.setName(command.name);
     }
@@ -89,10 +87,10 @@ public class ResourceTranslations {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
-        final var resource = resourceRepository.getByPublicId(id);
+        final var resource = nodeRepository.getByPublicId(id);
         resource.getTranslation(language).ifPresent((translation) -> {
             resource.removeTranslation(language);
-            resourceRepository.save(resource);
+            nodeRepository.save(resource);
         });
     }
 

@@ -34,9 +34,6 @@ public class CachedPath {
     private String path;
 
     @ManyToOne
-    private Resource resource;
-
-    @ManyToOne
     private Node node;
 
     @PrePersist
@@ -87,37 +84,16 @@ public class CachedPath {
     }
 
     public Optional<EntityWithPath> getOwningEntity() {
-        final var entitiesThatCanBeReturned = new HashSet<EntityWithPath>();
-
-        if (resource != null) {
-            entitiesThatCanBeReturned.add(resource);
-        }
-
-        if (node != null) {
-            entitiesThatCanBeReturned.add(node);
-        }
-
-        if (entitiesThatCanBeReturned.size() > 1) {
-            throw new IllegalStateException("CachedPath is owned by multiple entities");
-        }
-
-        try {
-            return Optional.ofNullable(entitiesThatCanBeReturned.iterator().next());
-        } catch (NoSuchElementException exception) {
-            return Optional.empty();
-        }
+        return Optional.ofNullable(node);
     }
 
     public void setOwningEntity(EntityWithPath entity) {
         if (entity == null) {
-            this.setResource(null);
             this.setNode(null);
             return;
         }
 
-        if (entity instanceof Resource) {
-            this.setResource((Resource) entity);
-        } else if (entity instanceof Node) {
+        if (entity instanceof Node) {
             this.setNode((Node) entity);
         } else {
             throw new IllegalArgumentException("Unknown entity of type " + entity.getClass().toString()
@@ -125,32 +101,6 @@ public class CachedPath {
         }
 
         setPublicId(entity.getPublicId());
-    }
-
-    public Optional<Resource> getResource() {
-        return Optional.ofNullable(this.resource);
-    }
-
-    public void setResource(Resource resource) {
-        final var oldResource = this.resource;
-
-        if (resource == null && oldResource == null) {
-            return;
-        }
-
-        this.resource = resource;
-
-        if (oldResource != null && oldResource != resource) {
-            oldResource.removeCachedPath(this);
-        }
-
-        if (resource != null && !resource.getCachedPaths().contains(this)) {
-            resource.addCachedPath(this);
-        }
-
-        if (resource != null) {
-            setNode(null);
-        }
     }
 
     public Optional<Node> getNode() {
@@ -172,10 +122,6 @@ public class CachedPath {
 
         if (node != null && !node.getCachedPaths().contains(this)) {
             node.addCachedPath(this);
-        }
-
-        if (node != null) {
-            setResource(null);
         }
     }
 

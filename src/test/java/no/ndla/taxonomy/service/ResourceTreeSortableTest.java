@@ -8,8 +8,7 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeResource;
-import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.NodeConnection;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -51,8 +50,8 @@ public class ResourceTreeSortableTest {
         assertFalse(sortable.getResourceConnection().isPresent());
 
         final var node = mock(Node.class);
-        final var resource = mock(Resource.class);
-        final var nodeResource = mock(NodeResource.class);
+        final var resource = mock(Node.class);
+        final var nodeResource = mock(NodeConnection.class);
 
         when(node.getId()).thenReturn(101);
         when(resource.getId()).thenReturn(102);
@@ -69,8 +68,8 @@ public class ResourceTreeSortableTest {
     @Test
     public void testPopulateFromNodeResource() throws URISyntaxException {
         final var node = mock(Node.class);
-        final var resource = mock(Resource.class);
-        final var nodeResource = mock(NodeResource.class);
+        final var resource = mock(Node.class);
+        final var nodeResource = mock(NodeConnection.class);
 
         when(node.getId()).thenReturn(101);
         when(resource.getId()).thenReturn(102);

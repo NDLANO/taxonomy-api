@@ -11,23 +11,24 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class NodeResourceTest {
     private Node node;
-    private Resource resource;
-    private NodeResource resourceConnection;
+    private Node resource;
+    private NodeConnection resourceConnection;
 
     @BeforeEach
     public void setUp() {
         node = mock(Node.class);
-        resource = mock(Resource.class);
+        when(node.getNodeType()).thenReturn(NodeType.TOPIC);
+        resource = mock(Node.class);
+        when(resource.getNodeType()).thenReturn(NodeType.RESOURCE);
 
-        resourceConnection = NodeResource.create(node, resource);
+        resourceConnection = NodeConnection.create(node, resource, false);
 
-        verify(node).addNodeResource(resourceConnection);
-        verify(resource).addNodeResource(resourceConnection);
+        verify(node).addChildConnection(resourceConnection);
+        verify(resource).addParentConnection(resourceConnection);
 
         assertNotNull(resourceConnection.getPublicId());
         assertTrue(resourceConnection.getPublicId().toString().length() > 4);
@@ -35,7 +36,7 @@ public class NodeResourceTest {
 
     @Test
     public void getNode() {
-        assertSame(node, resourceConnection.getNode().orElse(null));
+        assertSame(node, resourceConnection.getParent().orElse(null));
     }
 
     @Test
@@ -64,9 +65,9 @@ public class NodeResourceTest {
         resourceConnection.preRemove();
 
         assertFalse(resourceConnection.getResource().isPresent());
-        assertFalse(resourceConnection.getNode().isPresent());
+        assertFalse(resourceConnection.getParent().isPresent());
 
-        verify(node).removeNodeResource(resourceConnection);
-        verify(resource).removeNodeResource(resourceConnection);
+        verify(node).removeChildConnection(resourceConnection);
+        verify(resource).removeParentConnection(resourceConnection);
     }
 }

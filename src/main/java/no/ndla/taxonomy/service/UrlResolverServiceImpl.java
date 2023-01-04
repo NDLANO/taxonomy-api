@@ -9,9 +9,9 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.CachedPath;
 import no.ndla.taxonomy.domain.EntityWithPath;
+import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.UrlMapping;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.UrlMappingRepository;
 import no.ndla.taxonomy.service.dtos.ResolvedUrl;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
@@ -32,13 +32,11 @@ public class UrlResolverServiceImpl implements UrlResolverService {
     private final OldUrlCanonifier canonifier;
 
     private final NodeRepository nodeRepository;
-    private final ResourceRepository resourceRepository;
     private final UrlMappingRepository urlMappingRepository;
 
     @Autowired
-    public UrlResolverServiceImpl(ResourceRepository resourceRepository, UrlMappingRepository urlMappingRepository,
-            NodeRepository nodeRepository, OldUrlCanonifier oldUrlCanonifier) {
-        this.resourceRepository = resourceRepository;
+    public UrlResolverServiceImpl(UrlMappingRepository urlMappingRepository, NodeRepository nodeRepository,
+            OldUrlCanonifier oldUrlCanonifier) {
         this.nodeRepository = nodeRepository;
         this.urlMappingRepository = urlMappingRepository;
         this.canonifier = oldUrlCanonifier;
@@ -229,26 +227,12 @@ public class UrlResolverServiceImpl implements UrlResolverService {
         return returnedList;
     }
 
-    private Optional<EntityWithPath> getEntityFromPublicId(URI publicId) {
+    private Optional<Node> getEntityFromPublicId(URI publicId) {
         final var publicIdUrnPart = publicId.getSchemeSpecificPart();
         if (!publicId.getScheme().equals("urn") || publicIdUrnPart == null) {
             throw new InvalidArgumentServiceException("No valid URN provided");
         }
 
-        final var publicIdParts = publicIdUrnPart.split(":");
-
-        if (publicIdParts.length < 2) {
-            return Optional.empty();
-        }
-
-        switch (publicIdParts[0].toLowerCase()) {
-        case "topic":
-        case "subject":
-            return nodeRepository.findFirstByPublicIdIncludingCachedUrls(publicId).map(topic -> topic);
-        case "resource":
-            return resourceRepository.findFirstByPublicIdIncludingCachedUrls(publicId).map(resource -> resource);
-        }
-
-        return Optional.empty();
+        return nodeRepository.findFirstByPublicIdIncludingCachedUrls(publicId);
     }
 }

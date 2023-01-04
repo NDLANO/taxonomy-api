@@ -84,16 +84,13 @@ public class SubjectTopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
             @Parameter(name = "command", description = "The subject and topic getting connected.") @RequestBody AddTopicToSubjectCommand command) {
-
-        Node subject = nodeRepository.getByPublicId(command.subjectid);
-        Node topic = nodeRepository.getByPublicId(command.topicid);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
-                : null;
-
-        final var nodeConnection = connectionService.connectParentChild(subject, topic, relevance,
-                command.rank == 0 ? null : command.rank);
-
-        URI location = URI.create("/subject-topics/" + nodeConnection.getPublicId());
+        var subject = nodeRepository.getByPublicId(command.subjectid);
+        var topic = nodeRepository.getByPublicId(command.topicid);
+        var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
+        var rank = command.rank == 0 ? null : command.rank;
+        final var nodeConnection = connectionService.connectParentChild(subject, topic, relevance, rank,
+                Optional.empty());
+        var location = URI.create("/subject-topics/" + nodeConnection.getPublicId());
         return ResponseEntity.created(location).build();
     }
 
@@ -112,11 +109,11 @@ public class SubjectTopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) {
-        NodeConnection nodeConnection = nodeConnectionRepository.getByPublicId(id);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
-                : null;
+        var nodeConnection = nodeConnectionRepository.getByPublicId(id);
+        var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
+        var rank = command.rank > 0 ? command.rank : null;
 
-        connectionService.updateParentChild(nodeConnection, relevance, command.rank > 0 ? command.rank : null);
+        connectionService.updateParentChild(nodeConnection, relevance, rank, Optional.empty());
     }
 
     public static class AddTopicToSubjectCommand {
