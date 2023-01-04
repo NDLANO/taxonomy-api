@@ -19,11 +19,13 @@ import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.security.OAuthFlow;
 import io.swagger.v3.oas.models.security.OAuthFlows;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.customizers.OpenApiCustomiser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
 import java.util.Map;
 
 @Configuration
@@ -31,6 +33,12 @@ public class SwaggerConfiguration {
 
     @Value(value = "${auth0.issuer}")
     private String issuer;
+
+    @Value(value = "${ndla.environment:}")
+    private String environment;
+
+    @Value(value = "${server.port}")
+    private int port;
 
     @Value(value = "${contact.name:NDLA}")
     private String contactName;
@@ -46,12 +54,31 @@ public class SwaggerConfiguration {
 
     @Bean
     public OpenAPI API() {
-        return new OpenAPI().components(components()).info(new Info().title("NDLA Taxonomy API")
+        return new OpenAPI().components(components()).servers(servers()).info(new Info().title("NDLA Taxonomy API")
                 .description("Rest service and graph database for organizing content.\n\n"
                         + "When you remove an entity, its associations are also deleted. E.g., if you remove a subject, its associations to any topics are removed. The topics themselves are not affected.")
                 .version("v1").contact(new Contact().name(contactName).email(contactEmail).url(contactUrl))
                 .termsOfService(termsUrl)
                 .license(new License().name("GPL 3.0").url("https://www.gnu.org/licenses/gpl-3.0.en.html")));
+    }
+
+    private List<Server> servers() {
+        String url;
+        switch (environment) {
+        case "local":
+            url = "http://api-gateway.ndla-local/taxonomy";
+            break;
+        case "prod":
+            url = "https://api.ndla.no/taxonomy";
+            break;
+        case "test":
+        case "staging":
+            url = String.format("https://api.%s.ndla.no/taxonomy", environment);
+            break;
+        default:
+            url = String.format("http://localhost:%s", port);
+        }
+        return List.of(new Server().url(url));
     }
 
     private Components components() {
