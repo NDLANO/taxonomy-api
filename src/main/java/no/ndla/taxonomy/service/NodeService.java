@@ -48,6 +48,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final TreeSorter topicTreeSorter;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
+    private final TreeSorter treeSorter;
 
     private final ChangelogRepository changelogRepository;
     private final DomainEntityHelperService domainEntityHelperService;
@@ -70,7 +71,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             ChangelogRepository changelogRepository,
             DomainEntityHelperService domainEntityHelperService,
             CustomFieldService customFieldService,
-            RecursiveNodeTreeService recursiveNodeTreeService
+            RecursiveNodeTreeService recursiveNodeTreeService,
+            TreeSorter treeSorter
     ) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
@@ -82,6 +84,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         this.domainEntityHelperService = domainEntityHelperService;
         this.customFieldService = customFieldService;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
+        this.treeSorter = treeSorter;
     }
 
     @Transactional
@@ -237,19 +240,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         final List<NodeConnection> nodeResources;
 
         if (resourceTypeIds.size() > 0) {
-            nodeConnectionRepository.getBy(nodeIds, resourceTypeIds, relevance);
-            // TODO: Remake this nodeResourceRepository call in nodeConnectionRepository
-            nodeResources = nodeResourceRepository
-                    .findAllByNodeIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(
-                            nodeIds, resourceTypeIds, relevance);
+            nodeResources = nodeConnectionRepository.getResourceBy(nodeIds, resourceTypeIds, relevance);
         } else {
-            var nodeResourcesStream = nodeConnectionRepository.findParent
-            var nodeResourcesStream = nodeResourceRepository
-                    .findAllByNodeIdsIncludingRelationsForResourceDocuments(nodeIds).stream();
+            var nodeResourcesStream = nodeConnectionRepository.getByResourceIds(nodeIds).stream();
             if (relevance != null) {
                 final var isRequestingCore = "urn:relevance:core".equals(relevance.toString());
                 nodeResourcesStream = nodeResourcesStream.filter(nodeResource -> {
-                    final var resource = nodeResource.getResource().orElse(null);
+                    final var resource = nodeResource.getChild().orElse(null);
                     if (resource == null) {
                         return false;
                     }
@@ -270,7 +267,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
         return treeSorter.sortList(sortableListToAddTo).stream().map(ResourceTreeSortable::getResourceConnection)
                 .filter(Optional::isPresent).map(Optional::get)
-                .map(wrappedNodeResource -> new ResourceWithNodeConnectionDTO((NodeResource) wrappedNodeResource,
+                .map(wrappedNodeResource -> new ResourceWithNodeConnectionDTO((NodeConnection) wrappedNodeResource,
                         languageCode))
                 .collect(Collectors.toList());
 

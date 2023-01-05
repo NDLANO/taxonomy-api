@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Entity
 public class NodeConnection extends DomainEntity
-        implements EntityWithMetadata, EntityWithPathConnection, Comparable<NodeConnection> {
+        implements EntityWithMetadata, EntityWithPathConnection, Comparable<NodeConnection>, SortableResourceConnection<Node> {
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private Node parent;
@@ -80,6 +80,16 @@ public class NodeConnection extends DomainEntity
         if (child != null) {
             child.removeParentConnection(this);
         }
+    }
+
+    @Override
+    public Optional<Node> getResource() {
+        var child = getChild();
+        var isResource = child.map(c -> c.getNodeType() == NodeType.RESOURCE).orElse(false);
+
+        if(!isResource) throw new IllegalStateException("Tried to getResource on a nodeConnection connected to a non-resource");
+
+        return child;
     }
 
     public Optional<Node> getParent() {

@@ -35,11 +35,11 @@ public class ResourceWithNodeConnectionDTO extends ResourceDTO {
 
     }
 
-    public ResourceWithNodeConnectionDTO(NodeResource nodeResource, String language) {
+    public ResourceWithNodeConnectionDTO(NodeConnection nodeResource, String language) {
         super(nodeResource.getResource().orElseThrow(() -> new NotFoundException("NodeResource was not found")),
                 language);
 
-        this.parentId = nodeResource.getNode().map(Node::getPublicId).orElse(null);
+        this.parentId = nodeResource.getParent().map(Node::getPublicId).orElse(null);
 
         this.connectionId = nodeResource.getPublicId();
         this.rank = nodeResource.getRank();
