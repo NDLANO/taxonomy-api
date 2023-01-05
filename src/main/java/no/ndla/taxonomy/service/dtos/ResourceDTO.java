@@ -11,8 +11,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.domain.ResourceTranslation;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeTranslation;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 
 import java.net.URI;
@@ -72,7 +72,7 @@ public class ResourceDTO {
         this.metadata = metadata;
     }
 
-    public ResourceDTO(Resource resource, String languageCode) {
+    public ResourceDTO(Node resource, String languageCode) {
         this.id = resource.getPublicId();
         this.contentUri = resource.getContentUri();
         var translations = resource.getTranslations();
@@ -83,7 +83,7 @@ public class ResourceDTO {
                 .collect(Collectors.toCollection(TreeSet::new));
 
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
-                .map(ResourceTranslation::getName).orElse(resource.getName());
+                .map(NodeTranslation::getName).orElse(resource.getName());
 
         this.resourceTypes = resource.getResourceResourceTypes().stream()
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))

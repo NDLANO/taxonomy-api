@@ -11,9 +11,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
 import no.ndla.taxonomy.service.*;
@@ -34,15 +32,12 @@ import java.util.stream.Collectors;
 @RequestMapping(path = "/v1/resources")
 public class Resources extends CrudControllerWithMetadata<Node> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
-    private final ResourceService resourceService;
     private final NodeService nodeService;
-
     private final NodeRepository nodeRepository;
 
     public Resources(
             NodeRepository nodeRepository,
             ResourceResourceTypeRepository resourceResourceTypeRepository,
-            ResourceService resourceService,
             CachedUrlUpdaterService cachedUrlUpdaterService,
             MetadataService metadataService, NodeService nodeService
     ) {
@@ -51,7 +46,6 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.repository = nodeRepository;
         this.nodeRepository = nodeRepository;
-        this.resourceService = resourceService;
         this.nodeService = nodeService;
     }
 
@@ -122,10 +116,9 @@ public class Resources extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("{id}")
     @ApiOperation(value = "Gets a single resource")
-    public ResourceDTO get(@PathVariable("id") URI id,
+    public NodeDTO get(@PathVariable("id") URI id,
                            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-
-        return resourceService.getResourceByPublicId(id, language);
+        return nodeService.getNode(id, language);
     }
 
     @PutMapping("{id}")
@@ -144,7 +137,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @Transactional
     public ResponseEntity<Void> post(
             @ApiParam(name = "resource", value = "the new resource") @RequestBody ResourceCommand command) {
-        return doPost(new Resource(), command);
+        return doPost(new Node(), command);
     }
 
     @PostMapping("{id}/clone")
@@ -176,6 +169,9 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @Transactional(readOnly = true)
     public ResourceWithParentsDTO getResourceFull(@PathVariable("id") URI id,
                                                   @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+        var node = nodeService.getNode(id);
+        w
+        new ResourceWithParentsDTO(node, language);
         return resourceService.getResourceWithParentNodesByPublicId(id, language);
     }
 
@@ -184,6 +180,6 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
-        resourceService.delete(id);
+        nodeService.delete(id);
     }
 }

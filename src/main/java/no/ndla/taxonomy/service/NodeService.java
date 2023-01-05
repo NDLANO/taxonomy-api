@@ -11,6 +11,7 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.ChangelogRepository;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.service.dtos.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.service.task.Fetcher;
@@ -24,8 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.Join;
 import java.net.URI;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -44,6 +47,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final VersionService versionService;
     private final TreeSorter topicTreeSorter;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final RecursiveNodeTreeService recursiveNodeTreeService;
 
     private final ChangelogRepository changelogRepository;
     private final DomainEntityHelperService domainEntityHelperService;
@@ -56,10 +60,18 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         executor.shutdown();
     }
 
-    public NodeService(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-                       EntityConnectionService connectionService, VersionService versionService, TreeSorter topicTreeSorter,
-                       CachedUrlUpdaterService cachedUrlUpdaterService, ChangelogRepository changelogRepository,
-                       DomainEntityHelperService domainEntityHelperService, CustomFieldService customFieldService) {
+    public NodeService(
+            NodeRepository nodeRepository,
+            NodeConnectionRepository nodeConnectionRepository,
+            EntityConnectionService connectionService,
+            VersionService versionService,
+            TreeSorter topicTreeSorter,
+            CachedUrlUpdaterService cachedUrlUpdaterService,
+            ChangelogRepository changelogRepository,
+            DomainEntityHelperService domainEntityHelperService,
+            CustomFieldService customFieldService,
+            RecursiveNodeTreeService recursiveNodeTreeService
+    ) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -69,6 +81,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         this.changelogRepository = changelogRepository;
         this.domainEntityHelperService = domainEntityHelperService;
         this.customFieldService = customFieldService;
+        this.recursiveNodeTreeService = recursiveNodeTreeService;
     }
 
     @Transactional
@@ -170,6 +183,99 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
         return topicTreeSorter.sortList(wrappedList);
     }
+
+    public NodeDTO getNode(URI publicId, String language) {
+        var node = getNode(publicId);
+        return new NodeDTO(node, language);
+    }
+
+    public Node getNode(URI publicId) {
+        return nodeRepository
+                .findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
+                .orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found"));
+    }
+
+    public List<ResourceWithNodeConnectionDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds,
+                                                                    URI relevancePublicId, String languageCode, boolean recursive) {
+        final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
+
+        final Set<Integer> topicIdsToSearchFor;
+
+        // Add both topics and resourceTopics to a common list that will be sorted in a tree-structure based on rank at
+        // each level
+        final Set<ResourceTreeSortable<Node>> resourcesToSort = new HashSet<>();
+
+        // Populate a list of topic IDs we are going to fetch first, and then fetch the actual topics later
+        // This allows searching recursively without having to fetch the whole relation tree on each element in the
+        // recursive logic. It is also necessary to have the tree information later for ordering the result
+        if (recursive) {
+            final var nodeList = recursiveNodeTreeService.getRecursiveNodes(node);
+
+            nodeList.forEach(treeElement -> resourcesToSort.add(new ResourceTreeSortable<Node>("node", "node",
+                    treeElement.getId(), treeElement.getParentId().orElse(0), treeElement.getRank())));
+
+            topicIdsToSearchFor = nodeList.stream().map(RecursiveNodeTreeService.TreeElement::getId)
+                    .collect(Collectors.toSet());
+        } else {
+            topicIdsToSearchFor = Set.of(node.getId());
+        }
+
+        return filterNodeResourcesByIdsAndReturn(
+                topicIdsToSearchFor,
+                resourceTypeIds,
+                relevancePublicId,
+                resourcesToSort,
+                languageCode
+        );
+    }
+
+    private List<ResourceWithNodeConnectionDTO> filterNodeResourcesByIdsAndReturn(
+            Set<Integer> nodeIds,
+            Set<URI> resourceTypeIds, URI relevance, Set<ResourceTreeSortable<Node>> sortableListToAddTo,
+            String languageCode
+    ) {
+        final List<NodeConnection> nodeResources;
+
+        if (resourceTypeIds.size() > 0) {
+            nodeConnectionRepository.getBy(nodeIds, resourceTypeIds, relevance);
+            // TODO: Remake this nodeResourceRepository call in nodeConnectionRepository
+            nodeResources = nodeResourceRepository
+                    .findAllByNodeIdsAndResourceTypePublicIdsAndRelevancePublicIdIfNotNullIncludingRelationsForResourceDocuments(
+                            nodeIds, resourceTypeIds, relevance);
+        } else {
+            var nodeResourcesStream = nodeConnectionRepository.findParent
+            var nodeResourcesStream = nodeResourceRepository
+                    .findAllByNodeIdsIncludingRelationsForResourceDocuments(nodeIds).stream();
+            if (relevance != null) {
+                final var isRequestingCore = "urn:relevance:core".equals(relevance.toString());
+                nodeResourcesStream = nodeResourcesStream.filter(nodeResource -> {
+                    final var resource = nodeResource.getResource().orElse(null);
+                    if (resource == null) {
+                        return false;
+                    }
+                    final var rel = nodeResource.getRelevance().orElse(null);
+                    if (rel != null) {
+                        return rel.getPublicId().equals(relevance);
+                    } else {
+                        return isRequestingCore;
+                    }
+                });
+            }
+            nodeResources = nodeResourcesStream.collect(Collectors.toList());
+        }
+
+        nodeResources.forEach(nodeResource -> sortableListToAddTo.add(new ResourceTreeSortable<Node>(nodeResource)));
+
+        // Sort the list, extract all the topicResource objects in between topics and return list of documents
+
+        return treeSorter.sortList(sortableListToAddTo).stream().map(ResourceTreeSortable::getResourceConnection)
+                .filter(Optional::isPresent).map(Optional::get)
+                .map(wrappedNodeResource -> new ResourceWithNodeConnectionDTO((NodeResource) wrappedNodeResource,
+                        languageCode))
+                .collect(Collectors.toList());
+
+    }
+
 
     @Override
     public NodeRepository getRepository() {
