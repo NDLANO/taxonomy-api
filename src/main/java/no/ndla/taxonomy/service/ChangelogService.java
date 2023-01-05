@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.service;
 
-import liquibase.pro.packaged.R;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.ChangelogRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
@@ -19,11 +18,8 @@ import no.ndla.taxonomy.service.task.Updater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
@@ -63,7 +59,7 @@ public class ChangelogService implements DisposableBean {
         changelogRepository.deleteByDoneTrue();
     }
 
-    @Scheduled(fixedRate = 1, timeUnit = TimeUnit.SECONDS)
+    @Scheduled(fixedRate = 5, timeUnit = TimeUnit.SECONDS)
     @Transactional
     public void processChanges() {
         try {
