@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = {"/v1/topic-resources"})
+@RequestMapping(path = { "/v1/topic-resources" })
 @Transactional
 public class TopicResources {
 
@@ -39,12 +39,8 @@ public class TopicResources {
     private final EntityConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
 
-    public TopicResources(
-            NodeRepository nodeRepository,
-            NodeConnectionRepository nodeConnectionRepository,
-            EntityConnectionService connectionService,
-            RelevanceRepository relevanceRepository
-    ) {
+    public TopicResources(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
+            EntityConnectionService connectionService, RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
         this.connectionService = connectionService;
         this.nodeConnectionRepository = nodeConnectionRepository;
@@ -54,10 +50,8 @@ public class TopicResources {
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and resources")
     public List<ParentChildIndexDocument> index() {
-        return nodeConnectionRepository
-                .findAllByChildNodeType(NodeType.RESOURCE)
-                .stream().map(ParentChildIndexDocument::new)
-                .collect(Collectors.toList());
+        return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream()
+                .map(ParentChildIndexDocument::new).collect(Collectors.toList());
     }
 
     @GetMapping("/page")
@@ -119,7 +113,7 @@ public class TopicResources {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand command) {
+            @ApiParam(name = "connection", value = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand command) {
         var topicResource = nodeConnectionRepository.getByPublicId(id);
         var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
 

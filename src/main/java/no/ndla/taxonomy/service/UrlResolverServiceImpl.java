@@ -35,8 +35,8 @@ public class UrlResolverServiceImpl implements UrlResolverService {
     private final UrlMappingRepository urlMappingRepository;
 
     @Autowired
-    public UrlResolverServiceImpl(UrlMappingRepository urlMappingRepository,
-            NodeRepository nodeRepository, OldUrlCanonifier oldUrlCanonifier) {
+    public UrlResolverServiceImpl(UrlMappingRepository urlMappingRepository, NodeRepository nodeRepository,
+            OldUrlCanonifier oldUrlCanonifier) {
         this.nodeRepository = nodeRepository;
         this.urlMappingRepository = urlMappingRepository;
         this.canonifier = oldUrlCanonifier;

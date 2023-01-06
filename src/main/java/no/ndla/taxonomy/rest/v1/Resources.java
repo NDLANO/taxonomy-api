@@ -35,12 +35,8 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     private final NodeService nodeService;
     private final NodeRepository nodeRepository;
 
-    public Resources(
-            NodeRepository nodeRepository,
-            ResourceResourceTypeRepository resourceResourceTypeRepository,
-            CachedUrlUpdaterService cachedUrlUpdaterService,
-            MetadataService metadataService, NodeService nodeService
-    ) {
+    public Resources(NodeRepository nodeRepository, ResourceResourceTypeRepository resourceResourceTypeRepository,
+            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService, NodeService nodeService) {
         super(nodeRepository, cachedUrlUpdaterService, metadataService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
@@ -64,13 +60,8 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @ApiParam(value = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        return nodeService.getNodes(
-                language,
-                Optional.of(NodeType.RESOURCE),
-                contentUri,
-                Optional.empty(),
-                metadataFilters
-        );
+        return nodeService.getNodes(language, Optional.of(NodeType.RESOURCE), contentUri, Optional.empty(),
+                metadataFilters);
     }
 
     @GetMapping("/search")
@@ -84,14 +75,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @ApiParam(value = "Ids to fetch for query") @RequestParam(value = "ids", required = false) Optional<List<String>> ids
 
     ) {
-        return nodeService.searchByNodeType(
-                query,
-                ids,
-                language,
-                pageSize,
-                page,
-                Optional.of(NodeType.RESOURCE)
-        );
+        return nodeService.searchByNodeType(query, ids, language, pageSize, page, Optional.of(NodeType.RESOURCE));
     }
 
     @GetMapping("/page")
@@ -117,7 +101,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @GetMapping("{id}")
     @ApiOperation(value = "Gets a single resource")
     public NodeDTO get(@PathVariable("id") URI id,
-                           @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return nodeService.getNode(id, language);
     }
 
@@ -127,7 +111,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "resource", value = "the updated resource. Fields not included will be set to null.") @RequestBody ResourceCommand command) {
+            @ApiParam(name = "resource", value = "the updated resource. Fields not included will be set to null.") @RequestBody ResourceCommand command) {
         doPut(id, command);
     }
 
@@ -147,7 +131,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     public ResponseEntity<Void> clone(
             @ApiParam(name = "id", value = "Id of resource to clone", example = "urn:resource:1") @PathVariable("id") URI publicId,
             @ApiParam(name = "resource", value = "Object containing contentUri. Other values are ignored.") @RequestBody ResourceCommand command) {
-        Resource entity = resourceService.cloneResource(publicId, command.contentUri);
+        var entity = nodeService.cloneNode(publicId, command.contentUri);
         URI location = URI.create(getLocation() + "/" + entity.getPublicId());
         return ResponseEntity.created(location).build();
     }
@@ -156,7 +140,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @ApiOperation(value = "Gets all resource types associated with this resource")
     @Transactional(readOnly = true)
     public List<ResourceTypeWithConnectionDTO> getResourceTypes(@PathVariable("id") URI id,
-                                                                @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
         return resourceResourceTypeRepository
                 .findAllByResourcePublicIdIncludingResourceAndResourceTypeAndResourceTypeParent(id).stream()
@@ -168,11 +152,9 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @ApiOperation(value = "Gets all parent topics, all filters and resourceTypes for this resource")
     @Transactional(readOnly = true)
     public ResourceWithParentsDTO getResourceFull(@PathVariable("id") URI id,
-                                                  @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         var node = nodeService.getNode(id);
-        w
-        new ResourceWithParentsDTO(node, language);
-        return resourceService.getResourceWithParentNodesByPublicId(id, language);
+        return new ResourceWithParentsDTO(node, language);
     }
 
     @DeleteMapping("{id}")

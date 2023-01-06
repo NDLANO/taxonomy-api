@@ -46,9 +46,9 @@ public class ChangelogService implements DisposableBean {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public ChangelogService(ChangelogRepository changelogRepository, CustomFieldService customFieldService,
-                            DomainEntityHelperService domainEntityHelperService, VersionService versionService,
-                            ResourceTypeRepository resourceTypeRepository,
-                            ResourceResourceTypeRepository resourceResourceTypeRepository) {
+            DomainEntityHelperService domainEntityHelperService, VersionService versionService,
+            ResourceTypeRepository resourceTypeRepository,
+            ResourceResourceTypeRepository resourceResourceTypeRepository) {
         this.changelogRepository = changelogRepository;
         this.customFieldService = customFieldService;
         this.domainEntityHelperService = domainEntityHelperService;

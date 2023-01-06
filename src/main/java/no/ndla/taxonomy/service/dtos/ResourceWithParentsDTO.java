@@ -10,7 +10,7 @@ package no.ndla.taxonomy.service.dtos;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import no.ndla.taxonomy.domain.Resource;
+import no.ndla.taxonomy.domain.Node;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -28,10 +28,10 @@ public class ResourceWithParentsDTO extends ResourceDTO {
         super();
     }
 
-    public ResourceWithParentsDTO(Resource resource, String languageCode) {
+    public ResourceWithParentsDTO(Node resource, String languageCode) {
         super(resource, languageCode);
 
-        resource.getNodeResources().stream()
+        resource.getResourceChildren().stream()
                 .map(nodeResource -> new NodeWithResourceConnectionDTO(nodeResource, languageCode))
                 .forEach(parents::add);
     }

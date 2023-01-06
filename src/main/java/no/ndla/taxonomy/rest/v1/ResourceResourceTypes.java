@@ -36,11 +36,8 @@ public class ResourceResourceTypes {
     private final ResourceTypeRepository resourceTypeRepository;
     private final NodeRepository nodeRepository;
 
-    public ResourceResourceTypes(
-            ResourceResourceTypeRepository resourceResourceTypeRepository,
-            ResourceTypeRepository resourceTypeRepository,
-            NodeRepository nodeRepository
-    ) {
+    public ResourceResourceTypes(ResourceResourceTypeRepository resourceResourceTypeRepository,
+            ResourceTypeRepository resourceTypeRepository, NodeRepository nodeRepository) {
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceTypeRepository = resourceTypeRepository;
         this.nodeRepository = nodeRepository;

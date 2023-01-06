@@ -22,26 +22,24 @@ import java.util.Set;
 public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnection> {
     @SuppressWarnings("SpringDataRepositoryMethodReturnTypeInspection")
     @Query("SELECT nc.parent.id AS parentId, nc.child.id AS childId, nc.rank AS rank FROM NodeConnection nc"
-           + " JOIN nc.parent JOIN nc.child WHERE nc.parent.id IN :nodeId")
+            + " JOIN nc.parent JOIN nc.child WHERE nc.parent.id IN :nodeId")
     List<NodeTreeElement> findAllByNodeIdInIncludingTopicAndSubtopic(Set<Integer> nodeId);
 
-
     @Query("SELECT DISTINCT nr FROM NodeConnection nr " + NODE_CONNECTION_METADATA + " JOIN FETCH nr.child r "
-           + RESOURCE_METADATA + " LEFT JOIN FETCH nr.node n " + NODE_METADATA
-           + " LEFT JOIN nr.relevance rel LEFT JOIN r.resourceResourceTypes rrt"
-           + " LEFT JOIN rrt.resourceType rt LEFT JOIN FETCH r.resourceTranslations LEFT JOIN r.cachedPaths"
-           + " LEFT JOIN FETCH r.resourceResourceTypes rrtFetch LEFT JOIN FETCH nr.relevance"
-           + " LEFT JOIN FETCH rrtFetch.resourceType rtFetch LEFT JOIN FETCH rtFetch.resourceTypeTranslations"
-           + " WHERE n.id IN :nodeIds AND (rt.publicId IN :resourceTypePublicIds) AND"
-           + " n.nodeType = 'RESOURCE' AND"
-           + "   (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
+            + RESOURCE_METADATA + " LEFT JOIN FETCH nr.node n " + NODE_METADATA
+            + " LEFT JOIN nr.relevance rel LEFT JOIN r.resourceResourceTypes rrt"
+            + " LEFT JOIN rrt.resourceType rt LEFT JOIN FETCH r.resourceTranslations LEFT JOIN r.cachedPaths"
+            + " LEFT JOIN FETCH r.resourceResourceTypes rrtFetch LEFT JOIN FETCH nr.relevance"
+            + " LEFT JOIN FETCH rrtFetch.resourceType rtFetch LEFT JOIN FETCH rtFetch.resourceTypeTranslations"
+            + " WHERE n.id IN :nodeIds AND (rt.publicId IN :resourceTypePublicIds) AND" + " n.nodeType = 'RESOURCE' AND"
+            + "   (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
     List<NodeConnection> getResourceBy(Set<Integer> nodeIds, Set<URI> resourceTypeIds, URI relevance);
 
     @Query("SELECT DISTINCT nr FROM NodeConnection nr " + NODE_CONNECTION_METADATA + " LEFT JOIN FETCH nr.node n "
-           + NODE_METADATA + " LEFT JOIN FETCH nr.child r" + RESOURCE_METADATA
-           + " LEFT JOIN r.cachedPaths LEFT JOIN FETCH r.resourceResourceTypes rrtFetch"
-           + " LEFT JOIN FETCH rrtFetch.resourceType rtFetch LEFT JOIN FETCH rtFetch.resourceTypeTranslations"
-           + " WHERE n.id IN :nodeIds")
+            + NODE_METADATA + " LEFT JOIN FETCH nr.child r" + RESOURCE_METADATA
+            + " LEFT JOIN r.cachedPaths LEFT JOIN FETCH r.resourceResourceTypes rrtFetch"
+            + " LEFT JOIN FETCH rrtFetch.resourceType rtFetch LEFT JOIN FETCH rtFetch.resourceTypeTranslations"
+            + " WHERE n.id IN :nodeIds")
     List<NodeConnection> getByResourceIds(Collection<Integer> nodeIds);
 
     interface NodeTreeElement {
@@ -53,44 +51,42 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
     }
 
     @Query("SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child JOIN FETCH nc.metadata m"
-           + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField")
+            + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField")
     List<NodeConnection> findAllIncludingParentAndChild();
 
     @Query("SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child c JOIN FETCH nc.metadata m"
-           + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField WHERE c.nodeType = :nodeType")
+            + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField WHERE c.nodeType = :nodeType")
     List<NodeConnection> findAllByChildNodeType(NodeType childNodeType);
 
     @Query(value = "SELECT nc.id FROM NodeConnection nc ORDER BY nc.id", countQuery = "SELECT count(*) from NodeConnection")
     Page<Integer> findIdsPaginated(Pageable pageable);
 
-    @Query(
-            value = """
-                    SELECT nc.id FROM NodeConnection nc
-                    JOIN FETCH nc.child c
-                    WHERE c.nodeType = :nodeType
-                    ORDER BY nc.id
-                    """,
-            countQuery = """
-                    SELECT count(nc.id) FROM NodeConnection nc
-                    JOIN FETCH nc.child c
-                    WHERE c.nodeType = :nodeType
-                    ORDER BY nc.id
-                    """)
+    @Query(value = """
+            SELECT nc.id FROM NodeConnection nc
+            JOIN FETCH nc.child c
+            WHERE c.nodeType = :nodeType
+            ORDER BY nc.id
+            """, countQuery = """
+            SELECT count(nc.id) FROM NodeConnection nc
+            JOIN FETCH nc.child c
+            WHERE c.nodeType = :nodeType
+            ORDER BY nc.id
+            """)
     Page<Integer> findIdsPaginatedByChildNodeType(Pageable pageable, NodeType nodeType);
 
     @Query("SELECT DISTINCT nc FROM NodeConnection nc " + NODE_CONNECTION_METADATA + " JOIN FETCH nc.parent n "
-           + NODE_METADATA + " JOIN FETCH nc.child c " + CHILD_METADATA + " WHERE nc.id in :ids")
+            + NODE_METADATA + " JOIN FETCH nc.child c " + CHILD_METADATA + " WHERE nc.id in :ids")
     List<NodeConnection> findByIds(Collection<Integer> ids);
 
     @Query("SELECT DISTINCT nc FROM NodeConnection nc " + NODE_CONNECTION_METADATA + " JOIN FETCH nc.child c "
-           + CHILD_METADATA + " JOIN FETCH nc.parent n" + NODE_METADATA
-           + " LEFT JOIN FETCH c.translations WHERE n.publicId = :publicId")
+            + CHILD_METADATA + " JOIN FETCH nc.parent n" + NODE_METADATA
+            + " LEFT JOIN FETCH c.translations WHERE n.publicId = :publicId")
     List<NodeConnection> findAllByParentPublicIdIncludingChildAndChildTranslations(URI publicId);
 
     @Query("SELECT DISTINCT nc FROM NodeConnection nc " + NODE_CONNECTION_METADATA + " JOIN FETCH nc.parent n "
-           + NODE_METADATA + " JOIN FETCH nc.child c" + CHILD_METADATA
-           + " LEFT JOIN n.translations LEFT JOIN FETCH c.translations LEFT JOIN c.cachedPaths"
-           + " WHERE nc.child.id IN :nodeId")
+            + NODE_METADATA + " JOIN FETCH nc.child c" + CHILD_METADATA
+            + " LEFT JOIN n.translations LEFT JOIN FETCH c.translations LEFT JOIN c.cachedPaths"
+            + " WHERE nc.child.id IN :nodeId")
     List<NodeConnection> doFindAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<Integer> nodeId);
 
     default List<NodeConnection> findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(

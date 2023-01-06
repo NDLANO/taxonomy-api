@@ -21,18 +21,16 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class DomainEntityHelperServiceImpl implements DomainEntityHelperService {
     private final NodeRepository nodeRepository;
-    private final ResourceRepository resourceRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
-    private final NodeResourceRepository nodeResourceRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public DomainEntityHelperServiceImpl(NodeRepository nodeRepository, ResourceRepository resourceRepository,
-            NodeConnectionRepository nodeConnectionRepository, NodeResourceRepository nodeResourceRepository,
-            CachedUrlUpdaterService cachedUrlUpdaterService) {
+    public DomainEntityHelperServiceImpl(
+            NodeRepository nodeRepository,
+            NodeConnectionRepository nodeConnectionRepository,
+            CachedUrlUpdaterService cachedUrlUpdaterService
+    ) {
         this.nodeRepository = nodeRepository;
-        this.resourceRepository = resourceRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
-        this.nodeResourceRepository = nodeResourceRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
 
@@ -47,19 +45,12 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Transactional
     public DomainEntity getEntityByPublicId(URI publicId) {
         switch (publicId.getSchemeSpecificPart().split(":")[0]) {
-        case "subject":
-        case "topic":
-        case "node":
-            return nodeRepository.findNodeGraphByPublicId(publicId);
-        case "resource":
-            return resourceRepository.findResourceGraphByPublicId(publicId);
-        case "node-connection":
-        case "subject-topic":
-        case "topic-subtopic":
-            return nodeConnectionRepository.findByPublicId(publicId);
-        case "node-resource":
-        case "topic-resource":
-            return nodeResourceRepository.findByPublicId(publicId);
+            case "subject", "topic", "node", "resource" -> {
+                return nodeRepository.findNodeGraphByPublicId(publicId);
+            }
+            case "node-connection", "subject-topic", "topic-subtopic", "node-resource", "topic-resource" -> {
+                return nodeConnectionRepository.findByPublicId(publicId);
+            }
         }
         throw new NotFoundServiceException("Entity of type not found");
     }
@@ -67,19 +58,12 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Override
     public TaxonomyRepository getRepository(URI publicId) {
         switch (publicId.getSchemeSpecificPart().split(":")[0]) {
-        case "subject":
-        case "topic":
-        case "node":
-            return nodeRepository;
-        case "resource":
-            return resourceRepository;
-        case "node-connection":
-        case "subject-topic":
-        case "topic-subtopic":
-            return nodeConnectionRepository;
-        case "node-resource":
-        case "topic-resource":
-            return nodeResourceRepository;
+            case "subject", "topic", "node", "resource" -> {
+                return nodeRepository;
+            }
+            case "node-connection", "subject-topic", "topic-subtopic", "node-resource", "topic-resource" -> {
+                return nodeConnectionRepository;
+            }
         }
         throw new NotFoundServiceException(String.format("Unknown repository requested: %s", publicId));
     }

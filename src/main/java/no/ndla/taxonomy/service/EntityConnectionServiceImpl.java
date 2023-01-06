@@ -29,18 +29,15 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
     private final NodeRepository nodeRepository;
 
-    public EntityConnectionServiceImpl(
-            NodeConnectionRepository nodeConnectionRepository,
-            CachedUrlUpdaterService cachedUrlUpdaterService,
-            NodeRepository nodeRepository
-    ) {
+    public EntityConnectionServiceImpl(NodeConnectionRepository nodeConnectionRepository,
+            CachedUrlUpdaterService cachedUrlUpdaterService, NodeRepository nodeRepository) {
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
         this.nodeRepository = nodeRepository;
     }
 
     private EntityWithPathConnection doCreateConnection(EntityWithPath parent, EntityWithPath child,
-                                                        boolean requestedPrimary, Relevance relevance, int rank) {
+            boolean requestedPrimary, Relevance relevance, int rank) {
         if (child.getParentConnections().size() == 0) {
             // First connected is always primary regardless of request
             requestedPrimary = true;
@@ -70,12 +67,14 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         return connection;
     }
 
-    private NodeConnection createConnection(Node parent, Node child, Relevance relevance, int rank, Optional<Boolean> isPrimary) {
+    private NodeConnection createConnection(Node parent, Node child, Relevance relevance, int rank,
+            Optional<Boolean> isPrimary) {
         return (NodeConnection) doCreateConnection(parent, child, isPrimary.orElse(true), relevance, rank);
     }
 
     @Override
-    public NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank, Optional<Boolean> isPrimary) {
+    public NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank,
+            Optional<Boolean> isPrimary) {
         if (child.getParentConnections().size() > 0) {
             throw new DuplicateConnectionException();
         }
@@ -176,7 +175,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     private void updateRank(EntityWithPathConnection rankable, int newRank) {
         final var updatedConnections = RankableConnectionUpdater.rank(new ArrayList<>(rankable.getConnectedParent()
-                        .orElseThrow(() -> new IllegalStateException("Rankable parent not found")).getChildConnections()),
+                .orElseThrow(() -> new IllegalStateException("Rankable parent not found")).getChildConnections()),
                 rankable, newRank);
         saveConnections(updatedConnections);
     }
@@ -196,7 +195,8 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank, Optional<Boolean> isPrimary) {
+    public void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank,
+            Optional<Boolean> isPrimary) {
         updateRank(nodeConnection, newRank);
         isPrimary.ifPresent(primary -> updatePrimaryConnection(nodeConnection, primary));
         updateRelevance(nodeConnection, relevance);
@@ -233,9 +233,9 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     @Override
     public void disconnectAllParents(URI nodeId) {
-        var node = nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(nodeId).orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
-        node.getParentConnections()
-                .forEach(connection -> disconnectParentChildConnection((NodeConnection) connection));
+        var node = nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(nodeId)
+                .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
+        node.getParentConnections().forEach(connection -> disconnectParentChildConnection((NodeConnection) connection));
     }
 
     @Override

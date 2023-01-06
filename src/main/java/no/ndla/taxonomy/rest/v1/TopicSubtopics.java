@@ -87,9 +87,9 @@ public class TopicSubtopics {
         Node subtopic = nodeRepository.getByPublicId(command.subtopicid);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
                 : null;
+        var rank = command.rank == 0 ? null : command.rank;
 
-        final var topicSubtopic = connectionService.connectParentChild(topic, subtopic, relevance,
-                command.rank == 0 ? null : command.rank);
+        final var topicSubtopic = connectionService.connectParentChild(topic, subtopic, relevance, rank, Optional.empty());
 
         URI location = URI.create("/topic-subtopics/" + topicSubtopic.getPublicId());
         return ResponseEntity.created(location).build();
@@ -112,8 +112,9 @@ public class TopicSubtopics {
         final var topicSubtopic = nodeConnectionRepository.getByPublicId(id);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
                 : null;
+        var rank = command.rank > 0 ? command.rank : null;
 
-        connectionService.updateParentChild(topicSubtopic, relevance, command.rank > 0 ? command.rank : null);
+        connectionService.updateParentChild(topicSubtopic, relevance, rank, Optional.empty());
     }
 
     public static class AddSubtopicToTopicCommand {

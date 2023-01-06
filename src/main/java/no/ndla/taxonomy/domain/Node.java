@@ -17,12 +17,11 @@ import java.util.stream.Collectors;
 @NamedEntityGraph(name = Node.GRAPH, includeAllAttributes = true, attributeNodes = {
         @NamedAttributeNode("translations"), @NamedAttributeNode(value = "metadata"),
         @NamedAttributeNode(value = "parentConnections", subgraph = "parent-connection"),
-        @NamedAttributeNode(value = "childConnections", subgraph = "child-connection")}, subgraphs = {
-        @NamedSubgraph(name = "parent-connection", attributeNodes = {@NamedAttributeNode("parent"),
-                @NamedAttributeNode(value = "metadata")}),
-        @NamedSubgraph(name = "child-connection", attributeNodes = {@NamedAttributeNode("child"),
-                @NamedAttributeNode(value = "metadata")})
-})
+        @NamedAttributeNode(value = "childConnections", subgraph = "child-connection") }, subgraphs = {
+                @NamedSubgraph(name = "parent-connection", attributeNodes = { @NamedAttributeNode("parent"),
+                        @NamedAttributeNode(value = "metadata") }),
+                @NamedSubgraph(name = "child-connection", attributeNodes = { @NamedAttributeNode("child"),
+                        @NamedAttributeNode(value = "metadata") }) })
 @Entity
 public class Node extends EntityWithPath {
     public static final String GRAPH = "node-with-connections";
@@ -73,19 +72,41 @@ public class Node extends EntityWithPath {
     }
 
     public Node(Node node) {
+        this(node, true);
+    }
+
+    public Node(Node node, boolean keepPublicId) {
         this.contentUri = node.getContentUri();
         this.nodeType = node.getNodeType();
         this.ident = node.getIdent();
         this.context = node.isContext();
         this.root = node.isRoot();
+
+        if (keepPublicId) {
+            setPublicId(node.getPublicId());
+        } else {
+            setIdent(UUID.randomUUID().toString());
+            updatePublicID();
+        }
+
         TreeSet<NodeTranslation> trs = new TreeSet<>();
         for (NodeTranslation tr : node.getTranslations()) {
             trs.add(new NodeTranslation(tr, this));
         }
         this.translations = trs;
+        TreeSet<ResourceResourceType> rrts = new TreeSet<>();
+        for (ResourceResourceType rt : node.getResourceResourceTypes()) {
+            ResourceResourceType rrt = new ResourceResourceType();
+            if (keepPublicId) {
+                rrt.setPublicId(rt.getPublicId());
+            }
+            rrt.setResource(this);
+            rrt.setResourceType(rt.getResourceType());
+            rrts.add(rrt);
+        }
+        this.resourceResourceTypes = rrts;
         setMetadata(new Metadata(node.getMetadata()));
         setName(node.getName());
-        setPublicId(node.getPublicId());
     }
 
     private void updatePublicID() {
@@ -132,9 +153,9 @@ public class Node extends EntityWithPath {
     }
 
     public Collection<NodeConnection> getResourceChildren() {
-        return childConnections.stream().filter(cc ->
-                cc.getChild().map(child -> child.getNodeType() == NodeType.RESOURCE).orElse(false)
-        ).collect(Collectors.toUnmodifiableList());
+        return childConnections.stream()
+                .filter(cc -> cc.getChild().map(child -> child.getNodeType() == NodeType.RESOURCE).orElse(false))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     public Collection<ResourceType> getResourceTypes() {
@@ -159,7 +180,8 @@ public class Node extends EntityWithPath {
 
     public void addResourceResourceType(ResourceResourceType resourceResourceType) {
         if (this.getNodeType() != NodeType.RESOURCE)
-            throw new IllegalArgumentException("ResourceResourceType can only be associated with " + NodeType.RESOURCE.toString());
+            throw new IllegalArgumentException(
+                    "ResourceResourceType can only be associated with " + NodeType.RESOURCE.toString());
 
         this.resourceResourceTypes.add(resourceResourceType);
 
@@ -220,13 +242,8 @@ public class Node extends EntityWithPath {
     }
 
     public Collection<Node> getResources() {
-        return childConnections
-                .stream()
-                .map(NodeConnection::getChild)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .filter(s -> s.getNodeType() == NodeType.RESOURCE)
-                .collect(Collectors.toUnmodifiableList());
+        return childConnections.stream().map(NodeConnection::getChild).filter(Optional::isPresent).map(Optional::get)
+                .filter(s -> s.getNodeType() == NodeType.RESOURCE).collect(Collectors.toUnmodifiableList());
     }
 
     public void setIdent(String ident) {

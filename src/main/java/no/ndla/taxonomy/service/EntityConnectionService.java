@@ -14,7 +14,8 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface EntityConnectionService {
-    NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank, Optional<Boolean> isPrimary);
+    NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank,
+            Optional<Boolean> isPrimary);
 
     void disconnectParentChild(Node parent, Node child);
 

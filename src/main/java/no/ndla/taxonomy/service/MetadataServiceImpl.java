@@ -59,10 +59,6 @@ public class MetadataServiceImpl implements MetadataService {
 
             // Temporary update child relation when updating connection. Turn off after ed is updated
             if (updateChildRelation) {
-                if (entity instanceof NodeResource) {
-                    Metadata resourceMetadata = ((NodeResource) entity).getResource().get().getMetadata();
-                    mergeMetadata(resourceMetadata, metadataDto);
-                }
                 if (entity instanceof NodeConnection) {
                     Metadata connectionMetadata = ((NodeConnection) entity).getChild().get().getMetadata();
                     mergeMetadata(connectionMetadata, metadataDto);

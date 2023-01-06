@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.NodeResource;
+import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 
@@ -37,8 +37,8 @@ public class NodeWithResourceConnectionDTO extends NodeDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 
-    public NodeWithResourceConnectionDTO(NodeResource nodeResource, String language) {
-        super(nodeResource.getNode().orElseThrow(() -> new NotFoundException("Node was not found")), language);
+    public NodeWithResourceConnectionDTO(NodeConnection nodeResource, String language) {
+        super(nodeResource.getParent().orElseThrow(() -> new NotFoundException("Node was not found")), language);
 
         this.isPrimary = nodeResource.isPrimary().orElse(false);
         this.connectionId = nodeResource.getPublicId();

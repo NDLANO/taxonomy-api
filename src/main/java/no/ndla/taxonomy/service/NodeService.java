@@ -61,19 +61,11 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         executor.shutdown();
     }
 
-    public NodeService(
-            NodeRepository nodeRepository,
-            NodeConnectionRepository nodeConnectionRepository,
-            EntityConnectionService connectionService,
-            VersionService versionService,
-            TreeSorter topicTreeSorter,
-            CachedUrlUpdaterService cachedUrlUpdaterService,
-            ChangelogRepository changelogRepository,
-            DomainEntityHelperService domainEntityHelperService,
-            CustomFieldService customFieldService,
-            RecursiveNodeTreeService recursiveNodeTreeService,
-            TreeSorter treeSorter
-    ) {
+    public NodeService(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
+            EntityConnectionService connectionService, VersionService versionService, TreeSorter topicTreeSorter,
+            CachedUrlUpdaterService cachedUrlUpdaterService, ChangelogRepository changelogRepository,
+            DomainEntityHelperService domainEntityHelperService, CustomFieldService customFieldService,
+            RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -135,7 +127,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public List<EntityWithPathDTO> getNodes(Optional<String> language, Optional<NodeType> nodeType,
-                                            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
 
         final List<Node> filtered;
         Specification<Node> specification = where(base());
@@ -193,13 +185,12 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public Node getNode(URI publicId) {
-        return nodeRepository
-                .findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
+        return nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found"));
     }
 
     public List<ResourceWithNodeConnectionDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds,
-                                                                    URI relevancePublicId, String languageCode, boolean recursive) {
+            URI relevancePublicId, String languageCode, boolean recursive) {
         final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
 
         final Set<Integer> topicIdsToSearchFor;
@@ -223,20 +214,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             topicIdsToSearchFor = Set.of(node.getId());
         }
 
-        return filterNodeResourcesByIdsAndReturn(
-                topicIdsToSearchFor,
-                resourceTypeIds,
-                relevancePublicId,
-                resourcesToSort,
-                languageCode
-        );
+        return filterNodeResourcesByIdsAndReturn(topicIdsToSearchFor, resourceTypeIds, relevancePublicId,
+                resourcesToSort, languageCode);
     }
 
-    private List<ResourceWithNodeConnectionDTO> filterNodeResourcesByIdsAndReturn(
-            Set<Integer> nodeIds,
+    private List<ResourceWithNodeConnectionDTO> filterNodeResourcesByIdsAndReturn(Set<Integer> nodeIds,
             Set<URI> resourceTypeIds, URI relevance, Set<ResourceTreeSortable<Node>> sortableListToAddTo,
-            String languageCode
-    ) {
+            String languageCode) {
         final List<NodeConnection> nodeResources;
 
         if (resourceTypeIds.size() > 0) {
@@ -273,7 +257,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     }
 
-
     @Override
     public NodeRepository getRepository() {
         return nodeRepository;
@@ -285,7 +268,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public SearchResultDTO<NodeDTO> searchByNodeType(Optional<String> query, Optional<List<String>> ids,
-                                                     Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
+            Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
         Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
         return SearchService.super.search(query, ids, language, pageSize, page, nodeSpecLambda);
     }
@@ -314,11 +297,16 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     /**
      * Adds node and children to table to be processed later
      *
-     * @param nodeId   Public ID of the node to publish
-     * @param sourceId Public ID of source schema. Default schema if not present
-     * @param targetId Public ID of target schema. Mandatory
-     * @param isRoot   Used to save meta-field to track publishing
-     * @param cleanUp  Used to clean up metadata after publishing
+     * @param nodeId
+     *            Public ID of the node to publish
+     * @param sourceId
+     *            Public ID of source schema. Default schema if not present
+     * @param targetId
+     *            Public ID of target schema. Mandatory
+     * @param isRoot
+     *            Used to save meta-field to track publishing
+     * @param cleanUp
+     *            Used to clean up metadata after publishing
      */
     @Async
     @Transactional
@@ -363,5 +351,12 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         if (isRoot) {
             logger.info("Node " + nodeId + " added to changelog for publishing to " + target);
         }
+    }
+
+    public Node cloneNode(URI publicId, URI contentUri) {
+        final var node = getNode(publicId);
+        var cloned = new Node(node, false);
+        cloned.setContentUri(contentUri);
+        return nodeRepository.save(cloned);
     }
 }

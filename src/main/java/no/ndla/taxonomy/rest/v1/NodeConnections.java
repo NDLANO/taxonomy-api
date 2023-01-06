@@ -36,7 +36,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = {"/v1/node-connections"})
+@RequestMapping(path = { "/v1/node-connections" })
 @Transactional
 public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> {
     private final NodeRepository nodeRepository;
@@ -45,8 +45,8 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     private final RelevanceRepository relevanceRepository;
 
     public NodeConnections(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-                           EntityConnectionService connectionService, RelevanceRepository relevanceRepository,
-                           CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
+            EntityConnectionService connectionService, RelevanceRepository relevanceRepository,
+            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
         super(nodeConnectionRepository, cachedUrlUpdaterService, metadataService);
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
@@ -64,7 +64,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @GetMapping("/page")
     @ApiOperation(value = "Gets all connections between node and children paginated")
     public NodeConnectionPage allPaginated(@ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
-                                           @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
+            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
         }
@@ -114,7 +114,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @ApiOperation(value = "Updates a connection between a node and a child", notes = "Use to update which node is primary to a child or to alter sorting order")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateNodeChildCommand command) {
+            @ApiParam(name = "connection", value = "The updated connection") @RequestBody UpdateNodeChildCommand command) {
         final var connection = nodeConnectionRepository.getByPublicId(id);
         var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
         var rank = command.rank > 0 ? command.rank : null;

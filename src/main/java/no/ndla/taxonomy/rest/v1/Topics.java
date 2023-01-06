@@ -33,12 +33,8 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     private final NodeRepository nodeRepository;
     private final NodeService nodeService;
 
-    public Topics(
-            NodeRepository nodeRepository,
-            NodeService nodeService,
-            CachedUrlUpdaterService cachedUrlUpdaterService,
-            MetadataService metadataService
-    ) {
+    public Topics(NodeRepository nodeRepository, NodeService nodeService,
+            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
         super(nodeRepository, cachedUrlUpdaterService, metadataService);
 
         this.nodeRepository = nodeRepository;
@@ -94,10 +90,8 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}")
     @ApiOperation("Gets a single topic")
     @Transactional
-    public EntityWithPathDTO get(
-            @PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language
-    ) {
+    public EntityWithPathDTO get(@PathVariable("id") URI id,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return nodeService.getNode(id, language);
     }
 

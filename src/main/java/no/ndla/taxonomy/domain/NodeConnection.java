@@ -14,8 +14,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Entity
-public class NodeConnection extends DomainEntity
-        implements EntityWithMetadata, EntityWithPathConnection, Comparable<NodeConnection>, SortableResourceConnection<Node> {
+public class NodeConnection extends DomainEntity implements EntityWithMetadata, EntityWithPathConnection,
+        Comparable<NodeConnection>, SortableResourceConnection<Node> {
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private Node parent;
@@ -87,7 +87,8 @@ public class NodeConnection extends DomainEntity
         var child = getChild();
         var isResource = child.map(c -> c.getNodeType() == NodeType.RESOURCE).orElse(false);
 
-        if(!isResource) throw new IllegalStateException("Tried to getResource on a nodeConnection connected to a non-resource");
+        if (!isResource)
+            throw new IllegalStateException("Tried to getResource on a nodeConnection connected to a non-resource");
 
         return child;
     }
@@ -141,8 +142,9 @@ public class NodeConnection extends DomainEntity
     @Override
     public void setPrimary(boolean isPrimary) {
         var childType = this.child.getNodeType();
-        if(childType != NodeType.RESOURCE) {
-            throw new UnsupportedOperationException("NodeConnection with child of type '" + childType.toString() + "' can not be non-primary");
+        if (childType != NodeType.RESOURCE) {
+            throw new UnsupportedOperationException(
+                    "NodeConnection with child of type '" + childType.toString() + "' can not be non-primary");
         }
 
         this.isPrimary = isPrimary;

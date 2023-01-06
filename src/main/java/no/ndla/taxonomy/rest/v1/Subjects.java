@@ -31,24 +31,27 @@ import java.util.stream.Collectors;
 
 @RestController
 @Transactional
-@RequestMapping(path = { "/v1/subjects" })
+@RequestMapping(path = {"/v1/subjects"})
 public class Subjects extends CrudControllerWithMetadata<Node> {
     private final TreeSorter topicTreeSorter;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
-    private final ResourceService resourceService;
     private final NodeService nodeService;
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
 
-    public Subjects(TreeSorter treeSorter, CachedUrlUpdaterService cachedUrlUpdaterService,
-            RecursiveNodeTreeService recursiveNodeTreeService, ResourceService resourceService,
-            MetadataService metadataService, NodeService nodeService, NodeRepository nodeRepository,
-            NodeConnectionRepository nodeConnectionRepository) {
+    public Subjects(
+            TreeSorter treeSorter,
+            CachedUrlUpdaterService cachedUrlUpdaterService,
+            RecursiveNodeTreeService recursiveNodeTreeService,
+            MetadataService metadataService,
+            NodeService nodeService,
+            NodeRepository nodeRepository,
+            NodeConnectionRepository nodeConnectionRepository
+    ) {
         super(nodeRepository, cachedUrlUpdaterService, metadataService);
 
         this.topicTreeSorter = treeSorter;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
-        this.resourceService = resourceService;
         this.nodeService = nodeService;
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
@@ -102,7 +105,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a single subject", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
     public EntityWithPathDTO get(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+                                 @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
                 .map(subject -> new NodeDTO(subject, language))
                 .orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
@@ -113,7 +116,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-            @ApiParam(name = "subject", value = "The updated subject. Fields not included will be set to null.") @RequestBody SubjectCommand command) {
+                    @ApiParam(name = "subject", value = "The updated subject. Fields not included will be set to null.") @RequestBody SubjectCommand command) {
         doPut(id, command);
     }
 
@@ -129,11 +132,11 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/topics")
     @ApiOperation(value = "Gets all children associated with a subject", notes = "This resource is read-only. To update the relationship between nodes, use the resource /subject-topics.")
     public List<EntityWithPathChildDTO> getChildren(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
-            @ApiParam("If true, subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
-            @Deprecated @ApiParam(value = "Select by filter id(s). If not specified, all topics will be returned."
-                    + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) @RequestParam(value = "filter", required = false, defaultValue = "") Set<URI> filterIds,
-            @ApiParam(value = "Select by relevance. If not specified, all nodes will be returned.") @RequestParam(value = "relevance", required = false, defaultValue = "") URI relevance) {
+                                                    @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
+                                                    @ApiParam("If true, subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
+                                                    @Deprecated @ApiParam(value = "Select by filter id(s). If not specified, all topics will be returned."
+                                                            + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) @RequestParam(value = "filter", required = false, defaultValue = "") Set<URI> filterIds,
+                                                    @ApiParam(value = "Select by relevance. If not specified, all nodes will be returned.") @RequestParam(value = "relevance", required = false, defaultValue = "") URI relevance) {
         final var subject = nodeRepository.findFirstByPublicId(id)
                 .orElseThrow(() -> new NotFoundException("Subject", id));
 
@@ -182,7 +185,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     }
 
     private boolean searchForRelevance(NodeConnection connection, URI relevancePublicId,
-            Collection<NodeConnection> children) {
+                                       Collection<NodeConnection> children) {
         if (relevancePublicId == null) {
             return true;
         }
@@ -218,19 +221,25 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{subjectId}/resources")
     @ApiOperation(value = "Gets all resources for a subject. Searches recursively in all children of this node."
             + "The ordering of resources will be based on the rank of resources relative to the node they belong to.", tags = {
-                    "subjects" })
+            "subjects"})
     public List<ResourceWithNodeConnectionDTO> getResources(@PathVariable("subjectId") URI subjectId,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
-            @ApiParam(value = "Filter by resource type id(s). If not specified, resources of all types will be returned."
-                    + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) @RequestParam(value = "type", required = false, defaultValue = "") URI[] resourceTypeIds,
-            @Deprecated @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned."
-                    + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) @RequestParam(value = "filter", required = false, defaultValue = "") URI[] filterIds,
-            @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.") @RequestParam(value = "relevance", required = false, defaultValue = "") URI relevance) {
+                                                            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
+                                                            @ApiParam(value = "Filter by resource type id(s). If not specified, resources of all types will be returned."
+                                                                    + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) @RequestParam(value = "type", required = false, defaultValue = "") URI[] resourceTypeIds,
+                                                            @Deprecated @ApiParam(value = "Select by filter id(s). If not specified, all resources will be returned."
+                                                                    + "Multiple ids may be separated with comma or the parameter may be repeated for each id.", allowMultiple = true) @RequestParam(value = "filter", required = false, defaultValue = "") URI[] filterIds,
+                                                            @ApiParam(value = "Select by relevance. If not specified, all resources will be returned.") @RequestParam(value = "relevance", required = false, defaultValue = "") URI relevance) {
         final Set<URI> resourceTypeIdSet = resourceTypeIds != null ? Set.of(resourceTypeIds) : Set.of();
 
         // If null is sent to query it will be ignored, otherwise it will filter by relevance
         final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
 
-        return resourceService.getResourcesByNodeId(subjectId, resourceTypeIdSet, relevanceArgument, language, true);
+        return nodeService.getResourcesByNodeId(
+                subjectId,
+                resourceTypeIdSet,
+                relevanceArgument,
+                language,
+                true
+        );
     }
 }
