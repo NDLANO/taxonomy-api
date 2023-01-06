@@ -1056,8 +1056,8 @@
 
     <changeSet id="20230103 Copy resources to nodes" author="Jonas Natten">
         <sql splitStatements="false" stripComments="false">
-            INSERT INTO node (public_id, ident, node_type, name, content_uri, context)
-            SELECT public_id, REPLACE(public_id, 'urn:resource:', '') as ident, 'RESOURCE' as node_type, name, content_uri, false as context FROM resource;
+            INSERT INTO node (public_id, ident, node_type, name, content_uri, context, metadata_id)
+            SELECT public_id, REPLACE(public_id, 'urn:resource:', '') as ident, 'RESOURCE' as node_type, name, content_uri, false as context, metadata_id FROM resource;
         </sql>
     </changeSet>
 
