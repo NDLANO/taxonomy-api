@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Relevance;
@@ -73,10 +74,11 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
             throw new IllegalArgumentException("page parameter must be bigger than 0");
 
         var pageRequest = PageRequest.of(page.get() - 1, pageSize.get());
-        var ids = nodeConnectionRepository.findIdsPaginatedByChildNodeType(pageRequest, NodeType.RESOURCE);
-        var results = nodeConnectionRepository.findByIds(ids.getContent());
+        var connections = nodeConnectionRepository.findIdsPaginatedByChildNodeType(pageRequest, NodeType.RESOURCE);
+        var ids = connections.stream().map(DomainEntity::getId).collect(Collectors.toList());
+        var results = nodeConnectionRepository.findByIds(ids);
         var contents = results.stream().map(ParentChildIndexDocument::new).collect(Collectors.toList());
-        return new NodeConnectionPage(ids.getTotalElements(), contents);
+        return new NodeConnectionPage(connections.getTotalElements(), contents);
     }
 
     @GetMapping("/{id}")

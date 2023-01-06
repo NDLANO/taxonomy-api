@@ -58,7 +58,7 @@ public class Node extends EntityWithPath {
     @Column
     private boolean root;
 
-    @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceResourceType> resourceResourceTypes = new TreeSet<>();
 
     // Needed for hibernate
