@@ -65,8 +65,13 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             @ApiParam(value = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @ApiParam(value = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        return nodeService.getNodes(language, Optional.of(NodeType.SUBJECT), Optional.empty(), Optional.empty(),
-                metadataFilters);
+        return nodeService.getNodes(
+                language,
+                Optional.of(NodeType.SUBJECT),
+                Optional.empty(),
+                Optional.empty(),
+                metadataFilters
+        );
     }
 
     @GetMapping("/search")

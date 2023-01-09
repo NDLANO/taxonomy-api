@@ -106,50 +106,21 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("nodeType"), nodeType);
     }
 
-    public Specification<Node> nodeHasContentUri(URI contentUri) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("contentUri"), contentUri);
-    }
-
-    public Specification<Node> nodeHasCustomKey(String key) {
-        return (root, query, criteriaBuilder) -> {
-            Join<Node, Metadata> nodeMetadataJoin = root.join("metadata");
-            Join<Metadata, CustomFieldValue> join = nodeMetadataJoin.join("customFieldValues");
-            return criteriaBuilder.equal(join.get("customField").get("key"), key);
-        };
-    }
-
-    public Specification<Node> nodeHasCustomValue(String value) {
-        return (root, query, criteriaBuilder) -> {
-            Join<Node, Metadata> nodeMetadataJoin = root.join("metadata");
-            Join<Metadata, CustomFieldValue> join = nodeMetadataJoin.join("customFieldValues");
-            return criteriaBuilder.equal(join.get("value"), value);
-        };
-    }
-
-    public List<EntityWithPathDTO> getNodes(Optional<String> language, Optional<NodeType> nodeType,
-            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
-
-        final List<Node> filtered;
-        Specification<Node> specification = where(base());
-        if (isRoot.isPresent()) {
-            specification = specification.and(nodeIsRoot());
-        }
-        if (contentUri.isPresent()) {
-            specification = specification.and(nodeHasContentUri(contentUri.get()));
-        }
-        if (nodeType.isPresent()) {
-            specification = specification.and(nodeHasNodeType(nodeType.get()));
-        }
-        if (metadataFilters.getVisible().isPresent()) {
-            specification = specification.and(nodeIsVisible(metadataFilters.getVisible().get()));
-        }
-        if (metadataFilters.getKey().isPresent()) {
-            specification = specification.and(nodeHasCustomKey(metadataFilters.getKey().get()));
-        }
-        if (metadataFilters.getValue().isPresent()) {
-            specification = specification.and(nodeHasCustomValue(metadataFilters.getValue().get()));
-        }
-        filtered = nodeRepository.findAll(specification);
+    public List<EntityWithPathDTO> getNodes(
+            Optional<String> language,
+            Optional<NodeType> nodeType,
+            Optional<URI> contentUri,
+            Optional<Boolean> isRoot,
+            MetadataFilters metadataFilters
+    ) {
+        final List<Node> filtered = nodeRepository.findByNodeType(
+                nodeType,
+                metadataFilters.getVisible(),
+                metadataFilters.getKey(),
+                metadataFilters.getValue(),
+                contentUri,
+                isRoot
+        );
 
         return filtered.stream().distinct().map(n -> new NodeDTO(n, language.get())).collect(Collectors.toList());
     }
@@ -267,8 +238,14 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return new NodeDTO(node, languageCode);
     }
 
-    public SearchResultDTO<NodeDTO> searchByNodeType(Optional<String> query, Optional<List<String>> ids,
-            Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
+    public SearchResultDTO<NodeDTO> searchByNodeType(
+            Optional<String> query,
+            Optional<List<String>> ids,
+            Optional<String> language,
+            int pageSize,
+            int page,
+            Optional<NodeType> nodeType
+    ) {
         Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
         return SearchService.super.search(query, ids, language, pageSize, page, nodeSpecLambda);
     }
