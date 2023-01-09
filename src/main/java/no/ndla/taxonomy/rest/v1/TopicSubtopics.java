@@ -89,7 +89,8 @@ public class TopicSubtopics {
                 : null;
         var rank = command.rank == 0 ? null : command.rank;
 
-        final var topicSubtopic = connectionService.connectParentChild(topic, subtopic, relevance, rank, Optional.empty());
+        final var topicSubtopic = connectionService.connectParentChild(topic, subtopic, relevance, rank,
+                Optional.empty());
 
         URI location = URI.create("/topic-subtopics/" + topicSubtopic.getPublicId());
         return ResponseEntity.created(location).build();

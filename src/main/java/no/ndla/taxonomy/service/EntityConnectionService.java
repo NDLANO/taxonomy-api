@@ -23,7 +23,8 @@ public interface EntityConnectionService {
 
     void disconnectAllParents(URI nodeId);
 
-    void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank, Optional<Boolean> isPrimary);
+    void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank,
+            Optional<Boolean> isPrimary);
 
     void replacePrimaryConnectionsFor(EntityWithPath entity);
 

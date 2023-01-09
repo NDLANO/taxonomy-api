@@ -35,12 +35,9 @@ public class HibernateConfig {
 
     @Bean
     @Primary
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory(
-            DataSource dataSource,
-            JpaVendorAdapter jpaVendorAdapter,
-            VersionConnectionProvider versionConnectionProvider,
-            VersionIdentifierResolver versionIdentifierResolver
-    ) {
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource,
+            JpaVendorAdapter jpaVendorAdapter, VersionConnectionProvider versionConnectionProvider,
+            VersionIdentifierResolver versionIdentifierResolver) {
         Map<String, Object> properties = new HashMap<>(jpaProperties.getProperties());
         properties.put(AvailableSettings.PHYSICAL_NAMING_STRATEGY,
                 "org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy");

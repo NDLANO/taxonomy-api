@@ -106,21 +106,10 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("nodeType"), nodeType);
     }
 
-    public List<EntityWithPathDTO> getNodes(
-            Optional<String> language,
-            Optional<NodeType> nodeType,
-            Optional<URI> contentUri,
-            Optional<Boolean> isRoot,
-            MetadataFilters metadataFilters
-    ) {
-        final List<Node> filtered = nodeRepository.findByNodeType(
-                nodeType,
-                metadataFilters.getVisible(),
-                metadataFilters.getKey(),
-                metadataFilters.getValue(),
-                contentUri,
-                isRoot
-        );
+    public List<EntityWithPathDTO> getNodes(Optional<String> language, Optional<NodeType> nodeType,
+            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+        final List<Node> filtered = nodeRepository.findByNodeType(nodeType, metadataFilters.getVisible(),
+                metadataFilters.getKey(), metadataFilters.getValue(), contentUri, isRoot);
 
         return filtered.stream().distinct().map(n -> new NodeDTO(n, language.get())).collect(Collectors.toList());
     }
@@ -238,14 +227,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return new NodeDTO(node, languageCode);
     }
 
-    public SearchResultDTO<NodeDTO> searchByNodeType(
-            Optional<String> query,
-            Optional<List<String>> ids,
-            Optional<String> language,
-            int pageSize,
-            int page,
-            Optional<NodeType> nodeType
-    ) {
+    public SearchResultDTO<NodeDTO> searchByNodeType(Optional<String> query, Optional<List<String>> ids,
+            Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
         Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
         return SearchService.super.search(query, ids, language, pageSize, page, nodeSpecLambda);
     }

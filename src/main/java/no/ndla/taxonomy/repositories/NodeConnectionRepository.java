@@ -61,22 +61,19 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
     @Query(value = "SELECT nc.id FROM NodeConnection nc ORDER BY nc.id", countQuery = "SELECT count(*) from NodeConnection")
     Page<Integer> findIdsPaginated(Pageable pageable);
 
-    @Query(
-            value = """
-                    SELECT nc
-                    FROM NodeConnection nc
-                    JOIN nc.child c
-                    WHERE c.nodeType = :nodeType
-                    ORDER BY nc.id
-                    """,
-            countQuery = """
-                    SELECT count(nc)
-                    FROM NodeConnection nc
-                    JOIN nc.child c
-                    WHERE c.nodeType = :nodeType
-                    ORDER BY nc.id
-                    """
-    )
+    @Query(value = """
+            SELECT nc
+            FROM NodeConnection nc
+            JOIN nc.child c
+            WHERE c.nodeType = :nodeType
+            ORDER BY nc.id
+            """, countQuery = """
+            SELECT count(nc)
+            FROM NodeConnection nc
+            JOIN nc.child c
+            WHERE c.nodeType = :nodeType
+            ORDER BY nc.id
+            """)
     Page<NodeConnection> findIdsPaginatedByChildNodeType(Pageable pageable, NodeType nodeType);
 
     @Query("SELECT DISTINCT nc FROM NodeConnection nc " + NODE_CONNECTION_METADATA + " JOIN FETCH nc.parent n "

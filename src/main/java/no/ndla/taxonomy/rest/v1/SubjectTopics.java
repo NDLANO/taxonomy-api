@@ -29,7 +29,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = {"/v1/subject-topics"})
+@RequestMapping(path = { "/v1/subject-topics" })
 @Transactional
 public class SubjectTopics {
     private final EntityConnectionService connectionService;
@@ -38,7 +38,7 @@ public class SubjectTopics {
     private final NodeConnectionRepository nodeConnectionRepository;
 
     public SubjectTopics(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-                         EntityConnectionService connectionService, RelevanceRepository relevanceRepository) {
+            EntityConnectionService connectionService, RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -55,7 +55,7 @@ public class SubjectTopics {
     @GetMapping("/page")
     @ApiOperation("Gets all connections between subjects and topics paginated")
     public SubjectTopicPage allPaginated(@ApiParam(name = "page", value = "The page to fetch") Optional<Integer> page,
-                                         @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
+            @ApiParam(name = "pageSize", value = "Size of page to fetch") Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
         }
@@ -84,7 +84,8 @@ public class SubjectTopics {
         var topic = nodeRepository.getByPublicId(command.topicid);
         var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
         var rank = command.rank == 0 ? null : command.rank;
-        final var nodeConnection = connectionService.connectParentChild(subject, topic, relevance, rank, Optional.empty());
+        final var nodeConnection = connectionService.connectParentChild(subject, topic, relevance, rank,
+                Optional.empty());
         var location = URI.create("/subject-topics/" + nodeConnection.getPublicId());
         return ResponseEntity.created(location).build();
     }
@@ -102,9 +103,9 @@ public class SubjectTopics {
     @ApiOperation(value = "Updates a connection between subject and topic", notes = "Use to update which subject is primary to a topic or to change sorting order.")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) {
+            @ApiParam(name = "connection", value = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) {
         var nodeConnection = nodeConnectionRepository.getByPublicId(id);
-        var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId): null;
+        var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
         var rank = command.rank > 0 ? command.rank : null;
 
         connectionService.updateParentChild(nodeConnection, relevance, rank, Optional.empty());

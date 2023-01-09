@@ -36,7 +36,6 @@ public class NodesTest extends RestTest {
 
     @BeforeEach
     void clearAllRepos() {
-        resourceRepository.deleteAllAndFlush();
         nodeRepository.deleteAllAndFlush();
     }
 
@@ -518,7 +517,7 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_delete_nodes_but_resources_remain() throws Exception {
-        Resource resource = builder.resource("resource",
+        Node resource = builder.resource("resource",
                 r -> r.translation("nb", tr -> tr.name("ressurs")).resourceType(rt -> rt.name("Learning path")));
 
         URI parentId = builder.node(NodeType.TOPIC, parent -> parent.resource(resource)).getPublicId();

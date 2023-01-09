@@ -34,15 +34,10 @@ public class Queries {
     @GetMapping("/{contentURI}")
     @ApiOperation(value = "Gets all related data for a given contentURI")
     public List<EntityWithPathDTO> queryAll(@PathVariable("contentURI") URI contentURI,
-                                 @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language) {
         MetadataFilters metadataFilters = MetadataFilters.empty();
-        return nodeService.getNodes(
-                language,
-                Optional.empty(),
-                Optional.of(contentURI),
-                Optional.empty(),
-                metadataFilters
-        );
+        return nodeService.getNodes(language, Optional.empty(), Optional.of(contentURI), Optional.empty(),
+                metadataFilters);
     }
 
     @GetMapping("/resources")

@@ -32,7 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = {"/v1/nodes"})
+@RequestMapping(path = { "/v1/nodes" })
 public class Nodes extends CrudControllerWithMetadata<Node> {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
@@ -40,15 +40,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
 
-    public Nodes(
-            NodeRepository nodeRepository,
-            NodeConnectionRepository nodeConnectionRepository,
-            NodeService nodeService,
-            CachedUrlUpdaterService cachedUrlUpdaterService,
-            RecursiveNodeTreeService recursiveNodeTreeService,
-            TreeSorter treeSorter,
-            MetadataService metadataService
-    ) {
+    public Nodes(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
+            NodeService nodeService, CachedUrlUpdaterService cachedUrlUpdaterService,
+            RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter, MetadataService metadataService) {
         super(nodeRepository, cachedUrlUpdaterService, metadataService);
 
         this.nodeRepository = nodeRepository;
@@ -111,7 +105,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @ApiOperation("Gets a single node")
     @Transactional
     public NodeDTO get(@PathVariable("id") URI id,
-                       @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return new NodeDTO(nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found")), language);
     }
@@ -131,7 +125,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "node", value = "The updated node. Fields not included will be set to null.") @RequestBody NodeCommand command) {
+            @ApiParam(name = "node", value = "The updated node. Fields not included will be set to null.") @RequestBody NodeCommand command) {
         doPut(id, command);
     }
 
@@ -141,16 +135,16 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @Transactional
     public void publishAsync(@PathVariable("id") URI id,
-                             @ApiParam(value = "Version id to publish from. Can be omitted to publish from default.", example = "urn:version:1") @RequestParam(value = "sourceId", required = false) Optional<URI> sourceId,
-                             @ApiParam(value = "Version id to publish to.", example = "urn:version:2") @RequestParam(value = "targetId") URI targetId) {
+            @ApiParam(value = "Version id to publish from. Can be omitted to publish from default.", example = "urn:version:1") @RequestParam(value = "sourceId", required = false) Optional<URI> sourceId,
+            @ApiParam(value = "Version id to publish to.", example = "urn:version:2") @RequestParam(value = "targetId") URI targetId) {
         nodeService.publishNode(id, sourceId, targetId, true, false);
     }
 
     @GetMapping("/{id}/nodes")
     @ApiOperation(value = "Gets all children for this node")
     public List<EntityWithPathChildDTO> getChildren(@ApiParam(value = "id", required = true) @PathVariable("id") URI id,
-                                                    @ApiParam("If true, children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
-                                                    @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @ApiParam("If true, children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
+            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         final var node = nodeRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundException("Node", id));
 
         final List<Integer> childrenIds;
@@ -187,7 +181,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     }
 
     @GetMapping("/{id}/resources")
-    @ApiOperation(value = "Gets all resources for the given node", tags = {"nodes"})
+    @ApiOperation(value = "Gets all resources for the given node", tags = { "nodes" })
     public List<ResourceWithNodeConnectionDTO> getResources(
             @ApiParam(value = "id", required = true) @PathVariable("id") URI nodeId,
             @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false) String language,

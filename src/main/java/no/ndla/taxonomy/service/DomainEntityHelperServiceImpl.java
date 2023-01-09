@@ -24,11 +24,8 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     private final NodeConnectionRepository nodeConnectionRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public DomainEntityHelperServiceImpl(
-            NodeRepository nodeRepository,
-            NodeConnectionRepository nodeConnectionRepository,
-            CachedUrlUpdaterService cachedUrlUpdaterService
-    ) {
+    public DomainEntityHelperServiceImpl(NodeRepository nodeRepository,
+            NodeConnectionRepository nodeConnectionRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
@@ -45,12 +42,12 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Transactional
     public DomainEntity getEntityByPublicId(URI publicId) {
         switch (publicId.getSchemeSpecificPart().split(":")[0]) {
-            case "subject", "topic", "node", "resource" -> {
-                return nodeRepository.findNodeGraphByPublicId(publicId);
-            }
-            case "node-connection", "subject-topic", "topic-subtopic", "node-resource", "topic-resource" -> {
-                return nodeConnectionRepository.findByPublicId(publicId);
-            }
+        case "subject", "topic", "node", "resource" -> {
+            return nodeRepository.findNodeGraphByPublicId(publicId);
+        }
+        case "node-connection", "subject-topic", "topic-subtopic", "node-resource", "topic-resource" -> {
+            return nodeConnectionRepository.findByPublicId(publicId);
+        }
         }
         throw new NotFoundServiceException("Entity of type not found");
     }
@@ -58,12 +55,12 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Override
     public TaxonomyRepository getRepository(URI publicId) {
         switch (publicId.getSchemeSpecificPart().split(":")[0]) {
-            case "subject", "topic", "node", "resource" -> {
-                return nodeRepository;
-            }
-            case "node-connection", "subject-topic", "topic-subtopic", "node-resource", "topic-resource" -> {
-                return nodeConnectionRepository;
-            }
+        case "subject", "topic", "node", "resource" -> {
+            return nodeRepository;
+        }
+        case "node-connection", "subject-topic", "topic-subtopic", "node-resource", "topic-resource" -> {
+            return nodeConnectionRepository;
+        }
         }
         throw new NotFoundServiceException(String.format("Unknown repository requested: %s", publicId));
     }

@@ -53,6 +53,10 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
     }
 
     public static NodeConnection create(Node parent, Node child) {
+        return NodeConnection.create(parent, child, true);
+    }
+
+    public static NodeConnection create(Node parent, Node child, boolean isPrimary) {
         if (child == null || parent == null) {
             throw new NullPointerException("Both parent and child must be present.");
         }
@@ -60,6 +64,7 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
         final var nodeConnection = new NodeConnection();
         nodeConnection.parent = parent;
         nodeConnection.child = child;
+        nodeConnection.isPrimary = isPrimary;
 
         parent.addChildConnection(nodeConnection);
         child.addParentConnection(nodeConnection);

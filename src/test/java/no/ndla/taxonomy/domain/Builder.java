@@ -63,19 +63,19 @@ public class Builder {
         return builder.version;
     }
 
-    public Resource resource() {
+    public Node resource() {
         return resource(null, null);
     }
 
-    public Resource resource(String key) {
+    public Node resource(String key) {
         return resource(key, null);
     }
 
-    public Resource resource(Consumer<ResourceBuilder> consumer) {
+    public Node resource(Consumer<ResourceBuilder> consumer) {
         return resource(null, consumer);
     }
 
-    public Resource resource(String key, Consumer<ResourceBuilder> consumer) {
+    public Node resource(String key, Consumer<ResourceBuilder> consumer) {
         ResourceBuilder resource = getResourceBuilder(key);
         if (null != consumer)
             consumer.accept(resource);
@@ -237,9 +237,9 @@ public class Builder {
 
     @Transactional
     public static class ResourceTranslationBuilder {
-        private ResourceTranslation resourceTranslation;
+        private Translation resourceTranslation;
 
-        public ResourceTranslationBuilder(ResourceTranslation resourceTranslation) {
+        public ResourceTranslationBuilder(Translation resourceTranslation) {
             this.resourceTranslation = resourceTranslation;
         }
 
@@ -354,10 +354,10 @@ public class Builder {
 
     @Transactional
     public class ResourceBuilder {
-        private final Resource resource;
+        private final Node resource;
 
         public ResourceBuilder() {
-            resource = new Resource();
+            resource = new Node(NodeType.RESOURCE);
             entityManager.persist(resource);
         }
 
@@ -396,7 +396,7 @@ public class Builder {
         }
 
         public ResourceBuilder translation(String languageCode, Consumer<ResourceTranslationBuilder> consumer) {
-            ResourceTranslation resourceTranslation = resource.addTranslation(languageCode);
+            Translation resourceTranslation = resource.addTranslation(languageCode);
             entityManager.persist(resourceTranslation);
             ResourceTranslationBuilder builder = new ResourceTranslationBuilder(resourceTranslation);
             consumer.accept(builder);
@@ -609,16 +609,16 @@ public class Builder {
             return resource(resourceKey, primary, null);
         }
 
-        public NodeBuilder resource(Resource resource) {
-            entityManager.persist(NodeResource.create(node, resource));
+        public NodeBuilder resource(Node resource) {
+            entityManager.persist(NodeConnection.create(node, resource));
 
             cachedUrlUpdaterService.updateCachedUrls(resource);
 
             return this;
         }
 
-        public NodeBuilder resource(Resource resource, boolean primary) {
-            entityManager.persist(NodeResource.create(node, resource, primary));
+        public NodeBuilder resource(Node resource, boolean primary) {
+            entityManager.persist(NodeConnection.create(node, resource, primary));
 
             cachedUrlUpdaterService.updateCachedUrls(resource);
 
