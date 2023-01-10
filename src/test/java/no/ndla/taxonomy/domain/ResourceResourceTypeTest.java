@@ -15,13 +15,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 public class ResourceResourceTypeTest {
-    private Resource resource;
+    private Node resource;
     private ResourceType resourceType;
     private ResourceResourceType resourceResourceType;
 
     @BeforeEach
     public void setUp() {
-        resource = mock(Resource.class);
+        resource = mock(Node.class);
         resourceType = mock(ResourceType.class);
         resourceResourceType = ResourceResourceType.create(resource, resourceType);
 

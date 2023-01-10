@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceType;
 import org.junit.jupiter.api.Test;
@@ -38,7 +37,7 @@ public class ResourceResourceTypesTest extends RestTest {
                     }
                 }));
 
-        Resource resource = resourceRepository.getByPublicId(integrationResourceId);
+        var resource = nodeRepository.getByPublicId(integrationResourceId);
         assertEquals(1, resource.getResourceTypes().size());
         assertAnyTrue(resource.getResourceTypes(), t -> "text".equals(t.getName()));
         assertNotNull(resourceResourceTypeRepository.getByPublicId(id));
@@ -46,7 +45,7 @@ public class ResourceResourceTypesTest extends RestTest {
 
     @Test
     public void cannot_have_duplicate_resourcetypes_for_resource() throws Exception {
-        Resource integrationResource = newResource();
+        var integrationResource = newResource();
         integrationResource.setName("Introduction to integration");
 
         ResourceType resourceType = newResourceType().name("text");
@@ -63,7 +62,7 @@ public class ResourceResourceTypesTest extends RestTest {
 
     @Test
     public void can_delete_resource_resourcetype() throws Exception {
-        Resource integrationResource = builder.resource(r -> r.name("Introduction to integration"));
+        var integrationResource = builder.resource(r -> r.name("Introduction to integration"));
         ResourceType resourceType = builder.resourceType(rt -> rt.name("text"));
         URI id = save(integrationResource.addResourceType(resourceType)).getPublicId();
 
@@ -73,12 +72,12 @@ public class ResourceResourceTypesTest extends RestTest {
 
     @Test
     public void can_list_all_resource_resourcetypes() throws Exception {
-        Resource trigonometry = newResource();
+        var trigonometry = newResource();
         trigonometry.setName("Advanced trigonometry");
         ResourceType article = newResourceType().name("article");
         save(trigonometry.addResourceType(article));
 
-        Resource integration = newResource();
+        var integration = newResource();
         integration.setName("Introduction to integration");
         ResourceType text = newResourceType().name("text");
         save(integration.addResourceType(text));
@@ -95,7 +94,7 @@ public class ResourceResourceTypesTest extends RestTest {
 
     @Test
     public void can_get_a_resource_resourcetype() throws Exception {
-        Resource resource = newResource();
+        var resource = newResource();
         resource.setName("Advanced trigonometry");
         ResourceType resourceType = newResourceType().name("article");
         ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);
@@ -111,7 +110,7 @@ public class ResourceResourceTypesTest extends RestTest {
 
     @Test
     public void can_change_id_of_resource_type() throws Exception {
-        Resource resource = newResource();
+        var resource = newResource();
         resource.setName("Advanced trigonometry");
         ResourceType resourceType = newResourceType().name("article");
         ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);

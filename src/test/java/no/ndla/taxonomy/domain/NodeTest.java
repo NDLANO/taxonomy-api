@@ -178,42 +178,42 @@ public class NodeTest {
 
     @Test
     public void addGetAndRemoveNodeResources() {
-        assertEquals(0, node.getNodeResources().size());
+        assertEquals(0, node.getResourceChildren().size());
 
-        final var nodeResource1 = mock(NodeResource.class);
-        final var nodeResource2 = mock(NodeResource.class);
+        final var nodeResource1 = mock(NodeConnection.class);
+        final var nodeResource2 = mock(NodeConnection.class);
 
         try {
-            node.addNodeResource(nodeResource1);
+            node.addChildConnection(nodeResource1);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException ignored) {
         }
 
-        when(nodeResource1.getNode()).thenReturn(Optional.of(node));
-        node.addNodeResource(nodeResource1);
+        when(nodeResource1.getParent()).thenReturn(Optional.of(node));
+        node.addChildConnection(nodeResource1);
 
-        assertEquals(1, node.getNodeResources().size());
-        assertTrue(node.getNodeResources().contains(nodeResource1));
+        assertEquals(1, node.getResourceChildren().size());
+        assertTrue(node.getResourceChildren().contains(nodeResource1));
 
         try {
-            node.addNodeResource(nodeResource2);
+            node.addChildConnection(nodeResource2);
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException ignored) {
         }
-        when(nodeResource2.getNode()).thenReturn(Optional.of(node));
-        node.addNodeResource(nodeResource2);
+        when(nodeResource2.getParent()).thenReturn(Optional.of(node));
+        node.addChildConnection(nodeResource2);
 
-        assertEquals(2, node.getNodeResources().size());
-        assertTrue(node.getNodeResources().containsAll(Set.of(nodeResource1, nodeResource2)));
+        assertEquals(2, node.getResourceChildren().size());
+        assertTrue(node.getResourceChildren().containsAll(Set.of(nodeResource1, nodeResource2)));
 
-        node.removeNodeResource(nodeResource1);
+        node.removeChildConnection(nodeResource1);
         verify(nodeResource1).disassociate();
-        assertEquals(1, node.getNodeResources().size());
-        assertTrue(node.getNodeResources().contains(nodeResource2));
+        assertEquals(1, node.getResourceChildren().size());
+        assertTrue(node.getResourceChildren().contains(nodeResource2));
 
-        node.removeNodeResource(nodeResource2);
+        node.removeChildConnection(nodeResource2);
         verify(nodeResource2).disassociate();
-        assertEquals(0, node.getNodeResources().size());
+        assertEquals(0, node.getResourceChildren().size());
     }
 
     @Test
@@ -235,23 +235,23 @@ public class NodeTest {
 
     @Test
     public void getResources() {
-        final var resource1 = mock(Resource.class);
-        final var resource2 = mock(Resource.class);
+        final var resource1 = mock(Node.class);
+        final var resource2 = mock(Node.class);
 
-        final var nodeResource1 = mock(NodeResource.class);
-        final var nodeResource2 = mock(NodeResource.class);
-        final var NodeResource3 = mock(NodeResource.class);
+        final var nodeResource1 = mock(NodeConnection.class);
+        final var nodeResource2 = mock(NodeConnection.class);
+        final var NodeResource3 = mock(NodeConnection.class);
 
         Set.of(nodeResource1, nodeResource2, NodeResource3)
-                .forEach(nodeResource -> when(nodeResource.getNode()).thenReturn(Optional.of(node)));
+                .forEach(nodeResource -> when(nodeResource.getParent()).thenReturn(Optional.of(node)));
         when(nodeResource1.getResource()).thenReturn(Optional.of(resource1));
         when(nodeResource2.getResource()).thenReturn(Optional.of(resource2));
 
-        node.addNodeResource(nodeResource1);
-        node.addNodeResource(nodeResource2);
-        node.addNodeResource(NodeResource3);
+        node.addChildConnection(nodeResource1);
+        node.addChildConnection(nodeResource2);
+        node.addChildConnection(NodeResource3);
 
-        assertEquals(3, node.getNodeResources().size());
+        assertEquals(3, node.getResourceChildren().size());
         assertEquals(2, node.getResources().size());
         assertTrue(node.getResources().containsAll(Set.of(resource1, resource2)));
     }
@@ -307,7 +307,7 @@ public class NodeTest {
     public void preRemove() {
         final var parentConnections = Set.of(mock(NodeConnection.class), mock(NodeConnection.class));
         final var childConnections = Set.of(mock(NodeConnection.class), mock(NodeConnection.class));
-        final var topicResources = Set.of(mock(NodeResource.class), mock(NodeResource.class));
+        final var topicResources = Set.of(mock(NodeConnection.class), mock(NodeConnection.class));
 
         parentConnections.forEach(nodeConnection -> {
             when(nodeConnection.getChild()).thenReturn(Optional.of(node));
@@ -320,8 +320,8 @@ public class NodeTest {
         });
 
         topicResources.forEach(nodeResource -> {
-            when(nodeResource.getNode()).thenReturn(Optional.of(node));
-            node.addNodeResource(nodeResource);
+            when(nodeResource.getParent()).thenReturn(Optional.of(node));
+            node.addChildConnection(nodeResource);
         });
 
         node.preRemove();

@@ -25,24 +25,20 @@ import java.net.URI;
 @Transactional
 @Component
 public class TestSeeder {
-    private final ResourceRepository resourceRepository;
     private final RelevanceRepository relevanceRepository;
     private final ResourceTypeRepository resourceTypeRepository;
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
-    private final NodeResourceRepository nodeResourceRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public TestSeeder(ResourceRepository resourceRepository, RelevanceRepository relevanceRepository,
+    public TestSeeder(RelevanceRepository relevanceRepository,
             ResourceTypeRepository resourceTypeRepository, NodeRepository nodeRepository,
-            NodeConnectionRepository nodeConnectionRepository, NodeResourceRepository nodeResourceRepository,
+            NodeConnectionRepository nodeConnectionRepository,
             CachedUrlUpdaterService cachedUrlUpdaterService) {
-        this.resourceRepository = resourceRepository;
         this.relevanceRepository = relevanceRepository;
         this.resourceTypeRepository = resourceTypeRepository;
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
-        this.nodeResourceRepository = nodeResourceRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
 
@@ -60,8 +56,8 @@ public class TestSeeder {
         return relevanceRepository.save(relevance);
     }
 
-    private Resource createResource(String publicId, String name, String contentUri) {
-        final var resource = new Resource();
+    private Node createResource(String publicId, String name, String contentUri) {
+        final var resource = new Node(NodeType.RESOURCE);
 
         if (publicId != null) {
             resource.setPublicId(URI.create(publicId));
@@ -75,8 +71,7 @@ public class TestSeeder {
             resource.setContentUri(URI.create(contentUri));
         }
 
-        resourceRepository.saveAndFlush(resource);
-
+        nodeRepository.saveAndFlush(resource);
         cachedUrlUpdaterService.updateCachedUrls(resource);
 
         return resource;
@@ -100,7 +95,7 @@ public class TestSeeder {
         return resourceTypeRepository.save(resourceType);
     }
 
-    private ResourceResourceType createResourceResourceType(String publicId, Resource resource,
+    private ResourceResourceType createResourceResourceType(String publicId, Node resource,
             ResourceType resourceType) {
         final var resourceResourceType = ResourceResourceType.create(resource, resourceType);
 
@@ -161,14 +156,14 @@ public class TestSeeder {
         return nodeConnection;
     }
 
-    private NodeResource createNodeResource(String publicId, Node node, Resource resource, Boolean isPrimary,
+    private NodeConnection createNodeResource(String publicId, Node node, Node resource, Boolean isPrimary,
             Integer rank) {
         return createNodeResource(publicId, node, resource, isPrimary, rank, null);
     }
 
-    private NodeResource createNodeResource(String publicId, Node node, Resource resource, Boolean isPrimary,
+    private NodeConnection createNodeResource(String publicId, Node node, Node resource, Boolean isPrimary,
             Integer rank, Relevance relevance) {
-        final var nodeResource = NodeResource.create(node, resource);
+        final var nodeResource = NodeConnection.create(node, resource);
 
         if (publicId != null) {
             nodeResource.setPublicId(URI.create(publicId));
@@ -184,15 +179,14 @@ public class TestSeeder {
 
         nodeResource.setRelevance(relevance);
 
-        nodeResource.getNode().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
+        nodeResource.getParent().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
 
-        return nodeResourceRepository.saveAndFlush(nodeResource);
+        return nodeConnectionRepository.saveAndFlush(nodeResource);
     }
 
     private void clearAll() {
         resourceTypeRepository.deleteAllAndFlush();
         relevanceRepository.deleteAllAndFlush();
-        resourceRepository.deleteAllAndFlush();
         nodeRepository.deleteAllAndFlush();
     }
 

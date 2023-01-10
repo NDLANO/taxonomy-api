@@ -72,7 +72,7 @@ public class CachedPathTest {
         when(subject.getPublicId()).thenReturn(URI.create("urn:subject:1"));
         final var topic = mock(Node.class);
         when(topic.getPublicId()).thenReturn(URI.create("urn:topic:1"));
-        final var resource = mock(Resource.class);
+        final var resource = mock(Node.class);
         when(resource.getPublicId()).thenReturn(URI.create("urn:resource:1"));
         final var unknown = mock(EntityWithPath.class);
 

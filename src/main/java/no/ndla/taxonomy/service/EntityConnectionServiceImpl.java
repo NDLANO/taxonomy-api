@@ -72,9 +72,12 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         return (NodeConnection) doCreateConnection(parent, child, isPrimary.orElse(true), relevance, rank);
     }
 
+    public NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank) {
+        return this.connectParentChild(parent, child, relevance, rank, Optional.empty());
+    }
+
     @Override
-    public NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank,
-            Optional<Boolean> isPrimary) {
+    public NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank, Optional<Boolean> isPrimary) {
         if (child.getParentConnections().size() > 0) {
             throw new DuplicateConnectionException();
         }
@@ -195,8 +198,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank,
-            Optional<Boolean> isPrimary) {
+    public void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank, Optional<Boolean> isPrimary) {
         updateRank(nodeConnection, newRank);
         isPrimary.ifPresent(primary -> updatePrimaryConnection(nodeConnection, primary));
         updateRelevance(nodeConnection, relevance);

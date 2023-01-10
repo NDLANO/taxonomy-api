@@ -43,12 +43,12 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
     }
 
     public NodeConnection(NodeConnection nodeConnection) {
-        setPublicId(nodeConnection.getPublicId());
-        setPrimary(nodeConnection.isPrimary().orElse(false));
         this.rank = nodeConnection.rank;
         this.relevance = nodeConnection.relevance;
         this.parent = nodeConnection.parent;
         this.child = nodeConnection.child;
+        setPublicId(nodeConnection.getPublicId());
+        setPrimary(nodeConnection.isPrimary().orElse(false));
         setMetadata(new Metadata(nodeConnection.getMetadata()));
     }
 
@@ -147,7 +147,7 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
     @Override
     public void setPrimary(boolean isPrimary) {
         var childType = this.child.getNodeType();
-        if (childType != NodeType.RESOURCE) {
+        if (childType != NodeType.RESOURCE && !isPrimary) {
             throw new UnsupportedOperationException(
                     "NodeConnection with child of type '" + childType.toString() + "' can not be non-primary");
         }

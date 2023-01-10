@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.domain;
 
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
+import no.ndla.taxonomy.rest.v1.TopicResources;
 
 import javax.persistence.*;
 import java.net.URI;
@@ -141,6 +142,10 @@ public class Node extends EntityWithPath {
                 .collect(Collectors.toUnmodifiableList());
     }
 
+    public Set<NodeConnection> getParentNodeConnections() {
+        return this.parentConnections;
+    }
+
     @Override
     public Collection<EntityWithPathConnection> getChildConnections() {
         final Collection<EntityWithPathConnection> children = childConnections.stream()
@@ -178,6 +183,15 @@ public class Node extends EntityWithPath {
         return resourceResourceType;
     }
 
+    public void removeResourceType(ResourceType resourceType) {
+        Optional<ResourceResourceType> connection = this.resourceResourceTypes
+                .stream()
+                .filter(rrt -> rrt.getResourceType() == resourceType)
+                .findFirst();
+
+        connection.ifPresent(this::removeResourceResourceType);
+    }
+
     public void addResourceResourceType(ResourceResourceType resourceResourceType) {
         if (this.getNodeType() != NodeType.RESOURCE)
             throw new IllegalArgumentException(
@@ -202,6 +216,9 @@ public class Node extends EntityWithPath {
     public void addChildConnection(NodeConnection nodeConnection) {
         if (nodeConnection.getParent().orElse(null) != this) {
             throw new IllegalArgumentException("Parent must be set on NodeConnection before associating with child");
+        }
+        if(this.nodeType == NodeType.RESOURCE) {
+            throw new IllegalArgumentException("'" + NodeType.RESOURCE + "' nodes cannot have children");
         }
 
         this.childConnections.add(nodeConnection);
@@ -239,6 +256,13 @@ public class Node extends EntityWithPath {
     public Optional<Node> getParentNode() {
         return parentConnections.stream().map(NodeConnection::getParent).filter(Optional::isPresent).map(Optional::get)
                 .findFirst();
+    }
+
+    public Collection<Node> getParentNodes() {
+        return parentConnections
+                .stream()
+                .map(NodeConnection::getParent)
+                .filter(Optional::isPresent).map(Optional::get).toList();
     }
 
     public Collection<Node> getResources() {
@@ -376,4 +400,13 @@ public class Node extends EntityWithPath {
                 && Objects.equals(contentUri, that.contentUri) && nodeType == that.nodeType && ident.equals(that.ident)
                 && metadata.equals(that.metadata);
     }
+
+    public Optional<Node> getPrimaryNode() {
+        for (var node : this.parentConnections) {
+            if (node.isPrimary().orElse(false))
+                return node.getParent();
+        }
+        return Optional.empty();
+    }
+
 }

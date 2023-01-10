@@ -16,18 +16,18 @@ import static org.mockito.Mockito.verify;
 
 public class NodeResourceTest {
     private Node node;
-    private Resource resource;
-    private NodeResource resourceConnection;
+    private Node resource;
+    private NodeConnection resourceConnection;
 
     @BeforeEach
     public void setUp() {
         node = mock(Node.class);
-        resource = mock(Resource.class);
+        resource = mock(Node.class);
 
-        resourceConnection = NodeResource.create(node, resource);
+        resourceConnection = NodeConnection.create(node, resource);
 
-        verify(node).addNodeResource(resourceConnection);
-        verify(resource).addNodeResource(resourceConnection);
+        verify(node).addChildConnection(resourceConnection);
+        verify(resource).addParentConnection(resourceConnection);
 
         assertNotNull(resourceConnection.getPublicId());
         assertTrue(resourceConnection.getPublicId().toString().length() > 4);
@@ -35,7 +35,7 @@ public class NodeResourceTest {
 
     @Test
     public void getNode() {
-        assertSame(node, resourceConnection.getNode().orElse(null));
+        assertSame(node, resourceConnection.getParent().orElse(null));
     }
 
     @Test
@@ -64,9 +64,9 @@ public class NodeResourceTest {
         resourceConnection.preRemove();
 
         assertFalse(resourceConnection.getResource().isPresent());
-        assertFalse(resourceConnection.getNode().isPresent());
+        assertFalse(resourceConnection.getParent().isPresent());
 
-        verify(node).removeNodeResource(resourceConnection);
-        verify(resource).removeNodeResource(resourceConnection);
+        verify(node).removeParentConnection(resourceConnection);
+        verify(resource).removeChildConnection(resourceConnection);
     }
 }

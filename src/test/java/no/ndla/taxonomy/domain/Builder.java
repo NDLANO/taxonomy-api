@@ -27,7 +27,6 @@ public class Builder {
     private final Map<String, VersionBuilder> versions = new HashMap<>();
     private final Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();
     private final Map<String, NodeBuilder> nodes = new HashMap<>();
-    private final Map<String, ResourceBuilder> resources = new HashMap<>();
     private final Map<String, RelevanceBuilder> relevances = new HashMap<>();
     private final Map<String, UrlMappingBuilder> cachedUrlOldRigBuilders = new HashMap<>();
     private int keyCounter = 0;
@@ -71,15 +70,15 @@ public class Builder {
         return resource(key, null);
     }
 
-    public Node resource(Consumer<ResourceBuilder> consumer) {
+    public Node resource(Consumer<NodeBuilder> consumer) {
         return resource(null, consumer);
     }
 
-    public Node resource(String key, Consumer<ResourceBuilder> consumer) {
-        ResourceBuilder resource = getResourceBuilder(key);
+    public Node resource(String key, Consumer<NodeBuilder> consumer) {
+        var resource = getResourceBuilder(key);
         if (null != consumer)
             consumer.accept(resource);
-        return resource.resource;
+        return resource.node;
     }
 
     public ResourceType resourceType(String key) {
@@ -147,12 +146,8 @@ public class Builder {
         return resourceTypes.get(key);
     }
 
-    private ResourceBuilder getResourceBuilder(String key) {
-        if (key == null) {
-            key = createKey();
-        }
-        resources.putIfAbsent(key, new ResourceBuilder());
-        return resources.get(key);
+    private NodeBuilder getResourceBuilder(String key) {
+        return getNodeBuilder(key, NodeType.RESOURCE);
     }
 
     public Node node() {
@@ -352,96 +347,6 @@ public class Builder {
         }
     }
 
-    @Transactional
-    public class ResourceBuilder {
-        private final Node resource;
-
-        public ResourceBuilder() {
-            resource = new Node(NodeType.RESOURCE);
-            entityManager.persist(resource);
-        }
-
-        public ResourceBuilder name(String name) {
-            resource.setName(name);
-            return this;
-        }
-
-        public ResourceBuilder resourceType(ResourceType resourceType) {
-            entityManager.persist(resource.addResourceType(resourceType));
-            return this;
-        }
-
-        public ResourceBuilder resourceType(Consumer<ResourceTypeBuilder> consumer) {
-            return resourceType(null, consumer);
-        }
-
-        public ResourceBuilder resourceType(String resourceTypeKey, Consumer<ResourceTypeBuilder> consumer) {
-            ResourceTypeBuilder resourceTypeBuilder = getResourceTypeBuilder(resourceTypeKey);
-            if (null != consumer)
-                consumer.accept(resourceTypeBuilder);
-            return resourceType(resourceTypeBuilder.resourceType);
-        }
-
-        public ResourceBuilder resourceType(String resourceTypeKey) {
-            return resourceType(resourceTypeKey, null);
-        }
-
-        public ResourceBuilder contentUri(String contentUri) {
-            return contentUri(URI.create(contentUri));
-        }
-
-        public ResourceBuilder contentUri(URI contentUri) {
-            resource.setContentUri(contentUri);
-            return this;
-        }
-
-        public ResourceBuilder translation(String languageCode, Consumer<ResourceTranslationBuilder> consumer) {
-            Translation resourceTranslation = resource.addTranslation(languageCode);
-            entityManager.persist(resourceTranslation);
-            ResourceTranslationBuilder builder = new ResourceTranslationBuilder(resourceTranslation);
-            consumer.accept(builder);
-            return this;
-        }
-
-        public ResourceBuilder publicId(String id) {
-            resource.setPublicId(URI.create(id));
-
-            cachedUrlUpdaterService.updateCachedUrls(resource);
-
-            return this;
-        }
-
-        public ResourceBuilder isVisible(boolean visible) {
-            resource.getMetadata().setVisible(visible);
-            return this;
-        }
-
-        public ResourceBuilder grepCode(String code) {
-            GrepCode grepCode = new GrepCode();
-            grepCode.setCode(code);
-            grepCode.addMetadata(resource.getMetadata());
-            entityManager.persist(grepCode);
-
-            resource.getMetadata().addGrepCode(grepCode);
-            return this;
-        }
-
-        public ResourceBuilder customField(String key, String value) {
-            CustomField customField = new CustomField();
-            customField.setKey(key);
-            entityManager.persist(customField);
-            CustomFieldValue customFieldValue = new CustomFieldValue();
-            customFieldValue.setCustomField(customField);
-            customFieldValue.setValue(value);
-            customFieldValue.setMetadata(resource.getMetadata());
-            entityManager.persist(customFieldValue);
-
-            resource.getMetadata().addCustomFieldValue(customFieldValue);
-            return this;
-        }
-
-    }
-
     public UrlMapping urlMapping(Consumer<UrlMappingBuilder> consumer) {
         return urlMapping(null, consumer);
     }
@@ -472,6 +377,27 @@ public class Builder {
             node.setName(name);
             return this;
         }
+
+        public NodeBuilder resourceType(ResourceType resourceType) {
+            entityManager.persist(node.addResourceType(resourceType));
+            return this;
+        }
+
+        public NodeBuilder resourceType(Consumer<ResourceTypeBuilder> consumer) {
+            return resourceType(null, consumer);
+        }
+
+        public NodeBuilder resourceType(String resourceTypeKey, Consumer<ResourceTypeBuilder> consumer) {
+            ResourceTypeBuilder resourceTypeBuilder = getResourceTypeBuilder(resourceTypeKey);
+            if (null != consumer)
+                consumer.accept(resourceTypeBuilder);
+            return resourceType(resourceTypeBuilder.resourceType);
+        }
+
+        public NodeBuilder resourceType(String resourceTypeKey) {
+            return resourceType(resourceTypeKey, null);
+        }
+
 
         public NodeBuilder contentUri(String contentUri) {
             return contentUri(URI.create(contentUri));
@@ -585,24 +511,24 @@ public class Builder {
             return resource(resourceKey, null);
         }
 
-        public NodeBuilder resource(boolean primary, Consumer<ResourceBuilder> consumer) {
+        public NodeBuilder resource(boolean primary, Consumer<NodeBuilder> consumer) {
             return resource(null, primary, consumer);
         }
 
-        public NodeBuilder resource(Consumer<ResourceBuilder> consumer) {
+        public NodeBuilder resource(Consumer<NodeBuilder> consumer) {
             return resource(null, consumer);
         }
 
-        public NodeBuilder resource(String resourceKey, Consumer<ResourceBuilder> consumer) {
+        public NodeBuilder resource(String resourceKey, Consumer<NodeBuilder> consumer) {
             return resource(resourceKey, false, consumer);
         }
 
-        public NodeBuilder resource(String resourceKey, boolean primary, Consumer<ResourceBuilder> consumer) {
-            ResourceBuilder resource = getResourceBuilder(resourceKey);
+        public NodeBuilder resource(String resourceKey, boolean primary, Consumer<NodeBuilder> consumer) {
+            var resource = getResourceBuilder(resourceKey);
             if (null != consumer)
                 consumer.accept(resource);
 
-            return resource(resource.resource, primary);
+            return resource(resource.node, primary);
         }
 
         public NodeBuilder resource(String resourceKey, boolean primary) {

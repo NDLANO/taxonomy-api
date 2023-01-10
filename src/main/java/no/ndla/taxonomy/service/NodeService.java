@@ -62,10 +62,10 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public NodeService(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            EntityConnectionService connectionService, VersionService versionService, TreeSorter topicTreeSorter,
-            CachedUrlUpdaterService cachedUrlUpdaterService, ChangelogRepository changelogRepository,
-            DomainEntityHelperService domainEntityHelperService, CustomFieldService customFieldService,
-            RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter) {
+                       EntityConnectionService connectionService, VersionService versionService, TreeSorter topicTreeSorter,
+                       CachedUrlUpdaterService cachedUrlUpdaterService, ChangelogRepository changelogRepository,
+                       DomainEntityHelperService domainEntityHelperService, CustomFieldService customFieldService,
+                       RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -107,9 +107,15 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public List<EntityWithPathDTO> getNodes(Optional<String> language, Optional<NodeType> nodeType,
-            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
-        final List<Node> filtered = nodeRepository.findByNodeType(nodeType, metadataFilters.getVisible(),
-                metadataFilters.getKey(), metadataFilters.getValue(), contentUri, isRoot);
+                                            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+        final List<Node> filtered = nodeRepository.findByNodeType(
+                nodeType,
+                metadataFilters.getVisible(),
+                metadataFilters.getKey(),
+                metadataFilters.getValue(),
+                contentUri,
+                isRoot
+        );
 
         return filtered.stream().distinct().map(n -> new NodeDTO(n, language.get())).collect(Collectors.toList());
     }
@@ -150,7 +156,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public List<ResourceWithNodeConnectionDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds,
-            URI relevancePublicId, String languageCode, boolean recursive) {
+                                                                    URI relevancePublicId, String languageCode, boolean recursive) {
         final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
 
         final Set<Integer> topicIdsToSearchFor;
@@ -179,8 +185,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     private List<ResourceWithNodeConnectionDTO> filterNodeResourcesByIdsAndReturn(Set<Integer> nodeIds,
-            Set<URI> resourceTypeIds, URI relevance, Set<ResourceTreeSortable<Node>> sortableListToAddTo,
-            String languageCode) {
+                                                                                  Set<URI> resourceTypeIds, URI relevance, Set<ResourceTreeSortable<Node>> sortableListToAddTo,
+                                                                                  String languageCode) {
         final List<NodeConnection> nodeResources;
 
         if (resourceTypeIds.size() > 0) {
@@ -228,7 +234,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public SearchResultDTO<NodeDTO> searchByNodeType(Optional<String> query, Optional<List<String>> ids,
-            Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
+                                                     Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
         Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
         return SearchService.super.search(query, ids, language, pageSize, page, nodeSpecLambda);
     }
@@ -257,16 +263,11 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     /**
      * Adds node and children to table to be processed later
      *
-     * @param nodeId
-     *            Public ID of the node to publish
-     * @param sourceId
-     *            Public ID of source schema. Default schema if not present
-     * @param targetId
-     *            Public ID of target schema. Mandatory
-     * @param isRoot
-     *            Used to save meta-field to track publishing
-     * @param cleanUp
-     *            Used to clean up metadata after publishing
+     * @param nodeId   Public ID of the node to publish
+     * @param sourceId Public ID of source schema. Default schema if not present
+     * @param targetId Public ID of target schema. Mandatory
+     * @param isRoot   Used to save meta-field to track publishing
+     * @param cleanUp  Used to clean up metadata after publishing
      */
     @Async
     @Transactional

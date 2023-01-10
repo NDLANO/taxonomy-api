@@ -303,11 +303,9 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertNotNull(updated);
         assertNotEquals(updated.getId(), resource.getId());
         assertNotNull(updated.getCachedPaths());
-        assertEquals(2, updated.getResourceChildren().size()); // Should be used twice
-        assertAnyTrue(updated.getResourceChildren(),
-                nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:1")));
-        assertAnyTrue(updated.getResourceChildren(),
-                nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:2")));
+        assertEquals(2, updated.getParentNodeConnections().size()); // Should be used twice
+        assertAnyTrue(updated.getParentNodeConnections(), nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:1")));
+        assertAnyTrue(updated.getParentNodeConnections(), nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:2")));
         assertAnyTrue(updated.getAllPaths(), path -> path.equals("/subject:1/topic:1/resource:1"));
         assertAnyTrue(updated.getAllPaths(), path -> path.equals("/subject:1/topic:2/resource:1"));
     }

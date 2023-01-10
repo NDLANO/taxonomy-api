@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -64,7 +63,7 @@ public class ResourceTranslationsTest extends RestTest {
 
     @Test
     public void can_add_translation() throws Exception {
-        Resource resource = builder.resource(t -> t.name("Introduction to algrebra"));
+        var resource = builder.resource(t -> t.name("Introduction to algrebra"));
         URI id = resource.getPublicId();
 
         testUtils.updateResource("/v1/resources/" + id + "/translations/nb",
@@ -79,7 +78,7 @@ public class ResourceTranslationsTest extends RestTest {
 
     @Test
     public void can_delete_translation() throws Exception {
-        Resource resource = builder.resource(
+        var resource = builder.resource(
                 t -> t.name("Introduction to algrebra").translation("nb", l -> l.name("Introduksjon til algebra")));
         URI id = resource.getPublicId();
 
@@ -90,7 +89,7 @@ public class ResourceTranslationsTest extends RestTest {
 
     @Test
     public void can_get_all_translations() throws Exception {
-        Resource resource = builder.resource(
+        var resource = builder.resource(
                 t -> t.name("Introduction to algrebra").translation("nb", l -> l.name("Introduksjon til algebra"))
                         .translation("en", l -> l.name("Introduction to algrebra"))
                         .translation("de", l -> l.name("Introduktion bis Algebra")));
@@ -108,7 +107,7 @@ public class ResourceTranslationsTest extends RestTest {
 
     @Test
     public void can_get_single_translation() throws Exception {
-        Resource resource = builder.resource(
+        var resource = builder.resource(
                 t -> t.name("Introduction to algrebra").translation("nb", l -> l.name("Introduksjon til algebra")));
         URI id = resource.getPublicId();
 

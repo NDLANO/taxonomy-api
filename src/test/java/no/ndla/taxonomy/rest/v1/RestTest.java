@@ -40,9 +40,6 @@ public abstract class RestTest {
     ResourceResourceTypeRepository resourceResourceTypeRepository;
 
     @Autowired
-    ResourceRepository resourceRepository;
-
-    @Autowired
     ResourceTypeRepository resourceTypeRepository;
 
     @Autowired
@@ -53,9 +50,6 @@ public abstract class RestTest {
 
     @Autowired
     NodeConnectionRepository nodeConnectionRepository;
-
-    @Autowired
-    NodeResourceRepository nodeResourceRepository;
 
     @Autowired
     protected TestUtils testUtils;
@@ -81,9 +75,7 @@ public abstract class RestTest {
     @BeforeEach
     public void restTestSetUp() {
         builder = new Builder(entityManager, cachedUrlUpdaterService);
-        resourceRepository.deleteAllAndFlush();
         nodeRepository.deleteAllAndFlush();
-        nodeResourceRepository.deleteAllAndFlush();
         nodeConnectionRepository.deleteAllAndFlush();
     }
 
@@ -103,8 +95,8 @@ public abstract class RestTest {
         return save(node);
     }
 
-    Resource newResource() {
-        return save(new Resource());
+    Node newResource() {
+        return save(new Node(NodeType.RESOURCE));
     }
 
     ResourceType newResourceType() {
