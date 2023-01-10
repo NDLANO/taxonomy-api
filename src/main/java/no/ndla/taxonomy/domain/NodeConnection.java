@@ -92,7 +92,7 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
         var child = getChild();
         var isResource = child.map(c -> c.getNodeType() == NodeType.RESOURCE).orElse(false);
 
-        if (!isResource)
+        if (!isResource && child.isPresent())
             throw new IllegalStateException("Tried to getResource on a nodeConnection connected to a non-resource");
 
         return child;
