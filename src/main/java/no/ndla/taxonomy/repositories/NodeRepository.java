@@ -51,7 +51,8 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
 
     @Query("""
             SELECT n FROM Node n
-            LEFT JOIN FETCH n.metadata nm LEFT JOIN FETCH nm.grepCodes
+            LEFT JOIN FETCH n.metadata nm
+            LEFT JOIN FETCH nm.grepCodes
             LEFT JOIN FETCH nm.customFieldValues ncfv
             LEFT JOIN FETCH ncfv.customField cf
             LEFT JOIN FETCH n.cachedPaths
@@ -59,7 +60,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             WHERE (:nodeType IS NULL OR n.nodeType = :nodeType)
             AND (:isVisible IS NULL OR nm.visible = :isVisible)
             AND (:metadataFilterKey IS NULL OR cf.key = :metadataFilterKey)
-            AND (:metadataFilterValue IS NULL OR ncfv.value = :metadataFilterKey)
+            AND (:metadataFilterValue IS NULL OR ncfv.value = :metadataFilterValue)
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
             AND (:isRoot IS NULL OR n.root = true)
             """)

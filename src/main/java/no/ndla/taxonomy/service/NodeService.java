@@ -90,18 +90,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         nodeRepository.flush();
     }
 
-    public Specification<Node> base() {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.isNotNull(root.get("id"));
-    }
-
-    public Specification<Node> nodeIsRoot() {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("root"), true);
-    }
-
-    public Specification<Node> nodeIsVisible(Boolean visible) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("metadata").get("visible"), visible);
-    }
-
     public Specification<Node> nodeHasNodeType(NodeType nodeType) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("nodeType"), nodeType);
     }
