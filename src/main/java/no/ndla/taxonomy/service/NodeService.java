@@ -94,8 +94,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("nodeType"), nodeType);
     }
 
-    public List<EntityWithPathDTO> getNodes(Optional<String> language, Optional<NodeType> nodeType,
-                                            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+    public List<EntityWithPathDTO> getNodes(
+            Optional<String> language,
+            Optional<NodeType> nodeType,
+            Optional<URI> contentUri,
+            Optional<Boolean> isRoot,
+            MetadataFilters metadataFilters
+    ) {
         final List<Node> filtered = nodeRepository.findByNodeType(
                 nodeType,
                 metadataFilters.getVisible(),
@@ -105,7 +110,11 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 isRoot
         );
 
-        return filtered.stream().distinct().map(n -> new NodeDTO(n, language.get())).collect(Collectors.toList());
+        return filtered
+                .stream()
+                .distinct()
+                .map(n -> new NodeDTO(n, language.get()))
+                .collect(Collectors.toList());
     }
 
     public List<ConnectionIndexDTO> getAllConnections(URI nodePublicId) {
@@ -241,8 +250,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         if (recursive) {
             node.getChildren().forEach(nc -> {
                 nc.getChild()
-                    .filter(n -> n.getNodeType() != NodeType.RESOURCE)
-                    .map(n -> makeAllResourcesPrimary(n.getPublicId(), true));
+                        .filter(n -> n.getNodeType() != NodeType.RESOURCE)
+                        .map(n -> makeAllResourcesPrimary(n.getPublicId(), true));
             });
         }
 

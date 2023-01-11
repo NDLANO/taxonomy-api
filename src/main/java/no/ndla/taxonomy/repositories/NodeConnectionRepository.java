@@ -25,21 +25,42 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             + " JOIN nc.parent JOIN nc.child WHERE nc.parent.id IN :nodeId")
     List<NodeTreeElement> findAllByNodeIdInIncludingTopicAndSubtopic(Set<Integer> nodeId);
 
-    @Query("SELECT DISTINCT nc FROM NodeConnection nc " + NODE_CONNECTION_METADATA + " JOIN FETCH nc.child r "
-            + RESOURCE_METADATA + " LEFT JOIN FETCH nc.parent n " + NODE_METADATA
-            + " LEFT JOIN nc.relevance rel LEFT JOIN r.resourceResourceTypes rrt"
-            + " LEFT JOIN rrt.resourceType rt LEFT JOIN r.cachedPaths"
-            + " LEFT JOIN FETCH r.resourceResourceTypes rrtFetch LEFT JOIN FETCH nc.relevance"
-            + " LEFT JOIN FETCH rrtFetch.resourceType rtFetch LEFT JOIN FETCH rtFetch.resourceTypeTranslations"
-            + " WHERE n.id IN :nodeIds AND (rt.publicId IN :resourceTypePublicIds) AND" + " n.nodeType = 'RESOURCE' AND"
-            + "   (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)")
-    List<NodeConnection> getResourceBy(Set<Integer> nodeIds, Set<URI> resourceTypePublicIds, URI relevance);
+    String RESOURCE_METADATA = " LEFT JOIN FETCH r.metadata rm LEFT JOIN FETCH rm.grepCodes"
+            + " LEFT JOIN FETCH rm.customFieldValues rcfv LEFT JOIN FETCH rcfv.customField ";
+    String NODE_METADATA = " LEFT JOIN FETCH n.metadata nm LEFT JOIN FETCH nm.grepCodes"
+            + " LEFT JOIN FETCH nm.customFieldValues ncfv LEFT JOIN FETCH ncfv.customField ";
+    String CHILD_METADATA = " LEFT JOIN FETCH c.metadata cm LEFT JOIN FETCH cm.grepCodes"
+            + " LEFT JOIN FETCH cm.customFieldValues ccfv LEFT JOIN FETCH ccfv.customField ";
+    String NODE_CONNECTION_METADATA = " LEFT JOIN FETCH nc.metadata ncm LEFT JOIN FETCH ncm.grepCodes"
+            + " LEFT JOIN FETCH ncm.customFieldValues nccfv LEFT JOIN FETCH nccfv.customField ";
+
+    @Query("""
+            SELECT DISTINCT nc FROM NodeConnection nc
+            LEFT JOIN FETCH nc.metadata ncm LEFT JOIN FETCH ncm.grepCodes LEFT JOIN FETCH ncm.customFieldValues nccfv LEFT JOIN FETCH nccfv.customField
+            JOIN FETCH nc.child r
+            LEFT JOIN FETCH r.metadata rm LEFT JOIN FETCH rm.grepCodes LEFT JOIN FETCH rm.customFieldValues rcfv LEFT JOIN FETCH rcfv.customField 
+            LEFT JOIN FETCH nc.parent n
+            LEFT JOIN FETCH n.metadata nm LEFT JOIN FETCH nm.grepCodes LEFT JOIN FETCH nm.customFieldValues ncfv LEFT JOIN FETCH ncfv.customField
+            LEFT JOIN nc.relevance rel 
+            LEFT JOIN r.resourceResourceTypes rrt
+            LEFT JOIN rrt.resourceType rt 
+            LEFT JOIN r.cachedPaths
+            LEFT JOIN FETCH r.resourceResourceTypes rrtFetch 
+            LEFT JOIN FETCH nc.relevance
+            LEFT JOIN FETCH rrtFetch.resourceType rtFetch 
+            LEFT JOIN FETCH rtFetch.resourceTypeTranslations
+            WHERE n.id IN :nodeIds 
+            AND (rt.publicId IN :resourceTypePublicIds) 
+            AND r.nodeType = 'RESOURCE' 
+            AND (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)
+            """)
+    List<NodeConnection> getResourceBy(Set<Integer> nodeIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
 
     @Query("SELECT DISTINCT nc FROM NodeConnection nc " + NODE_CONNECTION_METADATA + " LEFT JOIN FETCH nc.parent n "
             + NODE_METADATA + " LEFT JOIN FETCH nc.child r" + RESOURCE_METADATA
             + " LEFT JOIN r.cachedPaths LEFT JOIN FETCH r.resourceResourceTypes rrtFetch"
             + " LEFT JOIN FETCH rrtFetch.resourceType rtFetch LEFT JOIN FETCH rtFetch.resourceTypeTranslations"
-            + " WHERE n.id IN :nodeIds")
+            + " WHERE n.id IN :nodeIds AND r.nodeType = 'RESOURCE'")
     List<NodeConnection> getByResourceIds(Collection<Integer> nodeIds);
 
     interface NodeTreeElement {
