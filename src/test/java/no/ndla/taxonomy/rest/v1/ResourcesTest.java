@@ -64,7 +64,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void resource_without_subject_and_topic_has_no_url() throws Exception {
-        builder.resource(r -> r.publicId("urn:resource:1"));
+        builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1");
         final var resource = testUtils.getObject(ResourceDTO.class, response);
@@ -195,7 +195,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_clone_resource() throws Exception {
-        URI publicId = builder.resource(r -> r.name("Resource").resourceType(rt -> rt.name("Fagstoff"))
+        URI publicId = builder.node(NodeType.RESOURCE, r -> r.name("Resource").resourceType(rt -> rt.name("Fagstoff"))
                 .translation("nb", tr -> tr.name("Fagstoff nb")).contentUri("urn:article:1")).getPublicId();
 
         final var command = new ResourceCommand() {
@@ -265,7 +265,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_update_resource_without_changing_metadata() throws Exception {
-        URI publicId = builder.resource(r -> r.isVisible(false).grepCode("KM123").customField("key", "value"))
+        URI publicId = builder.node(NodeType.RESOURCE, r -> r.isVisible(false).grepCode("KM123").customField("key", "value"))
                 .getPublicId();
 
         final var command = new ResourceCommand() {
@@ -305,20 +305,20 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_delete_resource() throws Exception {
-        var resource = builder.resource(
+        var resource = builder.node(NodeType.RESOURCE,
                 r -> r.translation("nb", tr -> tr.name("ressurs")).resourceType(rt -> rt.name("Learning path")));
         resource.getTranslation("nb");
 
         builder.node(t -> t.nodeType(NodeType.TOPIC).resource(resource));
 
-        URI id = builder.resource("resource").getPublicId();
+        URI id = builder.node(NodeType.RESOURCE).getPublicId();
         testUtils.deleteResource("/v1/resources/" + id);
         assertNull(nodeRepository.findByPublicId(id));
     }
 
     @Test
     public void can_delete_resource_with_two_parent_topics() throws Exception {
-        var resource = builder.resource("resource");
+        var resource = builder.node(NodeType.RESOURCE);
 
         builder.node(child -> child.nodeType(NodeType.TOPIC).resource(resource)).name("DELETE EDGE TO ME");
         builder.node(child -> child.nodeType(NodeType.TOPIC).resource(resource)).name("DELETE EDGE TO ME ALSO");
@@ -352,7 +352,7 @@ public class ResourcesTest extends RestTest {
                 .subtype("article", st -> st.name("Article").publicId("urn:resourcetype:2"))
                 .subtype("video", st -> st.name("Video").publicId("urn:resourcetype:3")));
 
-        builder.resource(r -> r.publicId("urn:resource:1").resourceType("article").resourceType("video"));
+        builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").resourceType("article").resourceType("video"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1/resource-types");
         final var result = testUtils.getObject(ResourceTypeWithConnectionDTO[].class, response);
@@ -367,7 +367,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void resources_can_have_same_name() throws Exception {
-        builder.resource(r -> r.publicId("urn:resource:1").name("What is maths?"));
+        builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").name("What is maths?"));
 
         final var command = new ResourceCommand() {
             {
@@ -383,7 +383,7 @@ public class ResourcesTest extends RestTest {
     public void get_resource_with_related_topics_filters_resourceTypes() throws Exception {
         final ResourceType resourceType = builder
                 .resourceType(rt -> rt.name("Læringssti").translation("nb", tr -> tr.name("Læringssti")));
-        final var resource = builder.resource(r -> r.publicId("urn:resource:1").resourceType(resourceType));
+        final var resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").resourceType(resourceType));
         final Node topic = builder.node("primary", NodeType.TOPIC, t -> t.name("Philosophy and Mind")
                 .publicId("urn:topic:1").contentUri(URI.create("urn:article:6662")).resource(resource, true));
 
@@ -502,7 +502,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void primary_status_is_returned_on_resources() throws Exception {
-        final var resource = builder.resource("r1", rb -> rb.name("resource 1"));
+        final var resource = builder.node("r1", NodeType.RESOURCE, rb -> rb.name("resource 1"));
 
         builder.node(tb -> {
             tb.nodeType(NodeType.TOPIC);

@@ -157,13 +157,13 @@ public class EntityConnectionServiceImplTest {
         final var topic3 = builder.node(NodeType.TOPIC);
         final var topic4 = builder.node(NodeType.TOPIC);
 
-        final var resource1 = builder.resource();
-        final var resource2 = builder.resource();
-        final var resource3 = builder.resource();
-        final var resource4 = builder.resource();
-        final var resource5 = builder.resource();
-        final var resource6 = builder.resource();
-        final var resource7 = builder.resource();
+        final var resource1 = builder.node(NodeType.RESOURCE);
+        final var resource2 = builder.node(NodeType.RESOURCE);
+        final var resource3 = builder.node(NodeType.RESOURCE);
+        final var resource4 = builder.node(NodeType.RESOURCE);
+        final var resource5 = builder.node(NodeType.RESOURCE);
+        final var resource6 = builder.node(NodeType.RESOURCE);
+        final var resource7 = builder.node(NodeType.RESOURCE);
 
         final var relevance = builder.relevance();
 
@@ -289,9 +289,9 @@ public class EntityConnectionServiceImplTest {
         final var topic2 = builder.node(NodeType.TOPIC);
         final var topic3 = builder.node(NodeType.TOPIC);
 
-        final var resource1 = builder.resource();
-        final var resource2 = builder.resource();
-        final var resource3 = builder.resource();
+        final var resource1 = builder.node(NodeType.RESOURCE);
+        final var resource2 = builder.node(NodeType.RESOURCE);
+        final var resource3 = builder.node(NodeType.RESOURCE);
 
         final var topic1resource1 = NodeConnection.create(topic1, resource1, true);
         final var topic1resource2 = NodeConnection.create(topic1, resource2, true);
@@ -366,9 +366,9 @@ public class EntityConnectionServiceImplTest {
         final var topic1 = builder.node(NodeType.TOPIC);
         final var topic2 = builder.node(NodeType.TOPIC);
 
-        final var resource1 = builder.resource();
-        final var resource2 = builder.resource();
-        final var resource3 = builder.resource();
+        final var resource1 = builder.node(NodeType.RESOURCE);
+        final var resource2 = builder.node(NodeType.RESOURCE);
+        final var resource3 = builder.node(NodeType.RESOURCE);
 
         final var topic1resource1 = NodeConnection.create(topic1, resource1, true);
         final var topic1resource2 = NodeConnection.create(topic1, resource2, true);
@@ -430,7 +430,7 @@ public class EntityConnectionServiceImplTest {
         final var topic1 = builder.node(NodeType.TOPIC);
         final var topic2 = builder.node(NodeType.TOPIC);
 
-        final var resource1 = builder.resource();
+        final var resource1 = builder.node(NodeType.RESOURCE);
 
         NodeConnection.create(subject1, topic1);
 

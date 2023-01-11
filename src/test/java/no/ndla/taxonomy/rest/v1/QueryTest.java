@@ -22,7 +22,7 @@ public class QueryTest extends RestTest {
 
     @Test
     public void can_get_resource_by_contentURI() throws Exception {
-        builder.resource(r -> r.publicId("urn:resource:1").contentUri("urn:article:345")
+        builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").contentUri("urn:article:345")
                 .resourceType(rt -> rt.name("Subject material")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/resources?contentURI=urn:article:345");
@@ -42,10 +42,10 @@ public class QueryTest extends RestTest {
 
     @Test
     public void can_get_all_resources_matching_contentURI() throws Exception {
-        builder.resource(r -> r.publicId("urn:resource:1").contentUri("urn:article:345")
+        builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").contentUri("urn:article:345")
                 .resourceType(rt -> rt.name("Subject material")));
 
-        builder.resource(r -> r.publicId("urn:resource:2").contentUri("urn:article:3"));
+        builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:2").contentUri("urn:article:3"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/resources?contentURI=urn:article:345");
         EntityWithPathDTO[] resources = testUtils.getObject(EntityWithPathDTO[].class, response);
@@ -56,7 +56,7 @@ public class QueryTest extends RestTest {
 
     @Test
     public void can_get_all_resource_types_for_a_resource() throws Exception {
-        builder.resource(r -> r.publicId("urn:resource:1").contentUri("urn:article:345")
+        builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").contentUri("urn:article:345")
                 .resourceType(rt -> rt.name("Subject material")).resourceType(rt -> rt.name("Learning path")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/resources?contentURI=urn:article:345");
@@ -68,7 +68,7 @@ public class QueryTest extends RestTest {
 
     @Test
     public void can_get_translated_name_for_resource() throws Exception {
-        builder.resource(r -> r.publicId("urn:resource:1").name("Resource").translation("nb", tr -> tr.name("ressurs"))
+        builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").name("Resource").translation("nb", tr -> tr.name("ressurs"))
                 .contentUri("urn:article:345").resourceType(rt -> rt.name("Subject material")));
 
         MockHttpServletResponse response = testUtils
@@ -82,7 +82,7 @@ public class QueryTest extends RestTest {
 
     @Test
     public void can_get_a_topic_matching_contentURI() throws Exception {
-        builder.resource(r -> r.publicId("urn:resource:1").contentUri("urn:article:345")
+        builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").contentUri("urn:article:345")
                 .resourceType(rt -> rt.name("Subject material")));
 
         builder.node(NodeType.TOPIC, r -> r.publicId("urn:topic:2").contentUri("urn:article:345"));

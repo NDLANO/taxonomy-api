@@ -157,7 +157,7 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void deleted_primary_topic_is_replaced() throws Exception {
-        var resource = builder.resource(r -> r.name("resource"));
+        var resource = builder.node(NodeType.RESOURCE, r -> r.name("resource"));
         Node primary = builder.node(NodeType.TOPIC, t -> t.name("primary").resource(resource));
         builder.node(NodeType.TOPIC, t -> t.name("other").resource(resource, true));
 
@@ -206,7 +206,7 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void resource_can_only_have_one_primary_topic() throws Exception {
-        var graphs = builder.resource(r -> r.name("graphs"));
+        var graphs = builder.node(NodeType.RESOURCE, r -> r.name("graphs"));
 
         builder.node(NodeType.TOPIC, t -> t.name("elementary maths").resource(graphs));
 
@@ -232,8 +232,8 @@ public class TopicResourcesTest extends RestTest {
     @Test
     public void can_order_resources() throws Exception {
         Node geometry = builder.node(NodeType.TOPIC, t -> t.name("Geometry").publicId("urn:topic:1"));
-        var squares = builder.resource(r -> r.name("Squares").publicId("urn:resource:1"));
-        var circles = builder.resource(r -> r.name("Circles").publicId("urn:resource:2"));
+        var squares = builder.node(NodeType.RESOURCE, r -> r.name("Squares").publicId("urn:resource:1"));
+        var circles = builder.node(NodeType.RESOURCE, r -> r.name("Circles").publicId("urn:resource:2"));
 
         URI geometrySquares = save(NodeConnection.create(geometry, squares)).getPublicId();
         URI geometryCircles = save(NodeConnection.create(geometry, circles)).getPublicId();
@@ -275,8 +275,8 @@ public class TopicResourcesTest extends RestTest {
     @Test
     public void can_create_resources_with_rank() throws Exception {
         Node geometry = builder.node(NodeType.TOPIC, t -> t.name("Geometry").publicId("urn:topic:1"));
-        var squares = builder.resource(r -> r.name("Squares").publicId("urn:resource:1"));
-        var circles = builder.resource(r -> r.name("Circles").publicId("urn:resource:2"));
+        var squares = builder.node(NodeType.RESOURCE, r -> r.name("Squares").publicId("urn:resource:1"));
+        var circles = builder.node(NodeType.RESOURCE, r -> r.name("Circles").publicId("urn:resource:2"));
 
         testUtils.createResource("/v1/topic-resources", new TopicResources.AddResourceToTopicCommand() {
             {

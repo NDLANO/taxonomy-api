@@ -1101,7 +1101,7 @@
                     )
                 );
             ALTER TABLE resource_resource_type ADD CONSTRAINT resource_resource_type_unique UNIQUE (resource_id, resource_type_id);
-            ALTER TABLE resource_resource_type ADD CONSTRAINT resource_resource_type_resource_id_fkey FOREIGN KEY (resource_type_id) REFERENCES node(id)
+            ALTER TABLE resource_resource_type ADD CONSTRAINT resource_resource_type_resource_id_fkey FOREIGN KEY (resource_id) REFERENCES node(id)
         </sql>
     </changeSet>
 

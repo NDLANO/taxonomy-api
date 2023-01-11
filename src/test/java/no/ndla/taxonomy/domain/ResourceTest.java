@@ -130,7 +130,7 @@ public class ResourceTest {
 
         }
 
-        when(resourceResourceType1.getResource()).thenReturn(resource);
+        when(resourceResourceType1.getNode()).thenReturn(resource);
         resource.addResourceResourceType(resourceResourceType1);
 
         assertEquals(1, resource.getResourceResourceTypes().size());
@@ -142,7 +142,7 @@ public class ResourceTest {
         } catch (IllegalArgumentException ignored) {
         }
 
-        when(resourceResourceType2.getResource()).thenReturn(resource);
+        when(resourceResourceType2.getNode()).thenReturn(resource);
         resource.addResourceResourceType(resourceResourceType2);
 
         assertEquals(2, resource.getResourceResourceTypes().size());
@@ -152,8 +152,8 @@ public class ResourceTest {
         reset(resourceResourceType1);
         reset(resourceResourceType2);
 
-        when(resourceResourceType1.getResource()).thenReturn(resource);
-        when(resourceResourceType2.getResource()).thenReturn(resource);
+        when(resourceResourceType1.getNode()).thenReturn(resource);
+        when(resourceResourceType2.getNode()).thenReturn(resource);
 
         resource.removeResourceResourceType(resourceResourceType1);
         assertEquals(1, resource.getResourceResourceTypes().size());

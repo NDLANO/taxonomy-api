@@ -353,7 +353,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_delete_topic_but_resources_and_filter_remain() throws Exception {
-        var resource = builder.resource("resource",
+        var resource = builder.node("resource", NodeType.RESOURCE,
                 r -> r.translation("nb", tr -> tr.name("ressurs")).resourceType(rt -> rt.name("Learning path")));
 
         URI parentId = builder.node(NodeType.TOPIC, parent -> parent.resource(resource)).getPublicId();

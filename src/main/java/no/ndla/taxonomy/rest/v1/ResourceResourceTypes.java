@@ -112,7 +112,7 @@ public class ResourceResourceTypes {
 
         public ResourceResourceTypeIndexDocument(ResourceResourceType resourceResourceType) {
             id = resourceResourceType.getPublicId();
-            resourceId = resourceResourceType.getResource().getPublicId();
+            resourceId = resourceResourceType.getNode().getPublicId();
             resourceTypeId = resourceResourceType.getResourceType().getPublicId();
         }
     }

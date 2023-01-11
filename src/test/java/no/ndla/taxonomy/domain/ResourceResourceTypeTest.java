@@ -30,7 +30,7 @@ public class ResourceResourceTypeTest {
 
     @Test
     public void getResource() {
-        assertSame(resource, resourceResourceType.getResource());
+        assertSame(resource, resourceResourceType.getNode());
     }
 
     @Test

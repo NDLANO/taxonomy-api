@@ -17,7 +17,7 @@ public class ResourceResourceType extends DomainEntity implements Comparable<Res
 
     @ManyToOne(cascade = { CascadeType.MERGE })
     @JoinColumn(name = "resource_id")
-    private Node resource;
+    private Node node;
 
     @ManyToOne(cascade = { CascadeType.MERGE })
     @JoinColumn(name = "resource_type_id")
@@ -30,7 +30,7 @@ public class ResourceResourceType extends DomainEntity implements Comparable<Res
     public static ResourceResourceType create(Node resource, ResourceType resourceType) {
         final var resourceResourceType = new ResourceResourceType();
 
-        resourceResourceType.resource = resource;
+        resourceResourceType.node = resource;
         resourceResourceType.resourceType = resourceType;
 
         resource.addResourceResourceType(resourceResourceType);
@@ -39,23 +39,23 @@ public class ResourceResourceType extends DomainEntity implements Comparable<Res
     }
 
     public void disassociate() {
-        final var resource = this.resource;
+        final var resource = this.node;
         final var resourceType = this.resourceType;
 
         this.resourceType = null;
-        this.resource = null;
+        this.node = null;
 
         if (resource != null) {
             resource.removeResourceResourceType(this);
         }
     }
 
-    public Node getResource() {
-        return resource;
+    public Node getNode() {
+        return node;
     }
 
-    public void setResource(Node resource) {
-        this.resource = resource;
+    public void setNode(Node resource) {
+        this.node = resource;
     }
 
     public ResourceType getResourceType() {
@@ -86,7 +86,7 @@ public class ResourceResourceType extends DomainEntity implements Comparable<Res
         if (o == null || getClass() != o.getClass())
             return false;
         ResourceResourceType that = (ResourceResourceType) o;
-        return Objects.equals(resource.getPublicId(), that.resource.getPublicId())
+        return Objects.equals(node.getPublicId(), that.node.getPublicId())
                 && Objects.equals(resourceType.getPublicId(), that.resourceType.getPublicId());
     }
 }

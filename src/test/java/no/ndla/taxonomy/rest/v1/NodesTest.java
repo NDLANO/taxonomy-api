@@ -39,6 +39,7 @@ public class NodesTest extends RestTest {
         nodeRepository.deleteAllAndFlush();
         nodeConnectionRepository.deleteAllAndFlush();
         resourceTypeRepository.deleteAllAndFlush();
+        resourceResourceTypeRepository.deleteAllAndFlush();
     }
 
     @Test
@@ -519,7 +520,15 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_delete_nodes_but_resources_remain() throws Exception {
-        Node resource = builder.node(NodeType.RESOURCE, r -> r.translation("nb", tr -> tr.name("ressurs")).resourceType(rt -> rt.name("Learning path")));
+        var x = builder.resourceType("rt", rt -> rt.name("Learning path"));
+        System.out.println(x.getId());
+        Node resource = builder.node(
+                NodeType.RESOURCE, r -> r
+                        .translation("nb", tr -> tr.name("ressurs"))
+        );
+
+        var hallo = resource.addResourceType(x);
+        entityManager.persist(hallo);
 
         URI parentId = builder.node(NodeType.TOPIC, parent -> parent.resource(resource)).getPublicId();
 
@@ -546,8 +555,8 @@ public class NodesTest extends RestTest {
 
     @Test
     void making_resources_primary_sets_other_contexts_not_primary() throws Exception {
-        var resource = builder.resource();
-        var resource2 = builder.resource();
+        var resource = builder.node(NodeType.RESOURCE);
+        var resource2 = builder.node(NodeType.RESOURCE);
         var node1 = builder.node(NodeType.TOPIC, n -> n.resource(resource, false).child(NodeType.TOPIC,
                 c -> c.publicId("urn:topic:1").resource(resource2, false)));
         var node2 = builder.node(NodeType.TOPIC, n -> n.resource(resource, true).child(NodeType.TOPIC,

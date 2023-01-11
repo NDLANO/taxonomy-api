@@ -8,7 +8,6 @@
 package no.ndla.taxonomy.domain;
 
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
-import no.ndla.taxonomy.rest.v1.TopicResources;
 
 import javax.persistence.*;
 import java.net.URI;
@@ -59,7 +58,7 @@ public class Node extends EntityWithPath {
     @Column
     private boolean root;
 
-    @OneToMany(mappedBy = "resource", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceResourceType> resourceResourceTypes = new TreeSet<>();
 
     // Needed for hibernate
@@ -101,7 +100,7 @@ public class Node extends EntityWithPath {
             if (keepPublicId) {
                 rrt.setPublicId(rt.getPublicId());
             }
-            rrt.setResource(this);
+            rrt.setNode(this);
             rrt.setResourceType(rt.getResourceType());
             rrts.add(rrt);
         }
@@ -199,7 +198,7 @@ public class Node extends EntityWithPath {
 
         this.resourceResourceTypes.add(resourceResourceType);
 
-        if (resourceResourceType.getResource() != this) {
+        if (resourceResourceType.getNode() != this) {
             throw new IllegalArgumentException(
                     "ResourceResourceType must have Resource set before being associated with Resource");
         }
@@ -208,7 +207,7 @@ public class Node extends EntityWithPath {
     public void removeResourceResourceType(ResourceResourceType resourceResourceType) {
         this.resourceResourceTypes.remove(resourceResourceType);
 
-        if (resourceResourceType.getResource() == this) {
+        if (resourceResourceType.getNode() == this) {
             resourceResourceType.disassociate();
         }
     }

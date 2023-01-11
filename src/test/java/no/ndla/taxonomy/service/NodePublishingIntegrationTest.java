@@ -277,7 +277,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         // nodes to make sure testnode is not the first
         builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
         builder.node(n -> n.publicId("urn:node:second").resource(r -> r.publicId("urn:resource:second")));
-        Node resource = builder.resource(r -> r.publicId("urn:resource:1"));
+        Node resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1"));
         Node node = builder
                 .node(NodeType.SUBJECT,
                         s -> s.isContext(true).publicId("urn:subject:1")
@@ -366,7 +366,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
         // a node to make sure testnode is not the first
         builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
-        Node resource = builder.resource(r -> r.publicId("urn:resource:1"));
+        Node resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1"));
         Node node = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1")
                 .child(NodeType.TOPIC, t2 -> t2.publicId("urn:topic:1").resource(resource)));
         Node second = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:2")
@@ -418,7 +418,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
                         st -> st.name("Fagartikkel").publicId("urn:resourcetype:1")
                                 .translation("nb", t -> t.name("Fagartikkel nb"))
                                 .translation("nn", t -> t.name("Fagartikkel nn"))));
-        Node resource = builder.resource(r -> r.publicId("urn:resource:1").resourceType("urn:resourcetype:1")
+        Node resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").resourceType("urn:resourcetype:1")
                 .translation("nb", tr -> tr.name("Resource nb")).translation("nn", tr -> tr.name("Resource nn")));
         Node node = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1")
                 .child(NodeType.TOPIC, t2 -> t2.publicId("urn:topic:1").resource(resource)));

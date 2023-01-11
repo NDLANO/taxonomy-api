@@ -7,6 +7,7 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceType;
 import org.junit.jupiter.api.Test;
@@ -62,7 +63,7 @@ public class ResourceResourceTypesTest extends RestTest {
 
     @Test
     public void can_delete_resource_resourcetype() throws Exception {
-        var integrationResource = builder.resource(r -> r.name("Introduction to integration"));
+        var integrationResource = builder.node(NodeType.RESOURCE, r -> r.name("Introduction to integration"));
         ResourceType resourceType = builder.resourceType(rt -> rt.name("text"));
         URI id = save(integrationResource.addResourceType(resourceType)).getPublicId();
 

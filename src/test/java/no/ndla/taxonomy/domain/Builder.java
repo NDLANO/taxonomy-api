@@ -62,25 +62,6 @@ public class Builder {
         return builder.version;
     }
 
-    public Node resource() {
-        return resource(null, null);
-    }
-
-    public Node resource(String key) {
-        return resource(key, null);
-    }
-
-    public Node resource(Consumer<NodeBuilder> consumer) {
-        return resource(null, consumer);
-    }
-
-    public Node resource(String key, Consumer<NodeBuilder> consumer) {
-        var resource = getResourceBuilder(key);
-        if (null != consumer)
-            consumer.accept(resource);
-        return resource.node;
-    }
-
     public ResourceType resourceType(String key) {
         return resourceType(key, null);
     }
@@ -226,20 +207,6 @@ public class Builder {
 
         public NodeTranslationBuilder name(String name) {
             nodeTranslation.setName(name);
-            return this;
-        }
-    }
-
-    @Transactional
-    public static class ResourceTranslationBuilder {
-        private Translation resourceTranslation;
-
-        public ResourceTranslationBuilder(Translation resourceTranslation) {
-            this.resourceTranslation = resourceTranslation;
-        }
-
-        public ResourceTranslationBuilder name(String name) {
-            resourceTranslation.setName(name);
             return this;
         }
     }
@@ -536,11 +503,7 @@ public class Builder {
         }
 
         public NodeBuilder resource(Node resource) {
-            entityManager.persist(NodeConnection.create(node, resource));
-
-            cachedUrlUpdaterService.updateCachedUrls(resource);
-
-            return this;
+            return this.child(resource);
         }
 
         public NodeBuilder resource(Node resource, boolean primary) {
