@@ -128,7 +128,20 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         nodeConnection.disassociate();
         nodeConnectionRepository.delete(nodeConnection);
 
-        child.ifPresent(cachedUrlUpdaterService::updateCachedUrls);
+        child.ifPresent(childToDisconnect -> {
+            if(childToDisconnect.getNodeType() == NodeType.RESOURCE) {
+                // Set next connection to primary if disconnecting the primary connection
+                var isPrimaryConnection = nodeConnection.isPrimary().orElse(false);
+                if(isPrimaryConnection) {
+                    childToDisconnect.getParentNodeConnections().stream().findFirst().ifPresent(nextConnection -> {
+                        nextConnection.setPrimary(true);
+                        nodeConnectionRepository.saveAndFlush(nextConnection);
+                        nextConnection.getResource().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
+                    });
+                }
+            }
+            cachedUrlUpdaterService.updateCachedUrls(childToDisconnect);
+        });
 
         nodeConnectionRepository.flush();
     }
@@ -199,7 +212,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     @Override
     public void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank, Optional<Boolean> isPrimary) {
-        updateRank(nodeConnection, newRank);
+        if(newRank != null) updateRank(nodeConnection, newRank);
         isPrimary.ifPresent(primary -> updatePrimaryConnection(nodeConnection, primary));
         updateRelevance(nodeConnection, relevance);
     }

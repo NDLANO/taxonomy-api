@@ -307,7 +307,7 @@ public class EntityConnectionServiceImplTest {
         assertFalse(topic3resource1.isPrimary().orElseThrow());
 
         assertTrue(topic1.getResourceChildren().contains(topic1resource1));
-        assertTrue(resource1.getResourceChildren().contains(topic1resource1));
+        assertTrue(resource1.getParentConnections().contains(topic1resource1));
 
         reset(cachedUrlUpdaterService);
 
@@ -319,19 +319,19 @@ public class EntityConnectionServiceImplTest {
         assertFalse(topic1resource1.getResource().isPresent());
         assertFalse(topic1resource1.getParent().isPresent());
         assertFalse(topic1.getResourceChildren().contains(topic1resource1));
-        assertFalse(resource1.getResourceChildren().contains(topic1resource1));
+        assertFalse(resource1.getParentNodeConnections().contains(topic1resource1));
 
         service.disconnectParentChildConnection(topic2resource1);
         assertTrue(topic3resource1.isPrimary().orElseThrow());
 
-        assertTrue(resource2.getResourceChildren().contains(topic1resource2));
-        assertTrue(resource3.getResourceChildren().contains(topic1resource3));
+        assertTrue(resource2.getParentConnections().contains(topic1resource2));
+        assertTrue(resource3.getParentConnections().contains(topic1resource3));
 
         service.disconnectParentChildConnection(topic1resource2);
         service.disconnectParentChildConnection(topic1resource3);
 
-        assertFalse(resource2.getResourceChildren().contains(topic1resource2));
-        assertFalse(resource3.getResourceChildren().contains(topic1resource3));
+        assertFalse(resource2.getParentConnections().contains(topic1resource2));
+        assertFalse(resource3.getParentConnections().contains(topic1resource3));
     }
 
     @Test

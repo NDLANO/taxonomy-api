@@ -17,11 +17,11 @@ import java.util.stream.Collectors;
 @NamedEntityGraph(name = Node.GRAPH, includeAllAttributes = true, attributeNodes = {
         @NamedAttributeNode("translations"), @NamedAttributeNode(value = "metadata"),
         @NamedAttributeNode(value = "parentConnections", subgraph = "parent-connection"),
-        @NamedAttributeNode(value = "childConnections", subgraph = "child-connection") }, subgraphs = {
-                @NamedSubgraph(name = "parent-connection", attributeNodes = { @NamedAttributeNode("parent"),
-                        @NamedAttributeNode(value = "metadata") }),
-                @NamedSubgraph(name = "child-connection", attributeNodes = { @NamedAttributeNode("child"),
-                        @NamedAttributeNode(value = "metadata") }) })
+        @NamedAttributeNode(value = "childConnections", subgraph = "child-connection")}, subgraphs = {
+        @NamedSubgraph(name = "parent-connection", attributeNodes = {@NamedAttributeNode("parent"),
+                @NamedAttributeNode(value = "metadata")}),
+        @NamedSubgraph(name = "child-connection", attributeNodes = {@NamedAttributeNode("child"),
+                @NamedAttributeNode(value = "metadata")})})
 @Entity
 public class Node extends EntityWithPath {
     public static final String GRAPH = "node-with-connections";
@@ -157,13 +157,16 @@ public class Node extends EntityWithPath {
 
     public Collection<NodeConnection> getResourceChildren() {
         return childConnections.stream()
-                .filter(cc -> cc.getChild().map(child -> child.getNodeType() == NodeType.RESOURCE).orElse(false))
-                .collect(Collectors.toUnmodifiableList());
+                .filter(cc -> cc
+                        .getChild()
+                        .map(child -> child.getNodeType() == NodeType.RESOURCE)
+                        .orElse(false))
+                .collect(Collectors.toSet());
     }
 
     public Collection<ResourceType> getResourceTypes() {
         return getResourceResourceTypes().stream().map(ResourceResourceType::getResourceType)
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
     }
 
     public Collection<ResourceResourceType> getResourceResourceTypes() {
@@ -215,7 +218,7 @@ public class Node extends EntityWithPath {
         if (nodeConnection.getParent().orElse(null) != this) {
             throw new IllegalArgumentException("Parent must be set on NodeConnection before associating with child");
         }
-        if(this.nodeType == NodeType.RESOURCE) {
+        if (this.nodeType == NodeType.RESOURCE) {
             throw new IllegalArgumentException("'" + NodeType.RESOURCE + "' nodes cannot have children");
         }
 
