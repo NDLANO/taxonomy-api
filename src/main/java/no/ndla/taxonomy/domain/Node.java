@@ -147,9 +147,8 @@ public class Node extends EntityWithPath {
 
     @Override
     public Collection<EntityWithPathConnection> getChildConnections() {
-        final Collection<EntityWithPathConnection> children = childConnections.stream()
-                .map(entity -> (EntityWithPathConnection) entity).collect(Collectors.toUnmodifiableList());
-        return children;
+        return childConnections.stream()
+                .map(entity -> (EntityWithPathConnection) entity).collect(Collectors.toSet());
     }
 
     public Collection<NodeConnection> getChildren() {
