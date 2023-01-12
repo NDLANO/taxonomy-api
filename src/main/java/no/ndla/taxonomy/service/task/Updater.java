@@ -9,15 +9,16 @@ package no.ndla.taxonomy.service.task;
 
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.ChangelogService;
+import no.ndla.taxonomy.service.DomainEntityHelperService;
 
 import java.util.Optional;
 
 public class Updater extends Task<DomainEntity> {
-    private ChangelogService changelogService;
+    private DomainEntityHelperService domainEntityHelperService;
     private DomainEntity element;
 
-    public void setChangelogService(ChangelogService changelogService) {
-        this.changelogService = changelogService;
+    public void setDomainEntityHelperService(DomainEntityHelperService domainEntityHelperService) {
+        this.domainEntityHelperService = domainEntityHelperService;
     }
 
     public void setElement(DomainEntity element) {
@@ -30,19 +31,7 @@ public class Updater extends Task<DomainEntity> {
 
     @Override
     protected Optional<DomainEntity> execute() {
-        if (element instanceof Node) {
-            return changelogService.updateNode((Node) element, this.cleanUp);
-        }
-        if (element instanceof Resource) {
-            return changelogService.updateResource((Resource) element, this.cleanUp);
-        }
-        if (element instanceof NodeConnection) {
-            return changelogService.updateNodeConnection((NodeConnection) element, this.cleanUp);
-        }
-        if (element instanceof NodeResource) {
-            return changelogService.updateNodeResource((NodeResource) element, this.cleanUp);
-        }
-        throw new IllegalArgumentException("Wrong type of element to update: " + element.getEntityName());
+        return domainEntityHelperService.updateEntity(element, this.cleanUp);
     }
 
 }
