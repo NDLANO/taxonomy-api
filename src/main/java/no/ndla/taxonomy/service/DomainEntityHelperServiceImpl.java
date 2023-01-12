@@ -147,13 +147,17 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             ((Resource) domainEntity).getTranslations().forEach(ResourceTranslation::getName);
             ((Resource) domainEntity).getParentConnections();
             ((Resource) domainEntity).getResourceResourceTypes();
-            ((Resource) domainEntity).getResourceTypes().forEach(ResourceType::getTranslations);
+            ((Resource) domainEntity).getResourceResourceTypes().forEach(ResourceResourceType::getResourceType);
+            ((Resource) domainEntity).getResourceTypes().forEach(this::initializeFields);
         } else if (domainEntity instanceof NodeConnection) {
             ((NodeConnection) domainEntity).getParent().ifPresent(this::initializeFields);
             ((NodeConnection) domainEntity).getChild().ifPresent(this::initializeFields);
         } else if (domainEntity instanceof NodeResource) {
             ((NodeResource) domainEntity).getNode().ifPresent(this::initializeFields);
             ((NodeResource) domainEntity).getResource().ifPresent(this::initializeFields);
+        } else if (domainEntity instanceof ResourceType) {
+            ((ResourceType) domainEntity).getParent().ifPresent(this::initializeFields);
+            ((ResourceType) domainEntity).getTranslations().forEach(ResourceTypeTranslation::getName);
         }
     }
 
