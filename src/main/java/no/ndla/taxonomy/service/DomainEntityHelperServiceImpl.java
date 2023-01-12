@@ -60,9 +60,9 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         case "subject":
         case "topic":
         case "node":
-            return nodeRepository.findNodeGraphByPublicId(publicId);
+            return nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId).orElse(null);
         case "resource":
-            return resourceRepository.findResourceGraphByPublicId(publicId);
+            return resourceRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId).orElse(null);
         case "node-connection":
         case "subject-topic":
         case "topic-subtopic":
@@ -114,6 +114,9 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Transactional
     public Optional<DomainEntity> getProcessedEntityByPublicId(URI publicId, boolean addIsPublishing, boolean cleanUp) {
         DomainEntity entity = getEntityByPublicId(publicId);
+        if (entity != null) {
+            initializeFields(entity);
+        }
         if (entity instanceof EntityWithMetadata) {
             EntityWithMetadata entityWithMetadata = (EntityWithMetadata) entity;
             if (addIsPublishing && !cleanUp) {
@@ -133,6 +136,25 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             }
         }
         return Optional.ofNullable(entity);
+    }
+
+    private void initializeFields(DomainEntity domainEntity) {
+        if (domainEntity instanceof Node) {
+            ((Node) domainEntity).getTranslations().forEach(NodeTranslation::getName);
+            ((Node) domainEntity).getChildConnections();
+            ((Node) domainEntity).getParentConnections();
+        } else if (domainEntity instanceof Resource) {
+            ((Resource) domainEntity).getTranslations().forEach(ResourceTranslation::getName);
+            ((Resource) domainEntity).getParentConnections();
+            ((Resource) domainEntity).getResourceResourceTypes();
+            ((Resource) domainEntity).getResourceTypes().forEach(ResourceType::getTranslations);
+        } else if (domainEntity instanceof NodeConnection) {
+            ((NodeConnection) domainEntity).getParent().ifPresent(this::initializeFields);
+            ((NodeConnection) domainEntity).getChild().ifPresent(this::initializeFields);
+        } else if (domainEntity instanceof NodeResource) {
+            ((NodeResource) domainEntity).getNode().ifPresent(this::initializeFields);
+            ((NodeResource) domainEntity).getResource().ifPresent(this::initializeFields);
+        }
     }
 
     private void unsetCustomField(Metadata metadata, String customfield) {
