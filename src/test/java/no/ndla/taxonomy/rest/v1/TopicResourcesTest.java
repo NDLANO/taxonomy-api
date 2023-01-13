@@ -81,7 +81,7 @@ public class TopicResourcesTest extends RestTest {
         assertAnyTrue(calculus.getResources(), t -> "Introduction to integration".equals(t.getName()));
         assertNotNull(nodeConnectionRepository.getByPublicId(id));
         // First topic connection will always be primary
-        assertTrue(calculus.getParentConnections().iterator().next().isPrimary().orElseThrow());
+        assertTrue(calculus.getChildConnections().iterator().next().isPrimary().orElseThrow());
 
         // After behavior change: Add the resource again to another topic with primary = false
         // should create a non-primary resource connection

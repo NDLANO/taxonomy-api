@@ -361,7 +361,7 @@ public class TopicsTest extends RestTest {
         testUtils.deleteResource("/v1/topics/" + parentId);
 
         assertNull(nodeRepository.findByPublicId(parentId));
-        assertNotNull(nodeConnectionRepository.findByPublicId(resource.getPublicId()));
+        assertNotNull(nodeRepository.findByPublicId(resource.getPublicId()));
     }
 
     private static class ConnectionTypeCounter {
