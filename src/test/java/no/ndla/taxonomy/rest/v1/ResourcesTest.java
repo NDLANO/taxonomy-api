@@ -247,7 +247,7 @@ public class ResourcesTest extends RestTest {
     @Test
     public void can_update_resource_with_new_id() throws Exception {
         URI publicId = newResource().getPublicId();
-        URI randomId = URI.create("uri:resource:random");
+        URI randomId = URI.create("urn:resource:random");
 
         final var command = new ResourceCommand() {
             {

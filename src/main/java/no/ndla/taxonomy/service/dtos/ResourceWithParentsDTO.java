@@ -31,7 +31,7 @@ public class ResourceWithParentsDTO extends ResourceDTO {
     public ResourceWithParentsDTO(Node resource, String languageCode) {
         super(resource, languageCode);
 
-        resource.getResourceChildren().stream()
+        resource.getParentNodeConnections().stream()
                 .map(nodeResource -> new NodeWithResourceConnectionDTO(nodeResource, languageCode))
                 .forEach(parents::add);
     }

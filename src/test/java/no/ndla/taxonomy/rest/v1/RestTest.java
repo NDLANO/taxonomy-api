@@ -11,6 +11,7 @@ import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,6 +48,9 @@ public abstract class RestTest {
 
     @Autowired
     NodeRepository nodeRepository;
+
+    @Autowired
+    NodeService nodeService;
 
     @Autowired
     NodeConnectionRepository nodeConnectionRepository;
@@ -96,7 +100,8 @@ public abstract class RestTest {
     }
 
     Node newResource() {
-        return save(new Node(NodeType.RESOURCE));
+        var node = new Node(NodeType.RESOURCE);
+        return save(node);
     }
 
     ResourceType newResourceType() {

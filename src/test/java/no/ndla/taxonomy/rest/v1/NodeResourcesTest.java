@@ -127,9 +127,12 @@ public class NodeResourcesTest extends RestTest {
 
     @Test
     public void can_delete_node_resource() throws Exception {
-        URI id = save(NodeConnection.create(newTopic(), newResource())).getPublicId();
-        testUtils.deleteResource("/v1/node-resources/" + id);
-        assertNull(nodeRepository.findByPublicId(id));
+        var topic = newTopic();
+        var resource = newResource();
+        var connection = save(NodeConnection.create(topic, resource));
+        var connectionId = connection.getPublicId();
+        testUtils.deleteResource("/v1/node-resources/" + connectionId);
+        assertNull(nodeRepository.findByPublicId(connectionId));
     }
 
     @Test

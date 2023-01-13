@@ -11,8 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class NodeResourceTest {
     private Node node;
@@ -22,9 +21,11 @@ public class NodeResourceTest {
     @BeforeEach
     public void setUp() {
         node = mock(Node.class);
+        when(node.getNodeType()).thenReturn(NodeType.TOPIC);
         resource = mock(Node.class);
+        when(resource.getNodeType()).thenReturn(NodeType.RESOURCE);
 
-        resourceConnection = NodeConnection.create(node, resource);
+        resourceConnection = NodeConnection.create(node, resource, false);
 
         verify(node).addChildConnection(resourceConnection);
         verify(resource).addParentConnection(resourceConnection);
@@ -66,7 +67,7 @@ public class NodeResourceTest {
         assertFalse(resourceConnection.getResource().isPresent());
         assertFalse(resourceConnection.getParent().isPresent());
 
-        verify(node).removeParentConnection(resourceConnection);
-        verify(resource).removeChildConnection(resourceConnection);
+        verify(node).removeChildConnection(resourceConnection);
+        verify(resource).removeParentConnection(resourceConnection);
     }
 }

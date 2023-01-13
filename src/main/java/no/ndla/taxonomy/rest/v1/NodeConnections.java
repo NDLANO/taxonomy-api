@@ -106,7 +106,8 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @ApiOperation(value = "Removes a connection between a node and a child")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
-        connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id));
+        var connection = nodeConnectionRepository.getByPublicId(id);
+        connectionService.disconnectParentChildConnection(connection);
     }
 
     @PutMapping("/{id}")
