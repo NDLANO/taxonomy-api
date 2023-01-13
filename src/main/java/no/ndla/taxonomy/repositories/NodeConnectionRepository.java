@@ -93,7 +93,6 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             FROM NodeConnection nc
             JOIN nc.child c
             WHERE c.nodeType = :nodeType
-            ORDER BY nc.id
             """)
     Page<NodeConnection> findIdsPaginatedByChildNodeType(Pageable pageable, NodeType nodeType);
 

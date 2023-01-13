@@ -14,10 +14,10 @@ public class NodeResourcePageDTO {
     @Schema(description = "Page containing results")
     public List<NodeResourceDTO> results;
 
-    NodeResourcePageDTO() {
+    public NodeResourcePageDTO() {
     }
 
-    NodeResourcePageDTO(long totalCount, List<NodeResourceDTO> results) {
+    public NodeResourcePageDTO(long totalCount, List<NodeResourceDTO> results) {
         this.totalCount = totalCount;
         this.results = results;
     }

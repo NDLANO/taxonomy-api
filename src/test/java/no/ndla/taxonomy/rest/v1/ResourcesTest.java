@@ -30,6 +30,7 @@ public class ResourcesTest extends RestTest {
     @BeforeEach
     void clearAllRepos() {
         nodeRepository.deleteAllAndFlush();
+        nodeConnectionRepository.deleteAllAndFlush();
     }
 
     @Test

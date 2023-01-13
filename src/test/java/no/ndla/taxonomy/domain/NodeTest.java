@@ -182,6 +182,12 @@ public class NodeTest {
 
         final var nodeResource1 = mock(NodeConnection.class);
         final var nodeResource2 = mock(NodeConnection.class);
+        final var resource1 = mock(Node.class);
+        final var resource2 = mock(Node.class);
+        when(resource1.getNodeType()).thenReturn(NodeType.RESOURCE);
+        when(resource2.getNodeType()).thenReturn(NodeType.RESOURCE);
+        when(nodeResource1.getChild()).thenReturn(Optional.of(resource1));
+        when(nodeResource2.getChild()).thenReturn(Optional.of(resource2));
 
         try {
             node.addChildConnection(nodeResource1);

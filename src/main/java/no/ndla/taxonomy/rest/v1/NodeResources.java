@@ -16,9 +16,11 @@ import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
-import no.ndla.taxonomy.repositories.*;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeConnectionPage;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.ParentChildIndexDocument;
+import no.ndla.taxonomy.repositories.NodeConnectionRepository;
+import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.repositories.RelevanceRepository;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourceDTO;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourcePageDTO;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.EntityConnectionService;
 import no.ndla.taxonomy.service.MetadataService;
@@ -35,7 +37,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = { "/v1/node-resources" })
+@RequestMapping(path = {"/v1/node-resources"})
 @Transactional
 public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
 
@@ -45,8 +47,8 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     private final RelevanceRepository relevanceRepository;
 
     public NodeResources(NodeRepository nodeRepository, EntityConnectionService connectionService,
-            NodeConnectionRepository nodeConnectionRepository, RelevanceRepository relevanceRepository,
-            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
+                         NodeConnectionRepository nodeConnectionRepository, RelevanceRepository relevanceRepository,
+                         CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
         super(nodeConnectionRepository, cachedUrlUpdaterService, metadataService);
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.nodeRepository = nodeRepository;
@@ -56,14 +58,14 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
 
     @GetMapping
     @ApiOperation(value = "Gets all connections between node and resources")
-    public List<ParentChildIndexDocument> index() {
+    public List<NodeResourceDTO> index() {
         return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream()
-                .map(ParentChildIndexDocument::new).collect(Collectors.toList());
+                .map(NodeResourceDTO::new).collect(Collectors.toList());
     }
 
     @GetMapping("/page")
     @ApiOperation(value = "Gets all connections between node and resources paginated")
-    public NodeConnectionPage allPaginated(
+    public NodeResourcePageDTO allPaginated(
             @ApiParam(name = "page", value = "The page to fetch", required = true) Optional<Integer> page,
             @ApiParam(name = "pageSize", value = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
 
@@ -75,17 +77,17 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
 
         var pageRequest = PageRequest.of(page.get() - 1, pageSize.get());
         var connections = nodeConnectionRepository.findIdsPaginatedByChildNodeType(pageRequest, NodeType.RESOURCE);
-        var ids = connections.stream().map(DomainEntity::getId).collect(Collectors.toList());
+        var ids = connections.stream().map(DomainEntity::getId).toList();
         var results = nodeConnectionRepository.findByIds(ids);
-        var contents = results.stream().map(ParentChildIndexDocument::new).collect(Collectors.toList());
-        return new NodeConnectionPage(connections.getTotalElements(), contents);
+        var contents = results.stream().map(NodeResourceDTO::new).collect(Collectors.toList());
+        return new NodeResourcePageDTO(connections.getTotalElements(), contents);
     }
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a specific connection between a node and a resource")
-    public ParentChildIndexDocument get(@PathVariable("id") URI id) {
+    public NodeResourceDTO get(@PathVariable("id") URI id) {
         NodeConnection connection = nodeConnectionRepository.getByPublicId(id);
-        return new ParentChildIndexDocument(connection);
+        return new NodeResourceDTO(connection);
     }
 
     @PostMapping
@@ -118,7 +120,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-            @ApiParam(name = "connection", value = "Updated node/resource connection") @RequestBody UpdateNodeResourceCommand command) {
+                    @ApiParam(name = "connection", value = "Updated node/resource connection") @RequestBody UpdateNodeResourceCommand command) {
         final var nodeResource = nodeConnectionRepository.getByPublicId(id);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
                 : null;
