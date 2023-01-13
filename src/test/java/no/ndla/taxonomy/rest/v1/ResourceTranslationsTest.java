@@ -23,7 +23,8 @@ public class ResourceTranslationsTest extends RestTest {
 
     @Test
     public void can_get_all_resources_with_translation() throws Exception {
-        builder.node(NodeType.RESOURCE, r -> r.name("The inner planets").translation("nb", tr -> tr.name("De indre planetene")));
+        builder.node(NodeType.RESOURCE,
+                r -> r.name("The inner planets").translation("nb", tr -> tr.name("De indre planetene")));
         builder.node(NodeType.RESOURCE, r -> r.name("Gas giants").translation("nb", tr -> tr.name("Gasskjemper")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources?language=nb");

@@ -64,12 +64,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
             AND (:isRoot IS NULL OR n.root = true)
             """)
-    List<Node> findByNodeType(
-            Optional<NodeType> nodeType,
-            Optional<Boolean> isVisible,
-            Optional<String> metadataFilterKey,
-            Optional<String> metadataFilterValue,
-            Optional<URI> contentUri,
-            Optional<Boolean> isRoot
-    );
+    List<Node> findByNodeType(Optional<NodeType> nodeType, Optional<Boolean> isVisible,
+            Optional<String> metadataFilterKey, Optional<String> metadataFilterValue, Optional<URI> contentUri,
+            Optional<Boolean> isRoot);
 }

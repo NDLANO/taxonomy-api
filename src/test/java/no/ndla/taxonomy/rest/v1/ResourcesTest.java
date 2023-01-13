@@ -196,8 +196,11 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_clone_resource() throws Exception {
-        URI publicId = builder.node(NodeType.RESOURCE, r -> r.name("Resource").resourceType(rt -> rt.name("Fagstoff"))
-                .translation("nb", tr -> tr.name("Fagstoff nb")).contentUri("urn:article:1")).getPublicId();
+        URI publicId = builder
+                .node(NodeType.RESOURCE,
+                        r -> r.name("Resource").resourceType(rt -> rt.name("Fagstoff"))
+                                .translation("nb", tr -> tr.name("Fagstoff nb")).contentUri("urn:article:1"))
+                .getPublicId();
 
         final var command = new ResourceCommand() {
             {
@@ -266,7 +269,8 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_update_resource_without_changing_metadata() throws Exception {
-        URI publicId = builder.node(NodeType.RESOURCE, r -> r.isVisible(false).grepCode("KM123").customField("key", "value"))
+        URI publicId = builder
+                .node(NodeType.RESOURCE, r -> r.isVisible(false).grepCode("KM123").customField("key", "value"))
                 .getPublicId();
 
         final var command = new ResourceCommand() {
@@ -353,7 +357,8 @@ public class ResourcesTest extends RestTest {
                 .subtype("article", st -> st.name("Article").publicId("urn:resourcetype:2"))
                 .subtype("video", st -> st.name("Video").publicId("urn:resourcetype:3")));
 
-        builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").resourceType("article").resourceType("video"));
+        builder.node(NodeType.RESOURCE,
+                r -> r.publicId("urn:resource:1").resourceType("article").resourceType("video"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/urn:resource:1/resource-types");
         final var result = testUtils.getObject(ResourceTypeWithConnectionDTO[].class, response);
@@ -384,7 +389,8 @@ public class ResourcesTest extends RestTest {
     public void get_resource_with_related_topics_filters_resourceTypes() throws Exception {
         final ResourceType resourceType = builder
                 .resourceType(rt -> rt.name("Læringssti").translation("nb", tr -> tr.name("Læringssti")));
-        final var resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").resourceType(resourceType));
+        final var resource = builder.node(NodeType.RESOURCE,
+                r -> r.publicId("urn:resource:1").resourceType(resourceType));
         final Node topic = builder.node("primary", NodeType.TOPIC, t -> t.name("Philosophy and Mind")
                 .publicId("urn:topic:1").contentUri(URI.create("urn:article:6662")).resource(resource, true));
 

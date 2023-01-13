@@ -77,17 +77,16 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank, Optional<Boolean> isPrimary) {
+    public NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank,
+            Optional<Boolean> isPrimary) {
         if (child.getParentConnections().size() > 0) {
-            if(child.getNodeType() != NodeType.RESOURCE)
+            if (child.getNodeType() != NodeType.RESOURCE)
                 throw new DuplicateConnectionException();
 
-            var alreadyConnectedResource = parent
-                    .getResourceChildren()
-                    .stream()
+            var alreadyConnectedResource = parent.getResourceChildren().stream()
                     .anyMatch(connection -> connection.getChild().orElse(null) == child);
 
-            if(alreadyConnectedResource) {
+            if (alreadyConnectedResource) {
                 throw new DuplicateConnectionException();
             }
         }
@@ -139,10 +138,10 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         nodeConnectionRepository.delete(nodeConnection);
 
         child.ifPresent(childToDisconnect -> {
-            if(childToDisconnect.getNodeType() == NodeType.RESOURCE) {
+            if (childToDisconnect.getNodeType() == NodeType.RESOURCE) {
                 // Set next connection to primary if disconnecting the primary connection
                 var isPrimaryConnection = nodeConnection.isPrimary().orElse(false);
-                if(isPrimaryConnection) {
+                if (isPrimaryConnection) {
                     childToDisconnect.getParentNodeConnections().stream().findFirst().ifPresent(nextConnection -> {
                         nextConnection.setPrimary(true);
                         nodeConnectionRepository.saveAndFlush(nextConnection);
@@ -221,8 +220,10 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank, Optional<Boolean> isPrimary) {
-        if(newRank != null) updateRank(nodeConnection, newRank);
+    public void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank,
+            Optional<Boolean> isPrimary) {
+        if (newRank != null)
+            updateRank(nodeConnection, newRank);
         isPrimary.ifPresent(primary -> updatePrimaryConnection(nodeConnection, primary));
         updateRelevance(nodeConnection, relevance);
     }

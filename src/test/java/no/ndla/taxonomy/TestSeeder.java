@@ -31,9 +31,8 @@ public class TestSeeder {
     private final NodeConnectionRepository nodeConnectionRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    public TestSeeder(RelevanceRepository relevanceRepository,
-            ResourceTypeRepository resourceTypeRepository, NodeRepository nodeRepository,
-            NodeConnectionRepository nodeConnectionRepository,
+    public TestSeeder(RelevanceRepository relevanceRepository, ResourceTypeRepository resourceTypeRepository,
+            NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
             CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.relevanceRepository = relevanceRepository;
         this.resourceTypeRepository = resourceTypeRepository;
@@ -95,8 +94,7 @@ public class TestSeeder {
         return resourceTypeRepository.save(resourceType);
     }
 
-    private ResourceResourceType createResourceResourceType(String publicId, Node resource,
-            ResourceType resourceType) {
+    private ResourceResourceType createResourceResourceType(String publicId, Node resource, ResourceType resourceType) {
         final var resourceResourceType = ResourceResourceType.create(resource, resourceType);
 
         if (publicId != null) {

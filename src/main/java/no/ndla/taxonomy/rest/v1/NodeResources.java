@@ -37,7 +37,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = {"/v1/node-resources"})
+@RequestMapping(path = { "/v1/node-resources" })
 @Transactional
 public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
 
@@ -47,8 +47,8 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     private final RelevanceRepository relevanceRepository;
 
     public NodeResources(NodeRepository nodeRepository, EntityConnectionService connectionService,
-                         NodeConnectionRepository nodeConnectionRepository, RelevanceRepository relevanceRepository,
-                         CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
+            NodeConnectionRepository nodeConnectionRepository, RelevanceRepository relevanceRepository,
+            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
         super(nodeConnectionRepository, cachedUrlUpdaterService, metadataService);
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.nodeRepository = nodeRepository;
@@ -59,8 +59,8 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @GetMapping
     @ApiOperation(value = "Gets all connections between node and resources")
     public List<NodeResourceDTO> index() {
-        return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream()
-                .map(NodeResourceDTO::new).collect(Collectors.toList());
+        return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream().map(NodeResourceDTO::new)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/page")
@@ -121,7 +121,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-                    @ApiParam(name = "connection", value = "Updated node/resource connection") @RequestBody UpdateNodeResourceCommand command) {
+            @ApiParam(name = "connection", value = "Updated node/resource connection") @RequestBody UpdateNodeResourceCommand command) {
         final var nodeResource = nodeConnectionRepository.getByPublicId(id);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
                 : null;

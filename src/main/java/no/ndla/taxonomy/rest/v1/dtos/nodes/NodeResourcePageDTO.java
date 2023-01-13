@@ -22,4 +22,3 @@ public class NodeResourcePageDTO {
         this.results = results;
     }
 }
-

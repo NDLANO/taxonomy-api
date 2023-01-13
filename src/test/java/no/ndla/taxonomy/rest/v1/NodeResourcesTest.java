@@ -336,7 +336,7 @@ public class NodeResourcesTest extends RestTest {
     @Test
     public void update_child_resource_rank_modifies_other_contiguous_ranks() throws Exception {
         List<NodeConnection> nodeResources = createTenContiguousRankedConnections(); // creates ranks 1, 2, 3, 4, 5, 6,
-                                                                                   // 7, 8, 9, 10
+                                                                                     // 7, 8, 9, 10
         Map<String, Integer> mappedRanks = mapConnectionRanks(nodeResources);
 
         // make the last object the first
@@ -353,7 +353,8 @@ public class NodeResourcesTest extends RestTest {
 
         // verify that the other connections have been updated
         for (var nodeResource : nodeResources) {
-            MockHttpServletResponse response = testUtils.getResource("/v1/node-resources/" + nodeResource.getPublicId().toString());
+            MockHttpServletResponse response = testUtils
+                    .getResource("/v1/node-resources/" + nodeResource.getPublicId().toString());
             NodeResourceDTO connectionFromDb = testUtils.getObject(NodeResourceDTO.class, response);
             // verify that the other connections have had their rank bumped up 1
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
@@ -367,7 +368,7 @@ public class NodeResourcesTest extends RestTest {
     public void update_child_resource_rank_does_not_alter_noncontiguous_ranks() throws Exception {
 
         var nodeResources = createTenNonContiguousRankedConnections(); // creates ranks 1, 2, 3, 4, 5,
-                                                                                      // 60, 70, 80, 90, 100
+                                                                       // 60, 70, 80, 90, 100
         Map<String, Integer> mappedRanks = mapConnectionRanks(nodeResources);
 
         // make the last object the first
@@ -420,8 +421,7 @@ public class NodeResourcesTest extends RestTest {
         for (var nodeResource : nodeResources) {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/node-resources/" + nodeResource.getPublicId().toString());
-            NodeResourceDTO connection = testUtils.getObject(NodeResourceDTO.class,
-                    response);
+            NodeResourceDTO connection = testUtils.getObject(NodeResourceDTO.class, response);
             if (!connection.id.equals(updatedConnection.getPublicId())) {
                 assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);
             }

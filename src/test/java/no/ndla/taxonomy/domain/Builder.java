@@ -365,7 +365,6 @@ public class Builder {
             return resourceType(resourceTypeKey, null);
         }
 
-
         public NodeBuilder contentUri(String contentUri) {
             return contentUri(URI.create(contentUri));
         }

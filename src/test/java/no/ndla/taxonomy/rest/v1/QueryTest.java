@@ -68,8 +68,9 @@ public class QueryTest extends RestTest {
 
     @Test
     public void can_get_translated_name_for_resource() throws Exception {
-        builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").name("Resource").translation("nb", tr -> tr.name("ressurs"))
-                .contentUri("urn:article:345").resourceType(rt -> rt.name("Subject material")));
+        builder.node(NodeType.RESOURCE,
+                r -> r.publicId("urn:resource:1").name("Resource").translation("nb", tr -> tr.name("ressurs"))
+                        .contentUri("urn:article:345").resourceType(rt -> rt.name("Subject material")));
 
         MockHttpServletResponse response = testUtils
                 .getResource("/v1/queries/resources?contentURI=urn:article:345&language=nb");

@@ -522,10 +522,7 @@ public class NodesTest extends RestTest {
     public void can_delete_nodes_but_resources_remain() throws Exception {
         var x = builder.resourceType("rt", rt -> rt.name("Learning path"));
         System.out.println(x.getId());
-        Node resource = builder.node(
-                NodeType.RESOURCE, r -> r
-                        .translation("nb", tr -> tr.name("ressurs"))
-        );
+        Node resource = builder.node(NodeType.RESOURCE, r -> r.translation("nb", tr -> tr.name("ressurs")));
 
         var hallo = resource.addResourceType(x);
         entityManager.persist(hallo);

@@ -228,9 +228,11 @@ public class EntityConnectionServiceImplTest {
         assertEquals(5, connection9.getRank());
 
         // First topic connection for a resource will be primary regardless of request
-        final var forcedPrimaryConnection1 = service.connectParentChild(topic4, resource6, relevance, 0, Optional.of(false));
+        final var forcedPrimaryConnection1 = service.connectParentChild(topic4, resource6, relevance, 0,
+                Optional.of(false));
         assertTrue(forcedPrimaryConnection1.isPrimary().orElseThrow());
-        final var forcedPrimaryConnection2 = service.connectParentChild(topic4, resource7, relevance, 1, Optional.of(false));
+        final var forcedPrimaryConnection2 = service.connectParentChild(topic4, resource7, relevance, 1,
+                Optional.of(false));
         assertTrue(forcedPrimaryConnection2.isPrimary().orElseThrow());
 
         // Trying to add duplicate connection
@@ -387,14 +389,14 @@ public class EntityConnectionServiceImplTest {
         assertTrue(topic1resource3.isPrimary().orElseThrow());
         assertFalse(topic2resource1.isPrimary().orElseThrow());
 
-        service.updateParentChild(topic2resource1, relevance,  null, Optional.of(true));
+        service.updateParentChild(topic2resource1, relevance, null, Optional.of(true));
 
         assertFalse(topic1resource1.isPrimary().orElseThrow());
         assertTrue(topic1resource2.isPrimary().orElseThrow());
         assertTrue(topic1resource3.isPrimary().orElseThrow());
         assertTrue(topic2resource1.isPrimary().orElseThrow());
 
-        service.updateParentChild(topic2resource1, relevance,  null, Optional.of(false));
+        service.updateParentChild(topic2resource1, relevance, null, Optional.of(false));
 
         assertTrue(topic1resource1.isPrimary().orElseThrow());
         assertTrue(topic1resource2.isPrimary().orElseThrow());
@@ -402,7 +404,7 @@ public class EntityConnectionServiceImplTest {
         assertFalse(topic2resource1.isPrimary().orElseThrow());
 
         try {
-            service.updateParentChild(topic1resource3, relevance,  null, Optional.of(false));
+            service.updateParentChild(topic1resource3, relevance, null, Optional.of(false));
             fail("Expected InvalidArgumentServiceException");
         } catch (InvalidArgumentServiceException ignored) {
 
@@ -411,12 +413,12 @@ public class EntityConnectionServiceImplTest {
         assertEquals(1, topic1resource1.getRank());
         assertEquals(2, topic1resource2.getRank());
         assertEquals(3, topic1resource3.getRank());
-        service.updateParentChild(topic1resource3, relevance,  1, Optional.of(true));
+        service.updateParentChild(topic1resource3, relevance, 1, Optional.of(true));
         assertEquals(2, topic1resource1.getRank());
         assertEquals(3, topic1resource2.getRank());
         assertEquals(1, topic1resource3.getRank());
 
-        service.updateParentChild(topic1resource2, relevance,  2, Optional.of(true));
+        service.updateParentChild(topic1resource2, relevance, 2, Optional.of(true));
         assertEquals(3, topic1resource1.getRank());
         assertEquals(2, topic1resource2.getRank());
         assertEquals(1, topic1resource3.getRank());

@@ -304,8 +304,10 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertNotEquals(updated.getId(), resource.getId());
         assertNotNull(updated.getCachedPaths());
         assertEquals(2, updated.getParentNodeConnections().size()); // Should be used twice
-        assertAnyTrue(updated.getParentNodeConnections(), nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:1")));
-        assertAnyTrue(updated.getParentNodeConnections(), nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:2")));
+        assertAnyTrue(updated.getParentNodeConnections(),
+                nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:1")));
+        assertAnyTrue(updated.getParentNodeConnections(),
+                nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:2")));
         assertAnyTrue(updated.getAllPaths(), path -> path.equals("/subject:1/topic:1/resource:1"));
         assertAnyTrue(updated.getAllPaths(), path -> path.equals("/subject:1/topic:2/resource:1"));
     }
@@ -418,8 +420,10 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
                         st -> st.name("Fagartikkel").publicId("urn:resourcetype:1")
                                 .translation("nb", t -> t.name("Fagartikkel nb"))
                                 .translation("nn", t -> t.name("Fagartikkel nn"))));
-        Node resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").resourceType("urn:resourcetype:1")
-                .translation("nb", tr -> tr.name("Resource nb")).translation("nn", tr -> tr.name("Resource nn")));
+        Node resource = builder.node(NodeType.RESOURCE,
+                r -> r.publicId("urn:resource:1").resourceType("urn:resourcetype:1")
+                        .translation("nb", tr -> tr.name("Resource nb"))
+                        .translation("nn", tr -> tr.name("Resource nn")));
         Node node = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1")
                 .child(NodeType.TOPIC, t2 -> t2.publicId("urn:topic:1").resource(resource)));
         Node second = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:2")

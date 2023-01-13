@@ -24,8 +24,8 @@ public class SubjectResourceTypesTest extends RestTest {
         URI id = builder
                 .node(NodeType.SUBJECT,
                         s -> s.isContext(true).child(NodeType.TOPIC, t -> t.name("topic").child(NodeType.TOPIC,
-                                        st -> st.resource(r -> r.name("resource 1").resourceType(rt -> rt.name("lecure"))
-                                                .resourceType(rt -> rt.name("assignment"))))
+                                st -> st.resource(r -> r.name("resource 1").resourceType(rt -> rt.name("lecure"))
+                                        .resourceType(rt -> rt.name("assignment"))))
                                 .resource(r -> r.name("resource 2").resourceType(rt -> rt.name("lecture"))
                                         .resourceType(rt -> rt.name("assignment")))))
                 .getPublicId();

@@ -74,10 +74,9 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
         for (String schema : schemas) {
             logger.info("Initializing Liquibase for version " + schema);
 
-
             // TODO: There is probably a better way to do this.
             var ds = dataSource;
-            if(!"".equals(dataSourceUsername)) {
+            if (!"".equals(dataSourceUsername)) {
                 var hc = new HikariConfig();
                 hc.setSchema(schema);
                 hc.setUsername(dataSourceUsername);
