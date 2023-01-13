@@ -121,7 +121,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @Transactional
     public ResponseEntity<Void> post(
             @ApiParam(name = "resource", value = "the new resource") @RequestBody ResourceCommand command) {
-        return doPost(new Node(), command);
+        return doPost(new Node(NodeType.RESOURCE), command);
     }
 
     @PostMapping("{id}/clone")
