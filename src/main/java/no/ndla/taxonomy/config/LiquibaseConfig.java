@@ -74,12 +74,17 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
         for (String schema : schemas) {
             logger.info("Initializing Liquibase for version " + schema);
 
-            var hc = new HikariConfig();
-            hc.setSchema(schema);
-            hc.setUsername(dataSourceUsername);
-            hc.setPassword(dataSourcePassword);
-            hc.setJdbcUrl(dataSourceUrl);
-            var ds = new HikariDataSource(hc);
+
+            // TODO: There is probably a better way to do this.
+            var ds = dataSource;
+            if(!"".equals(dataSourceUsername)) {
+                var hc = new HikariConfig();
+                hc.setSchema(schema);
+                hc.setUsername(dataSourceUsername);
+                hc.setPassword(dataSourcePassword);
+                hc.setJdbcUrl(dataSourceUrl);
+                ds = new HikariDataSource(hc);
+            }
 
             SpringLiquibase liquibase = this.getSpringLiquibase(ds, schema);
             liquibase.afterPropertiesSet();
