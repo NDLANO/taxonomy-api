@@ -12,22 +12,8 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@NamedEntityGraph(name = Node.GRAPH, includeAllAttributes = true, attributeNodes = {
-        @NamedAttributeNode("translations"), @NamedAttributeNode(value = "metadata"),
-        @NamedAttributeNode(value = "parentConnections", subgraph = "parent-connection"),
-        @NamedAttributeNode(value = "childConnections", subgraph = "child-connection"),
-        @NamedAttributeNode(value = "nodeResources", subgraph = "resource-connections") }, subgraphs = {
-                @NamedSubgraph(name = "parent-connection", attributeNodes = { @NamedAttributeNode("parent"),
-                        @NamedAttributeNode(value = "metadata") }),
-                @NamedSubgraph(name = "child-connection", attributeNodes = { @NamedAttributeNode("child"),
-                        @NamedAttributeNode(value = "metadata") }),
-                @NamedSubgraph(name = "resource-connections", attributeNodes = {
-                        @NamedAttributeNode(value = "metadata"),
-                        @NamedAttributeNode(value = "resource", subgraph = Resource.GRAPH) }) })
 @Entity
 public class Node extends EntityWithPath {
-    public static final String GRAPH = "node-with-connections";
-
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<NodeConnection> parentConnections = new TreeSet<>();
 

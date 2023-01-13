@@ -15,21 +15,8 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@NamedEntityGraph(name = Resource.GRAPH, includeAllAttributes = true, attributeNodes = {
-        @NamedAttributeNode(value = "metadata"), @NamedAttributeNode(value = "resourceTranslations"),
-        @NamedAttributeNode(value = "resourceResourceTypes", subgraph = "resourceResourceTypes"),
-        @NamedAttributeNode(value = "nodes", subgraph = "node-with-connections") }, subgraphs = {
-                @NamedSubgraph(name = "resourceResourceTypes", attributeNodes = {
-                        @NamedAttributeNode(value = "resourceType", subgraph = "resourceType") }),
-                @NamedSubgraph(name = "resourceType", attributeNodes = {
-                        @NamedAttributeNode("resourceTypeTranslations"),
-                        @NamedAttributeNode(value = "parent", subgraph = "resourceTypeParent") }),
-                @NamedSubgraph(name = "resourceTypeParent", attributeNodes = {
-                        @NamedAttributeNode("resourceTypeTranslations") }) })
 @Entity
 public class Resource extends EntityWithPath {
-    public static final String GRAPH = "resource-with-data";
-
     @Column
     private URI contentUri;
 

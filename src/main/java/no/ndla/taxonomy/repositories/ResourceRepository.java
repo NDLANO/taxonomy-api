@@ -10,7 +10,6 @@ package no.ndla.taxonomy.repositories;
 import no.ndla.taxonomy.domain.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
@@ -52,12 +51,6 @@ public interface ResourceRepository extends TaxonomyRepository<Resource> {
     @Query("SELECT r.id FROM Resource r LEFT JOIN r.metadata m LEFT JOIN m.customFieldValues cfv"
             + " LEFT JOIN cfv.customField cf WHERE cfv.value = :value")
     List<Integer> getAllResourceIdsWithMetadataValue(String value);
-
-    @EntityGraph(value = Resource.GRAPH, type = EntityGraph.EntityGraphType.LOAD)
-    @Query("SELECT DISTINCT r FROM Resource r " + RESOURCE_METADATA + " LEFT JOIN FETCH r.cachedPaths"
-            + " LEFT JOIN FETCH r.resourceResourceTypes rrt LEFT JOIN FETCH rrt.resourceType rt"
-            + " WHERE r.publicId = :publicId")
-    Resource findResourceGraphByPublicId(URI publicId);
 
     @Query(value = "SELECT r.id FROM Resource r ORDER BY r.id", countQuery = "SELECT count(*) from Resource")
     Page<Integer> findIdsPaginated(Pageable pageable);
