@@ -11,11 +11,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeConnectionPage;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.ParentChildIndexDocument;
 import no.ndla.taxonomy.service.EntityConnectionService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -49,14 +49,14 @@ public class TopicResources {
 
     @GetMapping
     @ApiOperation(value = "Gets all connections between topics and resources")
-    public List<ParentChildIndexDocument> index() {
+    public List<TopicResourceIndexDocument> index() {
         return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream()
-                .map(ParentChildIndexDocument::new).collect(Collectors.toList());
+                .map(TopicResourceIndexDocument::new).collect(Collectors.toList());
     }
 
     @GetMapping("/page")
     @ApiOperation(value = "Gets all connections between topic and resources paginated")
-    public NodeConnectionPage allPaginated(
+    public TopicResourcePage allPaginated(
             @ApiParam(name = "page", value = "The page to fetch", required = true) Optional<Integer> page,
             @ApiParam(name = "pageSize", value = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
@@ -69,15 +69,15 @@ public class TopicResources {
         var connections = nodeConnectionRepository.findIdsPaginatedByChildNodeType(pageRequest, NodeType.RESOURCE);
         var ids = connections.stream().map(DomainEntity::getId).collect(Collectors.toList());
         var results = nodeConnectionRepository.findByIds(ids);
-        var contents = results.stream().map(ParentChildIndexDocument::new).collect(Collectors.toList());
-        return new NodeConnectionPage(connections.getTotalElements(), contents);
+        var contents = results.stream().map(TopicResourceIndexDocument::new).collect(Collectors.toList());
+        return new TopicResourcePage(connections.getTotalElements(), contents);
     }
 
     @GetMapping("/{id}")
     @ApiOperation(value = "Gets a specific connection between a topic and a resource")
-    public ParentChildIndexDocument get(@PathVariable("id") URI id) {
+    public TopicResourceIndexDocument get(@PathVariable("id") URI id) {
         var resourceConnection = nodeConnectionRepository.getByPublicId(id);
-        return new ParentChildIndexDocument(resourceConnection);
+        return new TopicResourceIndexDocument(resourceConnection);
     }
 
     @PostMapping
@@ -106,7 +106,8 @@ public class TopicResources {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
-        connectionService.disconnectAllParents(id);
+        var connection = nodeConnectionRepository.getByPublicId(id);
+        connectionService.disconnectParentChildConnection(connection);
     }
 
     @PutMapping("/{id}")
@@ -210,6 +211,19 @@ public class TopicResources {
         @JsonProperty
         @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
+
+        TopicResourceIndexDocument(NodeConnection topicResource) {
+            id = topicResource.getPublicId();
+            topicResource.getParent().ifPresent(topic -> topicid = topic.getPublicId());
+            topicResource.getResource().ifPresent(resource -> resourceId = resource.getPublicId());
+            primary = topicResource.isPrimary().orElse(false);
+            rank = topicResource.getRank();
+            relevanceId = topicResource.getRelevance().map(Relevance::getPublicId).orElse(null);
+        }
+
+        TopicResourceIndexDocument() {
+
+        }
 
     }
 }

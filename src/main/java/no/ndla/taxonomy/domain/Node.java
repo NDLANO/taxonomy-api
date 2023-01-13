@@ -7,6 +7,7 @@
 
 package no.ndla.taxonomy.domain;
 
+import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 
 import javax.persistence.*;
@@ -138,7 +139,7 @@ public class Node extends EntityWithPath {
     @Override
     public Collection<EntityWithPathConnection> getParentConnections() {
         return parentConnections.stream().map(entity -> (EntityWithPathConnection) entity)
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
     }
 
     public Set<NodeConnection> getParentNodeConnections() {
@@ -166,7 +167,7 @@ public class Node extends EntityWithPath {
 
     public Collection<ResourceType> getResourceTypes() {
         return getResourceResourceTypes().stream().map(ResourceResourceType::getResourceType)
-                .toList();
+                .collect(Collectors.toSet());
     }
 
     public Collection<ResourceResourceType> getResourceResourceTypes() {
@@ -185,12 +186,20 @@ public class Node extends EntityWithPath {
     }
 
     public void removeResourceType(ResourceType resourceType) {
-        Optional<ResourceResourceType> connection = this.resourceResourceTypes
-                .stream()
-                .filter(rrt -> rrt.getResourceType() == resourceType)
-                .findFirst();
+        var resourceResourceType = getResourceType(resourceType);
+        if(resourceResourceType.isEmpty())
+            throw new ChildNotFoundException(
+                    "Resource with id " + this.getPublicId() + " is not of type " + resourceType.getPublicId());
 
-        connection.ifPresent(this::removeResourceResourceType);
+        resourceResourceTypes.remove(resourceResourceType.get());
+    }
+
+    private Optional<ResourceResourceType> getResourceType(ResourceType resourceType) {
+        for (ResourceResourceType resourceResourceType : resourceResourceTypes) {
+            if (resourceResourceType.getResourceType().equals(resourceType))
+                return Optional.of(resourceResourceType);
+        }
+        return Optional.empty();
     }
 
     public void addResourceResourceType(ResourceResourceType resourceResourceType) {

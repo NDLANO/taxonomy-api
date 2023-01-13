@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -77,24 +78,20 @@ public class CachedPathTest {
         final var unknown = mock(EntityWithPath.class);
 
         assertNull(getField(cachedPath, "node"));
-        assertNull(getField(cachedPath, "resource"));
 
         cachedPath.setOwningEntity(subject);
 
         assertSame(subject, getField(cachedPath, "node"));
-        assertNull(getField(cachedPath, "resource"));
         assertEquals("urn:subject:1", cachedPath.getPublicId().toString());
 
         cachedPath.setOwningEntity(topic);
 
         assertSame(topic, getField(cachedPath, "node"));
-        assertNull(getField(cachedPath, "resource"));
         assertEquals("urn:topic:1", cachedPath.getPublicId().toString());
 
         cachedPath.setOwningEntity(resource);
 
-        assertNull(getField(cachedPath, "node"));
-        assertSame(resource, getField(cachedPath, "resource"));
+        assertSame(resource, getField(cachedPath, "node"));
         assertEquals("urn:resource:1", cachedPath.getPublicId().toString());
 
         try {
@@ -106,19 +103,16 @@ public class CachedPathTest {
         cachedPath.setOwningEntity(null);
 
         assertNull(getField(cachedPath, "node"));
-        assertNull(getField(cachedPath, "resource"));
 
         cachedPath.setOwningEntity(subject);
         cachedPath.setOwningEntity(null);
 
         assertNull(getField(cachedPath, "node"));
-        assertNull(getField(cachedPath, "resource"));
 
         cachedPath.setOwningEntity(topic);
         cachedPath.setOwningEntity(null);
 
         assertNull(getField(cachedPath, "node"));
-        assertNull(getField(cachedPath, "resource"));
     }
 
     @Test
@@ -130,28 +124,18 @@ public class CachedPathTest {
         assertSame(subject, cachedPath.getOwningEntity().orElseThrow());
 
         final var topic = mock(Node.class);
-
         setField(cachedPath, "node", topic);
-
         try {
             cachedPath.getOwningEntity();
         } catch (IllegalStateException ignored) {
         }
-
         assertSame(topic, cachedPath.getOwningEntity().orElseThrow());
 
         final var resource = mock(Node.class);
-
-        setField(cachedPath, "resource", resource);
-
-        try {
-            cachedPath.getOwningEntity();
-            fail("Expected IllegalStateException");
-        } catch (IllegalStateException ignored) {
-        }
+        setField(cachedPath, "node", resource);
+        assertSame(resource, cachedPath.getOwningEntity().orElseThrow());
 
         setField(cachedPath, "node", null);
-
-        assertSame(resource, cachedPath.getOwningEntity().orElseThrow());
+        assertTrue(cachedPath.getOwningEntity().isEmpty());
     }
 }

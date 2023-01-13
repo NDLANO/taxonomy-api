@@ -79,10 +79,10 @@ public class ResourceTest {
         when(nodeResource1.getParent()).thenReturn(Optional.of(node1));
         when(nodeResource2.getParent()).thenReturn(Optional.of(node2));
 
-        setField(resource, "nodes", Set.of(nodeResource1, nodeResource2));
+        setField(resource, "parentConnections", Set.of(nodeResource1, nodeResource2));
 
-        assertEquals(2, resource.getParentConnections().size());
-        assertTrue(resource.getParentConnections().containsAll(Set.of(node1, node2)));
+        assertEquals(2, resource.getParentNodes().size());
+        assertTrue(resource.getParentNodes().containsAll(Set.of(node1, node2)));
     }
 
     @Test
@@ -216,7 +216,7 @@ public class ResourceTest {
         } catch (IllegalArgumentException ignored) {
         }
 
-        when(nodeResource1.getResource()).thenReturn(Optional.of(resource));
+        when(nodeResource1.getChild()).thenReturn(Optional.of(resource));
         resource.addParentConnection(nodeResource1);
 
         assertEquals(1, resource.getParentConnections().size());
@@ -228,14 +228,14 @@ public class ResourceTest {
         } catch (IllegalArgumentException ignored) {
         }
 
-        when(nodeResource2.getResource()).thenReturn(Optional.of(resource));
+        when(nodeResource2.getChild()).thenReturn(Optional.of(resource));
         resource.addParentConnection(nodeResource2);
 
         assertEquals(2, resource.getParentConnections().size());
         assertTrue(resource.getParentConnections().containsAll(Set.of(nodeResource1, nodeResource2)));
 
-        when(nodeResource1.getResource()).thenReturn(Optional.of(resource));
-        when(nodeResource2.getResource()).thenReturn(Optional.of(resource));
+        when(nodeResource1.getChild()).thenReturn(Optional.of(resource));
+        when(nodeResource2.getChild()).thenReturn(Optional.of(resource));
 
         resource.removeParentConnection(nodeResource1);
 
@@ -257,7 +257,7 @@ public class ResourceTest {
 
         Set.of(nodeResource1, nodeResource2).forEach(nodeResource -> {
             when(nodeResource.getChild()).thenReturn(Optional.of(resource));
-            resource.addChildConnection(nodeResource);
+            resource.addParentConnection(nodeResource);
         });
 
         resource.preRemove();
