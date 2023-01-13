@@ -244,14 +244,19 @@ public class NodeTest {
 
         Set.of(nodeResource1, nodeResource2, NodeResource3)
                 .forEach(nodeResource -> when(nodeResource.getParent()).thenReturn(Optional.of(node)));
+        when(resource1.getNodeType()).thenReturn(NodeType.RESOURCE);
+        when(resource2.getNodeType()).thenReturn(NodeType.RESOURCE);
         when(nodeResource1.getResource()).thenReturn(Optional.of(resource1));
         when(nodeResource2.getResource()).thenReturn(Optional.of(resource2));
+        when(nodeResource1.getChild()).thenReturn(Optional.of(resource1));
+        when(nodeResource2.getChild()).thenReturn(Optional.of(resource2));
 
         node.addChildConnection(nodeResource1);
         node.addChildConnection(nodeResource2);
         node.addChildConnection(NodeResource3);
 
-        assertEquals(3, node.getResourceChildren().size());
+        assertEquals(2, node.getResourceChildren().size());
+        assertEquals(3, node.getChildren().size());
         assertEquals(2, node.getResources().size());
         assertTrue(node.getResources().containsAll(Set.of(resource1, resource2)));
     }
