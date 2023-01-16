@@ -8,8 +8,9 @@
 package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.springframework.http.HttpStatus;
@@ -28,44 +29,44 @@ public class Filters extends ObsoleteCrudController {
     }
 
     @GetMapping("/v1/filters")
-    @ApiOperation("Gets all filters")
+    @Operation(summary = "Gets all filters")
     @Deprecated(forRemoval = true)
     public List<Object> index(
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return List.of();
     }
 
     @GetMapping("/v1/filters/{id}")
-    @ApiOperation(value = "Gets a single filter", notes = "Default language will be returned if desired language not found or if parameter is omitted.")
+    @Operation(summary = "Gets a single filter", description = "Default language will be returned if desired language not found or if parameter is omitted.")
     @Deprecated(forRemoval = true)
     public Object get(@PathVariable("id") URI id,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
     @PostMapping("/v1/filters")
-    @ApiOperation(value = "Creates a new filter")
+    @Operation(summary = "Creates a new filter", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     @Deprecated(forRemoval = true)
     public ResponseEntity<Void> post(
-            @ApiParam(name = "filter", value = "The new filter") @RequestBody FilterDTO command) {
+            @Parameter(name = "filter", description = "The new filter") @RequestBody FilterDTO command) {
         throw new InvalidArgumentServiceException("Create filter's disabled");
     }
 
     @PutMapping("/v1/filters/{id}")
-    @ApiOperation("Updates a filter")
+    @Operation(summary = "Updates a filter", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     @Deprecated(forRemoval = true)
     public void put(@PathVariable("id") URI id,
-            @ApiParam(name = "filter", value = "The updated filter") @RequestBody FilterDTO command) {
+            @Parameter(name = "filter", description = "The updated filter") @RequestBody FilterDTO command) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
     @DeleteMapping("/v1/filters/{id}")
-    @ApiOperation(value = "Delete a single filter by ID")
+    @Operation(summary = "Delete a single filter by ID", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
@@ -75,18 +76,18 @@ public class Filters extends ObsoleteCrudController {
     }
 
     @GetMapping("/v1/subjects/{subjectId}/filters")
-    @ApiOperation(value = "Gets all filters for a subject", tags = { "subjects" })
+    @Operation(summary = "Gets all filters for a subject", tags = { "subjects" })
     @Deprecated(forRemoval = true)
     public List<Object> getFiltersBySubjectId(@PathVariable("subjectId") URI subjectId,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") String language) {
         return List.of();
     }
 
     @GetMapping("/v1/resources/{resourceId}/filters")
-    @ApiOperation(value = "Gets all filters associated with this resource", tags = { "resources" })
+    @Operation(summary = "Gets all filters associated with this resource", tags = { "resources" })
     @Deprecated(forRemoval = true)
     public List<Object> getFiltersByResourceId(@PathVariable("resourceId") URI resourceId,
-            @ApiParam(value = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return List.of();
     }
 

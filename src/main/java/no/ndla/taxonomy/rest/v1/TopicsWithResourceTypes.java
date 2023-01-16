@@ -8,10 +8,10 @@
 package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,17 +32,17 @@ public class TopicsWithResourceTypes {
     }
 
     @PostMapping
-    @ApiOperation(value = "Adds a resource type to a topic")
+    @Operation(summary = "Adds a resource type to a topic", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public ResponseEntity<Void> post(
-            @ApiParam(name = "connection", value = "The new resource/resource type connection") @RequestBody CreateTopicResourceTypeCommand command) {
+            @Parameter(name = "connection", description = "The new resource/resource type connection") @RequestBody CreateTopicResourceTypeCommand command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
     @DeleteMapping({ "/{id}" })
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiOperation("Removes a resource type from a topic")
+    @Operation(summary = "Removes a resource type from a topic", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public void delete(@PathVariable("id") URI id) {
@@ -50,14 +50,14 @@ public class TopicsWithResourceTypes {
     }
 
     @GetMapping
-    @ApiOperation("Gets all connections between topics and resource types")
+    @Operation(summary = "Gets all connections between topics and resource types")
     @Deprecated(forRemoval = true)
     public List<TopicResourceTypeIndexDocument> index() {
         return List.of();
     }
 
     @GetMapping({ "/{id}" })
-    @ApiOperation("Gets a single connection between topic and resource type")
+    @Operation(summary = "Gets a single connection between topic and resource type")
     @Deprecated(forRemoval = true)
     public TopicResourceTypeIndexDocument get(@PathVariable("id") URI id) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
@@ -65,26 +65,26 @@ public class TopicsWithResourceTypes {
 
     public static class CreateTopicResourceTypeCommand {
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Topic id", example = "urn:topic:123")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic id", example = "urn:topic:123")
         URI topicId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resourcetype:234")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource type id", example = "urn:resourcetype:234")
         URI resourceTypeId;
     }
 
-    @ApiModel("ResourceTypeIndexDocument")
+    @Schema(name = "ResourceTypeIndexDocument")
     public static class TopicResourceTypeIndexDocument {
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Topic type id", example = "urn:topic:123")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic type id", example = "urn:topic:123")
         URI topicId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource type id", example = "urn:resourcetype:234")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource type id", example = "urn:resourcetype:234")
         URI resourceTypeId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource to resource type connection id", example = "urn:resource-has-resourcetypes:12")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource to resource type connection id", example = "urn:resource-has-resourcetypes:12")
         URI id;
     }
 }

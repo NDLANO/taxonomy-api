@@ -8,7 +8,7 @@
 package no.ndla.taxonomy.rest.v1.commands;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.service.UpdatableDto;
 
@@ -17,15 +17,15 @@ import java.util.Optional;
 
 public class VersionCommand implements UpdatableDto<Version> {
     @JsonProperty
-    @ApiModelProperty(notes = "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:subject:1")
+    @Schema(description = "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:subject:1")
     public URI id;
 
     @JsonProperty
-    @ApiModelProperty(notes = "If specified, set the name to this value.", example = "Beta 2022")
+    @Schema(description = "If specified, set the name to this value.", example = "Beta 2022")
     public String name;
 
     @JsonProperty
-    @ApiModelProperty(notes = "If specified, set the locked property to this value.")
+    @Schema(description = "If specified, set the locked property to this value.")
     public Boolean locked;
 
     @Override

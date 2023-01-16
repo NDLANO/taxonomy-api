@@ -9,7 +9,7 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
@@ -33,34 +33,34 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
 
     public String name;
 
-    @ApiModelProperty(value = "ID of article introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+    @Schema(description = "ID of article introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
     public URI contentUri;
 
-    @ApiModelProperty("Parent id in the current context, null if none exists")
+    @Schema(description = "Parent id in the current context, null if none exists")
     public URI parent;
 
-    @ApiModelProperty(value = "The primary path to this node.", example = "/subject:1/topic:1")
+    @Schema(description = "The primary path to this node.", example = "/subject:1/topic:1")
     public String path;
 
-    @ApiModelProperty(value = "List of all paths to this node")
+    @Schema(description = "List of all paths to this node")
     private TreeSet<String> paths;
 
-    @ApiModelProperty(value = "The id of the node connection which causes this node to be included in the result set.", example = "urn:node-connection:1")
+    @Schema(description = "The id of the node connection which causes this node to be included in the result set.", example = "urn:node-connection:1")
     public URI connectionId;
 
-    @ApiModelProperty(value = "Primary connection", example = "true")
+    @Schema(description = "Primary connection", example = "true")
     public boolean isPrimary;
 
-    @ApiModelProperty(value = "The order in which to sort the node within it's level.", example = "1")
+    @Schema(description = "The order in which to sort the node within it's level.", example = "1")
     public int rank;
 
-    @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+    @Schema(description = "Relevance id", example = "urn:relevance:core")
     public URI relevanceId;
 
-    @ApiModelProperty(value = "All translations of this resource")
+    @Schema(description = "All translations of this resource")
     public TreeSet<NodeTranslations.TranslationDTO> translations;
 
-    @ApiModelProperty(value = "List of language codes supported by translations")
+    @Schema(description = "List of language codes supported by translations")
     public TreeSet<String> supportedLanguages;
 
     @JsonIgnore
@@ -68,7 +68,7 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
 
     private String language;
 
-    @ApiModelProperty(value = "Metadata for entity. Read only.")
+    @Schema(description = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MetadataDto metadata;
 

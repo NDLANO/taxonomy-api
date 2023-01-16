@@ -11,7 +11,6 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourcePageDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
-import no.ndla.taxonomy.service.dtos.NodeConnectionIndexDTO;
 import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;

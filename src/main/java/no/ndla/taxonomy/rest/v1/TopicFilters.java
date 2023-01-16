@@ -8,10 +8,10 @@
 package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,36 +31,37 @@ public class TopicFilters {
     }
 
     @PostMapping
-    @ApiOperation(value = "Adds a filter to a topic")
+    @Operation(summary = "Adds a filter to a topic", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public ResponseEntity<Void> post(
-            @ApiParam(name = "topic filter", value = "The new topic filter") @RequestBody AddFilterToTopicCommand command) {
+            @Parameter(name = "topic filter", description = "The new topic filter") @RequestBody AddFilterToTopicCommand command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
     @PutMapping("/{id}")
-    @ApiOperation(value = "Updates a topic filter connection")
+    @Operation(summary = "Updates a topic filter connection", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public void put(@PathVariable("id") URI id,
-            @ApiParam(name = "topic filter", value = "The updated topic filter", required = true) @RequestBody UpdateTopicFilterCommand command) {
+            @Parameter(name = "topic filter", description = "The updated topic filter", required = true) @RequestBody UpdateTopicFilterCommand command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
     @DeleteMapping("/{id}")
-    @ApiOperation(value = "Deletes a connection between a topic and a filter")
+    @Operation(summary = "Deletes a connection between a topic and a filter", security = {
+            @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public void delete(
-            @ApiParam(name = "id", value = "The id of the connection to delete", required = true) @PathVariable String id) {
+            @Parameter(name = "id", description = "The id of the connection to delete", required = true) @PathVariable String id) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
     @GetMapping
-    @ApiOperation("Gets all connections between topics and filters")
+    @Operation(summary = "Gets all connections between topics and filters")
     @Deprecated(forRemoval = true)
     public List<TopicFilterIndexDocument> index() {
         return List.of();
@@ -68,15 +69,15 @@ public class TopicFilters {
 
     public static class AddFilterToTopicCommand {
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Topic id", example = "urn:topic:123")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic id", example = "urn:topic:123")
         public URI topicId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Filter id", example = "urn:filter:234")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Filter id", example = "urn:filter:234")
         public URI filterId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Relevance id", example = "urn:relevance:core")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
     }
 
@@ -84,22 +85,22 @@ public class TopicFilters {
         public URI relevanceId;
     }
 
-    @ApiModel("TopicFilterIndexDocument")
+    @Schema(name = "TopicFilterIndexDocument")
     public static class TopicFilterIndexDocument {
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Topic id", example = "urn:topic:123")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic id", example = "urn:topic:123")
         public URI topicId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Filter id", example = "urn:filter:234")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Filter id", example = "urn:filter:234")
         public URI filterId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Topic to filter connection id", example = "urn:topic-filter:12")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic to filter connection id", example = "urn:topic-filter:12")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Relevance id", example = "urn:relevance:core")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
         public TopicFilterIndexDocument() {

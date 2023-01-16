@@ -7,28 +7,29 @@
 
 package no.ndla.taxonomy.service.dtos;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiParam;
-import no.ndla.taxonomy.domain.*;
+import io.swagger.v3.oas.annotations.media.Schema;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 
 import java.net.URI;
 
-@ApiModel("ResourceWithTopicConnection")
+@Schema(name = "ResourceWithTopicConnection")
 public class ResourceWithNodeConnectionDTO extends ResourceDTO {
-    @ApiParam
+    @Schema
     private URI parentId;
 
-    @ApiParam
+    @Schema
     private URI connectionId;
 
-    @ApiParam
+    @Schema
     private int rank;
 
-    @ApiParam
+    @Schema
     private boolean primary;
 
-    @ApiParam
+    @Schema
     public URI relevanceId;
 
     public ResourceWithNodeConnectionDTO() {

@@ -8,9 +8,10 @@
 package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
@@ -57,17 +58,17 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     }
 
     @GetMapping
-    @ApiOperation(value = "Gets all connections between node and resources")
+    @Operation(summary = "Gets all connections between node and resources")
     public List<NodeResourceDTO> index() {
         return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream().map(NodeResourceDTO::new)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/page")
-    @ApiOperation(value = "Gets all connections between node and resources paginated")
+    @Operation(summary = "Gets all connections between node and resources paginated")
     public NodeResourcePageDTO allPaginated(
-            @ApiParam(name = "page", value = "The page to fetch", required = true) Optional<Integer> page,
-            @ApiParam(name = "pageSize", value = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
+            @Parameter(name = "page", description = "The page to fetch", required = true) Optional<Integer> page,
+            @Parameter(name = "pageSize", description = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
 
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
@@ -84,17 +85,17 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     }
 
     @GetMapping("/{id}")
-    @ApiOperation(value = "Gets a specific connection between a node and a resource")
+    @Operation(summary = "Gets a specific connection between a node and a resource")
     public NodeResourceDTO get(@PathVariable("id") URI id) {
         NodeConnection connection = nodeConnectionRepository.getByPublicId(id);
         return new NodeResourceDTO(connection);
     }
 
     @PostMapping
-    @ApiOperation(value = "Adds a resource to a node")
+    @Operation(summary = "Adds a resource to a node", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public ResponseEntity<Void> post(
-            @ApiParam(name = "connection", value = "new node/resource connection ") @RequestBody AddResourceToNodeCommand command) {
+            @Parameter(name = "connection", description = "new node/resource connection ") @RequestBody AddResourceToNodeCommand command) {
         var parent = nodeRepository.getByPublicId(command.nodeId);
         var child = nodeRepository.getByPublicId(command.resourceId);
         var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
@@ -108,7 +109,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     }
 
     @DeleteMapping("/{id}")
-    @ApiOperation("Removes a resource from a node")
+    @Operation(summary = "Removes a resource from a node", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void delete(@PathVariable("id") URI id) {
@@ -117,11 +118,12 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     }
 
     @PutMapping("/{id}")
-    @ApiOperation(value = "Updates a connection between a node and a resource", notes = "Use to update which node is primary to the resource or to change sorting order.")
+    @Operation(summary = "Updates a connection between a node and a resource", description = "Use to update which node is primary to the resource or to change sorting order.", security = {
+            @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     public void put(@PathVariable("id") URI id,
-            @ApiParam(name = "connection", value = "Updated node/resource connection") @RequestBody UpdateNodeResourceCommand command) {
+            @Parameter(name = "connection", description = "Updated node/resource connection") @RequestBody UpdateNodeResourceCommand command) {
         final var nodeResource = nodeConnectionRepository.getByPublicId(id);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
                 : null;
@@ -136,41 +138,41 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
 
     public static class AddResourceToNodeCommand {
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Node id", example = "urn:node:345")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Node id", example = "urn:node:345")
         public URI nodeId;
 
         @JsonProperty
-        @ApiModelProperty(required = true, value = "Resource id", example = "urn:resource:345")
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource id", example = "urn:resource:345")
         public URI resourceId;
 
         @JsonProperty
-        @ApiModelProperty(value = "Primary connection", example = "true")
+        @Schema(description = "Primary connection", example = "true")
         public boolean primary = true;
 
         @JsonProperty
-        @ApiModelProperty(value = "Order in which resource is sorted for the node", example = "1")
+        @Schema(description = "Order in which resource is sorted for the node", example = "1")
         public int rank;
 
         @JsonProperty
-        @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+        @Schema(description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
     }
 
     public static class UpdateNodeResourceCommand {
         @JsonProperty
-        @ApiModelProperty(value = "Node resource connection id", example = "urn:node-resource:123")
+        @Schema(description = "Node resource connection id", example = "urn:node-resource:123")
         public URI id;
 
         @JsonProperty
-        @ApiModelProperty(value = "Primary connection", example = "true")
+        @Schema(description = "Primary connection", example = "true")
         public boolean primary;
 
         @JsonProperty
-        @ApiModelProperty(value = "Order in which the resource will be sorted for this node.", example = "1")
+        @Schema(description = "Order in which the resource will be sorted for this node.", example = "1")
         public int rank;
 
         @JsonProperty
-        @ApiModelProperty(value = "Relevance id", example = "urn:relevance:core")
+        @Schema(description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
     }
 }

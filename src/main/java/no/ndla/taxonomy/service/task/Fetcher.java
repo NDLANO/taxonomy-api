@@ -47,7 +47,7 @@ public class Fetcher extends Task<DomainEntity> {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     protected Optional<DomainEntity> execute() {
         DomainEntity entity = domainEntityHelperService.getEntityByPublicId(this.publicId);
         if (entity instanceof EntityWithMetadata) {

@@ -8,8 +8,7 @@
 package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 
@@ -18,35 +17,35 @@ import javax.persistence.Enumerated;
 import java.net.URI;
 import java.time.Instant;
 
-@ApiModel("Version")
+@Schema(name = "Version")
 public class VersionDTO {
     @JsonProperty
-    @ApiModelProperty(example = "urn:version:1")
+    @Schema(example = "urn:version:1")
     private URI id;
 
     @JsonProperty
-    @ApiModelProperty(example = "BETA")
+    @Schema(example = "BETA")
     @Enumerated(EnumType.STRING)
     private VersionType versionType;
 
     @JsonProperty
-    @ApiModelProperty(notes = "Name for the version")
+    @Schema(description = "Name for the version")
     private String name;
 
     @JsonProperty
-    @ApiModelProperty(notes = "Unique hash for the version")
+    @Schema(description = "Unique hash for the version")
     private String hash;
 
     @JsonProperty
-    @ApiModelProperty(notes = "Is the version locked")
+    @Schema(description = "Is the version locked")
     private Boolean locked;
 
     @JsonProperty
-    @ApiModelProperty(notes = "Timestamp for when version was published")
+    @Schema(description = "Timestamp for when version was published")
     private Instant published;
 
     @JsonProperty
-    @ApiModelProperty(notes = "Timestamp for when version was archived")
+    @Schema(description = "Timestamp for when version was archived")
     private Instant archived;
 
     public VersionDTO() {
