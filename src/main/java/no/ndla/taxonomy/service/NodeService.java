@@ -43,11 +43,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final EntityConnectionService connectionService;
     private final VersionService versionService;
     private final TreeSorter topicTreeSorter;
-    private final CachedUrlUpdaterService cachedUrlUpdaterService;
-
     private final ChangelogRepository changelogRepository;
     private final DomainEntityHelperService domainEntityHelperService;
-    private final CustomFieldService customFieldService;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -58,17 +55,14 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     public NodeService(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
             EntityConnectionService connectionService, VersionService versionService, TreeSorter topicTreeSorter,
-            CachedUrlUpdaterService cachedUrlUpdaterService, ChangelogRepository changelogRepository,
-            DomainEntityHelperService domainEntityHelperService, CustomFieldService customFieldService) {
+            ChangelogRepository changelogRepository, DomainEntityHelperService domainEntityHelperService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
         this.versionService = versionService;
         this.topicTreeSorter = topicTreeSorter;
-        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
         this.changelogRepository = changelogRepository;
         this.domainEntityHelperService = domainEntityHelperService;
-        this.customFieldService = customFieldService;
     }
 
     @Transactional
@@ -188,13 +182,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     @Transactional
-    public Node updatePaths(Node node) {
-        Node saved = nodeRepository.save(node);
-        cachedUrlUpdaterService.updateCachedUrls(saved);
-        return saved;
-    }
-
-    @Transactional
     public boolean makeAllResourcesPrimary(URI nodePublicId, boolean recursive) {
         final var node = nodeRepository.findFirstByPublicId(nodePublicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
@@ -233,7 +220,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         try {
             Fetcher fetcher = new Fetcher();
             fetcher.setDomainEntityHelperService(domainEntityHelperService);
-            fetcher.setCustomFieldService(customFieldService);
             fetcher.setVersion(versionService.schemaFromHash(source));
             fetcher.setPublicId(nodeId);
             fetcher.setAddIsPublishing(isRoot);

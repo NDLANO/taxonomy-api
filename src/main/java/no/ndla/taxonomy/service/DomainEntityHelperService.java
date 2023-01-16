@@ -12,6 +12,7 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
 
 import java.net.URI;
+import java.util.Optional;
 
 public interface DomainEntityHelperService {
     Node getNodeByPublicId(URI publicId);
@@ -23,4 +24,8 @@ public interface DomainEntityHelperService {
     void buildPathsForEntity(URI publicId);
 
     void deleteEntityByPublicId(URI publicId);
+
+    Optional<DomainEntity> getProcessedEntityByPublicId(URI publicId, boolean addIsPublishing, boolean cleanUp);
+
+    Optional<DomainEntity> updateEntity(DomainEntity domainEntity, boolean cleanUp);
 }

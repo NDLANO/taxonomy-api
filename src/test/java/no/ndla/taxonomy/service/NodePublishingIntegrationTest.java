@@ -47,9 +47,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     ResourceRepository resourceRepository;
 
     @Autowired
-    ResourceTypeRepository resourceTypeRepository;
-
-    @Autowired
     NodeResourceRepository nodeResourceRepository;
 
     @Autowired
@@ -71,7 +68,10 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     Builder builder;
 
     @Autowired
-    private ThreadPoolTaskExecutor executor;
+    DomainEntityHelperService domainEntityHelperService;
+
+    @Autowired
+    ThreadPoolTaskExecutor executor;
 
     @BeforeEach
     void clearAllRepos() {
@@ -168,7 +168,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         }
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
-        Node published = nodeRepository.findNodeGraphByPublicId(node.getPublicId());
+        Node published = (Node) domainEntityHelperService.getProcessedEntityByPublicId(node.getPublicId(), false, false)
+                .get();
         Resource connected = published.getNodeResources().stream().findFirst().get().getResource().get();
         Resource resource = resourceRepository
                 .findFirstByPublicIdIncludingCachedUrlsAndTranslations(connected.getPublicId()).get();
@@ -256,9 +257,12 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         }
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
-        Resource resource = resourceRepository.findResourceGraphByPublicId(URI.create("urn:resource:1"));
-        Node subnode = nodeRepository.findNodeGraphByPublicId(URI.create("urn:topic:2"));
-        Node subsubnode = nodeRepository.findNodeGraphByPublicId(URI.create("urn:topic:3"));
+        Resource resource = (Resource) domainEntityHelperService
+                .getProcessedEntityByPublicId(URI.create("urn:resource:1"), false, false).get();
+        Node subnode = (Node) domainEntityHelperService
+                .getProcessedEntityByPublicId(URI.create("urn:topic:2"), false, false).get();
+        Node subsubnode = (Node) domainEntityHelperService
+                .getProcessedEntityByPublicId(URI.create("urn:topic:3"), false, false).get();
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertNotNull(resource);
@@ -306,7 +310,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         }
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
-        Resource updated = resourceRepository.findResourceGraphByPublicId(URI.create("urn:resource:1"));
+        Resource updated = (Resource) domainEntityHelperService
+                .getProcessedEntityByPublicId(URI.create("urn:resource:1"), false, false).get();
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertNotNull(updated);
@@ -352,7 +357,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         }
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
-        Node updatedChild = nodeRepository.findNodeGraphByPublicId(child.getPublicId());
+        Node updatedChild = (Node) domainEntityHelperService
+                .getProcessedEntityByPublicId(child.getPublicId(), false, false).get();
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertNotNull(updatedChild);
@@ -396,7 +402,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         }
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
-        Resource updated = resourceRepository.findResourceGraphByPublicId(resource.getPublicId());
+        Resource updated = (Resource) domainEntityHelperService
+                .getProcessedEntityByPublicId(URI.create("urn:resource:1"), false, false).get();
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertNotNull(updated);
@@ -469,7 +476,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         }
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
-        Resource updated = resourceRepository.findResourceGraphByPublicId(URI.create("urn:resource:1"));
+        Resource updated = (Resource) domainEntityHelperService
+                .getProcessedEntityByPublicId(URI.create("urn:resource:1"), false, false).get();
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertNotNull(updated);
@@ -584,7 +592,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
         // Check node is published to schema
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
-        Node published = nodeRepository.findNodeGraphByPublicId(node.getPublicId());
+        Node published = (Node) domainEntityHelperService.getProcessedEntityByPublicId(node.getPublicId(), false, false)
+                .get();
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertNotNull(published);
