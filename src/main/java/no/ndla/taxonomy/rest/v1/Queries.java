@@ -9,7 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import no.ndla.taxonomy.service.MetadataFilters;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.SearchableTaxonomyContextDTO;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.EntityWithPathDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
@@ -31,6 +31,13 @@ public class Queries {
         this.topicController = topicController;
         this.resourceController = resourceController;
         this.nodeService = nodeService;
+    }
+
+    @GetMapping("/{contentURI}")
+    @Operation(summary = "Gets a list of resources matching given contentURI, empty list of no matches are found.")
+    public List<SearchableTaxonomyContextDTO> queryFullNode(@PathVariable("contentURI") Optional<URI> contentURI,
+            @Parameter(description = "Whether to filter out contexts if a parent (or the node itself) is non-visible") @RequestParam(value = "filterVisibles", required = false, defaultValue = "true") boolean filterVisibles) {
+        return nodeService.getSearchableByContentUri(contentURI, filterVisibles);
     }
 
     @GetMapping("/resources")

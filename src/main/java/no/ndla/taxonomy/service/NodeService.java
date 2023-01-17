@@ -12,6 +12,7 @@ import no.ndla.taxonomy.repositories.ChangelogRepository;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.SearchableTaxonomyContextDTO;
 import no.ndla.taxonomy.service.dtos.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.service.task.Fetcher;
@@ -45,6 +46,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final DomainEntityHelperService domainEntityHelperService;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
+    private final SearchableTaxonomyContextDTOFactory searchableTaxonomyContextDTOFactory;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -56,7 +58,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     public NodeService(ChangelogRepository changelogRepository, DomainEntityHelperService domainEntityHelperService,
             EntityConnectionService connectionService, NodeConnectionRepository nodeConnectionRepository,
             NodeRepository nodeRepository, RecursiveNodeTreeService recursiveNodeTreeService,
-            TreeSorter topicTreeSorter, TreeSorter treeSorter, VersionService versionService) {
+            TreeSorter topicTreeSorter, TreeSorter treeSorter, VersionService versionService,
+            SearchableTaxonomyContextDTOFactory searchableTaxonomyContextDTOFactory) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -66,6 +69,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         this.domainEntityHelperService = domainEntityHelperService;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.treeSorter = treeSorter;
+        this.searchableTaxonomyContextDTOFactory = searchableTaxonomyContextDTOFactory;
     }
 
     @Transactional
@@ -307,5 +311,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         var cloned = new Node(node, false);
         cloned.setContentUri(contentUri);
         return nodeRepository.save(cloned);
+    }
+
+    public List<SearchableTaxonomyContextDTO> getSearchableByContentUri(Optional<URI> contentURI,
+            boolean filterVisibles) {
+        var nodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
+                Optional.empty(), contentURI, Optional.empty());
+
+        return searchableTaxonomyContextDTOFactory.fromNodes(nodes, filterVisibles);
     }
 }

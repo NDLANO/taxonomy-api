@@ -402,4 +402,35 @@ public class Node extends EntityWithPath {
         return Optional.empty();
     }
 
+    private List<NodePath> getParentPaths(List<NodePath> oldBasePaths, Node node,
+            Optional<NodeConnection> connectionToChild) {
+        var basePaths = oldBasePaths.stream().map(p -> p.add(node, connectionToChild)).toList();
+
+        var parentConnections = node.getParentNodeConnections().stream().filter(nc -> nc.getParent().isPresent())
+                .toList();
+        if (parentConnections.isEmpty()) {
+            return basePaths;
+        }
+
+        var paths = new ArrayList<NodePath>();
+
+        for (var parentConnection : parentConnections) {
+            var maybeParent = parentConnection.getParent();
+            if (maybeParent.isEmpty())
+                continue;
+            var parent = maybeParent.get();
+
+            var result = this.getParentPaths(basePaths, parent, Optional.of(parentConnection));
+            paths.addAll(result);
+        }
+
+        return paths;
+    }
+
+    public List<NodePath> buildPaths() {
+        var np = new NodePath();
+        var paths = getParentPaths(List.of(np), this, Optional.empty());
+        return paths.stream().sorted(Comparator.comparing(NodePath::toString)).toList();
+    }
+
 }
