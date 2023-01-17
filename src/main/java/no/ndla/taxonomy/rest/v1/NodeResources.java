@@ -104,7 +104,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
 
         final var nodeConnection = connectionService.connectParentChild(parent, child, relevance, rank, primary);
 
-        var location = URI.create("/node-child/" + nodeConnection.getPublicId());
+        var location = URI.create("/node-resources/" + nodeConnection.getPublicId());
         return ResponseEntity.created(location).build();
     }
 

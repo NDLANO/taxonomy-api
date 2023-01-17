@@ -125,7 +125,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     public Node getNode(URI publicId) {
         return nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
-                .orElseThrow(() -> new NotFoundHttpResponseException("Topic was not found"));
+                .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
     }
 
     public List<ResourceWithNodeConnectionDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds,
