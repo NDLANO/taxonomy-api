@@ -102,7 +102,7 @@ public class TopicResources {
         final NodeConnection topicResource;
         topicResource = connectionService.connectParentChild(topic, resource, relevance, rank, primary);
 
-        URI location = URI.create("/node-child/" + topicResource.getPublicId());
+        URI location = URI.create("/topic-resources/" + topicResource.getPublicId());
         return ResponseEntity.created(location).build();
     }
 
