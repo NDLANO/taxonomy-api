@@ -54,6 +54,10 @@ public abstract class EntityWithPathDTO {
     @Schema(description = "Resource type(s)", example = "[{\"id\": \"urn:resourcetype:1\",\"name\":\"lecture\"}]")
     private TreeSet<ResourceTypeDTO> resourceTypes = new TreeSet<>();
 
+    @JsonProperty
+    @Schema(description = "The type of node", example = "resource")
+    public NodeType nodeType;
+
     public EntityWithPathDTO() {
     }
 
@@ -83,6 +87,8 @@ public abstract class EntityWithPathDTO {
         this.resourceTypes = entity.getResourceResourceTypes().stream()
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
                 .collect(Collectors.toCollection(TreeSet::new));
+
+        this.nodeType = entity.getNodeType();
 
     }
 
