@@ -44,21 +44,21 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
     Page<Integer> findIdsByTypePaginated(Pageable pageable, NodeType nodeType);
 
     @Query("""
-            SELECT n FROM Node n
+            SELECT DISTINCT n FROM Node n
             LEFT JOIN FETCH n.metadata nm
             LEFT JOIN FETCH nm.grepCodes
             LEFT JOIN FETCH nm.customFieldValues ncfv
             LEFT JOIN FETCH ncfv.customField cf
             LEFT JOIN FETCH n.cachedPaths
             LEFT JOIN FETCH n.translations
-            WHERE (:nodeType IS NULL OR n.nodeType = :nodeType)
+            WHERE ((:nodeTypes) IS NULL OR n.nodeType in (:nodeTypes))
             AND (:isVisible IS NULL OR nm.visible = :isVisible)
             AND (:metadataFilterKey IS NULL OR cf.key = :metadataFilterKey)
             AND (:metadataFilterValue IS NULL OR ncfv.value = :metadataFilterValue)
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
             AND (:isRoot IS NULL OR n.root = true)
             """)
-    List<Node> findByNodeType(Optional<NodeType> nodeType, Optional<Boolean> isVisible,
+    List<Node> findByNodeType(List<NodeType> nodeTypes, Optional<Boolean> isVisible,
             Optional<String> metadataFilterKey, Optional<String> metadataFilterValue, Optional<URI> contentUri,
             Optional<Boolean> isRoot);
 }

@@ -61,7 +61,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        return nodeService.getNodes(language, Optional.of(NodeType.RESOURCE), contentUri, Optional.empty(),
+        return nodeService.getNodes(language, List.of(NodeType.RESOURCE), contentUri, Optional.empty(),
                 metadataFilters);
     }
 
