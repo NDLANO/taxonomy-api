@@ -65,7 +65,6 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
     @Schema(description = "The type of node", example = "resource")
     public NodeType nodeType;
 
-
     @JsonIgnore
     public List<EntityWithPathChildDTO> children = new ArrayList<>();
 

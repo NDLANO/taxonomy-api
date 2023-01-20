@@ -190,10 +190,11 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
         return treeSorter.sortList(sortableListToAddTo).stream().map(ResourceTreeSortable::getResourceConnection)
                 .filter(Optional::isPresent).map(Optional::get)
+                .filter(connection -> ((NodeConnection) connection).getChild()
+                        .map(c -> c.getNodeType() == NodeType.RESOURCE).orElse(false))
                 .map(wrappedNodeResource -> new ResourceWithNodeConnectionDTO((NodeConnection) wrappedNodeResource,
                         languageCode))
                 .collect(Collectors.toList());
-
     }
 
     @Override

@@ -20,10 +20,16 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnection> {
-    @SuppressWarnings("SpringDataRepositoryMethodReturnTypeInspection")
-    @Query("SELECT nc.parent.id AS parentId, nc.child.id AS childId, nc.rank AS rank FROM NodeConnection nc"
-            + " JOIN nc.parent JOIN nc.child WHERE nc.parent.id IN :nodeId")
-    List<NodeTreeElement> findAllByNodeIdInIncludingTopicAndSubtopic(Set<Integer> nodeId);
+    @Query("""
+            SELECT DISTINCT nc
+            FROM NodeConnection nc
+            JOIN nc.parent p
+            JOIN nc.child c
+            LEFT JOIN nc.relevance rel
+            WHERE nc.parent.id IN :nodeId
+            AND ((:nodeTypes) IS NULL OR c.nodeType in :nodeTypes)
+            """)
+    List<NodeConnection> findAllByNodeIdInIncludingTopicAndSubtopic(Set<Integer> nodeId, List<NodeType> nodeTypes);
 
     @Query("""
             SELECT DISTINCT nc FROM NodeConnection nc
@@ -53,14 +59,6 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             + " LEFT JOIN FETCH rrtFetch.resourceType rtFetch LEFT JOIN FETCH rtFetch.resourceTypeTranslations"
             + " WHERE n.id IN :nodeIds AND r.nodeType = 'RESOURCE'")
     List<NodeConnection> getByResourceIds(Collection<Integer> nodeIds);
-
-    interface NodeTreeElement {
-        Integer getParentId();
-
-        Integer getChildId();
-
-        Integer getRank();
-    }
 
     @Query("SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child JOIN FETCH nc.metadata m"
             + " LEFT JOIN m.grepCodes LEFT JOIN FETCH m.customFieldValues cvf LEFT JOIN cvf.customField")

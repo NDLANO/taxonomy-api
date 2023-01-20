@@ -7,15 +7,15 @@
 
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /*
     This class replicates old structure previously implemented as recursive queries in database, methods
@@ -30,7 +30,8 @@ public class RecursiveNodeTreeService {
         this.nodeConnectionRepository = nodeConnectionRepository;
     }
 
-    private void addChildIdsRecursively(Set<TreeElement> elements, Set<Integer> ids, int ttl) {
+    private void addChildIdsRecursively(Set<TreeElement> elements, Set<Integer> ids, int ttl,
+            List<NodeType> nodeTypes) {
         // Method just takes the list of ids provided and add each of the children it finds to the list,
         // and then recursively runs the same method on each of the found children IDs, once for each level
 
@@ -40,24 +41,36 @@ public class RecursiveNodeTreeService {
 
         final var idsThisLevel = new HashSet<Integer>();
 
-        nodeConnectionRepository.findAllByNodeIdInIncludingTopicAndSubtopic(ids).forEach(nodeConnection -> {
-            elements.add(new TreeElement(nodeConnection.getChildId(), nodeConnection.getParentId(),
-                    nodeConnection.getRank()));
-            idsThisLevel.add(nodeConnection.getChildId());
+        nodeConnectionRepository.findAllByNodeIdInIncludingTopicAndSubtopic(ids, nodeTypes).forEach(nodeConnection -> {
+            var child = nodeConnection.getChild();
+            var parent = nodeConnection.getParent();
+            if (child.isEmpty() || parent.isEmpty())
+                return;
+
+            var childId = child.get().getId();
+            var parentId = parent.get().getId();
+
+            elements.add(new TreeElement(childId, parentId, nodeConnection.getRank()));
+            idsThisLevel.add(childId);
         });
 
         if (idsThisLevel.size() > 0) {
-            addChildIdsRecursively(elements, idsThisLevel, ttl);
+            addChildIdsRecursively(elements, idsThisLevel, ttl, nodeTypes);
         }
     }
 
-    public Set<TreeElement> getRecursiveNodes(Node node) {
+    public Set<TreeElement> getRecursiveNodes(Node node, List<NodeType> nodeTypes) {
         final var toReturn = new HashSet<TreeElement>();
         toReturn.add(new TreeElement(node.getId(), null, 0));
 
-        addChildIdsRecursively(toReturn, Set.of(node.getId()), 1000);
+        addChildIdsRecursively(toReturn, Set.of(node.getId()), 1000, nodeTypes);
 
         return toReturn;
+    }
+
+    public Set<TreeElement> getRecursiveNodes(Node node) {
+        var defaultNodeTypes = NodeType.values();
+        return getRecursiveNodes(node, Arrays.stream(defaultNodeTypes).toList());
     }
 
     public static class TreeElement {

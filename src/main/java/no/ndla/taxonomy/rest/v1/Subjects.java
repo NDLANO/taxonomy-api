@@ -156,9 +156,9 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         // Filtering
 
         final var filteredConnections = children.stream()
-                .filter(nodeConnection -> nodeConnection.getChild().isPresent())
-                .filter(nodeConnection -> searchForRelevance(nodeConnection, relevanceArgument, children))
-                .collect(Collectors.toList());
+                .filter(nodeConnection -> nodeConnection.getChild().isPresent()
+                        && nodeConnection.getChild().get().getNodeType() == NodeType.TOPIC)
+                .filter(nodeConnection -> searchForRelevance(nodeConnection, relevanceArgument, children)).toList();
 
         // Wrapping with metadata from API if asked for
 
