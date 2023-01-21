@@ -23,9 +23,9 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
     @Query("""
             SELECT DISTINCT nc
             FROM NodeConnection nc
-            JOIN nc.parent p
-            JOIN nc.child c
-            LEFT JOIN nc.relevance rel
+            JOIN FETCH nc.parent p
+            JOIN FETCH nc.child c
+            LEFT JOIN FETCH nc.relevance rel
             WHERE nc.parent.id IN :nodeId
             AND ((:nodeTypes) IS NULL OR c.nodeType in :nodeTypes)
             """)
