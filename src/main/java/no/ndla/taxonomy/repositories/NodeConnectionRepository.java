@@ -23,8 +23,11 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
     @Query("""
             SELECT DISTINCT nc
             FROM NodeConnection nc
+            LEFT JOIN FETCH nc.metadata ncm LEFT JOIN FETCH ncm.grepCodes LEFT JOIN FETCH ncm.customFieldValues nccfv LEFT JOIN FETCH nccfv.customField
             JOIN FETCH nc.parent p
+            LEFT JOIN FETCH p.metadata pm LEFT JOIN FETCH pm.grepCodes LEFT JOIN FETCH pm.customFieldValues pcfv LEFT JOIN FETCH pcfv.customField
             JOIN FETCH nc.child c
+            LEFT JOIN FETCH c.metadata cm LEFT JOIN FETCH cm.grepCodes LEFT JOIN FETCH cm.customFieldValues ccfv LEFT JOIN FETCH ccfv.customField
             LEFT JOIN FETCH nc.relevance rel
             WHERE nc.parent.id IN :nodeId
             AND ((:nodeTypes) IS NULL OR c.nodeType in :nodeTypes)
