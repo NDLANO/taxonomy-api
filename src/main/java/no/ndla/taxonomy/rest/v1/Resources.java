@@ -10,18 +10,13 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.repositories.ResourceRepository;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
-import no.ndla.taxonomy.service.MetadataFilters;
-import no.ndla.taxonomy.service.MetadataService;
-import no.ndla.taxonomy.service.ResourceService;
-import no.ndla.taxonomy.service.dtos.ResourceDTO;
-import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
-import no.ndla.taxonomy.service.dtos.ResourceWithParentsDTO;
-import no.ndla.taxonomy.service.dtos.SearchResultDTO;
+import no.ndla.taxonomy.service.*;
+import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,21 +31,19 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "/v1/resources")
-public class Resources extends CrudControllerWithMetadata<Resource> {
+public class Resources extends CrudControllerWithMetadata<Node> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
-    private final ResourceService resourceService;
+    private final NodeService nodeService;
+    private final NodeRepository nodeRepository;
 
-    private final ResourceRepository resourceRepository;
-
-    public Resources(ResourceRepository resourceRepository,
-            ResourceResourceTypeRepository resourceResourceTypeRepository, ResourceService resourceService,
-            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
-        super(resourceRepository, cachedUrlUpdaterService, metadataService);
+    public Resources(NodeRepository nodeRepository, ResourceResourceTypeRepository resourceResourceTypeRepository,
+            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService, NodeService nodeService) {
+        super(nodeRepository, cachedUrlUpdaterService, metadataService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
-        this.repository = resourceRepository;
-        this.resourceRepository = resourceRepository;
-        this.resourceService = resourceService;
+        this.repository = nodeRepository;
+        this.nodeRepository = nodeRepository;
+        this.nodeService = nodeService;
     }
 
     @Override
@@ -61,20 +54,21 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @GetMapping
     @Operation(summary = "Lists all resources")
     @Transactional(readOnly = true)
-    public List<ResourceDTO> getAll(
+    public List<EntityWithPathDTO> getAll(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        return resourceService.getResources(language, contentUri, metadataFilters);
+        return nodeService.getNodes(language, List.of(NodeType.RESOURCE), contentUri, Optional.empty(),
+                metadataFilters);
     }
 
     @GetMapping("/search")
     @Operation(summary = "Search all resources")
     @Transactional(readOnly = true)
-    public SearchResultDTO<ResourceDTO> search(
+    public SearchResultDTO<NodeDTO> search(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @Parameter(description = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
@@ -82,7 +76,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
             @Parameter(description = "Ids to fetch for query") @RequestParam(value = "ids", required = false) Optional<List<String>> ids
 
     ) {
-        return resourceService.search(query, ids, language, pageSize, page);
+        return nodeService.searchByNodeType(query, ids, language, pageSize, page, Optional.of(NodeType.RESOURCE));
     }
 
     @GetMapping("/page")
@@ -97,8 +91,9 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
         if (page.get() < 1)
             throw new IllegalArgumentException("page parameter must be bigger than 0");
 
-        var ids = resourceRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
-        var results = resourceRepository.findByIds(ids.getContent());
+        var pageRequest = PageRequest.of(page.get() - 1, pageSize.get());
+        var ids = nodeRepository.findIdsByTypePaginated(pageRequest, NodeType.RESOURCE);
+        var results = nodeRepository.findByIds(ids.getContent());
         var contents = results.stream().map(node -> new ResourceDTO(node, language.orElse("nb")))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
@@ -106,10 +101,9 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
 
     @GetMapping("{id}")
     @Operation(summary = "Gets a single resource")
-    public ResourceDTO get(@PathVariable("id") URI id,
+    public NodeDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-
-        return resourceService.getResourceByPublicId(id, language);
+        return nodeService.getNode(id, language);
     }
 
     @PutMapping("{id}")
@@ -128,7 +122,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @Transactional
     public ResponseEntity<Void> post(
             @Parameter(name = "resource", description = "the new resource") @RequestBody ResourceCommand command) {
-        return doPost(new Resource(), command);
+        return doPost(new Node(NodeType.RESOURCE), command);
     }
 
     @PostMapping("{id}/clone")
@@ -139,7 +133,7 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     public ResponseEntity<Void> clone(
             @Parameter(name = "id", description = "Id of resource to clone", example = "urn:resource:1") @PathVariable("id") URI publicId,
             @Parameter(name = "resource", description = "Object containing contentUri. Other values are ignored.") @RequestBody ResourceCommand command) {
-        Resource entity = resourceService.cloneResource(publicId, command.contentUri);
+        var entity = nodeService.cloneNode(publicId, command.contentUri);
         URI location = URI.create(getLocation() + "/" + entity.getPublicId());
         return ResponseEntity.created(location).build();
     }
@@ -161,7 +155,8 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @Transactional(readOnly = true)
     public ResourceWithParentsDTO getResourceFull(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return resourceService.getResourceWithParentNodesByPublicId(id, language);
+        var node = nodeService.getNode(id);
+        return new ResourceWithParentsDTO(node, language);
     }
 
     @DeleteMapping("{id}")
@@ -169,6 +164,6 @@ public class Resources extends CrudControllerWithMetadata<Resource> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") URI id) {
-        resourceService.delete(id);
+        nodeService.delete(id);
     }
 }

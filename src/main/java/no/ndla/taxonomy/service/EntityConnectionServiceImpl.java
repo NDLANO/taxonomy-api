@@ -9,13 +9,15 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
-import no.ndla.taxonomy.repositories.NodeResourceRepository;
+import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -24,15 +26,14 @@ import java.util.logging.Logger;
 @Service
 public class EntityConnectionServiceImpl implements EntityConnectionService {
     private final NodeConnectionRepository nodeConnectionRepository;
-    private final NodeResourceRepository nodeResourceRepository;
-
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final NodeRepository nodeRepository;
 
     public EntityConnectionServiceImpl(NodeConnectionRepository nodeConnectionRepository,
-            NodeResourceRepository nodeResourceRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
+            CachedUrlUpdaterService cachedUrlUpdaterService, NodeRepository nodeRepository) {
         this.nodeConnectionRepository = nodeConnectionRepository;
-        this.nodeResourceRepository = nodeResourceRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.nodeRepository = nodeRepository;
     }
 
     private EntityWithPathConnection doCreateConnection(EntityWithPath parent, EntityWithPath child,
@@ -46,8 +47,6 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
         if (parent instanceof Node && child instanceof Node) {
             connection = NodeConnection.create((Node) parent, (Node) child);
-        } else if (parent instanceof Node && child instanceof Resource) {
-            connection = NodeResource.create((Node) parent, (Resource) child);
         } else {
             throw new IllegalArgumentException("Unknown parent-child connection");
         }
@@ -68,19 +67,28 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         return connection;
     }
 
-    private NodeConnection createConnection(Node parent, Node child, Relevance relevance, int rank) {
-        return (NodeConnection) doCreateConnection(parent, child, true, relevance, rank);
+    private NodeConnection createConnection(Node parent, Node child, Relevance relevance, int rank,
+            Optional<Boolean> isPrimary) {
+        return (NodeConnection) doCreateConnection(parent, child, isPrimary.orElse(true), relevance, rank);
     }
 
-    private NodeResource createConnection(Node node, Resource resource, Relevance relevance, boolean primary,
-            int rank) {
-        return (NodeResource) doCreateConnection(node, resource, primary, relevance, rank);
+    public NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank) {
+        return this.connectParentChild(parent, child, relevance, rank, Optional.empty());
     }
 
     @Override
-    public NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank) {
+    public NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank,
+            Optional<Boolean> isPrimary) {
         if (child.getParentConnections().size() > 0) {
-            throw new DuplicateConnectionException();
+            if (child.getNodeType() != NodeType.RESOURCE)
+                throw new DuplicateConnectionException();
+
+            var alreadyConnectedResource = parent.getResourceChildren().stream()
+                    .anyMatch(connection -> connection.getChild().orElse(null) == child);
+
+            if (alreadyConnectedResource) {
+                throw new DuplicateConnectionException();
+            }
         }
 
         if (parent == child) {
@@ -112,22 +120,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
             rank = parent.getChildren().stream().map(NodeConnection::getRank).max(Integer::compare).orElse(0) + 1;
         }
 
-        return nodeConnectionRepository.saveAndFlush(createConnection(parent, child, relevance, rank));
-    }
-
-    @Override
-    public NodeResource connectNodeResource(Node node, Resource resource, Relevance relevance, boolean isPrimary,
-            Integer rank) {
-        if (node.getNodeResources().stream()
-                .anyMatch(nodeResource -> nodeResource.getResource().orElse(null) == resource)) {
-            throw new DuplicateConnectionException();
-        }
-
-        if (rank == null) {
-            rank = node.getNodeResources().stream().map(NodeResource::getRank).max(Integer::compare).orElse(0) + 1;
-        }
-
-        return nodeResourceRepository.saveAndFlush(createConnection(node, resource, relevance, isPrimary, rank));
+        return nodeConnectionRepository.saveAndFlush(createConnection(parent, child, relevance, rank, isPrimary));
     }
 
     @Override
@@ -144,55 +137,34 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         nodeConnection.disassociate();
         nodeConnectionRepository.delete(nodeConnection);
 
-        child.ifPresent(cachedUrlUpdaterService::updateCachedUrls);
-
-        nodeConnectionRepository.flush();
-    }
-
-    @Override
-    public void disconnectNodeResource(Node node, Resource resource) {
-        new HashSet<>(node.getNodeResources()).stream()
-                .filter(nodeResource -> nodeResource.getResource().orElse(null) == resource)
-                .forEach(this::disconnectNodeResource); // (It will never be more than one record)
-    }
-
-    @Override
-    public void disconnectNodeResource(NodeResource nodeResource) {
-        boolean setNewPrimary = nodeResource.isPrimary().orElse(false) && nodeResource.getResource().isPresent();
-        final var resourceOptional = nodeResource.getResource();
-
-        nodeResource.disassociate();
-        nodeResourceRepository.delete(nodeResource);
-
-        resourceOptional.ifPresent(resource -> {
-            if (setNewPrimary) {
-                resource.getNodeResources().stream().findFirst().ifPresent(resource1 -> {
-                    resource1.setPrimary(true);
-                    nodeResourceRepository.saveAndFlush(resource1);
-
-                    resource1.getResource().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
-                });
+        child.ifPresent(childToDisconnect -> {
+            if (childToDisconnect.getNodeType() == NodeType.RESOURCE) {
+                // Set next connection to primary if disconnecting the primary connection
+                var isPrimaryConnection = nodeConnection.isPrimary().orElse(false);
+                if (isPrimaryConnection) {
+                    childToDisconnect.getParentNodeConnections().stream().findFirst().ifPresent(nextConnection -> {
+                        nextConnection.setPrimary(true);
+                        nodeConnectionRepository.saveAndFlush(nextConnection);
+                        nextConnection.getResource().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
+                    });
+                }
             }
-
-            cachedUrlUpdaterService.updateCachedUrls(resource);
+            cachedUrlUpdaterService.updateCachedUrls(childToDisconnect);
         });
 
-        nodeResourceRepository.flush();
+        nodeConnectionRepository.flush();
     }
 
     private void saveConnections(Collection<EntityWithPathConnection> connections) {
         connections.forEach(connectable -> {
             if (connectable instanceof NodeConnection) {
                 nodeConnectionRepository.save((NodeConnection) connectable);
-            } else if (connectable instanceof NodeResource) {
-                nodeResourceRepository.save((NodeResource) connectable);
             } else {
                 throw new IllegalArgumentException(
                         "Unknown instance of PrimaryPathConnectable: " + connectable.getClass().toString());
             }
         });
         nodeConnectionRepository.flush();
-        nodeResourceRepository.flush();
     }
 
     private void updatePrimaryConnection(EntityWithPathConnection connectable, boolean setPrimaryTo) {
@@ -248,14 +220,11 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public void updateNodeResource(NodeResource nodeResource, Relevance relevance, boolean isPrimary, Integer newRank) {
-        updateRankableConnection(nodeResource, isPrimary, newRank);
-        updateRelevance(nodeResource, relevance);
-    }
-
-    @Override
-    public void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank) {
-        updateRank(nodeConnection, newRank);
+    public void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank,
+            Optional<Boolean> isPrimary) {
+        if (newRank != null)
+            updateRank(nodeConnection, newRank);
+        isPrimary.ifPresent(primary -> updatePrimaryConnection(nodeConnection, primary));
         updateRelevance(nodeConnection, relevance);
     }
 
@@ -289,12 +258,17 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
+    public void disconnectAllParents(URI nodeId) {
+        var node = nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(nodeId)
+                .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
+        node.getParentConnections().forEach(connection -> disconnectParentChildConnection((NodeConnection) connection));
+    }
+
+    @Override
     public void disconnectAllChildren(EntityWithPath entity) {
         Set.copyOf(entity.getChildConnections()).forEach(connection -> {
             if (connection instanceof NodeConnection) {
                 disconnectParentChildConnection((NodeConnection) connection);
-            } else if (connection instanceof NodeResource) {
-                disconnectNodeResource((NodeResource) connection);
             } else {
                 throw new IllegalStateException("Unknown child object on entity trying to disconnect children from");
             }

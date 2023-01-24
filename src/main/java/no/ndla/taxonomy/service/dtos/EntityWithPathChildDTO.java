@@ -9,11 +9,9 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.Translation;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.NodeTranslations;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 import no.ndla.taxonomy.service.TreeSorter;
@@ -63,6 +61,10 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
     @Schema(description = "List of language codes supported by translations")
     public TreeSet<String> supportedLanguages;
 
+    @JsonProperty
+    @Schema(description = "The type of node", example = "resource")
+    public NodeType nodeType;
+
     @JsonIgnore
     public List<EntityWithPathChildDTO> children = new ArrayList<>();
 
@@ -88,6 +90,8 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
             this.supportedLanguages = this.translations.stream().map(t -> t.language)
                     .collect(Collectors.toCollection(TreeSet::new));
             this.metadata = new MetadataDto(child.getMetadata());
+
+            this.nodeType = child.getNodeType();
         });
 
         nodeConnection.getParent().ifPresent(parent -> this.parent = parent.getPublicId());

@@ -14,8 +14,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Entity
-public class NodeConnection extends DomainEntity
-        implements EntityWithMetadata, EntityWithPathConnection, Comparable<NodeConnection> {
+public class NodeConnection extends DomainEntity implements EntityWithMetadata, EntityWithPathConnection,
+        Comparable<NodeConnection>, SortableResourceConnection<Node> {
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private Node parent;
@@ -26,6 +26,9 @@ public class NodeConnection extends DomainEntity
 
     @Column(name = "rank")
     private int rank;
+
+    @Column(name = "is_primary")
+    private boolean isPrimary;
 
     @ManyToOne
     @JoinColumn(name = "relevance_id")
@@ -40,16 +43,20 @@ public class NodeConnection extends DomainEntity
     }
 
     public NodeConnection(NodeConnection nodeConnection) {
-        setPublicId(nodeConnection.getPublicId());
-        setPrimary(nodeConnection.isPrimary().orElse(false));
         this.rank = nodeConnection.rank;
         this.relevance = nodeConnection.relevance;
         this.parent = nodeConnection.parent;
         this.child = nodeConnection.child;
+        setPublicId(nodeConnection.getPublicId());
+        setPrimary(nodeConnection.isPrimary().orElse(false));
         setMetadata(new Metadata(nodeConnection.getMetadata()));
     }
 
     public static NodeConnection create(Node parent, Node child) {
+        return NodeConnection.create(parent, child, true);
+    }
+
+    public static NodeConnection create(Node parent, Node child, boolean isPrimary) {
         if (child == null || parent == null) {
             throw new NullPointerException("Both parent and child must be present.");
         }
@@ -57,6 +64,7 @@ public class NodeConnection extends DomainEntity
         final var nodeConnection = new NodeConnection();
         nodeConnection.parent = parent;
         nodeConnection.child = child;
+        nodeConnection.isPrimary = isPrimary;
 
         parent.addChildConnection(nodeConnection);
         child.addParentConnection(nodeConnection);
@@ -77,6 +85,17 @@ public class NodeConnection extends DomainEntity
         if (child != null) {
             child.removeParentConnection(this);
         }
+    }
+
+    @Override
+    public Optional<Node> getResource() {
+        var child = getChild();
+        var isResource = child.map(c -> c.getNodeType() == NodeType.RESOURCE).orElse(false);
+
+        if (!isResource && child.isPresent())
+            throw new IllegalStateException("Tried to getResource on a nodeConnection connected to a non-resource");
+
+        return child;
     }
 
     public Optional<Node> getParent() {
@@ -122,16 +141,18 @@ public class NodeConnection extends DomainEntity
 
     @Override
     public Optional<Boolean> isPrimary() {
-        return Optional.of(true);
+        return Optional.of(this.isPrimary);
     }
 
     @Override
     public void setPrimary(boolean isPrimary) {
-        if (isPrimary) {
-            return;
+        var childType = this.child.getNodeType();
+        if (childType != NodeType.RESOURCE && !isPrimary) {
+            throw new UnsupportedOperationException(
+                    "NodeConnection with child of type '" + childType.toString() + "' can not be non-primary");
         }
 
-        throw new UnsupportedOperationException("NodeConnection can not be non-primary");
+        this.isPrimary = isPrimary;
     }
 
     @Override

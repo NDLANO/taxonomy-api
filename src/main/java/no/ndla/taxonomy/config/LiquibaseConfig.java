@@ -7,6 +7,8 @@
 
 package no.ndla.taxonomy.config;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import liquibase.exception.LiquibaseException;
 import liquibase.integration.spring.SpringLiquibase;
 import org.slf4j.Logger;
@@ -37,6 +39,15 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
     @Value("${spring.datasource.hikari.schema:PUBLIC}")
     private String defaultSchema;
 
+    @Value("${spring.datasource.url:}")
+    private String dataSourceUrl;
+
+    @Value("${spring.datasource.username:}")
+    private String dataSourceUsername;
+
+    @Value("${spring.datasource.password:}")
+    private String dataSourcePassword;
+
     @Autowired
     private LiquibaseProperties liquibaseProperties;
 
@@ -62,7 +73,19 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
     protected void runOnAllSchemas(DataSource dataSource, Collection<String> schemas) throws LiquibaseException {
         for (String schema : schemas) {
             logger.info("Initializing Liquibase for version " + schema);
-            SpringLiquibase liquibase = this.getSpringLiquibase(dataSource, schema);
+
+            // TODO: There is probably a better way to do this.
+            var ds = dataSource;
+            if (!"".equals(dataSourceUsername)) {
+                var hc = new HikariConfig();
+                hc.setSchema(schema);
+                hc.setUsername(dataSourceUsername);
+                hc.setPassword(dataSourcePassword);
+                hc.setJdbcUrl(dataSourceUrl);
+                ds = new HikariDataSource(hc);
+            }
+
+            SpringLiquibase liquibase = this.getSpringLiquibase(ds, schema);
             liquibase.afterPropertiesSet();
             logger.info("Liquibase ran for version " + schema);
         }
@@ -73,6 +96,7 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
         liquibase.setResourceLoader(getResourceLoader());
         liquibase.setDataSource(dataSource);
         liquibase.setDefaultSchema(schema);
+        liquibase.setLiquibaseSchema(schema);
         liquibase.setChangeLogParameters(Map.of("schema", schema));
         liquibase.setChangeLog(liquibaseProperties.getChangeLog());
         liquibase.setContexts(liquibaseProperties.getContexts());

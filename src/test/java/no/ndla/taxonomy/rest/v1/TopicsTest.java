@@ -10,7 +10,6 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
@@ -39,7 +38,6 @@ public class TopicsTest extends RestTest {
 
     @BeforeEach
     void clearAllRepos() {
-        resourceRepository.deleteAllAndFlush();
         nodeRepository.deleteAllAndFlush();
     }
 
@@ -355,7 +353,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_delete_topic_but_resources_and_filter_remain() throws Exception {
-        Resource resource = builder.resource("resource",
+        var resource = builder.node("resource", NodeType.RESOURCE,
                 r -> r.translation("nb", tr -> tr.name("ressurs")).resourceType(rt -> rt.name("Learning path")));
 
         URI parentId = builder.node(NodeType.TOPIC, parent -> parent.resource(resource)).getPublicId();
@@ -363,7 +361,7 @@ public class TopicsTest extends RestTest {
         testUtils.deleteResource("/v1/topics/" + parentId);
 
         assertNull(nodeRepository.findByPublicId(parentId));
-        assertNotNull(resourceRepository.findByPublicId(resource.getPublicId()));
+        assertNotNull(nodeRepository.findByPublicId(resource.getPublicId()));
     }
 
     private static class ConnectionTypeCounter {

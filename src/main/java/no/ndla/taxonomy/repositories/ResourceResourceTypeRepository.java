@@ -14,13 +14,13 @@ import java.net.URI;
 import java.util.List;
 
 public interface ResourceResourceTypeRepository extends TaxonomyRepository<ResourceResourceType> {
-    @Query("SELECT rrt FROM ResourceResourceType rrt JOIN FETCH rrt.resource r " + RESOURCE_METADATA
+    @Query("SELECT rrt FROM ResourceResourceType rrt JOIN FETCH rrt.node r " + RESOURCE_METADATA
             + " JOIN FETCH rrt.resourceType")
     List<ResourceResourceType> findAllIncludingResourceAndResourceType();
 
-    @Query("SELECT rrt FROM ResourceResourceType rrt JOIN FETCH rrt.resource"
+    @Query("SELECT rrt FROM ResourceResourceType rrt JOIN FETCH rrt.node"
             + " JOIN FETCH rrt.resourceType rt LEFT JOIN FETCH rt.parent"
-            + " WHERE rrt.resource.publicId = :resourcePublicId")
+            + " WHERE rrt.node.publicId = :resourcePublicId")
     List<ResourceResourceType> findAllByResourcePublicIdIncludingResourceAndResourceTypeAndResourceTypeParent(
             URI resourcePublicId);
 }

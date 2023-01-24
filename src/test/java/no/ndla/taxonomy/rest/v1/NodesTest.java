@@ -36,8 +36,10 @@ public class NodesTest extends RestTest {
 
     @BeforeEach
     void clearAllRepos() {
-        resourceRepository.deleteAllAndFlush();
         nodeRepository.deleteAllAndFlush();
+        nodeConnectionRepository.deleteAllAndFlush();
+        resourceTypeRepository.deleteAllAndFlush();
+        resourceResourceTypeRepository.deleteAllAndFlush();
     }
 
     @Test
@@ -235,7 +237,7 @@ public class NodesTest extends RestTest {
 
     /**
      * This test creates a structure of subjects and topics as follows:
-     * 
+     *
      * <pre>
      *   S:1
      *    \
@@ -518,15 +520,18 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_delete_nodes_but_resources_remain() throws Exception {
-        Resource resource = builder.resource("resource",
-                r -> r.translation("nb", tr -> tr.name("ressurs")).resourceType(rt -> rt.name("Learning path")));
+        var x = builder.resourceType("rt", rt -> rt.name("Learning path"));
+        Node resource = builder.node(NodeType.RESOURCE, r -> r.translation("nb", tr -> tr.name("ressurs")));
+
+        var hallo = resource.addResourceType(x);
+        entityManager.persist(hallo);
 
         URI parentId = builder.node(NodeType.TOPIC, parent -> parent.resource(resource)).getPublicId();
 
         testUtils.deleteResource("/v1/nodes/" + parentId);
 
         assertNull(nodeRepository.findByPublicId(parentId));
-        assertNotNull(resourceRepository.findByPublicId(resource.getPublicId()));
+        assertNotNull(nodeRepository.findByPublicId(resource.getPublicId()));
     }
 
     @Test
@@ -546,8 +551,8 @@ public class NodesTest extends RestTest {
 
     @Test
     void making_resources_primary_sets_other_contexts_not_primary() throws Exception {
-        var resource = builder.resource();
-        var resource2 = builder.resource();
+        var resource = builder.node(NodeType.RESOURCE);
+        var resource2 = builder.node(NodeType.RESOURCE);
         var node1 = builder.node(NodeType.TOPIC, n -> n.resource(resource, false).child(NodeType.TOPIC,
                 c -> c.publicId("urn:topic:1").resource(resource2, false)));
         var node2 = builder.node(NodeType.TOPIC, n -> n.resource(resource, true).child(NodeType.TOPIC,
@@ -559,14 +564,14 @@ public class NodesTest extends RestTest {
                     "/v1/nodes/" + node1.getPublicId() + "/makeResourcesPrimary", null, status().isOk());
             assertEquals(200, response.getStatus());
             var updated1 = nodeRepository.getByPublicId(node1.getPublicId());
-            assertTrue(updated1.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            assertTrue(updated1.getResourceChildren().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
             var updated2 = nodeRepository.getByPublicId(node2.getPublicId());
-            assertFalse(updated2.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            assertFalse(updated2.getResourceChildren().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
             // Following should be unchanged
             var updated3 = nodeRepository.getByPublicId(URI.create("urn:topic:1"));
-            assertFalse(updated3.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            assertFalse(updated3.getResourceChildren().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
             var updated4 = nodeRepository.getByPublicId(URI.create("urn:topic:2"));
-            assertTrue(updated4.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            assertTrue(updated4.getResourceChildren().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
         }
         {
             // Recursive flag updates all levels
@@ -574,14 +579,14 @@ public class NodesTest extends RestTest {
                     "/v1/nodes/" + node1.getPublicId() + "/makeResourcesPrimary?recursive=true", null, status().isOk());
             assertEquals(200, response.getStatus());
             var updated1 = nodeRepository.getByPublicId(node1.getPublicId());
-            assertTrue(updated1.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            assertTrue(updated1.getResourceChildren().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
             var updated2 = nodeRepository.getByPublicId(node2.getPublicId());
-            assertFalse(updated2.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            assertFalse(updated2.getResourceChildren().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
             // Switched order from previous block
             var updated3 = nodeRepository.getByPublicId(URI.create("urn:topic:1"));
-            assertTrue(updated3.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            assertTrue(updated3.getResourceChildren().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
             var updated4 = nodeRepository.getByPublicId(URI.create("urn:topic:2"));
-            assertFalse(updated4.getNodeResources().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
+            assertFalse(updated4.getResourceChildren().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
         }
 
     }

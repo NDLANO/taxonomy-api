@@ -9,8 +9,9 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Resource;
-import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.repositories.NodeConnectionRepository;
+import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,20 +37,18 @@ class DomainEntityHelperServiceImplTest {
     private Node topic2;
     private Node node1;
     private Node node2;
-    private Resource resource1;
-    private Resource resource2;
+    private Node resource1;
+    private Node resource2;
 
     private DomainEntityHelperServiceImpl service;
 
     @BeforeEach
-    void setUp(@Autowired NodeRepository nodeRepository, @Autowired ResourceRepository resourceRepository,
-            @Autowired NodeConnectionRepository nodeConnectionRepository,
-            @Autowired NodeResourceRepository nodeResourceRepository,
+    void setUp(@Autowired NodeRepository nodeRepository, @Autowired NodeConnectionRepository nodeConnectionRepository,
             @Autowired ResourceTypeRepository resourceTypeRepository,
             @Autowired CachedUrlUpdaterService cachedUrlUpdaterService,
             @Autowired CustomFieldService customFieldService) {
-        service = new DomainEntityHelperServiceImpl(nodeRepository, resourceRepository, nodeConnectionRepository,
-                nodeResourceRepository, resourceTypeRepository, cachedUrlUpdaterService, customFieldService);
+        service = new DomainEntityHelperServiceImpl(nodeRepository, nodeConnectionRepository, resourceTypeRepository,
+                cachedUrlUpdaterService, customFieldService);
 
         topic1 = new Node(NodeType.TOPIC);
         topic1.setPublicId(URI.create("urn:topic:test:1"));
@@ -75,13 +74,13 @@ class DomainEntityHelperServiceImplTest {
         node2.setPublicId(URI.create("urn:node:test:2"));
         node2 = nodeRepository.save(node2);
 
-        resource1 = new Resource();
+        resource1 = new Node(NodeType.RESOURCE);
         resource1.setPublicId(URI.create("urn:resource:test:1"));
-        resource1 = resourceRepository.save(resource1);
+        resource1 = nodeRepository.save(resource1);
 
-        resource2 = new Resource();
+        resource2 = new Node(NodeType.RESOURCE);
         resource2.setPublicId(URI.create("urn:resource:test:2"));
-        resource2 = resourceRepository.save(resource2);
+        resource2 = nodeRepository.save(resource2);
 
     }
 

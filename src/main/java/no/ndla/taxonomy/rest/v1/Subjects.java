@@ -36,20 +36,17 @@ import java.util.stream.Collectors;
 public class Subjects extends CrudControllerWithMetadata<Node> {
     private final TreeSorter topicTreeSorter;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
-    private final ResourceService resourceService;
     private final NodeService nodeService;
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
 
     public Subjects(TreeSorter treeSorter, CachedUrlUpdaterService cachedUrlUpdaterService,
-            RecursiveNodeTreeService recursiveNodeTreeService, ResourceService resourceService,
-            MetadataService metadataService, NodeService nodeService, NodeRepository nodeRepository,
-            NodeConnectionRepository nodeConnectionRepository) {
+            RecursiveNodeTreeService recursiveNodeTreeService, MetadataService metadataService, NodeService nodeService,
+            NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository) {
         super(nodeRepository, cachedUrlUpdaterService, metadataService);
 
         this.topicTreeSorter = treeSorter;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
-        this.resourceService = resourceService;
         this.nodeService = nodeService;
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
@@ -63,7 +60,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        return nodeService.getNodes(language, Optional.of(NodeType.SUBJECT), Optional.empty(), Optional.empty(),
+        return nodeService.getNodes(language, List.of(NodeType.SUBJECT), Optional.empty(), Optional.empty(),
                 metadataFilters);
     }
 
@@ -159,9 +156,9 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         // Filtering
 
         final var filteredConnections = children.stream()
-                .filter(nodeConnection -> nodeConnection.getChild().isPresent())
-                .filter(nodeConnection -> searchForRelevance(nodeConnection, relevanceArgument, children))
-                .collect(Collectors.toList());
+                .filter(nodeConnection -> nodeConnection.getChild().isPresent()
+                        && nodeConnection.getChild().get().getNodeType() == NodeType.TOPIC)
+                .filter(nodeConnection -> searchForRelevance(nodeConnection, relevanceArgument, children)).toList();
 
         // Wrapping with metadata from API if asked for
 
@@ -232,6 +229,6 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         // If null is sent to query it will be ignored, otherwise it will filter by relevance
         final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
 
-        return resourceService.getResourcesByNodeId(subjectId, resourceTypeIdSet, relevanceArgument, language, true);
+        return nodeService.getResourcesByNodeId(subjectId, resourceTypeIdSet, relevanceArgument, language, true);
     }
 }

@@ -11,7 +11,6 @@ import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.UrlMapping;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.repositories.ResourceRepository;
 import no.ndla.taxonomy.repositories.UrlMappingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,8 +41,6 @@ public class UrlResolverServiceImplTest {
     @Autowired
     private NodeRepository nodeRepository;
     @Autowired
-    private ResourceRepository resourceRepository;
-    @Autowired
     private UrlMappingRepository urlMappingRepository;
     @Autowired
     private OldUrlCanonifier oldUrlCanonifier;
@@ -52,14 +49,12 @@ public class UrlResolverServiceImplTest {
 
     @BeforeEach
     void clearAllRepos() {
-        resourceRepository.deleteAllAndFlush();
         nodeRepository.deleteAllAndFlush();
     }
 
     @BeforeEach
     public void restTestSetUp() {
-        urlResolverService = new UrlResolverServiceImpl(resourceRepository, urlMappingRepository, nodeRepository,
-                oldUrlCanonifier);
+        urlResolverService = new UrlResolverServiceImpl(urlMappingRepository, nodeRepository, oldUrlCanonifier);
     }
 
     @Test

@@ -12,10 +12,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import no.ndla.taxonomy.domain.Resource;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceType;
-import no.ndla.taxonomy.repositories.ResourceRepository;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import org.springframework.http.HttpStatus;
@@ -35,13 +34,13 @@ public class ResourceResourceTypes {
 
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ResourceTypeRepository resourceTypeRepository;
-    private final ResourceRepository resourceRepository;
+    private final NodeRepository nodeRepository;
 
     public ResourceResourceTypes(ResourceResourceTypeRepository resourceResourceTypeRepository,
-            ResourceTypeRepository resourceTypeRepository, ResourceRepository resourceRepository) {
+            ResourceTypeRepository resourceTypeRepository, NodeRepository nodeRepository) {
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceTypeRepository = resourceTypeRepository;
-        this.resourceRepository = resourceRepository;
+        this.nodeRepository = nodeRepository;
     }
 
     @PostMapping
@@ -50,7 +49,8 @@ public class ResourceResourceTypes {
     public ResponseEntity<Void> post(
             @Parameter(name = "connection", description = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) {
 
-        Resource resource = resourceRepository.getByPublicId(command.resourceId);
+        var resource = nodeRepository.getByPublicId(command.resourceId);
+
         ResourceType resourceType = resourceTypeRepository.getByPublicId(command.resourceTypeId);
 
         ResourceResourceType resourceResourceType = resource.addResourceType(resourceType);
@@ -112,7 +112,7 @@ public class ResourceResourceTypes {
 
         public ResourceResourceTypeIndexDocument(ResourceResourceType resourceResourceType) {
             id = resourceResourceType.getPublicId();
-            resourceId = resourceResourceType.getResource().getPublicId();
+            resourceId = resourceResourceType.getNode().getPublicId();
             resourceTypeId = resourceResourceType.getResourceType().getPublicId();
         }
     }

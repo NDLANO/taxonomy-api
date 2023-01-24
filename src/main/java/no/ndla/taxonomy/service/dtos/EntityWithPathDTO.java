@@ -8,11 +8,10 @@
 package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import no.ndla.taxonomy.domain.EntityWithPath;
-import no.ndla.taxonomy.domain.EntityWithPathConnection;
-import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.Translation;
+import io.swagger.v3.oas.annotations.media.Schema;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 
 import java.net.URI;
@@ -51,10 +50,18 @@ public abstract class EntityWithPathDTO {
     @Schema(description = "List of names in the path")
     private List<String> breadcrumbs;
 
+    @JsonProperty
+    @Schema(description = "Resource type(s)", example = "[{\"id\": \"urn:resourcetype:1\",\"name\":\"lecture\"}]")
+    private TreeSet<ResourceTypeDTO> resourceTypes = new TreeSet<>();
+
+    @JsonProperty
+    @Schema(description = "The type of node", example = "resource")
+    public NodeType nodeType;
+
     public EntityWithPathDTO() {
     }
 
-    public EntityWithPathDTO(EntityWithPath entity, String languageCode) {
+    public EntityWithPathDTO(Node entity, String languageCode) {
         this.id = entity.getPublicId();
         this.contentUri = entity.getContentUri();
         this.paths = entity.getAllPaths();
@@ -76,6 +83,13 @@ public abstract class EntityWithPathDTO {
         this.metadata = new MetadataDto(entity.getMetadata());
 
         this.breadcrumbs = buildCrumbs(entity, languageCode);
+
+        this.resourceTypes = entity.getResourceResourceTypes().stream()
+                .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
+                .collect(Collectors.toCollection(TreeSet::new));
+
+        this.nodeType = entity.getNodeType();
+
     }
 
     private List<String> buildCrumbs(EntityWithPath entity, String languageCode) {
@@ -122,6 +136,10 @@ public abstract class EntityWithPathDTO {
 
     public List<String> getBreadcrumbs() {
         return breadcrumbs;
+    }
+
+    public Set<ResourceTypeDTO> getResourceTypes() {
+        return resourceTypes;
     }
 
     public Set<String> getSupportedLanguages() {
