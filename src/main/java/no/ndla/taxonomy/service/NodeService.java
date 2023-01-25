@@ -12,7 +12,7 @@ import no.ndla.taxonomy.repositories.ChangelogRepository;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.SearchableTaxonomyContextDTO;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.service.dtos.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.service.task.Fetcher;
@@ -46,7 +46,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final DomainEntityHelperService domainEntityHelperService;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
-    private final SearchableTaxonomyContextDTOFactory searchableTaxonomyContextDTOFactory;
+    private final TaxonomyContextDTOFactory searchableTaxonomyContextDTOFactory;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -59,7 +59,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             EntityConnectionService connectionService, NodeConnectionRepository nodeConnectionRepository,
             NodeRepository nodeRepository, RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter topicTreeSorter, TreeSorter treeSorter, VersionService versionService,
-            SearchableTaxonomyContextDTOFactory searchableTaxonomyContextDTOFactory) {
+            TaxonomyContextDTOFactory searchableTaxonomyContextDTOFactory) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -94,10 +94,10 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return filtered.stream().distinct().map(n -> new NodeDTO(n, language.get())).collect(Collectors.toList());
     }
 
-    public List<ResourceDTO> getResources(Optional<String> language, List<NodeType> nodeType, Optional<URI> contentUri,
-            Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+    public List<ResourceDTO> getResources(Optional<String> language, Optional<URI> contentUri, Optional<Boolean> isRoot,
+            MetadataFilters metadataFilters) {
         final List<ResourceDTO> listToReturn = new ArrayList<>();
-        var ids = nodeRepository.findIdsByType(nodeType);
+        var ids = nodeRepository.findIdsByType(List.of(NodeType.RESOURCE));
         final var counter = new AtomicInteger();
         ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
             final var nodes = nodeRepository.findByIdsFiltered(idChunk, metadataFilters.getVisible(),
@@ -313,8 +313,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return nodeRepository.save(cloned);
     }
 
-    public List<SearchableTaxonomyContextDTO> getSearchableByContentUri(Optional<URI> contentURI,
-            boolean filterVisibles) {
+    public List<TaxonomyContextDTO> getSearchableByContentUri(Optional<URI> contentURI, boolean filterVisibles) {
         var nodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
                 Optional.empty(), contentURI, Optional.empty());
 

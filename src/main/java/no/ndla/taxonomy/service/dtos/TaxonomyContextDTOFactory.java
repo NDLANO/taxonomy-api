@@ -9,14 +9,14 @@ import java.net.URI;
 import java.util.*;
 
 @Service
-public class SearchableTaxonomyContextDTOFactory {
+public class TaxonomyContextDTOFactory {
     private final RelevanceRepository relevanceRepository;
 
-    public SearchableTaxonomyContextDTOFactory(RelevanceRepository relevanceRepository) {
+    public TaxonomyContextDTOFactory(RelevanceRepository relevanceRepository) {
         this.relevanceRepository = relevanceRepository;
     }
 
-    public List<SearchableTaxonomyContextDTO> fromNodes(List<Node> nodes, boolean filterVisibles) {
+    public List<TaxonomyContextDTO> fromNodes(List<Node> nodes, boolean filterVisibles) {
         return nodes.stream().flatMap(node -> {
             return node.buildPaths().stream().map(np -> {
                 return fromNodeAndPath(node, np, filterVisibles);
@@ -24,8 +24,7 @@ public class SearchableTaxonomyContextDTOFactory {
         }).toList();
     }
 
-    public Optional<SearchableTaxonomyContextDTO> fromNodeAndPath(Node node, NodePath nodePath,
-            boolean filterVisibles) {
+    private Optional<TaxonomyContextDTO> fromNodeAndPath(Node node, NodePath nodePath, boolean filterVisibles) {
         if (filterVisibles && !nodePath.isVisible())
             return Optional.empty();
 
@@ -52,10 +51,9 @@ public class SearchableTaxonomyContextDTOFactory {
                 .orElse(URI.create("urn:relevance:core"));
         var resourceTypes = node.getResourceTypes().stream().map(SearchableTaxonomyResourceType::new).toList();
         var isPrimaryConnection = nodePath.getBaseConnection().isPrimary().orElse(false);
-        var parentTopicIds = nodePath.withoutBase().stream().filter(n -> n.getNodeType() == NodeType.TOPIC)
-                .map(n -> n.getPublicId().toString()).toList();
+        var parentTopicIds = getAllParentTopicIds(node, filterVisibles);
 
-        var ctx = new SearchableTaxonomyContextDTO(node.getPublicId(), subjectNode.getPublicId(), subjectNames, path,
+        var ctx = new TaxonomyContextDTO(node.getPublicId(), subjectNode.getPublicId(), subjectNames, path,
                 nodePath.getBreadcrumbs(), getContextType(node), relevanceId, relevanceTranslations, resourceTypes,
                 parentTopicIds, isPrimaryConnection);
 
@@ -76,6 +74,24 @@ public class SearchableTaxonomyContextDTOFactory {
         }
 
         return Optional.empty();
+    }
+
+    private List<URI> getAllParentTopicIds(Node node, boolean filterVisibles) {
+        var ids = new ArrayList<URI>();
+        var parents = node.getParentNodes();
+
+        for (var parent : parents) {
+            var skipForVisibility = filterVisibles && !parent.getMetadata().isVisible();
+            if (parent.getNodeType() != NodeType.TOPIC || skipForVisibility) {
+                continue;
+            }
+
+            ids.add(parent.getPublicId());
+            var parentPids = getAllParentTopicIds(parent, filterVisibles);
+            ids.addAll(parentPids);
+        }
+
+        return ids;
     }
 
     public static String DefaultLanguage = "nb";

@@ -13,7 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.util.*;
 
-public record SearchableTaxonomyContextDTO(
+public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "The public-id of the node connected via content-uri") URI id,
         @JsonProperty @Schema(description = "The id of the root parent of the context") URI subjectId,
         @JsonProperty @Schema(description = "The name of the root parent of the context") LanguageField<String> subject,
@@ -23,6 +23,6 @@ public record SearchableTaxonomyContextDTO(
         @JsonProperty @Schema(description = "Id of the relevance of the connection of the base") URI relevanceId,
         @JsonProperty @Schema(description = "Name of the relevance of the connection of the base") LanguageField<String> relevance,
         @JsonProperty @Schema(description = "Resource-types of the base") List<SearchableTaxonomyResourceType> resourceTypes,
-        @JsonProperty @Schema(description = "List of all parent topic-ids") List<String> parentTopicIds,
+        @JsonProperty @Schema(description = "List of all parent topic-ids") List<URI> parentTopicIds,
         @JsonProperty @Schema(description = "Whether the base connection is primary or not") boolean isPrimaryConnection) {
 }

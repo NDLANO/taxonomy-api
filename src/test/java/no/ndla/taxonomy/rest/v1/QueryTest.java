@@ -9,7 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageField;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.SearchableTaxonomyContextDTO;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -155,13 +155,14 @@ public class QueryTest extends RestTest {
                                 .name("topic 3").translation("nb", tr -> tr.name("Emne 3")).child(resource)));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/urn:article:1?filterVisibles=true");
-        var result = testUtils.getObject(SearchableTaxonomyContextDTO[].class, response);
+        var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
 
         assertEquals(2, result.length);
 
         var firstResult = result[0];
         assertEquals(URI.create("urn:resource:1"), firstResult.id());
-        assertEquals(List.of("urn:topic:1"), firstResult.parentTopicIds());
+        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:3")),
+                firstResult.parentTopicIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:1"), firstResult.subjectId());
         assertEquals("/subject:1/topic:1/resource:1", firstResult.path());
         assertEquals(URI.create("urn:relevance:core"), firstResult.relevanceId());
@@ -171,7 +172,8 @@ public class QueryTest extends RestTest {
 
         var secondResult = result[1];
         assertEquals(URI.create("urn:resource:1"), secondResult.id());
-        assertEquals(List.of("urn:topic:2"), secondResult.parentTopicIds());
+        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:3")),
+                secondResult.parentTopicIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:2"), secondResult.subjectId());
         assertEquals("/subject:2/topic:2/resource:1", secondResult.path());
         assertEquals(URI.create("urn:relevance:core"), secondResult.relevanceId());
@@ -202,8 +204,66 @@ public class QueryTest extends RestTest {
                                 .name("topic 3").translation("nb", tr -> tr.name("Emne 3")).child(resource)));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/urn:article:1?filterVisibles=false");
-        var result = testUtils.getObject(SearchableTaxonomyContextDTO[].class, response);
+        var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
 
         assertEquals(3, result.length);
+        var firstResult = result[0];
+        assertEquals(URI.create("urn:resource:1"), firstResult.id());
+        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:3")),
+                firstResult.parentTopicIds().stream().sorted().toList());
+        assertEquals(URI.create("urn:subject:1"), firstResult.subjectId());
+        assertEquals("/subject:1/topic:1/resource:1", firstResult.path());
+        assertEquals(URI.create("urn:relevance:core"), firstResult.relevanceId());
+        var breadcrumbs = new LanguageField<List<String>>();
+        breadcrumbs.put("nb", List.of("Fag", "Emne"));
+        assertEquals(breadcrumbs, firstResult.breadcrumbs());
+
+        var secondResult = result[1];
+        assertEquals(URI.create("urn:resource:1"), secondResult.id());
+        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:3")),
+                secondResult.parentTopicIds().stream().sorted().toList());
+        assertEquals(URI.create("urn:subject:2"), secondResult.subjectId());
+        assertEquals("/subject:2/topic:2/resource:1", secondResult.path());
+        assertEquals(URI.create("urn:relevance:core"), secondResult.relevanceId());
+        var breadcrumbs2 = new LanguageField<List<String>>();
+        breadcrumbs2.put("nb", List.of("Fag 2", "Emne 2"));
+        assertEquals(breadcrumbs2, secondResult.breadcrumbs());
+
+        var thirdResult = result[2];
+        assertEquals(URI.create("urn:resource:1"), thirdResult.id());
+        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:3")),
+                thirdResult.parentTopicIds().stream().sorted().toList());
+        assertEquals(URI.create("urn:subject:3"), thirdResult.subjectId());
+        assertEquals("/subject:3/topic:3/resource:1", thirdResult.path());
+        assertEquals(URI.create("urn:relevance:core"), thirdResult.relevanceId());
+        var breadcrumbs3 = new LanguageField<List<String>>();
+        breadcrumbs3.put("nb", List.of("Fag 3", "Emne 3"));
+        assertEquals(breadcrumbs3, thirdResult.breadcrumbs());
+    }
+
+    @Test
+    public void that_parent_topic_ids_are_derived_correctly() throws Exception {
+        var resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").contentUri("urn:article:1")
+                .translation("nb", t -> t.name("Ressurs")));
+        var relevance = builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
+
+        builder.node(NodeType.SUBJECT,
+                s -> s.publicId("urn:subject:1").name("subject").translation("nb", tr -> tr.name("Fag"))
+                        .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1").name("topic")
+                                .translation("nb", tr -> tr.name("Emne")).child(resource)));
+
+        builder.node(NodeType.SUBJECT,
+                s -> s.publicId("urn:subject:2").name("subject 2").translation("nb", tr -> tr.name("Fag 2"))
+                        .child(NodeType.TOPIC, t -> t.publicId("urn:topic:2").name("topic 2")
+                                .translation("nb", tr -> tr.name("Emne 2")).child(resource)));
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/queries/urn:article:1?filterVisibles=false");
+        var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
+
+        assertEquals(2, result.length);
+        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2")),
+                result[0].parentTopicIds().stream().sorted().toList());
+        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2")),
+                result[1].parentTopicIds().stream().sorted().toList());
     }
 }

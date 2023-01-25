@@ -9,9 +9,8 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.SearchableTaxonomyContextDTO;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.service.NodeService;
-import no.ndla.taxonomy.service.dtos.EntityWithPathDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +34,7 @@ public class Queries {
 
     @GetMapping("/{contentURI}")
     @Operation(summary = "Gets a list of contexts matching given contentURI, empty list if no matches are found.")
-    public List<SearchableTaxonomyContextDTO> queryFullNode(@PathVariable("contentURI") Optional<URI> contentURI,
+    public List<TaxonomyContextDTO> queryFullNode(@PathVariable("contentURI") Optional<URI> contentURI,
             @Parameter(description = "Whether to filter out contexts if a parent (or the node itself) is non-visible") @RequestParam(value = "filterVisibles", required = false, defaultValue = "true") boolean filterVisibles) {
         return nodeService.getSearchableByContentUri(contentURI, filterVisibles);
     }
