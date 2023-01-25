@@ -44,20 +44,46 @@ through the API. For details on the use of each service, please see the Swagger 
 
 ```mermaid
 flowchart TB
-    sub1(Mathematics)  --> top1(Geometry) & top2(Statistics)
-    top1 --> top1.1(Trigonometry)
-    top1.1 --> res1.1.1(Tangens) & res1.1.2(Sine and cosine)
-    top2 --> top2.1(Probablility)
-    top2.1 --> res2.1.1(What is probability?) & res2.1.2(Adding probabilities) & res2.1.3(Probability questions)
-    res1.1.1 --> resT1(Lecture)
-    res1.1.2 --> resT2(Article)
+    subgraph Subjects
+        sub1(Mathematics)
+    end
+    subgraph Topics
+        top1(Geometry)
+        top2(Statistics)
+    end
+    subgraph Subtopics
+        top1.1(Trigonometry)
+        top2.1(Probablility)
+    end
+    subgraph Resources
+        res1.1.1(Tangens) 
+        res1.1.2(Sine and cosine)
+        res2.1.1(What is probability?) 
+        res2.1.2(Adding probabilities) 
+        res2.1.3(Probability questions)
+    end
+    subgraph Resource types
+        resT1(Lecture)
+        resT2(Article)
+        resT3(Quiz)
+    end
+    subgraph Parent resource types
+        pRes1(Subject matter)
+        pRes2(Activity)
+    end
+    sub1 --> top1 & top2
+    top1 --> top1.1
+    top1.1 --> res1.1.1 & res1.1.2
+    top2 --> top2.1
+    top2.1 --> res2.1.1 & res2.1.2 & res2.1.3
+    res1.1.1 --> resT1
+    res1.1.2 --> resT2
     res2.1.1 --> resT2
     res2.1.2 --> resT2
-    res2.1.3 --> resT3(Quiz)
-    resT1 --> pRes1(Subject matter)
+    res2.1.3 --> resT3
+    resT1 --> pRes1
     resT2 --> pRes1
-    resT3 --> pRes2(Activity)
-    
+    resT3 --> pRes2
 ```
 
 ### Subjects and topics (legacy endpoints)
@@ -308,26 +334,26 @@ You can also get all translations for an entity. Get all available translations 
 `/v1/nodes/{id}/translations`. 
 
 
-## Relevances (slightly outdated)
+## Relevances
 
 The topics and learning resources contained in a subject may be organised in a way that spans academic years and 
-academic programs. Mathematics would, for instance, contain a topic called geometry, which contains several learning 
+academic programs. Mathematics would, for instance, contain a topic called *geometry*, which contains several learning 
 resources. Some of these are considered *core material* in some subjects, but may be offered as *supplementary material* 
 in other. 
 
 ```mermaid
     flowchart LR
-        sub(Mathematics) --supl--> top1(Algebra)
+        sub(Mathematics) --supp--> top1(Algebra)
         sub(Mathematics) --core--> top2(Geometry)
         top1 --core--> res1(Equations with one variable)
-        top1 --supl--> res2(Equations with one variable)
+        top1 --supp--> res2(Equations with one variable)
         top2 --> res3(Right triangles)
         top2 --core--> res4(Pythagoras) & res5(Trignometry)
-        top2 --supl--> res6(Eqilateral triangles)
+        top2 --supp--> res6(Eqilateral triangles)
         
 ```
 
-In the above example, *right triangles*, *pythagoras* and *trinometry* are considered *core material*, while 
+In the above example, *right triangles*, *pythagoras* and *trignometry* are considered *core material*, while 
 *equilateral triangles* are supplementary. Additionally, *algebar* is supplementary material. All resources under 
 *algebra* is also supplementary. No connected relevance is considered core. 
 
