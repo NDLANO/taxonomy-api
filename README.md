@@ -23,27 +23,44 @@ is a hierarchical sub-division of the subject into subject areas. The topics may
 editors.
 
 This organisation gives us a tree representation of the content, where the subjects are at the roots of the tree, the 
-topics make up the branches, and the resources are the leaves. Note, however, that this is not a strict tree-structure, since
-resources may belong to several parents (see "Multiple parent connections" below). *Subjects* and *topics* are stored 
-as the same datatype *node* in the database, which gives us the possibility to expand the hirerarchy with new types later. 
+topics make up the branches, and the resources are the leaves. Note, however, that this is not a strict tree-structure, 
+since resources may belong to several parents (see "Multiple parent connections" below). *Subjects*, *topics* and 
+*resources* are stored as the same datatype *node* in the database, which gives us the possibility to expand the 
+hirerarchy with new types later. 
 
 The taxonomy data model consists of *entities* and *connections* between entities. 
 
-The entities in the taxonomy are Node (Subject, Topic), Resource, and Resource type. The taxonomy stores metadata for each entity, 
-such as name and content URI. Translations of names can also be stored. 
+The central entities in the taxonomy are Node (Subject, Topic, Resource) and Resource type. The taxonomy stores metadata 
+for each entity, such as name and content URI. Translations of names can also be stored. 
 
 In addition to the entities, the taxonomy stores the connections you make between entities. Each connection also has 
 metadata attached to it, such as which entities are connected, and whether this connection is the primary connection 
-(see "Multiple parent connections" below). Nodes can be connected to other nodes, nodes to resources, 
-resources to resource types, and resource types to parent resources types. The connections can also be labelled with rank. 
-This makes it easy to tell which order all the resources (or topics) is meant to be presented.  
+(see "Multiple parent connections" below). Nodes can be connected to other nodes, nodes to resource types, and resource 
+types to parent resources types. The connections can also be labelled with rank. This makes it easy to tell which order 
+all the nodes are meant to be presented.  
 
 Below you can see a figure of how entities can be connected. We will go through how this structure can be realised 
 through the API. For details on the use of each service, please see the Swagger documentation. 
 
-![Figure of content structure for mathematics](doc/mathematics-structure.png?raw=true)
+```mermaid
+flowchart TB
+    sub1(Mathematics)  --> top1(Geometry) & top2(Statistics)
+    top1 --> top1.1(Trigonometry)
+    top1.1 --> res1.1.1(Tangens) & res1.1.2(Sine and cosine)
+    top2 --> top2.1(Probablility)
+    top2.1 --> res2.1.1(What is probability?) & res2.1.2(Adding probabilities) & res2.1.3(Probability questions)
+    res1.1.1 --> resT1(Lecture)
+    res1.1.2 --> resT2(Article)
+    res2.1.1 --> resT2
+    res2.1.2 --> resT2
+    res2.1.3 --> resT3(Quiz)
+    resT1 --> pRes1(Subject matter)
+    resT2 --> pRes1
+    resT3 --> pRes2(Activity)
+    
+```
 
-### Subjects and topics (legacy endppoints)
+### Subjects and topics (legacy endpoints)
 
 First, create a subject with the name Mathematics with a POST call to `/v1/subjects`. When this call returns you'll get a location.
 This location contains the path to this subject within the subjects resource, e.g., `/v1/subjects/urn:subject:342`, where `urn:subject:342` 
@@ -66,6 +83,26 @@ Call GET on `/v1/subjects/{id}/topics` to list out the topics connected to the s
 A GET call to `/v1/topics` will yield both topics and subtopics. The only thing differentiating a topic 
 from a subtopic is the connection in `/v1/topic-subtopics`. Similar to the connections between a subject and its topics, you can 
 get all subtopics for a topic with a GET call to `/v1/topics/{id}/subtopics`.
+
+### Resources (legacy endpoint)
+
+A resource (or learning resource) represents (for now) an article or a learning path. Its Content URI is
+an ID referring to the actual content which is stored in a different API, e.g., the Article API or the Learning Path API.
+
+Resources are created in the same way as nodes, but with a POST call to `/v1/resources`. You can connect your resources
+to nodes by making a POST call to `/v1/node-resources`. (Legacy `/v1/topic-resources`) You can update a resource
+(for instance, change its Content URI) by making a PUT call to `/v1/resources/{id}`.
+
+List all resources connected to a node with a GET call to `/v1/nodes/{id}/resources`. The endpoint supports the parameter `recursive`
+which allows you to fetch resources for the specified node, and all its children. (Legacy endpoint `/v1/subjects/{id}/resources`
+specifies `recursive=true` by default). For the Mathematics node, this would return nothing unless you specify `recursive=true`.
+With recursive this call would return a list with these five entities: Tangens, Sine and Cosine, What is probability, Adding probabilities, and
+Probability questions.
+
+If you retrieve all resources connected to the topic Statistics, you'll get an empty list, because it doesn't have any
+resources connected directly to it. If you ask for all resources recursively, you'll get the three resources from the
+Probability topic, since it is a sub topic of Statistics.
+
 
 ### Nodes
 
@@ -92,6 +129,22 @@ Geometry and Statistics.
 A GET call to `/v1/nodes` will yield all the nodes. This endpoint supports some parameters allowing you to get what you need. 
 Nodetype SUBJECT gives you all the subjects, same as the old `/v1/subjects`.
 
+A resource (or learning resource) represents (for now) an article or a learning path. Its Content URI is
+an ID referring to the actual content which is stored in a different API, e.g., the Article API or the Learning Path API.
+
+Resources are created with a POST call to `/v1/nodes` and nodetype RESOURCE. You can connect your resources
+to nodes by making a POST call to `/v1/node-connections`. (Legacy `/v1/topic-resources`) You can update a resource
+(for instance, change its Content URI) by making a PUT call to `/v1/nodes/{id}`.
+
+List all resources connected to a node with a GET call to `/v1/nodes/{id}/resources`. The endpoint supports the parameter `recursive`
+which allows you to fetch resources for the specified node, and all its children. (Legacy endpoint `/v1/subjects/{id}/resources`
+specifies `recursive=true` by default). For the Mathematics node, this would return nothing unless you specify `recursive=true`.
+With recursive this call would return a list with these five entities: Tangens, Sine and Cosine, What is probability?, Adding probabilities, and
+Probability questions.
+
+If you retrieve all resources connected to the node Statistics, you'll get an empty list, because it doesn't have any
+resources connected directly to it. If you ask for all resources recursively, you'll get the three resources from the
+Probability topic, since it is a subtopic of Statistics.
 
 ### Updating entities and connections
 
@@ -103,26 +156,6 @@ The API cannot check which fields should be unset, which is why all fields must 
 
 You should verify that your changes are correct with a GET call after the PUT request (similarly for POST). This is by design, so 
 that the client verifies that the changes on the server are correct. 
-
-
-### Resources 
-
-A resource (or learning resource) represents (for now) an article or a learning path. Its Content URI is 
-an ID referring to the actual content which is stored in a different API, e.g., the Article API or the Learning Path API. 
-
-Resources are created in the same way as nodes, but with a POST call to `/v1/resources`. You can connect your resources 
-to nodes by making a POST call to `/v1/node-resources`. (Legacy `/v1/topic-resources`) You can update a resource 
-(for instance, change its Content URI) by making a PUT call to `/v1/resources/{id}`. 
-
-List all resources connected to a node with a GET call to `/v1/nodes/{id}/resources`. The endpoint supports the parameter `recursive` 
-which allows you to fetch resources for the specified node, and all its children. (Legacy endpoint `/v1/subjects/{id}/resources` 
-specifies `recursive=true` by default). For the Mathematics node, this would return nothing unless you specify `recursive=true`. 
-With recursive this call would return a list with these five entities: Tangens, Sine and Cosine, What is probability, Adding probabilities, and 
-Probability questions. 
-
-If you retrieve all resources connected to the topic Statistics, you'll get an empty list, because it doesn't have any 
-resources connected directly to it. If you ask for all resources recursively, you'll get the three resources from the 
-Probability topic, since it is a sub topic of Statistics.  
 
 
 ### Resource types
@@ -139,22 +172,34 @@ When you get all resources for a subject or topic you can choose to get only res
 corresponding to the ID of Articles will give you a list of three entities; Sine and Cosine, What is probability, and Adding probability.
 
 
-### Multiple parent connections  (slightly outdated!)
-Multiple parent connections for nodes are not allowed! But as some topics such as Statistics may be relevant in several subjects,
-it is possible to have the same contentURI for several topics. This allows us to create a structure where Statistics is a topic in Mathematics, 
-but it is also a topic in Social Studies. 
+### Multiple parent connections
+Multiple parent connections for nodes are not allowed, except for resources! But as some topics such as Statistics may 
+be relevant in several subjects, it is possible to have the same contentURI for several topics. This allows us to create 
+a structure where Statistics is a topic in Mathematics, but it is also a topic in Social Studies.
 
-![Figure of content structure for mathematics](doc/multiple-parent-connections.png?raw=true)
+```mermaid
+    flowchart TB
+        sub1(Mathematics)
+        sub2(Social studies)
+        sub1 ==> top1(Geometry) & top2(Statistics) & top3(Calculus)
+        sub2 ==> top2
+        sub2 ==> top4(Economics)
+        top2 ==> top2.1(Probability)
+        top3 ==> top2.2(Integration)
+        top2.1 ==> res1(What is probability) & res2(Adding probabilities) & res3(Probability questions)
+        top2.2 ==> res4(Riemann sums)
+        top4 ---> res4
+```
 
-In the figure above, primary connections are showed in bold red while the secondary connections are shown in black. Note 
-that a resource can only have *one* primary parent. If you set a different connection to be primary, the previous primary 
-connection will become secondary.
+In the figure above, primary connections are showed in bold while secondary connections are shown in normal width. Only
+resources can have primary connections, and have only *one* primary parent. If you set a different connection to 
+be primary, another primary connection will become secondary.
 
 The figure above shows how Statistics is a topic in both Mathematics and Social Studies. If you list all the topics in 
 Social Studies, Statistics will be in the list. It also shows that Riemann Sums is a resource in both Economics and Integration. 
 If you list all the resources in Social Studies or Mathematics, Riemann Sums will be in the list.  
 
-If you delete a primary connection to an entity, a new primary connection will be chosen randomly from the remaining connections. 
+If you delete a primary connection to a resource, a new primary connection will be chosen randomly from the remaining connections. 
 If you are changing primary connections, you can choose a new primary connection after you have deleted the old, or before.
 If an entity no longer has any connections you will not be able to get a URL for that entity (meaning that this 
 entity will not be shown in the production system).
@@ -267,46 +312,42 @@ You can also get all translations for an entity. Get all available translations 
 
 The topics and learning resources contained in a subject may be organised in a way that spans academic years and 
 academic programs. Mathematics would, for instance, contain a topic called geometry, which contains several learning 
-resources. Some of these are considered *core material* in some subjects, but may be offered as *supplementary material* in other. 
+resources. Some of these are considered *core material* in some subjects, but may be offered as *supplementary material* 
+in other. 
 
-![Filters in mathematics](doc/filters.png?raw=true)
+```mermaid
+    flowchart LR
+        sub(Mathematics) --supl--> top1(Algebra)
+        sub(Mathematics) --core--> top2(Geometry)
+        top1 --core--> res1(Equations with one variable)
+        top1 --supl--> res2(Equations with one variable)
+        top2 --> res3(Right triangles)
+        top2 --core--> res4(Pythagoras) & res5(Trignometry)
+        top2 --supl--> res6(Eqilateral triangles)
+        
+```
 
-In the above example, *right triangles* and *pythagoras* are both considered *core material* in the *R1* program, while
-*trigonometry* is *core material* in the *R2* program. Additionally, *trigonometry* is supplementary material in R1.
-All resources under *algebra* is core material in R1. 
+In the above example, *right triangles*, *pythagoras* and *trinometry* are considered *core material*, while 
+*equilateral triangles* are supplementary. Additionally, *algebar* is supplementary material. All resources under 
+*algebra* is also supplementary. No connected relevance is considered core. 
 
-Using this data structure it is possible to limit the resources shown in *Mathematics* to find resources that are relevant
-to a given academic program or academic year: 
+Using this data structure it is possible to limit the resources shown in *Mathematics* to find resources that are relevant.
 
-#### Example: List core material in Mathematics for R2
+#### Example: List core topics in Mathematics
 
-The results will contain *trigonometry*, since this is tagged as core material in R2. 
+The results will contain *geometry*, since this is tagged as core material. 
 
-#### Example: List core and supplementary material in Mathematics for R1
+#### Example: List core resources in Mathematics
 
-The results will contain *Equations with one variable*, *Equations with two variables*, *Right triangles*, *Pythagoras* 
-and *Trigonometry*, since these are either tagged as core or supplementary material in R1, or is contained in a topic
-which is tagged as core or supplementary material in R1. 
-
-#### Example: List core material in Mathematics
-
-The results will contain *Equations with one variable*, *Equations with two variables*, *Right triangles*, *Pythagoras* 
-and *Trigonometry*, since these are tagged as core material in either R1 or R2
+The results will contain *Equations with one variable*, *Right triangles*, *Pythagoras* and *Trigonometry*, since these 
+are tagged as core material.
 
 #### Example: List all resources in Mathematics
 
 The results will contain *Equations with one variable*, *Equations with two variables*, *Right triangles*, *Pythagoras*, 
-*Trigonometry* and *Right triangles* since all of these resources are contained in a topic connected to Mathematics. 
+*Trigonometry* and *Equilateral triangles* since all of these resources are contained in a topic connected to Mathematics. 
                        
-Note that the resource *Right triangles* is not marked as either core or supplementary material in neither R1 nor R2. 
-When listing all resources in R1 and R2, this resource will not be included. It will, however, be included when listing
-all resources in Mathematics.
-
 ### Tagging for multiple subjects
 
-![Filters in mathematics](doc/filters.png?raw=true)
-
 If a resource is used in several subjects, you can tag it as core or supplementary material in each of the subjects
-separately. In the example above, trigonometry is tagged as core material in Mathematics R2, and supplementary material
-in Mathematics R1 and Construction VG2. 
- 
+separately. 
