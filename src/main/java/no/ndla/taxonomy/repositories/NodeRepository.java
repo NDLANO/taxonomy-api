@@ -36,8 +36,16 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
     @Query(value = "SELECT n.id FROM Node n ORDER BY n.id", countQuery = "SELECT count(*) from Node")
     Page<Integer> findIdsPaginated(Pageable pageable);
 
-    @Query("SELECT DISTINCT n FROM Node n " + NODE_METADATA + " LEFT JOIN FETCH n.cachedPaths"
-            + " LEFT JOIN FETCH n.translations WHERE n.id in :ids")
+    @Query("""
+            SELECT DISTINCT n FROM Node n
+            LEFT JOIN FETCH n.metadata nm
+            LEFT JOIN FETCH nm.grepCodes
+            LEFT JOIN FETCH nm.customFieldValues ncfv
+            LEFT JOIN FETCH ncfv.customField cf
+            LEFT JOIN FETCH n.cachedPaths
+            LEFT JOIN FETCH n.translations
+            WHERE n.id in :ids
+            """)
     List<Node> findByIds(Collection<Integer> ids);
 
     @Query(value = "SELECT n.id FROM Node n where n.nodeType = :nodeType ORDER BY n.id", countQuery = "SELECT count(*) from Node n where n.nodeType = :nodeType")
