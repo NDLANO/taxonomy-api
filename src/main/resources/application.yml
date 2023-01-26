@@ -1,7 +1,12 @@
 server.port: 5000
 
 spring:
-  datasource.url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+  datasource:
+    url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    hikari:
+      max-lifetime: 600000
+      connection-timeout: 600000
+      validation-timeout: 600000
   jpa:
     hibernate:
       ddl-auto: none
