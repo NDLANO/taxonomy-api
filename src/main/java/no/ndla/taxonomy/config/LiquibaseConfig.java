@@ -78,6 +78,7 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
             var ds = dataSource;
             if (!"".equals(dataSourceUsername)) {
                 var hc = new HikariConfig();
+                hc.setMaximumPoolSize(1);
                 hc.setSchema(schema);
                 hc.setUsername(dataSourceUsername);
                 hc.setPassword(dataSourcePassword);
