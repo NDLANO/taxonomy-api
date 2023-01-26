@@ -54,7 +54,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
     @GetMapping
     @Operation(summary = "Gets all subjects")
-    public List<EntityWithPathDTO> index(
+    public List<NodeDTO> index(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") Optional<String> language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,

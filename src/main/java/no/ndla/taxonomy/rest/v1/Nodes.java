@@ -55,7 +55,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     @GetMapping
     @Operation(summary = "Gets all nodes")
-    public List<EntityWithPathDTO> getAll(
+    public List<NodeDTO> getAll(
             @Parameter(description = "Filter by nodeType, could be a comma separated list :^)") @RequestParam(value = "nodeType", required = false) List<NodeType> nodeType,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,

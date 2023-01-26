@@ -85,8 +85,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("nodeType"), nodeType);
     }
 
-    public List<EntityWithPathDTO> getNodes(Optional<String> language, List<NodeType> nodeType,
-            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+    public List<NodeDTO> getNodes(Optional<String> language, List<NodeType> nodeType, Optional<URI> contentUri,
+            Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
         final List<Node> filtered = nodeRepository.findByNodeType(nodeType, metadataFilters.getVisible(),
                 metadataFilters.getKey(), metadataFilters.getValue(), contentUri, isRoot);
 
