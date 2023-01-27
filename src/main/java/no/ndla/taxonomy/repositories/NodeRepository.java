@@ -59,6 +59,8 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             LEFT JOIN FETCH ncfv.customField cf
             LEFT JOIN FETCH n.cachedPaths
             LEFT JOIN FETCH n.translations
+            LEFT JOIN FETCH n.parentConnections pc
+            LEFT JOIN FETCH pc.relevance
             WHERE ((:nodeTypes) IS NULL OR n.nodeType in (:nodeTypes))
             AND (:isVisible IS NULL OR nm.visible = :isVisible)
             AND (:metadataFilterKey IS NULL OR cf.key = :metadataFilterKey)
