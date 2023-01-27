@@ -37,13 +37,19 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
     Page<Integer> findIdsPaginated(Pageable pageable);
 
     @Query("""
-            SELECT DISTINCT n FROM Node n
+            SELECT n FROM Node n
+            LEFT JOIN FETCH n.resourceResourceTypes rrt
+            LEFT JOIN FETCH rrt.resourceType rt
+            LEFT JOIN FETCH rt.resourceTypeTranslations
             LEFT JOIN FETCH n.metadata nm
             LEFT JOIN FETCH nm.grepCodes
             LEFT JOIN FETCH nm.customFieldValues ncfv
             LEFT JOIN FETCH ncfv.customField cf
             LEFT JOIN FETCH n.cachedPaths
             LEFT JOIN FETCH n.translations
+            LEFT JOIN FETCH n.parentConnections pc
+            LEFT JOIN FETCH pc.relevance rel
+            LEFT JOIN FETCH rel.translations
             WHERE n.id in :ids
             """)
     List<Node> findByIds(Collection<Integer> ids);
@@ -51,8 +57,13 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
     @Query(value = "SELECT n.id FROM Node n where n.nodeType = :nodeType ORDER BY n.id", countQuery = "SELECT count(*) from Node n where n.nodeType = :nodeType")
     Page<Integer> findIdsByTypePaginated(Pageable pageable, NodeType nodeType);
 
+    @Query("SELECT n.id FROM Node n where n.nodeType in :nodeTypes ORDER BY n.id")
+    List<Integer> findIdsByType(List<NodeType> nodeTypes);
+
     @Query("""
             SELECT DISTINCT n FROM Node n
+            LEFT JOIN FETCH n.resourceResourceTypes rrt
+            LEFT JOIN FETCH rrt.resourceType
             LEFT JOIN FETCH n.metadata nm
             LEFT JOIN FETCH nm.grepCodes
             LEFT JOIN FETCH nm.customFieldValues ncfv
