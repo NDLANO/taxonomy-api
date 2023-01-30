@@ -163,17 +163,15 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     .map(RecursiveNodeTreeService.TreeElement::getId).collect(Collectors.toList());
         } else {
             childrenIds = node.getChildren().stream().map(NodeConnection::getChild).filter(Optional::isPresent)
-                    .map(Optional::get).map(EntityWithPath::getId).collect(Collectors.toList());
+                    .map(Optional::get).filter(n -> nodeTypes.contains(n.getNodeType())).map(EntityWithPath::getId)
+                    .collect(Collectors.toList());
         }
         final var children = nodeConnectionRepository
                 .findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(childrenIds);
 
         final var returnList = new ArrayList<EntityWithPathChildDTO>();
 
-        final var filteredConnections = children.stream().filter(nodeConnection -> nodeConnection.getChild().isPresent()
-                && nodeTypes.contains(nodeConnection.getChild().get().getNodeType())).toList();
-
-        filteredConnections.stream().map(nodeConnection -> new NodeChildDTO(node, nodeConnection, language))
+        children.stream().map(nodeConnection -> new NodeChildDTO(node, nodeConnection, language))
                 .forEach(returnList::add);
 
         return treeSorter.sortList(returnList).stream().distinct().collect(Collectors.toList());
