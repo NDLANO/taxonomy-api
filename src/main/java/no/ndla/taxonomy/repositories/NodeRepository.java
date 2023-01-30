@@ -69,8 +69,9 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
             AND (:isRoot IS NULL OR n.root = true)
             """)
-    List<Node> findByIdsFiltered(Collection<Integer> ids, Optional<Boolean> isVisible, Optional<String> metadataFilterKey,
-            Optional<String> metadataFilterValue, Optional<URI> contentUri, Optional<Boolean> isRoot);
+    List<Node> findByIdsFiltered(Collection<Integer> ids, Optional<Boolean> isVisible,
+            Optional<String> metadataFilterKey, Optional<String> metadataFilterValue, Optional<URI> contentUri,
+            Optional<Boolean> isRoot);
 
     @Query(value = "SELECT n.id FROM Node n where n.nodeType = :nodeType ORDER BY n.id", countQuery = "SELECT count(*) from Node n where n.nodeType = :nodeType")
     Page<Integer> findIdsByTypePaginated(Pageable pageable, NodeType nodeType);
@@ -101,6 +102,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
             AND (:isRoot IS NULL OR n.root = true)
             """)
-    List<Node> findByNodeType(Optional<List<NodeType>> nodeTypes, Optional<Boolean> isVisible, Optional<String> metadataFilterKey,
-            Optional<String> metadataFilterValue, Optional<URI> contentUri, Optional<Boolean> isRoot);
+    List<Node> findByNodeType(Optional<List<NodeType>> nodeTypes, Optional<Boolean> isVisible,
+            Optional<String> metadataFilterKey, Optional<String> metadataFilterValue, Optional<URI> contentUri,
+            Optional<Boolean> isRoot);
 }

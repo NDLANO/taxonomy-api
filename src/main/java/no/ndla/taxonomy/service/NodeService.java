@@ -83,27 +83,24 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("nodeType"), nodeType);
     }
 
-    public List<NodeDTO> getNodes(Optional<String> language, Optional<List<NodeType>> nodeType, Optional<URI> contentUri,
-            Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
-        if(nodeType.isPresent() && nodeType.get().contains(NodeType.RESOURCE) && contentUri.isEmpty()) {
-            throw new IllegalArgumentException("Fetching resources via the node-endpoint directly is too slow. Use pagination at `/v1/nodes/page`");
-        }
+    public List<NodeDTO> getNodes(Optional<String> language, Optional<List<NodeType>> nodeType,
+            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
         final List<Node> filtered = nodeRepository.findByNodeType(nodeType, metadataFilters.getVisible(),
                 metadataFilters.getKey(), metadataFilters.getValue(), contentUri, isRoot);
         return filtered.stream().distinct().map(n -> new NodeDTO(n, language.get())).collect(Collectors.toList());
     }
 
     public List<ResourceDTO> getResources(Optional<String> language, List<NodeType> nodeType, Optional<URI> contentUri,
-                                  Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+            Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
         final List<ResourceDTO> listToReturn = new ArrayList<>();
         var ids = nodeRepository.findIdsByType(nodeType);
         final var counter = new AtomicInteger();
-        ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values()
-                .forEach(idChunk -> {
-                    final var nodes = nodeRepository.findByIdsFiltered(idChunk, metadataFilters.getVisible(), metadataFilters.getKey(), metadataFilters.getValue(), contentUri, isRoot);
-                     var dtos = nodes.stream().map(node -> new ResourceDTO(node, language.get())).toList();
-                     listToReturn.addAll(dtos);
-                });
+        ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
+            final var nodes = nodeRepository.findByIdsFiltered(idChunk, metadataFilters.getVisible(),
+                    metadataFilters.getKey(), metadataFilters.getValue(), contentUri, isRoot);
+            var dtos = nodes.stream().map(node -> new ResourceDTO(node, language.get())).toList();
+            listToReturn.addAll(dtos);
+        });
 
         return listToReturn;
     }

@@ -56,7 +56,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping
     @Operation(summary = "Gets all nodes")
     public List<NodeDTO> getAll(
-            @Parameter(description = "Filter by nodeType, could be a comma separated list :^)") @RequestParam(value = "nodeType", required = false) Optional<List<NodeType>> nodeType,
+            @Parameter(description = "Filter by nodeType, could be a comma separated list, defaults to Topics and Subjects (Resources are quite slow). :^)") @RequestParam(value = "nodeType", required = false) Optional<List<NodeType>> nodeType,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
             @Parameter(description = "Only root level") @RequestParam(value = "isRoot", required = false) Optional<Boolean> isRoot,
@@ -64,8 +64,15 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
 
+        var defaultNodeTypes = List.of(NodeType.SUBJECT, NodeType.TOPIC, NodeType.NODE);
+        var nodeTypes = nodeType.map(nt -> {
+            if (nt.size() == 0)
+                return defaultNodeTypes;
+            else
+                return nt;
+        }).orElse(defaultNodeTypes);
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        return nodeService.getNodes(language, nodeType, contentUri, isRoot, metadataFilters);
+        return nodeService.getNodes(language, Optional.of(nodeTypes), contentUri, isRoot, metadataFilters);
     }
 
     @GetMapping("/search")
