@@ -1124,4 +1124,10 @@
         <dropTable tableName="resource"/>
     </changeSet>
 
+    <changeSet id="20230129 Add nodeConnection child index" author="Jonas Natten">
+        <createIndex tableName="node_connection" indexName="node_connection_child_id">
+            <column name="child_id" />
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>
