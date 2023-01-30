@@ -214,6 +214,24 @@ public class NodesTest extends RestTest {
         }
         {
             MockHttpServletResponse response = testUtils
+                    .getResource("/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC,RESOURCE");
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(5, nodes.length);
+
+            assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "mithocondria".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "trigonometry".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "angles".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "Random node".equals(t.getName()));
+            assertAnyTrue(nodes, t -> t.getPath().contains("subject"));
+            assertAllTrue(nodes, t -> isValidId(t.getId()));
+
+            assertAllTrue(nodes, t -> t.getMetadata() != null);
+            assertAllTrue(nodes, t -> t.getMetadata().isVisible());
+            assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
+        }
+        {
+            MockHttpServletResponse response = testUtils
                     .getResource("/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC");
             final var nodes = testUtils.getObject(NodeDTO[].class, response);
             assertEquals(3, nodes.length);

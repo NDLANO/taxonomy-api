@@ -160,8 +160,6 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                         && nodeConnection.getChild().get().getNodeType() == NodeType.TOPIC)
                 .filter(nodeConnection -> searchForRelevance(nodeConnection, relevanceArgument, children)).toList();
 
-        // Wrapping with metadata from API if asked for
-
         filteredConnections.stream().map(nodeConnection -> createChildDTO(subject, nodeConnection, language))
                 .forEach(returnList::add);
 
