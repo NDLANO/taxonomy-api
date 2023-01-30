@@ -157,10 +157,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         final var node = nodeRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundException("Node", id));
 
         final List<Integer> childrenIds;
-        final List<NodeType> nodeTypes = nodeType.orElse(Arrays.stream(NodeType.values()).toList());
+        final List<NodeType> nodeTypes = nodeType.orElse(List.of(NodeType.NODE, NodeType.TOPIC, NodeType.SUBJECT));
         if (recursive) {
-            childrenIds = recursiveNodeTreeService
-                    .getRecursiveNodes(node, nodeTypes).stream()
+            childrenIds = recursiveNodeTreeService.getRecursiveNodes(node, nodeTypes).stream()
                     .map(RecursiveNodeTreeService.TreeElement::getId).collect(Collectors.toList());
         } else {
             childrenIds = node.getChildren().stream().map(NodeConnection::getChild).filter(Optional::isPresent)
@@ -171,9 +170,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
         final var returnList = new ArrayList<EntityWithPathChildDTO>();
 
-        final var filteredConnections = children.stream()
-                .filter(nodeConnection -> nodeConnection.getChild().isPresent()
-                        && nodeTypes.contains(nodeConnection.getChild().get().getNodeType())).toList();
+        final var filteredConnections = children.stream().filter(nodeConnection -> nodeConnection.getChild().isPresent()
+                && nodeTypes.contains(nodeConnection.getChild().get().getNodeType())).toList();
 
         filteredConnections.stream().map(nodeConnection -> new NodeChildDTO(node, nodeConnection, language))
                 .forEach(returnList::add);

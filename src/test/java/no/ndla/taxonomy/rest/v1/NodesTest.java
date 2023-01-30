@@ -194,8 +194,8 @@ public class NodesTest extends RestTest {
                 .child(NodeType.TOPIC, t -> t.name("trigonometry").resource(r -> r.name("angles")))
                 .child(NodeType.TOPIC, t -> t.name("Random node").child(NodeType.NODE, c -> c.name("Subnode"))));
         {
-            MockHttpServletResponse response = testUtils
-                    .getResource("/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true");
+            MockHttpServletResponse response = testUtils.getResource(
+                    "/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC,RESOURCE,NODE");
             final var nodes = testUtils.getObject(NodeDTO[].class, response);
             assertEquals(6, nodes.length);
 
@@ -213,8 +213,8 @@ public class NodesTest extends RestTest {
             assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
         }
         {
-            MockHttpServletResponse response = testUtils
-                    .getResource("/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC,RESOURCE");
+            MockHttpServletResponse response = testUtils.getResource(
+                    "/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC,RESOURCE");
             final var nodes = testUtils.getObject(NodeDTO[].class, response);
             assertEquals(5, nodes.length);
 
