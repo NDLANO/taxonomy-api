@@ -188,6 +188,50 @@ public class NodesTest extends RestTest {
     }
 
     @Test
+    public void can_get_sub_nodes() throws Exception {
+        Node subject = builder.node(NodeType.SUBJECT, s -> s.isRoot(true).isContext(true).name("Basic science")
+                .child(NodeType.TOPIC, t -> t.name("photo synthesis").resource(r -> r.name("mithocondria")))
+                .child(NodeType.TOPIC, t -> t.name("trigonometry").resource(r -> r.name("angles")))
+                .child(NodeType.TOPIC, t -> t.name("Random node").child(NodeType.NODE, c -> c.name("Subnode"))));
+        {
+            MockHttpServletResponse response = testUtils
+                    .getResource("/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true");
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(6, nodes.length);
+
+            assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "mithocondria".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "trigonometry".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "angles".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "Random node".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "Subnode".equals(t.getName()));
+            assertAnyTrue(nodes, t -> t.getPath().contains("subject"));
+            assertAllTrue(nodes, t -> isValidId(t.getId()));
+
+            assertAllTrue(nodes, t -> t.getMetadata() != null);
+            assertAllTrue(nodes, t -> t.getMetadata().isVisible());
+            assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
+        }
+        {
+            MockHttpServletResponse response = testUtils
+                    .getResource("/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC");
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(3, nodes.length);
+
+            assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "trigonometry".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "Random node".equals(t.getName()));
+            assertAnyTrue(nodes, t -> t.getPath().contains("subject"));
+            assertAllTrue(nodes, t -> isValidId(t.getId()));
+
+            assertAllTrue(nodes, t -> t.getMetadata() != null);
+            assertAllTrue(nodes, t -> t.getMetadata().isVisible());
+            assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
+        }
+
+    }
+
+    @Test
     public void can_filter_nodes() throws Exception {
         builder.node(NodeType.SUBJECT, s -> s.isRoot(true).isContext(true).name("Basic science").child(NodeType.TOPIC,
                 t -> t.name("photo synthesis")));
