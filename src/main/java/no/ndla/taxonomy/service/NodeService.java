@@ -24,13 +24,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -85,12 +83,26 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("nodeType"), nodeType);
     }
 
-    public List<EntityWithPathDTO> getNodes(Optional<String> language, List<NodeType> nodeType,
+    public List<NodeDTO> getNodes(Optional<String> language, Optional<List<NodeType>> nodeType,
             Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
         final List<Node> filtered = nodeRepository.findByNodeType(nodeType, metadataFilters.getVisible(),
                 metadataFilters.getKey(), metadataFilters.getValue(), contentUri, isRoot);
-
         return filtered.stream().distinct().map(n -> new NodeDTO(n, language.get())).collect(Collectors.toList());
+    }
+
+    public List<ResourceDTO> getResources(Optional<String> language, List<NodeType> nodeType, Optional<URI> contentUri,
+            Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+        final List<ResourceDTO> listToReturn = new ArrayList<>();
+        var ids = nodeRepository.findIdsByType(nodeType);
+        final var counter = new AtomicInteger();
+        ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
+            final var nodes = nodeRepository.findByIdsFiltered(idChunk, metadataFilters.getVisible(),
+                    metadataFilters.getKey(), metadataFilters.getValue(), contentUri, isRoot);
+            var dtos = nodes.stream().map(node -> new ResourceDTO(node, language.get())).toList();
+            listToReturn.addAll(dtos);
+        });
+
+        return listToReturn;
     }
 
     public List<ConnectionIndexDTO> getAllConnections(URI nodePublicId) {

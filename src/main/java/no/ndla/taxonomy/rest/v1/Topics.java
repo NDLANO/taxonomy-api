@@ -44,7 +44,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
     @GetMapping
     @Operation(summary = "Gets all topics")
-    public List<EntityWithPathDTO> getAll(
+    public List<NodeDTO> getAll(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
@@ -52,7 +52,8 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
 
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        return nodeService.getNodes(language, List.of(NodeType.TOPIC), contentUri, Optional.empty(), metadataFilters);
+        return nodeService.getNodes(language, Optional.of(List.of(NodeType.TOPIC)), contentUri, Optional.empty(),
+                metadataFilters);
     }
 
     @GetMapping("/search")

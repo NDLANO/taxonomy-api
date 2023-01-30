@@ -54,14 +54,14 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @GetMapping
     @Operation(summary = "Lists all resources")
     @Transactional(readOnly = true)
-    public List<EntityWithPathDTO> getAll(
+    public List<ResourceDTO> getAll(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        return nodeService.getNodes(language, List.of(NodeType.RESOURCE), contentUri, Optional.empty(),
+        return nodeService.getResources(language, List.of(NodeType.RESOURCE), contentUri, Optional.empty(),
                 metadataFilters);
     }
 
