@@ -88,8 +88,6 @@ public abstract class EntityWithPathDTO {
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
                 .collect(Collectors.toCollection(TreeSet::new));
 
-        this.nodeType = entity.getNodeType();
-
     }
 
     private List<String> buildCrumbs(EntityWithPath entity, String languageCode) {

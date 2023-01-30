@@ -52,7 +52,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
 
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        return nodeService.getNodes(language, List.of(NodeType.TOPIC), contentUri, Optional.empty(), metadataFilters);
+        return nodeService.getNodes(language, Optional.of(List.of(NodeType.TOPIC)), contentUri, Optional.empty(), metadataFilters);
     }
 
     @GetMapping("/search")

@@ -37,7 +37,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
     Page<Integer> findIdsPaginated(Pageable pageable);
 
     @Query("""
-            SELECT n FROM Node n
+            SELECT DISTINCT n FROM Node n
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType rt
             LEFT JOIN FETCH rt.resourceTypeTranslations
@@ -47,17 +47,39 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             LEFT JOIN FETCH ncfv.customField cf
             LEFT JOIN FETCH n.cachedPaths
             LEFT JOIN FETCH n.translations
-            LEFT JOIN FETCH n.parentConnections pc
-            LEFT JOIN FETCH pc.relevance rel
-            LEFT JOIN FETCH rel.translations
             WHERE n.id in :ids
             """)
     List<Node> findByIds(Collection<Integer> ids);
 
+    @Query("""
+            SELECT DISTINCT n FROM Node n
+            LEFT JOIN FETCH n.resourceResourceTypes rrt
+            LEFT JOIN FETCH rrt.resourceType rt
+            LEFT JOIN FETCH rt.resourceTypeTranslations
+            LEFT JOIN FETCH n.metadata nm
+            LEFT JOIN FETCH nm.grepCodes
+            LEFT JOIN FETCH nm.customFieldValues ncfv
+            LEFT JOIN FETCH ncfv.customField cf
+            LEFT JOIN FETCH n.cachedPaths
+            LEFT JOIN FETCH n.translations
+            WHERE n.id in :ids
+            AND (:isVisible IS NULL OR nm.visible = :isVisible)
+            AND (:metadataFilterKey IS NULL OR cf.key = :metadataFilterKey)
+            AND (:metadataFilterValue IS NULL OR ncfv.value = :metadataFilterValue)
+            AND (:contentUri IS NULL OR n.contentUri = :contentUri)
+            AND (:isRoot IS NULL OR n.root = true)
+            """)
+    List<Node> findByIdsFiltered(Collection<Integer> ids, Optional<Boolean> isVisible, Optional<String> metadataFilterKey,
+            Optional<String> metadataFilterValue, Optional<URI> contentUri, Optional<Boolean> isRoot);
+
     @Query(value = "SELECT n.id FROM Node n where n.nodeType = :nodeType ORDER BY n.id", countQuery = "SELECT count(*) from Node n where n.nodeType = :nodeType")
     Page<Integer> findIdsByTypePaginated(Pageable pageable, NodeType nodeType);
 
-    @Query("SELECT n.id FROM Node n where n.nodeType in :nodeTypes ORDER BY n.id")
+    @Query("""
+            SELECT n.id
+            FROM Node n
+            WHERE ((:nodeTypes) IS NULL OR n.nodeType in (:nodeTypes))
+            """)
     List<Integer> findIdsByType(List<NodeType> nodeTypes);
 
     @Query("""
@@ -79,6 +101,6 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
             AND (:isRoot IS NULL OR n.root = true)
             """)
-    List<Node> findByNodeType(List<NodeType> nodeTypes, Optional<Boolean> isVisible, Optional<String> metadataFilterKey,
+    List<Node> findByNodeType(Optional<List<NodeType>> nodeTypes, Optional<Boolean> isVisible, Optional<String> metadataFilterKey,
             Optional<String> metadataFilterValue, Optional<URI> contentUri, Optional<Boolean> isRoot);
 }
