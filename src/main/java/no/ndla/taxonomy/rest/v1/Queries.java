@@ -13,6 +13,7 @@ import no.ndla.taxonomy.service.MetadataFilters;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.EntityWithPathDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -34,11 +35,11 @@ public class Queries {
 
     @GetMapping("/resources")
     @Operation(summary = "Gets a list of resources matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/resources?contentURI= instead")
-    public List<NodeDTO> queryResources(@RequestParam("contentURI") Optional<URI> contentURI,
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
-            @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
-            @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
-            @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
+    public List<ResourceDTO> queryResources(@RequestParam("contentURI") Optional<URI> contentURI,
+                                            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
+                                            @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
+                                            @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
+                                            @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         return resourceController.getAll(language, contentURI, key, value, isVisible);
     }
 
