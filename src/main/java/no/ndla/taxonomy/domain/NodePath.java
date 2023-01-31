@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static no.ndla.taxonomy.service.dtos.TaxonomyContextDTOFactory.DefaultLanguage;
+import static no.ndla.taxonomy.config.Constants.DefaultLanguage;
 
 /**
  * Helper class to build paths of nodes :^)

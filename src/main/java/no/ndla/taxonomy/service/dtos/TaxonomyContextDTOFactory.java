@@ -1,12 +1,21 @@
 package no.ndla.taxonomy.service.dtos;
 
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodePath;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.*;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageField;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.SearchableTaxonomyResourceType;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static no.ndla.taxonomy.config.Constants.DefaultLanguage;
 
 @Service
 public class TaxonomyContextDTOFactory {
@@ -92,7 +101,5 @@ public class TaxonomyContextDTOFactory {
 
         return ids;
     }
-
-    public static String DefaultLanguage = "nb";
 
 }

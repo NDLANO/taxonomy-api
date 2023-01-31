@@ -5,9 +5,9 @@ import no.ndla.taxonomy.domain.ResourceType;
 
 import java.util.HashMap;
 
-public class SearchableTaxonomyResourceType {
-    static String DefaultLanguage = "nb";
+import static no.ndla.taxonomy.config.Constants.DefaultLanguage;
 
+public class SearchableTaxonomyResourceType {
     @JsonProperty
     private String id;
 
