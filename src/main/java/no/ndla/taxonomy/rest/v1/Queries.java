@@ -34,7 +34,7 @@ public class Queries {
     }
 
     @GetMapping("/{contentURI}")
-    @Operation(summary = "Gets a list of resources matching given contentURI, empty list of no matches are found.")
+    @Operation(summary = "Gets a list of contexts matching given contentURI, empty list if no matches are found.")
     public List<SearchableTaxonomyContextDTO> queryFullNode(@PathVariable("contentURI") Optional<URI> contentURI,
             @Parameter(description = "Whether to filter out contexts if a parent (or the node itself) is non-visible") @RequestParam(value = "filterVisibles", required = false, defaultValue = "true") boolean filterVisibles) {
         return nodeService.getSearchableByContentUri(contentURI, filterVisibles);
