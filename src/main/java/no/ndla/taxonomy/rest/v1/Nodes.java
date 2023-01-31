@@ -151,17 +151,20 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/nodes")
     @Operation(summary = "Gets all children for this node")
     public List<EntityWithPathChildDTO> getChildren(@Parameter(name = "id", required = true) @PathVariable("id") URI id,
+            @Parameter(description = "Filter by nodeType, could be a comma separated list, defaults to Topics and Subjects (Resources are quite slow). :^)") @RequestParam(value = "nodeType", required = false) Optional<List<NodeType>> nodeType,
             @Parameter(description = "If true, children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         final var node = nodeRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundException("Node", id));
 
         final List<Integer> childrenIds;
+        final List<NodeType> nodeTypes = nodeType.orElse(List.of(NodeType.NODE, NodeType.TOPIC, NodeType.SUBJECT));
         if (recursive) {
-            childrenIds = recursiveNodeTreeService.getRecursiveNodes(node).stream()
+            childrenIds = recursiveNodeTreeService.getRecursiveNodes(node, nodeTypes).stream()
                     .map(RecursiveNodeTreeService.TreeElement::getId).collect(Collectors.toList());
         } else {
             childrenIds = node.getChildren().stream().map(NodeConnection::getChild).filter(Optional::isPresent)
-                    .map(Optional::get).map(EntityWithPath::getId).collect(Collectors.toList());
+                    .map(Optional::get).filter(n -> nodeTypes.contains(n.getNodeType())).map(EntityWithPath::getId)
+                    .collect(Collectors.toList());
         }
         final var children = nodeConnectionRepository
                 .findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(childrenIds);
