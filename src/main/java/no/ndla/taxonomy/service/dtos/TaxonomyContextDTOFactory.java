@@ -28,12 +28,12 @@ public class TaxonomyContextDTOFactory {
         if (filterVisibles && !nodePath.isVisible())
             return Optional.empty();
 
-        var maybeSubjectNode = nodePath.getNodes().stream().findFirst()
+        var maybeFirstNode = nodePath.getNodes().stream().findFirst()
                 .filter(s -> s.getPublicId() != node.getPublicId());
-        if (maybeSubjectNode.isEmpty())
+        if (maybeFirstNode.isEmpty())
             return Optional.empty();
 
-        var subjectNode = maybeSubjectNode.get();
+        var subjectNode = maybeFirstNode.get();
         var subjectNames = LanguageField.nameFromNode(subjectNode);
         var path = nodePath.toString();
 
@@ -47,8 +47,7 @@ public class TaxonomyContextDTOFactory {
         relevance.getTranslations()
                 .forEach(trans -> relevanceTranslations.put(trans.getLanguageCode(), trans.getName()));
 
-        var relevanceId = nodePath.getBaseRelevance().map(DomainEntity::getPublicId)
-                .orElse(URI.create("urn:relevance:core"));
+        var relevanceId = relevance.getPublicId();
         var resourceTypes = node.getResourceTypes().stream().map(SearchableTaxonomyResourceType::new).toList();
         var isPrimaryConnection = nodePath.getBaseConnection().isPrimary().orElse(false);
         var parentTopicIds = getAllParentTopicIds(node, filterVisibles);
