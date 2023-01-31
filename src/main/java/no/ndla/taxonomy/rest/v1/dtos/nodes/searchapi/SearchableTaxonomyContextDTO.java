@@ -15,8 +15,8 @@ import java.util.*;
 
 public record SearchableTaxonomyContextDTO(
         @JsonProperty @Schema(description = "The public-id of the node connected via content-uri") URI id,
-        @JsonProperty @Schema(description = "The id of the root parent of the context (Hopefully a subject)") URI subjectId,
-        @JsonProperty @Schema(description = "The name of the root parent of the context (Hopefully a subject)") LanguageField<String> subject,
+        @JsonProperty @Schema(description = "The id of the root parent of the context") URI subjectId,
+        @JsonProperty @Schema(description = "The name of the root parent of the context") LanguageField<String> subject,
         @JsonProperty @Schema(description = "The context path") String path,
         @JsonProperty @Schema(description = "A breadcrumb of the names of the context's path") LanguageField<List<String>> breadcrumbs,
         @JsonProperty @Schema(description = "Whether a 'standard'-article, 'topic-article'-article or a 'learningpath'") Optional<String> contextType,
