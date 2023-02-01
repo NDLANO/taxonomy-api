@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.util.*;
 
+// NOTE: This will need to match `SearchableTaxonomyContext` in `search-api`
 public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "The public-id of the node connected via content-uri") URI id,
         @JsonProperty @Schema(description = "The id of the root parent of the context") URI subjectId,
