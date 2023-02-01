@@ -53,6 +53,17 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         this.treeSorter = treeSorter;
     }
 
+    private List<NodeType> getDefaultNodeTypes(Optional<List<NodeType>> nodeType, Optional<URI> contentURI,
+            Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+        if (nodeType.isPresent() && nodeType.get().size() > 0) {
+            return nodeType.get();
+        }
+        if (contentURI.isEmpty() && isRoot.isEmpty() && !metadataFilters.hasFilters()) {
+            return List.of(NodeType.TOPIC, NodeType.NODE, NodeType.SUBJECT);
+        }
+        return List.of(NodeType.values());
+    }
+
     @GetMapping
     @Operation(summary = "Gets all nodes")
     public List<NodeDTO> getAll(
@@ -63,16 +74,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
-
-        var defaultNodeTypes = List.of(NodeType.SUBJECT, NodeType.TOPIC, NodeType.NODE);
-        var nodeTypes = nodeType.map(nt -> {
-            if (nt.size() == 0)
-                return defaultNodeTypes;
-            else
-                return nt;
-        }).orElse(defaultNodeTypes);
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        return nodeService.getNodes(language, Optional.of(nodeTypes), contentUri, isRoot, metadataFilters);
+        var defaultNodeTypes = getDefaultNodeTypes(nodeType, contentUri, isRoot, metadataFilters);
+        return nodeService.getNodes(language, Optional.of(defaultNodeTypes), contentUri, isRoot, metadataFilters);
     }
 
     @GetMapping("/search")
