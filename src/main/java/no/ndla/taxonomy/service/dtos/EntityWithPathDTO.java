@@ -82,7 +82,7 @@ public abstract class EntityWithPathDTO {
 
         this.metadata = new MetadataDto(entity.getMetadata());
 
-        this.breadcrumbs = buildCrumbs(entity, languageCode);
+        this.breadcrumbs = entity.buildCrumbs(languageCode);
 
         this.resourceTypes = entity.getResourceResourceTypes().stream()
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
@@ -90,16 +90,6 @@ public abstract class EntityWithPathDTO {
 
         this.nodeType = entity.getNodeType();
 
-    }
-
-    private List<String> buildCrumbs(EntityWithPath entity, String languageCode) {
-        List<String> parentCrumbs = entity.getParentConnection().flatMap(parentConnection -> parentConnection
-                .getConnectedParent().map(parent -> buildCrumbs(parent, languageCode))).orElse(List.of());
-
-        var crumbs = new ArrayList<>(parentCrumbs);
-        var name = entity.getTranslation(languageCode).map(Translation::getName).orElse(entity.getName());
-        crumbs.add(name);
-        return crumbs;
     }
 
     public URI getId() {

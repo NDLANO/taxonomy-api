@@ -9,10 +9,7 @@ package no.ndla.taxonomy.domain;
 
 import javax.persistence.MappedSuperclass;
 import java.net.URI;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @MappedSuperclass
@@ -109,4 +106,25 @@ public abstract class EntityWithPath extends DomainObject implements EntityWithM
      * @return true if context
      */
     public abstract boolean isContext();
+
+    public List<String> buildCrumbs(String languageCode) {
+        List<String> parentCrumbs = this.getParentConnection().flatMap(parentConnection -> parentConnection
+                .getConnectedParent().map(parent -> buildCrumbs(parent, languageCode))).orElse(List.of());
+
+        var crumbs = new ArrayList<>(parentCrumbs);
+        var name = this.getTranslation(languageCode).map(Translation::getName).orElse(this.getName());
+        crumbs.add(name);
+        return crumbs;
+    }
+
+    private List<String> buildCrumbs(EntityWithPath entity, String languageCode) {
+        List<String> parentCrumbs = entity.getParentConnection().flatMap(parentConnection -> parentConnection
+                .getConnectedParent().map(parent -> buildCrumbs(parent, languageCode))).orElse(List.of());
+
+        var crumbs = new ArrayList<>(parentCrumbs);
+        var name = entity.getTranslation(languageCode).map(Translation::getName).orElse(entity.getName());
+        crumbs.add(name);
+        return crumbs;
+    }
+
 }

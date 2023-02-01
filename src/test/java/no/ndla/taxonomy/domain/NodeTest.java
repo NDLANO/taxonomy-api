@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -348,5 +348,72 @@ public class NodeTest {
 
         setField(node, "cachedPaths", cachedPaths);
         assertSame(cachedPaths, node.getCachedPaths());
+    }
+
+    @Test
+    public void pathBuilding() {
+        var n1 = new Node(NodeType.NODE);
+        var n2 = new Node(NodeType.NODE);
+        var n3 = new Node(NodeType.NODE);
+        var n4 = new Node(NodeType.NODE);
+        var n5 = new Node(NodeType.NODE);
+        var n6 = new Node(NodeType.NODE);
+        var n7 = new Node(NodeType.NODE);
+        var n8 = new Node(NodeType.NODE);
+        var n9 = new Node(NodeType.NODE);
+
+        n1.setName("n1");
+        n2.setName("n2");
+        n3.setName("n3");
+        n4.setName("n4");
+        n5.setName("n5");
+        n6.setName("n6");
+        n7.setName("n7");
+        n8.setName("n8");
+        n9.setName("n9");
+
+        var n1n2 = NodeConnection.create(n1, n2, true);
+        var n2n3 = NodeConnection.create(n2, n3, true);
+        var n2n4 = NodeConnection.create(n2, n4, false);
+        var n6n2 = NodeConnection.create(n6, n2, false);
+        var n2n5 = NodeConnection.create(n2, n5, false);
+        var n7n2 = NodeConnection.create(n7, n2, false);
+        var n9n8 = NodeConnection.create(n9, n8, false);
+        var n8n3 = NodeConnection.create(n8, n3, false);
+
+        var expected1 = new NodePath();
+        expected1.nodes = new ArrayList<>(List.of(n1, n2, n3));
+        expected1.nodeConnections = new ArrayList<>(List.of(n1n2, n2n3));
+
+        var expected2 = new NodePath();
+        expected2.nodes = new ArrayList<>(List.of(n6, n2, n3));
+        expected2.nodeConnections = new ArrayList<>(List.of(n6n2, n2n3));
+
+        var expected3 = new NodePath();
+        expected3.nodes = new ArrayList<>(List.of(n7, n2, n3));
+        expected3.nodeConnections = new ArrayList<>(List.of(n7n2, n2n3));
+
+        var expected4 = new NodePath();
+        expected4.nodes = new ArrayList<>(List.of(n9, n8, n3));
+        expected4.nodeConnections = new ArrayList<>(List.of(n9n8, n8n3));
+
+        var expected = Stream.of(expected1, expected2, expected3, expected4)
+                .sorted(Comparator.comparing(NodePath::toString)).toList();
+        var result = n3.buildPaths();
+
+        assertEquals(result, expected);
+    }
+
+    @Test
+    public void pathBuildingWithoutParentsResultsInStandalonePath() {
+        var n1 = new Node(NodeType.NODE);
+        n1.setName("n1");
+
+        var expected1 = new NodePath();
+        expected1.nodes = new ArrayList<>(List.of(n1));
+        var expected = List.of(expected1);
+        var result = n1.buildPaths();
+
+        assertEquals(result, expected);
     }
 }
