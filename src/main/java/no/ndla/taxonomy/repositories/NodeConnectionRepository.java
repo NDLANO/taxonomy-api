@@ -38,29 +38,38 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             SELECT DISTINCT nc FROM NodeConnection nc
             LEFT JOIN FETCH nc.metadata ncm LEFT JOIN FETCH ncm.grepCodes LEFT JOIN FETCH ncm.customFieldValues nccfv LEFT JOIN FETCH nccfv.customField
             JOIN FETCH nc.child r
+            LEFT JOIN FETCH r.translations
             LEFT JOIN FETCH r.metadata rm LEFT JOIN FETCH rm.grepCodes LEFT JOIN FETCH rm.customFieldValues rcfv LEFT JOIN FETCH rcfv.customField
             LEFT JOIN FETCH nc.parent n
             LEFT JOIN FETCH n.metadata nm LEFT JOIN FETCH nm.grepCodes LEFT JOIN FETCH nm.customFieldValues ncfv LEFT JOIN FETCH ncfv.customField
-            LEFT JOIN nc.relevance rel
-            LEFT JOIN r.resourceResourceTypes rrt
-            LEFT JOIN rrt.resourceType rt
-            LEFT JOIN r.cachedPaths
-            LEFT JOIN FETCH r.resourceResourceTypes rrtFetch
-            LEFT JOIN FETCH nc.relevance
-            LEFT JOIN FETCH rrtFetch.resourceType rtFetch
-            LEFT JOIN FETCH rtFetch.resourceTypeTranslations
+            LEFT JOIN FETCH r.cachedPaths
+            LEFT JOIN FETCH r.resourceResourceTypes rrt
+            LEFT JOIN FETCH nc.relevance rel
+            LEFT JOIN FETCH rrt.resourceType rt
+            LEFT JOIN FETCH rt.resourceTypeTranslations
             WHERE n.id IN :nodeIds
-            AND (rt.publicId IN :resourceTypePublicIds)
+            AND (:resourceTypePublicIds IS NULL OR rt.publicId IN :resourceTypePublicIds)
             AND r.nodeType = 'RESOURCE'
             AND (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)
             """)
     List<NodeConnection> getResourceBy(Set<Integer> nodeIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
 
-    @Query("SELECT DISTINCT nc FROM NodeConnection nc " + NODE_CONNECTION_METADATA + " LEFT JOIN FETCH nc.parent n "
-            + NODE_METADATA + " LEFT JOIN FETCH nc.child r" + RESOURCE_METADATA
-            + " LEFT JOIN r.cachedPaths LEFT JOIN FETCH r.resourceResourceTypes rrtFetch"
-            + " LEFT JOIN FETCH rrtFetch.resourceType rtFetch LEFT JOIN FETCH rtFetch.resourceTypeTranslations"
-            + " WHERE n.id IN :nodeIds AND r.nodeType = 'RESOURCE'")
+    @Query("""
+            SELECT DISTINCT nc FROM NodeConnection nc
+            LEFT JOIN FETCH nc.metadata ncm LEFT JOIN FETCH ncm.grepCodes LEFT JOIN FETCH ncm.customFieldValues nccfv LEFT JOIN FETCH nccfv.customField
+            JOIN FETCH nc.child r
+            LEFT JOIN FETCH r.translations
+            LEFT JOIN FETCH r.metadata rm LEFT JOIN FETCH rm.grepCodes LEFT JOIN FETCH rm.customFieldValues rcfv LEFT JOIN FETCH rcfv.customField
+            LEFT JOIN FETCH nc.parent n
+            LEFT JOIN FETCH n.metadata nm LEFT JOIN FETCH nm.grepCodes LEFT JOIN FETCH nm.customFieldValues ncfv LEFT JOIN FETCH ncfv.customField
+            LEFT JOIN FETCH r.cachedPaths
+            LEFT JOIN FETCH r.resourceResourceTypes rrt
+            LEFT JOIN FETCH nc.relevance rel
+            LEFT JOIN FETCH rrt.resourceType rt
+            LEFT JOIN FETCH rt.resourceTypeTranslations
+            WHERE n.id IN :nodeIds
+            AND r.nodeType = 'RESOURCE'
+            """)
     List<NodeConnection> getByResourceIds(Collection<Integer> nodeIds);
 
     @Query("SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child JOIN FETCH nc.metadata m"
