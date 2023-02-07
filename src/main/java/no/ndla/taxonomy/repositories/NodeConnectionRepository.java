@@ -23,11 +23,10 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
     @Query("""
             SELECT DISTINCT nc
             FROM NodeConnection nc
-            LEFT JOIN FETCH nc.metadata ncm LEFT JOIN FETCH ncm.grepCodes LEFT JOIN FETCH ncm.customFieldValues nccfv LEFT JOIN FETCH nccfv.customField
             JOIN FETCH nc.parent p
-            LEFT JOIN FETCH p.metadata pm LEFT JOIN FETCH pm.grepCodes LEFT JOIN FETCH pm.customFieldValues pcfv LEFT JOIN FETCH pcfv.customField
+            JOIN FETCH p.metadata pm
             JOIN FETCH nc.child c
-            LEFT JOIN FETCH c.metadata cm LEFT JOIN FETCH cm.grepCodes LEFT JOIN FETCH cm.customFieldValues ccfv LEFT JOIN FETCH ccfv.customField
+            JOIN FETCH c.metadata cm
             LEFT JOIN FETCH nc.relevance rel
             WHERE nc.parent.id IN :nodeId
             AND ((:nodeTypes) IS NULL OR c.nodeType in :nodeTypes)
@@ -36,11 +35,8 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
 
     @Query("""
             SELECT DISTINCT nc FROM NodeConnection nc
-            LEFT JOIN FETCH nc.metadata ncm LEFT JOIN FETCH ncm.grepCodes LEFT JOIN FETCH ncm.customFieldValues nccfv LEFT JOIN FETCH nccfv.customField
             JOIN FETCH nc.child r
-            LEFT JOIN FETCH r.metadata rm LEFT JOIN FETCH rm.grepCodes LEFT JOIN FETCH rm.customFieldValues rcfv LEFT JOIN FETCH rcfv.customField
             LEFT JOIN FETCH nc.parent n
-            LEFT JOIN FETCH n.metadata nm LEFT JOIN FETCH nm.grepCodes LEFT JOIN FETCH nm.customFieldValues ncfv LEFT JOIN FETCH ncfv.customField
             LEFT JOIN nc.relevance rel
             LEFT JOIN r.resourceResourceTypes rrt
             LEFT JOIN rrt.resourceType rt
@@ -56,8 +52,7 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             """)
     List<NodeConnection> getResourceBy(Set<Integer> nodeIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
 
-    @Query("SELECT DISTINCT nc FROM NodeConnection nc " + NODE_CONNECTION_METADATA + " LEFT JOIN FETCH nc.parent n "
-            + NODE_METADATA + " LEFT JOIN FETCH nc.child r" + RESOURCE_METADATA
+    @Query("SELECT DISTINCT nc FROM NodeConnection nc LEFT JOIN FETCH nc.parent n " + " LEFT JOIN FETCH nc.child r"
             + " LEFT JOIN r.cachedPaths LEFT JOIN FETCH r.resourceResourceTypes rrtFetch"
             + " LEFT JOIN FETCH rrtFetch.resourceType rtFetch LEFT JOIN FETCH rtFetch.resourceTypeTranslations"
             + " WHERE n.id IN :nodeIds AND r.nodeType = 'RESOURCE'")
