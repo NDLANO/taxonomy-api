@@ -153,12 +153,11 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
         final var returnList = new ArrayList<EntityWithPathChildDTO>();
 
-        // Filtering
-
-        final var filteredConnections = children.stream()
-                .filter(nodeConnection -> nodeConnection.getChild().isPresent()
-                        && nodeConnection.getChild().get().getNodeType() == NodeType.TOPIC)
-                .filter(nodeConnection -> searchForRelevance(nodeConnection, relevanceArgument, children)).toList();
+        final var filteredConnections = children.stream().filter(nodeConnection -> {
+            var child = nodeConnection.getChild();
+            var relevanceFilter = searchForRelevance(nodeConnection, relevanceArgument, children);
+            return child.isPresent() && child.get().getNodeType() == NodeType.TOPIC && relevanceFilter;
+        }).toList();
 
         filteredConnections.stream().map(nodeConnection -> createChildDTO(subject, nodeConnection, language))
                 .forEach(returnList::add);

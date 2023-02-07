@@ -1130,4 +1130,10 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="20230207 Add extra type indexes" author="Jonas Natten">
+        <createIndex tableName="node" indexName="node_node_type">
+            <column name="node_type" />
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

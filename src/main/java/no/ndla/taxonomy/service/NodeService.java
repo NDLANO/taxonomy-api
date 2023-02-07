@@ -203,13 +203,15 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         nodeResources.forEach(nodeResource -> sortableListToAddTo.add(new ResourceTreeSortable<Node>(nodeResource)));
 
         // Sort the list, extract all the topicResource objects in between topics and return list of documents
-
         return treeSorter.sortList(sortableListToAddTo).stream().map(ResourceTreeSortable::getResourceConnection)
-                .filter(Optional::isPresent).map(Optional::get)
-                .filter(connection -> ((NodeConnection) connection).getChild()
-                        .map(c -> c.getNodeType() == NodeType.RESOURCE).orElse(false))
-                .map(wrappedNodeResource -> new ResourceWithNodeConnectionDTO((NodeConnection) wrappedNodeResource,
-                        languageCode))
+                .filter(src -> {
+                    if (src.isEmpty())
+                        return false;
+                    var connection = (NodeConnection) src.get();
+                    var childIsResource = connection.getChild().map(c -> c.getNodeType() == NodeType.RESOURCE);
+                    return childIsResource.orElse(false);
+                }).map(wrappedNodeResource -> new ResourceWithNodeConnectionDTO(
+                        (NodeConnection) wrappedNodeResource.get(), languageCode))
                 .collect(Collectors.toList());
     }
 

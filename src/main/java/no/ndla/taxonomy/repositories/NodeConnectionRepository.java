@@ -36,37 +36,25 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
 
     @Query("""
             SELECT DISTINCT nc FROM NodeConnection nc
-            LEFT JOIN FETCH nc.metadata ncm LEFT JOIN FETCH ncm.grepCodes LEFT JOIN FETCH ncm.customFieldValues nccfv LEFT JOIN FETCH nccfv.customField
-            JOIN FETCH nc.child r
-            LEFT JOIN FETCH r.translations
-            LEFT JOIN FETCH r.metadata rm LEFT JOIN FETCH rm.grepCodes LEFT JOIN FETCH rm.customFieldValues rcfv LEFT JOIN FETCH rcfv.customField
+            LEFT JOIN FETCH nc.child child
             LEFT JOIN FETCH nc.parent n
-            LEFT JOIN FETCH n.metadata nm LEFT JOIN FETCH nm.grepCodes LEFT JOIN FETCH nm.customFieldValues ncfv LEFT JOIN FETCH ncfv.customField
-            LEFT JOIN FETCH r.cachedPaths
-            LEFT JOIN FETCH r.resourceResourceTypes rrt
+            LEFT JOIN FETCH child.resourceResourceTypes rrt
             LEFT JOIN FETCH nc.relevance rel
             LEFT JOIN FETCH rrt.resourceType rt
-            LEFT JOIN FETCH rt.resourceTypeTranslations
             WHERE n.id IN :nodeIds
             AND (:resourceTypePublicIds IS NULL OR rt.publicId IN :resourceTypePublicIds)
-            AND r.nodeType = 'RESOURCE'
             AND (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)
+            AND child.nodeType = 'RESOURCE'
             """)
     List<NodeConnection> getResourceBy(Set<Integer> nodeIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
 
     @Query("""
             SELECT DISTINCT nc FROM NodeConnection nc
-            LEFT JOIN FETCH nc.metadata ncm LEFT JOIN FETCH ncm.grepCodes LEFT JOIN FETCH ncm.customFieldValues nccfv LEFT JOIN FETCH nccfv.customField
             JOIN FETCH nc.child r
-            LEFT JOIN FETCH r.translations
-            LEFT JOIN FETCH r.metadata rm LEFT JOIN FETCH rm.grepCodes LEFT JOIN FETCH rm.customFieldValues rcfv LEFT JOIN FETCH rcfv.customField
             LEFT JOIN FETCH nc.parent n
-            LEFT JOIN FETCH n.metadata nm LEFT JOIN FETCH nm.grepCodes LEFT JOIN FETCH nm.customFieldValues ncfv LEFT JOIN FETCH ncfv.customField
-            LEFT JOIN FETCH r.cachedPaths
             LEFT JOIN FETCH r.resourceResourceTypes rrt
             LEFT JOIN FETCH nc.relevance rel
             LEFT JOIN FETCH rrt.resourceType rt
-            LEFT JOIN FETCH rt.resourceTypeTranslations
             WHERE n.id IN :nodeIds
             AND r.nodeType = 'RESOURCE'
             """)
