@@ -55,13 +55,13 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             SELECT DISTINCT n FROM Node n
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType rt
-            LEFT JOIN FETCH rt.resourceTypeTranslations
+            LEFT JOIN rt.resourceTypeTranslations
             LEFT JOIN FETCH n.metadata nm
-            LEFT JOIN FETCH nm.grepCodes
-            LEFT JOIN FETCH nm.customFieldValues ncfv
-            LEFT JOIN FETCH ncfv.customField cf
-            LEFT JOIN FETCH n.cachedPaths
-            LEFT JOIN FETCH n.translations
+            LEFT JOIN nm.grepCodes
+            LEFT JOIN nm.customFieldValues ncfv
+            LEFT JOIN ncfv.customField cf
+            LEFT JOIN n.cachedPaths
+            LEFT JOIN n.translations
             WHERE n.id in :ids
             AND (:isVisible IS NULL OR nm.visible = :isVisible)
             AND (:metadataFilterKey IS NULL OR cf.key = :metadataFilterKey)
