@@ -9,8 +9,7 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
-import no.ndla.taxonomy.domain.CustomFieldValue;
-import no.ndla.taxonomy.domain.GrepCode;
+import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Metadata;
 
 import java.util.HashMap;
@@ -38,9 +37,8 @@ public class MetadataDto {
 
     public MetadataDto(Metadata metadata) {
         this.visible = metadata.isVisible();
-        this.grepCodes = metadata.getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet());
-        this.customFields = metadata.getCustomFieldValues().stream()
-                .collect(Collectors.toMap(cfv -> cfv.getCustomField().getKey(), CustomFieldValue::getValue));
+        this.grepCodes = metadata.getGrepCodes().stream().map(JsonGrepCode::code).collect(Collectors.toSet());
+        this.customFields = metadata.getCustomFields();
     }
 
     public MetadataDto(MetadataApiEntity metadataApiEntity) {

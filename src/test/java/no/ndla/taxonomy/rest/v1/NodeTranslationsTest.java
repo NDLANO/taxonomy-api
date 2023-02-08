@@ -81,8 +81,9 @@ public class NodeTranslationsTest extends RestTest {
 
     @Test
     public void can_delete_translation() throws Exception {
-        Node node = builder.node(NodeType.TOPIC,
-                t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")));
+        // Node node = builder.node(NodeType.TOPIC,
+        // t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")));
+        var node = builder.node(NodeType.TOPIC, t -> t.name("Trigonometry").translation("Trigonometri", "nb"));
         URI id = node.getPublicId();
 
         testUtils.deleteResource("/v1/nodes/" + id + "/translations/nb");

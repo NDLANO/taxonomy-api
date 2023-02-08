@@ -8,8 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.TestSeeder;
-import no.ndla.taxonomy.domain.CustomFieldValue;
-import no.ndla.taxonomy.domain.GrepCode;
+import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
@@ -159,10 +158,9 @@ public class SubjectsTest extends RestTest {
         assertEquals(command.name, subject.getName());
         assertEquals(command.contentUri, subject.getContentUri());
         assertFalse(subject.getMetadata().isVisible());
-        assertTrue(subject.getMetadata().getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet())
+        assertTrue(subject.getMetadata().getGrepCodes().stream().map(JsonGrepCode::getCode).collect(Collectors.toSet())
                 .contains("KM123"));
-        assertTrue(subject.getMetadata().getCustomFieldValues().stream().map(CustomFieldValue::getValue)
-                .collect(Collectors.toSet()).contains("value"));
+        assertTrue(subject.getCustomFields().containsValue("value"));
     }
 
     @Test

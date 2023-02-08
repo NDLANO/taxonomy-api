@@ -37,8 +37,8 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     private final NodeRepository nodeRepository;
 
     public Resources(NodeRepository nodeRepository, ResourceResourceTypeRepository resourceResourceTypeRepository,
-            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService, NodeService nodeService) {
-        super(nodeRepository, cachedUrlUpdaterService, metadataService);
+            CachedUrlUpdaterService cachedUrlUpdaterService, NodeService nodeService) {
+        super(nodeRepository, cachedUrlUpdaterService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.repository = nodeRepository;
@@ -143,10 +143,9 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     public List<ResourceTypeWithConnectionDTO> getResourceTypes(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
-        return resourceResourceTypeRepository
-                .findAllByResourcePublicIdIncludingResourceAndResourceTypeAndResourceTypeParent(id).stream()
+        return resourceResourceTypeRepository.resourceResourceTypeByParentId(id).stream()
                 .map(resourceResourceType -> new ResourceTypeWithConnectionDTO(resourceResourceType, language))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @GetMapping("{id}/full")

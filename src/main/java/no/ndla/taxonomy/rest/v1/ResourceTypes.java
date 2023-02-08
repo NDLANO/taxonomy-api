@@ -13,8 +13,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import no.ndla.taxonomy.domain.JsonTranslation;
 import no.ndla.taxonomy.domain.ResourceType;
-import no.ndla.taxonomy.domain.ResourceTypeTranslation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
@@ -139,7 +139,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
             this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
             this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
 
-            this.name = resourceType.getTranslation(language).map(ResourceTypeTranslation::getName)
+            this.name = resourceType.getTranslation(language).map(JsonTranslation::getName)
                     .orElse(resourceType.getName());
 
             if (recursionLevels > 0) {

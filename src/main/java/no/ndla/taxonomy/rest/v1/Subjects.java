@@ -41,9 +41,9 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     private final NodeConnectionRepository nodeConnectionRepository;
 
     public Subjects(TreeSorter treeSorter, CachedUrlUpdaterService cachedUrlUpdaterService,
-            RecursiveNodeTreeService recursiveNodeTreeService, MetadataService metadataService, NodeService nodeService,
-            NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository) {
-        super(nodeRepository, cachedUrlUpdaterService, metadataService);
+            RecursiveNodeTreeService recursiveNodeTreeService, NodeService nodeService, NodeRepository nodeRepository,
+            NodeConnectionRepository nodeConnectionRepository) {
+        super(nodeRepository, cachedUrlUpdaterService);
 
         this.topicTreeSorter = treeSorter;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
@@ -101,9 +101,9 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Gets a single subject", description = "Default language will be returned if desired language not found or if parameter is omitted.")
     public EntityWithPathDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
-                .map(subject -> new NodeDTO(subject, language))
-                .orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
+        return nodeRepository.findFirstByPublicId(id).map(subject -> {
+            return new NodeDTO(subject, language);
+        }).orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
     }
 
     @PutMapping("/{id}")

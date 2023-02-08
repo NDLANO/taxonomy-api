@@ -9,12 +9,15 @@ package no.ndla.taxonomy.domain;
 
 import javax.persistence.MappedSuperclass;
 import java.net.URI;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @MappedSuperclass
 public abstract class EntityWithPath extends DomainObject implements EntityWithMetadata {
     public abstract Set<CachedPath> getCachedPaths();
+
+    public abstract void setCachedPaths(Set<CachedPath> cachedPaths);
 
     public void addCachedPath(CachedPath cachedPath) {
         this.getCachedPaths().add(cachedPath);
@@ -34,8 +37,7 @@ public abstract class EntityWithPath extends DomainObject implements EntityWithM
     }
 
     public Optional<String> getPrimaryPath() {
-        return getCachedPaths().stream().filter(CachedPath::isActive).filter(CachedPath::isPrimary)
-                .map(CachedPath::getPath).findFirst();
+        return getCachedPaths().stream().filter(CachedPath::isPrimary).map(CachedPath::getPath).findFirst();
     }
 
     public abstract Collection<EntityWithPathConnection> getParentConnections();
@@ -49,7 +51,8 @@ public abstract class EntityWithPath extends DomainObject implements EntityWithM
     public Optional<String> getPathByContext(DomainEntity context) {
         final var contextPublicId = context.getPublicId();
 
-        return getCachedPaths().stream().sorted((cachedUrl1, cachedUrl2) -> {
+        var cp = getCachedPaths();
+        return cp.stream().sorted((cachedUrl1, cachedUrl2) -> {
             final var path1 = cachedUrl1.getPath();
             final var path2 = cachedUrl2.getPath();
 
@@ -92,8 +95,7 @@ public abstract class EntityWithPath extends DomainObject implements EntityWithM
     }
 
     public TreeSet<String> getAllPaths() {
-        return getCachedPaths().stream().filter(CachedPath::isActive).map(CachedPath::getPath)
-                .collect(Collectors.toCollection(TreeSet::new));
+        return getCachedPaths().stream().map(CachedPath::getPath).collect(Collectors.toCollection(TreeSet::new));
     }
 
     abstract public URI getContentUri();
@@ -126,5 +128,4 @@ public abstract class EntityWithPath extends DomainObject implements EntityWithM
         crumbs.add(name);
         return crumbs;
     }
-
 }

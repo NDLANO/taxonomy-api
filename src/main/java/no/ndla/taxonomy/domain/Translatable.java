@@ -1,0 +1,46 @@
+package no.ndla.taxonomy.domain;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+public interface Translatable {
+
+    List<JsonTranslation> getTranslations();
+
+    void setTranslations(List<JsonTranslation> translations);
+
+    default void clearTranslations() {
+        setTranslations(new ArrayList<>());
+    }
+
+    default Optional<JsonTranslation> getTranslation(String languageCode) {
+        return getTranslations().stream().filter(translation -> translation.getLanguageCode().equals(languageCode))
+                .findFirst();
+    }
+
+    default JsonTranslation addTranslation(JsonTranslation nodeTranslation) {
+        if (nodeTranslation.getNode() != this) {
+            nodeTranslation.setNode(this);
+        }
+        var newTranslations = new ArrayList<>(getTranslations());
+        newTranslations.add(nodeTranslation);
+        setTranslations(newTranslations);
+        return nodeTranslation;
+    }
+
+    default JsonTranslation addTranslation(String name, String languageCode) {
+        var nodeTranslation = new JsonTranslation(name, languageCode);
+        return this.addTranslation(nodeTranslation);
+    }
+
+    default void removeTranslation(JsonTranslation translation) {
+        translation.setNode(null);
+        var newTranslations = getTranslations().stream().filter(t -> t != translation).toList();
+        setTranslations(newTranslations);
+    }
+
+    default void removeTranslation(String languageCode) {
+        getTranslation(languageCode).ifPresent(this::removeTranslation);
+    }
+}

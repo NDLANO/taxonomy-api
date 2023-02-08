@@ -24,7 +24,6 @@ import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourcePageDTO;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.EntityConnectionService;
-import no.ndla.taxonomy.service.MetadataService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,8 +48,8 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
 
     public NodeResources(NodeRepository nodeRepository, EntityConnectionService connectionService,
             NodeConnectionRepository nodeConnectionRepository, RelevanceRepository relevanceRepository,
-            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
-        super(nodeConnectionRepository, cachedUrlUpdaterService, metadataService);
+            CachedUrlUpdaterService cachedUrlUpdaterService) {
+        super(nodeConnectionRepository, cachedUrlUpdaterService);
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.nodeRepository = nodeRepository;
         this.connectionService = connectionService;

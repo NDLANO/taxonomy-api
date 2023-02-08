@@ -9,7 +9,6 @@ package no.ndla.taxonomy.service.task;
 
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.ChangelogService;
-import no.ndla.taxonomy.service.CustomFieldService;
 import no.ndla.taxonomy.service.DomainEntityHelperService;
 import no.ndla.taxonomy.service.exceptions.EntityNotFoundException;
 import org.springframework.transaction.annotation.Propagation;

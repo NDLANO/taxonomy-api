@@ -76,9 +76,8 @@ public class ResourceTranslations {
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "resource", description = "The new or updated translation") @RequestBody UpdateResourceTranslationCommand command) {
         var resource = nodeRepository.getByPublicId(id);
-        var translation = resource.addTranslation(language);
-        entityManager.persist(translation);
-        translation.setName(command.name);
+        resource.addTranslation(command.name, language);
+        entityManager.persist(resource);
     }
 
     @DeleteMapping("/{language}")

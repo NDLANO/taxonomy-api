@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeTranslation;
 import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -55,7 +54,7 @@ public class NodeTranslations {
     public TranslationDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node node = nodeRepository.getByPublicId(id);
-        NodeTranslation translation = node.getTranslation(language).orElseThrow(
+        var translation = node.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for node", id));
         return new TranslationDTO(translation);
     }
@@ -69,9 +68,8 @@ public class NodeTranslations {
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "command", description = "The new or updated translation") @RequestBody UpdateTranslationCommand command) {
         Node node = nodeRepository.getByPublicId(id);
-        NodeTranslation translation = node.addTranslation(language);
-        entityManager.persist(translation);
-        translation.setName(command.name);
+        node.addTranslation(command.name, language);
+        entityManager.persist(node);
     }
 
     @DeleteMapping("/{language}")
@@ -83,7 +81,7 @@ public class NodeTranslations {
         Node node = nodeRepository.getByPublicId(id);
         node.getTranslation(language).ifPresent(translation -> {
             node.removeTranslation(language);
-            entityManager.remove(translation);
+            entityManager.persist(node);
         });
     }
 

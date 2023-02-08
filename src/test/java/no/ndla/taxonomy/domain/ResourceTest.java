@@ -32,13 +32,13 @@ public class ResourceTest {
     public void addAndGetAndRemoveTranslations() {
         assertEquals(0, resource.getTranslations().size());
 
-        var returnedTranslation = resource.addTranslation("nb");
+        var returnedTranslation = resource.addTranslation("hei", "nb");
         assertEquals(1, resource.getTranslations().size());
         assertEquals("nb", returnedTranslation.getLanguageCode());
         assertTrue(resource.getTranslations().contains(returnedTranslation));
         assertEquals(resource, returnedTranslation.getNode());
 
-        var returnedTranslation2 = resource.addTranslation("en");
+        var returnedTranslation2 = resource.addTranslation("hello", "en");
         assertEquals(2, resource.getTranslations().size());
         assertEquals("en", returnedTranslation2.getLanguageCode());
         assertTrue(resource.getTranslations().containsAll(Set.of(returnedTranslation, returnedTranslation2)));
@@ -274,9 +274,8 @@ public class ResourceTest {
 
     @Test
     public void getCachedPaths() {
-        final var cachedPaths = Set.of();
-
-        setField(resource, "cachedPaths", cachedPaths);
-        assertSame(cachedPaths, resource.getCachedPaths());
+        setField(resource, "cachedPaths", new String[] {});
+        setField(resource, "primaryPaths", new String[] {});
+        assertEquals(Set.of(), resource.getCachedPaths());
     }
 }

@@ -43,8 +43,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     public Nodes(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
             NodeService nodeService, CachedUrlUpdaterService cachedUrlUpdaterService,
-            RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter, MetadataService metadataService) {
-        super(nodeRepository, cachedUrlUpdaterService, metadataService);
+            RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter) {
+        super(nodeRepository, cachedUrlUpdaterService);
 
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
@@ -118,7 +118,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @Transactional
     public NodeDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return new NodeDTO(nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
+        return new NodeDTO(nodeRepository.findFirstByPublicId(id)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found")), language);
     }
 

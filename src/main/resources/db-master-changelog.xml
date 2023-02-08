@@ -1136,4 +1136,229 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="20230208 Move visible to separate column for nodes" author="Jonas Natten">
+        <addColumn tableName="node">
+            <column name="visible" type="boolean" defaultValueBoolean="true" />
+        </addColumn>
+        <sql>
+            UPDATE node n
+            SET visible=(
+                SELECT m.visible FROM metadata m WHERE m.id = n.metadata_id
+            )
+        </sql>
+        <createIndex tableName="node" indexName="node_is_visible_index">
+            <column name="visible" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20230208 Move visible to separate column for node_connection" author="Jonas Natten">
+        <addColumn tableName="node_connection">
+            <column name="visible" type="boolean" defaultValueBoolean="true" />
+        </addColumn>
+        <sql>
+            UPDATE node_connection n
+            SET visible=(
+                SELECT m.visible FROM metadata m WHERE m.id = n.metadata_id
+            )
+        </sql>
+        <createIndex tableName="node_connection" indexName="node_connection_is_visible_index">
+            <column name="visible" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20230208 Move translations to separate column for nodes" author="Jonas Natten">
+        <addColumn tableName="node">
+            <column name="translations" type="jsonb" />
+        </addColumn>
+        <sql>
+            UPDATE node n
+            SET translations=(
+                SELECT json_agg(trans) FROM (
+                    SELECT ((js->'f1')::jsonb-'id'-'node_id'-'language_code'|| jsonb_build_object('languageCode', js->'f1'->'language_code')) trans FROM (SELECT row_to_json(row(nt)) AS js FROM node tn
+                    INNER JOIN node_translation nt ON nt.node_id = tn.id
+                    WHERE tn.id = n.id) AS _
+                ) AS _
+            )
+        </sql>
+        <sql>
+            UPDATE node n
+            SET translations='[]'
+            WHERE translations is NULL
+        </sql>
+        <addNotNullConstraint tableName="node" columnName="translations" />
+    </changeSet>
+
+    <changeSet id="20230208 Move translations to separate column for resource-types" author="Jonas Natten">
+        <addColumn tableName="resource_type">
+            <column name="translations" type="jsonb" />
+        </addColumn>
+        <sql>
+            UPDATE resource_type rt
+            SET translations=(
+                SELECT json_agg(trans) FROM (
+                    SELECT ((js->'f1')::jsonb-'id'-'resource_type_id'-'language_code'|| jsonb_build_object('languageCode', js->'f1'->'language_code')) trans FROM (SELECT row_to_json(row(rtt)) AS js FROM resource_type trt
+                    INNER JOIN resource_type_translation rtt ON rtt.resource_type_id = trt.id
+                    WHERE rtt.id = rt.id) AS _
+                ) AS _
+            )
+        </sql>
+        <sql>
+            UPDATE resource_type rt
+            SET translations='[]'
+            WHERE translations is NULL
+        </sql>
+        <addNotNullConstraint tableName="resource_type" columnName="translations" />
+    </changeSet>
+
+    <changeSet id="20230208 Move translations to separate column for relevances" author="Jonas Natten">
+        <addColumn tableName="relevance">
+            <column name="translations" type="jsonb" />
+        </addColumn>
+        <!-- There are no translations in the database for now, so lets not bother with a migration that does nothing -->
+        <sql>
+            UPDATE relevance
+            SET translations='[]'
+            WHERE translations is NULL
+        </sql>
+        <addNotNullConstraint tableName="relevance" columnName="translations" />
+    </changeSet>
+
+    <changeSet id="20230213 Move grepcodes to a column for node" author="Jonas Natten">
+        <addColumn tableName="node">
+            <column name="grepcodes" type="jsonb"/>
+        </addColumn>
+        <sql>
+            UPDATE node n
+            SET grepcodes=(
+                SELECT json_agg(codes) FROM (
+                    SELECT ((js->'f1')::jsonb-'id'-'node_id') codes
+                    FROM (SELECT row_to_json(row(gc)) AS js FROM node tn
+                    INNER JOIN metadata_grep_code mgc ON mgc.metadata_id = tn.metadata_id
+                    INNER JOIN grep_code gc on gc.id = mgc.grep_code_id
+                    WHERE tn.id = n.id) AS _
+                ) AS _
+            )
+        </sql>
+        <sql>
+            UPDATE node n
+            SET grepcodes='[]'
+            WHERE grepcodes is NULL
+        </sql>
+        <addNotNullConstraint tableName="node" columnName="grepcodes" />
+    </changeSet>
+
+    <changeSet id="20230213 Move grepcodes to a column for node_connection" author="Jonas Natten">
+        <addColumn tableName="node_connection">
+            <column name="grepcodes" type="jsonb"/>
+        </addColumn>
+        <sql>
+            UPDATE node_connection n
+            SET grepcodes=(
+                SELECT json_agg(codes) FROM (
+                    SELECT ((js->'f1')::jsonb-'id'-'node_id') codes
+                    FROM (SELECT row_to_json(row(gc)) AS js FROM node_connection tn
+                        INNER JOIN metadata_grep_code mgc ON mgc.metadata_id = tn.metadata_id
+                        INNER JOIN grep_code gc on gc.id = mgc.grep_code_id
+                        WHERE tn.id = n.id) AS _
+                ) AS _
+            )
+        </sql>
+        <sql>
+            UPDATE node n
+            SET grepcodes='[]'
+            WHERE grepcodes is NULL
+        </sql>
+        <addNotNullConstraint tableName="node" columnName="grepcodes" />
+    </changeSet>
+    <changeSet id="20230214 Move updated_at and created_at to columns node" author="Jonas Natten">
+        <addColumn tableName="node">
+            <column name="updated_at" type="timestamp" />
+            <column name="created_at" type="timestamp" />
+        </addColumn>
+        <sql>
+            UPDATE node n
+            SET
+                updated_at=(SELECT updated_at FROM metadata m WHERE m.id = n.metadata_id),
+                created_at=(SELECT created_at FROM metadata m WHERE m.id = n.metadata_id)
+        </sql>
+    </changeSet>
+
+    <changeSet id="20230214 Move updated_at and created_at to columns node_connection" author="Jonas Natten">
+        <addColumn tableName="node_connection">
+            <column name="updated_at" type="timestamp" />
+            <column name="created_at" type="timestamp" />
+        </addColumn>
+        <sql>
+            UPDATE node_connection n
+            SET
+                updated_at=(SELECT updated_at FROM metadata m WHERE m.id = n.metadata_id),
+                created_at=(SELECT created_at FROM metadata m WHERE m.id = n.metadata_id)
+        </sql>
+    </changeSet>
+
+    <changeSet id="20230214 Move custom field values to column for node" author="Jonas Natten">
+        <addColumn tableName="node">
+            <column name="customfields" type="jsonb" />
+        </addColumn>
+        <sql>
+            UPDATE node n
+            SET customfields=(
+                SELECT jsonb_object_agg(cf.key, cfv.value) FROM node sn
+                LEFT JOIN metadata m ON m.id = sn.metadata_id
+                LEFT JOIN custom_field_value cfv ON cfv.metadata_id = m.id
+                LEFT JOIN custom_field cf ON cf.id = cfv.custom_field_id
+                WHERE sn.id = n.id
+                AND cf.key IS NOT NULL AND cfv.value IS NOT NULL
+            )
+        </sql>
+        <sql>
+            UPDATE node n
+            SET customfields='{}'
+            WHERE customfields IS NULL
+        </sql>
+    </changeSet>
+
+    <changeSet id="20230214 Move custom field values to column for node_connection" author="Jonas Natten">
+        <addColumn tableName="node_connection">
+            <column name="customfields" type="jsonb" />
+        </addColumn>
+        <sql>
+            UPDATE node_connection n
+            SET customfields=(
+                SELECT jsonb_object_agg(cf.key, cfv.value) FROM node_connection sn
+                LEFT JOIN metadata m ON m.id = sn.metadata_id
+                LEFT JOIN custom_field_value cfv ON cfv.metadata_id = m.id
+                LEFT JOIN custom_field cf ON cf.id = cfv.custom_field_id
+                WHERE sn.id = n.id
+                AND cf.key IS NOT NULL AND cfv.value IS NOT NULL
+            )
+        </sql>
+        <sql>
+            UPDATE node_connection n
+            SET customfields='{}'
+            WHERE customfields IS NULL
+        </sql>
+    </changeSet>
+
+    <changeSet id="20230215 Move cached paths to column" author="Jonas Natten">
+        <addColumn tableName="node">
+            <column name="cached_paths" type="text[]" />
+        </addColumn>
+        <addColumn tableName="node">
+            <column name="primary_paths" type="text[]" />
+        </addColumn>
+        <sql>
+            UPDATE node n
+            SET primary_paths=(
+                SELECT array_agg(cp.path) FROM node n2
+                INNER JOIN cached_path cp ON cp.node_id = n2.id AND cp.is_primary = true AND cp.is_active = true
+                WHERE n2.id = n.id
+            ),
+            cached_paths=(
+                SELECT array_agg(cp.path) FROM node n2
+                INNER JOIN cached_path cp ON cp.node_id = n2.id AND cp.is_primary = false AND cp.is_active = true
+                WHERE n2.id = n.id
+            )
+        </sql>
+    </changeSet>
 </databaseChangeLog>

@@ -9,21 +9,23 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.CachedPath;
 import no.ndla.taxonomy.domain.EntityWithPath;
-import no.ndla.taxonomy.repositories.CachedPathRepository;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
-    private final CachedPathRepository cachedPathRepository;
+public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService<Node> {
+    private final NodeRepository nodeRepository;
 
-    public CachedUrlUpdaterServiceImpl(CachedPathRepository cachedPathRepository) {
-        this.cachedPathRepository = cachedPathRepository;
+    public CachedUrlUpdaterServiceImpl(NodeRepository nodeRepository) {
+        this.nodeRepository = nodeRepository;
     }
 
     private Set<PathToEntity> createPathsToEntity(EntityWithPath entity) {
@@ -54,9 +56,9 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
      */
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public void updateCachedUrls(EntityWithPath entity) {
+    public void updateCachedUrls(Node entity) {
         Set.copyOf(entity.getChildConnections())
-                .forEach(childEntity -> childEntity.getConnectedChild().ifPresent(this::updateCachedUrls));
+                .forEach(childEntity -> childEntity.getConnectedChild().ifPresent(e -> updateCachedUrls((Node) e)));
 
         clearCachedUrls(entity);
 
@@ -66,18 +68,17 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
             cachedPath.setPath(newPath.path);
             cachedPath.setPrimary(newPath.isPrimary);
             cachedPath.setOwningEntity(entity);
-            cachedPath.setActive(true);
 
             return cachedPath;
         }).collect(Collectors.toSet());
 
-        cachedPathRepository.saveAll(newCachedPathObjects);
+        entity.setCachedPaths(newCachedPathObjects);
     }
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public void clearCachedUrls(EntityWithPath entity) {
-        Set.copyOf(entity.getCachedPaths()).forEach(CachedPath::disable);
+    public void clearCachedUrls(Node entity) {
+        entity.setCachedPaths(new HashSet<>());
     }
 
     private static class PathToEntity {

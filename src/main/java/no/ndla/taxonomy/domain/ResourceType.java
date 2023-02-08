@@ -7,15 +7,20 @@
 
 package no.ndla.taxonomy.domain;
 
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+import io.hypersistence.utils.hibernate.type.json.JsonStringType;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
+
 import javax.persistence.*;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
+@TypeDefs({ @TypeDef(name = "json", typeClass = JsonStringType.class),
+        @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 public class ResourceType extends DomainObject implements Comparable<ResourceType> {
 
     public ResourceType() {
@@ -26,11 +31,7 @@ public class ResourceType extends DomainObject implements Comparable<ResourceTyp
         setName(resourceType.getName());
         setParent(parent);
         setPublicId(resourceType.getPublicId());
-        Set<ResourceTypeTranslation> trs = new HashSet<>();
-        for (ResourceTypeTranslation translation : resourceType.getTranslations()) {
-            trs.add(new ResourceTypeTranslation(translation, this));
-        }
-        this.resourceTypeTranslations = trs;
+        this.translations = resourceType.getTranslations().stream().map(JsonTranslation::new).toList();
     }
 
     @ManyToOne
@@ -41,8 +42,9 @@ public class ResourceType extends DomainObject implements Comparable<ResourceTyp
             CascadeType.PERSIST })
     private Set<ResourceType> subtypes = new HashSet<>();
 
-    @OneToMany(mappedBy = "resourceType", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ResourceTypeTranslation> resourceTypeTranslations = new HashSet<>();
+    @Type(type = "jsonb")
+    @Column(name = "translations", columnDefinition = "jsonb")
+    private List<JsonTranslation> translations = new ArrayList<>();
 
     public ResourceType name(String name) {
         setName(name);
@@ -87,47 +89,6 @@ public class ResourceType extends DomainObject implements Comparable<ResourceTyp
         return this.subtypes.stream().collect(Collectors.toUnmodifiableSet());
     }
 
-    public ResourceTypeTranslation addTranslation(String languageCode) {
-        ResourceTypeTranslation resourceTypeTranslation = getTranslation(languageCode).orElse(null);
-        if (resourceTypeTranslation != null)
-            return resourceTypeTranslation;
-
-        resourceTypeTranslation = new ResourceTypeTranslation(this, languageCode);
-        resourceTypeTranslations.add(resourceTypeTranslation);
-        return resourceTypeTranslation;
-    }
-
-    @Override
-    public Optional<ResourceTypeTranslation> getTranslation(String languageCode) {
-        return resourceTypeTranslations.stream()
-                .filter(resourceTypeTranslation -> resourceTypeTranslation.getLanguageCode().equals(languageCode))
-                .findFirst();
-    }
-
-    public Set<ResourceTypeTranslation> getTranslations() {
-        return resourceTypeTranslations.stream().collect(Collectors.toUnmodifiableSet());
-    }
-
-    public void removeTranslation(String languageCode) {
-        getTranslation(languageCode).ifPresent(this::removeTranslation);
-    }
-
-    public void addTranslation(ResourceTypeTranslation resourceTypeTranslation) {
-        this.resourceTypeTranslations.add(resourceTypeTranslation);
-        if (resourceTypeTranslation.getResourceType() != this) {
-            resourceTypeTranslation.setResourceType(this);
-        }
-    }
-
-    public void removeTranslation(ResourceTypeTranslation resourceTypeTranslation) {
-        if (resourceTypeTranslation.getResourceType() == this) {
-            resourceTypeTranslations.remove(resourceTypeTranslation);
-            if (resourceTypeTranslation.getResourceType() == this) {
-                resourceTypeTranslation.setResourceType(null);
-            }
-        }
-    }
-
     @PreRemove
     void preRemove() {
         setParent(null);
@@ -137,5 +98,15 @@ public class ResourceType extends DomainObject implements Comparable<ResourceTyp
     @Override
     public int compareTo(ResourceType o) {
         return this.getPublicId().compareTo(o.getPublicId());
+    }
+
+    @Override
+    public List<JsonTranslation> getTranslations() {
+        return this.translations;
+    }
+
+    @Override
+    public void setTranslations(List<JsonTranslation> translations) {
+        this.translations = translations;
     }
 }

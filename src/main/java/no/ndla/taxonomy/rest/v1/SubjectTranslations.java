@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeTranslation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import org.springframework.http.HttpStatus;
@@ -58,7 +57,7 @@ public class SubjectTranslations {
     public SubjectTranslationIndexDocument get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node subject = nodeRepository.getByPublicId(id);
-        NodeTranslation translation = subject.getTranslation(language).orElseThrow(
+        var translation = subject.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for subject", id));
 
         return new SubjectTranslationIndexDocument() {
@@ -78,7 +77,7 @@ public class SubjectTranslations {
         Node subject = nodeRepository.getByPublicId(id);
         subject.getTranslation(language).ifPresent((translation) -> {
             subject.removeTranslation(language);
-            entityManager.remove(translation);
+            entityManager.persist(subject);
         });
     }
 
@@ -91,9 +90,8 @@ public class SubjectTranslations {
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "subject", description = "The new or updated translation") @RequestBody UpdateSubjectTranslationCommand command) {
         Node subject = nodeRepository.getByPublicId(id);
-        NodeTranslation translation = subject.addTranslation(language);
-        entityManager.persist(translation);
-        translation.setName(command.name);
+        subject.addTranslation(command.name, language);
+        entityManager.persist(subject);
     }
 
     public static class SubjectTranslationIndexDocument {

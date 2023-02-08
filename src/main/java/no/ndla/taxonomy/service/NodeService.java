@@ -90,7 +90,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     public List<NodeDTO> getNodes(Optional<String> language, Optional<List<NodeType>> nodeType,
             Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
         final List<Node> filtered = nodeRepository.findByNodeType(nodeType, metadataFilters.getVisible(),
-                metadataFilters.getKey(), metadataFilters.getValue(), contentUri, isRoot);
+                metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, isRoot);
         return filtered.stream().distinct().map(n -> new NodeDTO(n, language.get())).collect(Collectors.toList());
     }
 
@@ -101,7 +101,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         final var counter = new AtomicInteger();
         ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
             final var nodes = nodeRepository.findByIdsFiltered(idChunk, metadataFilters.getVisible(),
-                    metadataFilters.getKey(), metadataFilters.getValue(), contentUri, isRoot);
+                    metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, isRoot);
             var dtos = nodes.stream().map(node -> new ResourceDTO(node, language.get())).toList();
             listToReturn.addAll(dtos);
         });
@@ -118,7 +118,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                         connectionService.getChildConnections(node).stream()
                                 .filter(entity -> entity instanceof NodeConnection)
                                 .map(ConnectionIndexDTO::childConnection))
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
     }
 
     public List<TopicChildDTO> getFilteredChildConnections(URI nodePublicId, String languageCode) {
@@ -140,7 +140,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public Node getNode(URI publicId) {
-        return nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId)
+        return nodeRepository.findFirstByPublicId(publicId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
     }
 

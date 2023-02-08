@@ -259,7 +259,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     @Override
     public void disconnectAllParents(URI nodeId) {
-        var node = nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(nodeId)
+        var node = nodeRepository.findFirstByPublicId(nodeId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
         node.getParentConnections().forEach(connection -> disconnectParentChildConnection((NodeConnection) connection));
     }

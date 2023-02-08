@@ -311,15 +311,12 @@ public class NodeConnectionsTest extends RestTest {
         }, status().isOk());
         NodeConnection connection = nodeConnectionRepository.getByPublicId(id);
         assertFalse(connection.getMetadata().isVisible());
-        Set<String> codes = connection.getMetadata().getGrepCodes().stream().map(GrepCode::getCode)
+        Set<String> codes = connection.getMetadata().getGrepCodes().stream().map(JsonGrepCode::getCode)
                 .collect(Collectors.toSet());
         assertTrue(codes.contains("KM123"));
-        Collection<CustomFieldValue> customFieldValues = connection.getMetadata().getCustomFieldValues();
-        assertTrue(customFieldValues.stream().map(CustomFieldValue::getCustomField).map(CustomField::getKey)
-                .collect(Collectors.toSet()).contains("key"));
-        assertTrue(customFieldValues.stream().map(CustomFieldValue::getValue).collect(Collectors.toSet())
-                .contains("value"));
-
+        var customFieldValues = connection.getCustomFields();
+        assertTrue(customFieldValues.containsKey("key"));
+        assertTrue(customFieldValues.containsValue("value"));
     }
 
     private Map<String, Integer> mapConnectionRanks(List<NodeConnection> nodeConnections) {

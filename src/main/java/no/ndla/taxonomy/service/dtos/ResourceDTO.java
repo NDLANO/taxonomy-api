@@ -10,8 +10,8 @@ package no.ndla.taxonomy.service.dtos;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import no.ndla.taxonomy.domain.JsonTranslation;
 import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeTranslation;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 
 import java.net.URI;
@@ -82,7 +82,7 @@ public class ResourceDTO {
                 .collect(Collectors.toCollection(TreeSet::new));
 
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
-                .map(NodeTranslation::getName).orElse(resource.getName());
+                .map(JsonTranslation::getName).orElse(resource.getName());
 
         this.resourceTypes = resource.getResourceResourceTypes().stream()
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))

@@ -7,8 +7,7 @@
 
 package no.ndla.taxonomy.domain;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import no.ndla.taxonomy.service.dtos.MetadataDto;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -16,115 +15,82 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Entity
 public class Metadata implements Serializable {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-
-    @UpdateTimestamp
     private Instant updatedAt;
 
-    @CreationTimestamp
     private Instant createdAt;
 
-    @SuppressWarnings("JpaDataSourceORMInspection")
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinTable(name = "metadata_grep_code", joinColumns = @JoinColumn(name = "metadata_id"), inverseJoinColumns = @JoinColumn(name = "grep_code_id"))
-    private Set<GrepCode> grepCodes = new HashSet<>();
+    private Set<JsonGrepCode> grepCodes = new HashSet<>();
 
-    // JPA will delete custom field values automatically if they are removed from this set and this
-    // entity persisted.
-    // This is for the @PreRemoval to take effect and automatically remove values when this entity
-    // is deleted - makes sense - right? otherwise service level code would have to always delete values before
-    // deleting this.
-    @OneToMany(cascade = { CascadeType.REMOVE, CascadeType.PERSIST, CascadeType.MERGE,
-            CascadeType.REFRESH }, orphanRemoval = true, mappedBy = "metadata", fetch = FetchType.EAGER)
-    private Set<CustomFieldValue> customFieldValues = new HashSet<>();
+    private Map<String, String> customFields = new HashMap<>();
 
-    @Column
     private boolean visible = true;
 
+    private EntityWithMetadata parent;
+
     public Metadata() {
+
+    }
+
+    public Metadata(EntityWithMetadata parent) {
+        this.parent = parent;
+        this.grepCodes = parent.getGrepCodes();
+        this.visible = parent.getVisible();
+        this.createdAt = parent.getCreatedAt();
+        this.updatedAt = parent.getUpdatedAt();
+        this.customFields = parent.getCustomFields();
     }
 
     public Metadata(Metadata metadata) {
+        this.parent = metadata.parent;
+        this.createdAt = metadata.createdAt;
+        this.customFields = metadata.getCustomFields();
+        this.grepCodes = new HashSet<>(metadata.getGrepCodes());
+        this.updatedAt = metadata.updatedAt;
         this.visible = metadata.isVisible();
-        Set<GrepCode> gcSet = new HashSet<>();
-        for (GrepCode code : metadata.getGrepCodes()) {
-            gcSet.add(new GrepCode(code, this));
-        }
-        this.grepCodes = gcSet;
-        Set<CustomFieldValue> cfvSet = new HashSet<>();
-        for (CustomFieldValue customFieldValue : metadata.getCustomFieldValues()) {
-            cfvSet.add(new CustomFieldValue(customFieldValue, this));
-        }
-        this.customFieldValues = cfvSet;
     }
 
-    public void addGrepCode(GrepCode grepCode) {
-        this.grepCodes.add(grepCode);
-
-        if (!grepCode.containsMetadata(this)) {
-            grepCode.addMetadata(this);
-        }
+    public Metadata(MetadataDto metadata) {
+        this.customFields = metadata.getCustomFields();
+        this.grepCodes = metadata.grepCodes.stream().map(JsonGrepCode::new).collect(Collectors.toSet());
+        this.visible = metadata.isVisible();
     }
 
-    public void removeGrepCode(GrepCode grepCode) {
+    public void setParent(EntityWithMetadata parent) {
+        this.parent = parent;
+    }
+
+    public void addGrepCode(JsonGrepCode grepCode) {
+        this.parent.getGrepCodes().add(grepCode);
+    }
+
+    public void removeGrepCode(JsonGrepCode grepCode) {
         this.grepCodes.remove(grepCode);
-
-        if (grepCode.containsMetadata(this)) {
-            grepCode.removeMetadata(this);
-        }
     }
 
-    public Collection<GrepCode> getGrepCodes() {
-        return grepCodes.stream().collect(Collectors.toUnmodifiableList());
+    public Set<JsonGrepCode> getGrepCodes() {
+        return new HashSet<>(grepCodes);
     }
 
-    public void addCustomFieldValue(CustomFieldValue customFieldValue) {
-        if (customFieldValue.getMetadata() == null) {
-            customFieldValue.setMetadata(this);
-        }
-        this.customFieldValues.add(customFieldValue);
-    }
-
-    public void removeCustomFieldValue(CustomFieldValue customFieldValue) {
-        this.customFieldValues.remove(customFieldValue);
-    }
-
-    public Collection<CustomFieldValue> getCustomFieldValues() {
-        return customFieldValues.stream().collect(Collectors.toUnmodifiableList());
-    }
-
-    public Optional<CustomFieldValue> getCustomFieldValueByKey(String key) {
-        return customFieldValues.stream()
-                .filter(customFieldValue -> customFieldValue.getCustomField().getKey().equals(key)).findFirst();
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
+    public Map<String, String> getCustomFields() {
+        return this.customFields;
     }
 
     public boolean isVisible() {
         return visible;
     }
 
-    public void setVisible(boolean visible) {
-        this.visible = visible;
+    public Instant getUpdatedAt() {
+        return updatedAt;
     }
 
-    @PreRemove
-    void preRemove() {
-        // De-links the grep codes before removal (but keeps the grep code entities)
-        Set.copyOf(this.grepCodes).forEach(this::removeGrepCode);
-        if (customFieldValues != null) {
-            customFieldValues.clear();
-        }
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+        this.parent.setVisible(visible);
     }
 
     @Override
@@ -136,6 +102,6 @@ public class Metadata implements Serializable {
         Metadata that = (Metadata) o;
         return visible == that.visible && Objects.equals(updatedAt, that.updatedAt)
                 && Objects.equals(createdAt, that.createdAt) && Objects.equals(grepCodes, that.grepCodes)
-                && Objects.equals(customFieldValues, that.customFieldValues);
+                && Objects.equals(customFields, that.customFields);
     }
 }

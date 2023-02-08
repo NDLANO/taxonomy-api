@@ -19,17 +19,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface NodeRepository extends TaxonomyRepository<Node> {
-    @Query("SELECT DISTINCT n FROM Node n " + NODE_METADATA + " LEFT JOIN FETCH n.cachedPaths"
-            + " LEFT JOIN FETCH n.translations WHERE n.context = :context")
+    @Query("SELECT DISTINCT n FROM Node n WHERE n.context = :context")
     List<Node> findAllByContextIncludingCachedUrlsAndTranslations(boolean context);
-
-    @Query("SELECT DISTINCT n FROM Node n " + NODE_METADATA + " LEFT JOIN FETCH n.cachedPaths"
-            + " LEFT JOIN FETCH n.translations WHERE n.publicId = :publicId")
-    Optional<Node> findFirstByPublicIdIncludingCachedUrlsAndTranslations(URI publicId);
-
-    @Query("SELECT DISTINCT n FROM Node n " + NODE_METADATA
-            + " LEFT JOIN FETCH n.cachedPaths WHERE n.publicId = :publicId")
-    Optional<Node> findFirstByPublicIdIncludingCachedUrls(URI publicId);
 
     Optional<Node> findFirstByPublicId(URI publicId);
 
@@ -40,13 +31,6 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             SELECT DISTINCT n FROM Node n
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType rt
-            LEFT JOIN FETCH rt.resourceTypeTranslations
-            LEFT JOIN FETCH n.metadata nm
-            LEFT JOIN FETCH nm.grepCodes
-            LEFT JOIN FETCH nm.customFieldValues ncfv
-            LEFT JOIN FETCH ncfv.customField cf
-            LEFT JOIN FETCH n.cachedPaths
-            LEFT JOIN FETCH n.translations
             WHERE n.id in :ids
             """)
     List<Node> findByIds(Collection<Integer> ids);
@@ -54,18 +38,13 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
     @Query("""
             SELECT DISTINCT n FROM Node n
             LEFT JOIN FETCH n.resourceResourceTypes rrt
-            LEFT JOIN FETCH rrt.resourceType rt
-            LEFT JOIN rt.resourceTypeTranslations
-            LEFT JOIN FETCH n.metadata nm
-            LEFT JOIN nm.grepCodes
-            LEFT JOIN nm.customFieldValues ncfv
-            LEFT JOIN ncfv.customField cf
-            LEFT JOIN n.cachedPaths
-            LEFT JOIN n.translations
+            LEFT JOIN FETCH rrt.resourceType
+            LEFT JOIN FETCH n.parentConnections pc
+            LEFT JOIN FETCH pc.relevance
             WHERE n.id in :ids
-            AND (:isVisible IS NULL OR nm.visible = :isVisible)
-            AND (:metadataFilterKey IS NULL OR cf.key = :metadataFilterKey)
-            AND (:metadataFilterValue IS NULL OR ncfv.value = :metadataFilterValue)
+            AND (:isVisible IS NULL OR n.visible = :isVisible)
+            AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, :metadataFilterKey) IS NOT NULL)
+            AND (:metadataFilterValue IS NULL OR cast(jsonb_path_query_array(n.customfields, '$.*') as text) like :metadataFilterValue)
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
             AND (:isRoot IS NULL OR n.root = true)
             """)
@@ -87,18 +66,12 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             SELECT DISTINCT n FROM Node n
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType
-            LEFT JOIN FETCH n.metadata nm
-            LEFT JOIN FETCH nm.grepCodes
-            LEFT JOIN FETCH nm.customFieldValues ncfv
-            LEFT JOIN FETCH ncfv.customField cf
-            LEFT JOIN FETCH n.cachedPaths
-            LEFT JOIN FETCH n.translations
             LEFT JOIN FETCH n.parentConnections pc
             LEFT JOIN FETCH pc.relevance
             WHERE ((:nodeTypes) IS NULL OR n.nodeType in (:nodeTypes))
-            AND (:isVisible IS NULL OR nm.visible = :isVisible)
-            AND (:metadataFilterKey IS NULL OR cf.key = :metadataFilterKey)
-            AND (:metadataFilterValue IS NULL OR ncfv.value = :metadataFilterValue)
+            AND (:isVisible IS NULL OR n.visible = :isVisible)
+            AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, :metadataFilterKey) IS NOT NULL)
+            AND (:metadataFilterValue IS NULL OR cast(jsonb_path_query_array(n.customfields, '$.*') as text) like :metadataFilterValue)
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
             AND (:isRoot IS NULL OR n.root = true)
             """)

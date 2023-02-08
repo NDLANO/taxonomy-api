@@ -7,9 +7,6 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.CustomField;
-import no.ndla.taxonomy.domain.CustomFieldValue;
-
 import java.util.Optional;
 
 public class MetadataFilters {
@@ -29,6 +26,11 @@ public class MetadataFilters {
 
     public Optional<String> getKey() {
         return key;
+    }
+
+    public Optional<String> getLikeQueryValue() {
+        // NOTE: This formatting of the filter is to be inserted into the `like` query in nodeRepository
+        return value.map(s -> "%\"" + s + "\"%");
     }
 
     public Optional<String> getValue() {

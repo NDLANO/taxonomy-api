@@ -7,13 +7,19 @@
 
 package no.ndla.taxonomy.domain;
 
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+import io.hypersistence.utils.hibernate.type.json.JsonStringType;
+import org.hibernate.annotations.*;
+
 import javax.persistence.*;
+import javax.persistence.Entity;
 import java.net.URI;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.Instant;
+import java.util.*;
 
 @Entity
+@TypeDefs({ @TypeDef(name = "json", typeClass = JsonStringType.class),
+        @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 public class NodeConnection extends DomainEntity implements EntityWithMetadata, EntityWithPathConnection,
         Comparable<NodeConnection>, SortableResourceConnection<Node> {
     @ManyToOne
@@ -34,9 +40,24 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
     @JoinColumn(name = "relevance_id")
     private Relevance relevance;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, optional = false)
-    @JoinColumn(name = "metadata_id")
-    private Metadata metadata = new Metadata();
+    @Column
+    private boolean visible = true;
+
+    @Type(type = "jsonb")
+    @Column(name = "grepcodes", columnDefinition = "jsonb")
+    private Set<JsonGrepCode> grepcodes = new HashSet<>();
+
+    @Type(type = "jsonb")
+    @Column(name = "customfields", columnDefinition = "jsonb")
+    private Map<String, String> customfields = new HashMap<>();
+
+    @Column
+    @CreationTimestamp
+    private Instant created_at;
+
+    @Column
+    @UpdateTimestamp
+    private Instant updated_at;
 
     private NodeConnection() {
         setPublicId(URI.create("urn:node-connection:" + UUID.randomUUID()));
@@ -167,16 +188,71 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
 
     @Override
     public Metadata getMetadata() {
-        return metadata;
+        return new Metadata(this);
     }
 
-    public void setMetadata(Metadata metadata) {
-        this.metadata = metadata;
+    @Override
+    public Set<JsonGrepCode> getGrepCodes() {
+        return this.grepcodes;
+    }
+
+    @Override
+    public void setCustomField(String key, String value) {
+        this.customfields.put(key, value);
+    }
+
+    @Override
+    public void unsetCustomField(String key) {
+        this.customfields.remove(key);
+    }
+
+    @Override
+    public void setGrepCodes(Set<JsonGrepCode> codes) {
+        this.grepcodes = codes;
+    }
+
+    @Override
+    public void setCustomFields(Map<String, String> customFields) {
+        this.customfields = customFields;
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+    }
+
+    @Override
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updated_at = updatedAt;
+    }
+
+    @Override
+    public void setCreatedAt(Instant createdAt) {
+        this.created_at = createdAt;
+    }
+
+    @Override
+    public boolean getVisible() {
+        return this.visible;
+    }
+
+    @Override
+    public Instant getCreatedAt() {
+        return this.created_at;
+    }
+
+    @Override
+    public Instant getUpdatedAt() {
+        return this.updated_at;
     }
 
     @Override
     public int compareTo(NodeConnection o) {
         return getPublicId().compareTo(o.getPublicId());
+    }
+
+    public Map<String, String> getCustomFields() {
+        return this.customfields;
     }
 
     @Override
@@ -187,7 +263,6 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
             return false;
         NodeConnection that = (NodeConnection) o;
         return rank == that.rank && parent.getPublicId().equals(that.parent.getPublicId())
-                && child.getPublicId().equals(that.child.getPublicId()) && Objects.equals(relevance, that.relevance)
-                && metadata.equals(that.metadata);
+                && child.getPublicId().equals(that.child.getPublicId()) && Objects.equals(relevance, that.relevance);
     }
 }
