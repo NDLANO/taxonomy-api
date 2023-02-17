@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-class CachedUrlUpdaterServiceImplTest {
+class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
     private CachedUrlUpdaterServiceImpl service;
 
     private NodeRepository nodeRepository;

@@ -35,7 +35,7 @@ public class VersionService {
     private final EntityManager entityManager;
     private final URNValidator validator = new URNValidator();
 
-    @Value("${spring.datasource.hikari.schema:PUBLIC}")
+    @Value("${spring.datasource.hikari.schema:public}")
     private String defaultSchema;
 
     public VersionService(VersionRepository versionRepository, EntityManager entityManager) {

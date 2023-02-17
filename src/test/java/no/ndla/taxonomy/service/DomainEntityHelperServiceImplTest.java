@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Transactional
-class DomainEntityHelperServiceImplTest {
+class DomainEntityHelperServiceImplTest extends AbstractIntegrationTest {
     private Node subject1;
     private Node subject2;
     private Node topic1;

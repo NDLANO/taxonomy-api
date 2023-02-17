@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /*
  * Test Service and database together.
  */
-public class UrlResolverServiceImplTest {
+public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     @Autowired
     private Builder builder;
 

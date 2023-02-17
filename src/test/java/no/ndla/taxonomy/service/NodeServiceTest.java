@@ -34,7 +34,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Transactional
-public class NodeServiceTest {
+public class NodeServiceTest extends AbstractIntegrationTest {
     @Autowired
     private NodeRepository nodeRepository;
 

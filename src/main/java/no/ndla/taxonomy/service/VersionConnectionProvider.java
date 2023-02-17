@@ -23,7 +23,7 @@ import java.sql.SQLException;
 public class VersionConnectionProvider extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl {
     private final DataSource dataSource;
 
-    @Value("${spring.datasource.hikari.schema:PUBLIC}")
+    @Value("${spring.datasource.hikari.schema:public}")
     private String defaultSchema;
 
     @Autowired

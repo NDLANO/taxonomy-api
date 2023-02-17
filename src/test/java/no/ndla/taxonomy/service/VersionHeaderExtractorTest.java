@@ -27,7 +27,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Transactional
-public class VersionHeaderExtractorTest {
+public class VersionHeaderExtractorTest extends AbstractIntegrationTest {
 
     @Autowired
     private VersionRepository versionRepository;
@@ -35,7 +35,7 @@ public class VersionHeaderExtractorTest {
     @Autowired
     private VersionHeaderExtractor versionHeaderExtractor;
 
-    @Value("${spring.datasource.hikari.schema:PUBLIC}")
+    @Value("${spring.datasource.hikari.schema:public}")
     private String defaultSchema;
 
     @BeforeEach

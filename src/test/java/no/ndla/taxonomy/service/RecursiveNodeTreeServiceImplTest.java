@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Transactional
-class RecursiveNodeTreeServiceImplTest {
+class RecursiveNodeTreeServiceImplTest extends AbstractIntegrationTest {
     private NodeRepository nodeRepository;
     private NodeConnectionRepository nodeConnectionRepository;
 
