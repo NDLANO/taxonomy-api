@@ -1264,7 +1264,7 @@
             )
         </sql>
         <sql>
-            UPDATE node n
+            UPDATE node_connection n
             SET grepcodes='[]'
             WHERE grepcodes is NULL
         </sql>
