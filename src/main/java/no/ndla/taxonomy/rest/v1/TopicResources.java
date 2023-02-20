@@ -12,11 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.DomainEntity;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -26,9 +22,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -36,7 +32,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = { "/v1/topic-resources" })
-@Transactional
 public class TopicResources {
 
     private final NodeRepository nodeRepository;
@@ -54,6 +49,7 @@ public class TopicResources {
 
     @GetMapping
     @Operation(summary = "Gets all connections between topics and resources")
+    @Transactional(readOnly = true)
     public List<TopicResourceIndexDocument> index() {
         return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream()
                 .map(TopicResourceIndexDocument::new).collect(Collectors.toList());
@@ -61,6 +57,7 @@ public class TopicResources {
 
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between topic and resources paginated")
+    @Transactional(readOnly = true)
     public TopicResourcePage allPaginated(
             @Parameter(name = "page", description = "The page to fetch", required = true) Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
@@ -80,6 +77,7 @@ public class TopicResources {
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a specific connection between a topic and a resource")
+    @Transactional(readOnly = true)
     public TopicResourceIndexDocument get(@PathVariable("id") URI id) {
         var resourceConnection = nodeConnectionRepository.getByPublicId(id);
         return new TopicResourceIndexDocument(resourceConnection);

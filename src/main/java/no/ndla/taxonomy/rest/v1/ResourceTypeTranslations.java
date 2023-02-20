@@ -17,17 +17,17 @@ import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping(path = { "/v1/resource-types/{id}/translations" })
-@Transactional
+@Transactional(readOnly = true)
 public class ResourceTypeTranslations {
 
     private final ResourceTypeRepository resourceTypeRepository;

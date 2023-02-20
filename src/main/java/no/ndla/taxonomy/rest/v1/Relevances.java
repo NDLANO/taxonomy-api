@@ -23,7 +23,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
 import java.util.Objects;
@@ -33,7 +32,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = { "/v1/relevances" })
-@Transactional
 public class Relevances extends CrudController<Relevance> {
 
     private final RelevanceRepository relevanceRepository;

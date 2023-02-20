@@ -22,12 +22,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 
 @RestController
 @RequestMapping("/v1/url")
-@Transactional
 public class UrlResolver {
     private final UrlResolverService urlResolverService;
 

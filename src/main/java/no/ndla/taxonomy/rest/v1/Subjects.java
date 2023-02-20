@@ -24,14 +24,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @RestController
-@Transactional
 @RequestMapping(path = { "/v1/subjects" })
 public class Subjects extends CrudControllerWithMetadata<Node> {
     private final TreeSorter topicTreeSorter;

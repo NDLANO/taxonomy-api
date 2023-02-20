@@ -23,9 +23,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = { "/v1/topic-subtopics" })
-@Transactional
 public class TopicSubtopics {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
@@ -50,6 +49,7 @@ public class TopicSubtopics {
 
     @GetMapping
     @Operation(summary = "Gets all connections between topics and subtopics")
+    @Transactional(readOnly = true)
     public List<TopicSubtopicIndexDocument> index() {
         return nodeConnectionRepository.findAllIncludingParentAndChild().stream().map(TopicSubtopicIndexDocument::new)
                 .collect(Collectors.toList());
@@ -57,6 +57,7 @@ public class TopicSubtopics {
 
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between topics and subtopics paginated")
+    @Transactional(readOnly = true)
     public TopicSubtopicPage allPaginated(
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
@@ -75,6 +76,7 @@ public class TopicSubtopics {
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single connection between a topic and a subtopic")
+    @Transactional(readOnly = true)
     public TopicSubtopicIndexDocument get(@PathVariable("id") URI id) {
         NodeConnection topicSubtopic = nodeConnectionRepository.getByPublicId(id);
         return new TopicSubtopicIndexDocument(topicSubtopic);

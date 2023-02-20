@@ -23,9 +23,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = { "/v1/subject-topics" })
-@Transactional
 public class SubjectTopics {
     private final EntityConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
@@ -50,6 +49,7 @@ public class SubjectTopics {
 
     @GetMapping
     @Operation(summary = "Gets all connections between subjects and topics")
+    @Transactional(readOnly = true)
     public List<SubjectTopicIndexDocument> index() {
         return nodeConnectionRepository.findAllIncludingParentAndChild().stream().map(SubjectTopicIndexDocument::new)
                 .collect(Collectors.toList());
@@ -57,6 +57,7 @@ public class SubjectTopics {
 
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between subjects and topics paginated")
+    @Transactional(readOnly = true)
     public SubjectTopicPage allPaginated(
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
@@ -74,6 +75,7 @@ public class SubjectTopics {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get a specific connection between a subject and a topic")
+    @Transactional(readOnly = true)
     public SubjectTopicIndexDocument get(@PathVariable("id") URI id) {
         NodeConnection nodeConnection = nodeConnectionRepository.getByPublicId(id);
         return new SubjectTopicIndexDocument(nodeConnection);

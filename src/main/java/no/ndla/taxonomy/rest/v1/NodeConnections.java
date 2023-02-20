@@ -29,7 +29,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +36,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = { "/v1/node-connections" })
-@Transactional
 public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;

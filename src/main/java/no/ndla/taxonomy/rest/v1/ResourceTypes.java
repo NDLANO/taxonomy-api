@@ -24,7 +24,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +33,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = { "/v1/resource-types" })
-@Transactional
 public class ResourceTypes extends CrudController<ResourceType> {
 
     private final ResourceTypeRepository resourceTypeRepository;
