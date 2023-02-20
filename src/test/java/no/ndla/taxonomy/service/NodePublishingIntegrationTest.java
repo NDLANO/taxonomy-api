@@ -22,10 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.junit.jupiter.api.Assertions.*;
@@ -449,6 +447,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         // Add new
         var resourceTranslation = new JsonTranslation("en");
         resourceTranslation.setName("Resource en");
+        r.addTranslation(resourceTranslation);
         // Remove
         r.removeTranslation("nn");
         entityManager.persist(r);
@@ -519,8 +518,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         // Update
         nb.get().setName("NB Node updated");
         // Add new
-        var en = new JsonTranslation("en");
-        en.setName("EN Node");
+        n.addTranslation("EN Node", "en");
         // Remove
         n.removeTranslation("nn");
         entityManager.persist(n);

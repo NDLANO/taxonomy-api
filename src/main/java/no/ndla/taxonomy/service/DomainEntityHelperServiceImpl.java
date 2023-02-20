@@ -162,6 +162,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             existing.setNodeType(node.getNodeType());
             existing.setRoot(node.isRoot());
             existing.setContext(node.isContext());
+            existing.setTranslations(node.getTranslations());
 
             // ResourceTypes
             Collection<URI> typesToSet = new HashSet<>();
@@ -197,27 +198,6 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
                         resourceResourceType.setPublicId(reusedUris.get(resourceType.getPublicId()));
                     }
                 });
-            }
-
-            // Translations
-            Set<JsonTranslation> translations = new HashSet<>();
-            for (JsonTranslation nodeTranslation : node.getTranslations()) {
-                var existingTranslation = existing.getTranslations().stream()
-                        .filter(translation -> translation.getLanguageCode().equals(nodeTranslation.getLanguageCode()))
-                        .findFirst();
-                if (existingTranslation.isPresent()) {
-                    var tr = existingTranslation.get();
-                    tr.setName(nodeTranslation.getName());
-                    translations.add(tr);
-                } else {
-                    translations.add(new JsonTranslation(nodeTranslation));
-                }
-            }
-            if (!translations.isEmpty()) {
-                existing.clearTranslations();
-                for (var translation : translations) {
-                    existing.addTranslation(translation);
-                }
             }
 
             // Metadata

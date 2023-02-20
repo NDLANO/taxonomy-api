@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class JsonTranslation implements Serializable, Translation {
     @JsonProperty("name")
@@ -55,5 +56,16 @@ public class JsonTranslation implements Serializable, Translation {
     @JsonIgnore
     public void setParent(Translatable parent) {
         this.parent = parent;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        var that = (JsonTranslation) o;
+        return Objects.equals(this.getLanguageCode(), that.getLanguageCode())
+                && Objects.equals(this.getName(), that.getName());
     }
 }

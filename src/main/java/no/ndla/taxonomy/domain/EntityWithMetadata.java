@@ -17,13 +17,19 @@ import java.util.Set;
 public interface EntityWithMetadata {
     Metadata getMetadata();
 
-    default void setMetadata(Metadata metadata) {
+    default void setMetadata(Metadata metadata, boolean changeOwner) {
         setCustomFields(metadata.getCustomFields());
         setGrepCodes(metadata.getGrepCodes());
         setVisible(metadata.isVisible());
         setUpdatedAt(metadata.getUpdatedAt());
         setCreatedAt(metadata.getCreatedAt());
-        metadata.setParent(this);
+        if (changeOwner) {
+            metadata.setParent(this);
+        }
+    }
+
+    default void setMetadata(Metadata metadata) {
+        this.setMetadata(metadata, true);
     }
 
     Set<JsonGrepCode> getGrepCodes();

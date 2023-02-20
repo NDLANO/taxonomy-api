@@ -36,7 +36,7 @@ public interface Translatable {
 
     default void removeTranslation(JsonTranslation translation) {
         translation.setParent(null);
-        var newTranslations = getTranslations().stream().filter(t -> t != translation).toList();
+        var newTranslations = new ArrayList<>(getTranslations().stream().filter(t -> t != translation).toList());
         setTranslations(newTranslations);
     }
 
