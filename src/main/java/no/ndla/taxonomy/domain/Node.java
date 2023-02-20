@@ -428,7 +428,9 @@ public class Node extends EntityWithPath implements Translatable {
         Node that = (Node) o;
         return context == that.context && root == that.root && Objects.equals(contentUri, that.contentUri)
                 && nodeType == that.nodeType && ident.equals(that.ident)
-                && Objects.equals(translations, that.translations);
+                && Objects.equals(translations, that.translations)
+                && Objects.equals(this.customfields, that.customfields) && this.visible == that.visible
+                && Objects.equals(this.grepcodes, that.grepcodes);
     }
 
     public Optional<Node> getPrimaryNode() {

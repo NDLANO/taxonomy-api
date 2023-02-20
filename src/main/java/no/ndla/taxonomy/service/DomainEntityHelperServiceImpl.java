@@ -151,7 +151,6 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         Node existing = (Node) getEntityByPublicId(node.getPublicId());
         node.getResourceTypes().forEach(this::ensureResourceTypesExists);
         if (existing == null) {
-            mergeMetadata(null, node.getMetadata(), node.getPublicId(), cleanUp);
             result = repository.save(new Node(node));
         } else if (existing.equals(node)) {
             result = existing;
@@ -163,12 +162,14 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             existing.setRoot(node.isRoot());
             existing.setContext(node.isContext());
             existing.setTranslations(node.getTranslations());
+            existing.setVisible(node.getVisible());
+            existing.setCustomFields(node.getCustomFields());
+            existing.setGrepCodes(node.getGrepCodes());
 
             // ResourceTypes
             Collection<URI> typesToSet = new HashSet<>();
             Collection<URI> typesToKeep = new HashSet<>();
-            List<URI> existingTypes = existing.getResourceTypes().stream().map(DomainEntity::getPublicId)
-                    .collect(Collectors.toList());
+            List<URI> existingTypes = existing.getResourceTypes().stream().map(DomainEntity::getPublicId).toList();
             node.getResourceTypes().forEach(resourceType -> {
                 if (existingTypes.contains(resourceType.getPublicId())) {
                     typesToKeep.add(resourceType.getPublicId());
@@ -200,13 +201,10 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
                 });
             }
 
-            // Metadata
-            mergeMetadata(existing, node.getMetadata(), node.getPublicId(), cleanUp);
             result = repository.save(existing);
 
             // delete orphans
-            List<URI> childIds = node.getChildren().stream().map(DomainEntity::getPublicId)
-                    .collect(Collectors.toList());
+            List<URI> childIds = node.getChildren().stream().map(DomainEntity::getPublicId).toList();
             result.getChildren().forEach(nodeConnection -> {
                 if (!childIds.contains(nodeConnection.getPublicId())) {
                     // Connection deleted
@@ -228,7 +226,6 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
 
         NodeConnection existing = (NodeConnection) getEntityByPublicId(nodeConnection.getPublicId());
         if (existing == null) {
-            mergeMetadata(null, nodeConnection.getMetadata(), nodeConnection.getPublicId(), cleanUp);
             // Use correct objects when copying
             nodeConnection
                     .setParent((Node) nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId()));
@@ -245,6 +242,9 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             existing.setParent((Node) nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId()));
             existing.setChild((Node) nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId()));
             existing.setRank(nodeConnection.getRank());
+            existing.setVisible(nodeConnection.getVisible());
+            existing.setGrepCodes(nodeConnection.getGrepCodes());
+            existing.setCustomFields(nodeConnection.getCustomFields());
             if (nodeConnection.getRelevance().isPresent()) {
                 existing.setRelevance(nodeConnection.getRelevance().get());
             }
@@ -252,7 +252,6 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
                 existing.setPrimary(nodeConnection.isPrimary().get());
             }
 
-            mergeMetadata(existing, nodeConnection.getMetadata(), nodeConnection.getPublicId(), cleanUp);
             result = repository.save(existing);
         }
         if (cleanUp) {
@@ -276,42 +275,4 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         return existing.get();
     }
 
-    protected void mergeMetadata(EntityWithMetadata present, Metadata metadata, URI publicId, boolean cleanUp) {
-        if (present == null)
-            return;
-
-        Metadata presentMetadata = present.getMetadata();
-        if (presentMetadata.equals(metadata)) {
-            // All ok, do nothing
-            return;
-        }
-
-        presentMetadata.setVisible(metadata.isVisible());
-        for (var grepCode : metadata.getGrepCodes()) {
-            if (!presentMetadata.getGrepCodes().stream().map(JsonGrepCode::code).toList().contains(grepCode.code())) {
-                presentMetadata.addGrepCode(new JsonGrepCode(grepCode));
-            }
-        }
-        if (!cleanUp) {
-            metadata.getCustomFields().forEach((key, value) -> {
-                if (!List.of(CustomField.IS_PUBLISHING, CustomField.IS_CHANGED, CustomField.REQUEST_PUBLISH)
-                        .contains(key)) {
-                    present.setCustomField(key, value);
-                }
-            });
-        } else {
-            logger.debug("Cleaning metadata in updater");
-            presentMetadata.getCustomFields().entrySet().forEach(customFieldValue -> {
-                var key = customFieldValue.getKey();
-                // Remove specially handled fields
-                if (Arrays.asList(CustomField.IS_PUBLISHING, CustomField.IS_CHANGED, CustomField.REQUEST_PUBLISH)
-                        .contains(key)) {
-                    present.unsetCustomField(customFieldValue.getKey());
-                    if (key.equals(CustomField.IS_PUBLISHING)) {
-                        logger.info(String.format("Publishing of node %s finished", publicId));
-                    }
-                }
-            });
-        }
-    }
 }
