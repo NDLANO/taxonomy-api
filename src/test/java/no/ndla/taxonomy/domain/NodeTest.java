@@ -281,23 +281,23 @@ public class NodeTest {
         assertEquals(1, node.getTranslations().size());
         assertEquals("nb", returnedTranslation.getLanguageCode());
         assertTrue(node.getTranslations().contains(returnedTranslation));
-        assertEquals(node, returnedTranslation.getNode());
+        assertEquals(node, returnedTranslation.getParent());
 
         var returnedTranslation2 = node.addTranslation("hello", "en");
         assertEquals(2, node.getTranslations().size());
         assertEquals("en", returnedTranslation2.getLanguageCode());
         assertTrue(node.getTranslations().containsAll(Set.of(returnedTranslation, returnedTranslation2)));
-        assertEquals(node, returnedTranslation2.getNode());
+        assertEquals(node, returnedTranslation2.getParent());
 
         node.removeTranslation("nb");
 
-        assertNull(returnedTranslation.getNode());
+        assertNull(returnedTranslation.getParent());
         assertFalse(node.getTranslations().contains(returnedTranslation));
 
         assertFalse(node.getTranslation("nb").isPresent());
 
         node.addTranslation(returnedTranslation);
-        assertEquals(node, returnedTranslation.getNode());
+        assertEquals(node, returnedTranslation.getParent());
         assertTrue(node.getTranslations().contains(returnedTranslation));
 
         assertEquals(returnedTranslation, node.getTranslation("nb").get());

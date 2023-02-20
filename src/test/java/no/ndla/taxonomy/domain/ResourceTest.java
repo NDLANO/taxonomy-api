@@ -36,23 +36,23 @@ public class ResourceTest {
         assertEquals(1, resource.getTranslations().size());
         assertEquals("nb", returnedTranslation.getLanguageCode());
         assertTrue(resource.getTranslations().contains(returnedTranslation));
-        assertEquals(resource, returnedTranslation.getNode());
+        assertEquals(resource, returnedTranslation.getParent());
 
         var returnedTranslation2 = resource.addTranslation("hello", "en");
         assertEquals(2, resource.getTranslations().size());
         assertEquals("en", returnedTranslation2.getLanguageCode());
         assertTrue(resource.getTranslations().containsAll(Set.of(returnedTranslation, returnedTranslation2)));
-        assertEquals(resource, returnedTranslation2.getNode());
+        assertEquals(resource, returnedTranslation2.getParent());
 
         resource.removeTranslation("nb");
 
-        assertNull(returnedTranslation.getNode());
+        assertNull(returnedTranslation.getParent());
         assertFalse(resource.getTranslations().contains(returnedTranslation));
 
         assertFalse(resource.getTranslation("nb").isPresent());
 
         resource.addTranslation(returnedTranslation);
-        assertEquals(resource, returnedTranslation.getNode());
+        assertEquals(resource, returnedTranslation.getParent());
         assertTrue(resource.getTranslations().contains(returnedTranslation));
 
         assertEquals(returnedTranslation, resource.getTranslation("nb").get());

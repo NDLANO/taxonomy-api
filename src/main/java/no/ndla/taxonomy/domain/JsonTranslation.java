@@ -48,12 +48,12 @@ public class JsonTranslation implements Serializable, Translation {
     }
 
     @JsonIgnore
-    public Translatable getNode() {
+    public Translatable getParent() {
         return this.parent;
     }
 
     @JsonIgnore
-    public void setNode(Translatable parent) {
+    public void setParent(Translatable parent) {
         this.parent = parent;
     }
 }

@@ -20,8 +20,8 @@ public interface Translatable {
     }
 
     default JsonTranslation addTranslation(JsonTranslation nodeTranslation) {
-        if (nodeTranslation.getNode() != this) {
-            nodeTranslation.setNode(this);
+        if (nodeTranslation.getParent() != this) {
+            nodeTranslation.setParent(this);
         }
         var newTranslations = new ArrayList<>(getTranslations());
         newTranslations.add(nodeTranslation);
@@ -35,7 +35,7 @@ public interface Translatable {
     }
 
     default void removeTranslation(JsonTranslation translation) {
-        translation.setNode(null);
+        translation.setParent(null);
         var newTranslations = getTranslations().stream().filter(t -> t != translation).toList();
         setTranslations(newTranslations);
     }
