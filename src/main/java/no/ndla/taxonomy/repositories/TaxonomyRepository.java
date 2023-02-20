@@ -17,16 +17,6 @@ import java.net.URI;
 
 @NoRepositoryBean
 public interface TaxonomyRepository<T> extends JpaRepository<T, Integer>, JpaSpecificationExecutor<T> {
-
-    String RESOURCE_METADATA = " LEFT JOIN FETCH r.metadata rm LEFT JOIN FETCH rm.grepCodes"
-            + " LEFT JOIN FETCH rm.customFieldValues rcfv LEFT JOIN FETCH rcfv.customField ";
-    String NODE_METADATA = " LEFT JOIN FETCH n.metadata nm LEFT JOIN FETCH nm.grepCodes"
-            + " LEFT JOIN FETCH nm.customFieldValues ncfv LEFT JOIN FETCH ncfv.customField ";
-    String CHILD_METADATA = " LEFT JOIN FETCH c.metadata cm LEFT JOIN FETCH cm.grepCodes"
-            + " LEFT JOIN FETCH cm.customFieldValues ccfv LEFT JOIN FETCH ccfv.customField ";
-    String NODE_CONNECTION_METADATA = " LEFT JOIN FETCH nc.metadata ncm LEFT JOIN FETCH ncm.grepCodes"
-            + " LEFT JOIN FETCH ncm.customFieldValues nccfv LEFT JOIN FETCH nccfv.customField ";
-
     T findByPublicId(URI id);
 
     default T getByPublicId(URI id) {
