@@ -7,66 +7,51 @@
 
 package no.ndla.taxonomy.domain;
 
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+import io.hypersistence.utils.hibernate.type.json.JsonStringType;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
+
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
+@TypeDefs({ @TypeDef(name = "json", typeClass = JsonStringType.class),
+        @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
 public class Relevance extends DomainObject {
 
-    @OneToMany(mappedBy = "relevance", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final Set<RelevanceTranslation> translations = new HashSet<>();
+    @Type(type = "jsonb")
+    @Column(name = "translations", columnDefinition = "jsonb")
+    protected List<JsonTranslation> translations = new ArrayList<>();
 
     public Relevance() {
         setPublicId(URI.create("urn:relevance:" + UUID.randomUUID()));
     }
 
-    public RelevanceTranslation addTranslation(String languageCode) {
-        RelevanceTranslation relevanceTranslation = getTranslation(languageCode).orElse(null);
+    public JsonTranslation addTranslation(String languageCode) {
+        var relevanceTranslation = getTranslation(languageCode).orElse(null);
         if (relevanceTranslation != null)
             return relevanceTranslation;
 
-        relevanceTranslation = new RelevanceTranslation(this, languageCode);
+        relevanceTranslation = new JsonTranslation(languageCode);
         translations.add(relevanceTranslation);
         return relevanceTranslation;
     }
 
     @Override
-    public Set<RelevanceTranslation> getTranslations() {
-        return translations.stream().collect(Collectors.toUnmodifiableSet());
+    public List<JsonTranslation> getTranslations() {
+        return this.translations;
     }
 
     @Override
-    public Optional<RelevanceTranslation> getTranslation(String languageCode) {
-        return translations.stream()
-                .filter(relevanceTranslation -> relevanceTranslation.getLanguageCode().equals(languageCode))
-                .findFirst();
-    }
-
-    public void addTranslation(RelevanceTranslation relevanceTranslation) {
-        this.translations.add(relevanceTranslation);
-        if (relevanceTranslation.getRelevance() != this) {
-            relevanceTranslation.setRelevance(this);
-        }
-    }
-
-    public void removeTranslation(RelevanceTranslation translation) {
-        if (translation.getRelevance() == this) {
-            translations.remove(translation);
-            if (translation.getRelevance() == this) {
-                translation.setRelevance(null);
-            }
-        }
-    }
-
-    public void removeTranslation(String language) {
-        getTranslation(language).ifPresent(this::removeTranslation);
+    public void setTranslations(List<JsonTranslation> translations) {
+        this.translations = translations;
     }
 
 }

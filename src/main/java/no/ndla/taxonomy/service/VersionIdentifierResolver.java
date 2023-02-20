@@ -19,7 +19,7 @@ import java.util.Optional;
 @Component
 public class VersionIdentifierResolver implements CurrentTenantIdentifierResolver {
 
-    @Value("${spring.datasource.hikari.schema:PUBLIC}")
+    @Value("${spring.datasource.hikari.schema:public}")
     private String defaultSchema;
 
     @Override

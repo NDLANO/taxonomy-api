@@ -7,52 +7,55 @@
 
 package no.ndla.taxonomy.domain;
 
-import javax.persistence.*;
+import java.io.Serializable;
 import java.net.URI;
 import java.util.HashSet;
-import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.UUID;
+import java.util.Set;
 
-@Entity
-@Table(name = "cached_path")
-public class CachedPath {
-    @Column(name = "is_primary")
+public class CachedPath implements Serializable {
     private boolean primary;
-
-    @Column(name = "is_active")
-    private boolean active = true;
-
-    @Column
-    @Id
-    private UUID id;
-
-    @Column
-    private URI publicId;
-
-    @Column
+    private String publicId;
     private String path;
 
-    @ManyToOne
-    private Node node;
+    private static CachedPath fromNonnullPath(String path, boolean isPrimary) {
+        var cp = new CachedPath();
+        var splitted = path.split("/");
+        var publicId = "urn:" + splitted[splitted.length - 1];
+        cp.setPublicId(URI.create(publicId));
+        cp.setPath(path);
+        cp.setPrimary(isPrimary);
+        return cp;
+    }
 
-    @PrePersist
-    void prePersist() {
-        if (id == null) {
-            id = UUID.randomUUID();
+    public static Set<CachedPath> fromPaths(String[] primary, String[] secondary) {
+        var paths = new HashSet<CachedPath>();
+
+        if (primary != null) {
+            for (var p : primary) {
+                paths.add(CachedPath.fromNonnullPath(p, true));
+            }
         }
+
+        if (secondary != null) {
+            for (var p : secondary) {
+                paths.add(CachedPath.fromNonnullPath(p, false));
+            }
+        }
+
+        return paths;
     }
 
-    public UUID getId() {
-        return id;
-    }
+    private Node node = null;
 
     public URI getPublicId() {
-        return publicId;
+        if (publicId == null)
+            return null;
+        return URI.create(publicId);
     }
 
     public void setPublicId(URI publicId) {
-        this.publicId = publicId;
+        this.publicId = publicId.toString();
     }
 
     public String getPath() {
@@ -69,18 +72,6 @@ public class CachedPath {
 
     public void setPrimary(boolean primary) {
         this.primary = primary;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
-    public void disable() {
-        setActive(false);
     }
 
     public Optional<EntityWithPath> getOwningEntity() {

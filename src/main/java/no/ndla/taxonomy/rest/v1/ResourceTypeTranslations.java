@@ -13,22 +13,21 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.ResourceType;
-import no.ndla.taxonomy.domain.ResourceTypeTranslation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping(path = { "/v1/resource-types/{id}/translations" })
-@Transactional
+@Transactional(readOnly = true)
 public class ResourceTypeTranslations {
 
     private final ResourceTypeRepository resourceTypeRepository;
@@ -60,7 +59,7 @@ public class ResourceTypeTranslations {
     public ResourceTypeTranslations.ResourceTypeTranslationIndexDocument get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
-        ResourceTypeTranslation translation = resourceType.getTranslation(language).orElseThrow(
+        var translation = resourceType.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for resource type", id));
 
         return new ResourceTypeTranslations.ResourceTypeTranslationIndexDocument() {
@@ -80,9 +79,8 @@ public class ResourceTypeTranslations {
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "resourceType", description = "The new or updated translation") @RequestBody ResourceTypeTranslations.UpdateResourceTypeTranslationCommand command) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
-        ResourceTypeTranslation translation = resourceType.addTranslation(language);
-        entityManager.persist(translation);
-        translation.setName(command.name);
+        resourceType.addTranslation(command.name, language);
+        entityManager.persist(resourceType);
     }
 
     @DeleteMapping("/{language}")
@@ -94,7 +92,7 @@ public class ResourceTypeTranslations {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         resourceType.getTranslation(language).ifPresent((translation) -> {
             resourceType.removeTranslation(language);
-            entityManager.remove(translation);
+            entityManager.persist(resourceType);
         });
     }
 

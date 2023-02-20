@@ -7,9 +7,7 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.CustomField;
-import no.ndla.taxonomy.domain.CustomFieldValue;
-import no.ndla.taxonomy.domain.GrepCode;
+import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -63,14 +60,12 @@ public class NodesMetadataTest extends RestTest {
         Node node = nodeRepository.getByPublicId(publicId);
         assertNotNull(node.getMetadata());
         assertFalse(node.getMetadata().isVisible());
-        Set<String> codes = node.getMetadata().getGrepCodes().stream().map(GrepCode::getCode)
+        Set<String> codes = node.getMetadata().getGrepCodes().stream().map(JsonGrepCode::getCode)
                 .collect(Collectors.toSet());
         assertTrue(codes.contains("KM123"));
-        Collection<CustomFieldValue> customFieldValues = node.getMetadata().getCustomFieldValues();
-        assertTrue(customFieldValues.stream().map(CustomFieldValue::getCustomField).map(CustomField::getKey)
-                .collect(Collectors.toSet()).contains("key"));
-        assertTrue(customFieldValues.stream().map(CustomFieldValue::getValue).collect(Collectors.toSet())
-                .contains("value"));
+        var customFieldValues = node.getMetadata().getCustomFields();
+        assertTrue(customFieldValues.containsKey("key"));
+        assertTrue(customFieldValues.containsValue("value"));
     }
 
     @Test
@@ -89,6 +84,6 @@ public class NodesMetadataTest extends RestTest {
         assertNotNull(node.getMetadata());
         assertTrue(node.getMetadata().isVisible());
         assertTrue(node.getMetadata().getGrepCodes().isEmpty());
-        assertTrue(node.getMetadata().getCustomFieldValues().isEmpty());
+        assertTrue(node.getCustomFields().isEmpty());
     }
 }

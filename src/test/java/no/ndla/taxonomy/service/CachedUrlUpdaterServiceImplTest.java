@@ -25,18 +25,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-class CachedUrlUpdaterServiceImplTest {
-    private CachedPathRepository cachedPathRepository;
+class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
     private CachedUrlUpdaterServiceImpl service;
 
     private NodeRepository nodeRepository;
+    private NodeConnectionRepository nodeConnectionRepository;
 
     @BeforeEach
-    void setup(@Autowired CachedPathRepository cachedPathRepository, @Autowired NodeRepository nodeRepository) {
-        this.cachedPathRepository = cachedPathRepository;
+    void setup(@Autowired NodeRepository nodeRepository, @Autowired NodeConnectionRepository nodeConnectionRepository) {
         this.nodeRepository = nodeRepository;
+        this.nodeConnectionRepository = nodeConnectionRepository;
 
-        service = new CachedUrlUpdaterServiceImpl(cachedPathRepository);
+        service = new CachedUrlUpdaterServiceImpl(nodeRepository);
     }
 
     @Test
@@ -57,7 +57,8 @@ class CachedUrlUpdaterServiceImplTest {
             assertEquals("urn:subject:1", path1.getPublicId().toString());
             assertTrue(path1.isPrimary());
 
-            assertEquals(1, cachedPathRepository.findAllByPublicId(URI.create("urn:subject:1")).size());
+            var node = nodeRepository.findFirstByPublicId(URI.create("urn:subject:1"));
+            assertEquals(1, node.get().getCachedPaths().size());
         }
 
         final var topic1 = new Node(NodeType.TOPIC);
@@ -75,27 +76,30 @@ class CachedUrlUpdaterServiceImplTest {
             assertEquals("urn:topic:1", path1.getPublicId().toString());
             assertTrue(path1.isPrimary());
 
-            assertEquals(1, cachedPathRepository.findAllByPublicId(URI.create("urn:topic:1")).size());
+            var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:1"));
+            assertEquals(1, node.get().getCachedPaths().size());
         }
 
-        topic1.addParentConnection(NodeConnection.create(subject1, topic1));
+        var nc = NodeConnection.create(subject1, topic1);
+        nodeConnectionRepository.save(nc);
+        topic1.addParentConnection(nc);
 
         service.updateCachedUrls(topic1);
 
         {
-            assertEquals(2, cachedPathRepository.findAllByPublicId(URI.create("urn:topic:1")).size());
-            assertTrue(
-                    cachedPathRepository.findAllByPublicId(URI.create("urn:topic:1")).stream().map(CachedPath::getPath)
-                            .collect(Collectors.toList()).containsAll(Set.of("/topic:1", "/subject:1/topic:1")));
+            var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:1")).get();
+            assertEquals(2, node.getCachedPaths().size());
+            assertTrue(node.getCachedPaths().stream().map(CachedPath::getPath).toList()
+                    .containsAll(Set.of("/topic:1", "/subject:1/topic:1")));
         }
 
         topic1.setContext(false);
 
         service.updateCachedUrls(topic1);
         {
-            assertEquals(1, cachedPathRepository.findAllByPublicId(URI.create("urn:topic:1")).size());
-            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:topic:1")).stream()
-                    .map(CachedPath::getPath).collect(Collectors.toList()).contains("/subject:1/topic:1"));
+            var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:1")).get();
+            assertEquals(1, node.getCachedPaths().size());
+            assertTrue(node.getCachedPaths().stream().map(CachedPath::getPath).toList().contains("/subject:1/topic:1"));
         }
 
         final var topic2 = new Node(NodeType.TOPIC);
@@ -105,17 +109,21 @@ class CachedUrlUpdaterServiceImplTest {
         service.updateCachedUrls(topic1);
 
         {
-            assertEquals(0, cachedPathRepository.findAllByPublicId(URI.create("urn:topic:2")).size());
+            var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:2")).get();
+            assertEquals(0, node.getCachedPaths().size());
         }
 
-        topic1.addChildConnection(NodeConnection.create(topic1, topic2));
+        var nc2 = NodeConnection.create(topic1, topic2);
+        topic1.addChildConnection(nc2);
+        nodeConnectionRepository.save(nc2);
 
         service.updateCachedUrls(topic1);
 
         {
-            assertEquals(1, cachedPathRepository.findAllByPublicId(URI.create("urn:topic:2")).size());
-            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:topic:2")).stream()
-                    .map(CachedPath::getPath).collect(Collectors.toList()).contains("/subject:1/topic:1/topic:2"));
+            var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:2")).get();
+            assertEquals(1, node.getCachedPaths().size());
+            assertTrue(node.getCachedPaths().stream().map(CachedPath::getPath).toList()
+                    .contains("/subject:1/topic:1/topic:2"));
         }
 
         topic1.setContext(true);
@@ -123,9 +131,9 @@ class CachedUrlUpdaterServiceImplTest {
         service.updateCachedUrls(topic1);
 
         {
-            assertEquals(2, cachedPathRepository.findAllByPublicId(URI.create("urn:topic:2")).size());
-            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:topic:2")).stream()
-                    .map(CachedPath::getPath).collect(Collectors.toList())
+            var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:2")).get();
+            assertEquals(2, node.getCachedPaths().size());
+            assertTrue(node.getCachedPaths().stream().map(CachedPath::getPath).toList()
                     .containsAll(Set.of("/subject:1/topic:1/topic:2", "/topic:1/topic:2")));
         }
 
@@ -136,28 +144,33 @@ class CachedUrlUpdaterServiceImplTest {
         service.updateCachedUrls(resource1);
 
         {
-            assertEquals(0, cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).size());
+            var node = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1")).get();
+            assertEquals(0, node.getCachedPaths().size());
         }
 
-        topic1.addChildConnection(NodeConnection.create(topic1, resource1));
+        var nc3 = NodeConnection.create(topic1, resource1);
+        nodeConnectionRepository.save(nc3);
+        topic1.addChildConnection(nc3);
 
         service.updateCachedUrls(resource1);
 
         {
-            assertEquals(2, cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).size());
-            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).stream()
-                    .map(CachedPath::getPath).collect(Collectors.toList())
+            var node = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1")).get();
+            assertEquals(2, node.getCachedPaths().size());
+            assertTrue(node.getCachedPaths().stream().map(CachedPath::getPath).toList()
                     .containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1")));
         }
 
-        topic2.addChildConnection(NodeConnection.create(topic2, resource1));
+        var nc4 = NodeConnection.create(topic2, resource1);
+        nodeConnectionRepository.save(nc4);
+        topic2.addChildConnection(nc4);
 
         service.updateCachedUrls(resource1);
 
         {
-            assertEquals(4, cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).size());
-            assertTrue(cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).stream()
-                    .map(CachedPath::getPath).collect(Collectors.toList())
+            var node = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1")).get();
+            assertEquals(4, node.getCachedPaths().size());
+            assertTrue(node.getCachedPaths().stream().map(CachedPath::getPath).toList()
                     .containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1",
                             "/subject:1/topic:1/topic:2/resource:1", "/topic:1/topic:2/resource:1")));
         }
@@ -165,7 +178,8 @@ class CachedUrlUpdaterServiceImplTest {
         nodeRepository.delete(resource1);
 
         {
-            assertEquals(0, cachedPathRepository.findAllByPublicId(URI.create("urn:resource:1")).size());
+            var node = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1"));
+            assertTrue(node.isEmpty());
         }
     }
 
@@ -183,8 +197,6 @@ class CachedUrlUpdaterServiceImplTest {
 
         service.clearCachedUrls(subject1);
 
-        assertEquals(1, subject1.getCachedPaths().size());
-        assertEquals(0,
-                subject1.getCachedPaths().stream().filter(CachedPath::isActive).collect(Collectors.toSet()).size());
+        assertEquals(0, subject1.getCachedPaths().size());
     }
 }

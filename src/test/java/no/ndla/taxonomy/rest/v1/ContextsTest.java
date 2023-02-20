@@ -83,10 +83,10 @@ public class ContextsTest extends RestTest {
         nodeRepository.deleteAllAndFlush();
 
         builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).publicId("urn:subject:1").name("Subject 1")
-                .translation("nb", tr -> tr.name("Fag 1")));
+                .translation("Fag 1", "nb"));
 
-        builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").name("Topic 1")
-                .translation("nb", tr -> tr.name("Emne 1")).isContext(true));
+        builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").name("Topic 1").translation("Emne 1", "nb")
+                .isContext(true));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/contexts?language=nb");
         Contexts.ContextIndexDocument[] contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);

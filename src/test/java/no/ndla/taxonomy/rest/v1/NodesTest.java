@@ -533,10 +533,9 @@ public class NodesTest extends RestTest {
         assertEquals(command.contentUri, node.getContentUri());
 
         assertFalse(node.getMetadata().isVisible());
-        assertTrue(node.getMetadata().getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet())
+        assertTrue(node.getMetadata().getGrepCodes().stream().map(JsonGrepCode::getCode).collect(Collectors.toSet())
                 .contains("KM123"));
-        assertTrue(node.getMetadata().getCustomFieldValues().stream().map(CustomFieldValue::getValue)
-                .collect(Collectors.toSet()).contains("value"));
+        assertTrue(node.getCustomFields().containsValue("value"));
     }
 
     @Test

@@ -13,22 +13,21 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeTranslation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping(path = { "/v1/topics/{id}/translations" })
-@Transactional
+@Transactional(readOnly = true)
 public class TopicTranslations {
 
     private final NodeRepository nodeRepository;
@@ -59,7 +58,7 @@ public class TopicTranslations {
     public TopicTranslations.TopicTranslationIndexDocument get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node topic = nodeRepository.getByPublicId(id);
-        NodeTranslation translation = topic.getTranslation(language).orElseThrow(
+        var translation = topic.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for topic", id));
         return new TopicTranslations.TopicTranslationIndexDocument() {
             {
@@ -77,10 +76,9 @@ public class TopicTranslations {
     public void put(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "topic", description = "The new or updated translation") @RequestBody TopicTranslations.UpdateTopicTranslationCommand command) {
-        Node topic = nodeRepository.getByPublicId(id);
-        NodeTranslation translation = topic.addTranslation(language);
-        entityManager.persist(translation);
-        translation.setName(command.name);
+        var topic = nodeRepository.getByPublicId(id);
+        topic.addTranslation(command.name, language);
+        entityManager.persist(topic);
     }
 
     @DeleteMapping("/{language}")
@@ -92,7 +90,7 @@ public class TopicTranslations {
         Node topic = nodeRepository.getByPublicId(id);
         topic.getTranslation(language).ifPresent(topicTranslation -> {
             topic.removeTranslation(language);
-            entityManager.remove(topicTranslation);
+            entityManager.persist(topic);
         });
     }
 

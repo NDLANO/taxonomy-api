@@ -20,10 +20,10 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,9 +47,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     ResourceTypeRepository resourceTypeRepository;
 
     @Autowired
-    GrepCodeRepository grepCodeRepository;
-
-    @Autowired
     NodeService nodeService;
 
     @Autowired
@@ -57,9 +54,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     ChangelogRepository changelogRepository;
-
-    @Autowired
-    CustomFieldRepository customFieldRepository;
 
     @Autowired
     Builder builder;
@@ -76,8 +70,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         versionRepository.deleteAllAndFlush();
         nodeConnectionRepository.deleteAllAndFlush();
         nodeRepository.deleteAllAndFlush();
-        grepCodeRepository.deleteAll();
-        customFieldRepository.deleteAll();
         changelogRepository.deleteAll();
     }
 
@@ -95,9 +87,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
         // a node to make sure testnode is not the first
         builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
-        Node node = builder.node(
-                n -> n.publicId("urn:node:1").name("Node").grepCode("KM123").customField("key", "value").isContext(true)
-                        .translation("nn", tr -> tr.name("NN Node")).translation("nb", tr -> tr.name("NB Node")));
+        Node node = builder.node(n -> n.publicId("urn:node:1").name("Node").grepCode("KM123")
+                .customField("key", "value").isContext(true).translation("NN Node", "nn").translation("NB Node", "nb"));
 
         TestTransaction.flagForCommit();
         TestTransaction.end();
@@ -110,7 +101,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         }
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
-        Node published = nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(node.getPublicId()).get();
+        Node published = nodeRepository.findFirstByPublicId(node.getPublicId()).get();
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertNotNull(published);
@@ -121,11 +112,10 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertEquals(node.getMetadata().isVisible(), published.getMetadata().isVisible());
         assertEquals(node.getMetadata().getGrepCodes().size(), published.getMetadata().getGrepCodes().size());
         assertAnyTrue(published.getMetadata().getGrepCodes(), grepCode -> grepCode.getCode().equals("KM123"));
-        assertEquals(node.getMetadata().getCustomFieldValues().size(),
-                published.getMetadata().getCustomFieldValues().size());
-        assertAnyTrue(published.getMetadata().getCustomFieldValues(),
-                customFieldValue -> customFieldValue.getCustomField().getKey().equals("key"));
-        assertAnyTrue(published.getMetadata().getCustomFieldValues(),
+        assertEquals(node.getCustomFields().size(), published.getCustomFields().size());
+        assertAnyTrue(published.getCustomFields().entrySet(),
+                customFieldValue -> customFieldValue.getKey().equals("key"));
+        assertAnyTrue(published.getCustomFields().entrySet(),
                 customFieldValue -> customFieldValue.getValue().equals("value"));
         assertNotNull(published.getTranslations());
         assertAnyTrue(published.getTranslations(), translation -> translation.getName().contains("NN Node"));
@@ -165,8 +155,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         Node published = (Node) domainEntityHelperService.getProcessedEntityByPublicId(node.getPublicId(), false, false)
                 .get();
         Node connected = published.getResourceChildren().stream().findFirst().get().getResource().get();
-        Node resource = nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(connected.getPublicId())
-                .get();
+        Node resource = nodeRepository.findFirstByPublicId(connected.getPublicId()).get();
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertEquals(node.getResourceChildren().size(), published.getResourceChildren().size());
@@ -174,9 +163,9 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertEquals("urn:resource:1", connected.getPublicId().toString());
         assertEquals("Resource", connected.getName());
         assertAnyTrue(connected.getMetadata().getGrepCodes(), grepCode -> grepCode.getCode().equals("KM234"));
-        assertAnyTrue(connected.getMetadata().getCustomFieldValues(),
-                customFieldValue -> customFieldValue.getCustomField().getKey().equals("key2"));
-        assertAnyTrue(connected.getMetadata().getCustomFieldValues(),
+        assertAnyTrue(connected.getCustomFields().entrySet(),
+                customFieldValue -> customFieldValue.getKey().equals("key2"));
+        assertAnyTrue(connected.getCustomFields().entrySet(),
                 customFieldValue -> customFieldValue.getValue().equals("value2"));
         assertAnyTrue(resource.getTranslations(), translation -> translation.getName().contains("Resource NB"));
         assertAnyTrue(resource.getTranslations(), translation -> translation.getName().contains("Resource NN"));
@@ -211,8 +200,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         }
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
-        Optional<Node> resource = nodeRepository
-                .findFirstByPublicIdIncludingCachedUrlsAndTranslations(URI.create("urn:resource:1"));
+        Optional<Node> resource = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1"));
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertTrue(resource.isPresent());
@@ -457,8 +445,9 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         // Update
         nb.get().setName("Resource nb updated");
         // Add new
-        var resourceTranslation = new NodeTranslation(r, "en");
+        var resourceTranslation = new JsonTranslation("en");
         resourceTranslation.setName("Resource en");
+        r.addTranslation(resourceTranslation);
         // Remove
         r.removeTranslation("nn");
         entityManager.persist(r);
@@ -525,12 +514,11 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.start();
         TestTransaction.flagForCommit();
         Node n = nodeRepository.findByPublicId(node.getPublicId());
-        Optional<NodeTranslation> nb = n.getTranslation("nb");
+        var nb = n.getTranslation("nb");
         // Update
         nb.get().setName("NB Node updated");
         // Add new
-        NodeTranslation en = new NodeTranslation(n, "en");
-        en.setName("EN Node");
+        n.addTranslation("EN Node", "en");
         // Remove
         n.removeTranslation("nn");
         entityManager.persist(n);
@@ -544,7 +532,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         }
 
         VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
-        Node published = nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(node.getPublicId()).get();
+        Node published = nodeRepository.findFirstByPublicId(node.getPublicId()).get();
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertNotNull(published);
@@ -596,8 +584,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertEquals(2, published.getTranslations().size());
         assertEquals(2, published.getChildNodes().size());
         assertEquals(1, published.getResources().size());
-        List<String> customfields = published.getMetadata().getCustomFieldValues().stream()
-                .map(customFieldValue -> customFieldValue.getCustomField().getKey()).collect(Collectors.toList());
+        var customfields = new ArrayList<>(published.getCustomFields().keySet());
         assertEquals(1, customfields.size());
         assertAnyTrue(customfields, customfield -> customfield.equals("to be kept"));
     }

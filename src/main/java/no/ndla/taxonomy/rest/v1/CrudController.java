@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.EntityWithPath;
+import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
@@ -64,7 +65,7 @@ public abstract class CrudController<T extends DomainEntity> {
         command.apply(entity);
 
         if (entity instanceof EntityWithPath && cachedUrlUpdaterService != null) {
-            cachedUrlUpdaterService.updateCachedUrls((EntityWithPath) entity);
+            cachedUrlUpdaterService.updateCachedUrls((Node) entity);
         }
 
         return entity;

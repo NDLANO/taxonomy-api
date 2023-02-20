@@ -10,6 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.service.AbstractIntegrationTest;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
@@ -29,7 +30,7 @@ import java.util.Set;
 @SpringBootTest
 @ActiveProfiles("junit")
 @Transactional
-public abstract class RestTest {
+public abstract class RestTest extends AbstractIntegrationTest {
 
     @Autowired
     EntityManager entityManager;

@@ -16,17 +16,17 @@ import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping(path = { "/v1/resources/{id}/translations" })
-@Transactional
+@Transactional(readOnly = true)
 public class ResourceTranslations {
 
     private final NodeRepository nodeRepository;
@@ -76,9 +76,8 @@ public class ResourceTranslations {
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "resource", description = "The new or updated translation") @RequestBody UpdateResourceTranslationCommand command) {
         var resource = nodeRepository.getByPublicId(id);
-        var translation = resource.addTranslation(language);
-        entityManager.persist(translation);
-        translation.setName(command.name);
+        resource.addTranslation(command.name, language);
+        entityManager.persist(resource);
     }
 
     @DeleteMapping("/{language}")

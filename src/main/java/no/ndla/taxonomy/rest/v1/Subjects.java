@@ -24,14 +24,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @RestController
-@Transactional
 @RequestMapping(path = { "/v1/subjects" })
 public class Subjects extends CrudControllerWithMetadata<Node> {
     private final TreeSorter topicTreeSorter;
@@ -41,9 +39,9 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     private final NodeConnectionRepository nodeConnectionRepository;
 
     public Subjects(TreeSorter treeSorter, CachedUrlUpdaterService cachedUrlUpdaterService,
-            RecursiveNodeTreeService recursiveNodeTreeService, MetadataService metadataService, NodeService nodeService,
-            NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository) {
-        super(nodeRepository, cachedUrlUpdaterService, metadataService);
+            RecursiveNodeTreeService recursiveNodeTreeService, NodeService nodeService, NodeRepository nodeRepository,
+            NodeConnectionRepository nodeConnectionRepository) {
+        super(nodeRepository, cachedUrlUpdaterService);
 
         this.topicTreeSorter = treeSorter;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
@@ -101,9 +99,9 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Gets a single subject", description = "Default language will be returned if desired language not found or if parameter is omitted.")
     public EntityWithPathDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(id)
-                .map(subject -> new NodeDTO(subject, language))
-                .orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
+        return nodeRepository.findFirstByPublicId(id).map(subject -> {
+            return new NodeDTO(subject, language);
+        }).orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
     }
 
     @PutMapping("/{id}")
@@ -153,12 +151,11 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
         final var returnList = new ArrayList<EntityWithPathChildDTO>();
 
-        // Filtering
-
-        final var filteredConnections = children.stream()
-                .filter(nodeConnection -> nodeConnection.getChild().isPresent()
-                        && nodeConnection.getChild().get().getNodeType() == NodeType.TOPIC)
-                .filter(nodeConnection -> searchForRelevance(nodeConnection, relevanceArgument, children)).toList();
+        final var filteredConnections = children.stream().filter(nodeConnection -> {
+            var child = nodeConnection.getChild();
+            var relevanceFilter = searchForRelevance(nodeConnection, relevanceArgument, children);
+            return child.isPresent() && child.get().getNodeType() == NodeType.TOPIC && relevanceFilter;
+        }).toList();
 
         filteredConnections.stream().map(nodeConnection -> createChildDTO(subject, nodeConnection, language))
                 .forEach(returnList::add);

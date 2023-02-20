@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import no.ndla.taxonomy.TestUtils;
+import no.ndla.taxonomy.service.AbstractIntegrationTest;
 import no.ndla.taxonomy.service.UrlResolverService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /*
  * Test controller only
  */
-public class UrlResolverMockTest {
+public class UrlResolverMockTest extends AbstractIntegrationTest {
     @MockBean
     UrlResolverService urlResolverService;
 

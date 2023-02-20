@@ -71,8 +71,8 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
     private List<String> getAllPaths(URI publicId) {
         try {
-            return getEntityFromPublicId(publicId).stream().map(EntityWithPath::getCachedPaths).flatMap(Set::stream)
-                    .map(CachedPath::getPath).collect(Collectors.toList());
+            return getEntityFromPublicId(publicId).stream()
+                    .flatMap(x -> x.getCachedPaths().stream().map(CachedPath::getPath)).collect(Collectors.toList());
         } catch (InvalidArgumentServiceException e) {
             return List.of();
         }
@@ -233,6 +233,6 @@ public class UrlResolverServiceImpl implements UrlResolverService {
             throw new InvalidArgumentServiceException("No valid URN provided");
         }
 
-        return nodeRepository.findFirstByPublicIdIncludingCachedUrls(publicId);
+        return nodeRepository.findFirstByPublicId(publicId);
     }
 }

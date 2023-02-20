@@ -97,27 +97,23 @@ public class ResourceTypeTest {
     public void getAddAndRemoveTranslation() {
         assertEquals(0, resourceType.getTranslations().size());
 
-        var returnedTranslation = resourceType.addTranslation("nb");
+        var returnedTranslation = resourceType.addTranslation("hei", "nb");
         assertEquals(1, resourceType.getTranslations().size());
         assertEquals("nb", returnedTranslation.getLanguageCode());
         assertTrue(resourceType.getTranslations().contains(returnedTranslation));
-        assertEquals(resourceType, returnedTranslation.getResourceType());
 
-        var returnedTranslation2 = resourceType.addTranslation("en");
+        var returnedTranslation2 = resourceType.addTranslation("hello", "en");
         assertEquals(2, resourceType.getTranslations().size());
         assertEquals("en", returnedTranslation2.getLanguageCode());
         assertTrue(resourceType.getTranslations().containsAll(Set.of(returnedTranslation, returnedTranslation2)));
-        assertEquals(resourceType, returnedTranslation2.getResourceType());
 
         resourceType.removeTranslation("nb");
 
-        assertNull(returnedTranslation.getResourceType());
         assertFalse(resourceType.getTranslations().contains(returnedTranslation));
 
         assertFalse(resourceType.getTranslation("nb").isPresent());
 
         resourceType.addTranslation(returnedTranslation);
-        assertEquals(resourceType, returnedTranslation.getResourceType());
         assertTrue(resourceType.getTranslations().contains(returnedTranslation));
 
         assertEquals(returnedTranslation, resourceType.getTranslation("nb").get());

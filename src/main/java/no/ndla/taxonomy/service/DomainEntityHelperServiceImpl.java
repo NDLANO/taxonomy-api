@@ -9,7 +9,6 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
-import no.ndla.taxonomy.service.exceptions.EntityNotFoundException;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,16 +28,14 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     private final NodeConnectionRepository nodeConnectionRepository;
     private final ResourceTypeRepository resourceTypeRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
-    private final CustomFieldService customFieldService;
 
     public DomainEntityHelperServiceImpl(NodeRepository nodeRepository,
             NodeConnectionRepository nodeConnectionRepository, ResourceTypeRepository resourceTypeRepository,
-            CachedUrlUpdaterService cachedUrlUpdaterService, CustomFieldService customFieldService) {
+            CachedUrlUpdaterService cachedUrlUpdaterService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.resourceTypeRepository = resourceTypeRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
-        this.customFieldService = customFieldService;
     }
 
     @Override
@@ -56,7 +53,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         case "topic":
         case "node":
         case "resource":
-            return nodeRepository.findFirstByPublicIdIncludingCachedUrlsAndTranslations(publicId).orElse(null);
+            return nodeRepository.findFirstByPublicId(publicId).orElse(null);
         case "node-connection":
         case "subject-topic":
         case "topic-subtopic":
@@ -103,22 +100,15 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         if (entity != null) {
             initializeFields(entity);
         }
-        if (entity instanceof EntityWithMetadata) {
-            EntityWithMetadata entityWithMetadata = (EntityWithMetadata) entity;
+        if (entity instanceof EntityWithMetadata entityWithMetadata) {
             if (addIsPublishing && !cleanUp) {
-                if (!entityWithMetadata.getMetadata().getCustomFieldValues().stream()
-                        .map(customFieldValue -> customFieldValue.getCustomField().getKey())
-                        .collect(Collectors.toList()).contains(CustomField.IS_PUBLISHING)) {
-                    customFieldService.setCustomField(entityWithMetadata.getMetadata(), CustomField.IS_PUBLISHING,
-                            "true");
-                }
+                entityWithMetadata.setCustomField(CustomField.IS_PUBLISHING, "true");
                 return Optional.of(entity);
             }
             if (cleanUp) {
-                Metadata metadata = entityWithMetadata.getMetadata();
-                unsetCustomField(metadata, CustomField.IS_PUBLISHING);
-                unsetCustomField(metadata, CustomField.REQUEST_PUBLISH);
-                unsetCustomField(metadata, CustomField.IS_CHANGED);
+                entityWithMetadata.unsetCustomField(CustomField.IS_PUBLISHING);
+                entityWithMetadata.unsetCustomField(CustomField.REQUEST_PUBLISH);
+                entityWithMetadata.unsetCustomField(CustomField.IS_CHANGED);
             }
         }
         return Optional.ofNullable(entity);
@@ -126,7 +116,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
 
     private void initializeFields(DomainEntity domainEntity) {
         if (domainEntity instanceof Node) {
-            ((Node) domainEntity).getTranslations().forEach(NodeTranslation::getName);
+            ((Node) domainEntity).getTranslations().forEach(JsonTranslation::getName);
             ((Node) domainEntity).getChildConnections();
             ((Node) domainEntity).getParentConnections();
             ((Node) domainEntity).getResourceResourceTypes();
@@ -137,20 +127,8 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             ((NodeConnection) domainEntity).getChild().ifPresent(this::initializeFields);
         } else if (domainEntity instanceof ResourceType) {
             ((ResourceType) domainEntity).getParent().ifPresent(this::initializeFields);
-            ((ResourceType) domainEntity).getTranslations().forEach(ResourceTypeTranslation::getName);
+            ((ResourceType) domainEntity).getTranslations().forEach(JsonTranslation::getName);
         }
-    }
-
-    private void unsetCustomField(Metadata metadata, String customfield) {
-        metadata.getCustomFieldValues().forEach(customFieldValue -> {
-            if (customFieldValue.getCustomField().getKey().equals(customfield)) {
-                try {
-                    customFieldService.unsetCustomField(customFieldValue.getId());
-                } catch (EntityNotFoundException e) {
-                    // Already deleted. Do nothing.
-                }
-            }
-        });
     }
 
     @Override
@@ -173,7 +151,6 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         Node existing = (Node) getEntityByPublicId(node.getPublicId());
         node.getResourceTypes().forEach(this::ensureResourceTypesExists);
         if (existing == null) {
-            mergeMetadata(null, node.getMetadata(), node.getPublicId(), cleanUp);
             result = repository.save(new Node(node));
         } else if (existing.equals(node)) {
             result = existing;
@@ -184,12 +161,15 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             existing.setNodeType(node.getNodeType());
             existing.setRoot(node.isRoot());
             existing.setContext(node.isContext());
+            existing.setTranslations(node.getTranslations());
+            existing.setVisible(node.getVisible());
+            existing.setCustomFields(node.getCustomFields());
+            existing.setGrepCodes(node.getGrepCodes());
 
             // ResourceTypes
             Collection<URI> typesToSet = new HashSet<>();
             Collection<URI> typesToKeep = new HashSet<>();
-            List<URI> existingTypes = existing.getResourceTypes().stream().map(DomainEntity::getPublicId)
-                    .collect(Collectors.toList());
+            List<URI> existingTypes = existing.getResourceTypes().stream().map(DomainEntity::getPublicId).toList();
             node.getResourceTypes().forEach(resourceType -> {
                 if (existingTypes.contains(resourceType.getPublicId())) {
                     typesToKeep.add(resourceType.getPublicId());
@@ -221,34 +201,10 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
                 });
             }
 
-            // Translations
-            Set<NodeTranslation> translations = new HashSet<>();
-            for (NodeTranslation nodeTranslation : node.getTranslations()) {
-                Optional<NodeTranslation> existingTranslation = existing.getTranslations().stream()
-                        .filter(translation -> translation.getLanguageCode().equals(nodeTranslation.getLanguageCode()))
-                        .findFirst();
-                if (existingTranslation.isPresent()) {
-                    NodeTranslation tr = existingTranslation.get();
-                    tr.setName(nodeTranslation.getName());
-                    translations.add(tr);
-                } else {
-                    translations.add(new NodeTranslation(nodeTranslation, existing));
-                }
-            }
-            if (!translations.isEmpty()) {
-                existing.clearTranslations();
-                for (NodeTranslation translation : translations) {
-                    existing.addTranslation(translation);
-                }
-            }
-
-            // Metadata
-            mergeMetadata(existing, node.getMetadata(), node.getPublicId(), cleanUp);
             result = repository.save(existing);
 
             // delete orphans
-            List<URI> childIds = node.getChildren().stream().map(DomainEntity::getPublicId)
-                    .collect(Collectors.toList());
+            List<URI> childIds = node.getChildren().stream().map(DomainEntity::getPublicId).toList();
             result.getChildren().forEach(nodeConnection -> {
                 if (!childIds.contains(nodeConnection.getPublicId())) {
                     // Connection deleted
@@ -270,7 +226,6 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
 
         NodeConnection existing = (NodeConnection) getEntityByPublicId(nodeConnection.getPublicId());
         if (existing == null) {
-            mergeMetadata(null, nodeConnection.getMetadata(), nodeConnection.getPublicId(), cleanUp);
             // Use correct objects when copying
             nodeConnection
                     .setParent((Node) nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId()));
@@ -287,6 +242,9 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             existing.setParent((Node) nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId()));
             existing.setChild((Node) nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId()));
             existing.setRank(nodeConnection.getRank());
+            existing.setVisible(nodeConnection.getVisible());
+            existing.setGrepCodes(nodeConnection.getGrepCodes());
+            existing.setCustomFields(nodeConnection.getCustomFields());
             if (nodeConnection.getRelevance().isPresent()) {
                 existing.setRelevance(nodeConnection.getRelevance().get());
             }
@@ -294,7 +252,6 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
                 existing.setPrimary(nodeConnection.isPrimary().get());
             }
 
-            mergeMetadata(existing, nodeConnection.getMetadata(), nodeConnection.getPublicId(), cleanUp);
             result = repository.save(existing);
         }
         if (cleanUp) {
@@ -318,55 +275,4 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         return existing.get();
     }
 
-    protected void mergeMetadata(EntityWithMetadata present, Metadata metadata, URI publicId, boolean cleanUp) {
-        if (present == null) {
-            // Make sure custom fields exists
-            metadata.getCustomFieldValues().forEach(customFieldValue -> customFieldService.setCustomField(null,
-                    customFieldValue.getCustomField().getKey(), null));
-            return;
-        }
-        Metadata presentMetadata = present.getMetadata();
-        if (presentMetadata.equals(metadata)) {
-            // All ok, do nothing
-            return;
-        }
-
-        presentMetadata.setVisible(metadata.isVisible());
-        for (GrepCode grepCode : metadata.getGrepCodes()) {
-            if (!presentMetadata.getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toList())
-                    .contains(grepCode.getCode())) {
-                presentMetadata.addGrepCode(new GrepCode(grepCode, presentMetadata));
-            }
-        }
-        if (!cleanUp) {
-            List<String> existingKeys = presentMetadata.getCustomFieldValues().stream()
-                    .map(customFieldValue1 -> customFieldValue1.getCustomField().getKey()).collect(Collectors.toList());
-            metadata.getCustomFieldValues().forEach(customFieldValue -> {
-                String key = customFieldValue.getCustomField().getKey();
-                if (!List.of(CustomField.IS_PUBLISHING, CustomField.IS_CHANGED, CustomField.REQUEST_PUBLISH)
-                        .contains(key)) {
-                    if (!existingKeys.contains(key)) {
-                        customFieldService.setCustomField(presentMetadata, key, customFieldValue.getValue());
-                    } else {
-                        // Update customfield
-                        Optional<CustomFieldValue> value = presentMetadata.getCustomFieldValueByKey(key);
-                        value.ifPresent(fieldValue -> fieldValue.setValue(customFieldValue.getValue()));
-                    }
-                }
-            });
-        } else {
-            logger.debug("Cleaning metadata in updater");
-            presentMetadata.getCustomFieldValues().forEach(customFieldValue -> {
-                String key = customFieldValue.getCustomField().getKey();
-                // Remove specially handled fields
-                if (Arrays.asList(CustomField.IS_PUBLISHING, CustomField.IS_CHANGED, CustomField.REQUEST_PUBLISH)
-                        .contains(key)) {
-                    presentMetadata.removeCustomFieldValue(customFieldValue);
-                    if (key.equals(CustomField.IS_PUBLISHING)) {
-                        logger.info(String.format("Publishing of node %s finished", publicId));
-                    }
-                }
-            });
-        }
-    }
 }

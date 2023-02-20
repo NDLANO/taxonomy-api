@@ -288,11 +288,9 @@ public class ResourcesTest extends RestTest {
         assertEquals(command.contentUri, resource.getContentUri());
 
         assertFalse(resource.getMetadata().isVisible());
-        assertTrue(resource.getMetadata().getGrepCodes().stream().map(GrepCode::getCode).collect(Collectors.toSet())
+        assertTrue(resource.getMetadata().getGrepCodes().stream().map(JsonGrepCode::getCode).collect(Collectors.toSet())
                 .contains("KM123"));
-        assertTrue(resource.getMetadata().getCustomFieldValues().stream().map(CustomFieldValue::getValue)
-                .collect(Collectors.toSet()).contains("value"));
-
+        assertTrue(resource.getMetadata().getCustomFields().containsValue("value"));
     }
 
     @Test

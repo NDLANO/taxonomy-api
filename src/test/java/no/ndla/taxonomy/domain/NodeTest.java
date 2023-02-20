@@ -37,22 +37,12 @@ public class NodeTest {
     public void getPrimaryPath() {
         assertFalse(node.getPrimaryPath().isPresent());
 
-        final var cachedPrimaryContextUrl = mock(CachedPath.class);
-        final var cachedPrimarySubjectUrl = mock(CachedPath.class);
-
-        when(cachedPrimaryContextUrl.isActive()).thenReturn(true);
-        when(cachedPrimaryContextUrl.isPrimary()).thenReturn(true);
-        when(cachedPrimaryContextUrl.getPath()).thenReturn("/topic/primary");
-        when(cachedPrimarySubjectUrl.isActive()).thenReturn(true);
-        when(cachedPrimarySubjectUrl.isPrimary()).thenReturn(true);
-        when(cachedPrimarySubjectUrl.getPath()).thenReturn("/subject/primary");
-
         // If returning a primary subject path along it must return it
-        setField(node, "cachedPaths", Set.of(cachedPrimarySubjectUrl));
+        setField(node, "primaryPaths", new String[] { "/subject/primary" });
         assertEquals("/subject/primary", node.getPrimaryPath().orElse(""));
 
         // And adding a primary context URL (topic) it must be returned instead
-        setField(node, "cachedPaths", Set.of(cachedPrimaryContextUrl));
+        setField(node, "primaryPaths", new String[] { "/topic/primary" });
         assertEquals("/topic/primary", node.getPrimaryPath().orElse(""));
 
         // Order must not matter
@@ -287,27 +277,27 @@ public class NodeTest {
     public void addAndGetAndRemoveTranslation() {
         assertEquals(0, node.getTranslations().size());
 
-        var returnedTranslation = node.addTranslation("nb");
+        var returnedTranslation = node.addTranslation("hei", "nb");
         assertEquals(1, node.getTranslations().size());
         assertEquals("nb", returnedTranslation.getLanguageCode());
         assertTrue(node.getTranslations().contains(returnedTranslation));
-        assertEquals(node, returnedTranslation.getNode());
+        assertEquals(node, returnedTranslation.getParent());
 
-        var returnedTranslation2 = node.addTranslation("en");
+        var returnedTranslation2 = node.addTranslation("hello", "en");
         assertEquals(2, node.getTranslations().size());
         assertEquals("en", returnedTranslation2.getLanguageCode());
         assertTrue(node.getTranslations().containsAll(Set.of(returnedTranslation, returnedTranslation2)));
-        assertEquals(node, returnedTranslation2.getNode());
+        assertEquals(node, returnedTranslation2.getParent());
 
         node.removeTranslation("nb");
 
-        assertNull(returnedTranslation.getNode());
+        assertNull(returnedTranslation.getParent());
         assertFalse(node.getTranslations().contains(returnedTranslation));
 
         assertFalse(node.getTranslation("nb").isPresent());
 
         node.addTranslation(returnedTranslation);
-        assertEquals(node, returnedTranslation.getNode());
+        assertEquals(node, returnedTranslation.getParent());
         assertTrue(node.getTranslations().contains(returnedTranslation));
 
         assertEquals(returnedTranslation, node.getTranslation("nb").get());
@@ -344,10 +334,12 @@ public class NodeTest {
 
     @Test
     public void getCachedPaths() {
-        final var cachedPaths = Set.of();
+        final var primaryPaths = new String[] {};
+        final var nonPrimaryPaths = new String[] {};
 
-        setField(node, "cachedPaths", cachedPaths);
-        assertSame(cachedPaths, node.getCachedPaths());
+        setField(node, "primaryPaths", primaryPaths);
+        setField(node, "cachedPaths", nonPrimaryPaths);
+        assertEquals(new HashSet<CachedPath>(), node.getCachedPaths());
     }
 
     @Test

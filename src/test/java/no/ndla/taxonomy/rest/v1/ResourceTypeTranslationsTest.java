@@ -22,8 +22,8 @@ public class ResourceTypeTranslationsTest extends RestTest {
 
     @Test
     public void can_get_all_resource_types() throws Exception {
-        builder.resourceType(t -> t.name("Article").translation("nb", l -> l.name("Artikkel")));
-        builder.resourceType(t -> t.name("Lecture").translation("nb", l -> l.name("Forelesning")));
+        builder.resourceType(t -> t.name("Article").translation("Artikkel", "nb"));
+        builder.resourceType(t -> t.name("Lecture").translation("Forelesning", "nb"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resource-types?language=nb");
         ResourceTypes.ResourceTypeIndexDocument[] resourceTypes = testUtils
@@ -36,7 +36,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
 
     @Test
     public void can_get_single_resource_type() throws Exception {
-        URI id = builder.resourceType(t -> t.name("Article").translation("nb", l -> l.name("Artikkel"))).getPublicId();
+        URI id = builder.resourceType(t -> t.name("Article").translation("Artikkel", "nb")).getPublicId();
 
         ResourceTypes.ResourceTypeIndexDocument resourceType = getResourceTypeIndexDocument(id, "nb");
         assertEquals("Artikkel", resourceType.name);
@@ -51,7 +51,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
 
     @Test
     public void can_get_default_language() throws Exception {
-        URI id = builder.resourceType(t -> t.name("Article").translation("nb", l -> l.name("Artikkel"))).getPublicId();
+        URI id = builder.resourceType(t -> t.name("Article").translation("Artikkel", "nb")).getPublicId();
 
         ResourceTypes.ResourceTypeIndexDocument resourceType = getResourceTypeIndexDocument(id, null);
         assertEquals("Article", resourceType.name);
@@ -74,8 +74,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
 
     @Test
     public void can_delete_translation() throws Exception {
-        ResourceType resourceType = builder
-                .resourceType(t -> t.name("Article").translation("nb", l -> l.name("Artikkel")));
+        ResourceType resourceType = builder.resourceType(t -> t.name("Article").translation("Artikkel", "nb"));
         URI id = resourceType.getPublicId();
 
         testUtils.deleteResource("/v1/resource-types/" + id + "/translations/nb");
@@ -85,9 +84,8 @@ public class ResourceTypeTranslationsTest extends RestTest {
 
     @Test
     public void can_get_all_translations() throws Exception {
-        ResourceType resourceType = builder
-                .resourceType(t -> t.name("Article").translation("nb", l -> l.name("Artikkel"))
-                        .translation("en", l -> l.name("Article")).translation("de", l -> l.name("Artikel")));
+        ResourceType resourceType = builder.resourceType(t -> t.name("Article").translation("Artikkel", "nb")
+                .translation("Article", "en").translation("Artikel", "de"));
         URI id = resourceType.getPublicId();
 
         ResourceTypeTranslations.ResourceTypeTranslationIndexDocument[] translations = testUtils.getObject(
@@ -102,8 +100,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
 
     @Test
     public void can_get_single_translation() throws Exception {
-        ResourceType resourceType = builder
-                .resourceType(t -> t.name("Article").translation("nb", l -> l.name("Artikkel")));
+        ResourceType resourceType = builder.resourceType(t -> t.name("Article").translation("Artikkel", "nb"));
         URI id = resourceType.getPublicId();
 
         ResourceTypeTranslations.ResourceTypeTranslationIndexDocument translation = testUtils.getObject(

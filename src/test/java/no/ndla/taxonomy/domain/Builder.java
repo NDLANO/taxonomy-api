@@ -197,30 +197,15 @@ public class Builder {
 
     }
 
-    @Transactional
-    public static class NodeTranslationBuilder {
-        private NodeTranslation nodeTranslation;
+    public static class JsonTranslationBuilder {
+        private JsonTranslation translation;
 
-        public NodeTranslationBuilder(NodeTranslation nodeTranslation) {
-            this.nodeTranslation = nodeTranslation;
+        public JsonTranslationBuilder(JsonTranslation nodeTranslation) {
+            this.translation = nodeTranslation;
         }
 
-        public NodeTranslationBuilder name(String name) {
-            nodeTranslation.setName(name);
-            return this;
-        }
-    }
-
-    @Transactional
-    public static class ResourceTypeTranslationBuilder {
-        private ResourceTypeTranslation resourceTypeTranslation;
-
-        public ResourceTypeTranslationBuilder(ResourceTypeTranslation resourceTypeTranslation) {
-            this.resourceTypeTranslation = resourceTypeTranslation;
-        }
-
-        public ResourceTypeTranslationBuilder name(String name) {
-            resourceTypeTranslation.setName(name);
+        public JsonTranslationBuilder name(String name) {
+            translation.setName(name);
             return this;
         }
     }
@@ -283,11 +268,17 @@ public class Builder {
             return this;
         }
 
-        public ResourceTypeBuilder translation(String languageCode, Consumer<ResourceTypeTranslationBuilder> consumer) {
-            ResourceTypeTranslation resourceTypeTranslation = resourceType.addTranslation(languageCode);
-            entityManager.persist(resourceTypeTranslation);
-            ResourceTypeTranslationBuilder builder = new ResourceTypeTranslationBuilder(resourceTypeTranslation);
+        public ResourceTypeBuilder translation(String name, String languageCode) {
+            resourceType.addTranslation(name, languageCode);
+            entityManager.persist(resourceType);
+            return this;
+        }
+
+        public ResourceTypeBuilder translation(String languageCode, Consumer<JsonTranslationBuilder> consumer) {
+            var nodeTranslation = resourceType.addTranslation("", languageCode);
+            var builder = new JsonTranslationBuilder(nodeTranslation);
             consumer.accept(builder);
+            entityManager.persist(resourceType);
             return this;
         }
 
@@ -401,39 +392,14 @@ public class Builder {
         }
 
         public NodeBuilder grepCode(String code) {
-            GrepCode grepCode = new GrepCode();
-            List resultList = entityManager.createQuery("select gc from GrepCode gc where gc.code = ?1")
-                    .setParameter(1, code).getResultList();
-            if (resultList.isEmpty()) {
-                grepCode.setCode(code);
-                entityManager.persist(grepCode);
-            } else {
-                grepCode = (GrepCode) resultList.get(0);
-            }
-            grepCode.addMetadata(node.getMetadata());
-            entityManager.persist(grepCode);
-
-            node.getMetadata().addGrepCode(grepCode);
+            this.node.addGrepCode(code);
+            entityManager.persist(this.node);
             return this;
         }
 
         public NodeBuilder customField(String key, String value) {
-            CustomField customField = new CustomField();
-            List resultList = entityManager.createQuery("select cf from CustomField cf where cf.key = ?1")
-                    .setParameter(1, key).getResultList();
-            if (resultList.isEmpty()) {
-                customField.setKey(key);
-                entityManager.persist(customField);
-            } else {
-                customField = (CustomField) resultList.get(0);
-            }
-            CustomFieldValue customFieldValue = new CustomFieldValue();
-            customFieldValue.setCustomField(customField);
-            customFieldValue.setValue(value);
-            customFieldValue.setMetadata(node.getMetadata());
-            entityManager.persist(customFieldValue);
-
-            node.getMetadata().addCustomFieldValue(customFieldValue);
+            this.node.setCustomField(key, value);
+            entityManager.persist(this.node);
             return this;
         }
 
@@ -513,12 +479,17 @@ public class Builder {
             return this;
         }
 
-        public NodeBuilder translation(String languageCode, Consumer<NodeTranslationBuilder> consumer) {
-            NodeTranslation nodeTranslation = node.addTranslation(languageCode);
-            entityManager.persist(nodeTranslation);
-            NodeTranslationBuilder builder = new NodeTranslationBuilder(nodeTranslation);
+        public NodeBuilder translation(String languageCode, Consumer<JsonTranslationBuilder> consumer) {
+            var nodeTranslation = node.addTranslation("", languageCode);
+            var builder = new JsonTranslationBuilder(nodeTranslation);
             consumer.accept(builder);
+            entityManager.persist(node);
+            return this;
+        }
 
+        public NodeBuilder translation(String name, String languageCode) {
+            node.addTranslation(name, languageCode);
+            entityManager.persist(node);
             return this;
         }
 

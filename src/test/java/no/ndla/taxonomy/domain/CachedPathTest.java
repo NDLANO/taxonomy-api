@@ -54,20 +54,6 @@ public class CachedPathTest {
     }
 
     @Test
-    public void prePersist() {
-        assertNull(cachedPath.getId());
-
-        cachedPath.prePersist();
-
-        assertNotNull(cachedPath.getId());
-
-        final var firstId = cachedPath.getId();
-
-        cachedPath.prePersist();
-        assertSame(firstId, cachedPath.getId());
-    }
-
-    @Test
     public void setOwningEntity() {
         final var subject = mock(Node.class);
         when(subject.getPublicId()).thenReturn(URI.create("urn:subject:1"));

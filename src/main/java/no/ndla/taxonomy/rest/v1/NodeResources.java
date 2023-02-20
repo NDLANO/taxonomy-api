@@ -24,14 +24,12 @@ import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourcePageDTO;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
 import no.ndla.taxonomy.service.EntityConnectionService;
-import no.ndla.taxonomy.service.MetadataService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +37,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = { "/v1/node-resources" })
-@Transactional
 public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
 
     private final NodeRepository nodeRepository;
@@ -49,8 +46,8 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
 
     public NodeResources(NodeRepository nodeRepository, EntityConnectionService connectionService,
             NodeConnectionRepository nodeConnectionRepository, RelevanceRepository relevanceRepository,
-            CachedUrlUpdaterService cachedUrlUpdaterService, MetadataService metadataService) {
-        super(nodeConnectionRepository, cachedUrlUpdaterService, metadataService);
+            CachedUrlUpdaterService cachedUrlUpdaterService) {
+        super(nodeConnectionRepository, cachedUrlUpdaterService);
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.nodeRepository = nodeRepository;
         this.connectionService = connectionService;

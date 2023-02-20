@@ -7,24 +7,31 @@
 
 package no.ndla.taxonomy.domain;
 
+import io.hypersistence.utils.hibernate.type.array.StringArrayType;
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
+import io.hypersistence.utils.hibernate.type.json.JsonStringType;
 import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
+import org.hibernate.annotations.*;
 
 import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
 import java.net.URI;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
-public class Node extends EntityWithPath {
+@TypeDefs({ @TypeDef(name = "json", typeClass = JsonStringType.class),
+        @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class),
+        @TypeDef(name = "string-array", typeClass = StringArrayType.class) })
+public class Node extends EntityWithPath implements Translatable {
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<NodeConnection> parentConnections = new TreeSet<>();
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<NodeConnection> childConnections = new TreeSet<>();
-
-    @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<NodeTranslation> translations = new TreeSet<>();
 
     @Column
     private URI contentUri;
@@ -36,12 +43,21 @@ public class Node extends EntityWithPath {
     @Column
     private String ident;
 
-    @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
-    protected Set<CachedPath> cachedPaths = new HashSet<>();
+    @Column
+    @CreationTimestamp
+    private Instant created_at;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, optional = false)
-    @JoinColumn(name = "metadata_id")
-    private Metadata metadata = new Metadata();
+    @Column
+    @UpdateTimestamp
+    private Instant updated_at;
+
+    @Type(type = "string-array")
+    @Column(name = "cached_paths", columnDefinition = "text[]")
+    private String[] cachedPaths;
+
+    @Type(type = "string-array")
+    @Column(name = "primary_paths", columnDefinition = "text[]")
+    private String[] primaryPaths;
 
     @Column
     private boolean context;
@@ -51,6 +67,21 @@ public class Node extends EntityWithPath {
 
     @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceResourceType> resourceResourceTypes = new TreeSet<>();
+
+    @Column
+    private boolean visible = true;
+
+    @Type(type = "jsonb")
+    @Column(name = "translations", columnDefinition = "jsonb")
+    private List<JsonTranslation> translations = new ArrayList<>();
+
+    @Type(type = "jsonb")
+    @Column(name = "grepcodes", columnDefinition = "jsonb")
+    private Set<JsonGrepCode> grepcodes = new HashSet<>();
+
+    @Type(type = "jsonb")
+    @Column(name = "customfields", columnDefinition = "jsonb")
+    private Map<String, String> customfields = new HashMap<>();
 
     // Needed for hibernate
     public Node() {
@@ -80,11 +111,7 @@ public class Node extends EntityWithPath {
             updatePublicID();
         }
 
-        TreeSet<NodeTranslation> trs = new TreeSet<>();
-        for (NodeTranslation tr : node.getTranslations()) {
-            trs.add(new NodeTranslation(tr, this));
-        }
-        this.translations = trs;
+        this.translations = node.getTranslations().stream().map(JsonTranslation::new).toList();
         TreeSet<ResourceResourceType> rrts = new TreeSet<>();
         for (ResourceResourceType rt : node.getResourceResourceTypes()) {
             ResourceResourceType rrt = new ResourceResourceType();
@@ -106,7 +133,15 @@ public class Node extends EntityWithPath {
 
     @Override
     public Set<CachedPath> getCachedPaths() {
-        return cachedPaths;
+        return CachedPath.fromPaths(this.primaryPaths, this.cachedPaths);
+    }
+
+    @Override
+    public void setCachedPaths(Set<CachedPath> cachedPaths) {
+        this.primaryPaths = cachedPaths.stream().filter(CachedPath::isPrimary).map(CachedPath::getPath)
+                .toArray(String[]::new);
+        this.cachedPaths = cachedPaths.stream().filter(s -> !s.isPrimary()).map(CachedPath::getPath)
+                .toArray(String[]::new);
     }
 
     /*
@@ -239,13 +274,9 @@ public class Node extends EntityWithPath {
         nodeConnection.disassociate();
     }
 
-    public void releaseParentConnections() {
-        this.parentConnections.clear();
-    }
-
     public Collection<Node> getChildNodes() {
         return childConnections.stream().map(NodeConnection::getChild).filter(Optional::isPresent).map(Optional::get)
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
     }
 
     public Optional<Node> getParentNode() {
@@ -260,7 +291,7 @@ public class Node extends EntityWithPath {
 
     public Collection<Node> getResources() {
         return childConnections.stream().map(NodeConnection::getChild).filter(Optional::isPresent).map(Optional::get)
-                .filter(s -> s.getNodeType() == NodeType.RESOURCE).collect(Collectors.toUnmodifiableList());
+                .filter(s -> s.getNodeType() == NodeType.RESOURCE).toList();
     }
 
     public void setIdent(String ident) {
@@ -287,51 +318,6 @@ public class Node extends EntityWithPath {
 
     public NodeType getNodeType() {
         return nodeType;
-    }
-
-    public NodeTranslation addTranslation(String languageCode) {
-        NodeTranslation nodeTranslation = getTranslation(languageCode).orElse(null);
-        if (nodeTranslation != null)
-            return nodeTranslation;
-
-        nodeTranslation = new NodeTranslation(this, languageCode);
-        translations.add(nodeTranslation);
-        return nodeTranslation;
-    }
-
-    @Override
-    public Optional<NodeTranslation> getTranslation(String languageCode) {
-        return translations.stream().filter(translation -> translation.getLanguageCode().equals(languageCode))
-                .findFirst();
-    }
-
-    @Override
-    public Collection<NodeTranslation> getTranslations() {
-        return translations.stream().collect(Collectors.toUnmodifiableList());
-    }
-
-    public void clearTranslations() {
-        translations.clear();
-    }
-
-    public void addTranslation(NodeTranslation nodeTranslation) {
-        this.translations.add(nodeTranslation);
-        if (nodeTranslation.getNode() != this) {
-            nodeTranslation.setNode(this);
-        }
-    }
-
-    public void removeTranslation(NodeTranslation translation) {
-        if (translation.getNode() == this) {
-            translations.remove(translation);
-            if (translation.getNode() == this) {
-                translation.setNode(null);
-            }
-        }
-    }
-
-    public void removeTranslation(String languageCode) {
-        getTranslation(languageCode).ifPresent(this::removeTranslation);
     }
 
     public void setContext(boolean context) {
@@ -369,11 +355,62 @@ public class Node extends EntityWithPath {
 
     @Override
     public Metadata getMetadata() {
-        return metadata;
+        return new Metadata(this);
     }
 
-    public void setMetadata(Metadata metadata) {
-        this.metadata = metadata;
+    @Override
+    public Set<JsonGrepCode> getGrepCodes() {
+        return this.grepcodes;
+    }
+
+    @Override
+    public void setCustomField(String key, String value) {
+        this.customfields.put(key, value);
+    }
+
+    @Override
+    public void unsetCustomField(String key) {
+        this.customfields.remove(key);
+    }
+
+    @Override
+    public void setGrepCodes(Set<JsonGrepCode> codes) {
+        this.grepcodes = codes;
+    }
+
+    @Override
+    public void setCustomFields(Map<String, String> customFields) {
+        this.customfields = customFields;
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+    }
+
+    @Override
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updated_at = updatedAt;
+    }
+
+    @Override
+    public void setCreatedAt(Instant createdAt) {
+        this.created_at = createdAt;
+    }
+
+    @Override
+    public boolean getVisible() {
+        return this.visible;
+    }
+
+    @Override
+    public Instant getCreatedAt() {
+        return this.created_at;
+    }
+
+    @Override
+    public Instant getUpdatedAt() {
+        return this.updated_at;
     }
 
     @PreRemove
@@ -389,9 +426,11 @@ public class Node extends EntityWithPath {
         if (o == null || getClass() != o.getClass())
             return false;
         Node that = (Node) o;
-        return context == that.context && root == that.root && Objects.equals(translations, that.translations)
-                && Objects.equals(contentUri, that.contentUri) && nodeType == that.nodeType && ident.equals(that.ident)
-                && metadata.equals(that.metadata);
+        return context == that.context && root == that.root && Objects.equals(contentUri, that.contentUri)
+                && nodeType == that.nodeType && ident.equals(that.ident)
+                && Objects.equals(translations, that.translations)
+                && Objects.equals(this.customfields, that.customfields) && this.visible == that.visible
+                && Objects.equals(this.grepcodes, that.grepcodes);
     }
 
     public Optional<Node> getPrimaryNode() {
@@ -427,10 +466,29 @@ public class Node extends EntityWithPath {
         return paths;
     }
 
+    public Map<String, String> getCustomFields() {
+        return this.customfields;
+    }
+
+    public void addGrepCode(String code) {
+        var now = Instant.now().toString();
+        var newGrepCode = new JsonGrepCode(code, now, now);
+        this.grepcodes.add(newGrepCode);
+    }
+
     public List<NodePath> buildPaths() {
         var np = new NodePath();
         var paths = getParentPaths(List.of(np), this, Optional.empty());
         return paths.stream().sorted(Comparator.comparing(NodePath::toString)).toList();
     }
 
+    @Override
+    public List<JsonTranslation> getTranslations() {
+        return this.translations;
+    }
+
+    @Override
+    public void setTranslations(List<JsonTranslation> translations) {
+        this.translations = translations;
+    }
 }

@@ -34,23 +34,19 @@ public class RelevanceTest {
         assertEquals(1, relevance.getTranslations().size());
         assertEquals("nb", returnedTranslation.getLanguageCode());
         assertTrue(relevance.getTranslations().contains(returnedTranslation));
-        assertEquals(relevance, returnedTranslation.getRelevance());
 
         var returnedTranslation2 = relevance.addTranslation("en");
         assertEquals(2, ((Collection) getField(relevance, "translations")).size());
         assertEquals("en", returnedTranslation2.getLanguageCode());
         assertTrue(relevance.getTranslations().containsAll(Set.of(returnedTranslation, returnedTranslation2)));
-        assertEquals(relevance, returnedTranslation2.getRelevance());
 
         relevance.removeTranslation("nb");
 
-        assertNull(returnedTranslation.getRelevance());
         assertFalse(relevance.getTranslations().contains(returnedTranslation));
 
         assertFalse(relevance.getTranslation("nb").isPresent());
 
         relevance.addTranslation(returnedTranslation);
-        assertEquals(relevance, returnedTranslation.getRelevance());
         assertTrue(relevance.getTranslations().contains(returnedTranslation));
 
         assertEquals(returnedTranslation, relevance.getTranslation("nb").get());

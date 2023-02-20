@@ -66,14 +66,14 @@ public class NodePath {
         var breadcrumbNodes = getBreadcrumbNodes();
         var breadcrumbs = new LanguageField<List<String>>();
         var allLanguages = breadcrumbNodes.stream()
-                .flatMap(n -> n.getTranslations().stream().map(NodeTranslation::getLanguageCode))
+                .flatMap(n -> n.getTranslations().stream().map(Translation::getLanguageCode))
                 .collect(Collectors.toSet());
         allLanguages.add(DefaultLanguage);
 
         for (var lang : allLanguages) {
             var crumbsForLanguage = new ArrayList<String>();
             breadcrumbNodes.forEach(n -> {
-                var translatedName = n.getTranslation(lang).map(NodeTranslation::getName).orElse(n.getName());
+                var translatedName = n.getTranslation(lang).map(JsonTranslation::getName).orElse(n.getName());
                 crumbsForLanguage.add(translatedName);
             });
             breadcrumbs.put(lang, crumbsForLanguage);

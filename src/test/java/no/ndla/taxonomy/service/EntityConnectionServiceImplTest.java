@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Transactional
-public class EntityConnectionServiceImplTest {
+public class EntityConnectionServiceImplTest extends AbstractIntegrationTest {
     @Autowired
     private NodeConnectionRepository nodeConnectionRepository;
 

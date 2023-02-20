@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Transactional
-class DomainEntityHelperServiceImplTest {
+class DomainEntityHelperServiceImplTest extends AbstractIntegrationTest {
     private Node subject1;
     private Node subject2;
     private Node topic1;
@@ -45,10 +45,9 @@ class DomainEntityHelperServiceImplTest {
     @BeforeEach
     void setUp(@Autowired NodeRepository nodeRepository, @Autowired NodeConnectionRepository nodeConnectionRepository,
             @Autowired ResourceTypeRepository resourceTypeRepository,
-            @Autowired CachedUrlUpdaterService cachedUrlUpdaterService,
-            @Autowired CustomFieldService customFieldService) {
+            @Autowired CachedUrlUpdaterService cachedUrlUpdaterService) {
         service = new DomainEntityHelperServiceImpl(nodeRepository, nodeConnectionRepository, resourceTypeRepository,
-                cachedUrlUpdaterService, customFieldService);
+                cachedUrlUpdaterService);
 
         topic1 = new Node(NodeType.TOPIC);
         topic1.setPublicId(URI.create("urn:topic:test:1"));
