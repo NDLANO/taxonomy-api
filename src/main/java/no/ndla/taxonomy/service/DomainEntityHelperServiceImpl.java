@@ -102,7 +102,6 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         }
         if (entity instanceof EntityWithMetadata entityWithMetadata) {
             if (addIsPublishing && !cleanUp) {
-                // TODO: Her var det en rar ifstatement, trenger man den?
                 entityWithMetadata.setCustomField(CustomField.IS_PUBLISHING, "true");
                 return Optional.of(entity);
             }
@@ -298,6 +297,9 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     }
 
     protected void mergeMetadata(EntityWithMetadata present, Metadata metadata, URI publicId, boolean cleanUp) {
+        if (present == null)
+            return;
+
         Metadata presentMetadata = present.getMetadata();
         if (presentMetadata.equals(metadata)) {
             // All ok, do nothing

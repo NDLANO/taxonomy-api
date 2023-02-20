@@ -49,9 +49,8 @@ public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends
             throws InvalidDataException {
         var entity = repository.findByPublicId(id);
         if (entity instanceof EntityWithMetadata em) {
-            var metadata = new Metadata(entityToUpdate);
-            em.setMetadata(metadata);
-            return new MetadataDto(em.getMetadata());
+            var result = em.getMetadata().mergeWith(entityToUpdate);
+            return new MetadataDto(result);
         }
         throw new NotFoundException("Entity", id);
     }

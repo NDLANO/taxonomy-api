@@ -8,8 +8,8 @@
 package no.ndla.taxonomy.domain;
 
 import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.exceptions.InvalidDataException;
 
-import javax.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.*;
@@ -50,10 +50,20 @@ public class Metadata implements Serializable {
         this.visible = metadata.isVisible();
     }
 
-    public Metadata(MetadataDto metadata) {
-        this.customFields = metadata.getCustomFields();
-        this.grepCodes = metadata.grepCodes.stream().map(JsonGrepCode::new).collect(Collectors.toSet());
-        this.visible = metadata.isVisible();
+    public Metadata mergeWith(MetadataDto toMerge) {
+        if (toMerge.visible != null) {
+            setVisible(toMerge.visible);
+        }
+
+        if (toMerge.grepCodes != null) {
+            setGrepCodes(toMerge.grepCodes);
+        }
+
+        if (toMerge.customFields != null) {
+            setCustomFields(toMerge.customFields);
+        }
+
+        return this;
     }
 
     public void setParent(EntityWithMetadata parent) {
@@ -61,11 +71,24 @@ public class Metadata implements Serializable {
     }
 
     public void addGrepCode(JsonGrepCode grepCode) {
-        this.parent.getGrepCodes().add(grepCode);
+        this.grepCodes.add(grepCode);
+        this.parent.setGrepCodes(this.grepCodes);
+    }
+
+    public void setGrepCodes(Set<String> grepCodes) {
+        var newJsonGrepCodes = grepCodes.stream().map(JsonGrepCode::new).collect(Collectors.toSet());
+        this.grepCodes = newJsonGrepCodes;
+        this.parent.setGrepCodes(newJsonGrepCodes);
+    }
+
+    public void setCustomFields(Map<String, String> customFields) {
+        this.customFields = customFields;
+        this.parent.setCustomFields(customFields);
     }
 
     public void removeGrepCode(JsonGrepCode grepCode) {
         this.grepCodes.remove(grepCode);
+        this.parent.setGrepCodes(this.grepCodes);
     }
 
     public Set<JsonGrepCode> getGrepCodes() {
