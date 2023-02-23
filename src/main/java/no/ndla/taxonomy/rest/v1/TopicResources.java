@@ -86,6 +86,7 @@ public class TopicResources {
     @PostMapping
     @Operation(summary = "Adds a resource to a topic", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public ResponseEntity<Void> post(
             @Parameter(name = "connection", description = "new topic/resource connection ") @RequestBody AddResourceToTopicCommand command) {
 
@@ -108,6 +109,7 @@ public class TopicResources {
     @Operation(summary = "Removes a resource from a topic", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void delete(@PathVariable("id") URI id) {
         var connection = nodeConnectionRepository.getByPublicId(id);
         connectionService.disconnectParentChildConnection(connection);
@@ -118,6 +120,7 @@ public class TopicResources {
             @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand command) {
         var topicResource = nodeConnectionRepository.getByPublicId(id);

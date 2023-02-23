@@ -21,6 +21,7 @@ import no.ndla.taxonomy.service.UpdatableDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -43,6 +44,7 @@ public class Relevances extends CrudController<Relevance> {
 
     @GetMapping
     @Operation(summary = "Gets all relevances")
+    @Transactional(readOnly = true)
     public List<RelevanceIndexDocument> index(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return relevanceRepository.findAllIncludingTranslations().stream()
@@ -51,6 +53,7 @@ public class Relevances extends CrudController<Relevance> {
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single relevance", description = "Default language will be returned if desired language not found or if parameter is omitted.")
+    @Transactional(readOnly = true)
     public RelevanceIndexDocument get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return relevanceRepository.findFirstByPublicIdIncludingTranslations(id)
@@ -61,6 +64,7 @@ public class Relevances extends CrudController<Relevance> {
     @PostMapping
     @Operation(summary = "Creates a new relevance", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public ResponseEntity<Void> post(
             @Parameter(name = "relevance", description = "The new relevance") @RequestBody RelevanceCommand command) {
         return doPost(new Relevance(), command);
@@ -70,6 +74,7 @@ public class Relevances extends CrudController<Relevance> {
     @Operation(summary = "Updates a relevance", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(name = "relevance", description = "The updated relevance. Fields not included will be set to null.") @RequestBody RelevanceCommand command) {
         doPut(id, command);

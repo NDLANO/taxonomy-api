@@ -66,6 +66,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     @GetMapping
     @Operation(summary = "Gets all nodes")
+    @Transactional(readOnly = true)
     public List<NodeDTO> getAll(
             @Parameter(description = "Filter by nodeType, could be a comma separated list, defaults to Topics and Subjects (Resources are quite slow). :^)") @RequestParam(value = "nodeType", required = false) Optional<List<NodeType>> nodeType,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
@@ -96,6 +97,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between node and children paginated")
+    @Transactional(readOnly = true)
     public SearchResultDTO<NodeDTO> allPaginated(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
@@ -115,7 +117,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single node")
-    @Transactional
+    @Transactional(readOnly = true)
     public NodeDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return new NodeDTO(nodeRepository.findFirstByPublicId(id)
@@ -154,6 +156,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}/nodes")
     @Operation(summary = "Gets all children for this node")
+    @Transactional(readOnly = true)
     public List<EntityWithPathChildDTO> getChildren(@Parameter(name = "id", required = true) @PathVariable("id") URI id,
             @Parameter(description = "Filter by nodeType, could be a comma separated list, defaults to Topics and Subjects (Resources are quite slow). :^)") @RequestParam(value = "nodeType", required = false) Optional<List<NodeType>> nodeType,
             @Parameter(description = "If true, children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
@@ -183,6 +186,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}/connections")
     @Operation(summary = "Gets all parents and children this node is connected to")
+    @Transactional(readOnly = true)
     public List<ConnectionIndexDTO> getAllConnections(@PathVariable("id") URI id) {
         return nodeService.getAllConnections(id);
     }
@@ -191,12 +195,14 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Deletes a single node by id", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
     public void delete(@PathVariable("id") URI id) {
         nodeService.delete(id);
     }
 
     @GetMapping("/{id}/resources")
     @Operation(summary = "Gets all resources for the given node", tags = { "nodes" })
+    @Transactional(readOnly = true)
     public List<ResourceWithNodeConnectionDTO> getResources(
             @Parameter(name = "id", required = true) @PathVariable("id") URI nodeId,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false) String language,
@@ -218,6 +224,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @PutMapping("/{id}/makeResourcesPrimary")
     @Operation(summary = "Makes all connected resources primary", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
+    @Transactional
     public ResponseEntity<Boolean> makeResourcesPrimary(
             @Parameter(name = "id", required = true) @PathVariable("id") URI nodeId,
             @Parameter(description = "If true, children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive) {

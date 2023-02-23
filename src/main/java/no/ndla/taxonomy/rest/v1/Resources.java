@@ -80,6 +80,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between node and children paginated")
+    @Transactional(readOnly = true)
     public SearchResultDTO<ResourceDTO> allPaginated(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
@@ -100,6 +101,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("{id}")
     @Operation(summary = "Gets a single resource")
+    @Transactional(readOnly = true)
     public NodeDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return nodeService.getNode(id, language);
@@ -161,6 +163,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Deletes a single entity by id", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
     public void delete(@PathVariable("id") URI id) {
         nodeService.delete(id);
     }

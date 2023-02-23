@@ -84,6 +84,7 @@ public class SubjectTopics {
     @PostMapping
     @Operation(summary = "Adds a new topic to a subject", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public ResponseEntity<Void> post(
             @Parameter(name = "command", description = "The subject and topic getting connected.") @RequestBody AddTopicToSubjectCommand command) {
         var subject = nodeRepository.getByPublicId(command.subjectid);
@@ -100,6 +101,7 @@ public class SubjectTopics {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Removes a topic from a subject", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void delete(@PathVariable("id") URI id) {
         connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id));
     }
@@ -109,6 +111,7 @@ public class SubjectTopics {
     @Operation(summary = "Updates a connection between subject and topic", description = "Use to update which subject is primary to a topic or to change sorting order.", security = {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "updated subject/topic connection") @RequestBody UpdateSubjectTopicCommand command) {
         var nodeConnection = nodeConnectionRepository.getByPublicId(id);

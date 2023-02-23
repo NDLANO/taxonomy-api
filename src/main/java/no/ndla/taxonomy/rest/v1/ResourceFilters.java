@@ -24,7 +24,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = { "/v1/resource-filters" })
-@Transactional
 @Deprecated(forRemoval = true)
 public class ResourceFilters {
 

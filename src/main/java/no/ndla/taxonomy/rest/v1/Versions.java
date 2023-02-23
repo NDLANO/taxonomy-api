@@ -21,6 +21,7 @@ import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -41,6 +42,7 @@ public class Versions extends CrudController<Version> {
 
     @GetMapping
     @Operation(summary = "Gets all versions")
+    @Transactional(readOnly = true)
     public List<VersionDTO> getAll(
             @Parameter(description = "Version type", example = "PUBLISHED") @RequestParam(value = "type", required = false, defaultValue = "") Optional<VersionType> versionType,
             @Parameter(description = "Version hash", example = "ndla") @RequestParam(value = "hash", required = false) Optional<String> hash) {
@@ -54,6 +56,7 @@ public class Versions extends CrudController<Version> {
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single version")
+    @Transactional(readOnly = true)
     public VersionDTO get(@PathVariable("id") URI id) {
         return versionRepository.findFirstByPublicId(id).map(VersionDTO::new)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Version not found"));
@@ -62,6 +65,7 @@ public class Versions extends CrudController<Version> {
     @PostMapping
     @Operation(summary = "Creates a new version", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
+    @Transactional
     public ResponseEntity<Void> post(
             @Parameter(description = "Base new version on version with this id") @RequestParam(value = "sourceId") Optional<URI> sourceId,
             @Parameter(name = "version", description = "The new version") @RequestBody VersionCommand command) {
@@ -75,6 +79,7 @@ public class Versions extends CrudController<Version> {
     @Operation(summary = "Updates a version", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
+    @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(name = "version", description = "The updated version.") @RequestBody VersionCommand command) {
         doPut(id, command);
@@ -85,6 +90,7 @@ public class Versions extends CrudController<Version> {
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
+    @Transactional
     public void delete(@PathVariable("id") URI id) {
         Optional<Version> version = versionRepository.findFirstByPublicId(id);
         if (version.isEmpty() || version.get().isLocked()) {
@@ -97,6 +103,7 @@ public class Versions extends CrudController<Version> {
     @Operation(summary = "Publishes a version", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
+    @Transactional
     public void publish(@PathVariable("id") URI id) {
         Optional<Version> version = versionRepository.findFirstByPublicId(id);
         if (version.isEmpty() || version.get().getVersionType() != VersionType.BETA) {

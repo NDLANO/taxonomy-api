@@ -27,7 +27,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = { "/v1/topics/{id}/translations" })
-@Transactional(readOnly = true)
 public class TopicTranslations {
 
     private final NodeRepository nodeRepository;
@@ -41,6 +40,7 @@ public class TopicTranslations {
 
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single topic")
+    @Transactional(readOnly = true)
     public List<TopicTranslations.TopicTranslationIndexDocument> index(@PathVariable("id") URI id) {
         Node topic = nodeRepository.getByPublicId(id);
         List<TopicTranslations.TopicTranslationIndexDocument> result = new ArrayList<>();
@@ -55,6 +55,7 @@ public class TopicTranslations {
 
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single topic")
+    @Transactional(readOnly = true)
     public TopicTranslations.TopicTranslationIndexDocument get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node topic = nodeRepository.getByPublicId(id);
@@ -73,6 +74,7 @@ public class TopicTranslations {
             @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "topic", description = "The new or updated translation") @RequestBody TopicTranslations.UpdateTopicTranslationCommand command) {
@@ -85,6 +87,7 @@ public class TopicTranslations {
     @Operation(summary = "Deletes a translation", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void delete(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node topic = nodeRepository.getByPublicId(id);
