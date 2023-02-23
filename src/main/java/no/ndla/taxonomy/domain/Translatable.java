@@ -2,6 +2,7 @@ package no.ndla.taxonomy.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public interface Translatable {
@@ -23,7 +24,8 @@ public interface Translatable {
         if (nodeTranslation.getParent() != this) {
             nodeTranslation.setParent(this);
         }
-        var newTranslations = new ArrayList<>(getTranslations());
+        var newTranslations = new ArrayList<>(getTranslations().stream()
+                .filter(t -> !Objects.equals(t.getLanguageCode(), nodeTranslation.getLanguageCode())).toList());
         newTranslations.add(nodeTranslation);
         setTranslations(newTranslations);
         return nodeTranslation;
