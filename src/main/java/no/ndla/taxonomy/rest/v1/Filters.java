@@ -16,7 +16,6 @@ import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -47,7 +46,6 @@ public class Filters extends ObsoleteCrudController {
     @PostMapping("/v1/filters")
     @Operation(summary = "Creates a new filter", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    @Transactional
     @Deprecated(forRemoval = true)
     public ResponseEntity<Void> post(
             @Parameter(name = "filter", description = "The new filter") @RequestBody FilterDTO command) {
@@ -58,7 +56,6 @@ public class Filters extends ObsoleteCrudController {
     @Operation(summary = "Updates a filter", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    @Transactional
     @Deprecated(forRemoval = true)
     public void put(@PathVariable("id") URI id,
             @Parameter(name = "filter", description = "The updated filter") @RequestBody FilterDTO command) {
@@ -69,7 +66,6 @@ public class Filters extends ObsoleteCrudController {
     @Operation(summary = "Delete a single filter by ID", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Transactional
     @Deprecated(forRemoval = true)
     public void delete(@PathVariable("id") URI id) {
         throw new NotFoundHttpResponseException("Filter was not found");

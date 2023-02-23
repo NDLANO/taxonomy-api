@@ -17,13 +17,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequestMapping(path = { "/v1/filters/{id}/translations" })
-@Transactional
 @Deprecated(forRemoval = true)
 public class FilterTranslations {
     public FilterTranslations() {

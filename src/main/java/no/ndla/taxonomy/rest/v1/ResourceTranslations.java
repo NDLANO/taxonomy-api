@@ -26,7 +26,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = { "/v1/resources/{id}/translations" })
-@Transactional(readOnly = true)
 public class ResourceTranslations {
 
     private final NodeRepository nodeRepository;
@@ -40,6 +39,7 @@ public class ResourceTranslations {
 
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single resource")
+    @Transactional(readOnly = true)
     public List<ResourceTranslationIndexDocument> index(@PathVariable("id") URI id) {
         var resource = nodeRepository.getByPublicId(id);
         List<ResourceTranslationIndexDocument> result = new ArrayList<>();
@@ -54,6 +54,7 @@ public class ResourceTranslations {
 
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single resource")
+    @Transactional(readOnly = true)
     public ResourceTranslationIndexDocument get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         var resource = nodeRepository.getByPublicId(id);
@@ -72,6 +73,7 @@ public class ResourceTranslations {
             @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "resource", description = "The new or updated translation") @RequestBody UpdateResourceTranslationCommand command) {
@@ -84,6 +86,7 @@ public class ResourceTranslations {
     @Operation(summary = "Deletes a translation", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void delete(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         final var resource = nodeRepository.getByPublicId(id);

@@ -27,7 +27,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = { "/v1/subjects/{id}/translations" })
-@Transactional(readOnly = true)
 public class SubjectTranslations {
     private final NodeRepository nodeRepository;
 
@@ -40,6 +39,7 @@ public class SubjectTranslations {
 
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single subject")
+    @Transactional(readOnly = true)
     public List<SubjectTranslationIndexDocument> index(@PathVariable("id") URI id) {
         Node subject = nodeRepository.getByPublicId(id);
         List<SubjectTranslationIndexDocument> result = new ArrayList<>();
@@ -54,6 +54,7 @@ public class SubjectTranslations {
 
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single subject")
+    @Transactional(readOnly = true)
     public SubjectTranslationIndexDocument get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node subject = nodeRepository.getByPublicId(id);
@@ -72,6 +73,7 @@ public class SubjectTranslations {
     @Operation(summary = "Deletes a translation", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void delete(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node subject = nodeRepository.getByPublicId(id);
@@ -86,6 +88,7 @@ public class SubjectTranslations {
             @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "subject", description = "The new or updated translation") @RequestBody UpdateSubjectTranslationCommand command) {

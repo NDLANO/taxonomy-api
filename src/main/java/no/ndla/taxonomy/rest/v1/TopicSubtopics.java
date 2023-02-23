@@ -85,6 +85,7 @@ public class TopicSubtopics {
     @PostMapping
     @Operation(summary = "Adds a subtopic to a topic", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public ResponseEntity<Void> post(
             @Parameter(name = "connection", description = "The new connection") @RequestBody AddSubtopicToTopicCommand command) {
         Node topic = nodeRepository.getByPublicId(command.topicid);
@@ -105,6 +106,7 @@ public class TopicSubtopics {
     @Operation(summary = "Removes a connection between a topic and a subtopic", security = {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void delete(@PathVariable("id") URI id) {
         connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id));
     }
@@ -114,6 +116,7 @@ public class TopicSubtopics {
     @Operation(summary = "Updates a connection between a topic and a subtopic", description = "Use to update which topic is primary to a subtopic or to alter sorting order", security = {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
         final var topicSubtopic = nodeConnectionRepository.getByPublicId(id);

@@ -22,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -52,6 +53,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
     @GetMapping
     @Operation(summary = "Gets all subjects")
+    @Transactional(readOnly = true)
     public List<NodeDTO> index(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") Optional<String> language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
@@ -64,6 +66,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/search")
     @Operation(summary = "Search all subjects")
+    @Transactional(readOnly = true)
     public SearchResultDTO<NodeDTO> search(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") Optional<String> language,
             @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
@@ -77,6 +80,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between node and children paginated")
+    @Transactional(readOnly = true)
     public SearchResultDTO<NodeDTO> allPaginated(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
@@ -97,6 +101,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single subject", description = "Default language will be returned if desired language not found or if parameter is omitted.")
+    @Transactional(readOnly = true)
     public EntityWithPathDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return nodeRepository.findFirstByPublicId(id).map(subject -> {
@@ -108,6 +113,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Updates a subject", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(name = "subject", description = "The updated subject. Fields not included will be set to null.") @RequestBody SubjectCommand command) {
         doPut(id, command);
@@ -116,6 +122,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @PostMapping
     @Operation(summary = "Creates a new subject", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public ResponseEntity<Void> post(
             @Parameter(name = "subject", description = "The new subject") @RequestBody SubjectCommand command) {
         final var subject = new Node(NodeType.SUBJECT);
@@ -124,6 +131,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
     @GetMapping("/{id}/topics")
     @Operation(summary = "Gets all children associated with a subject", description = "This resource is read-only. To update the relationship between nodes, use the resource /subject-topics.")
+    @Transactional(readOnly = true)
     public List<EntityWithPathChildDTO> getChildren(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @Parameter(description = "If true, subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
@@ -204,6 +212,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Deletes a single entity by id", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
     public void delete(@PathVariable("id") URI id) {
         nodeService.delete(id);
     }
@@ -212,6 +221,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Gets all resources for a subject. Searches recursively in all children of this node."
             + "The ordering of resources will be based on the rank of resources relative to the node they belong to.", tags = {
                     "subjects" })
+    @Transactional(readOnly = true)
     public List<ResourceWithNodeConnectionDTO> getResources(@PathVariable("subjectId") URI subjectId,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @Parameter(description = "Filter by resource type id(s). If not specified, resources of all types will be returned."

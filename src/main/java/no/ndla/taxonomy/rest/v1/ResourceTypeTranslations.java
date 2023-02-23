@@ -27,7 +27,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = { "/v1/resource-types/{id}/translations" })
-@Transactional(readOnly = true)
 public class ResourceTypeTranslations {
 
     private final ResourceTypeRepository resourceTypeRepository;
@@ -41,6 +40,7 @@ public class ResourceTypeTranslations {
 
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single resource type")
+    @Transactional(readOnly = true)
     public List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> index(@PathVariable("id") URI id) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> result = new ArrayList<>();
@@ -56,6 +56,7 @@ public class ResourceTypeTranslations {
 
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single resource type")
+    @Transactional(readOnly = true)
     public ResourceTypeTranslations.ResourceTypeTranslationIndexDocument get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
@@ -75,6 +76,7 @@ public class ResourceTypeTranslations {
             @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "resourceType", description = "The new or updated translation") @RequestBody ResourceTypeTranslations.UpdateResourceTypeTranslationCommand command) {
@@ -87,6 +89,7 @@ public class ResourceTypeTranslations {
     @Operation(summary = "Deletes a translation", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void delete(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);

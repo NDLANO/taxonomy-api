@@ -20,6 +20,7 @@ import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -44,6 +45,7 @@ public class ResourceResourceTypes {
     @PostMapping
     @Operation(summary = "Adds a resource type to a resource", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public ResponseEntity<Void> post(
             @Parameter(name = "connection", description = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) {
 
@@ -62,6 +64,7 @@ public class ResourceResourceTypes {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Removes a resource type from a resource", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void delete(@PathVariable("id") URI id) {
         resourceResourceTypeRepository.delete(resourceResourceTypeRepository.getByPublicId(id));
         resourceResourceTypeRepository.flush();
@@ -69,6 +72,7 @@ public class ResourceResourceTypes {
 
     @GetMapping
     @Operation(summary = "Gets all connections between resources and resource types")
+    @Transactional(readOnly = true)
     public List<ResourceResourceTypeIndexDocument> index() {
         return resourceResourceTypeRepository.findAllIncludingResourceAndResourceType().stream()
                 .map(ResourceResourceTypeIndexDocument::new).collect(Collectors.toList());
@@ -76,6 +80,7 @@ public class ResourceResourceTypes {
 
     @GetMapping({ "/{id}" })
     @Operation(summary = "Gets a single connection between resource and resource type")
+    @Transactional(readOnly = true)
     public ResourceResourceTypeIndexDocument get(@PathVariable("id") URI id) {
         ResourceResourceType result = resourceResourceTypeRepository.getByPublicId(id);
         return new ResourceResourceTypeIndexDocument(result);

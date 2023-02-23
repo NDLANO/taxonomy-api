@@ -19,6 +19,7 @@ import no.ndla.taxonomy.service.DomainEntityHelperService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.exceptions.InvalidDataException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -45,6 +46,7 @@ public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends
     @PutMapping(path = "/{id}/metadata")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Operation(summary = "Updates metadata for entity", security = { @SecurityRequirement(name = "oauth") })
+    @Transactional
     public MetadataDto putMetadata(@PathVariable("id") URI id, @RequestBody MetadataDto entityToUpdate)
             throws InvalidDataException {
         var entity = repository.findByPublicId(id);

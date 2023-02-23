@@ -20,6 +20,7 @@ import no.ndla.taxonomy.service.dtos.ResolvedUrl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -35,6 +36,7 @@ public class UrlResolver {
     }
 
     @GetMapping("/resolve")
+    @Transactional(readOnly = true)
     public ResolvedUrl resolve(@RequestParam String path) {
         return urlResolverService.resolveUrl(path)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Element with path was not found"));
@@ -42,6 +44,7 @@ public class UrlResolver {
 
     @GetMapping("/mapping")
     @Operation(summary = "Returns path for an url or HTTP 404")
+    @Transactional(readOnly = true)
     public ResolvedOldUrl getTaxonomyPathForUrl(
             @Parameter(description = "url in old rig except 'https://'", example = "ndla.no/nb/node/142542?fag=52253") @RequestParam String url) {
         ResolvedOldUrl resolvedOldUrl = new ResolvedOldUrl();
@@ -54,6 +57,7 @@ public class UrlResolver {
             @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void putTaxonomyNodeAndSubjectForOldUrl(@RequestBody UrlMapping urlMapping) {
         try {
             urlResolverService.putUrlMapping(urlMapping.url, URI.create(urlMapping.nodeId),

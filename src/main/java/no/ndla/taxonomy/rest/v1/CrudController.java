@@ -31,7 +31,6 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-@Transactional
 public abstract class CrudController<T extends DomainEntity> {
     protected TaxonomyRepository<T> repository;
     protected CachedUrlUpdaterService cachedUrlUpdaterService;
@@ -52,6 +51,7 @@ public abstract class CrudController<T extends DomainEntity> {
     @Operation(summary = "Deletes a single entity by id", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
     public void delete(@PathVariable("id") URI id) {
         repository.delete(repository.getByPublicId(id));
         repository.flush();
@@ -59,6 +59,7 @@ public abstract class CrudController<T extends DomainEntity> {
 
     @Operation(summary = "Updates a single entity by id", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     protected T doPut(URI id, UpdatableDto<T> command) {
         T entity = repository.getByPublicId(id);
         validator.validate(id, entity);
@@ -73,6 +74,7 @@ public abstract class CrudController<T extends DomainEntity> {
 
     @Operation(summary = "Creates a single entity", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     protected ResponseEntity<Void> doPost(T entity, UpdatableDto<T> command) {
         try {
             command.getId().ifPresent(id -> {

@@ -28,7 +28,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = { "/v1/nodes/{id}/translations" })
-@Transactional(readOnly = true)
 public class NodeTranslations {
 
     private final NodeRepository nodeRepository;
@@ -42,6 +41,7 @@ public class NodeTranslations {
 
     @GetMapping
     @Operation(summary = "Gets all translations for a single node")
+    @Transactional(readOnly = true)
     public List<TranslationDTO> index(@PathVariable("id") URI id) {
         Node node = nodeRepository.getByPublicId(id);
         List<TranslationDTO> result = new ArrayList<>();
@@ -51,6 +51,7 @@ public class NodeTranslations {
 
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single node")
+    @Transactional(readOnly = true)
     public TranslationDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node node = nodeRepository.getByPublicId(id);
@@ -64,6 +65,7 @@ public class NodeTranslations {
             @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "command", description = "The new or updated translation") @RequestBody UpdateTranslationCommand command) {
@@ -76,6 +78,7 @@ public class NodeTranslations {
     @Operation(summary = "Deletes a translation", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void delete(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node node = nodeRepository.getByPublicId(id);

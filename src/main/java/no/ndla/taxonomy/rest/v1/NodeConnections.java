@@ -27,6 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -54,6 +55,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
 
     @GetMapping
     @Operation(summary = "Gets all connections between node and children")
+    @Transactional(readOnly = true)
     public List<ParentChildIndexDocument> index() {
         return nodeConnectionRepository.findAllIncludingParentAndChild().stream().map(ParentChildIndexDocument::new)
                 .collect(Collectors.toList());
@@ -61,6 +63,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
 
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between node and children paginated")
+    @Transactional(readOnly = true)
     public NodeConnectionPage allPaginated(
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
@@ -78,6 +81,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single connection between a node and a child")
+    @Transactional(readOnly = true)
     public ParentChildIndexDocument get(@PathVariable("id") URI id) {
         NodeConnection topicSubtopic = nodeConnectionRepository.getByPublicId(id);
         return new ParentChildIndexDocument(topicSubtopic);
@@ -86,6 +90,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @PostMapping
     @Operation(summary = "Adds a node to a parent", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public ResponseEntity<Void> post(
             @Parameter(name = "connection", description = "The new connection") @RequestBody AddChildToParentCommand command) {
         Node parent = nodeRepository.getByPublicId(command.parentId);
@@ -105,6 +110,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @Operation(summary = "Removes a connection between a node and a child", security = {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void delete(@PathVariable("id") URI id) {
         var connection = nodeConnectionRepository.getByPublicId(id);
         connectionService.disconnectParentChildConnection(connection);
@@ -115,6 +121,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @Operation(summary = "Updates a connection between a node and a child", description = "Use to update which node is primary to a child or to alter sorting order", security = {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "The updated connection") @RequestBody UpdateNodeChildCommand command) {
         final var connection = nodeConnectionRepository.getByPublicId(id);
