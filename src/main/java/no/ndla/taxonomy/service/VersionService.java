@@ -35,7 +35,7 @@ public class VersionService {
     private final EntityManager entityManager;
     private final URNValidator validator = new URNValidator();
 
-    @Value("${spring.datasource.hikari.schema:public}")
+    @Value("${spring.datasource.hikari.schema:taxonomy_api}")
     private String defaultSchema;
 
     public VersionService(VersionRepository versionRepository, EntityManager entityManager) {

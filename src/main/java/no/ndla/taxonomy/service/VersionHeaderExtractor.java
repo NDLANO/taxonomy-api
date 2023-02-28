@@ -22,7 +22,7 @@ import java.util.Optional;
 @Component
 public class VersionHeaderExtractor {
 
-    @Value("${spring.datasource.hikari.schema:public}")
+    @Value("${spring.datasource.hikari.schema:taxonomy_api}")
     private String defaultSchema;
 
     private final VersionService versionService;

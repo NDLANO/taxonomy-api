@@ -35,7 +35,7 @@ public class VersionHeaderExtractorTest extends AbstractIntegrationTest {
     @Autowired
     private VersionHeaderExtractor versionHeaderExtractor;
 
-    @Value("${spring.datasource.hikari.schema:public}")
+    @Value("${spring.datasource.hikari.schema:taxonomy_api}")
     private String defaultSchema;
 
     @BeforeEach
