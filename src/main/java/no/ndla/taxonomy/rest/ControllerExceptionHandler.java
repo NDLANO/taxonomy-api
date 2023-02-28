@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
@@ -50,7 +51,7 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.SERVICE_UNAVAILABLE);
     }
 
-    @ExceptionHandler({ NotFoundServiceException.class, NotFoundHttpResponseException.class })
+    @ExceptionHandler({ NotFoundException.class, NotFoundServiceException.class, NotFoundHttpResponseException.class })
     protected ResponseEntity<String> handleNotFoundServiceException(RuntimeException exception) {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.NOT_FOUND);
     }
