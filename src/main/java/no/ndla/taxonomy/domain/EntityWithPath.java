@@ -48,9 +48,7 @@ public abstract class EntityWithPath extends DomainObject implements EntityWithM
         return this.getParentConnections().stream().findFirst();
     }
 
-    public Optional<String> getPathByContext(DomainEntity context) {
-        final var contextPublicId = context.getPublicId();
-
+    public Optional<String> getPathByContext(URI contextPublicId) {
         var cp = getCachedPaths();
         return cp.stream().sorted((cachedUrl1, cachedUrl2) -> {
             final var path1 = cachedUrl1.getPath();

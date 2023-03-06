@@ -16,24 +16,24 @@ import java.util.Optional;
 
 public class ResourceTreeSortable<T extends EntityWithPath> implements TreeSorter.Sortable {
     private int rank;
-    private int id;
-    private int parentId;
+    private URI id;
+    private URI parentId;
     private SortableResourceConnection<T> resourceConnection;
     private String parentType;
     private String type;
 
     public ResourceTreeSortable(SortableResourceConnection<T> resourceConnection) {
         this.id = resourceConnection.getResource().orElseThrow(() -> new IllegalArgumentException("Resource not set"))
-                .getId();
+                .getPublicId();
         this.parentId = resourceConnection.getParent().orElseThrow(() -> new IllegalArgumentException("Parent not set"))
-                .getId();
+                .getPublicId();
         this.rank = resourceConnection.getRank();
         this.resourceConnection = resourceConnection;
         this.type = "resource";
         this.parentType = "node";
     }
 
-    public ResourceTreeSortable(String type, String parentType, int id, int parentId, int rank) {
+    public ResourceTreeSortable(String type, String parentType, URI id, URI parentId, int rank) {
         this.id = id;
         this.parentId = parentId;
         this.rank = rank;

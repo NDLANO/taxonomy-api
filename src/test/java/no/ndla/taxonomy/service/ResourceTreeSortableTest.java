@@ -24,29 +24,31 @@ public class ResourceTreeSortableTest {
     public void getSortableRank() {
 
         // TopicResource
-        var sortable = new ResourceTreeSortable<Node>("resource", "topic", 100, 10, 1000);
+        var sortable = new ResourceTreeSortable<Node>("resource", "topic", URI.create("100"), URI.create("10"), 1000);
         assertEquals(1000 - 10000, sortable.getSortableRank());
 
         // TopicSubtopic
-        sortable = new ResourceTreeSortable<Node>("topic", "topic", 100, 10, 800);
+        sortable = new ResourceTreeSortable<Node>("topic", "topic", URI.create("100"), URI.create("10"), 800);
         assertEquals(800 - 1000, sortable.getSortableRank());
     }
 
     @Test
     public void getSortableId() throws URISyntaxException {
-        final var sortable = new ResourceTreeSortable<Node>("resource", "topic", 100, 10, 1000);
+        final var sortable = new ResourceTreeSortable<Node>("resource", "topic", URI.create("100"), URI.create("10"),
+                1000);
         assertEquals(new URI("urn:resource:100"), sortable.getSortableId());
     }
 
     @Test
     public void getSortableParentId() throws URISyntaxException {
-        final var sortable = new ResourceTreeSortable<Node>("resource", "topic", 100, 10, 1000);
+        final var sortable = new ResourceTreeSortable<Node>("resource", "topic", URI.create("100"), URI.create("10"),
+                1000);
         assertEquals(new URI("urn:topic:10"), sortable.getSortableParentId());
     }
 
     @Test
     public void getNodeResource() {
-        var sortable = new ResourceTreeSortable<Node>("resource", "topic", 100, 10, 1000);
+        var sortable = new ResourceTreeSortable<Node>("resource", "topic", URI.create("100"), URI.create("10"), 1000);
         assertFalse(sortable.getResourceConnection().isPresent());
 
         final var node = mock(Node.class);
@@ -71,8 +73,8 @@ public class ResourceTreeSortableTest {
         final var resource = mock(Node.class);
         final var nodeResource = mock(NodeConnection.class);
 
-        when(node.getId()).thenReturn(101);
-        when(resource.getId()).thenReturn(102);
+        when(node.getPublicId()).thenReturn(URI.create("101"));
+        when(resource.getPublicId()).thenReturn(URI.create("102"));
 
         when(nodeResource.getParent()).thenReturn(Optional.of(node));
         when(nodeResource.getResource()).thenReturn(Optional.of(resource));
