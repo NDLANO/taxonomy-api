@@ -79,9 +79,11 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
         // This must be enabled when ed is updated to update metadata for connections.
         // this.metadata = new MetadataDto(nodeConnection.getMetadata());
 
+        nodeConnection.getParent().ifPresent(parent -> this.parent = parent.getPublicId());
+
         nodeConnection.getChild().ifPresent(child -> {
             this.populateFromNode(child);
-            this.path = child.getPathByContext(node).orElse("");
+            this.path = child.getPathByContext(this.parent).orElse("");
             this.paths = child.getAllPaths();
 
             var translations = child.getTranslations();
@@ -93,8 +95,6 @@ public abstract class EntityWithPathChildDTO implements TreeSorter.Sortable {
 
             this.nodeType = child.getNodeType();
         });
-
-        nodeConnection.getParent().ifPresent(parent -> this.parent = parent.getPublicId());
 
         this.rank = nodeConnection.getRank();
 

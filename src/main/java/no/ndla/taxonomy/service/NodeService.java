@@ -148,7 +148,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             URI relevancePublicId, String languageCode, boolean recursive) {
         final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
 
-        final Set<Integer> topicIdsToSearchFor;
+        final Set<URI> topicIdsToSearchFor;
 
         // Add both topics and resourceTopics to a common list that will be sorted in a tree-structure based on rank at
         // each level
@@ -161,19 +161,19 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             final var nodeList = recursiveNodeTreeService.getRecursiveNodes(node);
 
             nodeList.forEach(treeElement -> resourcesToSort.add(new ResourceTreeSortable<Node>("node", "node",
-                    treeElement.getId(), treeElement.getParentId().orElse(0), treeElement.getRank())));
+                    treeElement.getId(), treeElement.getParentId().orElse(URI.create("")), treeElement.getRank())));
 
             topicIdsToSearchFor = nodeList.stream().map(RecursiveNodeTreeService.TreeElement::getId)
                     .collect(Collectors.toSet());
         } else {
-            topicIdsToSearchFor = Set.of(node.getId());
+            topicIdsToSearchFor = Set.of(node.getPublicId());
         }
 
         return filterNodeResourcesByIdsAndReturn(topicIdsToSearchFor, resourceTypeIds, relevancePublicId,
                 resourcesToSort, languageCode);
     }
 
-    private List<ResourceWithNodeConnectionDTO> filterNodeResourcesByIdsAndReturn(Set<Integer> nodeIds,
+    private List<ResourceWithNodeConnectionDTO> filterNodeResourcesByIdsAndReturn(Set<URI> nodeIds,
             Set<URI> resourceTypeIds, URI relevance, Set<ResourceTreeSortable<Node>> sortableListToAddTo,
             String languageCode) {
         final List<NodeConnection> nodeResources;

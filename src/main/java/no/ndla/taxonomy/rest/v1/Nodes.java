@@ -163,15 +163,15 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         final var node = nodeRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundException("Node", id));
 
-        final List<Integer> childrenIds;
+        final List<URI> childrenIds;
         final List<NodeType> nodeTypes = nodeType.orElse(List.of(NodeType.NODE, NodeType.TOPIC, NodeType.SUBJECT));
         if (recursive) {
             childrenIds = recursiveNodeTreeService.getRecursiveNodes(node, nodeTypes).stream()
                     .map(RecursiveNodeTreeService.TreeElement::getId).collect(Collectors.toList());
         } else {
             childrenIds = node.getChildren().stream().map(NodeConnection::getChild).filter(Optional::isPresent)
-                    .map(Optional::get).filter(n -> nodeTypes.contains(n.getNodeType())).map(EntityWithPath::getId)
-                    .collect(Collectors.toList());
+                    .map(Optional::get).filter(n -> nodeTypes.contains(n.getNodeType()))
+                    .map(EntityWithPath::getPublicId).collect(Collectors.toList());
         }
         final var children = nodeConnectionRepository
                 .findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(childrenIds);
@@ -181,7 +181,12 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         children.stream().map(nodeConnection -> new NodeChildDTO(node, nodeConnection, language))
                 .forEach(returnList::add);
 
-        return treeSorter.sortList(returnList).stream().distinct().collect(Collectors.toList());
+        var filtered = returnList.stream()
+                .filter(entityWithPathChildDTO -> childrenIds.contains(entityWithPathChildDTO.parent)
+                        || node.getPublicId().equals(entityWithPathChildDTO.parent))
+                .toList();
+
+        return treeSorter.sortList(filtered).stream().distinct().collect(Collectors.toList());
     }
 
     @GetMapping("/{id}/connections")

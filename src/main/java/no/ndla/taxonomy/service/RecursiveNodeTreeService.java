@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
 import java.util.*;
 
 /*
@@ -30,8 +31,7 @@ public class RecursiveNodeTreeService {
         this.nodeConnectionRepository = nodeConnectionRepository;
     }
 
-    private void addChildIdsRecursively(Set<TreeElement> elements, Set<Integer> ids, int ttl,
-            List<NodeType> nodeTypes) {
+    private void addChildIdsRecursively(Set<TreeElement> elements, Set<URI> ids, int ttl, List<NodeType> nodeTypes) {
         // Method just takes the list of ids provided and add each of the children it finds to the list,
         // and then recursively runs the same method on each of the found children IDs, once for each level
 
@@ -39,7 +39,7 @@ public class RecursiveNodeTreeService {
             throw new IllegalStateException("Recursion limit reached, probably an infinite loop in the structure");
         }
 
-        final var idsThisLevel = new HashSet<Integer>();
+        final var idsThisLevel = new HashSet<URI>();
 
         nodeConnectionRepository.findAllByNodeIdInIncludingTopicAndSubtopic(ids, nodeTypes).forEach(nodeConnection -> {
             var child = nodeConnection.getChild();
@@ -47,8 +47,8 @@ public class RecursiveNodeTreeService {
             if (child.isEmpty() || parent.isEmpty())
                 return;
 
-            var childId = child.get().getId();
-            var parentId = parent.get().getId();
+            var childId = child.get().getPublicId();
+            var parentId = parent.get().getPublicId();
 
             elements.add(new TreeElement(childId, parentId, nodeConnection.getRank()));
             idsThisLevel.add(childId);
@@ -61,9 +61,9 @@ public class RecursiveNodeTreeService {
 
     public Set<TreeElement> getRecursiveNodes(Node node, List<NodeType> nodeTypes) {
         final var toReturn = new HashSet<TreeElement>();
-        toReturn.add(new TreeElement(node.getId(), null, 0));
+        toReturn.add(new TreeElement(node.getPublicId(), null, 0));
 
-        addChildIdsRecursively(toReturn, Set.of(node.getId()), 1000, nodeTypes);
+        addChildIdsRecursively(toReturn, Set.of(node.getPublicId()), 1000, nodeTypes);
 
         return toReturn;
     }
@@ -74,21 +74,21 @@ public class RecursiveNodeTreeService {
     }
 
     public static class TreeElement {
-        private final int id;
-        private final Integer parentId;
+        private final URI id;
+        private final URI parentId;
         private final int rank;
 
-        public TreeElement(int id, Integer parentId, int rank) {
+        public TreeElement(URI id, URI parentId, int rank) {
             this.id = id;
             this.parentId = parentId;
             this.rank = rank;
         }
 
-        public int getId() {
+        public URI getId() {
             return id;
         }
 
-        public Optional<Integer> getParentId() {
+        public Optional<URI> getParentId() {
             return Optional.ofNullable(parentId);
         }
 

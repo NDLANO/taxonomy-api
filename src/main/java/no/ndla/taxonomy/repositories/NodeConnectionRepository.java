@@ -26,10 +26,10 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             JOIN FETCH nc.parent p
             JOIN FETCH nc.child c
             LEFT JOIN FETCH nc.relevance rel
-            WHERE nc.parent.id IN :nodeId
+            WHERE nc.parent.publicId IN :nodeId
             AND ((:nodeTypes) IS NULL OR c.nodeType in :nodeTypes)
             """)
-    List<NodeConnection> findAllByNodeIdInIncludingTopicAndSubtopic(Set<Integer> nodeId, List<NodeType> nodeTypes);
+    List<NodeConnection> findAllByNodeIdInIncludingTopicAndSubtopic(Set<URI> nodeId, List<NodeType> nodeTypes);
 
     @Query("""
             SELECT DISTINCT nc FROM NodeConnection nc
@@ -38,12 +38,12 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             LEFT JOIN FETCH child.resourceResourceTypes rrt
             LEFT JOIN FETCH nc.relevance rel
             LEFT JOIN FETCH rrt.resourceType rt
-            WHERE n.id IN :nodeIds
+            WHERE n.publicId IN :nodeIds
             AND (:resourceTypePublicIds IS NULL OR rt.publicId IN :resourceTypePublicIds)
             AND (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)
             AND child.nodeType = 'RESOURCE'
             """)
-    List<NodeConnection> getResourceBy(Set<Integer> nodeIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
+    List<NodeConnection> getResourceBy(Set<URI> nodeIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
 
     @Query("""
             SELECT DISTINCT nc FROM NodeConnection nc
@@ -52,10 +52,10 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             LEFT JOIN FETCH r.resourceResourceTypes rrt
             LEFT JOIN FETCH nc.relevance rel
             LEFT JOIN FETCH rrt.resourceType rt
-            WHERE n.id IN :nodeIds
+            WHERE n.publicId IN :nodeIds
             AND r.nodeType = 'RESOURCE'
             """)
-    List<NodeConnection> getByResourceIds(Collection<Integer> nodeIds);
+    List<NodeConnection> getByResourceIds(Collection<URI> nodeIds);
 
     @Query("SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child")
     List<NodeConnection> findAllIncludingParentAndChild();
@@ -91,11 +91,10 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             FROM NodeConnection nc
             JOIN FETCH nc.parent n
             JOIN FETCH nc.child c
-            WHERE nc.child.id IN :nodeId""")
-    List<NodeConnection> doFindAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<Integer> nodeId);
+            WHERE nc.child.publicId IN :nodeId""")
+    List<NodeConnection> doFindAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<URI> nodeId);
 
-    default List<NodeConnection> findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(
-            Collection<Integer> nodeId) {
+    default List<NodeConnection> findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<URI> nodeId) {
         if (nodeId.size() == 0) {
             return List.of();
         }

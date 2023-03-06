@@ -141,14 +141,14 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         final var subject = nodeRepository.findFirstByPublicId(id)
                 .orElseThrow(() -> new NotFoundException("Subject", id));
 
-        final List<Integer> childrenIds;
+        final List<URI> childrenIds;
 
         if (recursive) {
             childrenIds = recursiveNodeTreeService.getRecursiveNodes(subject).stream()
                     .map(RecursiveNodeTreeService.TreeElement::getId).collect(Collectors.toList());
         } else {
             childrenIds = subject.getChildConnections().stream().map(EntityWithPathConnection::getConnectedChild)
-                    .filter(Optional::isPresent).map(Optional::get).map(EntityWithPath::getId)
+                    .filter(Optional::isPresent).map(Optional::get).map(EntityWithPath::getPublicId)
                     .collect(Collectors.toList());
         }
 
@@ -168,6 +168,11 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         filteredConnections.stream().map(nodeConnection -> createChildDTO(subject, nodeConnection, language))
                 .forEach(returnList::add);
 
+        var filtered = returnList.stream()
+                .filter(entityWithPathChildDTO -> childrenIds.contains(entityWithPathChildDTO.parent)
+                        || subject.getPublicId().equals(entityWithPathChildDTO.parent))
+                .toList();
+
         // Remove duplicates from the list
         // List is sorted by parent, so we assume that any subtree that has a duplicate parent also
         // are repeated with the same subtree
@@ -175,7 +180,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
         // (Don't know how much it makes sense to sort the list by parent and rank when duplicates
         // are removed, but old code did)
-        return topicTreeSorter.sortList(returnList).stream().distinct().collect(Collectors.toList());
+        return topicTreeSorter.sortList(filtered).stream().distinct().collect(Collectors.toList());
     }
 
     private EntityWithPathChildDTO createChildDTO(Node subject, NodeConnection connection, String language) {
