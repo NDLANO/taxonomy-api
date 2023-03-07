@@ -22,7 +22,7 @@ import java.util.Optional;
 @Component
 public class VersionHeaderExtractor {
 
-    @Value("${spring.datasource.hikari.schema:public}")
+    @Value("${spring.datasource.hikari.schema:taxonomy_api}")
     private String defaultSchema;
 
     private final VersionService versionService;
@@ -39,21 +39,26 @@ public class VersionHeaderExtractor {
         if (req.getRequestURI().startsWith("/v1/versions")) {
             return defaultSchema;
         }
-        if (versionHash == null) {
-            // No header, check published and use for gets
-            Optional<Version> published = versionRepository.findFirstByVersionType(VersionType.PUBLISHED);
-            if (published.isPresent() && req.getMethod().equals("GET")) {
-                // Use published for all GETs
-                return versionService.schemaFromHash(published.get().getHash());
+        try {
+            if (versionHash == null) {
+                // No header, check published and use for gets
+                Optional<Version> published = versionRepository.findFirstByVersionType(VersionType.PUBLISHED);
+                if (published.isPresent() && req.getMethod().equals("GET")) {
+                    // Use published for all GETs
+                    return versionService.schemaFromHash(published.get().getHash());
+                }
+            } else {
+                // Header supplied, use that version if in database
+                Optional<Version> version = versionRepository.findFirstByHash(versionHash);
+                if (version.isPresent()) {
+                    return versionService.schemaFromHash(version.get().getHash());
+                }
             }
-        } else {
-            // Header supplied, use that version if in database
-            Optional<Version> version = versionRepository.findFirstByHash(versionHash);
-            if (version.isPresent()) {
-                return versionService.schemaFromHash(version.get().getHash());
-            }
+            // Either no header or no version matching header. Use default schema.
+            return defaultSchema;
+        } catch (Exception e) {
+            // Something happened when fetching version!
+            return defaultSchema;
         }
-        // Either no header or no version matching header. Use default schema.
-        return defaultSchema;
     }
 }
