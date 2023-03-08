@@ -1361,4 +1361,17 @@
             )
         </sql>
     </changeSet>
+    <changeSet id="202303082023 Clean up tables moved to columns" author="Jonas Natten">
+        <dropColumn tableName="node_connection" columnName="metadata_id" />
+        <dropColumn tableName="node" columnName="metadata_id" />
+
+        <dropTable tableName="custom_field_value" />
+        <dropTable tableName="custom_field" />
+        <dropTable tableName="cached_path" />
+        <dropTable tableName="metadata_grep_code" />
+        <dropTable tableName="metadata" />
+        <dropTable tableName="node_translation" />
+        <dropTable tableName="relevance_translation" />
+        <dropTable tableName="resource_type_translation" />
+    </changeSet>
 </databaseChangeLog>
