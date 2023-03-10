@@ -76,6 +76,7 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
 
             // TODO: There is probably a better way to do this.
             var ds = dataSource;
+            var needsClose = false;
             if (!"".equals(dataSourceUsername)) {
                 var hc = new HikariConfig();
                 hc.setMaximumPoolSize(1);
@@ -84,10 +85,15 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
                 hc.setPassword(dataSourcePassword);
                 hc.setJdbcUrl(dataSourceUrl);
                 ds = new HikariDataSource(hc);
+                needsClose = true;
             }
 
             SpringLiquibase liquibase = this.getSpringLiquibase(ds, schema);
             liquibase.afterPropertiesSet();
+            if(needsClose) {
+                logger.info("Closing datasource: " + ds);
+                ((HikariDataSource)ds).close();
+            }
             logger.info("Liquibase ran for version " + schema);
         }
     }
