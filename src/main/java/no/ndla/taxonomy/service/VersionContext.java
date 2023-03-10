@@ -11,7 +11,7 @@ package no.ndla.taxonomy.service;
  * Contains a ThreadLocal object to store a database schema name for use in Connection objects.
  */
 public class VersionContext {
-    private static final ThreadLocal<String> currentVersion = new ThreadLocal<>();
+    private static final ThreadLocal<String> currentVersion = new InheritableThreadLocal<>();
 
     public static void setCurrentVersion(String tenant) {
         currentVersion.set(tenant);
