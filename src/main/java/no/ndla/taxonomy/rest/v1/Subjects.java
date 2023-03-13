@@ -227,7 +227,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             + "The ordering of resources will be based on the rank of resources relative to the node they belong to.", tags = {
                     "subjects" })
     @Transactional(readOnly = true)
-    public List<ResourceWithNodeConnectionDTO> getResources(@PathVariable("subjectId") URI subjectId,
+    public List<EntityWithPathChildDTO> getResources(@PathVariable("subjectId") URI subjectId,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @Parameter(description = "Filter by resource type id(s). If not specified, resources of all types will be returned."
                     + "Multiple ids may be separated with comma or the parameter may be repeated for each id.") @RequestParam(value = "type", required = false, defaultValue = "") URI[] resourceTypeIds,

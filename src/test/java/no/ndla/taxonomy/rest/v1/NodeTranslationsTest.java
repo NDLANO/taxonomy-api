@@ -11,9 +11,8 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
-import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ResourceChildDTO;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
@@ -30,12 +29,12 @@ public class NodeTranslationsTest extends RestTest {
         builder.node(NodeType.NODE, t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")));
         builder.node(NodeType.NODE, t -> t.name("Integration").translation("nb", l -> l.name("Integrasjon")));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes?language=nb");
+        var response = testUtils.getResource("/v1/nodes?language=nb");
         final var topics = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(2, topics.length);
-        assertAnyTrue(topics, s -> s.name.equals("Trigonometri"));
-        assertAnyTrue(topics, s -> s.name.equals("Integrasjon"));
+        assertAnyTrue(topics, s -> s.getName().equals("Trigonometri"));
+        assertAnyTrue(topics, s -> s.getName().equals("Integrasjon"));
     }
 
     @Test
@@ -123,7 +122,7 @@ public class NodeTranslationsTest extends RestTest {
                         .translation("de", l -> l.name("Trigonometrie")));
         URI id = topic.getPublicId();
 
-        NodeTranslations.TranslationDTO[] translations = testUtils.getObject(NodeTranslations.TranslationDTO[].class,
+        var translations = testUtils.getObject(NodeTranslations.TranslationDTO[].class,
                 testUtils.getResource("/v1/nodes/" + id + "/translations"));
 
         assertEquals(3, translations.length);
@@ -138,7 +137,7 @@ public class NodeTranslationsTest extends RestTest {
                 t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")));
         URI id = topic.getPublicId();
 
-        NodeTranslations.TranslationDTO translation = testUtils.getObject(NodeTranslations.TranslationDTO.class,
+        var translation = testUtils.getObject(NodeTranslations.TranslationDTO.class,
                 testUtils.getResource("/v1/nodes/" + id + "/translations/nb"));
         assertEquals("Trigonometri", translation.name);
         assertEquals("nb", translation.language);
@@ -158,9 +157,8 @@ public class NodeTranslationsTest extends RestTest {
                                                 .resourceType("article"))))
                 .getPublicId();
 
-        MockHttpServletResponse response = testUtils
-                .getResource("/v1/nodes/" + a + "/resources?recursive=true&language=nb");
-        ResourceWithNodeConnectionDTO[] result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
+        var response = testUtils.getResource("/v1/nodes/" + a + "/resources?recursive=true&language=nb");
+        var result = testUtils.getObject(ResourceChildDTO[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "Introduksjon til calculus".equals(r.getName()));
@@ -179,8 +177,8 @@ public class NodeTranslationsTest extends RestTest {
                         r -> r.name("resource 2").translation("nb", tr -> tr.name("ressurs 2")).resourceType("article"))
                 .child(NodeType.TOPIC, st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/resources?language=nb");
-        ResourceWithNodeConnectionDTO[] result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
+        var response = testUtils.getResource("/v1/nodes/urn:topic:1/resources?language=nb");
+        var result = testUtils.getObject(ResourceChildDTO[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "ressurs 1".equals(r.getName()));

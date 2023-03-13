@@ -208,7 +208,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/resources")
     @Operation(summary = "Gets all resources for the given node", tags = { "nodes" })
     @Transactional(readOnly = true)
-    public List<ResourceWithNodeConnectionDTO> getResources(
+    public List<EntityWithPathChildDTO> getResources(
             @Parameter(name = "id", required = true) @PathVariable("id") URI nodeId,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false) String language,
             @Parameter(description = "If true, resources from children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,

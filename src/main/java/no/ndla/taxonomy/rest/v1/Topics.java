@@ -166,7 +166,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/resources")
     @Operation(summary = "Gets all resources for the given topic", tags = { "topics" })
     @Transactional(readOnly = true)
-    public List<ResourceWithNodeConnectionDTO> getResources(
+    public List<EntityWithPathChildDTO> getResources(
             @Parameter(name = "id", required = true) @PathVariable("id") URI topicId,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false) String language,
             @Parameter(description = "If true, resources from subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,

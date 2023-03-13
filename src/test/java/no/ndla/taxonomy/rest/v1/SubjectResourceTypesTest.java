@@ -8,9 +8,8 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ResourceChildDTO;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
@@ -30,8 +29,8 @@ public class SubjectResourceTypesTest extends RestTest {
                                         .resourceType(rt -> rt.name("assignment")))))
                 .getPublicId();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources");
-        ResourceWithNodeConnectionDTO[] result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
+        var response = testUtils.getResource("/v1/subjects/" + id + "/resources");
+        var result = testUtils.getObject(ResourceChildDTO[].class, response);
 
         assertEquals(2, result.length);
         assertEquals(2, result[0].getResourceTypes().size());
@@ -45,8 +44,8 @@ public class SubjectResourceTypesTest extends RestTest {
                         t -> t.name("topic").child(NodeType.TOPIC, st -> st.resource(r -> r.name("resource 1")))))
                 .getPublicId();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources");
-        ResourceWithNodeConnectionDTO[] result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
+        var response = testUtils.getResource("/v1/subjects/" + id + "/resources");
+        var result = testUtils.getObject(ResourceChildDTO[].class, response);
 
         assertEquals(1, result.length);
         assertEquals(0, result[0].getResourceTypes().size());
@@ -54,7 +53,7 @@ public class SubjectResourceTypesTest extends RestTest {
 
     @Test
     public void can_get_resources_for_a_subject_filtered_on_resource_type() throws Exception {
-        builder.resourceType("assignment").getPublicId();
+        builder.resourceType("assignment");
         URI lecture = builder.resourceType("lecture").getPublicId();
 
         URI id = builder.node(NodeType.SUBJECT, n -> n.isContext(true).child(t -> t.name("a").child(NodeType.TOPIC,
@@ -62,8 +61,8 @@ public class SubjectResourceTypesTest extends RestTest {
                 .resource(r -> r.name("an assignment").resourceType("assignment"))
                 .resource(r -> r.name("a lecture").resourceType("lecture")))).getPublicId();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources?type=" + lecture);
-        ResourceWithNodeConnectionDTO[] result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
+        var response = testUtils.getResource("/v1/subjects/" + id + "/resources?type=" + lecture);
+        var result = testUtils.getObject(ResourceChildDTO[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "a lecture".equals(r.getName()));

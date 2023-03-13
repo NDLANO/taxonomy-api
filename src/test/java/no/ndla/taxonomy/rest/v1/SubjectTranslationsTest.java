@@ -9,7 +9,10 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.dtos.EntityWithPathDTO;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.ResourceDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -99,8 +102,7 @@ public class SubjectTranslationsTest extends RestTest {
                         .translation("en", l -> l.name("Mathematics")).translation("de", l -> l.name("Mathematik")));
         URI id = subject.getPublicId();
 
-        SubjectTranslations.SubjectTranslationIndexDocument[] translations = testUtils.getObject(
-                SubjectTranslations.SubjectTranslationIndexDocument[].class,
+        var translations = testUtils.getObject(SubjectTranslations.SubjectTranslationIndexDocument[].class,
                 testUtils.getResource("/v1/subjects/" + id + "/translations"));
 
         assertEquals(3, translations.length);
@@ -115,8 +117,7 @@ public class SubjectTranslationsTest extends RestTest {
                 s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
         URI id = subject.getPublicId();
 
-        SubjectTranslations.SubjectTranslationIndexDocument translation = testUtils.getObject(
-                SubjectTranslations.SubjectTranslationIndexDocument.class,
+        var translation = testUtils.getObject(SubjectTranslations.SubjectTranslationIndexDocument.class,
                 testUtils.getResource("/v1/subjects/" + id + "/translations/nb"));
         assertEquals("Matematikk", translation.name);
         assertEquals("nb", translation.language);
@@ -131,14 +132,13 @@ public class SubjectTranslationsTest extends RestTest {
                                 t -> t.name("electricity").translation("nb", tr -> tr.name("elektrisitet")))
                         .child(NodeType.TOPIC, t -> t.name("optics").translation("nb", tr -> tr.name("optikk"))));
 
-        MockHttpServletResponse response = testUtils
-                .getResource("/v1/subjects/" + subject.getPublicId() + "/topics?language=nb");
-        NodeChildDTO[] topics = testUtils.getObject(NodeChildDTO[].class, response);
+        var response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics?language=nb");
+        var topics = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(3, topics.length);
-        assertAnyTrue(topics, t -> "statikk".equals(t.name));
-        assertAnyTrue(topics, t -> "elektrisitet".equals(t.name));
-        assertAnyTrue(topics, t -> "optikk".equals(t.name));
+        assertAnyTrue(topics, t -> "statikk".equals(t.getName()));
+        assertAnyTrue(topics, t -> "elektrisitet".equals(t.getName()));
+        assertAnyTrue(topics, t -> "optikk".equals(t.getName()));
     }
 
     @Test
@@ -153,7 +153,7 @@ public class SubjectTranslationsTest extends RestTest {
                         .translation("nb", tr -> tr.name("Introduksjon til calculus")).resourceType("article"))))
                 .getPublicId();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + id + "/resources?language=nb");
+        var response = testUtils.getResource("/v1/subjects/" + id + "/resources?language=nb");
         final var resources = testUtils.getObject(ResourceDTO[].class, response);
 
         assertEquals(2, resources.length);

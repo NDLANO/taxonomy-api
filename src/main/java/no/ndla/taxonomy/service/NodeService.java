@@ -144,7 +144,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
     }
 
-    public List<ResourceWithNodeConnectionDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds,
+    public List<EntityWithPathChildDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds,
             URI relevancePublicId, String languageCode, boolean recursive) {
         final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
 
@@ -173,9 +173,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 resourcesToSort, languageCode);
     }
 
-    private List<ResourceWithNodeConnectionDTO> filterNodeResourcesByIdsAndReturn(Set<URI> nodeIds,
-            Set<URI> resourceTypeIds, URI relevance, Set<ResourceTreeSortable<Node>> sortableListToAddTo,
-            String languageCode) {
+    private List<EntityWithPathChildDTO> filterNodeResourcesByIdsAndReturn(Set<URI> nodeIds, Set<URI> resourceTypeIds,
+            URI relevance, Set<ResourceTreeSortable<Node>> sortableListToAddTo, String languageCode) {
         final List<NodeConnection> nodeResources;
 
         if (resourceTypeIds.size() > 0) {
@@ -210,8 +209,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                     var connection = (NodeConnection) src.get();
                     var childIsResource = connection.getChild().map(c -> c.getNodeType() == NodeType.RESOURCE);
                     return childIsResource.orElse(false);
-                }).map(wrappedNodeResource -> new ResourceWithNodeConnectionDTO(
-                        (NodeConnection) wrappedNodeResource.get(), languageCode))
+                }).map(wrappedNodeResource -> new ResourceChildDTO(null, (NodeConnection) wrappedNodeResource.get(),
+                        languageCode))
                 .collect(Collectors.toList());
     }
 

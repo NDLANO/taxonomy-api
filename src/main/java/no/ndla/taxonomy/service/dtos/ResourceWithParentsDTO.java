@@ -24,7 +24,6 @@ public class ResourceWithParentsDTO extends ResourceDTO {
     private Set<NodeWithResourceConnectionDTO> parents = new HashSet<>();
 
     public ResourceWithParentsDTO() {
-        super();
     }
 
     public ResourceWithParentsDTO(Node resource, String languageCode) {
@@ -39,7 +38,4 @@ public class ResourceWithParentsDTO extends ResourceDTO {
         return parents;
     }
 
-    public Set<NodeWithResourceConnectionDTO> getParentTopics() {
-        return getParents();
-    }
 }
