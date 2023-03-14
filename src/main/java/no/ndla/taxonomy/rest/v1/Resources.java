@@ -54,7 +54,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @GetMapping
     @Operation(summary = "Lists all resources")
     @Transactional(readOnly = true)
-    public List<ResourceDTO> getAll(
+    public List<NodeDTO> getAll(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
@@ -81,7 +81,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between node and children paginated")
     @Transactional(readOnly = true)
-    public SearchResultDTO<ResourceDTO> allPaginated(
+    public SearchResultDTO<NodeDTO> allPaginated(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
@@ -94,7 +94,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         var pageRequest = PageRequest.of(page.get() - 1, pageSize.get());
         var ids = nodeRepository.findIdsByTypePaginated(pageRequest, NodeType.RESOURCE);
         var results = nodeRepository.findByIds(ids.getContent());
-        var contents = results.stream().map(node -> new ResourceDTO(node, language.orElse("nb")))
+        var contents = results.stream().map(node -> new NodeDTO(node, language.orElse("nb")))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
@@ -153,10 +153,10 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @GetMapping("{id}/full")
     @Operation(summary = "Gets all parent topics, all filters and resourceTypes for this resource")
     @Transactional(readOnly = true)
-    public ResourceWithParentsDTO getResourceFull(@PathVariable("id") URI id,
+    public NodeWithParents getResourceFull(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         var node = nodeService.getNode(id);
-        return new ResourceWithParentsDTO(node, language);
+        return new NodeWithParents(node, language);
     }
 
     @DeleteMapping("{id}")

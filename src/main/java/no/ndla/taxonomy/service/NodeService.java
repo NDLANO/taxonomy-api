@@ -94,15 +94,15 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return filtered.stream().distinct().map(n -> new NodeDTO(n, language.get())).collect(Collectors.toList());
     }
 
-    public List<ResourceDTO> getResources(Optional<String> language, Optional<URI> contentUri, Optional<Boolean> isRoot,
+    public List<NodeDTO> getResources(Optional<String> language, Optional<URI> contentUri, Optional<Boolean> isRoot,
             MetadataFilters metadataFilters) {
-        final List<ResourceDTO> listToReturn = new ArrayList<>();
+        final List<NodeDTO> listToReturn = new ArrayList<>();
         var ids = nodeRepository.findIdsByType(List.of(NodeType.RESOURCE));
         final var counter = new AtomicInteger();
         ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
             final var nodes = nodeRepository.findByIdsFiltered(idChunk, metadataFilters.getVisible(),
                     metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, isRoot);
-            var dtos = nodes.stream().map(node -> new ResourceDTO(node, language.get())).toList();
+            var dtos = nodes.stream().map(node -> new NodeDTO(node, language.get())).toList();
             listToReturn.addAll(dtos);
         });
 
@@ -121,15 +121,14 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 .toList();
     }
 
-    public List<TopicChildDTO> getFilteredChildConnections(URI nodePublicId, String languageCode) {
-        final var node = nodeRepository.findFirstByPublicId(nodePublicId)
+    public List<NodeChildDTO> getFilteredChildConnections(URI nodePublicId, String languageCode) {
+        nodeRepository.findFirstByPublicId(nodePublicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
         final List<NodeConnection> childConnections = nodeConnectionRepository
                 .findAllByParentPublicIdIncludingChildAndChildTranslations(nodePublicId);
 
         final var wrappedList = childConnections.stream()
-                .map(nodeConnection -> new TopicChildDTO(node, nodeConnection, languageCode))
-                .collect(Collectors.toUnmodifiableList());
+                .map(nodeConnection -> new NodeChildDTO(nodeConnection, languageCode)).toList();
 
         return topicTreeSorter.sortList(wrappedList);
     }
@@ -144,8 +143,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
     }
 
-    public List<EntityWithPathChildDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds,
-            URI relevancePublicId, String languageCode, boolean recursive) {
+    public List<NodeChildDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds, URI relevancePublicId,
+            String languageCode, boolean recursive) {
         final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
 
         final Set<URI> topicIdsToSearchFor;
@@ -173,7 +172,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 resourcesToSort, languageCode);
     }
 
-    private List<EntityWithPathChildDTO> filterNodeResourcesByIdsAndReturn(Set<URI> nodeIds, Set<URI> resourceTypeIds,
+    private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(Set<URI> nodeIds, Set<URI> resourceTypeIds,
             URI relevance, Set<ResourceTreeSortable<Node>> sortableListToAddTo, String languageCode) {
         final List<NodeConnection> nodeResources;
 
@@ -209,9 +208,10 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                     var connection = (NodeConnection) src.get();
                     var childIsResource = connection.getChild().map(c -> c.getNodeType() == NodeType.RESOURCE);
                     return childIsResource.orElse(false);
-                }).map(wrappedNodeResource -> new ResourceChildDTO(null, (NodeConnection) wrappedNodeResource.get(),
-                        languageCode))
-                .collect(Collectors.toList());
+                }).map(wrappedNodeResource -> {
+                    NodeConnection nodeConnection = (NodeConnection) wrappedNodeResource.get();
+                    return new NodeChildDTO(nodeConnection, languageCode);
+                }).collect(Collectors.toList());
     }
 
     @Override

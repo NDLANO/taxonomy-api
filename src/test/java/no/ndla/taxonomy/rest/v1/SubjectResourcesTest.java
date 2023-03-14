@@ -8,7 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.TestSeeder;
-import no.ndla.taxonomy.service.dtos.ResourceChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -24,7 +24,7 @@ public class SubjectResourcesTest extends RestTest {
         testSeeder.resourceWithResourceTypeTestSetup();
 
         var response = testUtils.getResource("/v1/subjects/urn:subject:1/resources?type=urn:resourcetype:video");
-        var result = testUtils.getObject(ResourceChildDTO[].class, response);
+        var result = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(1, result.length);
         assertAnyTrue(result, r -> "R:1".equals(r.getName()));

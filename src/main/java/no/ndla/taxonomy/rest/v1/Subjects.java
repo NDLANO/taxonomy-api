@@ -17,7 +17,9 @@ import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
 import no.ndla.taxonomy.service.*;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -102,7 +104,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single subject", description = "Default language will be returned if desired language not found or if parameter is omitted.")
     @Transactional(readOnly = true)
-    public EntityWithPathDTO get(@PathVariable("id") URI id,
+    public NodeDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return nodeRepository.findFirstByPublicId(id).map(subject -> {
             return new NodeDTO(subject, language);
@@ -132,7 +134,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/topics")
     @Operation(summary = "Gets all children associated with a subject", description = "This resource is read-only. To update the relationship between nodes, use the resource /subject-topics.")
     @Transactional(readOnly = true)
-    public List<EntityWithPathChildDTO> getChildren(@PathVariable("id") URI id,
+    public List<NodeChildDTO> getChildren(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @Parameter(description = "If true, subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @Deprecated @Parameter(description = "Select by filter id(s). If not specified, all topics will be returned."
@@ -157,7 +159,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         final var children = nodeConnectionRepository
                 .findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(childrenIds);
 
-        final var returnList = new ArrayList<EntityWithPathChildDTO>();
+        final var returnList = new ArrayList<NodeChildDTO>();
 
         final var filteredConnections = children.stream().filter(nodeConnection -> {
             var child = nodeConnection.getChild();
@@ -169,8 +171,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                 .forEach(returnList::add);
 
         var filtered = returnList.stream()
-                .filter(entityWithPathChildDTO -> childrenIds.contains(entityWithPathChildDTO.parent)
-                        || subject.getPublicId().equals(entityWithPathChildDTO.parent))
+                .filter(entityWithPathChildDTO -> childrenIds.contains(entityWithPathChildDTO.getParentId())
+                        || subject.getPublicId().equals(entityWithPathChildDTO.getParentId()))
                 .toList();
 
         // Remove duplicates from the list
@@ -183,8 +185,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         return topicTreeSorter.sortList(filtered).stream().distinct().collect(Collectors.toList());
     }
 
-    private EntityWithPathChildDTO createChildDTO(Node subject, NodeConnection connection, String language) {
-        return new NodeChildDTO(subject, connection, language);
+    private NodeChildDTO createChildDTO(Node subject, NodeConnection connection, String language) {
+        return new NodeChildDTO(connection, language);
     }
 
     private boolean searchForRelevance(NodeConnection connection, URI relevancePublicId,
@@ -227,7 +229,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             + "The ordering of resources will be based on the rank of resources relative to the node they belong to.", tags = {
                     "subjects" })
     @Transactional(readOnly = true)
-    public List<EntityWithPathChildDTO> getResources(@PathVariable("subjectId") URI subjectId,
+    public List<NodeChildDTO> getResources(@PathVariable("subjectId") URI subjectId,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @Parameter(description = "Filter by resource type id(s). If not specified, resources of all types will be returned."
                     + "Multiple ids may be separated with comma or the parameter may be repeated for each id.") @RequestParam(value = "type", required = false, defaultValue = "") URI[] resourceTypeIds,

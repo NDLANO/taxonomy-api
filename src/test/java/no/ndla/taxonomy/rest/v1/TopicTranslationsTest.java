@@ -10,8 +10,6 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
-import no.ndla.taxonomy.service.dtos.NodeDTO;
-import no.ndla.taxonomy.service.dtos.ResourceChildDTO;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -134,7 +132,7 @@ public class TopicTranslationsTest extends RestTest {
                 .getPublicId();
 
         var response = testUtils.getResource("/v1/topics/" + a + "/resources?recursive=true&language=nb");
-        var result = testUtils.getObject(ResourceChildDTO[].class, response);
+        var result = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "Introduksjon til calculus".equals(r.getName()));
@@ -154,7 +152,7 @@ public class TopicTranslationsTest extends RestTest {
                 .child(NodeType.TOPIC, st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))));
 
         var response = testUtils.getResource("/v1/topics/urn:topic:1/resources?language=nb");
-        var result = testUtils.getObject(ResourceChildDTO[].class, response);
+        var result = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "ressurs 1".equals(r.getName()));
@@ -162,10 +160,10 @@ public class TopicTranslationsTest extends RestTest {
         assertAllTrue(result, r -> r.getResourceTypes().iterator().next().getName().equals("Artikkel"));
     }
 
-    private NodeDTO getTopic(URI id, String language) throws Exception {
+    private NodeChildDTO getTopic(URI id, String language) throws Exception {
         String path = "/v1/topics/" + id;
         if (isNotEmpty(language))
             path = path + "?language=" + language;
-        return testUtils.getObject(NodeDTO.class, testUtils.getResource(path));
+        return testUtils.getObject(NodeChildDTO.class, testUtils.getResource(path));
     }
 }

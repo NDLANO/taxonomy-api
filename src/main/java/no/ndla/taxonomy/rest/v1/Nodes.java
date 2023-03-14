@@ -157,7 +157,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/nodes")
     @Operation(summary = "Gets all children for this node")
     @Transactional(readOnly = true)
-    public List<EntityWithPathChildDTO> getChildren(@Parameter(name = "id", required = true) @PathVariable("id") URI id,
+    public List<NodeChildDTO> getChildren(@Parameter(name = "id", required = true) @PathVariable("id") URI id,
             @Parameter(description = "Filter by nodeType, could be a comma separated list, defaults to Topics and Subjects (Resources are quite slow). :^)") @RequestParam(value = "nodeType", required = false) Optional<List<NodeType>> nodeType,
             @Parameter(description = "If true, children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
@@ -176,14 +176,13 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         final var children = nodeConnectionRepository
                 .findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(childrenIds);
 
-        final var returnList = new ArrayList<EntityWithPathChildDTO>();
+        final var returnList = new ArrayList<NodeChildDTO>();
 
-        children.stream().map(nodeConnection -> new NodeChildDTO(node, nodeConnection, language))
-                .forEach(returnList::add);
+        children.stream().map(nodeConnection -> new NodeChildDTO(nodeConnection, language)).forEach(returnList::add);
 
         var filtered = returnList.stream()
-                .filter(entityWithPathChildDTO -> childrenIds.contains(entityWithPathChildDTO.parent)
-                        || node.getPublicId().equals(entityWithPathChildDTO.parent))
+                .filter(entityWithPathChildDTO -> childrenIds.contains(entityWithPathChildDTO.getParentId())
+                        || node.getPublicId().equals(entityWithPathChildDTO.getParentId()))
                 .toList();
 
         return treeSorter.sortList(filtered).stream().distinct().collect(Collectors.toList());
@@ -208,8 +207,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/resources")
     @Operation(summary = "Gets all resources for the given node", tags = { "nodes" })
     @Transactional(readOnly = true)
-    public List<EntityWithPathChildDTO> getResources(
-            @Parameter(name = "id", required = true) @PathVariable("id") URI nodeId,
+    public List<NodeChildDTO> getResources(@Parameter(name = "id", required = true) @PathVariable("id") URI nodeId,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false) String language,
             @Parameter(description = "If true, resources from children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @Parameter(description = "Select by resource type id(s). If not specified, resources of all types will be returned. "

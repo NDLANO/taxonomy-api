@@ -8,7 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.service.dtos.ResourceDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -28,7 +28,7 @@ public class ResourceTranslationsTest extends RestTest {
         builder.node(NodeType.RESOURCE, r -> r.name("Gas giants").translation("nb", tr -> tr.name("Gasskjemper")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources?language=nb");
-        final var resources = testUtils.getObject(ResourceDTO[].class, response);
+        final var resources = testUtils.getObject(NodeDTO[].class, response);
 
         assertEquals(2, resources.length);
         assertAnyTrue(resources, s -> "De indre planetene".equals(s.getName()));
@@ -41,7 +41,7 @@ public class ResourceTranslationsTest extends RestTest {
                 tr -> tr.name("Introduksjon til trigonometri"))).getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resources/" + trigonometry + "?language=nb");
-        final var resource = testUtils.getObject(ResourceDTO.class, response);
+        final var resource = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("Introduksjon til trigonometri", resource.getName());
     }
@@ -120,10 +120,10 @@ public class ResourceTranslationsTest extends RestTest {
         assertEquals("nb", translation.language);
     }
 
-    private ResourceDTO getResourceIndexDocument(URI id, String language) throws Exception {
+    private NodeDTO getResourceIndexDocument(URI id, String language) throws Exception {
         String path = "/v1/resources/" + id;
         if (isNotEmpty(language))
             path = path + "?language=" + language;
-        return testUtils.getObject(ResourceDTO.class, testUtils.getResource(path));
+        return testUtils.getObject(NodeDTO.class, testUtils.getResource(path));
     }
 }

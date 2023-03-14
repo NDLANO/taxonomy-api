@@ -9,10 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.service.dtos.EntityWithPathDTO;
-import no.ndla.taxonomy.service.dtos.NodeChildDTO;
-import no.ndla.taxonomy.service.dtos.NodeDTO;
-import no.ndla.taxonomy.service.dtos.ResourceDTO;
+import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -37,7 +34,7 @@ public class SubjectTranslationsTest extends RestTest {
         builder.node(NodeType.SUBJECT, s -> s.name("Chemistry").translation("nb", l -> l.name("Kjemi")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects?language=nb");
-        NodeDTO[] subjects = testUtils.getObject(NodeDTO[].class, response);
+        NodeChildDTO[] subjects = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(2, subjects.length);
         assertAnyTrue(subjects, s -> s.getName().equals("Matematikk"));
@@ -49,14 +46,14 @@ public class SubjectTranslationsTest extends RestTest {
         URI id = builder.node(NodeType.SUBJECT, s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")))
                 .getPublicId();
 
-        EntityWithPathDTO subject = getSubject(id, "nb");
+        NodeDTO subject = getSubject(id, "nb");
         assertEquals("Matematikk", subject.getName());
     }
 
     @Test
     public void fallback_to_default_language() throws Exception {
         URI id = builder.node(NodeType.SUBJECT, s -> s.name("Mathematics")).getPublicId();
-        EntityWithPathDTO subject = getSubject(id, "XX");
+        NodeDTO subject = getSubject(id, "XX");
         assertEquals("Mathematics", subject.getName());
     }
 
@@ -65,7 +62,7 @@ public class SubjectTranslationsTest extends RestTest {
         URI id = builder.node(NodeType.SUBJECT, s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")))
                 .getPublicId();
 
-        EntityWithPathDTO subject = getSubject(id, null);
+        NodeDTO subject = getSubject(id, null);
         assertEquals("Mathematics", subject.getName());
     }
 
@@ -154,7 +151,7 @@ public class SubjectTranslationsTest extends RestTest {
                 .getPublicId();
 
         var response = testUtils.getResource("/v1/subjects/" + id + "/resources?language=nb");
-        final var resources = testUtils.getObject(ResourceDTO[].class, response);
+        final var resources = testUtils.getObject(NodeDTO[].class, response);
 
         assertEquals(2, resources.length);
 
@@ -163,10 +160,10 @@ public class SubjectTranslationsTest extends RestTest {
         assertAllTrue(resources, r -> r.getResourceTypes().iterator().next().getName().equals("Artikkel"));
     }
 
-    private NodeDTO getSubject(URI id, String language) throws Exception {
+    private NodeChildDTO getSubject(URI id, String language) throws Exception {
         String path = "/v1/subjects/" + id;
         if (isNotEmpty(language))
             path = path + "?language=" + language;
-        return testUtils.getObject(NodeDTO.class, testUtils.getResource(path));
+        return testUtils.getObject(NodeChildDTO.class, testUtils.getResource(path));
     }
 }

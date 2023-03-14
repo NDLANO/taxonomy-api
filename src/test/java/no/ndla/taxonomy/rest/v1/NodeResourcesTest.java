@@ -10,8 +10,8 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourcePageDTO;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
-import no.ndla.taxonomy.service.dtos.ResourceChildDTO;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -282,7 +282,7 @@ public class NodeResourcesTest extends RestTest {
                 });
 
         var response = testUtils.getResource("/v1/nodes/" + geometry.getPublicId() + "/resources");
-        var resources = testUtils.getObject(ResourceChildDTO[].class, response);
+        var resources = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(circles.getPublicId(), resources[0].getId());
         assertEquals(squares.getPublicId(), resources[1].getId());
     }
@@ -322,7 +322,7 @@ public class NodeResourcesTest extends RestTest {
         });
 
         var response = testUtils.getResource("/v1/nodes/" + geometry.getPublicId() + "/resources");
-        final var resources = testUtils.getObject(ResourceChildDTO[].class, response);
+        final var resources = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(circles.getPublicId(), resources[0].getId());
         assertEquals(squares.getPublicId(), resources[1].getId());

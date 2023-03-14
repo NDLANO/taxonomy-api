@@ -13,9 +13,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
-import no.ndla.taxonomy.service.*;
+import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.MetadataFilters;
+import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -94,7 +95,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single topic")
     @Transactional(readOnly = true)
-    public EntityWithPathDTO get(@PathVariable("id") URI id,
+    public NodeDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return nodeService.getNode(id, language);
     }
@@ -139,7 +140,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/topics")
     @Operation(summary = "Gets all subtopics for this topic")
     @Transactional(readOnly = true)
-    public List<TopicChildDTO> getSubTopics(@Parameter(name = "id", required = true) @PathVariable("id") URI id,
+    public List<NodeChildDTO> getSubTopics(@Parameter(name = "id", required = true) @PathVariable("id") URI id,
             @Parameter(description = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.") @RequestParam(value = "subject", required = false, defaultValue = "") URI subjectId,
             @Deprecated(forRemoval = true) @Parameter(description = "Select by filter id(s). If not specified, all subtopics connected to this topic will be returned."
                     + "Multiple ids may be separated with comma or the parameter may be repeated for each id.") @RequestParam(value = "filter", required = false, defaultValue = "") URI[] filterIds,
@@ -166,8 +167,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/resources")
     @Operation(summary = "Gets all resources for the given topic", tags = { "topics" })
     @Transactional(readOnly = true)
-    public List<EntityWithPathChildDTO> getResources(
-            @Parameter(name = "id", required = true) @PathVariable("id") URI topicId,
+    public List<NodeChildDTO> getResources(@Parameter(name = "id", required = true) @PathVariable("id") URI topicId,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false) String language,
             @Parameter(description = "If true, resources from subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @Parameter(description = "Select by resource type id(s). If not specified, resources of all types will be returned."

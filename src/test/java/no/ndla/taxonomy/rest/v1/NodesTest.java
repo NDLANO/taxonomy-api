@@ -11,8 +11,7 @@ import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
-import no.ndla.taxonomy.service.dtos.NodeDTO;
-import no.ndla.taxonomy.service.dtos.TopicChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +47,7 @@ public class NodesTest extends RestTest {
                 .nodeType(NodeType.TOPIC).name("trigonometry").contentUri("urn:article:1").publicId("urn:topic:1")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1");
-        final var node = testUtils.getObject(NodeDTO.class, response);
+        final var node = testUtils.getObject(NodeChildDTO.class, response);
 
         assertEquals("trigonometry", node.getName());
         assertEquals("urn:article:1", node.getContentUri().toString());
@@ -63,7 +62,7 @@ public class NodesTest extends RestTest {
         builder.node(NodeType.NODE, t -> t.publicId("urn:node:1"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:node:1");
-        final var node = testUtils.getObject(NodeDTO.class, response);
+        final var node = testUtils.getObject(NodeChildDTO.class, response);
 
         assertEquals("", node.getPath());
     }
@@ -81,14 +80,14 @@ public class NodesTest extends RestTest {
 
         {
             final var response = testUtils.getResource("/v1/nodes?contentURI=urn:test:1");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(1, nodes.length);
             assertEquals("photo synthesis", nodes[0].getName());
         }
 
         {
             final var response = testUtils.getResource("/v1/nodes?contentURI=urn:test:2");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(1, nodes.length);
             assertEquals("trigonometry", nodes[0].getName());
         }
@@ -112,7 +111,7 @@ public class NodesTest extends RestTest {
 
         {
             final var response = testUtils.getResource("/v1/nodes?value=value");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(1, nodes.length);
             assertEquals("photo synthesis", nodes[0].getName());
             assertNotNull(nodes[0].getMetadata());
@@ -121,7 +120,7 @@ public class NodesTest extends RestTest {
         }
         {
             final var response = testUtils.getResource("/v1/nodes?key=test&value=value");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(1, nodes.length);
             assertEquals("photo synthesis", nodes[0].getName());
             assertNotNull(nodes[0].getMetadata());
@@ -130,7 +129,7 @@ public class NodesTest extends RestTest {
         }
         {
             final var response = testUtils.getResource("/v1/nodes?key=test&value=value2");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(1, nodes.length);
             assertEquals("trigonometry", nodes[0].getName());
             assertNotNull(nodes[0].getMetadata());
@@ -147,7 +146,7 @@ public class NodesTest extends RestTest {
                 s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> t.name("trigonometry")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes");
-        final var nodes = testUtils.getObject(NodeDTO[].class, response);
+        final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(4, nodes.length);
 
         assertAnyTrue(nodes, t -> "Basic science".equals(t.getName()));
@@ -173,7 +172,7 @@ public class NodesTest extends RestTest {
                 n -> n.isRoot(true).name("Random node").child(NodeType.NODE, c -> c.name("Subnode")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes?isRoot=true");
-        final var nodes = testUtils.getObject(NodeDTO[].class, response);
+        final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(3, nodes.length);
 
         assertAnyTrue(nodes, t -> "Basic science".equals(t.getName()));
@@ -196,7 +195,7 @@ public class NodesTest extends RestTest {
         {
             MockHttpServletResponse response = testUtils.getResource(
                     "/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC,RESOURCE,NODE");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(6, nodes.length);
 
             assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
@@ -215,7 +214,7 @@ public class NodesTest extends RestTest {
         {
             MockHttpServletResponse response = testUtils.getResource(
                     "/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC,RESOURCE");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(5, nodes.length);
 
             assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
@@ -233,7 +232,7 @@ public class NodesTest extends RestTest {
         {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(3, nodes.length);
 
             assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
@@ -261,7 +260,7 @@ public class NodesTest extends RestTest {
 
         {
             MockHttpServletResponse response = testUtils.getResource("/v1/nodes?contentURI=urn:article:1");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(1, nodes.length);
             assertAnyTrue(nodes, t -> "Subnode".equals(t.getName()));
             assertAnyTrue(nodes, t -> t.getPath().contains("node"));
@@ -269,7 +268,7 @@ public class NodesTest extends RestTest {
         }
         {
             MockHttpServletResponse response = testUtils.getResource("/v1/nodes?isVisible=true");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(5, nodes.length);
             assertAnyTrue(nodes, t -> "Basic science".equals(t.getName()));
             assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
@@ -286,7 +285,7 @@ public class NodesTest extends RestTest {
                         t -> t.name("Maths vg1").contentUri("urn:frontpage:1").publicId("urn:subject:2")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:subject:2");
-        final var node = testUtils.getObject(NodeDTO.class, response);
+        final var node = testUtils.getObject(NodeChildDTO.class, response);
 
         assertEquals("Maths vg1", node.getName());
         assertEquals("urn:frontpage:1", node.getContentUri().toString());
@@ -335,7 +334,7 @@ public class NodesTest extends RestTest {
         testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes");
-        final var subtopics = testUtils.getObject(NodeDTO[].class, response);
+        final var subtopics = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(7, subtopics.length);
 
         assertEquals("urn:topic:2", subtopics[0].getId().toString());
@@ -351,7 +350,7 @@ public class NodesTest extends RestTest {
         testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes");
-        final var subtopics = testUtils.getObject(TopicChildDTO[].class, response);
+        final var subtopics = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(7, subtopics.length, "Unfiltered subtopics");
 
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() != null);

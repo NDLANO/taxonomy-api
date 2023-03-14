@@ -13,7 +13,6 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
-import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -35,7 +34,7 @@ public class SubjectsTest extends RestTest {
                 s -> s.isContext(true).name("english").contentUri("urn:article:1").publicId("urn:subject:1"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1");
-        NodeDTO subject = testUtils.getObject(NodeDTO.class, response);
+        NodeChildDTO subject = testUtils.getObject(NodeChildDTO.class, response);
 
         assertEquals("english", subject.getName());
         assertEquals("urn:article:1", subject.getContentUri().toString());
@@ -52,7 +51,7 @@ public class SubjectsTest extends RestTest {
         builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("mathematics"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects");
-        NodeDTO[] subjects = testUtils.getObject(NodeDTO[].class, response);
+        NodeChildDTO[] subjects = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(2, subjects.length);
 
         assertAnyTrue(subjects, s -> "english".equals(s.getName()));
