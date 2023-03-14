@@ -10,6 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -28,7 +29,7 @@ public class NodeTranslationsTest extends RestTest {
         builder.node(NodeType.NODE, t -> t.name("Integration").translation("nb", l -> l.name("Integrasjon")));
 
         var response = testUtils.getResource("/v1/nodes?language=nb");
-        final var topics = testUtils.getObject(NodeChildDTO[].class, response);
+        final var topics = testUtils.getObject(NodeDTO[].class, response);
 
         assertEquals(2, topics.length);
         assertAnyTrue(topics, s -> s.getName().equals("Trigonometri"));
@@ -184,11 +185,11 @@ public class NodeTranslationsTest extends RestTest {
         assertAllTrue(result, r -> r.getResourceTypes().iterator().next().getName().equals("Artikkel"));
     }
 
-    private NodeChildDTO getNode(URI id, String language) throws Exception {
+    private NodeDTO getNode(URI id, String language) throws Exception {
         String path = "/v1/nodes/" + id;
         if (isNotEmpty(language))
             path = path + "?language=" + language;
-        return testUtils.getObject(NodeChildDTO.class, testUtils.getResource(path));
+        return testUtils.getObject(NodeDTO.class, testUtils.getResource(path));
     }
 
 }

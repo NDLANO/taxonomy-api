@@ -10,6 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -160,10 +161,10 @@ public class TopicTranslationsTest extends RestTest {
         assertAllTrue(result, r -> r.getResourceTypes().iterator().next().getName().equals("Artikkel"));
     }
 
-    private NodeChildDTO getTopic(URI id, String language) throws Exception {
+    private NodeDTO getTopic(URI id, String language) throws Exception {
         String path = "/v1/topics/" + id;
         if (isNotEmpty(language))
             path = path + "?language=" + language;
-        return testUtils.getObject(NodeChildDTO.class, testUtils.getResource(path));
+        return testUtils.getObject(NodeDTO.class, testUtils.getResource(path));
     }
 }

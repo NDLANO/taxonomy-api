@@ -33,8 +33,8 @@ public class SubjectTranslationsTest extends RestTest {
         builder.node(NodeType.SUBJECT, s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
         builder.node(NodeType.SUBJECT, s -> s.name("Chemistry").translation("nb", l -> l.name("Kjemi")));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects?language=nb");
-        NodeChildDTO[] subjects = testUtils.getObject(NodeChildDTO[].class, response);
+        var response = testUtils.getResource("/v1/subjects?language=nb");
+        var subjects = testUtils.getObject(NodeDTO[].class, response);
 
         assertEquals(2, subjects.length);
         assertAnyTrue(subjects, s -> s.getName().equals("Matematikk"));
@@ -151,7 +151,7 @@ public class SubjectTranslationsTest extends RestTest {
                 .getPublicId();
 
         var response = testUtils.getResource("/v1/subjects/" + id + "/resources?language=nb");
-        final var resources = testUtils.getObject(NodeDTO[].class, response);
+        final var resources = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(2, resources.length);
 
@@ -160,10 +160,10 @@ public class SubjectTranslationsTest extends RestTest {
         assertAllTrue(resources, r -> r.getResourceTypes().iterator().next().getName().equals("Artikkel"));
     }
 
-    private NodeChildDTO getSubject(URI id, String language) throws Exception {
+    private NodeDTO getSubject(URI id, String language) throws Exception {
         String path = "/v1/subjects/" + id;
         if (isNotEmpty(language))
             path = path + "?language=" + language;
-        return testUtils.getObject(NodeChildDTO.class, testUtils.getResource(path));
+        return testUtils.getObject(NodeDTO.class, testUtils.getResource(path));
     }
 }
