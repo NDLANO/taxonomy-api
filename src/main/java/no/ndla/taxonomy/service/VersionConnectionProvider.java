@@ -7,15 +7,21 @@
 
 package no.ndla.taxonomy.service;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import no.ndla.taxonomy.domain.Version;
+import no.ndla.taxonomy.repositories.VersionRepository;
 import org.hibernate.engine.jdbc.connections.spi.AbstractDataSourceBasedMultiTenantConnectionProviderImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,29 +29,47 @@ import java.util.Map;
  */
 @Component
 public class VersionConnectionProvider extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl {
-    private final DataSource defaultDataSource;
-    private final VersionService versionService;
-    private boolean initCompleted = false;
     private final Map<String, DataSource> dataSourceMap = new HashMap<>();
+    private final DataSource defaultDataSource;
+
+    @Value("${spring.datasource.url:}")
+    private String dataSourceUrl;
+
+    @Value("${spring.datasource.username:}")
+    private String dataSourceUsername;
+
+    @Value("${spring.datasource.password:}")
+    private String dataSourcePassword;
 
     @Value("${spring.datasource.hikari.schema:taxonomy_api}")
     private String defaultSchema;
 
-    private void initDataSourceMap() {
-        var storedVersions = versionService.getVersions();
-        for (var version: storedVersions) {
-            var schemaName = versionService.schemaFromHash(version.getHash());
-            // FIXME: Create datasource for tenant
-            dataSourceMap.put(schemaName, ds);
-
-        }
-
+    private String schemaFromHash(String hash) {
+        if (hash != null)
+            return String.format("%s%s", defaultSchema, "_" + hash);
+        return defaultSchema;
     }
 
     @Autowired
-    public VersionConnectionProvider(DataSource dataSource, VersionService versionService) {
+    public VersionConnectionProvider(DataSource dataSource) {
         this.defaultDataSource = dataSource;
-        this.versionService = versionService;
+    }
+
+    private DataSource getDataSource(String tenant) {
+        var foundDataSource = dataSourceMap.get(tenant);
+        if (foundDataSource != null) {
+            return foundDataSource;
+        }
+
+        var config = new HikariConfig();
+        config.setSchema(tenant);
+        config.setJdbcUrl(dataSourceUrl);
+        config.setUsername(dataSourceUsername);
+        config.setPassword(dataSourcePassword);
+        var newDataSource = new HikariDataSource(config);
+        dataSourceMap.put(tenant, newDataSource);
+
+        return newDataSource;
     }
 
     @Override
@@ -55,19 +79,6 @@ public class VersionConnectionProvider extends AbstractDataSourceBasedMultiTenan
 
     @Override
     protected DataSource selectDataSource(String versionSchemaName) {
-        return dataSource;
-    }
-
-    @Override
-    public Connection getConnection(String versionSchemaName) throws SQLException {
-        final Connection connection = getAnyConnection();
-        connection.setSchema(versionSchemaName);
-        return connection;
-    }
-
-    @Override
-    public void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException {
-        connection.setSchema(defaultSchema);
-        connection.close();
+        return getDataSource(versionSchemaName);
     }
 }
