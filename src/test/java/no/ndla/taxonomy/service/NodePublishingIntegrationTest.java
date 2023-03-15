@@ -272,6 +272,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         // nodes to make sure testnode is not the first
         builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
         builder.node(n -> n.publicId("urn:node:second").resource(r -> r.publicId("urn:resource:second")));
+        builder.node(n -> n.publicId("urn:node:third").resource(r -> r.publicId("urn:resource:third")));
         Node resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1"));
         Node node = builder
                 .node(NodeType.SUBJECT,
