@@ -161,14 +161,13 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
         final var returnList = new ArrayList<NodeChildDTO>();
 
-        final var filteredConnections = children.stream().filter(nodeConnection -> {
+        final var connections = children.stream().filter(nodeConnection -> {
             var child = nodeConnection.getChild();
             var relevanceFilter = searchForRelevance(nodeConnection, relevanceArgument, children);
             return child.isPresent() && child.get().getNodeType() == NodeType.TOPIC && relevanceFilter;
         }).toList();
 
-        filteredConnections.stream().map(nodeConnection -> createChildDTO(subject, nodeConnection, language))
-                .forEach(returnList::add);
+        connections.stream().map(nodeConnection -> new NodeChildDTO(nodeConnection, language)).forEach(returnList::add);
 
         var filtered = returnList.stream()
                 .filter(entityWithPathChildDTO -> childrenIds.contains(entityWithPathChildDTO.getParentId())
@@ -183,10 +182,6 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         // (Don't know how much it makes sense to sort the list by parent and rank when duplicates
         // are removed, but old code did)
         return topicTreeSorter.sortList(filtered).stream().distinct().collect(Collectors.toList());
-    }
-
-    private NodeChildDTO createChildDTO(Node subject, NodeConnection connection, String language) {
-        return new NodeChildDTO(connection, language);
     }
 
     private boolean searchForRelevance(NodeConnection connection, URI relevancePublicId,
