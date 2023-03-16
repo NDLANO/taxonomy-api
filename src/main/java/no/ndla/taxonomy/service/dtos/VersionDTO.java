@@ -41,6 +41,10 @@ public class VersionDTO {
     private Boolean locked;
 
     @JsonProperty
+    @Schema(description = "Timestamp for when version was created")
+    private Instant created;
+
+    @JsonProperty
     @Schema(description = "Timestamp for when version was published")
     private Instant published;
 
@@ -57,6 +61,7 @@ public class VersionDTO {
         this.name = version.getName();
         this.hash = version.getHash();
         this.locked = version.isLocked();
+        this.created = version.getCreated();
         this.published = version.getPublished();
         this.archived = version.getArchived();
     }
@@ -75,6 +80,10 @@ public class VersionDTO {
 
     public String getHash() {
         return hash;
+    }
+
+    public Instant getCreated() {
+        return created;
     }
 
     public Instant getPublished() {

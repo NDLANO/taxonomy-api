@@ -1374,4 +1374,20 @@
         <dropTable tableName="relevance_translation" />
         <dropTable tableName="resource_type_translation" />
     </changeSet>
+
+    <changeSet id="20230314 Add created to version" author="Gunnar Velle">
+        <addColumn tableName="version">
+            <column name="created" type="timestamp with time zone" />
+        </addColumn>
+        <sql>
+            UPDATE version
+            SET created = published
+        </sql>
+        <sql>
+            UPDATE version
+            SET created = clock_timestamp()
+            WHERE created IS NULL
+        </sql>
+        <addNotNullConstraint tableName="version" columnName="created" />
+    </changeSet>
 </databaseChangeLog>

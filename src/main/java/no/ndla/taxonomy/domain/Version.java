@@ -29,6 +29,9 @@ public class Version extends DomainEntity {
     private boolean locked = false;
 
     @Column
+    private Instant created;
+
+    @Column
     private Instant published;
 
     @Column
@@ -37,6 +40,7 @@ public class Version extends DomainEntity {
     public Version() {
         setPublicId(URI.create("urn:version:" + UUID.randomUUID()));
         this.hash = HashUtil.shortHash(getPublicId());
+        this.created = Instant.now();
     }
 
     public VersionType getVersionType() {
@@ -65,6 +69,14 @@ public class Version extends DomainEntity {
 
     public void setLocked(boolean locked) {
         this.locked = locked;
+    }
+
+    public Instant getCreated() {
+        return created;
+    }
+
+    public void setCreated(Instant created) {
+        this.created = created;
     }
 
     public Instant getPublished() {
