@@ -9,10 +9,10 @@ package no.ndla.taxonomy.domain;
 
 import java.util.Optional;
 
-public interface SortableResourceConnection<T extends DomainEntity> {
+public interface SortableResourceConnection {
     Optional<Node> getResource();
 
-    Optional<T> getParent();
+    Optional<Node> getParent();
 
     int getRank();
 }

@@ -74,26 +74,6 @@ public class CachedPath implements Serializable {
         this.primary = primary;
     }
 
-    public Optional<EntityWithPath> getOwningEntity() {
-        return Optional.ofNullable(node);
-    }
-
-    public void setOwningEntity(EntityWithPath entity) {
-        if (entity == null) {
-            this.setNode(null);
-            return;
-        }
-
-        if (entity instanceof Node) {
-            this.setNode((Node) entity);
-        } else {
-            throw new IllegalArgumentException("Unknown entity of type " + entity.getClass().toString()
-                    + " passed as owning entity of CachedPath");
-        }
-
-        setPublicId(entity.getPublicId());
-    }
-
     public Optional<Node> getNode() {
         return Optional.ofNullable(this.node);
     }
@@ -111,8 +91,11 @@ public class CachedPath implements Serializable {
             oldNode.removeCachedPath(this);
         }
 
-        if (node != null && !node.getCachedPaths().contains(this)) {
-            node.addCachedPath(this);
+        if (node != null) {
+            setPublicId(node.getPublicId());
+            if (!node.getCachedPaths().contains(this)) {
+                node.addCachedPath(this);
+            }
         }
     }
 

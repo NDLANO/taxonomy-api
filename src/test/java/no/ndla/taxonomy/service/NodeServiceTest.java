@@ -9,16 +9,13 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.transaction.TestTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
@@ -42,7 +39,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
     private Builder builder;
 
     @MockBean
-    private EntityConnectionService entityConnectionService;
+    private NodeConnectionService nodeConnectionService;
 
     @Autowired
     private NodeService nodeService;
@@ -65,7 +62,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         nodeService.delete(topicId);
 
         assertFalse(nodeRepository.findFirstByPublicId(topicId).isPresent());
-        verify(entityConnectionService).disconnectAllChildren(createdTopic);
+        verify(nodeConnectionService).disconnectAllChildren(createdTopic);
     }
 
     @Test
@@ -83,13 +80,13 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         final var parentConnectionsToReturn = Set.of(subjectTopic);
         final var childConnectionsToReturn = Set.of(childTopicSubtopic);
 
-        when(entityConnectionService.getParentConnections(any(Node.class))).thenAnswer(invocationOnMock -> {
+        when(nodeConnectionService.getParentConnections(any(Node.class))).thenAnswer(invocationOnMock -> {
             final var topic = (Node) invocationOnMock.getArgument(0);
             assertEquals(topicId, topic.getPublicId());
 
             return parentConnectionsToReturn;
         });
-        when(entityConnectionService.getChildConnections(any(Node.class))).thenAnswer(invocationOnMock -> {
+        when(nodeConnectionService.getChildConnections(any(Node.class))).thenAnswer(invocationOnMock -> {
             final var topic = (Node) invocationOnMock.getArgument(0);
             assertEquals(topicId, topic.getPublicId());
 

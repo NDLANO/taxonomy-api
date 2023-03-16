@@ -9,7 +9,6 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import no.ndla.taxonomy.domain.EntityWithPathConnection;
 import no.ndla.taxonomy.domain.NodeConnection;
 
 import java.net.URI;
@@ -18,7 +17,7 @@ import java.util.Set;
 
 /** */
 @Schema(name = "Connections")
-public class ConnectionIndexDTO {
+public class NodeConnectionDTO {
 
     @JsonProperty
     @Schema(description = "The id of the subject-topic or topic-subtopic connection", example = "urn:subject-topic:1")
@@ -40,10 +39,10 @@ public class ConnectionIndexDTO {
     @Schema(description = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
     private Boolean isPrimary;
 
-    public ConnectionIndexDTO() {
+    public NodeConnectionDTO() {
     }
 
-    private ConnectionIndexDTO(EntityWithPathConnection connection, boolean isParentConnection) {
+    private NodeConnectionDTO(NodeConnection connection, boolean isParentConnection) {
         this.connectionId = connection.getPublicId();
         this.isPrimary = true;
 
@@ -55,21 +54,19 @@ public class ConnectionIndexDTO {
             this.paths = Set.copyOf(connected.getAllPaths());
         });
 
-        if (connection instanceof NodeConnection) {
-            if (isParentConnection) {
-                this.type = "parent-topic";
-            } else {
-                this.type = "subtopic";
-            }
+        if (isParentConnection) {
+            this.type = "parent-topic";
+        } else {
+            this.type = "subtopic";
         }
     }
 
-    public static ConnectionIndexDTO parentConnection(EntityWithPathConnection connection) {
-        return new ConnectionIndexDTO(connection, true);
+    public static NodeConnectionDTO parentConnection(NodeConnection connection) {
+        return new NodeConnectionDTO(connection, true);
     }
 
-    public static ConnectionIndexDTO childConnection(EntityWithPathConnection connection) {
-        return new ConnectionIndexDTO(connection, false);
+    public static NodeConnectionDTO childConnection(NodeConnection connection) {
+        return new NodeConnectionDTO(connection, false);
     }
 
     public URI getConnectionId() {

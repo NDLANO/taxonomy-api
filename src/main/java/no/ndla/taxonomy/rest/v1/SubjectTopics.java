@@ -18,7 +18,7 @@ import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.service.EntityConnectionService;
+import no.ndla.taxonomy.service.NodeConnectionService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,13 +34,13 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping(path = { "/v1/subject-topics" })
 public class SubjectTopics {
-    private final EntityConnectionService connectionService;
+    private final NodeConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
 
     public SubjectTopics(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            EntityConnectionService connectionService, RelevanceRepository relevanceRepository) {
+            NodeConnectionService connectionService, RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;

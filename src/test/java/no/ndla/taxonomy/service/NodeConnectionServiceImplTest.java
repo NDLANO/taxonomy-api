@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Transactional
-public class EntityConnectionServiceImplTest extends AbstractIntegrationTest {
+public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
     @Autowired
     private NodeConnectionRepository nodeConnectionRepository;
 
@@ -40,7 +40,7 @@ public class EntityConnectionServiceImplTest extends AbstractIntegrationTest {
 
     private CachedUrlUpdaterService cachedUrlUpdaterService;
 
-    private EntityConnectionServiceImpl service;
+    private NodeConnectionServiceImpl service;
 
     @Autowired
     private Builder builder;
@@ -49,7 +49,7 @@ public class EntityConnectionServiceImplTest extends AbstractIntegrationTest {
     public void setUp() throws Exception {
         cachedUrlUpdaterService = mock(CachedUrlUpdaterService.class);
 
-        service = new EntityConnectionServiceImpl(nodeConnectionRepository, cachedUrlUpdaterService, nodeRepository);
+        service = new NodeConnectionServiceImpl(nodeConnectionRepository, cachedUrlUpdaterService, nodeRepository);
     }
 
     @Test

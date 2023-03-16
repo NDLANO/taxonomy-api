@@ -81,8 +81,8 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Transactional
     public void buildPathsForEntity(URI publicId) {
         DomainEntity domainEntity = getEntityByPublicId(publicId);
-        if (domainEntity instanceof EntityWithPath) {
-            cachedUrlUpdaterService.updateCachedUrls((EntityWithPath) domainEntity);
+        if (domainEntity instanceof Node) {
+            cachedUrlUpdaterService.updateCachedUrls((Node) domainEntity);
         }
     }
 

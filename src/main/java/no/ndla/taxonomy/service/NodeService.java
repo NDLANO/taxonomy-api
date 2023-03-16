@@ -39,7 +39,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     Logger logger = LoggerFactory.getLogger(getClass().getName());
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
-    private final EntityConnectionService connectionService;
+    private final NodeConnectionService connectionService;
     private final VersionService versionService;
     private final TreeSorter topicTreeSorter;
     private final ChangelogRepository changelogRepository;
@@ -56,7 +56,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public NodeService(ChangelogRepository changelogRepository, DomainEntityHelperService domainEntityHelperService,
-            EntityConnectionService connectionService, NodeConnectionRepository nodeConnectionRepository,
+            NodeConnectionService connectionService, NodeConnectionRepository nodeConnectionRepository,
             NodeRepository nodeRepository, RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter topicTreeSorter, TreeSorter treeSorter, VersionService versionService,
             TaxonomyContextDTOFactory searchableTaxonomyContextDTOFactory) {
@@ -109,15 +109,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return listToReturn;
     }
 
-    public List<ConnectionIndexDTO> getAllConnections(URI nodePublicId) {
+    public List<NodeConnectionDTO> getAllConnections(URI nodePublicId) {
         final var node = nodeRepository.findFirstByPublicId(nodePublicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
 
         return Stream
-                .concat(connectionService.getParentConnections(node).stream().map(ConnectionIndexDTO::parentConnection),
-                        connectionService.getChildConnections(node).stream()
-                                .filter(entity -> entity instanceof NodeConnection)
-                                .map(ConnectionIndexDTO::childConnection))
+                .concat(connectionService.getParentConnections(node).stream().map(NodeConnectionDTO::parentConnection),
+                        connectionService.getChildConnections(node).stream().map(NodeConnectionDTO::childConnection))
                 .toList();
     }
 
@@ -151,7 +149,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
         // Add both topics and resourceTopics to a common list that will be sorted in a tree-structure based on rank at
         // each level
-        final Set<ResourceTreeSortable<Node>> resourcesToSort = new HashSet<>();
+        final Set<ResourceTreeSortable> resourcesToSort = new HashSet<>();
 
         // Populate a list of topic IDs we are going to fetch first, and then fetch the actual topics later
         // This allows searching recursively without having to fetch the whole relation tree on each element in the
@@ -173,7 +171,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(Set<URI> nodeIds, Set<URI> resourceTypeIds,
-            URI relevance, Set<ResourceTreeSortable<Node>> sortableListToAddTo, String languageCode) {
+            URI relevance, Set<ResourceTreeSortable> sortableListToAddTo, String languageCode) {
         final List<NodeConnection> nodeResources;
 
         if (resourceTypeIds.size() > 0) {
