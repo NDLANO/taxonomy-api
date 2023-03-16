@@ -10,10 +10,9 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourcePageDTO;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
-import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 import java.util.*;
@@ -161,7 +160,7 @@ public class NodeResourcesTest extends RestTest {
     @Test
     public void deleted_primary_node_is_replaced() throws Exception {
         var resource = builder.node(NodeType.RESOURCE, r -> r.name("resource"));
-        Node primary = builder.node(NodeType.TOPIC, t -> t.name("primary").resource(resource));
+        var primary = builder.node(NodeType.TOPIC, t -> t.name("primary").resource(resource));
         builder.node(NodeType.TOPIC, t -> t.name("other").resource(resource, true));
 
         testUtils.deleteResource("/v1/nodes/" + primary.getPublicId());
@@ -176,12 +175,12 @@ public class NodeResourcesTest extends RestTest {
         alternatingCurrent.setName("How alternating current works");
         save(NodeConnection.create(electricity, alternatingCurrent));
 
-        Node calculus = newTopic().name("calculus");
+        var calculus = newTopic().name("calculus");
         var integration = newResource();
         integration.setName("Introduction to integration");
         save(NodeConnection.create(calculus, integration));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/node-resources");
+        var response = testUtils.getResource("/v1/node-resources");
         var topicResources = testUtils.getObject(NodeResourceDTO[].class, response);
 
         assertEquals(2, topicResources.length);
@@ -196,28 +195,26 @@ public class NodeResourcesTest extends RestTest {
     public void can_get_resource_connections_paginated() throws Exception {
         var connections = createTenContiguousRankedConnections();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/node-resources/page?page=1&pageSize=5");
-        NodeResourcePageDTO page1 = testUtils.getObject(NodeResourcePageDTO.class, response);
+        var response = testUtils.getResource("/v1/node-resources/page?page=1&pageSize=5");
+        var page1 = testUtils.getObject(NodeResourcePageDTO.class, response);
         assertEquals(5, page1.results.size());
 
-        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-resources/page?page=2&pageSize=5");
-        NodeResourcePageDTO page2 = testUtils.getObject(NodeResourcePageDTO.class, response2);
+        var response2 = testUtils.getResource("/v1/node-resources/page?page=2&pageSize=5");
+        var page2 = testUtils.getObject(NodeResourcePageDTO.class, response2);
         assertEquals(5, page2.results.size());
 
-        var result = Stream.concat(page1.results.stream(), page2.results.stream()).collect(Collectors.toList());
+        var result = Stream.concat(page1.results.stream(), page2.results.stream()).toList();
 
-        assertTrue(connections.stream().map(DomainEntity::getPublicId).collect(Collectors.toList())
-                .containsAll(result.stream().map(r -> r.id).collect(Collectors.toList())));
+        assertTrue(connections.stream().map(DomainEntity::getPublicId).toList()
+                .containsAll(result.stream().map(r -> r.id).toList()));
     }
 
     @Test
     public void pagination_fails_if_param_not_present() throws Exception {
-        MockHttpServletResponse response = testUtils.getResource("/v1/node-resources/page?page=0",
-                status().isBadRequest());
+        var response = testUtils.getResource("/v1/node-resources/page?page=0", status().isBadRequest());
         assertEquals(400, response.getStatus());
 
-        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-resources/page?pageSize=5",
-                status().isBadRequest());
+        var response2 = testUtils.getResource("/v1/node-resources/page?pageSize=5", status().isBadRequest());
         assertEquals(400, response2.getStatus());
     }
 
@@ -228,8 +225,8 @@ public class NodeResourcesTest extends RestTest {
         alternatingCurrent.setName("How alternating current works");
         var topicResource = save(NodeConnection.create(electricity, alternatingCurrent));
 
-        MockHttpServletResponse resource = testUtils.getResource("/v1/node-resources/" + topicResource.getPublicId());
-        NodeResourceDTO topicResourceIndexDocument = testUtils.getObject(NodeResourceDTO.class, resource);
+        var resource = testUtils.getResource("/v1/node-resources/" + topicResource.getPublicId());
+        var topicResourceIndexDocument = testUtils.getObject(NodeResourceDTO.class, resource);
         assertEquals(electricity.getPublicId(), topicResourceIndexDocument.nodeId);
         assertEquals(alternatingCurrent.getPublicId(), topicResourceIndexDocument.resourceId);
     }
@@ -284,9 +281,8 @@ public class NodeResourcesTest extends RestTest {
                     }
                 });
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/" + geometry.getPublicId() + "/resources");
-        ResourceWithNodeConnectionDTO[] resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class,
-                response);
+        var response = testUtils.getResource("/v1/nodes/" + geometry.getPublicId() + "/resources");
+        var resources = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(circles.getPublicId(), resources[0].getId());
         assertEquals(squares.getPublicId(), resources[1].getId());
     }
@@ -296,7 +292,7 @@ public class NodeResourcesTest extends RestTest {
         builder.node(NodeType.TOPIC,
                 t -> t.name("elementary maths").resource(r -> r.name("graphs")).resource(r -> r.name("sets")));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/node-resources");
+        var response = testUtils.getResource("/v1/node-resources");
         NodeResourceDTO[] topicResources = testUtils.getObject(NodeResourceDTO[].class, response);
         assertAllTrue(topicResources, tr -> tr.rank == 0);
     }
@@ -325,8 +321,8 @@ public class NodeResourcesTest extends RestTest {
             }
         });
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/" + geometry.getPublicId() + "/resources");
-        final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
+        var response = testUtils.getResource("/v1/nodes/" + geometry.getPublicId() + "/resources");
+        final var resources = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(circles.getPublicId(), resources[0].getId());
         assertEquals(squares.getPublicId(), resources[1].getId());
@@ -352,9 +348,8 @@ public class NodeResourcesTest extends RestTest {
 
         // verify that the other connections have been updated
         for (var nodeResource : nodeResources) {
-            MockHttpServletResponse response = testUtils
-                    .getResource("/v1/node-resources/" + nodeResource.getPublicId().toString());
-            NodeResourceDTO connectionFromDb = testUtils.getObject(NodeResourceDTO.class, response);
+            var response = testUtils.getResource("/v1/node-resources/" + nodeResource.getPublicId().toString());
+            var connectionFromDb = testUtils.getObject(NodeResourceDTO.class, response);
             // verify that the other connections have had their rank bumped up 1
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
@@ -384,9 +379,8 @@ public class NodeResourcesTest extends RestTest {
 
         // verify that the other connections have been updated
         for (var nodeResource : nodeResources) {
-            MockHttpServletResponse response = testUtils
-                    .getResource("/v1/node-resources/" + nodeResource.getPublicId().toString());
-            NodeResourceDTO connectionFromDb = testUtils.getObject(NodeResourceDTO.class, response);
+            var response = testUtils.getResource("/v1/node-resources/" + nodeResource.getPublicId().toString());
+            var connectionFromDb = testUtils.getObject(NodeResourceDTO.class, response);
             // verify that only the contiguous connections are updated
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
@@ -418,9 +412,8 @@ public class NodeResourcesTest extends RestTest {
 
         // verify that the other connections are unchanged
         for (var nodeResource : nodeResources) {
-            MockHttpServletResponse response = testUtils
-                    .getResource("/v1/node-resources/" + nodeResource.getPublicId().toString());
-            NodeResourceDTO connection = testUtils.getObject(NodeResourceDTO.class, response);
+            var response = testUtils.getResource("/v1/node-resources/" + nodeResource.getPublicId().toString());
+            var connection = testUtils.getObject(NodeResourceDTO.class, response);
             if (!connection.id.equals(updatedConnection.getPublicId())) {
                 assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);
             }

@@ -34,8 +34,8 @@ public class SubjectsTest extends RestTest {
         builder.node(NodeType.SUBJECT,
                 s -> s.isContext(true).name("english").contentUri("urn:article:1").publicId("urn:subject:1"));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1");
-        NodeDTO subject = testUtils.getObject(NodeDTO.class, response);
+        var response = testUtils.getResource("/v1/subjects/urn:subject:1");
+        var subject = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("english", subject.getName());
         assertEquals("urn:article:1", subject.getContentUri().toString());
@@ -51,8 +51,8 @@ public class SubjectsTest extends RestTest {
         builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("english"));
         builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("mathematics"));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects");
-        NodeDTO[] subjects = testUtils.getObject(NodeDTO[].class, response);
+        var response = testUtils.getResource("/v1/subjects");
+        var subjects = testUtils.getObject(NodeDTO[].class, response);
         assertEquals(2, subjects.length);
 
         assertAnyTrue(subjects, s -> "english".equals(s.getName()));
@@ -75,7 +75,7 @@ public class SubjectsTest extends RestTest {
             }
         };
 
-        MockHttpServletResponse response = testUtils.createResource("/v1/subjects", createSubjectCommand);
+        var response = testUtils.createResource("/v1/subjects", createSubjectCommand);
         URI id = getId(response);
 
         Node subject = nodeRepository.getByPublicId(id);
@@ -93,7 +93,7 @@ public class SubjectsTest extends RestTest {
             }
         };
 
-        MockHttpServletResponse response = testUtils.createResource("/v1/subjects", command);
+        var response = testUtils.createResource("/v1/subjects", command);
         assertEquals("/v1/subjects/urn:subject:1", response.getHeader("Location"));
 
         assertNotNull(nodeRepository.getByPublicId(command.id));
@@ -194,18 +194,21 @@ public class SubjectsTest extends RestTest {
                         .child(NodeType.TOPIC, t -> t.name("electricity").contentUri("urn:article:2"))
                         .child(NodeType.TOPIC, t -> t.name("optics").contentUri("urn:article:3")));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
-        NodeChildDTO[] topics = testUtils.getObject(NodeChildDTO[].class, response);
+        var response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
+        var topics = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(3, topics.length);
-        assertAnyTrue(topics, t -> "statics".equals(t.name) && "urn:article:1".equals(t.contentUri.toString()));
-        assertAnyTrue(topics, t -> "electricity".equals(t.name) && "urn:article:2".equals(t.contentUri.toString()));
-        assertAnyTrue(topics, t -> "optics".equals(t.name) && "urn:article:3".equals(t.contentUri.toString()));
-        assertAnyTrue(topics, t -> t.isPrimary);
-        assertAllTrue(topics, t -> isValidId(t.id));
-        assertAllTrue(topics, t -> isValidId(t.connectionId));
-        assertAllTrue(topics, t -> !t.path.isEmpty());
-        assertAllTrue(topics, t -> t.parent.equals(subject.getPublicId()));
+        assertAnyTrue(topics,
+                t -> "statics".equals(t.getName()) && "urn:article:1".equals(t.getContentUri().toString()));
+        assertAnyTrue(topics,
+                t -> "electricity".equals(t.getName()) && "urn:article:2".equals(t.getContentUri().toString()));
+        assertAnyTrue(topics,
+                t -> "optics".equals(t.getName()) && "urn:article:3".equals(t.getContentUri().toString()));
+        assertAnyTrue(topics, t -> t.isPrimary());
+        assertAllTrue(topics, t -> isValidId(t.getId()));
+        assertAllTrue(topics, t -> isValidId(t.getConnectionId()));
+        assertAllTrue(topics, t -> !t.getPath().isEmpty());
+        assertAllTrue(topics, t -> t.getParentId().equals(subject.getPublicId()));
 
         assertAllTrue(topics, t -> t.getMetadata() != null);
 
@@ -225,17 +228,16 @@ public class SubjectsTest extends RestTest {
                                                         .name("grandchild topic").publicId("urn:topic:aaa")))))
                 .getPublicId();
 
-        MockHttpServletResponse response = testUtils
-                .getResource("/v1/subjects/" + subjectId + "/topics?recursive=true");
-        NodeChildDTO[] topics = testUtils.getObject(NodeChildDTO[].class, response);
+        var response = testUtils.getResource("/v1/subjects/" + subjectId + "/topics?recursive=true");
+        var topics = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(3, topics.length);
-        assertEquals("parent topic", topics[0].name);
-        assertEquals("/subject:1/topic:a", topics[0].path);
-        assertEquals("child topic", topics[1].name);
-        assertEquals("/subject:1/topic:a/topic:aa", topics[1].path);
-        assertEquals("grandchild topic", topics[2].name);
-        assertEquals("/subject:1/topic:a/topic:aa/topic:aaa", topics[2].path);
+        assertEquals("parent topic", topics[0].getName());
+        assertEquals("/subject:1/topic:a", topics[0].getPath());
+        assertEquals("child topic", topics[1].getName());
+        assertEquals("/subject:1/topic:a/topic:aa", topics[1].getPath());
+        assertEquals("grandchild topic", topics[2].getName());
+        assertEquals("/subject:1/topic:a/topic:aa/topic:aaa", topics[2].getPath());
 
         assertAllTrue(topics, t -> t.getMetadata() != null);
 
@@ -243,45 +245,45 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 0);
 
         Node subject = builder.node("subject");
-        assertEquals(first(subject.getChildConnections()).getPublicId(), topics[0].connectionId);
+        assertEquals(first(subject.getChildConnections()).getPublicId(), topics[0].getConnectionId());
 
         Node parent = builder.node("parent");
-        assertEquals(first(parent.getChildConnections()).getPublicId(), topics[1].connectionId);
+        assertEquals(first(parent.getChildConnections()).getPublicId(), topics[1].getConnectionId());
 
         Node child = builder.node("child");
-        assertEquals(first(child.getChildConnections()).getPublicId(), topics[2].connectionId);
+        assertEquals(first(child.getChildConnections()).getPublicId(), topics[2].getConnectionId());
     }
 
     @Test
     public void recursive_topics_are_ordered_by_rank_relative_to_parent() throws Exception {
         testSeeder.recursiveNodesBySubjectNodeIdTestSetup();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/topics?recursive=true");
-        NodeChildDTO[] topics = testUtils.getObject(NodeChildDTO[].class, response);
+        var response = testUtils.getResource("/v1/subjects/urn:subject:1/topics?recursive=true");
+        var topics = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(8, topics.length);
-        assertEquals("urn:topic:1", topics[0].id.toString());
-        assertEquals("urn:topic:2", topics[1].id.toString());
-        assertEquals("urn:topic:3", topics[2].id.toString());
-        assertEquals("urn:topic:4", topics[3].id.toString());
-        assertEquals("urn:topic:5", topics[4].id.toString());
-        assertEquals("urn:topic:6", topics[5].id.toString());
-        assertEquals("urn:topic:7", topics[6].id.toString());
-        assertEquals("urn:topic:8", topics[7].id.toString());
+        assertEquals("urn:topic:1", topics[0].getId().toString());
+        assertEquals("urn:topic:2", topics[1].getId().toString());
+        assertEquals("urn:topic:3", topics[2].getId().toString());
+        assertEquals("urn:topic:4", topics[3].getId().toString());
+        assertEquals("urn:topic:5", topics[4].getId().toString());
+        assertEquals("urn:topic:6", topics[5].getId().toString());
+        assertEquals("urn:topic:7", topics[6].getId().toString());
+        assertEquals("urn:topic:8", topics[7].getId().toString());
     }
 
     @Test
     public void recursive_topics_with_relevance_are_ordered_relative_to_parent() throws Exception {
         testSeeder.recursiveNodesBySubjectNodeIdAndRelevanceTestSetup();
         // test core relevance
-        MockHttpServletResponse response = testUtils
+        var response = testUtils
                 .getResource("/v1/subjects/urn:subject:1/topics?recursive=true&relevance=urn:relevance:core");
-        NodeChildDTO[] topics = testUtils.getObject(NodeChildDTO[].class, response);
+        var topics = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(5, topics.length);
 
         // test supplementary relevance
-        MockHttpServletResponse response2 = testUtils
+        var response2 = testUtils
                 .getResource("/v1/subjects/urn:subject:1/topics?recursive=true&relevance=urn:relevance:supplementary");
-        NodeChildDTO[] topics2 = testUtils.getObject(NodeChildDTO[].class, response2);
+        var topics2 = testUtils.getObject(NodeChildDTO[].class, response2);
         assertEquals(4, topics2.length);
     }
 }

@@ -12,7 +12,7 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
-import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,6 @@ import java.util.Set;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -46,7 +45,7 @@ public class TopicsTest extends RestTest {
         builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1").child(t -> t
                 .nodeType(NodeType.TOPIC).name("trigonometry").contentUri("urn:article:1").publicId("urn:topic:1")));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
+        var response = testUtils.getResource("/v1/topics/urn:topic:1");
         final var topic = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("trigonometry", topic.getName());
@@ -62,7 +61,7 @@ public class TopicsTest extends RestTest {
     public void topic_without_subject_has_no_url() throws Exception {
         builder.node(NodeType.TOPIC, t -> t.publicId("urn:topic:1"));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
+        var response = testUtils.getResource("/v1/topics/urn:topic:1");
         final var topic = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("", topic.getPath());
@@ -146,7 +145,7 @@ public class TopicsTest extends RestTest {
         builder.node(NodeType.SUBJECT,
                 s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> t.name("trigonometry")));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics");
+        var response = testUtils.getResource("/v1/topics");
         final var topics = testUtils.getObject(NodeDTO[].class, response);
         assertEquals(2, topics.length);
 
@@ -186,8 +185,8 @@ public class TopicsTest extends RestTest {
     public void can_get_all_connections() throws Exception {
         testSeeder.topicNodeConnectionsTestSetup();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:2000/connections");
-        ConnectionIndexDTO[] connections = testUtils.getObject(ConnectionIndexDTO[].class, response);
+        var response = testUtils.getResource("/v1/topics/urn:topic:2000/connections");
+        var connections = testUtils.getObject(ConnectionIndexDTO[].class, response);
 
         assertEquals(3, connections.length, "Correct number of connections");
         assertAllTrue(connections, c -> c.getPaths().size() > 0); // all connections have at least one path
@@ -199,8 +198,8 @@ public class TopicsTest extends RestTest {
     public void subtopics_are_sorted_by_rank() throws Exception {
         testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
-        final var subtopics = testUtils.getObject(NodeDTO[].class, response);
+        var response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
+        final var subtopics = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(7, subtopics.length);
 
         assertEquals("urn:topic:2", subtopics[0].getId().toString());
@@ -215,8 +214,8 @@ public class TopicsTest extends RestTest {
     public void can_get_unfiltered_subtopics() throws Exception {
         testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
-        final var subtopics = testUtils.getObject(NodeDTO[].class, response);
+        var response = testUtils.getResource("/v1/topics/urn:topic:1/topics");
+        final var subtopics = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(7, subtopics.length, "Unfiltered subtopics");
 
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() != null);
@@ -239,7 +238,7 @@ public class TopicsTest extends RestTest {
             }
         };
 
-        MockHttpServletResponse response = testUtils.createResource("/v1/topics", createTopicCommand);
+        var response = testUtils.createResource("/v1/topics", createTopicCommand);
         URI id = getId(response);
 
         Node topic = nodeRepository.getByPublicId(id);

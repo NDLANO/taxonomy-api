@@ -10,7 +10,6 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.service.CachedUrlUpdaterService;
-import no.ndla.taxonomy.service.dtos.EntityWithPathDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,8 +34,8 @@ public class ContextsTest extends RestTest {
 
         builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).publicId("urn:subject:1").name("Subject 1"));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/contexts");
-        Contexts.ContextIndexDocument[] contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
+        var response = testUtils.getResource("/v1/contexts");
+        var contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
 
         assertEquals(1, contexts.length);
         assertEquals("urn:subject:1", contexts[0].id.toString());
@@ -48,8 +47,8 @@ public class ContextsTest extends RestTest {
     public void topics_can_be_contexts() throws Exception {
         builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").name("Topic 1").isContext(true));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/contexts");
-        Contexts.ContextIndexDocument[] contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
+        var response = testUtils.getResource("/v1/contexts");
+        var contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
 
         assertEquals(1, contexts.length);
         assertEquals("urn:topic:1", contexts[0].id.toString());
@@ -88,8 +87,8 @@ public class ContextsTest extends RestTest {
         builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").name("Topic 1").translation("Emne 1", "nb")
                 .isContext(true));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/contexts?language=nb");
-        Contexts.ContextIndexDocument[] contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
+        var response = testUtils.getResource("/v1/contexts?language=nb");
+        var contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
 
         assertEquals(2, contexts.length);
 
@@ -112,7 +111,6 @@ public class ContextsTest extends RestTest {
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
         final var topicIndexDocument = testUtils.getObject(NodeDTO.class, response);
-        // assertEquals("/topic:1", topicIndexDocument.getPath());
         assertAnyTrue(topicIndexDocument.getPaths(), p -> p.equals("/topic:1"));
     }
 }

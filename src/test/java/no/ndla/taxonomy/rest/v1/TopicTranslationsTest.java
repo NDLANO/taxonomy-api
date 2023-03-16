@@ -9,12 +9,9 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.service.dtos.EntityWithPathChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
-import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
@@ -31,12 +28,12 @@ public class TopicTranslationsTest extends RestTest {
         builder.node(NodeType.TOPIC, t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")));
         builder.node(NodeType.TOPIC, t -> t.name("Integration").translation("nb", l -> l.name("Integrasjon")));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics?language=nb");
+        var response = testUtils.getResource("/v1/topics?language=nb");
         final var topics = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(2, topics.length);
-        assertAnyTrue(topics, s -> s.name.equals("Trigonometri"));
-        assertAnyTrue(topics, s -> s.name.equals("Integrasjon"));
+        assertAnyTrue(topics, s -> s.getName().equals("Trigonometri"));
+        assertAnyTrue(topics, s -> s.getName().equals("Integrasjon"));
     }
 
     @Test
@@ -100,8 +97,7 @@ public class TopicTranslationsTest extends RestTest {
                         .translation("de", l -> l.name("Trigonometrie")));
         URI id = topic.getPublicId();
 
-        TopicTranslations.TopicTranslationIndexDocument[] translations = testUtils.getObject(
-                TopicTranslations.TopicTranslationIndexDocument[].class,
+        var translations = testUtils.getObject(TopicTranslations.TopicTranslationIndexDocument[].class,
                 testUtils.getResource("/v1/topics/" + id + "/translations"));
 
         assertEquals(3, translations.length);
@@ -116,8 +112,7 @@ public class TopicTranslationsTest extends RestTest {
                 t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")));
         URI id = topic.getPublicId();
 
-        TopicTranslations.TopicTranslationIndexDocument translation = testUtils.getObject(
-                TopicTranslations.TopicTranslationIndexDocument.class,
+        var translation = testUtils.getObject(TopicTranslations.TopicTranslationIndexDocument.class,
                 testUtils.getResource("/v1/topics/" + id + "/translations/nb"));
         assertEquals("Trigonometri", translation.name);
         assertEquals("nb", translation.language);
@@ -137,9 +132,8 @@ public class TopicTranslationsTest extends RestTest {
                                                 .resourceType("article"))))
                 .getPublicId();
 
-        MockHttpServletResponse response = testUtils
-                .getResource("/v1/topics/" + a + "/resources?recursive=true&language=nb");
-        ResourceWithNodeConnectionDTO[] result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
+        var response = testUtils.getResource("/v1/topics/" + a + "/resources?recursive=true&language=nb");
+        var result = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "Introduksjon til calculus".equals(r.getName()));
@@ -158,8 +152,8 @@ public class TopicTranslationsTest extends RestTest {
                         r -> r.name("resource 2").translation("nb", tr -> tr.name("ressurs 2")).resourceType("article"))
                 .child(NodeType.TOPIC, st -> st.name("subtopic").resource(r -> r.name("subtopic resource")))));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1/resources?language=nb");
-        ResourceWithNodeConnectionDTO[] result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
+        var response = testUtils.getResource("/v1/topics/urn:topic:1/resources?language=nb");
+        var result = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(2, result.length);
         assertAnyTrue(result, r -> "ressurs 1".equals(r.getName()));

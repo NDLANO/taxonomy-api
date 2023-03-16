@@ -11,8 +11,8 @@ import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionIndexDTO;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
-import no.ndla.taxonomy.service.dtos.TopicChildDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -196,7 +196,7 @@ public class NodesTest extends RestTest {
         {
             MockHttpServletResponse response = testUtils.getResource(
                     "/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC,RESOURCE,NODE");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(6, nodes.length);
 
             assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
@@ -215,7 +215,7 @@ public class NodesTest extends RestTest {
         {
             MockHttpServletResponse response = testUtils.getResource(
                     "/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC,RESOURCE");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(5, nodes.length);
 
             assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
@@ -233,7 +233,7 @@ public class NodesTest extends RestTest {
         {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC");
-            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(3, nodes.length);
 
             assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
@@ -335,7 +335,7 @@ public class NodesTest extends RestTest {
         testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes");
-        final var subtopics = testUtils.getObject(NodeDTO[].class, response);
+        final var subtopics = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(7, subtopics.length);
 
         assertEquals("urn:topic:2", subtopics[0].getId().toString());
@@ -351,7 +351,7 @@ public class NodesTest extends RestTest {
         testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes");
-        final var subtopics = testUtils.getObject(TopicChildDTO[].class, response);
+        final var subtopics = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(7, subtopics.length, "Unfiltered subtopics");
 
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() != null);

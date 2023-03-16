@@ -10,6 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageField;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -114,7 +115,7 @@ public class QueryTest extends RestTest {
     @Test
     public void no_topics_matching_contentURI() throws Exception {
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/topics?contentURI=urn:article:345");
-        NodeDTO[] resources = testUtils.getObject(NodeDTO[].class, response);
+        var resources = testUtils.getObject(NodeDTO[].class, response);
 
         assertEquals(0, resources.length);
     }
@@ -154,7 +155,7 @@ public class QueryTest extends RestTest {
                         .translation("nb", tr -> tr.name("Fag 3")).child(NodeType.TOPIC, t -> t.publicId("urn:topic:3")
                                 .name("topic 3").translation("nb", tr -> tr.name("Emne 3")).child(resource)));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/queries/urn:article:1?filterVisibles=true");
+        var response = testUtils.getResource("/v1/queries/urn:article:1?filterVisibles=true");
         var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
 
         assertEquals(2, result.length);

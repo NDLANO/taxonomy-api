@@ -10,9 +10,8 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -178,9 +177,8 @@ public class TopicResourcesTest extends RestTest {
         integration.setName("Introduction to integration");
         save(NodeConnection.create(calculus, integration));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topic-resources");
-        TopicResources.TopicResourceIndexDocument[] topicResources = testUtils
-                .getObject(TopicResources.TopicResourceIndexDocument[].class, response);
+        var response = testUtils.getResource("/v1/topic-resources");
+        var topicResources = testUtils.getObject(TopicResources.TopicResourceIndexDocument[].class, response);
 
         assertEquals(2, topicResources.length);
         assertAnyTrue(topicResources, t -> electricity.getPublicId().equals(t.topicid)
@@ -197,9 +195,8 @@ public class TopicResourcesTest extends RestTest {
         alternatingCurrent.setName("How alternating current works");
         var topicResource = save(NodeConnection.create(electricity, alternatingCurrent));
 
-        MockHttpServletResponse resource = testUtils.getResource("/v1/topic-resources/" + topicResource.getPublicId());
-        TopicResources.TopicResourceIndexDocument topicResourceIndexDocument = testUtils
-                .getObject(TopicResources.TopicResourceIndexDocument.class, resource);
+        var resource = testUtils.getResource("/v1/topic-resources/" + topicResource.getPublicId());
+        var topicResourceIndexDocument = testUtils.getObject(TopicResources.TopicResourceIndexDocument.class, resource);
         assertEquals(electricity.getPublicId(), topicResourceIndexDocument.topicid);
         assertEquals(alternatingCurrent.getPublicId(), topicResourceIndexDocument.resourceId);
     }
@@ -254,9 +251,8 @@ public class TopicResourcesTest extends RestTest {
                     }
                 });
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/" + geometry.getPublicId() + "/resources");
-        ResourceWithNodeConnectionDTO[] resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class,
-                response);
+        var response = testUtils.getResource("/v1/topics/" + geometry.getPublicId() + "/resources");
+        var resources = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(circles.getPublicId(), resources[0].getId());
         assertEquals(squares.getPublicId(), resources[1].getId());
     }
@@ -266,9 +262,8 @@ public class TopicResourcesTest extends RestTest {
         builder.node(NodeType.TOPIC,
                 t -> t.name("elementary maths").resource(r -> r.name("graphs")).resource(r -> r.name("sets")));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topic-resources");
-        TopicResources.TopicResourceIndexDocument[] topicResources = testUtils
-                .getObject(TopicResources.TopicResourceIndexDocument[].class, response);
+        var response = testUtils.getResource("/v1/topic-resources");
+        var topicResources = testUtils.getObject(TopicResources.TopicResourceIndexDocument[].class, response);
         assertAllTrue(topicResources, tr -> tr.rank == 0);
     }
 
@@ -296,8 +291,8 @@ public class TopicResourcesTest extends RestTest {
             }
         });
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/topics/" + geometry.getPublicId() + "/resources");
-        final var resources = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
+        var response = testUtils.getResource("/v1/topics/" + geometry.getPublicId() + "/resources");
+        final var resources = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(circles.getPublicId(), resources[0].getId());
         assertEquals(squares.getPublicId(), resources[1].getId());
@@ -323,10 +318,8 @@ public class TopicResourcesTest extends RestTest {
 
         // verify that the other connections have been updated
         for (NodeConnection topicResource : topicResources) {
-            MockHttpServletResponse response = testUtils
-                    .getResource("/v1/topic-resources/" + topicResource.getPublicId().toString());
-            TopicResources.TopicResourceIndexDocument connectionFromDb = testUtils
-                    .getObject(TopicResources.TopicResourceIndexDocument.class, response);
+            var response = testUtils.getResource("/v1/topic-resources/" + topicResource.getPublicId().toString());
+            var connectionFromDb = testUtils.getObject(TopicResources.TopicResourceIndexDocument.class, response);
             // verify that the other connections have had their rank bumped up 1
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
@@ -356,10 +349,8 @@ public class TopicResourcesTest extends RestTest {
 
         // verify that the other connections have been updated
         for (NodeConnection topicResource : topicResources) {
-            MockHttpServletResponse response = testUtils
-                    .getResource("/v1/topic-resources/" + topicResource.getPublicId().toString());
-            TopicResources.TopicResourceIndexDocument connectionFromDb = testUtils
-                    .getObject(TopicResources.TopicResourceIndexDocument.class, response);
+            var response = testUtils.getResource("/v1/topic-resources/" + topicResource.getPublicId().toString());
+            var connectionFromDb = testUtils.getObject(TopicResources.TopicResourceIndexDocument.class, response);
             // verify that only the contiguous connections are updated
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
@@ -378,7 +369,7 @@ public class TopicResourcesTest extends RestTest {
         Map<String, Integer> mappedRanks = mapConnectionRanks(topicResources);
 
         // set rank for last object to higher than any existing
-        NodeConnection updatedConnection = topicResources.get(topicResources.size() - 1);
+        var updatedConnection = topicResources.get(topicResources.size() - 1);
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource("/v1/topic-resources/" + topicResources.get(9).getPublicId().toString(),
                 new TopicResources.UpdateTopicResourceCommand() {
@@ -391,10 +382,8 @@ public class TopicResourcesTest extends RestTest {
 
         // verify that the other connections are unchanged
         for (NodeConnection topicResource : topicResources) {
-            MockHttpServletResponse response = testUtils
-                    .getResource("/v1/topic-resources/" + topicResource.getPublicId().toString());
-            TopicResources.TopicResourceIndexDocument connection = testUtils
-                    .getObject(TopicResources.TopicResourceIndexDocument.class, response);
+            var response = testUtils.getResource("/v1/topic-resources/" + topicResource.getPublicId().toString());
+            var connection = testUtils.getObject(TopicResources.TopicResourceIndexDocument.class, response);
             if (!connection.id.equals(updatedConnection.getPublicId())) {
                 assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);
             }

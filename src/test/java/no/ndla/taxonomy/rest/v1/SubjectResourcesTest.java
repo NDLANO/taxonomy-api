@@ -8,10 +8,9 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.TestSeeder;
-import no.ndla.taxonomy.service.dtos.ResourceWithNodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,9 +23,8 @@ public class SubjectResourcesTest extends RestTest {
     public void can_get_resources_belonging_to_a_resource_type_for_a_subject() throws Exception {
         testSeeder.resourceWithResourceTypeTestSetup();
 
-        MockHttpServletResponse response = testUtils
-                .getResource("/v1/subjects/urn:subject:1/resources?type=urn:resourcetype:video");
-        ResourceWithNodeConnectionDTO[] result = testUtils.getObject(ResourceWithNodeConnectionDTO[].class, response);
+        var response = testUtils.getResource("/v1/subjects/urn:subject:1/resources?type=urn:resourcetype:video");
+        var result = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(1, result.length);
         assertAnyTrue(result, r -> "R:1".equals(r.getName()));
