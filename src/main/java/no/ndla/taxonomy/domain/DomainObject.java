@@ -9,8 +9,6 @@ package no.ndla.taxonomy.domain;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
-import java.util.Collection;
-import java.util.Optional;
 
 @MappedSuperclass
 public abstract class DomainObject extends DomainEntity implements Translatable {

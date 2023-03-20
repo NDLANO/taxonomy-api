@@ -56,7 +56,7 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
     @Transactional(propagation = Propagation.MANDATORY)
     public void updateCachedUrls(Node entity) {
         Set.copyOf(entity.getChildConnections())
-                .forEach(childEntity -> childEntity.getConnectedChild().ifPresent(e -> updateCachedUrls((Node) e)));
+                .forEach(childEntity -> childEntity.getConnectedChild().ifPresent(this::updateCachedUrls));
 
         clearCachedUrls(entity);
 

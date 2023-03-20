@@ -8,7 +8,10 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.repositories.NodeConnectionRepository;
+import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.repositories.ResourceTypeRepository;
+import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,17 +52,12 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Transactional(propagation = Propagation.MANDATORY)
     public DomainEntity getEntityByPublicId(URI publicId) {
         switch (publicId.getSchemeSpecificPart().split(":")[0]) {
-        case "subject":
-        case "topic":
-        case "node":
-        case "resource":
+        case "subject", "topic", "node", "resource" -> {
             return nodeRepository.findFirstByPublicId(publicId).orElse(null);
-        case "node-connection":
-        case "subject-topic":
-        case "topic-subtopic":
-        case "node-resource":
-        case "topic-resource":
+        }
+        case "node-connection", "subject-topic", "topic-subtopic", "node-resource", "topic-resource" -> {
             return nodeConnectionRepository.findByPublicId(publicId);
+        }
         }
         throw new NotFoundServiceException("Entity of type not found");
     }
@@ -147,11 +145,10 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Transactional(propagation = Propagation.MANDATORY)
     private Optional<DomainEntity> updateNode(Node node, boolean cleanUp) {
         Node result;
-        TaxonomyRepository<DomainEntity> repository = getRepository(node.getPublicId());
-        Node existing = (Node) getEntityByPublicId(node.getPublicId());
+        Node existing = nodeRepository.findByPublicId(node.getPublicId());
         node.getResourceTypes().forEach(this::ensureResourceTypesExists);
         if (existing == null) {
-            result = repository.save(new Node(node));
+            result = nodeRepository.save(new Node(node));
         } else if (existing.equals(node)) {
             result = existing;
         } else {
@@ -201,7 +198,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
                 });
             }
 
-            result = repository.save(existing);
+            result = nodeRepository.save(existing);
 
             // delete orphans
             List<URI> childIds = node.getChildren().stream().map(DomainEntity::getPublicId).toList();
@@ -221,26 +218,21 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Transactional(propagation = Propagation.MANDATORY)
     private Optional<DomainEntity> updateNodeConnection(NodeConnection nodeConnection, boolean cleanUp) {
         NodeConnection result;
-        TaxonomyRepository<DomainEntity> repository = getRepository(nodeConnection.getPublicId());
-        TaxonomyRepository<DomainEntity> nodeRepository = getRepository(URI.create("urn:node:dummy"));
-
-        NodeConnection existing = (NodeConnection) getEntityByPublicId(nodeConnection.getPublicId());
+        NodeConnection existing = nodeConnectionRepository.findByPublicId(nodeConnection.getPublicId());
         if (existing == null) {
             // Use correct objects when copying
-            nodeConnection
-                    .setParent((Node) nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId()));
-            nodeConnection
-                    .setChild((Node) nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId()));
+            nodeConnection.setParent(nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId()));
+            nodeConnection.setChild(nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId()));
             NodeConnection connection = new NodeConnection(nodeConnection);
             connection.setPublicId(nodeConnection.getPublicId());
-            result = repository.save(connection);
+            result = nodeConnectionRepository.save(connection);
         } else {
-            /*
-             * if (existing.equals(nodeConnection)) { return Optional.of(existing); }
-             */
+            if (existing.equals(nodeConnection)) {
+                return Optional.of(existing);
+            }
             logger.debug("Updating nodeconnection " + nodeConnection.getPublicId());
-            existing.setParent((Node) nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId()));
-            existing.setChild((Node) nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId()));
+            existing.setParent(nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId()));
+            existing.setChild(nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId()));
             existing.setRank(nodeConnection.getRank());
             existing.setVisible(nodeConnection.getVisible());
             existing.setGrepCodes(nodeConnection.getGrepCodes());
@@ -252,7 +244,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
                 existing.setPrimary(nodeConnection.isPrimary().get());
             }
 
-            result = repository.save(existing);
+            result = nodeConnectionRepository.save(existing);
         }
         if (cleanUp) {
             buildPathsForEntity(result.getChild().get().getPublicId());

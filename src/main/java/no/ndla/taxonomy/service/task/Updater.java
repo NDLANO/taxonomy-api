@@ -7,8 +7,7 @@
 
 package no.ndla.taxonomy.service.task;
 
-import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.service.ChangelogService;
+import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.service.DomainEntityHelperService;
 
 import java.util.Optional;

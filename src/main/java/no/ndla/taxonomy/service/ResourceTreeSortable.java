@@ -13,7 +13,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 
-public class ResourceTreeSortable<Node> implements TreeSorter.Sortable {
+public class ResourceTreeSortable implements TreeSorter.Sortable {
     private final int rank;
     private final URI id;
     private final URI parentId;

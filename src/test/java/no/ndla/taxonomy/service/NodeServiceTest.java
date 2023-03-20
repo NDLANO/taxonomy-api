@@ -44,12 +44,6 @@ public class NodeServiceTest extends AbstractIntegrationTest {
     @Autowired
     private NodeService nodeService;
 
-    @Autowired
-    private VersionService versionService;
-
-    @MockBean
-    private TreeSorter treeSorter;
-
     @BeforeEach
     void clearAllRepos() {
         nodeRepository.deleteAllAndFlush();

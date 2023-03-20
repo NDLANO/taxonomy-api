@@ -157,7 +157,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         if (recursive) {
             final var nodeList = recursiveNodeTreeService.getRecursiveNodes(node);
 
-            nodeList.forEach(treeElement -> resourcesToSort.add(new ResourceTreeSortable<Node>("node", "node",
+            nodeList.forEach(treeElement -> resourcesToSort.add(new ResourceTreeSortable("node", "node",
                     treeElement.getId(), treeElement.getParentId().orElse(URI.create("")), treeElement.getRank())));
 
             topicIdsToSearchFor = nodeList.stream().map(RecursiveNodeTreeService.TreeElement::getId)
@@ -196,7 +196,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             nodeResources = nodeResourcesStream.collect(Collectors.toList());
         }
 
-        nodeResources.forEach(nodeResource -> sortableListToAddTo.add(new ResourceTreeSortable<Node>(nodeResource)));
+        nodeResources.forEach(nodeResource -> sortableListToAddTo.add(new ResourceTreeSortable(nodeResource)));
 
         // Sort the list, extract all the topicResource objects in between topics and return list of documents
         return treeSorter.sortList(sortableListToAddTo).stream().map(ResourceTreeSortable::getResourceConnection)

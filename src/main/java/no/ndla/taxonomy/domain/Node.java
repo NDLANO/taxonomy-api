@@ -233,7 +233,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public Collection<NodeConnection> getParentConnections() {
-        return parentConnections.stream().map(entity -> (NodeConnection) entity).toList();
+        return parentConnections.stream().toList();
     }
 
     public Set<NodeConnection> getParentNodeConnections() {
@@ -241,7 +241,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public Collection<NodeConnection> getChildConnections() {
-        return childConnections.stream().map(entity -> (NodeConnection) entity).collect(Collectors.toSet());
+        return new HashSet<>(childConnections);
     }
 
     public Collection<NodeConnection> getChildren() {
