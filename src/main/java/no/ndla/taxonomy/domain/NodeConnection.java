@@ -11,8 +11,8 @@ import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import io.hypersistence.utils.hibernate.type.json.JsonStringType;
 import org.hibernate.annotations.*;
 
-import javax.persistence.*;
 import javax.persistence.Entity;
+import javax.persistence.*;
 import java.net.URI;
 import java.time.Instant;
 import java.util.*;
@@ -20,8 +20,8 @@ import java.util.*;
 @Entity
 @TypeDefs({ @TypeDef(name = "json", typeClass = JsonStringType.class),
         @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
-public class NodeConnection extends DomainEntity implements EntityWithMetadata, EntityWithPathConnection,
-        Comparable<NodeConnection>, SortableResourceConnection<Node> {
+public class NodeConnection extends DomainEntity
+        implements EntityWithMetadata, Comparable<NodeConnection>, SortableResourceConnection {
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private Node parent;
@@ -71,6 +71,13 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
         setPublicId(nodeConnection.getPublicId());
         setPrimary(nodeConnection.isPrimary().orElse(false));
         setMetadata(new Metadata(nodeConnection.getMetadata()));
+    }
+
+    // Special constructor for rankable test
+    public NodeConnection(String uri, Relevance relevance, int rank) {
+        setPublicId(URI.create(uri));
+        this.relevance = relevance;
+        this.rank = rank;
     }
 
     public static NodeConnection create(Node parent, Node child) {
@@ -145,13 +152,11 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
         this.rank = rank;
     }
 
-    @Override
-    public Optional<EntityWithPath> getConnectedParent() {
+    public Optional<Node> getConnectedParent() {
         return Optional.ofNullable(parent);
     }
 
-    @Override
-    public Optional<EntityWithPath> getConnectedChild() {
+    public Optional<Node> getConnectedChild() {
         return Optional.ofNullable(child);
     }
 
@@ -160,12 +165,10 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
         disassociate();
     }
 
-    @Override
     public Optional<Boolean> isPrimary() {
         return Optional.of(this.isPrimary);
     }
 
-    @Override
     public void setPrimary(boolean isPrimary) {
         var childType = this.child.getNodeType();
         if (childType != NodeType.RESOURCE && !isPrimary) {
@@ -176,12 +179,10 @@ public class NodeConnection extends DomainEntity implements EntityWithMetadata, 
         this.isPrimary = isPrimary;
     }
 
-    @Override
     public Optional<Relevance> getRelevance() {
         return Optional.ofNullable(relevance);
     }
 
-    @Override
     public void setRelevance(Relevance relevance) {
         this.relevance = relevance;
     }

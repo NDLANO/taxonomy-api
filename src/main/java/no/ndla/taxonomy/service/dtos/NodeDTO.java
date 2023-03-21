@@ -76,7 +76,7 @@ public class NodeDTO {
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
                 .map(Translation::getName).orElse(entity.getName());
 
-        Optional<Relevance> relevance = entity.getParentConnection().flatMap(EntityWithPathConnection::getRelevance);
+        Optional<Relevance> relevance = entity.getParentConnection().flatMap(NodeConnection::getRelevance);
         this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
 
         this.metadata = new MetadataDto(entity.getMetadata());

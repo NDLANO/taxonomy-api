@@ -7,13 +7,15 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.Relevance;
 
 import java.net.URI;
 import java.util.Collection;
 import java.util.Optional;
 
-public interface EntityConnectionService {
+public interface NodeConnectionService {
     NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank,
             Optional<Boolean> isPrimary);
 
@@ -26,11 +28,11 @@ public interface EntityConnectionService {
     void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank,
             Optional<Boolean> isPrimary);
 
-    void replacePrimaryConnectionsFor(EntityWithPath entity);
+    void replacePrimaryConnectionsFor(Node entity);
 
-    Collection<EntityWithPathConnection> getParentConnections(EntityWithPath entity);
+    Collection<NodeConnection> getParentConnections(Node entity);
 
-    Collection<EntityWithPathConnection> getChildConnections(EntityWithPath entity);
+    Collection<NodeConnection> getChildConnections(Node entity);
 
-    void disconnectAllChildren(EntityWithPath entity);
+    void disconnectAllChildren(Node entity);
 }

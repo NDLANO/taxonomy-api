@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;

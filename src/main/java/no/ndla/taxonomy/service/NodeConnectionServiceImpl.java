@@ -7,7 +7,10 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
@@ -24,29 +27,29 @@ import java.util.logging.Logger;
 
 @Transactional(propagation = Propagation.MANDATORY)
 @Service
-public class EntityConnectionServiceImpl implements EntityConnectionService {
+public class NodeConnectionServiceImpl implements NodeConnectionService {
     private final NodeConnectionRepository nodeConnectionRepository;
     private final CachedUrlUpdaterService cachedUrlUpdaterService;
     private final NodeRepository nodeRepository;
 
-    public EntityConnectionServiceImpl(NodeConnectionRepository nodeConnectionRepository,
+    public NodeConnectionServiceImpl(NodeConnectionRepository nodeConnectionRepository,
             CachedUrlUpdaterService cachedUrlUpdaterService, NodeRepository nodeRepository) {
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
         this.nodeRepository = nodeRepository;
     }
 
-    private EntityWithPathConnection doCreateConnection(EntityWithPath parent, EntityWithPath child,
-            boolean requestedPrimary, Relevance relevance, int rank) {
+    private NodeConnection doCreateConnection(Node parent, Node child, boolean requestedPrimary, Relevance relevance,
+            int rank) {
         if (child.getParentConnections().size() == 0) {
             // First connected is always primary regardless of request
             requestedPrimary = true;
         }
 
-        EntityWithPathConnection connection;
+        NodeConnection connection;
 
-        if (parent instanceof Node && child instanceof Node) {
-            connection = NodeConnection.create((Node) parent, (Node) child);
+        if (parent != null) {
+            connection = NodeConnection.create(parent, child);
         } else {
             throw new IllegalArgumentException("Unknown parent-child connection");
         }
@@ -69,7 +72,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
 
     private NodeConnection createConnection(Node parent, Node child, Relevance relevance, int rank,
             Optional<Boolean> isPrimary) {
-        return (NodeConnection) doCreateConnection(parent, child, isPrimary.orElse(true), relevance, rank);
+        return doCreateConnection(parent, child, isPrimary.orElse(true), relevance, rank);
     }
 
     public NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank) {
@@ -99,11 +102,11 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
             throw new InvalidArgumentServiceException("Root node cannot be set as child");
         }
 
-        EntityWithPath parentConnected = parent;
+        Node parentConnected = parent;
 
         var ttl = 100;
-        while (parentConnected.getParentConnections().stream().findFirst()
-                .map(EntityWithPathConnection::getConnectedParent).isPresent()) {
+        while (parentConnected.getParentConnections().stream().findFirst().map(NodeConnection::getConnectedParent)
+                .isPresent()) {
             Logger.getLogger(this.getClass().toString()).info(parentConnected.getPublicId().toString());
             parentConnected = parentConnected.getParentConnections().stream().findFirst().orElseThrow()
                     .getConnectedParent().orElseThrow();
@@ -155,25 +158,18 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         nodeConnectionRepository.flush();
     }
 
-    private void saveConnections(Collection<EntityWithPathConnection> connections) {
-        connections.forEach(connectable -> {
-            if (connectable instanceof NodeConnection) {
-                nodeConnectionRepository.save((NodeConnection) connectable);
-            } else {
-                throw new IllegalArgumentException(
-                        "Unknown instance of PrimaryPathConnectable: " + connectable.getClass().toString());
-            }
-        });
+    private void saveConnections(Collection<NodeConnection> connections) {
+        connections.forEach(nodeConnectionRepository::save);
         nodeConnectionRepository.flush();
     }
 
-    private void updatePrimaryConnection(EntityWithPathConnection connectable, boolean setPrimaryTo) {
-        final var updatedConnectables = new HashSet<EntityWithPathConnection>();
+    private void updatePrimaryConnection(NodeConnection connectable, boolean setPrimaryTo) {
+        final var updatedConnectables = new HashSet<NodeConnection>();
         updatedConnectables.add(connectable);
 
         // Updates all other nodes connected to this parent
         final var foundNewPrimary = new AtomicBoolean(false);
-        connectable.getConnectedChild().ifPresent(entityWithPath -> entityWithPath.getParentConnections().stream()
+        connectable.getConnectedChild().ifPresent(node -> node.getParentConnections().stream()
                 .filter(connectable1 -> connectable1 != connectable).forEachOrdered(connectable1 -> {
                     if (!setPrimaryTo && !foundNewPrimary.get()) {
                         connectable1.setPrimary(true);
@@ -198,20 +194,20 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
         }
     }
 
-    private void updateRank(EntityWithPathConnection rankable, int newRank) {
+    private void updateRank(NodeConnection rankable, int newRank) {
         final var updatedConnections = RankableConnectionUpdater.rank(new ArrayList<>(rankable.getConnectedParent()
                 .orElseThrow(() -> new IllegalStateException("Rankable parent not found")).getChildConnections()),
                 rankable, newRank);
         saveConnections(updatedConnections);
     }
 
-    private void updateRelevance(EntityWithPathConnection connection, Relevance relevance) {
+    private void updateRelevance(NodeConnection connection, Relevance relevance) {
         connection.setRelevance(relevance);
 
         this.saveConnections(Collections.singletonList(connection));
     }
 
-    private void updateRankableConnection(EntityWithPathConnection connection, boolean isPrimary, Integer newRank) {
+    private void updateRankableConnection(NodeConnection connection, boolean isPrimary, Integer newRank) {
         updatePrimaryConnection(connection, isPrimary);
 
         if (newRank != null) {
@@ -229,7 +225,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public void replacePrimaryConnectionsFor(EntityWithPath entity) {
+    public void replacePrimaryConnectionsFor(Node entity) {
         entity.getChildConnections().stream().filter(connection -> connection.isPrimary().orElse(false))
                 .forEach(connection -> {
                     try {
@@ -240,7 +236,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public Collection<EntityWithPathConnection> getParentConnections(EntityWithPath entity) {
+    public Collection<NodeConnection> getParentConnections(Node entity) {
         // (applies to both getChildConnections and getParentConnections)
         //
         // While this method will work on any objects implementing the EntityWithPath interface
@@ -253,7 +249,7 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     }
 
     @Override
-    public Collection<EntityWithPathConnection> getChildConnections(EntityWithPath entity) {
+    public Collection<NodeConnection> getChildConnections(Node entity) {
         return entity.getChildConnections();
     }
 
@@ -261,17 +257,11 @@ public class EntityConnectionServiceImpl implements EntityConnectionService {
     public void disconnectAllParents(URI nodeId) {
         var node = nodeRepository.findFirstByPublicId(nodeId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
-        node.getParentConnections().forEach(connection -> disconnectParentChildConnection((NodeConnection) connection));
+        node.getParentConnections().forEach(this::disconnectParentChildConnection);
     }
 
     @Override
-    public void disconnectAllChildren(EntityWithPath entity) {
-        Set.copyOf(entity.getChildConnections()).forEach(connection -> {
-            if (connection instanceof NodeConnection) {
-                disconnectParentChildConnection((NodeConnection) connection);
-            } else {
-                throw new IllegalStateException("Unknown child object on entity trying to disconnect children from");
-            }
-        });
+    public void disconnectAllChildren(Node entity) {
+        Set.copyOf(entity.getChildConnections()).forEach(this::disconnectParentChildConnection);
     }
 }

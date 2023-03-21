@@ -151,7 +151,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/connections")
     @Operation(summary = "Gets all subjects and subtopics this topic is connected to")
     @Transactional(readOnly = true)
-    public List<ConnectionIndexDTO> getAllConnections(@PathVariable("id") URI id) {
+    public List<NodeConnectionDTO> getAllConnections(@PathVariable("id") URI id) {
         return nodeService.getAllConnections(id);
     }
 

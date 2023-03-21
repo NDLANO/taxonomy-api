@@ -8,27 +8,25 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.CachedPath;
-import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService<Node> {
+public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
     private final NodeRepository nodeRepository;
 
     public CachedUrlUpdaterServiceImpl(NodeRepository nodeRepository) {
         this.nodeRepository = nodeRepository;
     }
 
-    private Set<PathToEntity> createPathsToEntity(EntityWithPath entity) {
+    private Set<PathToEntity> createPathsToEntity(Node entity) {
         final var returnedPaths = new HashSet<PathToEntity>();
 
         // This entity can be root path
@@ -58,7 +56,7 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService<Node
     @Transactional(propagation = Propagation.MANDATORY)
     public void updateCachedUrls(Node entity) {
         Set.copyOf(entity.getChildConnections())
-                .forEach(childEntity -> childEntity.getConnectedChild().ifPresent(e -> updateCachedUrls((Node) e)));
+                .forEach(childEntity -> childEntity.getConnectedChild().ifPresent(this::updateCachedUrls));
 
         clearCachedUrls(entity);
 
@@ -67,7 +65,7 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService<Node
             final var cachedPath = new CachedPath();
             cachedPath.setPath(newPath.path);
             cachedPath.setPrimary(newPath.isPrimary);
-            cachedPath.setOwningEntity(entity);
+            cachedPath.setNode(entity);
 
             return cachedPath;
         }).collect(Collectors.toSet());
@@ -81,13 +79,6 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService<Node
         entity.setCachedPaths(new HashSet<>());
     }
 
-    private static class PathToEntity {
-        private final boolean isPrimary;
-        private final String path;
-
-        private PathToEntity(String path, boolean isPrimary) {
-            this.path = path;
-            this.isPrimary = isPrimary;
-        }
+    private record PathToEntity(String path, boolean isPrimary) {
     }
 }

@@ -7,11 +7,10 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.Node;
 
-public interface CachedUrlUpdaterService<T extends EntityWithPath> {
-    void updateCachedUrls(T entity);
+public interface CachedUrlUpdaterService {
+    void updateCachedUrls(Node entity);
 
-    void clearCachedUrls(T entity);
+    void clearCachedUrls(Node entity);
 }

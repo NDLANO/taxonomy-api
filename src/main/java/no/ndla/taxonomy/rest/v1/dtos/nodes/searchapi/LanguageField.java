@@ -1,9 +1,8 @@
 package no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi;
 
-import org.springframework.data.util.Pair;
 import no.ndla.taxonomy.domain.Node;
+import org.springframework.data.util.Pair;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 

@@ -10,7 +10,9 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -149,9 +151,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             childrenIds = recursiveNodeTreeService.getRecursiveNodes(subject).stream()
                     .map(RecursiveNodeTreeService.TreeElement::getId).collect(Collectors.toList());
         } else {
-            childrenIds = subject.getChildConnections().stream().map(EntityWithPathConnection::getConnectedChild)
-                    .filter(Optional::isPresent).map(Optional::get).map(EntityWithPath::getPublicId)
-                    .collect(Collectors.toList());
+            childrenIds = subject.getChildConnections().stream().map(NodeConnection::getConnectedChild)
+                    .filter(Optional::isPresent).map(Optional::get).map(Node::getPublicId).collect(Collectors.toList());
         }
 
         final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;

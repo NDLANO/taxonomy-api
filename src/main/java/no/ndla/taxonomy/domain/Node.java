@@ -14,9 +14,9 @@ import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import org.hibernate.annotations.*;
 
-import javax.persistence.*;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.*;
 import java.net.URI;
 import java.time.Instant;
 import java.util.*;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @TypeDefs({ @TypeDef(name = "json", typeClass = JsonStringType.class),
         @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class),
         @TypeDef(name = "string-array", typeClass = StringArrayType.class) })
-public class Node extends EntityWithPath implements Translatable {
+public class Node extends DomainObject implements EntityWithMetadata {
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<NodeConnection> parentConnections = new TreeSet<>();
 
@@ -131,17 +131,84 @@ public class Node extends EntityWithPath implements Translatable {
         super.setPublicId(URI.create("urn:" + nodeType.getName() + ":" + getIdent()));
     }
 
-    @Override
     public Set<CachedPath> getCachedPaths() {
         return CachedPath.fromPaths(this.primaryPaths, this.cachedPaths);
     }
 
-    @Override
     public void setCachedPaths(Set<CachedPath> cachedPaths) {
         this.primaryPaths = cachedPaths.stream().filter(CachedPath::isPrimary).map(CachedPath::getPath)
                 .toArray(String[]::new);
         this.cachedPaths = cachedPaths.stream().filter(s -> !s.isPrimary()).map(CachedPath::getPath)
                 .toArray(String[]::new);
+    }
+
+    public void addCachedPath(CachedPath cachedPath) {
+        this.getCachedPaths().add(cachedPath);
+
+        if (cachedPath.getNode().orElse(null) != this) {
+            cachedPath.setNode(this);
+        }
+    }
+
+    @Deprecated
+    public void removeCachedPath(CachedPath cachedPath) {
+        this.getCachedPaths().remove(cachedPath);
+
+        if (cachedPath.getNode().orElse(null) == this) {
+            cachedPath.setNode(null);
+        }
+    }
+
+    public Optional<String> getPrimaryPath() {
+        return getCachedPaths().stream().filter(CachedPath::isPrimary).map(CachedPath::getPath).findFirst();
+    }
+
+    public Optional<String> getPathByContext(URI contextPublicId) {
+        var cp = getCachedPaths();
+        return cp.stream().sorted((cachedUrl1, cachedUrl2) -> {
+            final var path1 = cachedUrl1.getPath();
+            final var path2 = cachedUrl2.getPath();
+
+            final var path1MatchesContext = path1.startsWith("/" + contextPublicId.getSchemeSpecificPart());
+            final var path2MatchesContext = path2.startsWith("/" + contextPublicId.getSchemeSpecificPart());
+
+            final var path1IsPrimary = cachedUrl1.isPrimary();
+            final var path2IsPrimary = cachedUrl2.isPrimary();
+
+            if (path1IsPrimary && path2IsPrimary && path1MatchesContext && path2MatchesContext) {
+                return 0;
+            }
+
+            if (path1MatchesContext && path2MatchesContext && path1IsPrimary) {
+                return -1;
+            }
+
+            if (path1MatchesContext && path2MatchesContext && path2IsPrimary) {
+                return 1;
+            }
+
+            if (path1MatchesContext && !path2MatchesContext) {
+                return -1;
+            }
+
+            if (path2MatchesContext && !path1MatchesContext) {
+                return 1;
+            }
+
+            if (path1IsPrimary && !path2IsPrimary) {
+                return -1;
+            }
+
+            if (path2IsPrimary && !path1IsPrimary) {
+                return 1;
+            }
+
+            return 0;
+        }).map(CachedPath::getPath).findFirst();
+    }
+
+    public TreeSet<String> getAllPaths() {
+        return getCachedPaths().stream().map(CachedPath::getPath).collect(Collectors.toCollection(TreeSet::new));
     }
 
     /*
@@ -161,18 +228,20 @@ public class Node extends EntityWithPath implements Translatable {
      * return 0; }); }
      */
 
-    @Override
-    public Collection<EntityWithPathConnection> getParentConnections() {
-        return parentConnections.stream().map(entity -> (EntityWithPathConnection) entity).toList();
+    public Optional<NodeConnection> getParentConnection() {
+        return this.getParentConnections().stream().findFirst();
+    }
+
+    public Collection<NodeConnection> getParentConnections() {
+        return parentConnections.stream().toList();
     }
 
     public Set<NodeConnection> getParentNodeConnections() {
         return this.parentConnections;
     }
 
-    @Override
-    public Collection<EntityWithPathConnection> getChildConnections() {
-        return childConnections.stream().map(entity -> (EntityWithPathConnection) entity).collect(Collectors.toSet());
+    public Collection<NodeConnection> getChildConnections() {
+        return new HashSet<>(childConnections);
     }
 
     public Collection<NodeConnection> getChildren() {
@@ -324,7 +393,6 @@ public class Node extends EntityWithPath implements Translatable {
         this.context = context;
     }
 
-    @Override
     public boolean isContext() {
         return root || context;
     }
@@ -480,6 +548,26 @@ public class Node extends EntityWithPath implements Translatable {
         var np = new NodePath();
         var paths = getParentPaths(List.of(np), this, Optional.empty());
         return paths.stream().sorted(Comparator.comparing(NodePath::toString)).toList();
+    }
+
+    public List<String> buildCrumbs(String languageCode) {
+        List<String> parentCrumbs = this.getParentConnection().flatMap(parentConnection -> parentConnection
+                .getConnectedParent().map(parent -> buildCrumbs(parent, languageCode))).orElse(List.of());
+
+        var crumbs = new ArrayList<>(parentCrumbs);
+        var name = this.getTranslation(languageCode).map(Translation::getName).orElse(this.getName());
+        crumbs.add(name);
+        return crumbs;
+    }
+
+    private List<String> buildCrumbs(Node entity, String languageCode) {
+        List<String> parentCrumbs = entity.getParentConnection().flatMap(parentConnection -> parentConnection
+                .getConnectedParent().map(parent -> buildCrumbs(parent, languageCode))).orElse(List.of());
+
+        var crumbs = new ArrayList<>(parentCrumbs);
+        var name = entity.getTranslation(languageCode).map(Translation::getName).orElse(entity.getName());
+        crumbs.add(name);
+        return crumbs;
     }
 
     @Override

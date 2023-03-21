@@ -24,7 +24,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = { "/v1/contexts" })
@@ -45,13 +44,11 @@ public class Contexts {
 
         final var nodes = nodeRepository.findAllByContextIncludingCachedUrlsAndTranslations(true);
 
-        final var contextDocuments = new ArrayList<ContextIndexDocument>();
-
-        contextDocuments.addAll(nodes.stream()
+        final var contextDocuments = new ArrayList<>(nodes.stream()
                 .map(topic -> new ContextIndexDocument(topic.getPublicId(),
                         topic.getTranslation(language).map(Translation::getName).orElse(topic.getName()),
                         topic.getPrimaryPath().orElse(null)))
-                .collect(Collectors.toList()));
+                .toList());
 
         contextDocuments.sort(Comparator.comparing(ContextIndexDocument::getId));
 

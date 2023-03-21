@@ -8,7 +8,6 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.CachedPath;
-import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.UrlMapping;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -80,8 +79,8 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
     private Optional<String> getPrimaryPath(URI publicId) {
         try {
-            return getEntityFromPublicId(publicId).stream().map(EntityWithPath::getPrimaryPath)
-                    .filter(Optional::isPresent).map(Optional::get).findFirst();
+            return getEntityFromPublicId(publicId).stream().map(Node::getPrimaryPath).filter(Optional::isPresent)
+                    .map(Optional::get).findFirst();
         } catch (InvalidArgumentServiceException e) {
             return Optional.empty();
         }
@@ -148,14 +147,14 @@ public class UrlResolverServiceImpl implements UrlResolverService {
         }
     }
 
-    private void validateEntityPath(List<EntityWithPath> entities) {
+    private void validateEntityPath(List<Node> entities) {
         // Verify that the path is actually valid, not just that the objects referred to exists. We
         // could use the CachedUrl
         // to do this validation, but would rather not since the CachedUrl view generation could be
         // removed later
 
         // Searches the array, check that the child element has the previous entity as parent
-        final var lastEntity = new AtomicReference<EntityWithPath>();
+        final var lastEntity = new AtomicReference<Node>();
         for (final var entity : entities) {
             if (lastEntity.get() != null) {
                 if (entity.getParentConnections().stream().noneMatch(parentConnection -> parentConnection
@@ -191,13 +190,13 @@ public class UrlResolverServiceImpl implements UrlResolverService {
             // Create a list of parents with publicId in reversed order, not including the node
             // itself
             resolvedUrl.setParents(resolvedPathComponents.subList(0, resolvedPathComponents.size() - 1).stream()
-                    .map(EntityWithPath::getPublicId).sorted(Collections.reverseOrder()).collect(Collectors.toList()));
+                    .map(Node::getPublicId).sorted(Collections.reverseOrder()).collect(Collectors.toList()));
 
             resolvedUrl.setName(leafElement.getName());
 
             // Generate a string path from the sorted list of parent nodes, a cleaned version of the
             // provided string path parameter
-            resolvedUrl.setPath("/" + resolvedPathComponents.stream().map(EntityWithPath::getPublicId)
+            resolvedUrl.setPath("/" + resolvedPathComponents.stream().map(Node::getPublicId)
                     .map(URI::getSchemeSpecificPart).collect(Collectors.joining("/")));
 
             return Optional.of(resolvedUrl);
@@ -206,10 +205,10 @@ public class UrlResolverServiceImpl implements UrlResolverService {
         }
     }
 
-    private List<EntityWithPath> resolveEntitiesFromPath(String path) {
+    private List<Node> resolveEntitiesFromPath(String path) {
         final var pathParts = path.split("/+");
 
-        final var returnedList = new ArrayList<EntityWithPath>();
+        final var returnedList = new ArrayList<Node>();
 
         for (String pathPart : pathParts) {
             // Ignore empty parts of the path, including when having leading and/or trailing slashes

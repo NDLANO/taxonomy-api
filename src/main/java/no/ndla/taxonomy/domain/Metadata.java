@@ -8,7 +8,6 @@
 package no.ndla.taxonomy.domain;
 
 import no.ndla.taxonomy.service.dtos.MetadataDto;
-import no.ndla.taxonomy.service.exceptions.InvalidDataException;
 
 import java.io.Serializable;
 import java.time.Instant;
