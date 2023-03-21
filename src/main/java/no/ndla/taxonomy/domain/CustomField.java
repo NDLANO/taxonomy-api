@@ -13,7 +13,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.UUID;
 
 @Entity
 public class CustomField implements Serializable {

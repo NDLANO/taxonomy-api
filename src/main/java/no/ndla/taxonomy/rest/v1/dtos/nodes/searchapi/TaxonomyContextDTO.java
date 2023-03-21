@@ -11,7 +11,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.net.URI;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 // NOTE: This will need to match `SearchableTaxonomyContext` in `search-api`
 public record TaxonomyContextDTO(

@@ -10,7 +10,6 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.DomainEntity;
-import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
@@ -65,7 +64,7 @@ public abstract class CrudController<T extends DomainEntity> {
         validator.validate(id, entity);
         command.apply(entity);
 
-        if (entity instanceof EntityWithPath && cachedUrlUpdaterService != null) {
+        if (entity instanceof Node && cachedUrlUpdaterService != null) {
             cachedUrlUpdaterService.updateCachedUrls((Node) entity);
         }
 
@@ -86,8 +85,8 @@ public abstract class CrudController<T extends DomainEntity> {
             URI location = URI.create(getLocation() + "/" + entity.getPublicId());
             repository.saveAndFlush(entity);
 
-            if (entity instanceof EntityWithPath && cachedUrlUpdaterService != null) {
-                cachedUrlUpdaterService.updateCachedUrls((EntityWithPath) entity);
+            if (entity instanceof Node && cachedUrlUpdaterService != null) {
+                cachedUrlUpdaterService.updateCachedUrls((Node) entity);
             }
 
             return ResponseEntity.created(location).build();

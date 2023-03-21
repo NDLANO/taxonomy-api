@@ -44,9 +44,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     NodeConnectionRepository nodeConnectionRepository;
 
     @Autowired
-    ResourceTypeRepository resourceTypeRepository;
-
-    @Autowired
     NodeService nodeService;
 
     @Autowired

@@ -7,10 +7,7 @@
 
 package no.ndla.taxonomy.domain;
 
-import no.ndla.taxonomy.service.dtos.MetadataDto;
-
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 

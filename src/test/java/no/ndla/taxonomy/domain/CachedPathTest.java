@@ -61,67 +61,61 @@ public class CachedPathTest {
         when(topic.getPublicId()).thenReturn(URI.create("urn:topic:1"));
         final var resource = mock(Node.class);
         when(resource.getPublicId()).thenReturn(URI.create("urn:resource:1"));
-        final var unknown = mock(EntityWithPath.class);
+        final var unknown = mock(Node.class);
 
         assertNull(getField(cachedPath, "node"));
 
-        cachedPath.setOwningEntity(subject);
+        cachedPath.setNode(subject);
 
         assertSame(subject, getField(cachedPath, "node"));
         assertEquals("urn:subject:1", cachedPath.getPublicId().toString());
 
-        cachedPath.setOwningEntity(topic);
+        cachedPath.setNode(topic);
 
         assertSame(topic, getField(cachedPath, "node"));
         assertEquals("urn:topic:1", cachedPath.getPublicId().toString());
 
-        cachedPath.setOwningEntity(resource);
+        cachedPath.setNode(resource);
 
         assertSame(resource, getField(cachedPath, "node"));
         assertEquals("urn:resource:1", cachedPath.getPublicId().toString());
 
-        try {
-            cachedPath.setOwningEntity(unknown);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException ignored) {
-        }
-
-        cachedPath.setOwningEntity(null);
+        cachedPath.setNode(null);
 
         assertNull(getField(cachedPath, "node"));
 
-        cachedPath.setOwningEntity(subject);
-        cachedPath.setOwningEntity(null);
+        cachedPath.setNode(subject);
+        cachedPath.setNode(null);
 
         assertNull(getField(cachedPath, "node"));
 
-        cachedPath.setOwningEntity(topic);
-        cachedPath.setOwningEntity(null);
+        cachedPath.setNode(topic);
+        cachedPath.setNode(null);
 
         assertNull(getField(cachedPath, "node"));
     }
 
     @Test
     public void getOwningEntity() {
-        assertFalse(cachedPath.getOwningEntity().isPresent());
+        assertFalse(cachedPath.getNode().isPresent());
 
         final var subject = mock(Node.class);
         setField(cachedPath, "node", subject);
-        assertSame(subject, cachedPath.getOwningEntity().orElseThrow());
+        assertSame(subject, cachedPath.getNode().orElseThrow());
 
         final var topic = mock(Node.class);
         setField(cachedPath, "node", topic);
         try {
-            cachedPath.getOwningEntity();
+            cachedPath.getNode();
         } catch (IllegalStateException ignored) {
         }
-        assertSame(topic, cachedPath.getOwningEntity().orElseThrow());
+        assertSame(topic, cachedPath.getNode().orElseThrow());
 
         final var resource = mock(Node.class);
         setField(cachedPath, "node", resource);
-        assertSame(resource, cachedPath.getOwningEntity().orElseThrow());
+        assertSame(resource, cachedPath.getNode().orElseThrow());
 
         setField(cachedPath, "node", null);
-        assertTrue(cachedPath.getOwningEntity().isEmpty());
+        assertTrue(cachedPath.getNode().isEmpty());
     }
 }

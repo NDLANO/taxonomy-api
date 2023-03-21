@@ -17,7 +17,7 @@ import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.service.EntityConnectionService;
+import no.ndla.taxonomy.service.NodeConnectionService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,11 +36,11 @@ public class TopicResources {
 
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
-    private final EntityConnectionService connectionService;
+    private final NodeConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
 
     public TopicResources(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            EntityConnectionService connectionService, RelevanceRepository relevanceRepository) {
+            NodeConnectionService connectionService, RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
         this.connectionService = connectionService;
         this.nodeConnectionRepository = nodeConnectionRepository;

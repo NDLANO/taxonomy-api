@@ -10,7 +10,6 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import no.ndla.taxonomy.domain.EntityWithPath;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
@@ -20,7 +19,10 @@ import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
 import no.ndla.taxonomy.service.*;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -170,8 +172,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     .map(RecursiveNodeTreeService.TreeElement::getId).collect(Collectors.toList());
         } else {
             childrenIds = node.getChildren().stream().map(NodeConnection::getChild).filter(Optional::isPresent)
-                    .map(Optional::get).filter(n -> nodeTypes.contains(n.getNodeType()))
-                    .map(EntityWithPath::getPublicId).collect(Collectors.toList());
+                    .map(Optional::get).filter(n -> nodeTypes.contains(n.getNodeType())).map(Node::getPublicId)
+                    .collect(Collectors.toList());
         }
         final var children = nodeConnectionRepository
                 .findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(childrenIds);
@@ -191,7 +193,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/connections")
     @Operation(summary = "Gets all parents and children this node is connected to")
     @Transactional(readOnly = true)
-    public List<ConnectionIndexDTO> getAllConnections(@PathVariable("id") URI id) {
+    public List<NodeConnectionDTO> getAllConnections(@PathVariable("id") URI id) {
         return nodeService.getAllConnections(id);
     }
 

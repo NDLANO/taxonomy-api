@@ -9,7 +9,10 @@ package no.ndla.taxonomy.domain;
 
 import no.ndla.taxonomy.util.HashUtil;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import java.net.URI;
 import java.time.Instant;
 import java.util.UUID;

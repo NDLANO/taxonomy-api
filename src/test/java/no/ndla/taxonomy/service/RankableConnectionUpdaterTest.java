@@ -7,8 +7,8 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.EntityWithPath;
-import no.ndla.taxonomy.domain.EntityWithPathConnection;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
 import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RankableConnectionUpdaterTest {
-    private void verifyOrder(List<TestRankable> list, List<String> expectedOrder) {
+    private void verifyOrder(List<NodeConnection> list, List<String> expectedOrder) {
         assertEquals(expectedOrder.size(), list.size());
 
         for (var index = 0; index < expectedOrder.size(); index++) {
@@ -34,16 +34,16 @@ public class RankableConnectionUpdaterTest {
     public void rank() throws URISyntaxException {
         final var relevance = new Relevance();
 
-        final var rankable1 = new TestRankable("urn:1", relevance, 0);
-        final var rankable2 = new TestRankable("urn:2", relevance, 1);
-        final var rankable3 = new TestRankable("urn:3", relevance, 10);
-        final var rankable4 = new TestRankable("urn:4", relevance, 11);
-        final var rankable5 = new TestRankable("urn:5", relevance, 12);
-        final var rankable6 = new TestRankable("urn:6", relevance, 20);
-        final var rankable7 = new TestRankable("urn:7", relevance, 100);
-        final var rankable8 = new TestRankable("urn:8", relevance, 1000);
+        final var rankable1 = new NodeConnection("urn:1", relevance, 0);
+        final var rankable2 = new NodeConnection("urn:2", relevance, 1);
+        final var rankable3 = new NodeConnection("urn:3", relevance, 10);
+        final var rankable4 = new NodeConnection("urn:4", relevance, 11);
+        final var rankable5 = new NodeConnection("urn:5", relevance, 12);
+        final var rankable6 = new NodeConnection("urn:6", relevance, 20);
+        final var rankable7 = new NodeConnection("urn:7", relevance, 100);
+        final var rankable8 = new NodeConnection("urn:8", relevance, 1000);
 
-        final var rankableList = new ArrayList<TestRankable>();
+        final var rankableList = new ArrayList<NodeConnection>();
 
         RankableConnectionUpdater.rank(rankableList, rankable1, 0);
         RankableConnectionUpdater.rank(rankableList, rankable2, 1);
@@ -117,16 +117,16 @@ public class RankableConnectionUpdaterTest {
     public void rank_cascading() throws URISyntaxException {
         final var relevance = new Relevance();
 
-        final var rankable1 = new TestRankable("urn:1", relevance, 0);
-        final var rankable2 = new TestRankable("urn:2", relevance, 1);
-        final var rankable3 = new TestRankable("urn:3", relevance, 10);
-        final var rankable4 = new TestRankable("urn:4", relevance, 10);
-        final var rankable5 = new TestRankable("urn:5", relevance, 10);
-        final var rankable6 = new TestRankable("urn:6", relevance, 10);
-        final var rankable7 = new TestRankable("urn:7", relevance, 13);
-        final var rankable8 = new TestRankable("urn:8", relevance, 20);
+        final var rankable1 = new NodeConnection("urn:1", relevance, 0);
+        final var rankable2 = new NodeConnection("urn:2", relevance, 1);
+        final var rankable3 = new NodeConnection("urn:3", relevance, 10);
+        final var rankable4 = new NodeConnection("urn:4", relevance, 10);
+        final var rankable5 = new NodeConnection("urn:5", relevance, 10);
+        final var rankable6 = new NodeConnection("urn:6", relevance, 10);
+        final var rankable7 = new NodeConnection("urn:7", relevance, 13);
+        final var rankable8 = new NodeConnection("urn:8", relevance, 20);
 
-        final var rankableList = Arrays.nonNullElementsIn(new TestRankable[] { rankable1, rankable2, rankable3,
+        final var rankableList = Arrays.nonNullElementsIn(new NodeConnection[] { rankable1, rankable2, rankable3,
                 rankable4, rankable5, rankable6, rankable7, rankable8 });
 
         assertEquals(0, rankable1.getRank());
@@ -151,61 +151,5 @@ public class RankableConnectionUpdaterTest {
         assertEquals(13, rankable6.getRank());
         assertEquals(14, rankable7.getRank());
         assertEquals(20, rankable8.getRank());
-    }
-
-    private static class TestRankable implements EntityWithPathConnection {
-        private final URI publicId;
-        private int rank;
-        private Relevance relevance;
-
-        private TestRankable(String publicId, Relevance relevance, int rank) throws URISyntaxException {
-            this.publicId = new URI(publicId);
-            this.rank = rank;
-            this.relevance = relevance;
-        }
-
-        @Override
-        public URI getPublicId() {
-            return publicId;
-        }
-
-        @Override
-        public int getRank() {
-            return rank;
-        }
-
-        @Override
-        public void setRank(int rank) {
-            this.rank = rank;
-        }
-
-        @Override
-        public Optional<Boolean> isPrimary() {
-            return Optional.empty();
-        }
-
-        @Override
-        public void setPrimary(boolean isPrimary) {
-        }
-
-        @Override
-        public Optional<EntityWithPath> getConnectedParent() {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<EntityWithPath> getConnectedChild() {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<Relevance> getRelevance() {
-            return Optional.ofNullable(this.relevance);
-        }
-
-        @Override
-        public void setRelevance(Relevance relevance) {
-            this.relevance = relevance;
-        }
     }
 }
