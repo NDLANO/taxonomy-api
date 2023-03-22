@@ -476,7 +476,7 @@
         <customChange class="no.ndla.taxonomy.migration.V21__RecanonifyUrlMap" />
     </changeSet>
 
-    <changeSet id="20190606 v22 cached_url materialized view" author="Migrated From Flyway" dbms="!h2">
+    <changeSet id="20190606 v22 cached_url materialized view" author="Migrated From Flyway">
         <sql>
             DROP view cached_url;
 
@@ -578,7 +578,7 @@
         </sql>
     </changeSet>
 
-    <changeSet id="20190606 v23 modification triggers" author="Migrated From Flyway" dbms="!h2">
+    <changeSet id="20190606 v23 modification triggers" author="Migrated From Flyway">
         <sql splitStatements="false" stripComments="false">
             drop function if exists update_url_cache() cascade;
         </sql>
@@ -627,17 +627,11 @@
         </sql>
     </changeSet>
     <changeSet id="20190606 fix unique constraint for topic_subtopic set on the wrong table (remove index)"
-               author="Jon-Eirik Pettersen" dbms="!h2">
+               author="Jon-Eirik Pettersen">
         <preConditions onFail="MARK_RAN">
             <indexExists tableName="subject_topic" indexName="topic_subtopic_unique"/>
         </preConditions>
 
-        <dropUniqueConstraint tableName="subject_topic" constraintName="topic_subtopic_unique"
-                              uniqueColumns="topic_id,subject_id"/>
-    </changeSet>
-    <changeSet id="20200506 fix unique constraint for topic_subtopic set on the wrong table (remove index) h2"
-               author="Jon-Eirik Pettersen" dbms="h2">
-        <!-- H2 database is not migrated from flyway, so it is by sure going to have the constraint, but the indexExists does not work -->
         <dropUniqueConstraint tableName="subject_topic" constraintName="topic_subtopic_unique"
                               uniqueColumns="topic_id,subject_id"/>
     </changeSet>

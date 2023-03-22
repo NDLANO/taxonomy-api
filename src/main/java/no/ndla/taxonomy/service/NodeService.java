@@ -91,7 +91,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
         final List<Node> filtered = nodeRepository.findByNodeType(nodeType, metadataFilters.getVisible(),
                 metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, isRoot);
-        return filtered.stream().distinct().map(n -> new NodeDTO(n, language.get())).collect(Collectors.toList());
+        return filtered.stream().distinct().map(n -> new NodeDTO(Optional.empty(), n, language.get()))
+                .collect(Collectors.toList());
     }
 
     public List<NodeDTO> getResources(Optional<String> language, Optional<URI> contentUri, Optional<Boolean> isRoot,
@@ -102,7 +103,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
             final var nodes = nodeRepository.findByIdsFiltered(idChunk, metadataFilters.getVisible(),
                     metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, isRoot);
-            var dtos = nodes.stream().map(node -> new NodeDTO(node, language.get())).toList();
+            var dtos = nodes.stream().map(node -> new NodeDTO(Optional.empty(), node, language.get())).toList();
             listToReturn.addAll(dtos);
         });
 
@@ -120,20 +121,20 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public List<NodeChildDTO> getFilteredChildConnections(URI nodePublicId, String languageCode) {
-        nodeRepository.findFirstByPublicId(nodePublicId)
+        Node node = nodeRepository.findFirstByPublicId(nodePublicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
         final List<NodeConnection> childConnections = nodeConnectionRepository
                 .findAllByParentPublicIdIncludingChildAndChildTranslations(nodePublicId);
 
         final var wrappedList = childConnections.stream()
-                .map(nodeConnection -> new NodeChildDTO(nodeConnection, languageCode)).toList();
+                .map(nodeConnection -> new NodeChildDTO(Optional.of(node), nodeConnection, languageCode)).toList();
 
         return topicTreeSorter.sortList(wrappedList);
     }
 
     public NodeDTO getNode(URI publicId, String language) {
         var node = getNode(publicId);
-        return new NodeDTO(node, language);
+        return new NodeDTO(Optional.empty(), node, language);
     }
 
     public Node getNode(URI publicId) {
@@ -208,7 +209,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                     return childIsResource.orElse(false);
                 }).map(wrappedNodeResource -> {
                     NodeConnection nodeConnection = (NodeConnection) wrappedNodeResource.get();
-                    return new NodeChildDTO(nodeConnection, languageCode);
+                    return new NodeChildDTO(Optional.empty(), nodeConnection, languageCode);
                 }).collect(Collectors.toList());
     }
 
@@ -219,7 +220,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     @Override
     public NodeDTO createDTO(Node node, String languageCode) {
-        return new NodeDTO(node, languageCode);
+        return new NodeDTO(Optional.empty(), node, languageCode);
     }
 
     public SearchResultDTO<NodeDTO> searchByNodeType(Optional<String> query, Optional<List<String>> ids,

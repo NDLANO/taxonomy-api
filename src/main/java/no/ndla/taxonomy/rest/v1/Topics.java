@@ -73,7 +73,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     }
 
     @GetMapping("/page")
-    @Operation(summary = "Gets all connections between node and children paginated")
+    @Operation(summary = "Gets all topics paginated")
     @Transactional(readOnly = true)
     public SearchResultDTO<NodeDTO> allPaginated(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
@@ -87,7 +87,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
         var ids = nodeRepository.findIdsByTypePaginated(PageRequest.of(page.get() - 1, pageSize.get()), NodeType.TOPIC);
         var results = nodeRepository.findByIds(ids.getContent());
-        var contents = results.stream().map(node -> new NodeDTO(node, language.orElse("nb")))
+        var contents = results.stream().map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb")))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }

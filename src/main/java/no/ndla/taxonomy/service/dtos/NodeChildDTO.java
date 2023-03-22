@@ -17,6 +17,7 @@ import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.service.TreeSorter;
 
 import java.net.URI;
+import java.util.Optional;
 
 /**
  * Represents Node or Resource in child context
@@ -38,8 +39,9 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
     @Schema(description = "Relevance id", example = "urn:relevance:core")
     private URI relevanceId;
 
-    public NodeChildDTO(NodeConnection nodeConnection, String language) {
-        super(nodeConnection.getChild().orElseThrow(() -> new NotFoundException("Child was not found")), language);
+    public NodeChildDTO(Optional<Node> root, NodeConnection nodeConnection, String language) {
+        super(root, nodeConnection.getChild().orElseThrow(() -> new NotFoundException("Child was not found")),
+                language);
 
         // This must be enabled when ed is updated to update metadata for connections.
         // this.metadata = new MetadataDto(nodeConnection.getMetadata());
@@ -59,7 +61,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
      * Special constructor used to get parents for resource/full
      */
     public NodeChildDTO(Node parent, NodeConnection nodeConnection, String language) {
-        super(parent, language);
+        super(Optional.empty(), parent, language);
 
         this.rank = nodeConnection.getRank();
         this.connectionId = nodeConnection.getPublicId();
