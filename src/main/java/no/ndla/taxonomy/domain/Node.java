@@ -533,9 +533,9 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public List<String> buildCrumbs(String languageCode) {
-        List<String> parentCrumbs = new ArrayList<>();
-        this.getParentConnections().stream().map(parentConnection -> parentConnection.getConnectedParent()
-                .map(parent -> parentCrumbs.addAll(buildCrumbs(parent, languageCode))));
+        List<String> parentCrumbs = this.getParentConnections().stream().findFirst().flatMap(
+                parentConnection -> parentConnection.getParent().map(parent -> buildCrumbs(parent, languageCode)))
+                .orElse(List.of());
 
         var crumbs = new ArrayList<>(parentCrumbs);
         var name = this.getTranslation(languageCode).map(Translation::getName).orElse(this.getName());
@@ -544,9 +544,9 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     private List<String> buildCrumbs(Node entity, String languageCode) {
-        List<String> parentCrumbs = new ArrayList<>();
-        entity.getParentConnections().stream().map(parentConnection -> parentConnection.getConnectedParent()
-                .map(parent -> parentCrumbs.addAll(buildCrumbs(parent, languageCode))));
+        List<String> parentCrumbs = entity.getParentConnections().stream().findFirst().flatMap(
+                parentConnection -> parentConnection.getParent().map(parent -> buildCrumbs(parent, languageCode)))
+                .orElse(List.of());
 
         var crumbs = new ArrayList<>(parentCrumbs);
         var name = entity.getTranslation(languageCode).map(Translation::getName).orElse(entity.getName());

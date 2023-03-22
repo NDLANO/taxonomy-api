@@ -105,11 +105,10 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         Node parentConnected = parent;
 
         var ttl = 100;
-        while (parentConnected.getParentConnections().stream().findFirst().map(NodeConnection::getParent)
-                .isPresent()) {
+        while (parentConnected.getParentConnections().stream().findFirst().map(NodeConnection::getParent).isPresent()) {
             Logger.getLogger(this.getClass().toString()).info(parentConnected.getPublicId().toString());
-            parentConnected = parentConnected.getParentConnections().stream().findFirst().orElseThrow()
-                    .getParent().orElseThrow();
+            parentConnected = parentConnected.getParentConnections().stream().findFirst().orElseThrow().getParent()
+                    .orElseThrow();
 
             if (ttl-- < 0) {
                 throw new InvalidArgumentServiceException("Too many levels to get top level object");

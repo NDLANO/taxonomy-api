@@ -274,8 +274,8 @@ public class TestSeeder {
         final var subject1 = createNode(NodeType.SUBJECT, "urn:subject:1", "S:1", null, true);
         final var subject2 = createNode(NodeType.SUBJECT, "urn:subject:2", "S:2", null, true);
 
-        final var topic1 = createNode(NodeType.NODE, "urn:topic:1", "ST:1", null, false);
-        final var topic2 = createNode(NodeType.NODE, "urn:topic:2", "ST:2", null, false);
+        final var topic1 = createNode(NodeType.TOPIC, "urn:topic:1", "T:1", null, false);
+        final var topic2 = createNode(NodeType.TOPIC, "urn:topic:2", "T:2", null, false);
 
         createNodeConnection("urn:subject-topic:1", subject1, topic1, 1);
         createNodeConnection("urn:subject-topic:2", subject2, topic2, 1);
