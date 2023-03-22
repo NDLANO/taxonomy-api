@@ -7,7 +7,7 @@
         logicalFilePath="classpath:db-master-changelog.xml">
 
     <preConditions>
-        <dbms type="postgresql,h2"/>
+        <dbms type="postgresql"/>
     </preConditions>
 
     <include file="db-migrate-changelog-from-flyway.xml"/>
@@ -62,7 +62,7 @@
     </changeSet>
 
     <changeSet id="20190924 disable update triggers for cached_url before removing shared topics"
-               author="Jon-Eirik Pettersen" dbms="!h2">
+               author="Jon-Eirik Pettersen">
         <sql splitStatements="false" stripComments="false">
             DROP TRIGGER refresh_paths ON subject;
             DROP TRIGGER refresh_paths ON topic;
@@ -77,8 +77,7 @@
         <customChange class="no.ndla.taxonomy.migration.RemoveSharedTopicsSqlChange"/>
     </changeSet>
 
-    <changeSet id="20190925 re-create cached_url without primary connection column" author="Jon-Eirik Pettersen"
-               dbms="!h2">
+    <changeSet id="20190925 re-create cached_url without primary connection column" author="Jon-Eirik Pettersen">
         <sql>
             DROP MATERIALIZED VIEW cached_url;
 
@@ -174,7 +173,7 @@
         </sql>
     </changeSet>
 
-    <changeSet id="20190925 re-enable update triggers for cached_url" author="Jon-Eirik Pettersen" dbms="!h2">
+    <changeSet id="20190925 re-enable update triggers for cached_url" author="Jon-Eirik Pettersen">
         <sql splitStatements="false" stripComments="false">
             create trigger refresh_paths
             after insert or update or delete or truncate
@@ -226,7 +225,7 @@
         <addUniqueConstraint tableName="subject_topic" columnNames="topic_id"
                              constraintName="unique_subject_topic_topic_id"/>
 
-        <sql stripComments="false" splitStatements="false" dbms="!h2">
+        <sql stripComments="false" splitStatements="false">
             CREATE FUNCTION check_subject_topic_uniqueness() RETURNS trigger AS $$
             BEGIN
             IF EXISTS(SELECT child_topic_id FROM (SELECT id, topic_id AS child_topic_id FROM subject_topic UNION SELECT
@@ -241,18 +240,18 @@
             LANGUAGE plpgsql
         </sql>
 
-        <sql dbms="!h2">
+        <sql>
             CREATE TRIGGER check_subject_topic_uniqueness_on_topic_subtopic AFTER INSERT OR UPDATE ON topic_subtopic
             EXECUTE PROCEDURE check_subject_topic_uniqueness();
         </sql>
-        <sql dbms="!h2">
+        <sql>
             CREATE TRIGGER check_subject_topic_uniqueness_on_subject_topic AFTER INSERT OR UPDATE ON subject_topic
             EXECUTE PROCEDURE check_subject_topic_uniqueness();
         </sql>
     </changeSet>
 
     <changeSet id="20190924 disable update triggers for cached_url before removing shared topics"
-               author="Jon-Eirik Pettersen" dbms="!h2">
+               author="Jon-Eirik Pettersen">
         <sql splitStatements="false" stripComments="false">
             DROP TRIGGER refresh_paths ON subject;
             DROP TRIGGER refresh_paths ON topic;
@@ -271,7 +270,7 @@
         </addColumn>
     </changeSet>
 
-    <changeSet id="20191114 remove update triggers before merging resources" author="Jon-Eirik Pettersen" dbms="!h2">
+    <changeSet id="20191114 remove update triggers before merging resources" author="Jon-Eirik Pettersen">
         <sql splitStatements="false" stripComments="false">
             DROP TRIGGER IF EXISTS refresh_paths ON subject;
             DROP TRIGGER IF EXISTS refresh_paths ON topic;
@@ -294,7 +293,7 @@
         <customChange class="no.ndla.taxonomy.migration.SetSinglePrimaryConnectionOnResourcesSqlChange"/>
     </changeSet>
 
-    <changeSet id="20191115 re-create cached_url and update triggers" author="Jon-Eirik Pettersen" dbms="!h2">
+    <changeSet id="20191115 re-create cached_url and update triggers" author="Jon-Eirik Pettersen">
         <sql>
             DROP MATERIALIZED VIEW cached_url;
 
@@ -489,7 +488,7 @@
     </changeSet>
 
     <changeSet id="20200506 migrate data from cached_url materialized view to cached_path table"
-               author="Jon-Eirik Pettersen" dbms="!h2">
+               author="Jon-Eirik Pettersen">
         <sql splitStatements="false" stripComments="false">
             TRUNCATE cached_path;
 
@@ -503,7 +502,7 @@
             FROM cached_url;
         </sql>
     </changeSet>
-    <changeSet id="20200506 delete cached_url materialized view" author="Jon-Eirik Pettersen" dbms="!h2">
+    <changeSet id="20200506 delete cached_url materialized view" author="Jon-Eirik Pettersen">
         <sql splitStatements="false" stripComments="false">
             DROP TRIGGER IF EXISTS refresh_paths ON subject;
             DROP TRIGGER IF EXISTS refresh_paths ON topic;
@@ -955,19 +954,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20220225 add script to clone schema" author="Gunnar Velle" dbms="h2" runOnChange="true">
-        <!-- Cannot define functions in H2, but can emulate with alias to java function, which returns ResultSet -->
-        <sql splitStatements="false">
-            CREATE ALIAS clone_schema AS $$
-            java.sql.ResultSet cloneSchema(java.lang.String source_schema, java.lang.String dest_schema, boolean
-            include_recs, boolean ddl_only) {
-                return new org.h2.tools.SimpleResultSet();
-            }
-            $$
-        </sql>
-    </changeSet>
-
-    <changeSet id="20220225 add script to clone schema" author="Gunnar Velle" dbms="!h2" runOnChange="true">
+    <changeSet id="20220225 add script to clone schema" author="Gunnar Velle" runOnChange="true">
         <!-- Fetched from http://pateldenish.com/2019/08/clone-schema-in-postgres.html -->
         <!-- and https://github.com/denishpatel/pg-clone-schema/blob/master/clone_schema.sql -->
         <!-- NB! Original script is changed so the functions is created in current schema and not public! -->
