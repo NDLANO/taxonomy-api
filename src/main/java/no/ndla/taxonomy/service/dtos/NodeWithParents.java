@@ -31,7 +31,7 @@ public class NodeWithParents extends NodeDTO {
     public NodeWithParents(Node node, String languageCode) {
         super(node, languageCode);
 
-        node.getParentNodeConnections().stream().map(nodeResource -> {
+        node.getParentConnections().stream().map(nodeResource -> {
             Node parent = nodeResource.getParent().orElseThrow(() -> new NotFoundException("Parent not found"));
             return new NodeChildDTO(parent, nodeResource, languageCode);
         }).forEach(parents::add);

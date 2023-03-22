@@ -120,7 +120,8 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         }
 
         if (rank == null) {
-            rank = parent.getChildren().stream().map(NodeConnection::getRank).max(Integer::compare).orElse(0) + 1;
+            rank = parent.getChildConnections().stream().map(NodeConnection::getRank).max(Integer::compare).orElse(0)
+                    + 1;
         }
 
         return nodeConnectionRepository.saveAndFlush(createConnection(parent, child, relevance, rank, isPrimary));
@@ -128,7 +129,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
 
     @Override
     public void disconnectParentChild(Node parent, Node child) {
-        new HashSet<>(parent.getChildren()).stream()
+        new HashSet<>(parent.getChildConnections()).stream()
                 .filter(connection -> connection.getConnectedChild().orElse(null) == child)
                 .forEach(this::disconnectParentChildConnection); // (It will never be more than one record)
     }
@@ -145,7 +146,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
                 // Set next connection to primary if disconnecting the primary connection
                 var isPrimaryConnection = nodeConnection.isPrimary().orElse(false);
                 if (isPrimaryConnection) {
-                    childToDisconnect.getParentNodeConnections().stream().findFirst().ifPresent(nextConnection -> {
+                    childToDisconnect.getParentConnections().stream().findFirst().ifPresent(nextConnection -> {
                         nextConnection.setPrimary(true);
                         nodeConnectionRepository.saveAndFlush(nextConnection);
                         nextConnection.getResource().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
