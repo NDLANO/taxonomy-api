@@ -98,7 +98,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     }
 
     @GetMapping("/page")
-    @Operation(summary = "Gets all connections between node and children paginated")
+    @Operation(summary = "Gets all nodes paginated")
     @Transactional(readOnly = true)
     public SearchResultDTO<NodeDTO> allPaginated(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
@@ -112,7 +112,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
         var ids = nodeRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
         var results = nodeRepository.findByIds(ids.getContent());
-        var contents = results.stream().map(node -> new NodeDTO(node, language.orElse("nb")))
+        var contents = results.stream().map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb")))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
@@ -122,7 +122,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @Transactional(readOnly = true)
     public NodeDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return new NodeDTO(nodeRepository.findFirstByPublicId(id)
+        return new NodeDTO(Optional.empty(), nodeRepository.findFirstByPublicId(id)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found")), language);
     }
 
@@ -180,7 +180,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
         final var returnList = new ArrayList<NodeChildDTO>();
 
-        children.stream().map(nodeConnection -> new NodeChildDTO(nodeConnection, language)).forEach(returnList::add);
+        children.stream().map(nodeConnection -> new NodeChildDTO(Optional.of(node), nodeConnection, language))
+                .forEach(returnList::add);
 
         var filtered = returnList.stream()
                 .filter(entityWithPathChildDTO -> childrenIds.contains(entityWithPathChildDTO.getParentId())

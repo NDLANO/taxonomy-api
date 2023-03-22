@@ -98,7 +98,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         var ids = nodeRepository.findIdsByTypePaginated(PageRequest.of(page.get() - 1, pageSize.get()),
                 NodeType.SUBJECT);
         var results = nodeRepository.findByIds(ids.getContent());
-        var contents = results.stream().map(node -> new NodeDTO(node, language.orElse("nb")))
+        var contents = results.stream().map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb")))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
@@ -109,7 +109,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     public NodeDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return nodeRepository.findFirstByPublicId(id).map(subject -> {
-            return new NodeDTO(subject, language);
+            return new NodeDTO(Optional.empty(), subject, language);
         }).orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
     }
 
@@ -168,12 +168,11 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             return child.isPresent() && child.get().getNodeType() == NodeType.TOPIC && relevanceFilter;
         }).toList();
 
-        connections.stream().map(nodeConnection -> new NodeChildDTO(nodeConnection, language)).forEach(returnList::add);
+        connections.stream().map(nodeConnection -> new NodeChildDTO(Optional.of(subject), nodeConnection, language))
+                .forEach(returnList::add);
 
-        var filtered = returnList.stream()
-                .filter(entityWithPathChildDTO -> childrenIds.contains(entityWithPathChildDTO.getParentId())
-                        || subject.getPublicId().equals(entityWithPathChildDTO.getParentId()))
-                .toList();
+        var filtered = returnList.stream().filter(childDTO -> childrenIds.contains(childDTO.getParentId())
+                || subject.getPublicId().equals(childDTO.getParentId())).toList();
 
         // Remove duplicates from the list
         // List is sorted by parent, so we assume that any subtree that has a duplicate parent also

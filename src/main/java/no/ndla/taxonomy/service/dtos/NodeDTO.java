@@ -60,12 +60,13 @@ public class NodeDTO {
     public NodeDTO() {
     }
 
-    public NodeDTO(Node entity, String languageCode) {
+    public NodeDTO(Optional<Node> root, Node entity, String languageCode) {
         this.id = entity.getPublicId();
         this.contentUri = entity.getContentUri();
         this.paths = entity.getAllPaths();
 
         this.path = entity.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
+        root.ifPresent(r -> this.path = entity.getPathByContext(r.getPublicId()).orElse(""));
 
         var translations = entity.getTranslations();
         this.translations = translations.stream().map(TranslationDTO::new)

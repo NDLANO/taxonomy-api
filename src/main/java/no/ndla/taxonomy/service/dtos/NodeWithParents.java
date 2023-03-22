@@ -13,6 +13,7 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @Schema(name = "ResourceWithParents")
@@ -29,7 +30,7 @@ public class NodeWithParents extends NodeDTO {
     }
 
     public NodeWithParents(Node node, String languageCode) {
-        super(node, languageCode);
+        super(Optional.empty(), node, languageCode);
 
         node.getParentNodeConnections().stream().map(nodeResource -> {
             Node parent = nodeResource.getParent().orElseThrow(() -> new NotFoundException("Parent not found"));
