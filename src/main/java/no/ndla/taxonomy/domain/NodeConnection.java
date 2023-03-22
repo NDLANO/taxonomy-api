@@ -152,14 +152,6 @@ public class NodeConnection extends DomainEntity
         this.rank = rank;
     }
 
-    public Optional<Node> getConnectedParent() {
-        return Optional.ofNullable(parent);
-    }
-
-    public Optional<Node> getConnectedChild() {
-        return Optional.ofNullable(child);
-    }
-
     @PreRemove
     public void preRemove() {
         disassociate();

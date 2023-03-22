@@ -158,7 +158,7 @@ public class UrlResolverServiceImpl implements UrlResolverService {
         for (final var entity : entities) {
             if (lastEntity.get() != null) {
                 if (entity.getParentConnections().stream().noneMatch(parentConnection -> parentConnection
-                        .getConnectedParent().filter(parent -> parent.equals(lastEntity.get())).isPresent())) {
+                        .getParent().filter(parent -> parent.equals(lastEntity.get())).isPresent())) {
                     throw new NotFoundServiceException(
                             lastEntity.get().getPublicId() + " has no child with ID " + entity.getPublicId());
                 }

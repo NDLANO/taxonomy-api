@@ -248,7 +248,7 @@ public class NodeResourcesTest extends RestTest {
         });
 
         graphs.getParentConnections().forEach(nodeResource -> {
-            if (nodeResource.getConnectedParent().orElseThrow(RuntimeException::new).equals(graphTheory)) {
+            if (nodeResource.getParent().orElseThrow(RuntimeException::new).equals(graphTheory)) {
                 assertTrue(nodeResource.isPrimary().orElseThrow());
             } else {
                 assertFalse(nodeResource.isPrimary().orElseThrow());

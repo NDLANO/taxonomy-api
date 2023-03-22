@@ -105,11 +105,11 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         Node parentConnected = parent;
 
         var ttl = 100;
-        while (parentConnected.getParentConnections().stream().findFirst().map(NodeConnection::getConnectedParent)
+        while (parentConnected.getParentConnections().stream().findFirst().map(NodeConnection::getParent)
                 .isPresent()) {
             Logger.getLogger(this.getClass().toString()).info(parentConnected.getPublicId().toString());
             parentConnected = parentConnected.getParentConnections().stream().findFirst().orElseThrow()
-                    .getConnectedParent().orElseThrow();
+                    .getParent().orElseThrow();
 
             if (ttl-- < 0) {
                 throw new InvalidArgumentServiceException("Too many levels to get top level object");
@@ -130,7 +130,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     @Override
     public void disconnectParentChild(Node parent, Node child) {
         new HashSet<>(parent.getChildConnections()).stream()
-                .filter(connection -> connection.getConnectedChild().orElse(null) == child)
+                .filter(connection -> connection.getChild().orElse(null) == child)
                 .forEach(this::disconnectParentChildConnection); // (It will never be more than one record)
     }
 
@@ -170,7 +170,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
 
         // Updates all other nodes connected to this parent
         final var foundNewPrimary = new AtomicBoolean(false);
-        connectable.getConnectedChild().ifPresent(node -> node.getParentConnections().stream()
+        connectable.getChild().ifPresent(node -> node.getParentConnections().stream()
                 .filter(connectable1 -> connectable1 != connectable).forEachOrdered(connectable1 -> {
                     if (!setPrimaryTo && !foundNewPrimary.get()) {
                         connectable1.setPrimary(true);
@@ -186,7 +186,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
 
         saveConnections(updatedConnectables);
 
-        updatedConnectables.forEach(updatedConnectable -> updatedConnectable.getConnectedChild()
+        updatedConnectables.forEach(updatedConnectable -> updatedConnectable.getChild()
                 .ifPresent(cachedUrlUpdaterService::updateCachedUrls));
 
         if (!setPrimaryTo && !foundNewPrimary.get()) {
@@ -196,7 +196,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     }
 
     private void updateRank(NodeConnection rankable, int newRank) {
-        final var updatedConnections = RankableConnectionUpdater.rank(new ArrayList<>(rankable.getConnectedParent()
+        final var updatedConnections = RankableConnectionUpdater.rank(new ArrayList<>(rankable.getParent()
                 .orElseThrow(() -> new IllegalStateException("Rankable parent not found")).getChildConnections()),
                 rankable, newRank);
         saveConnections(updatedConnections);

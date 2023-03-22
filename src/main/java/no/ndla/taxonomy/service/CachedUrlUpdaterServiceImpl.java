@@ -37,7 +37,7 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
         // Get all parent paths, append this entity publicId to the end of the actual path and add
         // all to the list to return
         entity.getParentConnections()
-                .forEach(parentConnection -> parentConnection.getConnectedParent().ifPresent(parent -> {
+                .forEach(parentConnection -> parentConnection.getParent().ifPresent(parent -> {
                     createPathsToEntity(parent).stream()
                             .map(parentPath -> new PathToEntity(
                                     parentPath.path + "/" + entity.getPublicId().getSchemeSpecificPart(),
@@ -56,7 +56,7 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
     @Transactional(propagation = Propagation.MANDATORY)
     public void updateCachedUrls(Node entity) {
         Set.copyOf(entity.getChildConnections())
-                .forEach(childEntity -> childEntity.getConnectedChild().ifPresent(this::updateCachedUrls));
+                .forEach(childEntity -> childEntity.getChild().ifPresent(this::updateCachedUrls));
 
         clearCachedUrls(entity);
 
