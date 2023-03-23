@@ -229,15 +229,15 @@ public class Node extends DomainObject implements EntityWithMetadata {
      */
 
     public Collection<NodeConnection> getParentConnections() {
-        return this.parentConnections;
+        return this.parentConnections.stream().toList();
     }
 
     public Collection<NodeConnection> getChildConnections() {
-        return childConnections;
+        return this.childConnections.stream().toList();
     }
 
     public Collection<NodeConnection> getResourceChildren() {
-        return childConnections.stream()
+        return this.childConnections.stream()
                 .filter(cc -> cc.getChild().map(child -> child.getNodeType() == NodeType.RESOURCE).orElse(false))
                 .collect(Collectors.toSet());
     }
@@ -268,7 +268,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
             throw new ChildNotFoundException(
                     "Resource with id " + this.getPublicId() + " is not of type " + resourceType.getPublicId());
 
-        resourceResourceTypes.remove(resourceResourceType.get());
+        this.resourceResourceTypes.remove(resourceResourceType.get());
     }
 
     private Optional<ResourceResourceType> getResourceType(ResourceType resourceType) {
