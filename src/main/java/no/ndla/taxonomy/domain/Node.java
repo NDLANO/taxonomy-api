@@ -233,7 +233,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public Collection<NodeConnection> getChildConnections() {
-        return this.childConnections.stream().toList();
+        return new HashSet<>(childConnections);
     }
 
     public Collection<NodeConnection> getResourceChildren() {

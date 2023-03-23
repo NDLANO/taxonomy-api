@@ -255,7 +255,7 @@ public class NodeConnection extends DomainEntity
         if (o == null || getClass() != o.getClass())
             return false;
         NodeConnection that = (NodeConnection) o;
-        return rank == that.rank && parent.getPublicId().equals(that.parent.getPublicId())
-                && child.getPublicId().equals(that.child.getPublicId()) && Objects.equals(relevance, that.relevance);
+        return rank == that.rank && Objects.equals(parent, that.parent) && Objects.equals(child, that.child)
+                && Objects.equals(relevance, that.relevance);
     }
 }
