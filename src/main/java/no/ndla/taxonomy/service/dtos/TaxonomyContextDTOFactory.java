@@ -4,7 +4,7 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodePath;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageField;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.SearchableTaxonomyResourceType;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
 import org.springframework.stereotype.Service;
@@ -42,7 +42,7 @@ public class TaxonomyContextDTOFactory {
             return Optional.empty();
 
         var subjectNode = maybeFirstNode.get();
-        var subjectNames = LanguageField.nameFromNode(subjectNode);
+        var subjectNames = LanguageFieldDTO.nameFromNode(subjectNode);
         var path = nodePath.toString();
 
         var relevance = nodePath.getBaseRelevance().orElseGet(() -> {
@@ -50,12 +50,13 @@ public class TaxonomyContextDTOFactory {
             return relevanceRepository.findFirstByPublicIdIncludingTranslations(coreId).orElseThrow();
         });
 
-        var relevanceTranslations = new LanguageField<String>();
+        var relevanceTranslations = new LanguageFieldDTO<String>();
         relevanceTranslations.put(DefaultLanguage, relevance.getName());
         relevance.getTranslations()
                 .forEach(trans -> relevanceTranslations.put(trans.getLanguageCode(), trans.getName()));
 
         var relevanceId = relevance.getPublicId();
+
         var resourceTypes = node.getResourceTypes().stream().map(SearchableTaxonomyResourceType::new).toList();
         var isPrimaryConnection = nodePath.getBaseConnection().isPrimary().orElse(false);
         var parentTopicIds = getAllParentTopicIds(node, filterVisibles);

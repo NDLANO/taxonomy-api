@@ -8,9 +8,8 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageField;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
-import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -167,7 +166,7 @@ public class QueryTest extends RestTest {
         assertEquals(URI.create("urn:subject:1"), firstResult.subjectId());
         assertEquals("/subject:1/topic:1/resource:1", firstResult.path());
         assertEquals(URI.create("urn:relevance:core"), firstResult.relevanceId());
-        var breadcrumbs = new LanguageField<List<String>>();
+        var breadcrumbs = new LanguageFieldDTO<List<String>>();
         breadcrumbs.put("nb", List.of("Fag", "Emne"));
         assertEquals(breadcrumbs, firstResult.breadcrumbs());
 
@@ -178,7 +177,7 @@ public class QueryTest extends RestTest {
         assertEquals(URI.create("urn:subject:2"), secondResult.subjectId());
         assertEquals("/subject:2/topic:2/resource:1", secondResult.path());
         assertEquals(URI.create("urn:relevance:core"), secondResult.relevanceId());
-        var breadcrumbs2 = new LanguageField<List<String>>();
+        var breadcrumbs2 = new LanguageFieldDTO<List<String>>();
         breadcrumbs2.put("nb", List.of("Fag 2", "Emne 2"));
         assertEquals(breadcrumbs2, secondResult.breadcrumbs());
     }
@@ -215,7 +214,7 @@ public class QueryTest extends RestTest {
         assertEquals(URI.create("urn:subject:1"), firstResult.subjectId());
         assertEquals("/subject:1/topic:1/resource:1", firstResult.path());
         assertEquals(URI.create("urn:relevance:core"), firstResult.relevanceId());
-        var breadcrumbs = new LanguageField<List<String>>();
+        var breadcrumbs = new LanguageFieldDTO<List<String>>();
         breadcrumbs.put("nb", List.of("Fag", "Emne"));
         assertEquals(breadcrumbs, firstResult.breadcrumbs());
 
@@ -226,7 +225,7 @@ public class QueryTest extends RestTest {
         assertEquals(URI.create("urn:subject:2"), secondResult.subjectId());
         assertEquals("/subject:2/topic:2/resource:1", secondResult.path());
         assertEquals(URI.create("urn:relevance:core"), secondResult.relevanceId());
-        var breadcrumbs2 = new LanguageField<List<String>>();
+        var breadcrumbs2 = new LanguageFieldDTO<List<String>>();
         breadcrumbs2.put("nb", List.of("Fag 2", "Emne 2"));
         assertEquals(breadcrumbs2, secondResult.breadcrumbs());
 
@@ -237,7 +236,7 @@ public class QueryTest extends RestTest {
         assertEquals(URI.create("urn:subject:3"), thirdResult.subjectId());
         assertEquals("/subject:3/topic:3/resource:1", thirdResult.path());
         assertEquals(URI.create("urn:relevance:core"), thirdResult.relevanceId());
-        var breadcrumbs3 = new LanguageField<List<String>>();
+        var breadcrumbs3 = new LanguageFieldDTO<List<String>>();
         breadcrumbs3.put("nb", List.of("Fag 3", "Emne 3"));
         assertEquals(breadcrumbs3, thirdResult.breadcrumbs());
     }
