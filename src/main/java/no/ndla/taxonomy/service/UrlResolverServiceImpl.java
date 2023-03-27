@@ -70,8 +70,8 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
     private List<String> getAllPaths(URI publicId) {
         try {
-            return getEntityFromPublicId(publicId).stream()
-                    .flatMap(x -> x.getCachedPaths().stream().map(CachedPath::getPath)).collect(Collectors.toList());
+            return getEntityFromPublicId(publicId).stream().flatMap(x -> x.getAllPaths().stream())
+                    .collect(Collectors.toList());
         } catch (InvalidArgumentServiceException e) {
             return List.of();
         }

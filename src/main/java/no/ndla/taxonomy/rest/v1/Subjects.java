@@ -10,6 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
@@ -59,7 +60,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Gets all subjects")
     @Transactional(readOnly = true)
     public List<NodeDTO> index(
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") Optional<String> language,
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
@@ -72,7 +73,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Search all subjects")
     @Transactional(readOnly = true)
     public SearchResultDTO<NodeDTO> search(
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") Optional<String> language,
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
             @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @Parameter(description = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
             @Parameter(description = "Query to search names") @RequestParam(value = "query", required = false) Optional<String> query,
@@ -86,7 +87,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Gets all connections between node and children paginated")
     @Transactional(readOnly = true)
     public SearchResultDTO<NodeDTO> allPaginated(
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
@@ -107,9 +108,9 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Gets a single subject", description = "Default language will be returned if desired language not found or if parameter is omitted.")
     @Transactional(readOnly = true)
     public NodeDTO get(@PathVariable("id") URI id,
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
         return nodeRepository.findFirstByPublicId(id).map(subject -> {
-            return new NodeDTO(Optional.empty(), subject, language);
+            return new NodeDTO(Optional.empty(), subject, language.orElse(Constants.DefaultLanguage));
         }).orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
     }
 
@@ -137,7 +138,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Gets all children associated with a subject", description = "This resource is read-only. To update the relationship between nodes, use the resource /subject-topics.")
     @Transactional(readOnly = true)
     public List<NodeChildDTO> getChildren(@PathVariable("id") URI id,
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
             @Parameter(description = "If true, subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @Deprecated @Parameter(description = "Select by filter id(s). If not specified, all topics will be returned."
                     + "Multiple ids may be separated with comma or the parameter may be repeated for each id.") @RequestParam(value = "filter", required = false, defaultValue = "") Set<URI> filterIds,
@@ -168,8 +169,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             return child.isPresent() && child.get().getNodeType() == NodeType.TOPIC && relevanceFilter;
         }).toList();
 
-        connections.stream().map(nodeConnection -> new NodeChildDTO(Optional.of(subject), nodeConnection, language))
-                .forEach(returnList::add);
+        connections.stream().map(nodeConnection -> new NodeChildDTO(Optional.of(subject), nodeConnection,
+                language.orElse(Constants.DefaultLanguage))).forEach(returnList::add);
 
         var filtered = returnList.stream().filter(childDTO -> childrenIds.contains(childDTO.getParentId())
                 || subject.getPublicId().equals(childDTO.getParentId())).toList();
@@ -225,7 +226,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                     "subjects" })
     @Transactional(readOnly = true)
     public List<NodeChildDTO> getResources(@PathVariable("subjectId") URI subjectId,
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
             @Parameter(description = "Filter by resource type id(s). If not specified, resources of all types will be returned."
                     + "Multiple ids may be separated with comma or the parameter may be repeated for each id.") @RequestParam(value = "type", required = false, defaultValue = "") URI[] resourceTypeIds,
             @Deprecated @Parameter(description = "Select by filter id(s). If not specified, all resources will be returned."

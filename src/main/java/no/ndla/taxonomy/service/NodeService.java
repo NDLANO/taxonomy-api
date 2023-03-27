@@ -132,9 +132,9 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return topicTreeSorter.sortList(wrappedList);
     }
 
-    public NodeDTO getNode(URI publicId, String language) {
+    public NodeDTO getNode(URI publicId, Optional<String> language) {
         var node = getNode(publicId);
-        return new NodeDTO(Optional.empty(), node, language);
+        return new NodeDTO(Optional.empty(), node, language.orElse(Constants.DefaultLanguage));
     }
 
     public Node getNode(URI publicId) {
@@ -143,7 +143,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public List<NodeChildDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds, URI relevancePublicId,
-            String languageCode, boolean recursive) {
+            Optional<String> languageCode, boolean recursive) {
         final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
 
         final Set<URI> topicIdsToSearchFor;
@@ -172,7 +172,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(Set<URI> nodeIds, Set<URI> resourceTypeIds,
-            URI relevance, Set<ResourceTreeSortable> sortableListToAddTo, String languageCode) {
+            URI relevance, Set<ResourceTreeSortable> sortableListToAddTo, Optional<String> languageCode) {
         final List<NodeConnection> nodeResources;
 
         if (resourceTypeIds.size() > 0) {
@@ -194,7 +194,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                     }
                 });
             }
-            nodeResources = nodeResourcesStream.collect(Collectors.toList());
+            nodeResources = nodeResourcesStream.collect(toList());
         }
 
         nodeResources.forEach(nodeResource -> sortableListToAddTo.add(new ResourceTreeSortable(nodeResource)));
@@ -209,8 +209,9 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                     return childIsResource.orElse(false);
                 }).map(wrappedNodeResource -> {
                     NodeConnection nodeConnection = (NodeConnection) wrappedNodeResource.get();
-                    return new NodeChildDTO(Optional.empty(), nodeConnection, languageCode);
-                }).collect(Collectors.toList());
+                    return new NodeChildDTO(Optional.empty(), nodeConnection,
+                            languageCode.orElse(Constants.DefaultLanguage));
+                }).collect(toList());
     }
 
     @Override

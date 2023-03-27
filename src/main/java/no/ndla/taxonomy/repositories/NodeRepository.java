@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface NodeRepository extends TaxonomyRepository<Node> {
-    @Query("SELECT DISTINCT n FROM Node n WHERE n.context = :context")
-    List<Node> findAllByContextIncludingCachedUrlsAndTranslations(boolean context);
+    @Query("SELECT DISTINCT n FROM Node n WHERE n.context = :isContext")
+    List<Node> findAllByContextIncludingCachedUrlsAndTranslations(boolean isContext);
 
     Optional<Node> findFirstByPublicId(URI publicId);
 
