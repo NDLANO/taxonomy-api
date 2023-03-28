@@ -59,7 +59,7 @@ public class NodeTranslationsTest extends RestTest {
                 .getPublicId();
 
         final var topic = getNode(id, null);
-        assertEquals("Trigonometry", topic.getName());
+        assertEquals("Trigonometri", topic.getName());
     }
 
     @Test

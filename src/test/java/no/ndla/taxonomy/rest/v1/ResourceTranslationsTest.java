@@ -60,7 +60,7 @@ public class ResourceTranslationsTest extends RestTest {
                 .getPublicId();
 
         final var resource = getResourceIndexDocument(id, null);
-        assertEquals("Introduction to algrebra", resource.getName());
+        assertEquals("Introduksjon til algebra", resource.getName());
     }
 
     @Test

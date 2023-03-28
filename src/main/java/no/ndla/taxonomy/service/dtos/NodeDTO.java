@@ -10,6 +10,7 @@ package no.ndla.taxonomy.service.dtos;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 
@@ -57,16 +58,38 @@ public class NodeDTO {
     @Schema(description = "The type of node", example = "resource")
     public NodeType nodeType;
 
+    @JsonProperty
+    @Schema(description = "An hash unique for this context.")
+    private String contextHash;
+
     public NodeDTO() {
     }
 
     public NodeDTO(Optional<Node> root, Node entity, String languageCode) {
         this.id = entity.getPublicId();
         this.contentUri = entity.getContentUri();
+
         this.paths = entity.getAllPaths();
 
         this.path = entity.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
         root.ifPresent(r -> this.path = entity.getPathByContext(r.getPublicId()).orElse(""));
+        this.breadcrumbs = entity.buildCrumbs(languageCode);
+
+        Optional<Relevance> relevance = entity.getParentConnection().flatMap(NodeConnection::getRelevance);
+        this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
+
+        // pick correct context if present
+        var primaryContext = entity.getPrimaryContext();
+        if (root.isPresent()) {
+            primaryContext = entity.getContextByRoot(root.get().getPublicId().toString());
+        }
+        primaryContext.ifPresent(context -> {
+            this.path = context.path();
+            this.breadcrumbs = LanguageField.listFromLists(context.breadcrumbs(), LanguageField.fromNode(entity))
+                    .get(languageCode);
+            this.relevanceId = URI.create(context.relevanceId());
+            this.contextHash = context.contextId();
+        });
 
         var translations = entity.getTranslations();
         this.translations = translations.stream().map(TranslationDTO::new)
@@ -77,12 +100,7 @@ public class NodeDTO {
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
                 .map(Translation::getName).orElse(entity.getName());
 
-        Optional<Relevance> relevance = entity.getParentConnection().flatMap(NodeConnection::getRelevance);
-        this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
-
         this.metadata = new MetadataDto(entity.getMetadata());
-
-        this.breadcrumbs = entity.buildCrumbs(languageCode);
 
         this.resourceTypes = entity.getResourceResourceTypes().stream()
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))

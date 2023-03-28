@@ -18,6 +18,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,6 +45,7 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
     void updateCachedUrls() {
         final var subject1 = new Node(NodeType.SUBJECT);
         subject1.setPublicId(URI.create("urn:subject:1"));
+        subject1.setName("Subject1");
         subject1.setContext(true);
 
         nodeRepository.save(subject1);
@@ -51,18 +53,20 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
         service.updateCachedUrls(subject1);
 
         {
-            assertEquals(1, subject1.getCachedPaths().size());
-            final var path1 = subject1.getCachedPaths().iterator().next();
-            assertEquals("/subject:1", path1.getPath());
-            assertEquals("urn:subject:1", path1.getPublicId().toString());
-            assertTrue(path1.isPrimary());
+            assertEquals(1, subject1.getContexts().size());
+            final var context = subject1.getContexts().iterator().next();
+            assertEquals("/subject:1", context.path());
+            assertEquals("urn:subject:1", context.rootId().toString());
+            assertEquals(0, context.breadcrumbs().size());
+            assertTrue(context.isPrimary());
 
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:subject:1"));
-            assertEquals(1, node.get().getCachedPaths().size());
+            assertEquals(1, node.get().getContexts().size());
         }
 
         final var topic1 = new Node(NodeType.TOPIC);
         topic1.setPublicId(URI.create("urn:topic:1"));
+        topic1.setName("Topic1");
         topic1.setContext(true);
 
         nodeRepository.save(topic1);
@@ -70,14 +74,15 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
         service.updateCachedUrls(topic1);
 
         {
-            assertEquals(1, topic1.getCachedPaths().size());
-            final var path1 = topic1.getCachedPaths().iterator().next();
-            assertEquals("/topic:1", path1.getPath());
-            assertEquals("urn:topic:1", path1.getPublicId().toString());
-            assertTrue(path1.isPrimary());
+            assertEquals(1, topic1.getContexts().size());
+            final var context = topic1.getContexts().iterator().next();
+            assertEquals("/topic:1", context.path());
+            assertEquals("urn:topic:1", context.rootId().toString());
+            assertEquals(0, context.breadcrumbs().size());
+            assertTrue(context.isPrimary());
 
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:1"));
-            assertEquals(1, node.get().getCachedPaths().size());
+            assertEquals(1, node.get().getContexts().size());
         }
 
         var nc = NodeConnection.create(subject1, topic1);
@@ -88,8 +93,8 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:1")).get();
-            assertEquals(2, node.getCachedPaths().size());
-            assertTrue(node.getCachedPaths().stream().map(CachedPath::getPath).toList()
+            assertEquals(2, node.getContexts().size());
+            assertTrue(node.getContexts().stream().map(Context::path).toList()
                     .containsAll(Set.of("/topic:1", "/subject:1/topic:1")));
         }
 
@@ -98,19 +103,20 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
         service.updateCachedUrls(topic1);
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:1")).get();
-            assertEquals(1, node.getCachedPaths().size());
-            assertTrue(node.getCachedPaths().stream().map(CachedPath::getPath).toList().contains("/subject:1/topic:1"));
+            assertEquals(1, node.getContexts().size());
+            assertTrue(node.getContexts().stream().map(Context::path).toList().contains("/subject:1/topic:1"));
         }
 
         final var topic2 = new Node(NodeType.TOPIC);
         topic2.setPublicId(URI.create("urn:topic:2"));
+        topic2.setName("Topic2");
         nodeRepository.save(topic2);
 
         service.updateCachedUrls(topic1);
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:2")).get();
-            assertEquals(0, node.getCachedPaths().size());
+            assertEquals(0, node.getContexts().size());
         }
 
         var nc2 = NodeConnection.create(topic1, topic2);
@@ -121,9 +127,8 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:2")).get();
-            assertEquals(1, node.getCachedPaths().size());
-            assertTrue(node.getCachedPaths().stream().map(CachedPath::getPath).toList()
-                    .contains("/subject:1/topic:1/topic:2"));
+            assertEquals(1, node.getContexts().size());
+            assertTrue(node.getContexts().stream().map(Context::path).toList().contains("/subject:1/topic:1/topic:2"));
         }
 
         topic1.setContext(true);
@@ -132,8 +137,8 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:2")).get();
-            assertEquals(2, node.getCachedPaths().size());
-            assertTrue(node.getCachedPaths().stream().map(CachedPath::getPath).toList()
+            assertEquals(2, node.getContexts().size());
+            assertTrue(node.getContexts().stream().map(Context::path).toList()
                     .containsAll(Set.of("/subject:1/topic:1/topic:2", "/topic:1/topic:2")));
         }
 
@@ -145,7 +150,7 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1")).get();
-            assertEquals(0, node.getCachedPaths().size());
+            assertEquals(0, node.getContexts().size());
         }
 
         var nc3 = NodeConnection.create(topic1, resource1);
@@ -156,8 +161,8 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1")).get();
-            assertEquals(2, node.getCachedPaths().size());
-            assertTrue(node.getCachedPaths().stream().map(CachedPath::getPath).toList()
+            assertEquals(2, node.getContexts().size());
+            assertTrue(node.getContexts().stream().map(Context::path).toList()
                     .containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1")));
         }
 
@@ -169,8 +174,8 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1")).get();
-            assertEquals(4, node.getCachedPaths().size());
-            assertTrue(node.getCachedPaths().stream().map(CachedPath::getPath).toList()
+            assertEquals(4, node.getContexts().size());
+            assertTrue(node.getContexts().stream().map(Context::path).toList()
                     .containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1",
                             "/subject:1/topic:1/topic:2/resource:1", "/topic:1/topic:2/resource:1")));
         }

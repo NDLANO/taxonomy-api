@@ -26,5 +26,6 @@ public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "Name of the relevance of the connection of the base") LanguageFieldDTO<String> relevance,
         @JsonProperty @Schema(description = "Resource-types of the base") List<SearchableTaxonomyResourceType> resourceTypes,
         @JsonProperty @Schema(description = "List of all parent topic-ids") List<URI> parentTopicIds,
-        @JsonProperty @Schema(description = "Whether the base connection is primary or not") boolean isPrimaryConnection) {
+        @JsonProperty @Schema(description = "Whether the base connection is primary or not") boolean isPrimaryConnection,
+        @JsonProperty @Schema(description = "Unique id of context based on root + connection") String contextId) {
 }

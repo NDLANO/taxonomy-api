@@ -83,6 +83,10 @@ public class Node extends DomainObject implements EntityWithMetadata {
     @Column(name = "customfields", columnDefinition = "jsonb")
     private Map<String, String> customfields = new HashMap<>();
 
+    @Type(type = "jsonb")
+    @Column(name = "contexts", columnDefinition = "jsonb")
+    private Set<Context> contexts = new HashSet<>();
+
     // Needed for hibernate
     public Node() {
     }
@@ -160,7 +164,14 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public Optional<String> getPrimaryPath() {
+        if (!getContexts().isEmpty()) {
+            return getContexts().stream().filter(Context::isPrimary).map(Context::path).findFirst();
+        }
         return getCachedPaths().stream().filter(CachedPath::isPrimary).map(CachedPath::getPath).findFirst();
+    }
+
+    public Optional<Context> getPrimaryContext() {
+        return getContexts().stream().filter(Context::isPrimary).findFirst();
     }
 
     public Optional<String> getPathByContext(URI contextPublicId) {
@@ -207,7 +218,30 @@ public class Node extends DomainObject implements EntityWithMetadata {
         }).map(CachedPath::getPath).findFirst();
     }
 
+    public Optional<Context> getContextByRoot(String contextPublicId) {
+        var ctx = getContexts();
+        var maybeContext = ctx.stream().filter(c -> c.rootId().equals(contextPublicId)).findFirst();
+        return maybeContext.or(() -> ctx.stream().sorted((context1, context2) -> {
+
+            if (context1.isPrimary() && context2.isPrimary()) {
+                return 0;
+            }
+
+            if (context1.isPrimary()) {
+                return -1;
+            }
+
+            if (context2.isPrimary()) {
+                return 1;
+            }
+            return 0;
+        }).findFirst());
+    }
+
     public TreeSet<String> getAllPaths() {
+        if (!getContexts().isEmpty()) {
+            return getContexts().stream().map(Context::path).collect(Collectors.toCollection(TreeSet::new));
+        }
         return getCachedPaths().stream().map(CachedPath::getPath).collect(Collectors.toCollection(TreeSet::new));
     }
 
@@ -380,6 +414,16 @@ public class Node extends DomainObject implements EntityWithMetadata {
         return contentUri;
     }
 
+    public String getContextType() {
+        if (contentUri == null)
+            return null;
+        if (contentUri.getSchemeSpecificPart().startsWith("learningpath"))
+            return "learningpath";
+        if (nodeType.equals(NodeType.TOPIC))
+            return "topic-article";
+        return "standard";
+    }
+
     public void setNodeType(NodeType nodeType) {
         this.nodeType = nodeType;
         updatePublicID();
@@ -467,7 +511,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     @Override
-    public boolean getVisible() {
+    public boolean isVisible() {
         return this.visible;
     }
 
@@ -536,6 +580,14 @@ public class Node extends DomainObject implements EntityWithMetadata {
 
     public Map<String, String> getCustomFields() {
         return this.customfields;
+    }
+
+    public void setContexts(Set<Context> contexts) {
+        this.contexts = contexts;
+    }
+
+    public Set<Context> getContexts() {
+        return this.contexts;
     }
 
     public void addGrepCode(String code) {

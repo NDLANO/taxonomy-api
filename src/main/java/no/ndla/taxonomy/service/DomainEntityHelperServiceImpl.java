@@ -159,7 +159,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             existing.setRoot(node.isRoot());
             existing.setContext(node.isContext());
             existing.setTranslations(node.getTranslations());
-            existing.setVisible(node.getVisible());
+            existing.setVisible(node.isVisible());
             existing.setCustomFields(node.getCustomFields());
             existing.setGrepCodes(node.getGrepCodes());
 
@@ -234,7 +234,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             existing.setParent(nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId()));
             existing.setChild(nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId()));
             existing.setRank(nodeConnection.getRank());
-            existing.setVisible(nodeConnection.getVisible());
+            existing.setVisible(nodeConnection.isVisible());
             existing.setGrepCodes(nodeConnection.getGrepCodes());
             existing.setCustomFields(nodeConnection.getCustomFields());
             if (nodeConnection.getRelevance().isPresent()) {

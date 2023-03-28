@@ -1377,4 +1377,17 @@
         </sql>
         <addNotNullConstraint tableName="version" columnName="created" />
     </changeSet>
+
+    <changeSet id="20230322 Add context list to node" author="Gunnar Velle">
+        <addColumn tableName="node">
+            <column name="contexts" type="jsonb"/>
+        </addColumn>
+        <sql>
+            UPDATE node n
+            SET contexts='[]'
+            WHERE contexts is null
+        </sql>
+    </changeSet>
+
+
 </databaseChangeLog>

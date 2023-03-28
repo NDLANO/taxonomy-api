@@ -46,8 +46,8 @@ public class LanguageField<V> extends HashMap<String, V> {
             LanguageField<String> languageField) {
         var breadcrumbs = new LanguageField<List<String>>();
         breadcrumbs.putAll(listLanguageField);
-        breadcrumbs.keySet().forEach(key -> {
-            var crumbs = breadcrumbs.get(key);
+        languageField.keySet().forEach(key -> {
+            var crumbs = breadcrumbs.computeIfAbsent(key, k -> new ArrayList<>());
             if (languageField.get(key) != null) {
                 crumbs.add(languageField.get(key));
             }

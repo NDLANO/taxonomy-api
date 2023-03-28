@@ -233,7 +233,7 @@ public class NodeConnection extends DomainEntity
     }
 
     @Override
-    public boolean getVisible() {
+    public boolean isVisible() {
         return this.visible;
     }
 

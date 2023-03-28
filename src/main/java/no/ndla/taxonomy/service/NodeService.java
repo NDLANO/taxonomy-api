@@ -7,13 +7,20 @@
 
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.ChangelogRepository;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageFieldDTO;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.SearchableTaxonomyResourceType;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.service.task.Fetcher;
 import org.slf4j.Logger;
@@ -33,6 +40,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toList;
+
 @Transactional(readOnly = true)
 @Service
 public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>, DisposableBean {
@@ -46,7 +55,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final DomainEntityHelperService domainEntityHelperService;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
-    private final TaxonomyContextDTOFactory searchableTaxonomyContextDTOFactory;
+    private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final RelevanceRepository relevanceRepository;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -59,7 +69,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             NodeConnectionService connectionService, NodeConnectionRepository nodeConnectionRepository,
             NodeRepository nodeRepository, RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter topicTreeSorter, TreeSorter treeSorter, VersionService versionService,
-            TaxonomyContextDTOFactory searchableTaxonomyContextDTOFactory) {
+            CachedUrlUpdaterService cachedUrlUpdaterService, RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -69,7 +79,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         this.domainEntityHelperService = domainEntityHelperService;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.treeSorter = treeSorter;
-        this.searchableTaxonomyContextDTOFactory = searchableTaxonomyContextDTOFactory;
+        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.relevanceRepository = relevanceRepository;
     }
 
     @Transactional
@@ -92,7 +103,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         final List<Node> filtered = nodeRepository.findByNodeType(nodeType, metadataFilters.getVisible(),
                 metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, isRoot);
         return filtered.stream().distinct().map(n -> new NodeDTO(Optional.empty(), n, language.get()))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     public List<NodeDTO> getResources(Optional<String> language, Optional<URI> contentUri, Optional<Boolean> isRoot,
@@ -317,7 +328,36 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     public List<TaxonomyContextDTO> getSearchableByContentUri(Optional<URI> contentURI, boolean filterVisibles) {
         var nodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
                 Optional.empty(), contentURI, Optional.empty());
+        var contextDtos = nodes.stream().flatMap(node -> {
+            var parentIds = node.getContexts().stream().map(Context::parentId)
+                    .map(s -> s.map(URI::create).orElseGet(() -> URI.create(""))).toList();
+            var contexts = filterVisibles
+                    ? node.getContexts().stream().filter(Context::isVisible).collect(Collectors.toSet())
+                    : node.getContexts();
+            return contexts.stream().map(context -> {
+                Optional<Relevance> relevance = relevanceRepository
+                        .findFirstByPublicIdIncludingTranslations(URI.create(context.relevanceId()));
+                var relevanceName = new LanguageField<String>();
+                if (relevance.isPresent()) {
+                    relevanceName = LanguageField.fromNode(relevance.get());
+                }
+                var resourceTypes = node.getResourceTypes().stream().map(SearchableTaxonomyResourceType::new).toList();
+                var breadcrumbs = context.breadcrumbs();
+                return new TaxonomyContextDTO(node.getPublicId(), URI.create(context.rootId()),
+                        LanguageFieldDTO.fromLanguageField(context.rootName()), context.path(),
+                        LanguageFieldDTO.fromLanguageFieldList(breadcrumbs), Optional.of(context.contextType()),
+                        URI.create(context.relevanceId()), LanguageFieldDTO.fromLanguageField(relevanceName),
+                        resourceTypes, parentIds, context.isPrimary(), null);
+            });
+        }).toList();
 
-        return searchableTaxonomyContextDTOFactory.fromNodes(nodes, filterVisibles);
+        return contextDtos.stream().sorted(Comparator.comparing(TaxonomyContextDTO::path)).toList();
+    }
+
+    public List<Node> buildAllContexts() {
+        List<Node> rootNodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
+                Optional.empty(), Optional.empty(), Optional.of(Boolean.TRUE));
+        rootNodes.forEach(cachedUrlUpdaterService::updateCachedUrls);
+        return rootNodes;
     }
 }
