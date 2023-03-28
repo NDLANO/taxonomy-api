@@ -224,6 +224,9 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             // Use correct objects when copying
             Node parent = nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId());
             Node child = nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId());
+            if (parent == null || child == null) {
+                throw new NotFoundServiceException("Either parent or child not found");
+            }
             nodeConnection.setParent(parent);
             nodeConnection.setChild(child);
             NodeConnection connection = new NodeConnection(nodeConnection);
