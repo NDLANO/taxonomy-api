@@ -46,8 +46,7 @@ public class NodeConnectionDTO {
         this.connectionId = connection.getPublicId();
         this.isPrimary = true;
 
-        final var connectedObject = isParentConnection ? connection.getConnectedParent()
-                : connection.getConnectedChild();
+        final var connectedObject = isParentConnection ? connection.getParent() : connection.getChild();
 
         connectedObject.ifPresent(connected -> {
             this.targetId = connected.getPublicId();

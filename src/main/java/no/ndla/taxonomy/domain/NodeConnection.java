@@ -152,14 +152,6 @@ public class NodeConnection extends DomainEntity
         this.rank = rank;
     }
 
-    public Optional<Node> getConnectedParent() {
-        return Optional.ofNullable(parent);
-    }
-
-    public Optional<Node> getConnectedChild() {
-        return Optional.ofNullable(child);
-    }
-
     @PreRemove
     public void preRemove() {
         disassociate();
@@ -263,7 +255,7 @@ public class NodeConnection extends DomainEntity
         if (o == null || getClass() != o.getClass())
             return false;
         NodeConnection that = (NodeConnection) o;
-        return rank == that.rank && parent.getPublicId().equals(that.parent.getPublicId())
-                && child.getPublicId().equals(that.child.getPublicId()) && Objects.equals(relevance, that.relevance);
+        return rank == that.rank && Objects.equals(parent, that.parent) && Objects.equals(child, that.child)
+                && Objects.equals(relevance, that.relevance);
     }
 }

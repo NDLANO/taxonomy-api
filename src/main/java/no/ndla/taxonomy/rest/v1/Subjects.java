@@ -152,7 +152,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             childrenIds = recursiveNodeTreeService.getRecursiveNodes(subject).stream()
                     .map(RecursiveNodeTreeService.TreeElement::getId).collect(Collectors.toList());
         } else {
-            childrenIds = subject.getChildConnections().stream().map(NodeConnection::getConnectedChild)
+            childrenIds = subject.getChildConnections().stream().map(NodeConnection::getChild)
                     .filter(Optional::isPresent).map(Optional::get).map(Node::getPublicId).collect(Collectors.toList());
         }
 

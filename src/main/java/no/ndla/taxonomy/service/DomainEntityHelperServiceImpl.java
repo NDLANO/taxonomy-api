@@ -15,6 +15,7 @@ import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -201,8 +202,8 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             result = nodeRepository.save(existing);
 
             // delete orphans
-            List<URI> childIds = node.getChildren().stream().map(DomainEntity::getPublicId).toList();
-            result.getChildren().forEach(nodeConnection -> {
+            List<URI> childIds = node.getChildConnections().stream().map(DomainEntity::getPublicId).toList();
+            result.getChildConnections().forEach(nodeConnection -> {
                 if (!childIds.contains(nodeConnection.getPublicId())) {
                     // Connection deleted
                     deleteEntityByPublicId(nodeConnection.getPublicId());
@@ -221,11 +222,18 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         NodeConnection existing = nodeConnectionRepository.findByPublicId(nodeConnection.getPublicId());
         if (existing == null) {
             // Use correct objects when copying
-            nodeConnection.setParent(nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId()));
-            nodeConnection.setChild(nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId()));
+            Node parent = nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId());
+            Node child = nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId());
+            nodeConnection.setParent(parent);
+            nodeConnection.setChild(child);
             NodeConnection connection = new NodeConnection(nodeConnection);
-            connection.setPublicId(nodeConnection.getPublicId());
-            result = nodeConnectionRepository.save(connection);
+            try {
+                result = nodeConnectionRepository.save(connection);
+            } catch (DataIntegrityViolationException e) {
+                // connection created manually
+                existing = nodeConnectionRepository.findByParentIdAndChildId(parent.getId(), child.getId());
+                result = updateExisting(existing, nodeConnection);
+            }
         } else {
             if (existing.equals(nodeConnection)) {
                 return Optional.of(existing);
@@ -233,23 +241,26 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             logger.debug("Updating nodeconnection " + nodeConnection.getPublicId());
             existing.setParent(nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId()));
             existing.setChild(nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId()));
-            existing.setRank(nodeConnection.getRank());
-            existing.setVisible(nodeConnection.isVisible());
-            existing.setGrepCodes(nodeConnection.getGrepCodes());
-            existing.setCustomFields(nodeConnection.getCustomFields());
-            if (nodeConnection.getRelevance().isPresent()) {
-                existing.setRelevance(nodeConnection.getRelevance().get());
-            }
-            if (nodeConnection.isPrimary().isPresent()) {
-                existing.setPrimary(nodeConnection.isPrimary().get());
-            }
-
-            result = nodeConnectionRepository.save(existing);
+            result = updateExisting(existing, nodeConnection);
         }
         if (cleanUp) {
             buildPathsForEntity(result.getChild().get().getPublicId());
         }
         return Optional.of(result);
+    }
+
+    private NodeConnection updateExisting(NodeConnection existing, NodeConnection nodeConnection) {
+        existing.setRank(nodeConnection.getRank());
+        existing.setVisible(nodeConnection.isVisible());
+        existing.setGrepCodes(nodeConnection.getGrepCodes());
+        existing.setCustomFields(nodeConnection.getCustomFields());
+        if (nodeConnection.getRelevance().isPresent()) {
+            existing.setRelevance(nodeConnection.getRelevance().get());
+        }
+        if (nodeConnection.isPrimary().isPresent()) {
+            existing.setPrimary(nodeConnection.isPrimary().get());
+        }
+        return nodeConnectionRepository.save(existing);
     }
 
     private ResourceType ensureResourceTypesExists(ResourceType resourceType) {

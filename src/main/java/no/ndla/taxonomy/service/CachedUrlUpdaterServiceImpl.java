@@ -17,7 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,23 +44,21 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
 
         // Get all parent connections, append this entity publicId to the end of the actual path and add
         // all to the list to return
-        entity.getParentConnections()
-                .forEach(parentConnection -> parentConnection.getConnectedParent().ifPresent(parent -> {
-                    createContexts(parent).stream().map(parentContext -> {
-                        var breadcrumbs = LanguageField.listFromLists(parentContext.breadcrumbs(),
-                                LanguageField.fromNode(parent));
-                        return new Context(parentContext.rootId(), parentContext.rootName(),
-                                parentContext.path() + "/" + entity.getPublicId().getSchemeSpecificPart(), breadcrumbs,
-                                entity.getContextType(), Optional.of(parent.getPublicId().toString()),
-                                parentContext.isVisible() && entity.isVisible(),
-                                parentConnection.isPrimary().orElse(true),
-                                parentConnection.getRelevance()
-                                        .flatMap(relevance -> Optional.of(relevance.getPublicId().toString()))
-                                        .orElse("urn:relevance:core"),
-                                HashUtil.longHash(parentContext.rootId() + parentConnection.getPublicId()));
+        entity.getParentConnections().forEach(parentConnection -> parentConnection.getParent().ifPresent(parent -> {
+            createContexts(parent).stream().map(parentContext -> {
+                var breadcrumbs = LanguageField.listFromLists(parentContext.breadcrumbs(),
+                        LanguageField.fromNode(parent));
+                return new Context(parentContext.rootId(), parentContext.rootName(),
+                        parentContext.path() + "/" + entity.getPublicId().getSchemeSpecificPart(), breadcrumbs,
+                        entity.getContextType(), Optional.of(parent.getPublicId().toString()),
+                        parentContext.isVisible() && entity.isVisible(), parentConnection.isPrimary().orElse(true),
+                        parentConnection.getRelevance()
+                                .flatMap(relevance -> Optional.of(relevance.getPublicId().toString()))
+                                .orElse("urn:relevance:core"),
+                        HashUtil.longHash(parentContext.rootId() + parentConnection.getPublicId()));
 
-                    }).forEach(returnedContexts::add);
-                }));
+            }).forEach(returnedContexts::add);
+        }));
 
         return returnedContexts;
     }
@@ -70,7 +71,7 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
     @Transactional(propagation = Propagation.MANDATORY)
     public void updateCachedUrls(Node entity) {
         Set.copyOf(entity.getChildConnections())
-                .forEach(childEntity -> childEntity.getConnectedChild().ifPresent(this::updateCachedUrls));
+                .forEach(childEntity -> childEntity.getChild().ifPresent(this::updateCachedUrls));
 
         clearCachedUrls(entity);
 

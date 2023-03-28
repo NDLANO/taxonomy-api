@@ -262,28 +262,16 @@ public class Node extends DomainObject implements EntityWithMetadata {
      * return 0; }); }
      */
 
-    public Optional<NodeConnection> getParentConnection() {
-        return this.getParentConnections().stream().findFirst();
-    }
-
     public Collection<NodeConnection> getParentConnections() {
-        return parentConnections.stream().toList();
-    }
-
-    public Set<NodeConnection> getParentNodeConnections() {
-        return this.parentConnections;
+        return this.parentConnections.stream().toList();
     }
 
     public Collection<NodeConnection> getChildConnections() {
         return new HashSet<>(childConnections);
     }
 
-    public Collection<NodeConnection> getChildren() {
-        return childConnections;
-    }
-
     public Collection<NodeConnection> getResourceChildren() {
-        return childConnections.stream()
+        return this.childConnections.stream()
                 .filter(cc -> cc.getChild().map(child -> child.getNodeType() == NodeType.RESOURCE).orElse(false))
                 .collect(Collectors.toSet());
     }
@@ -314,7 +302,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
             throw new ChildNotFoundException(
                     "Resource with id " + this.getPublicId() + " is not of type " + resourceType.getPublicId());
 
-        resourceResourceTypes.remove(resourceResourceType.get());
+        this.resourceResourceTypes.remove(resourceResourceType.get());
     }
 
     private Optional<ResourceResourceType> getResourceType(ResourceType resourceType) {
@@ -380,11 +368,6 @@ public class Node extends DomainObject implements EntityWithMetadata {
     public Collection<Node> getChildNodes() {
         return childConnections.stream().map(NodeConnection::getChild).filter(Optional::isPresent).map(Optional::get)
                 .toList();
-    }
-
-    public Optional<Node> getParentNode() {
-        return parentConnections.stream().map(NodeConnection::getParent).filter(Optional::isPresent).map(Optional::get)
-                .findFirst();
     }
 
     public Collection<Node> getParentNodes() {
@@ -557,8 +540,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
             Optional<NodeConnection> connectionToChild) {
         var basePaths = oldBasePaths.stream().map(p -> p.add(node, connectionToChild)).toList();
 
-        var parentConnections = node.getParentNodeConnections().stream().filter(nc -> nc.getParent().isPresent())
-                .toList();
+        var parentConnections = node.getParentConnections().stream().filter(nc -> nc.getParent().isPresent()).toList();
         if (parentConnections.isEmpty()) {
             return basePaths;
         }
@@ -603,8 +585,9 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public List<String> buildCrumbs(String languageCode) {
-        List<String> parentCrumbs = this.getParentConnection().flatMap(parentConnection -> parentConnection
-                .getConnectedParent().map(parent -> buildCrumbs(parent, languageCode))).orElse(List.of());
+        List<String> parentCrumbs = this.getParentConnections().stream().findFirst().flatMap(
+                parentConnection -> parentConnection.getParent().map(parent -> buildCrumbs(parent, languageCode)))
+                .orElse(List.of());
 
         var crumbs = new ArrayList<>(parentCrumbs);
         var name = this.getTranslation(languageCode).map(Translation::getName).orElse(this.getName());
@@ -613,8 +596,9 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     private List<String> buildCrumbs(Node entity, String languageCode) {
-        List<String> parentCrumbs = entity.getParentConnection().flatMap(parentConnection -> parentConnection
-                .getConnectedParent().map(parent -> buildCrumbs(parent, languageCode))).orElse(List.of());
+        List<String> parentCrumbs = entity.getParentConnections().stream().findFirst().flatMap(
+                parentConnection -> parentConnection.getParent().map(parent -> buildCrumbs(parent, languageCode)))
+                .orElse(List.of());
 
         var crumbs = new ArrayList<>(parentCrumbs);
         var name = entity.getTranslation(languageCode).map(Translation::getName).orElse(entity.getName());

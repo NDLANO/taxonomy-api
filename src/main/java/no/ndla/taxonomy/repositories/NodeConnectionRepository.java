@@ -14,10 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 
 import java.net.URI;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnection> {
     @Query("""
@@ -103,4 +100,14 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
     }
 
     Optional<NodeConnection> findFirstByPublicId(URI publicId);
+
+    @Query("""
+            SELECT DISTINCT nc
+            FROM NodeConnection nc
+            JOIN FETCH nc.parent n
+            JOIN FETCH nc.child c
+            WHERE nc.parent.id = :parentId
+            AND nc.child.id = :childId
+            """)
+    NodeConnection findByParentIdAndChildId(Integer parentId, Integer childId);
 }
