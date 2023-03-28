@@ -29,7 +29,7 @@ public class InternalController {
     @Operation(summary = "Updates contexts for all roots")
     @Transactional
     @Async
-    //@PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
+    @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public void buildAllContexts() {
         nodeService.buildAllContexts();
     }
