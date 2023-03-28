@@ -139,7 +139,7 @@ public class NodeTest {
 
     @Test
     public void addGetAndRemoveParentTopicSubtopics() {
-        assertFalse(node.getParentNode().isPresent());
+        assertTrue(node.getParentNodes().isEmpty());
 
         final var connection1 = mock(NodeConnection.class);
         final var connection2 = mock(NodeConnection.class);
@@ -152,8 +152,8 @@ public class NodeTest {
         when(connection1.getChild()).thenReturn(Optional.of(node));
         node.addParentConnection(connection1);
 
-        assertTrue(node.getParentConnection().isPresent());
-        assertSame(connection1, node.getParentConnection().orElseThrow());
+        assertFalse(node.getParentConnections().isEmpty());
+        assertSame(connection1, node.getParentConnections().stream().findFirst().orElseThrow());
 
         try {
             node.addParentConnection(connection2);
@@ -163,7 +163,7 @@ public class NodeTest {
 
         node.removeParentConnection(connection1);
         verify(connection1).disassociate();
-        assertFalse(node.getParentConnection().isPresent());
+        assertTrue(node.getParentConnections().isEmpty());
     }
 
     @Test
@@ -221,12 +221,12 @@ public class NodeTest {
         when(nodeConnection.getChild()).thenReturn(Optional.of(node));
         when(nodeConnection.getParent()).thenReturn(Optional.of(parent1));
 
-        assertFalse(node.getParentNode().isPresent());
+        assertTrue(node.getParentNodes().isEmpty());
 
         node.addParentConnection(nodeConnection);
 
-        assertTrue(node.getParentNode().isPresent());
-        assertSame(parent1, node.getParentNode().orElseThrow());
+        assertFalse(node.getParentNodes().isEmpty());
+        assertSame(parent1, node.getParentNodes().stream().findFirst().orElseThrow());
     }
 
     @Test
@@ -252,7 +252,7 @@ public class NodeTest {
         node.addChildConnection(NodeResource3);
 
         assertEquals(2, node.getResourceChildren().size());
-        assertEquals(3, node.getChildren().size());
+        assertEquals(3, node.getChildConnections().size());
         assertEquals(2, node.getResources().size());
         assertTrue(node.getResources().containsAll(Set.of(resource1, resource2)));
     }

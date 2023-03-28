@@ -157,8 +157,8 @@ public class UrlResolverServiceImpl implements UrlResolverService {
         final var lastEntity = new AtomicReference<Node>();
         for (final var entity : entities) {
             if (lastEntity.get() != null) {
-                if (entity.getParentConnections().stream().noneMatch(parentConnection -> parentConnection
-                        .getConnectedParent().filter(parent -> parent.equals(lastEntity.get())).isPresent())) {
+                if (entity.getParentConnections().stream().noneMatch(parentConnection -> parentConnection.getParent()
+                        .filter(parent -> parent.equals(lastEntity.get())).isPresent())) {
                     throw new NotFoundServiceException(
                             lastEntity.get().getPublicId() + " has no child with ID " + entity.getPublicId());
                 }

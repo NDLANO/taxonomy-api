@@ -8,7 +8,10 @@
 package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.repositories.ChangelogRepository;
+import no.ndla.taxonomy.repositories.NodeConnectionRepository;
+import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -297,10 +300,10 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertNotNull(updated);
         assertNotEquals(updated.getId(), resource.getId());
         assertNotNull(updated.getCachedPaths());
-        assertEquals(2, updated.getParentNodeConnections().size()); // Should be used twice
-        assertAnyTrue(updated.getParentNodeConnections(),
+        assertEquals(2, updated.getParentConnections().size()); // Should be used twice
+        assertAnyTrue(updated.getParentConnections(),
                 nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:1")));
-        assertAnyTrue(updated.getParentNodeConnections(),
+        assertAnyTrue(updated.getParentConnections(),
                 nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:2")));
         assertAnyTrue(updated.getAllPaths(), path -> path.equals("/subject:1/topic:1/resource:1"));
         assertAnyTrue(updated.getAllPaths(), path -> path.equals("/subject:1/topic:2/resource:1"));
@@ -344,8 +347,8 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertNotNull(updatedChild);
         assertFalse(updatedChild.getMetadata().isVisible());
         assertFalse(updatedChild.getResourceChildren().isEmpty());
-        assertTrue(updatedChild.getParentNode().isPresent());
-        assertEquals(node.getPublicId(), updatedChild.getParentNode().get().getPublicId());
+        assertFalse(updatedChild.getParentNodes().isEmpty());
+        assertEquals(node.getPublicId(), updatedChild.getParentNodes().stream().findFirst().get().getPublicId());
         assertAnyTrue(updatedChild.getAllPaths(), path -> path.equals("/subject:1/node:1"));
     }
 
@@ -388,10 +391,10 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
         assertNotNull(updated);
         assertNotNull(updated.getCachedPaths());
-        assertEquals(2, updated.getParentNodeConnections().size()); // Should be used twice
-        assertAnyTrue(updated.getParentNodeConnections(),
+        assertEquals(2, updated.getParentConnections().size()); // Should be used twice
+        assertAnyTrue(updated.getParentConnections(),
                 nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:1")));
-        assertAnyTrue(updated.getParentNodeConnections(),
+        assertAnyTrue(updated.getParentConnections(),
                 nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:2")));
         assertAnyTrue(updated.getAllPaths(), path -> path.equals("/subject:1/topic:1/resource:1"));
         assertAnyTrue(updated.getAllPaths(), path -> path.equals("/subject:2/topic:2/resource:1"));
@@ -465,10 +468,10 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
         assertNotNull(updated);
         assertNotNull(updated.getCachedPaths());
-        assertEquals(2, updated.getParentNodeConnections().size()); // Should be used twice
-        assertAnyTrue(updated.getParentNodeConnections(),
+        assertEquals(2, updated.getParentConnections().size()); // Should be used twice
+        assertAnyTrue(updated.getParentConnections(),
                 nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:1")));
-        assertAnyTrue(updated.getParentNodeConnections(),
+        assertAnyTrue(updated.getParentConnections(),
                 nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:2")));
         assertAnyTrue(updated.getAllPaths(), path -> path.equals("/subject:1/topic:1/resource:1"));
         assertAnyTrue(updated.getAllPaths(), path -> path.equals("/subject:2/topic:2/resource:1"));

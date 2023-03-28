@@ -20,6 +20,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import javax.persistence.EntityManager;
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,7 +45,7 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_get_single_node() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1").child(t -> t
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("maths").publicId("urn:subject:1").child(t -> t
                 .nodeType(NodeType.TOPIC).name("trigonometry").contentUri("urn:article:1").publicId("urn:topic:1")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1");
@@ -53,6 +54,7 @@ public class NodesTest extends RestTest {
         assertEquals("trigonometry", node.getName());
         assertEquals("urn:article:1", node.getContentUri().toString());
         assertEquals("/subject:1/topic:1", node.getPath());
+        assertEquals(List.of("maths", "trigonometry"), node.getBreadcrumbs());
 
         assertNotNull(node.getMetadata());
         assertTrue(node.getMetadata().isVisible());
@@ -84,6 +86,7 @@ public class NodesTest extends RestTest {
             final var nodes = testUtils.getObject(NodeDTO[].class, response);
             assertEquals(1, nodes.length);
             assertEquals("photo synthesis", nodes[0].getName());
+            assertEquals(List.of("Basic science", "photo synthesis"), nodes[0].getBreadcrumbs());
         }
 
         {
@@ -91,6 +94,7 @@ public class NodesTest extends RestTest {
             final var nodes = testUtils.getObject(NodeDTO[].class, response);
             assertEquals(1, nodes.length);
             assertEquals("trigonometry", nodes[0].getName());
+            assertEquals(List.of("Maths", "trigonometry"), nodes[0].getBreadcrumbs());
         }
     }
 

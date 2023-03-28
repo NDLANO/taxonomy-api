@@ -60,35 +60,36 @@ public class NodeDTO {
     public NodeDTO() {
     }
 
-    public NodeDTO(Optional<Node> root, Node entity, String languageCode) {
-        this.id = entity.getPublicId();
-        this.contentUri = entity.getContentUri();
-        this.paths = entity.getAllPaths();
+    public NodeDTO(Optional<Node> root, Node node, String languageCode) {
+        this.id = node.getPublicId();
+        this.contentUri = node.getContentUri();
+        this.paths = node.getAllPaths();
 
-        this.path = entity.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
-        root.ifPresent(r -> this.path = entity.getPathByContext(r.getPublicId()).orElse(""));
+        this.path = node.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
+        root.ifPresent(r -> this.path = node.getPathByContext(r.getPublicId()).orElse(""));
 
-        var translations = entity.getTranslations();
+        var translations = node.getTranslations();
         this.translations = translations.stream().map(TranslationDTO::new)
                 .collect(Collectors.toCollection(TreeSet::new));
         this.supportedLanguages = this.translations.stream().map(t -> t.language)
                 .collect(Collectors.toCollection(TreeSet::new));
 
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
-                .map(Translation::getName).orElse(entity.getName());
+                .map(Translation::getName).orElse(node.getName());
 
-        Optional<Relevance> relevance = entity.getParentConnection().flatMap(NodeConnection::getRelevance);
+        Optional<Relevance> relevance = node.getParentConnections().stream().findFirst()
+                .flatMap(NodeConnection::getRelevance);
         this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
 
-        this.metadata = new MetadataDto(entity.getMetadata());
+        this.metadata = new MetadataDto(node.getMetadata());
 
-        this.breadcrumbs = entity.buildCrumbs(languageCode);
+        this.breadcrumbs = node.buildCrumbs(languageCode);
 
-        this.resourceTypes = entity.getResourceResourceTypes().stream()
+        this.resourceTypes = node.getResourceResourceTypes().stream()
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
                 .collect(Collectors.toCollection(TreeSet::new));
 
-        this.nodeType = entity.getNodeType();
+        this.nodeType = node.getNodeType();
 
     }
 

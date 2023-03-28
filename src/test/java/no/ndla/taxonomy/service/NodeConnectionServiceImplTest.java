@@ -256,9 +256,9 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
 
         // Just verifies the pre-conditions of the created objects that is used for the test
         assertTrue(topic1.getChildConnections().containsAll(Set.of(topic1subtopic1, topic1subtopic2, topic1subtopic3)));
-        assertSame(topic1subtopic1, subtopic1.getParentConnection().orElseThrow());
-        assertSame(topic1subtopic2, subtopic2.getParentConnection().orElseThrow());
-        assertSame(topic1subtopic3, subtopic3.getParentConnection().orElseThrow());
+        assertSame(topic1subtopic1, subtopic1.getParentConnections().stream().findFirst().orElseThrow());
+        assertSame(topic1subtopic2, subtopic2.getParentConnections().stream().findFirst().orElseThrow());
+        assertSame(topic1subtopic3, subtopic3.getParentConnections().stream().findFirst().orElseThrow());
         assertEquals(3, topic1.getChildConnections().size());
 
         reset(cachedUrlUpdaterService);
@@ -271,18 +271,18 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         assertFalse(topic1subtopic1.getChild().isPresent());
         assertFalse(topic1.getChildConnections().contains(topic1subtopic1));
         assertEquals(2, topic1.getChildConnections().size());
-        assertFalse(subtopic1.getParentConnection().isPresent());
-        assertSame(topic1subtopic2, subtopic2.getParentConnection().orElseThrow());
-        assertSame(topic1subtopic3, subtopic3.getParentConnection().orElseThrow());
+        assertFalse(subtopic1.getParentConnections().stream().findFirst().isPresent());
+        assertSame(topic1subtopic2, subtopic2.getParentConnections().stream().findFirst().orElseThrow());
+        assertSame(topic1subtopic3, subtopic3.getParentConnections().stream().findFirst().orElseThrow());
 
         service.disconnectParentChild(topic1, subtopic2);
         assertFalse(topic1subtopic2.getParent().isPresent());
         assertFalse(topic1subtopic2.getChild().isPresent());
         assertFalse(topic1.getChildConnections().contains(topic1subtopic2));
         assertEquals(1, topic1.getChildConnections().size());
-        assertFalse(subtopic1.getParentConnection().isPresent());
-        assertFalse(subtopic2.getParentConnection().isPresent());
-        assertSame(topic1subtopic3, subtopic3.getParentConnection().orElseThrow());
+        assertFalse(subtopic1.getParentConnections().stream().findFirst().isPresent());
+        assertFalse(subtopic2.getParentConnections().stream().findFirst().isPresent());
+        assertSame(topic1subtopic3, subtopic3.getParentConnections().stream().findFirst().orElseThrow());
     }
 
     @Test
@@ -321,7 +321,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         assertFalse(topic1resource1.getResource().isPresent());
         assertFalse(topic1resource1.getParent().isPresent());
         assertFalse(topic1.getResourceChildren().contains(topic1resource1));
-        assertFalse(resource1.getParentNodeConnections().contains(topic1resource1));
+        assertFalse(resource1.getParentConnections().contains(topic1resource1));
 
         service.disconnectParentChildConnection(topic2resource1);
         assertTrue(topic3resource1.isPrimary().orElseThrow());

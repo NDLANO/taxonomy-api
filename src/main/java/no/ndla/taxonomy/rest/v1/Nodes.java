@@ -171,7 +171,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             childrenIds = recursiveNodeTreeService.getRecursiveNodes(node, nodeTypes).stream()
                     .map(RecursiveNodeTreeService.TreeElement::getId).collect(Collectors.toList());
         } else {
-            childrenIds = node.getChildren().stream().map(NodeConnection::getChild).filter(Optional::isPresent)
+            childrenIds = node.getChildConnections().stream().map(NodeConnection::getChild).filter(Optional::isPresent)
                     .map(Optional::get).filter(n -> nodeTypes.contains(n.getNodeType())).map(Node::getPublicId)
                     .collect(Collectors.toList());
         }

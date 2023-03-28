@@ -234,7 +234,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         final var node = nodeRepository.findFirstByPublicId(nodePublicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
         if (recursive) {
-            node.getChildren().forEach(nc -> {
+            node.getChildConnections().forEach(nc -> {
                 nc.getChild().filter(n -> n.getNodeType() != NodeType.RESOURCE)
                         .map(n -> makeAllResourcesPrimary(n.getPublicId(), true));
             });
@@ -287,7 +287,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         if (!cleanUp) {
             changelogRepository.save(new Changelog(source, target, nodeId, false));
         }
-        for (NodeConnection connection : node.getChildren()) {
+        for (NodeConnection connection : node.getChildConnections()) {
             if (connection.getChild().isPresent()) {
                 Node child = connection.getChild().get();
                 publishNode(child.getPublicId(), sourceId, targetId, false, cleanUp);

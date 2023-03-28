@@ -420,6 +420,7 @@ public class ResourcesTest extends RestTest {
         final var result = testUtils.getObject(NodeWithParents.class, response);
         assertNotNull(result.getPaths());
         assertEquals(2, result.getPaths().size());
+        assertEquals(3, result.getBreadcrumbs().size());
     }
 
     @Test
@@ -430,6 +431,7 @@ public class ResourcesTest extends RestTest {
         final var result = testUtils.getObject(NodeWithParents.class, response);
         assertNotNull(result.getPaths());
         assertEquals(2, result.getPaths().size());
+        assertEquals(3, result.getBreadcrumbs().size());
     }
 
     @Test
