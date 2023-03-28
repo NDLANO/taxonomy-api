@@ -347,7 +347,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                         LanguageFieldDTO.fromLanguageField(context.rootName()), context.path(),
                         LanguageFieldDTO.fromLanguageFieldList(breadcrumbs), Optional.of(context.contextType()),
                         URI.create(context.relevanceId()), LanguageFieldDTO.fromLanguageField(relevanceName),
-                        resourceTypes, parentIds, context.isPrimary(), null);
+                        resourceTypes, parentIds, context.isPrimary(), context.contextId());
             });
         }).toList();
 

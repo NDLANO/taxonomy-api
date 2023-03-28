@@ -58,8 +58,8 @@ public class NodeDTO {
     public NodeType nodeType;
 
     @JsonProperty
-    @Schema(description = "An hash unique for this context.")
-    private String contextHash;
+    @Schema(description = "An id unique for this context.")
+    private String contextId;
 
     public NodeDTO() {
     }
@@ -88,7 +88,7 @@ public class NodeDTO {
             this.breadcrumbs = LanguageField.listFromLists(context.breadcrumbs(), LanguageField.fromNode(entity))
                     .get(languageCode);
             this.relevanceId = URI.create(context.relevanceId());
-            this.contextHash = context.contextId();
+            this.contextId = context.contextId();
         });
 
         var translations = entity.getTranslations();
