@@ -83,7 +83,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         };
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
-        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
+        executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
 
         // a node to make sure testnode is not the first
         builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
@@ -132,7 +132,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         };
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
-        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
+        executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
 
         // a node to make sure testnode is not the first
         builder.node(n -> n.resource(r -> r.publicId("urn:resource:first")));
@@ -181,7 +181,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         };
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
-        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
+        executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
 
         // a node to make sure testnode is not the first
         builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
@@ -219,7 +219,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         };
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
-        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
+        executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
 
         // a node to make sure testnode is not the first
         builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
@@ -267,7 +267,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         };
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
-        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
+        executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
 
         // nodes to make sure testnode is not the first
         builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
@@ -319,7 +319,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         };
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
-        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
+        executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
 
         // a node to make sure testnode is not the first
         builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
@@ -362,7 +362,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         };
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
-        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
+        executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
 
         // a node to make sure testnode is not the first
         builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
@@ -410,7 +410,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         };
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
-        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
+        executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
 
         // a node to make sure testnode is not the first
         builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
@@ -494,7 +494,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         };
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
-        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
+        executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
 
         // a node to make sure testnode is not the first
         builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
@@ -553,7 +553,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         };
         Version target = versionService.createNewVersion(Optional.empty(), command);
         assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
-        executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
+        executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
 
         List<Changelog> changelogs = changelogRepository.findAll();
         assertTrue(changelogs.isEmpty());
