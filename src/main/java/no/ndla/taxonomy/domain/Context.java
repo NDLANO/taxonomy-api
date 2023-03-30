@@ -36,6 +36,6 @@ import java.util.Optional;
  *            Hash of root publicId + nodeConnection publicId. Unique for this context.
  */
 public record Context(String rootId, LanguageField<String> rootName, String path,
-        LanguageField<List<String>> breadcrumbs, String contextType, Optional<String> parentId, boolean isVisible,
-        boolean isPrimary, String relevanceId, String contextId) {
+        LanguageField<List<String>> breadcrumbs, Optional<String> contextType, Optional<String> parentId,
+        boolean isVisible, boolean isPrimary, String relevanceId, String contextId) {
 }

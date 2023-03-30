@@ -331,8 +331,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         var nodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
                 Optional.empty(), contentURI, Optional.empty(), Optional.empty());
         var contextDtos = nodes.stream().flatMap(node -> {
-            var parentIds = node.getContexts().stream().map(Context::parentId)
-                    .map(s -> s.map(URI::create).orElseGet(() -> URI.create(""))).toList();
+            var parentIds = node.getContexts().stream().map(Context::parentId).flatMap(s -> s.stream().map(URI::create))
+                    .toList();
             var contexts = filterVisibles
                     ? node.getContexts().stream().filter(Context::isVisible).collect(Collectors.toSet())
                     : node.getContexts();
@@ -347,7 +347,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 var breadcrumbs = context.breadcrumbs();
                 return new TaxonomyContextDTO(node.getPublicId(), URI.create(context.rootId()),
                         LanguageFieldDTO.fromLanguageField(context.rootName()), context.path(),
-                        LanguageFieldDTO.fromLanguageFieldList(breadcrumbs), Optional.of(context.contextType()),
+                        LanguageFieldDTO.fromLanguageFieldList(breadcrumbs), context.contextType(),
                         URI.create(context.relevanceId()), LanguageFieldDTO.fromLanguageField(relevanceName),
                         resourceTypes, parentIds, context.isPrimary(), context.contextId());
             });

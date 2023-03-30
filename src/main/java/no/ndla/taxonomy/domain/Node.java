@@ -415,14 +415,14 @@ public class Node extends DomainObject implements EntityWithMetadata {
         return contentUri;
     }
 
-    public String getContextType() {
+    public Optional<String> getContextType() {
         if (contentUri == null)
-            return null;
+            return Optional.empty();
         if (contentUri.getSchemeSpecificPart().startsWith("learningpath"))
-            return "learningpath";
+            return Optional.of("learningpath");
         if (nodeType.equals(NodeType.TOPIC))
-            return "topic-article";
-        return "standard";
+            return Optional.of("topic-article");
+        return Optional.of("standard");
     }
 
     public void setNodeType(NodeType nodeType) {
