@@ -66,7 +66,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         return nodeService.getNodes(language, Optional.of(List.of(NodeType.SUBJECT)), Optional.empty(),
-                Optional.empty(), metadataFilters);
+                Optional.empty(), Optional.empty(), metadataFilters);
     }
 
     @GetMapping("/search")
@@ -99,7 +99,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         var ids = nodeRepository.findIdsByTypePaginated(PageRequest.of(page.get() - 1, pageSize.get()),
                 NodeType.SUBJECT);
         var results = nodeRepository.findByIds(ids.getContent());
-        var contents = results.stream().map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb")))
+        var contents = results.stream()
+                .map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb"), Optional.empty()))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
@@ -110,7 +111,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     public NodeDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
         return nodeRepository.findFirstByPublicId(id).map(subject -> {
-            return new NodeDTO(Optional.empty(), subject, language.orElse(Constants.DefaultLanguage));
+            return new NodeDTO(Optional.empty(), subject, language.orElse(Constants.DefaultLanguage), Optional.empty());
         }).orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
     }
 

@@ -56,7 +56,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         return nodeService.getNodes(language, Optional.of(List.of(NodeType.TOPIC)), contentUri, Optional.empty(),
-                metadataFilters);
+                Optional.empty(), metadataFilters);
     }
 
     @GetMapping("/search")
@@ -88,7 +88,8 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
         var ids = nodeRepository.findIdsByTypePaginated(PageRequest.of(page.get() - 1, pageSize.get()), NodeType.TOPIC);
         var results = nodeRepository.findByIds(ids.getContent());
-        var contents = results.stream().map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb")))
+        var contents = results.stream()
+                .map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb"), Optional.empty()))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }

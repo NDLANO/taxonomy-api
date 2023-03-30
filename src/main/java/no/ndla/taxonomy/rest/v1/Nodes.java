@@ -77,10 +77,12 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Only root level") @RequestParam(value = "isRoot", required = false) Optional<Boolean> isRoot,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
-            @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
+            @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible,
+            @Parameter(description = "Filter by context id") @RequestParam(value = "contextId", required = false) Optional<String> contextId) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         var defaultNodeTypes = getDefaultNodeTypes(nodeType, contentUri, isRoot, metadataFilters);
-        return nodeService.getNodes(language, Optional.of(defaultNodeTypes), contentUri, isRoot, metadataFilters);
+        return nodeService.getNodes(language, Optional.of(defaultNodeTypes), contentUri, contextId, isRoot,
+                metadataFilters);
     }
 
     @GetMapping("/search")
@@ -113,7 +115,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
         var ids = nodeRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
         var results = nodeRepository.findByIds(ids.getContent());
-        var contents = results.stream().map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb")))
+        var contents = results.stream()
+                .map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb"), Optional.empty()))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
@@ -123,8 +126,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @Transactional(readOnly = true)
     public NodeDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) String language) {
-        return new NodeDTO(Optional.empty(), nodeRepository.findFirstByPublicId(id)
-                .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found")), language);
+        return new NodeDTO(Optional.empty(), nodeRepository.findFirstByPublicId(id).orElseThrow(
+                () -> new NotFoundHttpResponseException("Node was not found")), language, Optional.empty());
     }
 
     @PostMapping
@@ -184,10 +187,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         children.stream().map(nodeConnection -> new NodeChildDTO(Optional.of(node), nodeConnection,
                 language.orElse(Constants.DefaultLanguage))).forEach(returnList::add);
 
-        var filtered = returnList.stream()
-                .filter(entityWithPathChildDTO -> childrenIds.contains(entityWithPathChildDTO.getParentId())
-                        || node.getPublicId().equals(entityWithPathChildDTO.getParentId()))
-                .toList();
+        var filtered = returnList.stream().filter(childDTO -> childrenIds.contains(childDTO.getParentId())
+                || node.getPublicId().equals(childDTO.getParentId())).toList();
 
         return treeSorter.sortList(filtered).stream().distinct().collect(Collectors.toList());
     }

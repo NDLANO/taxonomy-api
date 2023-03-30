@@ -64,7 +64,7 @@ public class NodeDTO {
     public NodeDTO() {
     }
 
-    public NodeDTO(Optional<Node> root, Node entity, String languageCode) {
+    public NodeDTO(Optional<Node> root, Node entity, String languageCode, Optional<String> contextId) {
         this.id = entity.getPublicId();
         this.contentUri = entity.getContentUri();
 
@@ -78,17 +78,13 @@ public class NodeDTO {
                 .flatMap(NodeConnection::getRelevance);
         this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
 
-        // pick correct context if present
-        var primaryContext = entity.getPrimaryContext();
-        if (root.isPresent()) {
-            primaryContext = entity.getContextByRoot(root.get().getPublicId().toString());
-        }
-        primaryContext.ifPresent(context -> {
-            this.path = context.path();
-            this.breadcrumbs = LanguageField.listFromLists(context.breadcrumbs(), LanguageField.fromNode(entity))
+        Optional<Context> context = entity.pickContext(contextId, root);
+        context.ifPresent(ctx -> {
+            this.path = ctx.path();
+            this.breadcrumbs = LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity))
                     .get(languageCode);
-            this.relevanceId = URI.create(context.relevanceId());
-            this.contextId = context.contextId();
+            this.relevanceId = URI.create(ctx.relevanceId());
+            this.contextId = ctx.contextId();
         });
 
         var translations = entity.getTranslations();

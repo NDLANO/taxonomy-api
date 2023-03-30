@@ -99,10 +99,11 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public List<NodeDTO> getNodes(Optional<String> language, Optional<List<NodeType>> nodeType,
-            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+            Optional<URI> contentUri, Optional<String> contextId, Optional<Boolean> isRoot,
+            MetadataFilters metadataFilters) {
         final List<Node> filtered = nodeRepository.findByNodeType(nodeType, metadataFilters.getVisible(),
-                metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, isRoot);
-        return filtered.stream().distinct().map(n -> new NodeDTO(Optional.empty(), n, language.get()))
+                metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, contextId, isRoot);
+        return filtered.stream().distinct().map(n -> new NodeDTO(Optional.empty(), n, language.get(), contextId))
                 .collect(toList());
     }
 
@@ -114,7 +115,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
             final var nodes = nodeRepository.findByIdsFiltered(idChunk, metadataFilters.getVisible(),
                     metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, isRoot);
-            var dtos = nodes.stream().map(node -> new NodeDTO(Optional.empty(), node, language.get())).toList();
+            var dtos = nodes.stream().map(node -> new NodeDTO(Optional.empty(), node, language.get(), Optional.empty()))
+                    .toList();
             listToReturn.addAll(dtos);
         });
 
@@ -145,7 +147,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     public NodeDTO getNode(URI publicId, Optional<String> language) {
         var node = getNode(publicId);
-        return new NodeDTO(Optional.empty(), node, language.orElse(Constants.DefaultLanguage));
+        return new NodeDTO(Optional.empty(), node, language.orElse(Constants.DefaultLanguage), Optional.empty());
     }
 
     public Node getNode(URI publicId) {
@@ -232,7 +234,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     @Override
     public NodeDTO createDTO(Node node, String languageCode) {
-        return new NodeDTO(Optional.empty(), node, languageCode);
+        return new NodeDTO(Optional.empty(), node, languageCode, Optional.empty());
     }
 
     public SearchResultDTO<NodeDTO> searchByNodeType(Optional<String> query, Optional<List<String>> ids,
@@ -327,7 +329,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     public List<TaxonomyContextDTO> getSearchableByContentUri(Optional<URI> contentURI, boolean filterVisibles) {
         var nodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
-                Optional.empty(), contentURI, Optional.empty());
+                Optional.empty(), contentURI, Optional.empty(), Optional.empty());
         var contextDtos = nodes.stream().flatMap(node -> {
             var parentIds = node.getContexts().stream().map(Context::parentId)
                     .map(s -> s.map(URI::create).orElseGet(() -> URI.create(""))).toList();
@@ -356,7 +358,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     public List<Node> buildAllContexts() {
         List<Node> rootNodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
-                Optional.empty(), Optional.empty(), Optional.of(Boolean.TRUE));
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(Boolean.TRUE));
         rootNodes.forEach(cachedUrlUpdaterService::updateCachedUrls);
         return rootNodes;
     }

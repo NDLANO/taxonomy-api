@@ -218,10 +218,28 @@ public class Node extends DomainObject implements EntityWithMetadata {
         }).map(CachedPath::getPath).findFirst();
     }
 
-    public Optional<Context> getContextByRoot(String contextPublicId) {
-        var ctx = getContexts();
-        var maybeContext = ctx.stream().filter(c -> c.rootId().equals(contextPublicId)).findFirst();
-        return maybeContext.or(() -> ctx.stream().sorted((context1, context2) -> {
+    /**
+     * Picks a context based on parameters. If no parameters or none matching, pick first primary
+     * 
+     * @param contextId
+     *            If this is present, pick the context with corresponding id
+     * @param root
+     *            If this is present, and no contextId, pick context with this publicId as root.
+     * 
+     * @return
+     */
+    public Optional<Context> pickContext(Optional<String> contextId, Optional<Node> root) {
+        var contexts = getContexts();
+        var maybeContext = contextId.flatMap(id -> contexts.stream().filter(c -> c.contextId().equals(id)).findFirst());
+        if (maybeContext.isPresent()) {
+            return maybeContext;
+        }
+        var maybeRoot = root.flatMap(
+                node -> contexts.stream().filter(c -> c.contextId().equals(node.getPublicId().toString())).findFirst());
+        if (maybeRoot.isPresent()) {
+            return maybeRoot;
+        }
+        return contexts.stream().min((context1, context2) -> {
 
             if (context1.isPrimary() && context2.isPrimary()) {
                 return 0;
@@ -235,7 +253,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
                 return 1;
             }
             return 0;
-        }).findFirst());
+        });
     }
 
     public TreeSet<String> getAllPaths() {
