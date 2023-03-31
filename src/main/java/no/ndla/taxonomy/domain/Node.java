@@ -219,12 +219,13 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     /**
-     * Picks a context based on parameters. If no parameters or none matching, pick first primary
+     * Picks a context based on parameters. If no parameters or no root matching, pick by matching path and primary
      * 
      * @param contextId
-     *            If this is present, pick the context with corresponding id
+     *            If this is present, return the context with corresponding id
      * @param root
-     *            If this is present, and no contextId, pick context with this publicId as root.
+     *            If this is present, return context with this publicId as root. Else pick context containing roots
+     *            publicId.
      * 
      * @return
      */
@@ -235,21 +236,37 @@ public class Node extends DomainObject implements EntityWithMetadata {
             return maybeContext;
         }
         var maybeRoot = root.flatMap(
-                node -> contexts.stream().filter(c -> c.contextId().equals(node.getPublicId().toString())).findFirst());
+                node -> contexts.stream().filter(c -> c.rootId().equals(node.getPublicId().toString())).findFirst());
         if (maybeRoot.isPresent()) {
             return maybeRoot;
         }
         return contexts.stream().min((context1, context2) -> {
+            final var inPath1 = context1.path()
+                    .contains(root.map(node -> node.getPublicId().getSchemeSpecificPart()).orElse("other"));
+            final var inPath2 = context2.path()
+                    .contains(root.map(node -> node.getPublicId().getSchemeSpecificPart()).orElse("other"));
 
-            if (context1.isPrimary() && context2.isPrimary()) {
-                return 0;
+            if (inPath1 && inPath2) {
+                if (context1.isPrimary() && context2.isPrimary()) {
+                    return 0;
+                }
+                if (context1.isPrimary()) {
+                    return -1;
+                }
+                if (context2.isPrimary()) {
+                    return 1;
+                }
             }
-
-            if (context1.isPrimary()) {
+            if (inPath1 && !inPath2) {
                 return -1;
             }
-
-            if (context2.isPrimary()) {
+            if (inPath2 && !inPath1) {
+                return 1;
+            }
+            if (context1.isPrimary() && !context2.isPrimary()) {
+                return -1;
+            }
+            if (context2.isPrimary() && !context1.isPrimary()) {
                 return 1;
             }
             return 0;

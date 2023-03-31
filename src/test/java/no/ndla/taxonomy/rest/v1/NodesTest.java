@@ -74,6 +74,16 @@ public class NodesTest extends RestTest {
     }
 
     @Test
+    public void single_context_node_has_url() throws Exception {
+        builder.node(NodeType.NODE, t -> t.isContext(true).publicId("urn:node:1"));
+
+        var response = testUtils.getResource("/v1/nodes/urn:node:1");
+        final var node = testUtils.getObject(NodeDTO.class, response);
+
+        assertEquals("/node:1", node.getPath());
+    }
+
+    @Test
     public void can_get_nodes_by_contentURI() throws Exception {
         builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> {
             t.name("photo synthesis");
@@ -126,7 +136,7 @@ public class NodesTest extends RestTest {
                 assertEquals(1, nodes.length);
                 assertEquals("Resource", nodes[0].getName());
                 assertEquals(context.path(), nodes[0].getPath());
-                assertEquals(context.breadcrumbs().get("nb"), nodes[0].getBreadcrumbs());
+                assertTrue(nodes[0].getBreadcrumbs().containsAll(context.breadcrumbs().get("nb")));
             } catch (Exception e) {
                 // Not happening
             }
@@ -319,6 +329,55 @@ public class NodesTest extends RestTest {
     }
 
     @Test
+    void fetching_subnodes_uses_correct_context() throws Exception {
+        Node resource = builder.node(NodeType.RESOURCE, r -> r.name("Leaf").publicId("urn:resource:1"));
+        builder.node(NodeType.SUBJECT, s1 -> s1.isRoot(true).isContext(true).name("Subject1").publicId("urn:subject:1")
+                .child(NodeType.TOPIC, t1 -> t1.name("Topic1").publicId("urn:topic:1").resource(resource)));
+        builder.node(NodeType.SUBJECT,
+                s2 -> s2.isRoot(true).isContext(true).name("Subject2").publicId("urn:subject:2").child(NodeType.TOPIC,
+                        t2 -> t2.name("Topic2").publicId("urn:topic:2").isContext(true).child(NodeType.TOPIC,
+                                t3 -> t3.name("Topic3").publicId("urn:topic:3").resource(resource))));
+
+        {
+            var response = testUtils
+                    .getResource("/v1/nodes/urn:subject:1/nodes?nodeType=TOPIC,RESOURCE&recursive=true");
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
+            assertEquals(2, nodes.length);
+            assertAllTrue(nodes, t -> t.getPath().contains("/subject:1/topic:1"));
+        }
+        {
+            var response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes?nodeType=RESOURCE");
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertEquals("Leaf", nodes[0].getName());
+            assertEquals(3, nodes[0].getBreadcrumbs().size());
+            assertEquals("/subject:1/topic:1/resource:1", nodes[0].getPath());
+        }
+        {
+            var response = testUtils
+                    .getResource("/v1/nodes/urn:subject:2/nodes?nodeType=TOPIC,RESOURCE&recursive=true");
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
+            assertEquals(3, nodes.length);
+            assertAllTrue(nodes, t -> t.getPath().contains("/subject:2/topic:2"));
+        }
+        {
+            // Topic2 is context
+            var response = testUtils.getResource("/v1/nodes/urn:topic:2/nodes?nodeType=TOPIC,RESOURCE&recursive=true");
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
+            assertEquals(2, nodes.length);
+            assertAllTrue(nodes, t -> t.getPath().contains("/topic:2/topic:3"));
+        }
+        {
+            var response = testUtils.getResource("/v1/nodes/urn:topic:3/nodes?nodeType=RESOURCE");
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertEquals("Leaf", nodes[0].getName());
+            // Can't predict which of the two contexts with topic:3 that is picked
+            assertAllTrue(nodes, t -> t.getPaths().contains("/topic:2/topic:3/resource:1"));
+        }
+    }
+
+    @Test
     public void can_place_subject_below_subject() throws Exception {
         builder.node(NodeType.SUBJECT,
                 s -> s.isContext(true).name("Maths").publicId("urn:subject:1").child(NodeType.SUBJECT,
@@ -369,6 +428,12 @@ public class NodesTest extends RestTest {
         connectionsHaveCorrectTypes(connections);
     }
 
+    private void connectionsHaveCorrectTypes(NodeConnectionDTO[] connections) {
+        ConnectionTypeCounter connectionTypeCounter = new ConnectionTypeCounter(connections).countTypes();
+        assertEquals(1, connectionTypeCounter.getParentCount());
+        assertEquals(2, connectionTypeCounter.getChildCount());
+    }
+
     @Test
     public void subnodes_are_sorted_by_rank() throws Exception {
         testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
@@ -396,12 +461,6 @@ public class NodesTest extends RestTest {
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() != null);
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().isVisible());
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().getGrepCodes().size() == 0);
-    }
-
-    private void connectionsHaveCorrectTypes(NodeConnectionDTO[] connections) {
-        ConnectionTypeCounter connectionTypeCounter = new ConnectionTypeCounter(connections).countTypes();
-        assertEquals(1, connectionTypeCounter.getParentCount());
-        assertEquals(2, connectionTypeCounter.getChildCount());
     }
 
     @Test

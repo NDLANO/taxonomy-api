@@ -58,4 +58,31 @@ public class LanguageFieldTest {
         assertEquals(1, languageField.size());
         assertEquals(List.of("Name", "Name 2"), languageField.get("nb"));
     }
+
+    @Test
+    void test_create_language_field_list_without_changing_original_list() {
+        Node node = new Node(NodeType.NODE);
+        node.setName("Name");
+        node.addTranslation("Name", "nb");
+
+        Node node2 = new Node(NodeType.NODE);
+        node2.setName("Name 2");
+        node2.addTranslation("Name 2", "nb");
+
+        Node node3 = new Node(NodeType.NODE);
+        node3.setName("Name 3");
+        node3.addTranslation("Name 3", "nb");
+
+        var languageField = LanguageField.listFromLists(LanguageField.listFromNode(node),
+                LanguageField.fromNode(node2));
+        assertEquals(1, languageField.size());
+        assertEquals(List.of("Name", "Name 2"), languageField.get("nb"));
+
+        var updatedLanguageField = LanguageField.listFromLists(languageField, LanguageField.fromNode(node3));
+        assertEquals(1, updatedLanguageField.size());
+        assertEquals(List.of("Name", "Name 2", "Name 3"), updatedLanguageField.get("nb"));
+        // original list not updated
+        assertEquals(List.of("Name", "Name 2"), languageField.get("nb"));
+    }
+
 }

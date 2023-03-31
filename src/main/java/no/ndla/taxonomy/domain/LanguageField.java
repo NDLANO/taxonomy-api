@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.domain;
 
 import no.ndla.taxonomy.config.Constants;
+import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.data.util.Pair;
 
 import java.util.ArrayList;
@@ -44,8 +45,7 @@ public class LanguageField<V> extends HashMap<String, V> {
 
     public static LanguageField<List<String>> listFromLists(LanguageField<List<String>> listLanguageField,
             LanguageField<String> languageField) {
-        var breadcrumbs = new LanguageField<List<String>>();
-        breadcrumbs.putAll(listLanguageField);
+        var breadcrumbs = SerializationUtils.clone(listLanguageField);
         languageField.keySet().forEach(key -> {
             var crumbs = breadcrumbs.computeIfAbsent(key, k -> new ArrayList<>());
             if (languageField.get(key) != null) {

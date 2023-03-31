@@ -93,6 +93,7 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
     @Transactional(propagation = Propagation.MANDATORY)
     public void clearCachedUrls(Node entity) {
         entity.setCachedPaths(new HashSet<>());
+        entity.setContexts(new HashSet<>());
     }
 
 }
