@@ -71,8 +71,6 @@ public class NodeDTO {
         this.paths = entity.getAllPaths();
 
         this.path = entity.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
-        root.ifPresent(r -> this.path = entity.getPathByContext(r.getPublicId()).orElse(""));
-        this.breadcrumbs = entity.buildCrumbs(languageCode);
 
         Optional<Relevance> relevance = entity.getParentConnections().stream().findFirst()
                 .flatMap(NodeConnection::getRelevance);

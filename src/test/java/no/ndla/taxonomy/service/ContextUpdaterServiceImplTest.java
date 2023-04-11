@@ -18,16 +18,14 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
-    private CachedUrlUpdaterServiceImpl service;
+class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
+    private ContextUpdaterServiceImpl service;
 
     private NodeRepository nodeRepository;
     private NodeConnectionRepository nodeConnectionRepository;
@@ -37,7 +35,7 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
 
-        service = new CachedUrlUpdaterServiceImpl(nodeRepository);
+        service = new ContextUpdaterServiceImpl(nodeRepository);
     }
 
     @Test
@@ -50,7 +48,7 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
 
         nodeRepository.save(subject1);
 
-        service.updateCachedUrls(subject1);
+        service.updateContexts(subject1);
 
         {
             assertEquals(1, subject1.getContexts().size());
@@ -71,7 +69,7 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
 
         nodeRepository.save(topic1);
 
-        service.updateCachedUrls(topic1);
+        service.updateContexts(topic1);
 
         {
             assertEquals(1, topic1.getContexts().size());
@@ -89,7 +87,7 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
         nodeConnectionRepository.save(nc);
         topic1.addParentConnection(nc);
 
-        service.updateCachedUrls(topic1);
+        service.updateContexts(topic1);
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:1")).get();
@@ -100,7 +98,7 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
 
         topic1.setContext(false);
 
-        service.updateCachedUrls(topic1);
+        service.updateContexts(topic1);
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:1")).get();
             assertEquals(1, node.getContexts().size());
@@ -112,7 +110,7 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
         topic2.setName("Topic2");
         nodeRepository.save(topic2);
 
-        service.updateCachedUrls(topic1);
+        service.updateContexts(topic1);
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:2")).get();
@@ -123,7 +121,7 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
         topic1.addChildConnection(nc2);
         nodeConnectionRepository.save(nc2);
 
-        service.updateCachedUrls(topic1);
+        service.updateContexts(topic1);
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:2")).get();
@@ -133,7 +131,7 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
 
         topic1.setContext(true);
 
-        service.updateCachedUrls(topic1);
+        service.updateContexts(topic1);
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:2")).get();
@@ -146,7 +144,7 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
         resource1.setPublicId(URI.create("urn:resource:1"));
         nodeRepository.save(resource1);
 
-        service.updateCachedUrls(resource1);
+        service.updateContexts(resource1);
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1")).get();
@@ -157,7 +155,7 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
         nodeConnectionRepository.save(nc3);
         topic1.addChildConnection(nc3);
 
-        service.updateCachedUrls(resource1);
+        service.updateContexts(resource1);
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1")).get();
@@ -170,7 +168,7 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
         nodeConnectionRepository.save(nc4);
         topic2.addChildConnection(nc4);
 
-        service.updateCachedUrls(resource1);
+        service.updateContexts(resource1);
 
         {
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1")).get();
@@ -196,12 +194,12 @@ class CachedUrlUpdaterServiceImplTest extends AbstractIntegrationTest {
 
         nodeRepository.save(subject1);
 
-        service.updateCachedUrls(subject1);
+        service.updateContexts(subject1);
 
-        assertEquals(1, subject1.getCachedPaths().size());
+        assertEquals(1, subject1.getContexts().size());
 
-        service.clearCachedUrls(subject1);
+        service.clearContexts(subject1);
 
-        assertEquals(0, subject1.getCachedPaths().size());
+        assertEquals(0, subject1.getContexts().size());
     }
 }

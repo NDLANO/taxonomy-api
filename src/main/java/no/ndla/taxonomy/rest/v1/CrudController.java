@@ -13,7 +13,7 @@ import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.URNValidator;
 import no.ndla.taxonomy.service.UpdatableDto;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -32,12 +32,12 @@ import java.util.Map;
 
 public abstract class CrudController<T extends DomainEntity> {
     protected TaxonomyRepository<T> repository;
-    protected CachedUrlUpdaterService cachedUrlUpdaterService;
+    protected ContextUpdaterService cachedUrlUpdaterService;
 
     private static final Map<Class<?>, String> locations = new HashMap<>();
     private final URNValidator validator = new URNValidator();
 
-    protected CrudController(TaxonomyRepository<T> repository, CachedUrlUpdaterService cachedUrlUpdaterService) {
+    protected CrudController(TaxonomyRepository<T> repository, ContextUpdaterService cachedUrlUpdaterService) {
         this.repository = repository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
@@ -65,7 +65,7 @@ public abstract class CrudController<T extends DomainEntity> {
         command.apply(entity);
 
         if (entity instanceof Node && cachedUrlUpdaterService != null) {
-            cachedUrlUpdaterService.updateCachedUrls((Node) entity);
+            cachedUrlUpdaterService.updateContexts((Node) entity);
         }
 
         return entity;
@@ -86,7 +86,7 @@ public abstract class CrudController<T extends DomainEntity> {
             repository.saveAndFlush(entity);
 
             if (entity instanceof Node && cachedUrlUpdaterService != null) {
-                cachedUrlUpdaterService.updateCachedUrls((Node) entity);
+                cachedUrlUpdaterService.updateContexts((Node) entity);
             }
 
             return ResponseEntity.created(location).build();

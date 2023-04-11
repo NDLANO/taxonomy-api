@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.CachedPath;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.UrlMapping;
 import no.ndla.taxonomy.repositories.NodeRepository;

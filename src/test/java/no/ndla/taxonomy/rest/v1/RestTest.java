@@ -11,7 +11,7 @@ import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.AbstractIntegrationTest;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +60,7 @@ public abstract class RestTest extends AbstractIntegrationTest {
     protected TestUtils testUtils;
 
     @Autowired
-    protected CachedUrlUpdaterService cachedUrlUpdaterService;
+    protected ContextUpdaterService cachedUrlUpdaterService;
 
     protected Builder builder;
 

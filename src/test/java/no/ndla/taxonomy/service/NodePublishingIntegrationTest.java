@@ -108,7 +108,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertNotEquals(node.getId(), published.getId());// node should have 1, published 3
         assertEquals(node.getName(), published.getName());
         assertEquals(node.getNodeType(), published.getNodeType());
-        assertEquals(1, published.getCachedPaths().size());
+        assertEquals(1, published.getContexts().size());
         assertEquals(node.getMetadata().isVisible(), published.getMetadata().isVisible());
         assertEquals(node.getMetadata().getGrepCodes().size(), published.getMetadata().getGrepCodes().size());
         assertAnyTrue(published.getMetadata().getGrepCodes(), grepCode -> grepCode.getCode().equals("KM123"));
@@ -299,7 +299,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
         assertNotNull(updated);
         assertNotEquals(updated.getId(), resource.getId());
-        assertNotNull(updated.getCachedPaths());
+        assertNotNull(updated.getContexts());
         assertEquals(2, updated.getParentConnections().size()); // Should be used twice
         assertAnyTrue(updated.getParentConnections(),
                 nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:1")));
@@ -390,7 +390,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertNotNull(updated);
-        assertNotNull(updated.getCachedPaths());
+        assertNotNull(updated.getContexts());
         assertEquals(2, updated.getParentConnections().size()); // Should be used twice
         assertAnyTrue(updated.getParentConnections(),
                 nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:1")));
@@ -467,7 +467,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertNotNull(updated);
-        assertNotNull(updated.getCachedPaths());
+        assertNotNull(updated.getContexts());
         assertEquals(2, updated.getParentConnections().size()); // Should be used twice
         assertAnyTrue(updated.getParentConnections(),
                 nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:1")));

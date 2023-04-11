@@ -45,7 +45,7 @@ class DomainEntityHelperServiceImplTest extends AbstractIntegrationTest {
     @BeforeEach
     void setUp(@Autowired NodeRepository nodeRepository, @Autowired NodeConnectionRepository nodeConnectionRepository,
             @Autowired ResourceTypeRepository resourceTypeRepository,
-            @Autowired CachedUrlUpdaterService cachedUrlUpdaterService) {
+            @Autowired ContextUpdaterService cachedUrlUpdaterService) {
         service = new DomainEntityHelperServiceImpl(nodeRepository, nodeConnectionRepository, resourceTypeRepository,
                 cachedUrlUpdaterService);
 

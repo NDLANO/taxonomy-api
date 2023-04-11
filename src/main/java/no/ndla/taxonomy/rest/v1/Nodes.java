@@ -45,7 +45,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     private final TreeSorter treeSorter;
 
     public Nodes(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            NodeService nodeService, CachedUrlUpdaterService cachedUrlUpdaterService,
+            NodeService nodeService, ContextUpdaterService cachedUrlUpdaterService,
             RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter) {
         super(nodeRepository, cachedUrlUpdaterService);
 

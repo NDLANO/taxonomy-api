@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.CachedPath;
 import no.ndla.taxonomy.domain.Context;
 import no.ndla.taxonomy.domain.LanguageField;
 import no.ndla.taxonomy.domain.Node;
@@ -21,13 +20,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
-public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
+public class ContextUpdaterServiceImpl implements ContextUpdaterService {
     private final NodeRepository nodeRepository;
 
-    public CachedUrlUpdaterServiceImpl(NodeRepository nodeRepository) {
+    public ContextUpdaterServiceImpl(NodeRepository nodeRepository) {
         this.nodeRepository = nodeRepository;
     }
 
@@ -64,35 +62,22 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
     }
 
     /*
-     * Method recursively re-creates all CachedPath entries for the entity by removing old entities and creating new
-     * ones
+     * Method recursively re-creates all Contexts entries for the entity by removing old entities and creating new ones
      */
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public void updateCachedUrls(Node entity) {
+    public void updateContexts(Node entity) {
         Set.copyOf(entity.getChildConnections())
-                .forEach(childEntity -> childEntity.getChild().ifPresent(this::updateCachedUrls));
+                .forEach(childEntity -> childEntity.getChild().ifPresent(this::updateContexts));
 
-        clearCachedUrls(entity);
+        clearContexts(entity);
 
-        final var newPathsToEntity = createContexts(entity);
-        final var newCachedPathObjects = newPathsToEntity.stream().map(newPath -> {
-            final var cachedPath = new CachedPath();
-            cachedPath.setPath(newPath.path());
-            cachedPath.setPrimary(newPath.isPrimary());
-            cachedPath.setNode(entity);
-
-            return cachedPath;
-        }).collect(Collectors.toSet());
-
-        entity.setCachedPaths(newCachedPathObjects);
-        entity.setContexts(newPathsToEntity);
+        entity.setContexts(createContexts(entity));
     }
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public void clearCachedUrls(Node entity) {
-        entity.setCachedPaths(new HashSet<>());
+    public void clearContexts(Node entity) {
         entity.setContexts(new HashSet<>());
     }
 

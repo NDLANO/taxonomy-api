@@ -9,8 +9,8 @@ package no.ndla.taxonomy.service;
 
 import no.ndla.taxonomy.domain.Node;
 
-public interface CachedUrlUpdaterService {
-    void updateCachedUrls(Node entity);
+public interface ContextUpdaterService {
+    void updateContexts(Node entity);
 
-    void clearCachedUrls(Node entity);
+    void clearContexts(Node entity);
 }

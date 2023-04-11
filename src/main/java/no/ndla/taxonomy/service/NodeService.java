@@ -55,7 +55,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final DomainEntityHelperService domainEntityHelperService;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
-    private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final ContextUpdaterService cachedUrlUpdaterService;
     private final RelevanceRepository relevanceRepository;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -69,7 +69,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             NodeConnectionService connectionService, NodeConnectionRepository nodeConnectionRepository,
             NodeRepository nodeRepository, RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter topicTreeSorter, TreeSorter treeSorter, VersionService versionService,
-            CachedUrlUpdaterService cachedUrlUpdaterService, RelevanceRepository relevanceRepository) {
+            ContextUpdaterService cachedUrlUpdaterService, RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -359,7 +359,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     public List<Node> buildAllContexts() {
         List<Node> rootNodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
                 Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(Boolean.TRUE));
-        rootNodes.forEach(cachedUrlUpdaterService::updateCachedUrls);
+        rootNodes.forEach(cachedUrlUpdaterService::updateContexts);
         return rootNodes;
     }
 }
