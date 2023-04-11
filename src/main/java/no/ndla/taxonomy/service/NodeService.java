@@ -180,11 +180,11 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             topicIdsToSearchFor = Set.of(node.getPublicId());
         }
 
-        return filterNodeResourcesByIdsAndReturn(topicIdsToSearchFor, resourceTypeIds, relevancePublicId,
+        return filterNodeResourcesByIdsAndReturn(node, topicIdsToSearchFor, resourceTypeIds, relevancePublicId,
                 resourcesToSort, languageCode);
     }
 
-    private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(Set<URI> nodeIds, Set<URI> resourceTypeIds,
+    private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(Node root, Set<URI> nodeIds, Set<URI> resourceTypeIds,
             URI relevance, Set<ResourceTreeSortable> sortableListToAddTo, Optional<String> languageCode) {
         final List<NodeConnection> nodeResources;
 
@@ -222,7 +222,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                     return childIsResource.orElse(false);
                 }).map(wrappedNodeResource -> {
                     NodeConnection nodeConnection = (NodeConnection) wrappedNodeResource.get();
-                    return new NodeChildDTO(Optional.empty(), nodeConnection,
+                    return new NodeChildDTO(Optional.of(root), nodeConnection,
                             languageCode.orElse(Constants.DefaultLanguage));
                 }).collect(toList());
     }

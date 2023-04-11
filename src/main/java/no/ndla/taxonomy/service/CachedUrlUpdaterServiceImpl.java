@@ -39,7 +39,7 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
             returnedContexts.add(new Context(entity.getPublicId().toString(), LanguageField.fromNode(entity),
                     "/" + entity.getPublicId().getSchemeSpecificPart(), new LanguageField<List<String>>(),
                     entity.getContextType(), Optional.empty(), entity.isVisible(), true, "urn:relevance:core",
-                    HashUtil.longHash(entity.getPublicId())));
+                    HashUtil.mediumHash(entity.getPublicId())));
         }
 
         // Get all parent connections, append this entity publicId to the end of the actual path and add
@@ -55,7 +55,7 @@ public class CachedUrlUpdaterServiceImpl implements CachedUrlUpdaterService {
                         parentConnection.getRelevance()
                                 .flatMap(relevance -> Optional.of(relevance.getPublicId().toString()))
                                 .orElse("urn:relevance:core"),
-                        HashUtil.longHash(parentContext.rootId() + parentConnection.getPublicId()));
+                        HashUtil.mediumHash(parentContext.rootId() + parentConnection.getPublicId()));
 
             }).forEach(returnedContexts::add);
         }));
