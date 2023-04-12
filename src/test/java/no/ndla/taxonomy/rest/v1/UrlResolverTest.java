@@ -119,7 +119,7 @@ public class UrlResolverTest extends RestTest {
                 .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1").resource(
                         r -> r.name("One fine resource").contentUri("urn:article:1").publicId("urn:resource:1"))));
         Node resource = nodeRepository.getByPublicId(URI.create("urn:resource:1"));
-        String hash = HashUtil.mediumHash(root.getPublicId().toString()
+        String hash = HashUtil.semiHash(root.getPublicId().toString()
                 + resource.getParentConnections().stream().findFirst().get().getPublicId().toString());
 
         ResolvedUrl url = resolveUrl(String.format("/one-fine-resource__%s", hash));
