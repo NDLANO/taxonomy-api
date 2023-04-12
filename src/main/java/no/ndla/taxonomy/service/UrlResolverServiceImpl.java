@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.Context;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.UrlMapping;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -15,7 +14,6 @@ import no.ndla.taxonomy.repositories.UrlMappingRepository;
 import no.ndla.taxonomy.service.dtos.ResolvedUrl;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import no.ndla.taxonomy.util.TitleUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -208,19 +206,6 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
     private List<Node> resolveEntitiesFromPath(String path) {
         final var returnedList = new ArrayList<Node>();
-
-        if (path.contains("__")) {
-            // Pick correct path from context
-            String contextId = TitleUtil.getHashFromPath(path);
-            List<Node> byNodeType = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
-                    Optional.empty(), Optional.empty(), Optional.of(contextId), Optional.empty());
-            if (byNodeType.size() == 1) {
-                Node node = byNodeType.stream().findFirst().get();
-                Context context = node.getContexts().stream().filter(ctx -> ctx.contextId().equals(contextId))
-                        .findFirst().get();
-                path = context.path();
-            }
-        }
         final var pathParts = path.split("/+");
         for (String pathPart : pathParts) {
             // Ignore empty parts of the path, including when having leading and/or trailing slashes

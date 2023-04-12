@@ -64,7 +64,7 @@ public class NodeDTO {
 
     @JsonProperty
     @Schema(description = "A pretty url based on name and context. Empty if no context.")
-    private Optional<String> url;
+    private Optional<String> url = Optional.empty();
 
     public NodeDTO() {
     }

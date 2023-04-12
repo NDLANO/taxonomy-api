@@ -113,21 +113,6 @@ public class UrlResolverTest extends RestTest {
         testUtils.getResource("/v1/url/resolve?path=" + path, status().isNotFound());
     }
 
-    @Test
-    void can_resolve_url_for_pretty_url() throws Exception {
-        Node root = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1")
-                .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1").resource(
-                        r -> r.name("One fine resource").contentUri("urn:article:1").publicId("urn:resource:1"))));
-        Node resource = nodeRepository.getByPublicId(URI.create("urn:resource:1"));
-        String hash = HashUtil.semiHash(root.getPublicId().toString()
-                + resource.getParentConnections().stream().findFirst().get().getPublicId().toString());
-
-        ResolvedUrl url = resolveUrl(String.format("/one-fine-resource__%s", hash));
-        assertEquals("urn:article:1", url.getContentUri().toString());
-        assertParents(url, "urn:topic:1", "urn:subject:1");
-        assertEquals("/subject:1/topic:1/resource:1", url.getPath());
-    }
-
     private void assertParents(ResolvedUrl path, String... expected) {
         assertEquals(expected.length, path.getParents().size());
         for (int i = 0; i < expected.length; i++) {
