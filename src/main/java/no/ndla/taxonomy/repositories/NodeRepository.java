@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface NodeRepository extends TaxonomyRepository<Node> {
-    @Query("SELECT DISTINCT n FROM Node n WHERE n.context = :context")
-    List<Node> findAllByContextIncludingCachedUrlsAndTranslations(boolean context);
+    @Query("SELECT DISTINCT n FROM Node n WHERE n.context = :isContext")
+    List<Node> findAllByContextIncludingCachedUrlsAndTranslations(boolean isContext);
 
     Optional<Node> findFirstByPublicId(URI publicId);
 
@@ -73,9 +73,10 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, :metadataFilterKey) IS NOT NULL)
             AND (:metadataFilterValue IS NULL OR cast(jsonb_path_query_array(n.customfields, '$.*') as text) like :metadataFilterValue)
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
+            AND (:contextId IS NULL OR jsonb_contains(n.contexts, jsonb_build_array(jsonb_build_object('contextId',:contextId))) = true)
             AND (:isRoot IS NULL OR n.root = true)
             """)
     List<Node> findByNodeType(Optional<List<NodeType>> nodeTypes, Optional<Boolean> isVisible,
             Optional<String> metadataFilterKey, Optional<String> metadataFilterValue, Optional<URI> contentUri,
-            Optional<Boolean> isRoot);
+            Optional<String> contextId, Optional<Boolean> isRoot);
 }

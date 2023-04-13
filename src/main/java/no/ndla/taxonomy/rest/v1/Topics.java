@@ -10,6 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -47,7 +48,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Gets all topics")
     @Transactional(readOnly = true)
     public List<NodeDTO> getAll(
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") Optional<String> language,
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
@@ -55,14 +56,14 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         return nodeService.getNodes(language, Optional.of(List.of(NodeType.TOPIC)), contentUri, Optional.empty(),
-                metadataFilters);
+                Optional.empty(), metadataFilters);
     }
 
     @GetMapping("/search")
     @Operation(summary = "Search all topics")
     @Transactional(readOnly = true)
     public SearchResultDTO<NodeDTO> search(
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") Optional<String> language,
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
             @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @Parameter(description = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
             @Parameter(description = "Query to search names") @RequestParam(value = "query", required = false) Optional<String> query,
@@ -76,7 +77,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Gets all topics paginated")
     @Transactional(readOnly = true)
     public SearchResultDTO<NodeDTO> allPaginated(
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
@@ -87,7 +88,8 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
         var ids = nodeRepository.findIdsByTypePaginated(PageRequest.of(page.get() - 1, pageSize.get()), NodeType.TOPIC);
         var results = nodeRepository.findByIds(ids.getContent());
-        var contents = results.stream().map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb")))
+        var contents = results.stream()
+                .map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb"), Optional.empty()))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
@@ -96,7 +98,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Gets a single topic")
     @Transactional(readOnly = true)
     public NodeDTO get(@PathVariable("id") URI id,
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
         return nodeService.getNode(id, language);
     }
 
@@ -124,7 +126,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @Deprecated(forRemoval = true)
     @Transactional
     public List<ResourceTypeDTO> getResourceTypes(@PathVariable("id") URI id,
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") Optional<String> language) {
         return List.of();
     }
 
@@ -133,7 +135,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @Deprecated(forRemoval = true)
     @Transactional
     public List<Object> getFilters(@Parameter(name = "id", required = true) @PathVariable("id") URI id,
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
         return List.of();
     }
 
@@ -144,8 +146,8 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Select filters by subject id if filter list is empty. Used as alternative to specify filters.") @RequestParam(value = "subject", required = false, defaultValue = "") URI subjectId,
             @Deprecated(forRemoval = true) @Parameter(description = "Select by filter id(s). If not specified, all subtopics connected to this topic will be returned."
                     + "Multiple ids may be separated with comma or the parameter may be repeated for each id.") @RequestParam(value = "filter", required = false, defaultValue = "") URI[] filterIds,
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
-        return nodeService.getFilteredChildConnections(id, language);
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
+        return nodeService.getFilteredChildConnections(id, language.orElse(Constants.DefaultLanguage));
     }
 
     @GetMapping("/{id}/connections")
@@ -168,7 +170,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Gets all resources for the given topic", tags = { "topics" })
     @Transactional(readOnly = true)
     public List<NodeChildDTO> getResources(@Parameter(name = "id", required = true) @PathVariable("id") URI topicId,
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false) String language,
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
             @Parameter(description = "If true, resources from subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @Parameter(description = "Select by resource type id(s). If not specified, resources of all types will be returned."
                     + "Multiple ids may be separated with comma or the parameter may be repeated for each id.") @RequestParam(value = "type", required = false) URI[] resourceTypeIds,

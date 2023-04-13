@@ -160,7 +160,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             existing.setRoot(node.isRoot());
             existing.setContext(node.isContext());
             existing.setTranslations(node.getTranslations());
-            existing.setVisible(node.getVisible());
+            existing.setVisible(node.isVisible());
             existing.setCustomFields(node.getCustomFields());
             existing.setGrepCodes(node.getGrepCodes());
 
@@ -251,7 +251,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
 
     private NodeConnection updateExisting(NodeConnection existing, NodeConnection nodeConnection) {
         existing.setRank(nodeConnection.getRank());
-        existing.setVisible(nodeConnection.getVisible());
+        existing.setVisible(nodeConnection.isVisible());
         existing.setGrepCodes(nodeConnection.getGrepCodes());
         existing.setCustomFields(nodeConnection.getCustomFields());
         if (nodeConnection.getRelevance().isPresent()) {

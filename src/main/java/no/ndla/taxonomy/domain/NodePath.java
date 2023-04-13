@@ -1,6 +1,6 @@
 package no.ndla.taxonomy.domain;
 
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageField;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageFieldDTO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +54,10 @@ public class NodePath {
         return this.nodes;
     }
 
+    public Optional<Node> getRootNode() {
+        return this.nodes.stream().findFirst();
+    }
+
     private List<Node> getBreadcrumbNodes() {
         var breadcrumbNodes = new ArrayList<Node>();
         for (var i = 0; i < this.nodes.size() - 1; ++i) {
@@ -62,9 +66,9 @@ public class NodePath {
         return breadcrumbNodes;
     }
 
-    public LanguageField<List<String>> getBreadcrumbs() {
+    public LanguageFieldDTO<List<String>> getBreadcrumbs() {
         var breadcrumbNodes = getBreadcrumbNodes();
-        var breadcrumbs = new LanguageField<List<String>>();
+        var breadcrumbs = new LanguageFieldDTO<List<String>>();
         var allLanguages = breadcrumbNodes.stream()
                 .flatMap(n -> n.getTranslations().stream().map(Translation::getLanguageCode))
                 .collect(Collectors.toSet());

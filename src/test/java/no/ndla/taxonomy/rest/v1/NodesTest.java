@@ -13,6 +13,8 @@ import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
 import no.ndla.taxonomy.service.dtos.NodeConnectionDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
+import org.apache.commons.lang3.ArrayUtils;
+import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,7 +51,7 @@ public class NodesTest extends RestTest {
         builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("maths").publicId("urn:subject:1").child(t -> t
                 .nodeType(NodeType.TOPIC).name("trigonometry").contentUri("urn:article:1").publicId("urn:topic:1")));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1");
+        var response = testUtils.getResource("/v1/nodes/urn:topic:1");
         final var node = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("trigonometry", node.getName());
@@ -64,10 +67,20 @@ public class NodesTest extends RestTest {
     public void single_node_has_no_url() throws Exception {
         builder.node(NodeType.NODE, t -> t.publicId("urn:node:1"));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:node:1");
+        var response = testUtils.getResource("/v1/nodes/urn:node:1");
         final var node = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("", node.getPath());
+    }
+
+    @Test
+    public void single_context_node_has_url() throws Exception {
+        builder.node(NodeType.NODE, t -> t.isContext(true).publicId("urn:node:1"));
+
+        var response = testUtils.getResource("/v1/nodes/urn:node:1");
+        final var node = testUtils.getObject(NodeDTO.class, response);
+
+        assertEquals("/node:1", node.getPath());
     }
 
     @Test
@@ -96,6 +109,39 @@ public class NodesTest extends RestTest {
             assertEquals("trigonometry", nodes[0].getName());
             assertEquals(List.of("Maths", "trigonometry"), nodes[0].getBreadcrumbs());
         }
+    }
+
+    @Test
+    public void can_get_nodes_by_contextId() throws Exception {
+        Node resource = builder.node(NodeType.RESOURCE, r -> r.name("Resource"));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> {
+            t.name("photo synthesis");
+            t.contentUri(URI.create("urn:test:1")).resource(resource);
+        }));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> {
+            t.name("trigonometry");
+            t.contentUri(URI.create("urn:test:2")).resource(resource);
+        }));
+
+        Optional<Node> fromDB = nodeRepository.findFirstByPublicId(resource.getPublicId());
+        assertTrue(fromDB.isPresent());
+        assertEquals(2, fromDB.get().getContexts().size());
+
+        // Check fetching by contextid and make sure correct path and breadcrumbs is used
+        fromDB.get().getContexts().forEach(context -> {
+            try {
+                final var response = testUtils
+                        .getResource("/v1/nodes?nodeType=RESOURCE&contextId=" + context.contextId());
+                final var nodes = testUtils.getObject(NodeDTO[].class, response);
+                assertEquals(1, nodes.length);
+                assertEquals("Resource", nodes[0].getName());
+                assertEquals(Optional.of(String.format("/resource__%s", context.contextId())), nodes[0].getUrl());
+                assertEquals(context.path(), nodes[0].getPath());
+                assertTrue(nodes[0].getBreadcrumbs().containsAll(context.breadcrumbs().get("nb")));
+            } catch (Exception e) {
+                // Not happening
+            }
+        });
     }
 
     @Test
@@ -150,7 +196,7 @@ public class NodesTest extends RestTest {
         builder.node(NodeType.SUBJECT,
                 s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> t.name("trigonometry")));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes");
+        var response = testUtils.getResource("/v1/nodes");
         final var nodes = testUtils.getObject(NodeDTO[].class, response);
         assertEquals(4, nodes.length);
 
@@ -176,7 +222,7 @@ public class NodesTest extends RestTest {
         builder.node(NodeType.NODE,
                 n -> n.isRoot(true).name("Random node").child(NodeType.NODE, c -> c.name("Subnode")));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes?isRoot=true");
+        var response = testUtils.getResource("/v1/nodes?isRoot=true");
         final var nodes = testUtils.getObject(NodeDTO[].class, response);
         assertEquals(3, nodes.length);
 
@@ -198,7 +244,7 @@ public class NodesTest extends RestTest {
                 .child(NodeType.TOPIC, t -> t.name("trigonometry").resource(r -> r.name("angles")))
                 .child(NodeType.TOPIC, t -> t.name("Random node").child(NodeType.NODE, c -> c.name("Subnode"))));
         {
-            MockHttpServletResponse response = testUtils.getResource(
+            var response = testUtils.getResource(
                     "/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC,RESOURCE,NODE");
             final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(6, nodes.length);
@@ -217,7 +263,7 @@ public class NodesTest extends RestTest {
             assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
         }
         {
-            MockHttpServletResponse response = testUtils.getResource(
+            var response = testUtils.getResource(
                     "/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC,RESOURCE");
             final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(5, nodes.length);
@@ -235,7 +281,7 @@ public class NodesTest extends RestTest {
             assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
         }
         {
-            MockHttpServletResponse response = testUtils
+            var response = testUtils
                     .getResource("/v1/nodes/" + subject.getPublicId() + "/nodes?recursive=true&nodeType=TOPIC");
             final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(3, nodes.length);
@@ -264,7 +310,7 @@ public class NodesTest extends RestTest {
                 c -> c.name("Subnode").contentUri("urn:article:1").isVisible(false)));
 
         {
-            MockHttpServletResponse response = testUtils.getResource("/v1/nodes?contentURI=urn:article:1");
+            var response = testUtils.getResource("/v1/nodes?contentURI=urn:article:1");
             final var nodes = testUtils.getObject(NodeDTO[].class, response);
             assertEquals(1, nodes.length);
             assertAnyTrue(nodes, t -> "Subnode".equals(t.getName()));
@@ -272,7 +318,7 @@ public class NodesTest extends RestTest {
             assertAllTrue(nodes, t -> isValidId(t.getId()));
         }
         {
-            MockHttpServletResponse response = testUtils.getResource("/v1/nodes?isVisible=true");
+            var response = testUtils.getResource("/v1/nodes?isVisible=true");
             final var nodes = testUtils.getObject(NodeDTO[].class, response);
             assertEquals(5, nodes.length);
             assertAnyTrue(nodes, t -> "Basic science".equals(t.getName()));
@@ -284,12 +330,61 @@ public class NodesTest extends RestTest {
     }
 
     @Test
+    void fetching_subnodes_uses_correct_context() throws Exception {
+        Node resource = builder.node(NodeType.RESOURCE, r -> r.name("Leaf").publicId("urn:resource:1"));
+        builder.node(NodeType.SUBJECT, s1 -> s1.isRoot(true).isContext(true).name("Subject1").publicId("urn:subject:1")
+                .child(NodeType.TOPIC, t1 -> t1.name("Topic1").publicId("urn:topic:1").resource(resource)));
+        builder.node(NodeType.SUBJECT,
+                s2 -> s2.isRoot(true).isContext(true).name("Subject2").publicId("urn:subject:2").child(NodeType.TOPIC,
+                        t2 -> t2.name("Topic2").publicId("urn:topic:2").isContext(true).child(NodeType.TOPIC,
+                                t3 -> t3.name("Topic3").publicId("urn:topic:3").resource(resource))));
+
+        {
+            var response = testUtils
+                    .getResource("/v1/nodes/urn:subject:1/nodes?nodeType=TOPIC,RESOURCE&recursive=true");
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
+            assertEquals(2, nodes.length);
+            assertAllTrue(nodes, t -> t.getPath().contains("/subject:1/topic:1"));
+        }
+        {
+            var response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes?nodeType=RESOURCE");
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertEquals("Leaf", nodes[0].getName());
+            assertEquals(3, nodes[0].getBreadcrumbs().size());
+            assertEquals("/subject:1/topic:1/resource:1", nodes[0].getPath());
+        }
+        {
+            var response = testUtils
+                    .getResource("/v1/nodes/urn:subject:2/nodes?nodeType=TOPIC,RESOURCE&recursive=true");
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
+            assertEquals(3, nodes.length);
+            assertAllTrue(nodes, t -> t.getPath().contains("/subject:2/topic:2"));
+        }
+        {
+            // Topic2 is context
+            var response = testUtils.getResource("/v1/nodes/urn:topic:2/nodes?nodeType=TOPIC,RESOURCE&recursive=true");
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
+            assertEquals(2, nodes.length);
+            assertAllTrue(nodes, t -> t.getPath().contains("/topic:2/topic:3"));
+        }
+        {
+            var response = testUtils.getResource("/v1/nodes/urn:topic:3/nodes?nodeType=RESOURCE");
+            final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertEquals("Leaf", nodes[0].getName());
+            // Can't predict which of the two contexts with topic:3 that is picked
+            assertAllTrue(nodes, t -> t.getPaths().contains("/topic:2/topic:3/resource:1"));
+        }
+    }
+
+    @Test
     public void can_place_subject_below_subject() throws Exception {
         builder.node(NodeType.SUBJECT,
                 s -> s.isContext(true).name("Maths").publicId("urn:subject:1").child(NodeType.SUBJECT,
                         t -> t.name("Maths vg1").contentUri("urn:frontpage:1").publicId("urn:subject:2")));
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:subject:2");
+        var response = testUtils.getResource("/v1/nodes/urn:subject:2");
         final var node = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("Maths vg1", node.getName());
@@ -298,7 +393,7 @@ public class NodesTest extends RestTest {
 
         assertNotNull(node.getMetadata());
         assertTrue(node.getMetadata().isVisible());
-        assertTrue(node.getMetadata().getGrepCodes().size() == 0);
+        assertEquals(0, node.getMetadata().getGrepCodes().size());
     }
 
     /**
@@ -325,8 +420,8 @@ public class NodesTest extends RestTest {
     public void can_get_all_connections() throws Exception {
         testSeeder.topicNodeConnectionsTestSetup();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:2000/connections");
-        NodeConnectionDTO[] connections = testUtils.getObject(NodeConnectionDTO[].class, response);
+        var response = testUtils.getResource("/v1/nodes/urn:topic:2000/connections");
+        final var connections = testUtils.getObject(NodeConnectionDTO[].class, response);
 
         assertEquals(3, connections.length, "Correct number of connections");
         assertAllTrue(connections, c -> c.getPaths().size() > 0); // all connections have at least one path
@@ -334,11 +429,17 @@ public class NodesTest extends RestTest {
         connectionsHaveCorrectTypes(connections);
     }
 
+    private void connectionsHaveCorrectTypes(NodeConnectionDTO[] connections) {
+        ConnectionTypeCounter connectionTypeCounter = new ConnectionTypeCounter(connections).countTypes();
+        assertEquals(1, connectionTypeCounter.getParentCount());
+        assertEquals(2, connectionTypeCounter.getChildCount());
+    }
+
     @Test
     public void subnodes_are_sorted_by_rank() throws Exception {
         testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes");
+        var response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes");
         final var subtopics = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(7, subtopics.length);
 
@@ -354,19 +455,13 @@ public class NodesTest extends RestTest {
     public void can_get_unfiltered_subnodes() throws Exception {
         testSeeder.subtopicsByNodeIdAndRelevanceTestSetup();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes");
+        var response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes");
         final var subtopics = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(7, subtopics.length, "Unfiltered subtopics");
 
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() != null);
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().isVisible());
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().getGrepCodes().size() == 0);
-    }
-
-    private void connectionsHaveCorrectTypes(NodeConnectionDTO[] connections) {
-        ConnectionTypeCounter connectionTypeCounter = new ConnectionTypeCounter(connections).countTypes();
-        assertEquals(1, connectionTypeCounter.getParentCount());
-        assertEquals(2, connectionTypeCounter.getChildCount());
     }
 
     @Test
@@ -380,7 +475,7 @@ public class NodesTest extends RestTest {
             }
         };
 
-        MockHttpServletResponse response = testUtils.createResource("/v1/nodes", createNodeCommand);
+        var response = testUtils.createResource("/v1/nodes", createNodeCommand);
         URI id = getId(response);
 
         Node node = nodeRepository.getByPublicId(id);
@@ -400,7 +495,7 @@ public class NodesTest extends RestTest {
             }
         };
 
-        MockHttpServletResponse response = testUtils.createResource("/v1/nodes", createNodeCommand);
+        var response = testUtils.createResource("/v1/nodes", createNodeCommand);
         URI id = getId(response);
 
         Node node = nodeRepository.getByPublicId(id);
@@ -419,7 +514,7 @@ public class NodesTest extends RestTest {
             }
         };
 
-        MockHttpServletResponse response = testUtils.createResource("/v1/nodes", createNodeCommand);
+        var response = testUtils.createResource("/v1/nodes", createNodeCommand);
         URI id = getId(response);
 
         Node node = nodeRepository.getByPublicId(id);
@@ -602,15 +697,14 @@ public class NodesTest extends RestTest {
     @Test
     void publishing_node_fails_if_no_target_version() throws Exception {
         Node node = builder.node();
-        MockHttpServletResponse response = testUtils.updateResource("/v1/nodes/" + node.getPublicId() + "/publish",
-                null, status().is4xxClientError());
+        var response = testUtils.updateResource("/v1/nodes/" + node.getPublicId() + "/publish", null,
+                status().is4xxClientError());
         assertEquals(400, response.getStatus());
     }
 
     @Test
     void publishing_node_fails_if_node_not_found() throws Exception {
-        MockHttpServletResponse response = testUtils.updateResource("/v1/nodes/urn:node:random/publish", null,
-                status().is4xxClientError());
+        var response = testUtils.updateResource("/v1/nodes/urn:node:random/publish", null, status().is4xxClientError());
         assertEquals(400, response.getStatus());
     }
 
@@ -625,8 +719,8 @@ public class NodesTest extends RestTest {
 
         {
             // Only set primary on one level
-            MockHttpServletResponse response = testUtils.updateResource(
-                    "/v1/nodes/" + node1.getPublicId() + "/makeResourcesPrimary", null, status().isOk());
+            var response = testUtils.updateResource("/v1/nodes/" + node1.getPublicId() + "/makeResourcesPrimary", null,
+                    status().isOk());
             assertEquals(200, response.getStatus());
             var updated1 = nodeRepository.getByPublicId(node1.getPublicId());
             assertTrue(updated1.getResourceChildren().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
@@ -640,7 +734,7 @@ public class NodesTest extends RestTest {
         }
         {
             // Recursive flag updates all levels
-            MockHttpServletResponse response = testUtils.updateResource(
+            var response = testUtils.updateResource(
                     "/v1/nodes/" + node1.getPublicId() + "/makeResourcesPrimary?recursive=true", null, status().isOk());
             assertEquals(200, response.getStatus());
             var updated1 = nodeRepository.getByPublicId(node1.getPublicId());

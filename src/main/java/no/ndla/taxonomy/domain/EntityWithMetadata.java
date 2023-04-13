@@ -31,7 +31,7 @@ public interface EntityWithMetadata {
 
     Set<JsonGrepCode> getGrepCodes();
 
-    boolean getVisible();
+    boolean isVisible();
 
     Instant getCreatedAt();
 

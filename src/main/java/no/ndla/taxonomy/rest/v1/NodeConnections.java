@@ -31,8 +31,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @RestController
@@ -57,8 +59,16 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @Operation(summary = "Gets all connections between node and children")
     @Transactional(readOnly = true)
     public List<ParentChildIndexDocument> index() {
-        return nodeConnectionRepository.findAllIncludingParentAndChild().stream().map(ParentChildIndexDocument::new)
-                .collect(Collectors.toList());
+        final List<ParentChildIndexDocument> listToReturn = new ArrayList<>();
+        var ids = nodeConnectionRepository.findAllIds();
+        final var counter = new AtomicInteger();
+        ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
+            final var connections = nodeConnectionRepository.findByIds(idChunk);
+            var dtos = connections.stream().map(ParentChildIndexDocument::new).toList();
+            listToReturn.addAll(dtos);
+        });
+
+        return listToReturn;
     }
 
     @GetMapping("/page")

@@ -7,15 +7,23 @@
 
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.ChangelogRepository;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageFieldDTO;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.SearchableTaxonomyResourceType;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.service.task.Fetcher;
+import no.ndla.taxonomy.util.TitleUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -33,6 +41,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toList;
+
 @Transactional(readOnly = true)
 @Service
 public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>, DisposableBean {
@@ -46,7 +56,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final DomainEntityHelperService domainEntityHelperService;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
-    private final TaxonomyContextDTOFactory searchableTaxonomyContextDTOFactory;
+    private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final RelevanceRepository relevanceRepository;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -59,7 +70,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             NodeConnectionService connectionService, NodeConnectionRepository nodeConnectionRepository,
             NodeRepository nodeRepository, RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter topicTreeSorter, TreeSorter treeSorter, VersionService versionService,
-            TaxonomyContextDTOFactory searchableTaxonomyContextDTOFactory) {
+            CachedUrlUpdaterService cachedUrlUpdaterService, RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -69,7 +80,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         this.domainEntityHelperService = domainEntityHelperService;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.treeSorter = treeSorter;
-        this.searchableTaxonomyContextDTOFactory = searchableTaxonomyContextDTOFactory;
+        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.relevanceRepository = relevanceRepository;
     }
 
     @Transactional
@@ -88,11 +100,12 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public List<NodeDTO> getNodes(Optional<String> language, Optional<List<NodeType>> nodeType,
-            Optional<URI> contentUri, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+            Optional<URI> contentUri, Optional<String> contextId, Optional<Boolean> isRoot,
+            MetadataFilters metadataFilters) {
         final List<Node> filtered = nodeRepository.findByNodeType(nodeType, metadataFilters.getVisible(),
-                metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, isRoot);
-        return filtered.stream().distinct().map(n -> new NodeDTO(Optional.empty(), n, language.get()))
-                .collect(Collectors.toList());
+                metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, contextId, isRoot);
+        return filtered.stream().distinct().map(n -> new NodeDTO(Optional.empty(), n, language.get(), contextId))
+                .collect(toList());
     }
 
     public List<NodeDTO> getResources(Optional<String> language, Optional<URI> contentUri, Optional<Boolean> isRoot,
@@ -103,7 +116,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
             final var nodes = nodeRepository.findByIdsFiltered(idChunk, metadataFilters.getVisible(),
                     metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, isRoot);
-            var dtos = nodes.stream().map(node -> new NodeDTO(Optional.empty(), node, language.get())).toList();
+            var dtos = nodes.stream().map(node -> new NodeDTO(Optional.empty(), node, language.get(), Optional.empty()))
+                    .toList();
             listToReturn.addAll(dtos);
         });
 
@@ -132,9 +146,9 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return topicTreeSorter.sortList(wrappedList);
     }
 
-    public NodeDTO getNode(URI publicId, String language) {
+    public NodeDTO getNode(URI publicId, Optional<String> language) {
         var node = getNode(publicId);
-        return new NodeDTO(Optional.empty(), node, language);
+        return new NodeDTO(Optional.empty(), node, language.orElse(Constants.DefaultLanguage), Optional.empty());
     }
 
     public Node getNode(URI publicId) {
@@ -143,7 +157,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public List<NodeChildDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds, URI relevancePublicId,
-            String languageCode, boolean recursive) {
+            Optional<String> languageCode, boolean recursive) {
         final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
 
         final Set<URI> topicIdsToSearchFor;
@@ -167,12 +181,12 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             topicIdsToSearchFor = Set.of(node.getPublicId());
         }
 
-        return filterNodeResourcesByIdsAndReturn(topicIdsToSearchFor, resourceTypeIds, relevancePublicId,
+        return filterNodeResourcesByIdsAndReturn(node, topicIdsToSearchFor, resourceTypeIds, relevancePublicId,
                 resourcesToSort, languageCode);
     }
 
-    private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(Set<URI> nodeIds, Set<URI> resourceTypeIds,
-            URI relevance, Set<ResourceTreeSortable> sortableListToAddTo, String languageCode) {
+    private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(Node root, Set<URI> nodeIds, Set<URI> resourceTypeIds,
+            URI relevance, Set<ResourceTreeSortable> sortableListToAddTo, Optional<String> languageCode) {
         final List<NodeConnection> nodeResources;
 
         if (resourceTypeIds.size() > 0) {
@@ -194,7 +208,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                     }
                 });
             }
-            nodeResources = nodeResourcesStream.collect(Collectors.toList());
+            nodeResources = nodeResourcesStream.collect(toList());
         }
 
         nodeResources.forEach(nodeResource -> sortableListToAddTo.add(new ResourceTreeSortable(nodeResource)));
@@ -209,8 +223,9 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                     return childIsResource.orElse(false);
                 }).map(wrappedNodeResource -> {
                     NodeConnection nodeConnection = (NodeConnection) wrappedNodeResource.get();
-                    return new NodeChildDTO(Optional.empty(), nodeConnection, languageCode);
-                }).collect(Collectors.toList());
+                    return new NodeChildDTO(Optional.of(root), nodeConnection,
+                            languageCode.orElse(Constants.DefaultLanguage));
+                }).collect(toList());
     }
 
     @Override
@@ -220,7 +235,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     @Override
     public NodeDTO createDTO(Node node, String languageCode) {
-        return new NodeDTO(Optional.empty(), node, languageCode);
+        return new NodeDTO(Optional.empty(), node, languageCode, Optional.empty());
     }
 
     public SearchResultDTO<NodeDTO> searchByNodeType(Optional<String> query, Optional<List<String>> ids,
@@ -315,8 +330,52 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     public List<TaxonomyContextDTO> getSearchableByContentUri(Optional<URI> contentURI, boolean filterVisibles) {
         var nodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
-                Optional.empty(), contentURI, Optional.empty());
+                Optional.empty(), contentURI, Optional.empty(), Optional.empty());
+        var contextDtos = nodesToContexts(nodes, filterVisibles);
 
-        return searchableTaxonomyContextDTOFactory.fromNodes(nodes, filterVisibles);
+        return contextDtos.stream().sorted(Comparator.comparing(TaxonomyContextDTO::path)).toList();
+    }
+
+    List<TaxonomyContextDTO> nodesToContexts(List<Node> nodes, boolean filterVisibles) {
+        return nodes.stream().flatMap(node -> {
+            var parentIds = node.getContexts().stream().map(Context::parentId).flatMap(s -> s.stream().map(URI::create))
+                    .toList();
+            var contexts = filterVisibles
+                    ? node.getContexts().stream().filter(Context::isVisible).collect(Collectors.toSet())
+                    : node.getContexts();
+            return contexts.stream().map(context -> {
+                Optional<Relevance> relevance = relevanceRepository
+                        .findFirstByPublicIdIncludingTranslations(URI.create(context.relevanceId()));
+                var relevanceName = new LanguageField<String>();
+                if (relevance.isPresent()) {
+                    relevanceName = LanguageField.fromNode(relevance.get());
+                }
+                var resourceTypes = node.getResourceTypes().stream().map(SearchableTaxonomyResourceType::new).toList();
+                var breadcrumbs = context.breadcrumbs();
+                return new TaxonomyContextDTO(node.getPublicId(), URI.create(context.rootId()),
+                        LanguageFieldDTO.fromLanguageField(context.rootName()), context.path(),
+                        LanguageFieldDTO.fromLanguageFieldList(breadcrumbs), context.contextType(),
+                        URI.create(context.relevanceId()), LanguageFieldDTO.fromLanguageField(relevanceName),
+                        resourceTypes, parentIds, context.isPrimary(), context.contextId());
+            });
+        }).toList();
+    }
+
+    public List<Node> buildAllContexts() {
+        List<Node> rootNodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(Boolean.TRUE));
+        rootNodes.forEach(cachedUrlUpdaterService::updateCachedUrls);
+        return rootNodes;
+    }
+
+    public List<TaxonomyContextDTO> getContextByPath(Optional<String> path) {
+        if (path.isPresent()) {
+            String contextId = TitleUtil.getHashFromPath(path.get());
+            List<Node> nodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
+                    Optional.empty(), Optional.empty(), Optional.of(contextId), Optional.empty());
+            var contexts = nodesToContexts(nodes, false);
+            return contexts.stream().filter(c -> c.contextId().equals(contextId)).toList();
+        }
+        return List.of();
     }
 }

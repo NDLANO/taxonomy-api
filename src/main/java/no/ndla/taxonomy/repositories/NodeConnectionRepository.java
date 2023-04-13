@@ -77,6 +77,9 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             """)
     Page<NodeConnection> findIdsPaginatedByChildNodeType(Pageable pageable, NodeType nodeType);
 
+    @Query("SELECT nc.id FROM NodeConnection nc")
+    List<Integer> findAllIds();
+
     @Query("SELECT DISTINCT nc FROM NodeConnection nc JOIN FETCH nc.parent n JOIN FETCH nc.child c WHERE nc.id in :ids")
     List<NodeConnection> findByIds(Collection<Integer> ids);
 

@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
+import no.ndla.taxonomy.util.TitleUtil;
 
 import java.net.URI;
 import java.util.*;
@@ -57,39 +58,57 @@ public class NodeDTO {
     @Schema(description = "The type of node", example = "resource")
     public NodeType nodeType;
 
+    @JsonProperty
+    @Schema(description = "An id unique for this context.")
+    private String contextId;
+
+    @JsonProperty
+    @Schema(description = "A pretty url based on name and context. Empty if no context.")
+    private Optional<String> url = Optional.empty();
+
     public NodeDTO() {
     }
 
-    public NodeDTO(Optional<Node> root, Node node, String languageCode) {
-        this.id = node.getPublicId();
-        this.contentUri = node.getContentUri();
-        this.paths = node.getAllPaths();
+    public NodeDTO(Optional<Node> root, Node entity, String languageCode, Optional<String> contextId) {
+        this.id = entity.getPublicId();
+        this.contentUri = entity.getContentUri();
 
-        this.path = node.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
-        root.ifPresent(r -> this.path = node.getPathByContext(r.getPublicId()).orElse(""));
+        this.paths = entity.getAllPaths();
 
-        var translations = node.getTranslations();
+        this.path = entity.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
+        root.ifPresent(r -> this.path = entity.getPathByContext(r.getPublicId()).orElse(""));
+        this.breadcrumbs = entity.buildCrumbs(languageCode);
+
+        Optional<Relevance> relevance = entity.getParentConnections().stream().findFirst()
+                .flatMap(NodeConnection::getRelevance);
+        this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
+
+        var translations = entity.getTranslations();
         this.translations = translations.stream().map(TranslationDTO::new)
                 .collect(Collectors.toCollection(TreeSet::new));
         this.supportedLanguages = this.translations.stream().map(t -> t.language)
                 .collect(Collectors.toCollection(TreeSet::new));
 
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
-                .map(Translation::getName).orElse(node.getName());
+                .map(Translation::getName).orElse(entity.getName());
 
-        Optional<Relevance> relevance = node.getParentConnections().stream().findFirst()
-                .flatMap(NodeConnection::getRelevance);
-        this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
+        this.metadata = new MetadataDto(entity.getMetadata());
 
-        this.metadata = new MetadataDto(node.getMetadata());
-
-        this.breadcrumbs = node.buildCrumbs(languageCode);
-
-        this.resourceTypes = node.getResourceResourceTypes().stream()
+        this.resourceTypes = entity.getResourceResourceTypes().stream()
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
                 .collect(Collectors.toCollection(TreeSet::new));
 
-        this.nodeType = node.getNodeType();
+        this.nodeType = entity.getNodeType();
+
+        Optional<Context> context = entity.pickContext(contextId, root);
+        context.ifPresent(ctx -> {
+            this.path = ctx.path();
+            this.breadcrumbs = LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity))
+                    .get(languageCode);
+            this.relevanceId = URI.create(ctx.relevanceId());
+            this.contextId = ctx.contextId();
+            this.url = TitleUtil.createPrettyUrl(this.name, this.contextId);
+        });
 
     }
 
@@ -137,7 +156,7 @@ public class NodeDTO {
         return supportedLanguages;
     }
 
-    protected void setMetadata(MetadataDto metadata) {
-        this.metadata = metadata;
+    public Optional<String> getUrl() {
+        return url;
     }
 }

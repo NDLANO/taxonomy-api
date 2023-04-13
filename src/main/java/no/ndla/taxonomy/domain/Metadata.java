@@ -34,7 +34,7 @@ public class Metadata implements Serializable {
     public Metadata(EntityWithMetadata parent) {
         this.parent = parent;
         this.grepCodes = parent.getGrepCodes();
-        this.visible = parent.getVisible();
+        this.visible = parent.isVisible();
         this.createdAt = parent.getCreatedAt();
         this.updatedAt = parent.getUpdatedAt();
         this.customFields = parent.getCustomFields();

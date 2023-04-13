@@ -63,7 +63,7 @@ public class SubjectTranslationsTest extends RestTest {
                 .getPublicId();
 
         NodeDTO subject = getSubject(id, null);
-        assertEquals("Mathematics", subject.getName());
+        assertEquals("Matematikk", subject.getName());
     }
 
     @Test

@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.CachedPath;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.UrlMapping;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -70,8 +69,8 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
     private List<String> getAllPaths(URI publicId) {
         try {
-            return getEntityFromPublicId(publicId).stream()
-                    .flatMap(x -> x.getCachedPaths().stream().map(CachedPath::getPath)).collect(Collectors.toList());
+            return getEntityFromPublicId(publicId).stream().flatMap(x -> x.getAllPaths().stream())
+                    .collect(Collectors.toList());
         } catch (InvalidArgumentServiceException e) {
             return List.of();
         }
@@ -206,10 +205,8 @@ public class UrlResolverServiceImpl implements UrlResolverService {
     }
 
     private List<Node> resolveEntitiesFromPath(String path) {
-        final var pathParts = path.split("/+");
-
         final var returnedList = new ArrayList<Node>();
-
+        final var pathParts = path.split("/+");
         for (String pathPart : pathParts) {
             // Ignore empty parts of the path, including when having leading and/or trailing slashes
             // and multiple slashes

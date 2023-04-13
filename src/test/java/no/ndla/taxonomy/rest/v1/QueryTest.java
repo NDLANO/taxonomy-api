@@ -7,11 +7,12 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageField;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
-import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.util.HashUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -141,17 +142,17 @@ public class QueryTest extends RestTest {
         builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
         builder.node(NodeType.SUBJECT,
-                s -> s.publicId("urn:subject:1").name("subject").translation("nb", tr -> tr.name("Fag"))
+                s -> s.isRoot(true).publicId("urn:subject:1").name("subject").translation("nb", tr -> tr.name("Fag"))
                         .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1").name("topic")
                                 .translation("nb", tr -> tr.name("Emne")).child(resource)));
 
         builder.node(NodeType.SUBJECT,
-                s -> s.publicId("urn:subject:2").name("subject 2").translation("nb", tr -> tr.name("Fag 2"))
-                        .child(NodeType.TOPIC, t -> t.publicId("urn:topic:2").name("topic 2")
-                                .translation("nb", tr -> tr.name("Emne 2")).child(resource)));
+                s -> s.isRoot(true).publicId("urn:subject:2").name("subject 2")
+                        .translation("nb", tr -> tr.name("Fag 2")).child(NodeType.TOPIC, t -> t.publicId("urn:topic:2")
+                                .name("topic 2").translation("nb", tr -> tr.name("Emne 2")).child(resource)));
 
         builder.node(NodeType.SUBJECT,
-                s -> s.isVisible(false).publicId("urn:subject:3").name("subject 3")
+                s -> s.isRoot(true).isVisible(false).publicId("urn:subject:3").name("subject 3")
                         .translation("nb", tr -> tr.name("Fag 3")).child(NodeType.TOPIC, t -> t.publicId("urn:topic:3")
                                 .name("topic 3").translation("nb", tr -> tr.name("Emne 3")).child(resource)));
 
@@ -167,7 +168,7 @@ public class QueryTest extends RestTest {
         assertEquals(URI.create("urn:subject:1"), firstResult.subjectId());
         assertEquals("/subject:1/topic:1/resource:1", firstResult.path());
         assertEquals(URI.create("urn:relevance:core"), firstResult.relevanceId());
-        var breadcrumbs = new LanguageField<List<String>>();
+        var breadcrumbs = new LanguageFieldDTO<List<String>>();
         breadcrumbs.put("nb", List.of("Fag", "Emne"));
         assertEquals(breadcrumbs, firstResult.breadcrumbs());
 
@@ -178,7 +179,7 @@ public class QueryTest extends RestTest {
         assertEquals(URI.create("urn:subject:2"), secondResult.subjectId());
         assertEquals("/subject:2/topic:2/resource:1", secondResult.path());
         assertEquals(URI.create("urn:relevance:core"), secondResult.relevanceId());
-        var breadcrumbs2 = new LanguageField<List<String>>();
+        var breadcrumbs2 = new LanguageFieldDTO<List<String>>();
         breadcrumbs2.put("nb", List.of("Fag 2", "Emne 2"));
         assertEquals(breadcrumbs2, secondResult.breadcrumbs());
     }
@@ -190,17 +191,17 @@ public class QueryTest extends RestTest {
         var relevance = builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
         builder.node(NodeType.SUBJECT,
-                s -> s.publicId("urn:subject:1").name("subject").translation("nb", tr -> tr.name("Fag"))
+                s -> s.isRoot(true).publicId("urn:subject:1").name("subject").translation("nb", tr -> tr.name("Fag"))
                         .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1").name("topic")
                                 .translation("nb", tr -> tr.name("Emne")).child(resource)));
 
         builder.node(NodeType.SUBJECT,
-                s -> s.publicId("urn:subject:2").name("subject 2").translation("nb", tr -> tr.name("Fag 2"))
-                        .child(NodeType.TOPIC, t -> t.publicId("urn:topic:2").name("topic 2")
-                                .translation("nb", tr -> tr.name("Emne 2")).child(resource)));
+                s -> s.isRoot(true).publicId("urn:subject:2").name("subject 2")
+                        .translation("nb", tr -> tr.name("Fag 2")).child(NodeType.TOPIC, t -> t.publicId("urn:topic:2")
+                                .name("topic 2").translation("nb", tr -> tr.name("Emne 2")).child(resource)));
 
         builder.node(NodeType.SUBJECT,
-                s -> s.isVisible(false).publicId("urn:subject:3").name("subject 3")
+                s -> s.isRoot(true).isVisible(false).publicId("urn:subject:3").name("subject 3")
                         .translation("nb", tr -> tr.name("Fag 3")).child(NodeType.TOPIC, t -> t.publicId("urn:topic:3")
                                 .name("topic 3").translation("nb", tr -> tr.name("Emne 3")).child(resource)));
 
@@ -215,7 +216,7 @@ public class QueryTest extends RestTest {
         assertEquals(URI.create("urn:subject:1"), firstResult.subjectId());
         assertEquals("/subject:1/topic:1/resource:1", firstResult.path());
         assertEquals(URI.create("urn:relevance:core"), firstResult.relevanceId());
-        var breadcrumbs = new LanguageField<List<String>>();
+        var breadcrumbs = new LanguageFieldDTO<List<String>>();
         breadcrumbs.put("nb", List.of("Fag", "Emne"));
         assertEquals(breadcrumbs, firstResult.breadcrumbs());
 
@@ -226,7 +227,7 @@ public class QueryTest extends RestTest {
         assertEquals(URI.create("urn:subject:2"), secondResult.subjectId());
         assertEquals("/subject:2/topic:2/resource:1", secondResult.path());
         assertEquals(URI.create("urn:relevance:core"), secondResult.relevanceId());
-        var breadcrumbs2 = new LanguageField<List<String>>();
+        var breadcrumbs2 = new LanguageFieldDTO<List<String>>();
         breadcrumbs2.put("nb", List.of("Fag 2", "Emne 2"));
         assertEquals(breadcrumbs2, secondResult.breadcrumbs());
 
@@ -237,7 +238,7 @@ public class QueryTest extends RestTest {
         assertEquals(URI.create("urn:subject:3"), thirdResult.subjectId());
         assertEquals("/subject:3/topic:3/resource:1", thirdResult.path());
         assertEquals(URI.create("urn:relevance:core"), thirdResult.relevanceId());
-        var breadcrumbs3 = new LanguageField<List<String>>();
+        var breadcrumbs3 = new LanguageFieldDTO<List<String>>();
         breadcrumbs3.put("nb", List.of("Fag 3", "Emne 3"));
         assertEquals(breadcrumbs3, thirdResult.breadcrumbs());
     }
@@ -249,14 +250,14 @@ public class QueryTest extends RestTest {
         var relevance = builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
         builder.node(NodeType.SUBJECT,
-                s -> s.publicId("urn:subject:1").name("subject").translation("nb", tr -> tr.name("Fag"))
+                s -> s.isRoot(true).publicId("urn:subject:1").name("subject").translation("nb", tr -> tr.name("Fag"))
                         .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1").name("topic")
                                 .translation("nb", tr -> tr.name("Emne")).child(resource)));
 
         builder.node(NodeType.SUBJECT,
-                s -> s.publicId("urn:subject:2").name("subject 2").translation("nb", tr -> tr.name("Fag 2"))
-                        .child(NodeType.TOPIC, t -> t.publicId("urn:topic:2").name("topic 2")
-                                .translation("nb", tr -> tr.name("Emne 2")).child(resource)));
+                s -> s.isRoot(true).publicId("urn:subject:2").name("subject 2")
+                        .translation("nb", tr -> tr.name("Fag 2")).child(NodeType.TOPIC, t -> t.publicId("urn:topic:2")
+                                .name("topic 2").translation("nb", tr -> tr.name("Emne 2")).child(resource)));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/queries/urn:article:1?filterVisibles=false");
         var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
@@ -267,4 +268,76 @@ public class QueryTest extends RestTest {
         assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2")),
                 result[1].parentTopicIds().stream().sorted().toList());
     }
+
+    @Test
+    public void that_topics_can_be_contexts_too() throws Exception {
+        var resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").contentUri("urn:article:1")
+                .translation("nb", t -> t.name("Ressurs")));
+        builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
+
+        builder.node(NodeType.SUBJECT,
+                s -> s.isRoot(true).publicId("urn:subject:1").name("subject").translation("nb", tr -> tr.name("Fag"))
+                        .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1").name("topic")
+                                .translation("nb", tr -> tr.name("Emne")).child(resource)));
+
+        builder.node(NodeType.SUBJECT,
+                s -> s.isRoot(true).publicId("urn:subject:2").name("subject 2")
+                        .translation("nb", tr -> tr.name("Fag 2"))
+                        .child(NodeType.TOPIC, t -> t.isContext(true).publicId("urn:topic:2").name("topic 2")
+                                .translation("nb", tr -> tr.name("Emne 2")).child(resource)));
+
+        MockHttpServletResponse response = testUtils.getResource("/v1/queries/urn:article:1?filterVisibles=false");
+        var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
+
+        assertEquals(3, result.length);
+        var firstResult = result[0];
+        assertEquals(URI.create("urn:resource:1"), firstResult.id());
+        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:2")),
+                firstResult.parentTopicIds().stream().sorted().toList());
+        assertEquals(URI.create("urn:subject:1"), firstResult.subjectId());
+        assertEquals("/subject:1/topic:1/resource:1", firstResult.path());
+        assertEquals(URI.create("urn:relevance:core"), firstResult.relevanceId());
+        var breadcrumbs = new LanguageFieldDTO<List<String>>();
+        breadcrumbs.put("nb", List.of("Fag", "Emne"));
+        assertEquals(breadcrumbs, firstResult.breadcrumbs());
+
+        var secondResult = result[1];
+        assertEquals(URI.create("urn:resource:1"), secondResult.id());
+        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:2")),
+                secondResult.parentTopicIds().stream().sorted().toList());
+        assertEquals(URI.create("urn:subject:2"), secondResult.subjectId());
+        assertEquals("/subject:2/topic:2/resource:1", secondResult.path());
+        assertEquals(URI.create("urn:relevance:core"), secondResult.relevanceId());
+        var breadcrumbs2 = new LanguageFieldDTO<List<String>>();
+        breadcrumbs2.put("nb", List.of("Fag 2", "Emne 2"));
+        assertEquals(breadcrumbs2, secondResult.breadcrumbs());
+
+        var thirdResult = result[2];
+        assertEquals(URI.create("urn:resource:1"), thirdResult.id());
+        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:2")),
+                thirdResult.parentTopicIds().stream().sorted().toList());
+        assertEquals(URI.create("urn:topic:2"), thirdResult.subjectId());
+        assertEquals("/topic:2/resource:1", thirdResult.path());
+        assertEquals(URI.create("urn:relevance:core"), thirdResult.relevanceId());
+        var breadcrumbs3 = new LanguageFieldDTO<List<String>>();
+        breadcrumbs3.put("nb", List.of("Emne 2"));
+        assertEquals(breadcrumbs3, thirdResult.breadcrumbs());
+    }
+
+    @Test
+    public void that_contexts_can_be_found_by_path() throws Exception {
+        Node root = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1").name("Subject")
+                .child(NodeType.TOPIC, t -> t.name("Topic").publicId("urn:topic:1").resource(
+                        r -> r.name("One fine resource").contentUri("urn:article:1").publicId("urn:resource:1"))));
+        Node resource = nodeRepository.getByPublicId(URI.create("urn:resource:1"));
+        String hash = HashUtil.semiHash(root.getPublicId().toString()
+                + resource.getParentConnections().stream().findFirst().get().getPublicId().toString());
+
+        var response = testUtils.getResource("/v1/queries/path?path=" + String.format("/one-fine-resource__%s", hash));
+        var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
+
+        assertEquals(1, result.length);
+        assertEquals(List.of("Subject", "Topic"), result[0].breadcrumbs().get("nb"));
+    }
+
 }
