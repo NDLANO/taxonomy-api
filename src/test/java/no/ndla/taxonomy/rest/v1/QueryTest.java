@@ -7,10 +7,12 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.util.HashUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -320,6 +322,22 @@ public class QueryTest extends RestTest {
         var breadcrumbs3 = new LanguageFieldDTO<List<String>>();
         breadcrumbs3.put("nb", List.of("Emne 2"));
         assertEquals(breadcrumbs3, thirdResult.breadcrumbs());
+    }
+
+    @Test
+    public void that_contexts_can_be_found_by_path() throws Exception {
+        Node root = builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1").name("Subject")
+                .child(NodeType.TOPIC, t -> t.name("Topic").publicId("urn:topic:1").resource(
+                        r -> r.name("One fine resource").contentUri("urn:article:1").publicId("urn:resource:1"))));
+        Node resource = nodeRepository.getByPublicId(URI.create("urn:resource:1"));
+        String hash = HashUtil.semiHash(root.getPublicId().toString()
+                + resource.getParentConnections().stream().findFirst().get().getPublicId().toString());
+
+        var response = testUtils.getResource("/v1/queries/path?path=" + String.format("/one-fine-resource__%s", hash));
+        var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
+
+        assertEquals(1, result.length);
+        assertEquals(List.of("Subject", "Topic"), result[0].breadcrumbs().get("nb"));
     }
 
 }

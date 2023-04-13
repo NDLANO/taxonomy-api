@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
+import no.ndla.taxonomy.util.TitleUtil;
 
 import java.net.URI;
 import java.util.*;
@@ -61,6 +62,10 @@ public class NodeDTO {
     @Schema(description = "An id unique for this context.")
     private String contextId;
 
+    @JsonProperty
+    @Schema(description = "A pretty url based on name and context. Empty if no context.")
+    private Optional<String> url = Optional.empty();
+
     public NodeDTO() {
     }
 
@@ -75,15 +80,6 @@ public class NodeDTO {
         Optional<Relevance> relevance = entity.getParentConnections().stream().findFirst()
                 .flatMap(NodeConnection::getRelevance);
         this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
-
-        Optional<Context> context = entity.pickContext(contextId, root);
-        context.ifPresent(ctx -> {
-            this.path = ctx.path();
-            this.breadcrumbs = LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity))
-                    .get(languageCode);
-            this.relevanceId = URI.create(ctx.relevanceId());
-            this.contextId = ctx.contextId();
-        });
 
         var translations = entity.getTranslations();
         this.translations = translations.stream().map(TranslationDTO::new)
@@ -101,6 +97,16 @@ public class NodeDTO {
                 .collect(Collectors.toCollection(TreeSet::new));
 
         this.nodeType = entity.getNodeType();
+
+        Optional<Context> context = entity.pickContext(contextId, root);
+        context.ifPresent(ctx -> {
+            this.path = ctx.path();
+            this.breadcrumbs = LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity))
+                    .get(languageCode);
+            this.relevanceId = URI.create(ctx.relevanceId());
+            this.contextId = ctx.contextId();
+            this.url = TitleUtil.createPrettyUrl(this.name, this.contextId);
+        });
 
     }
 
@@ -148,7 +154,7 @@ public class NodeDTO {
         return supportedLanguages;
     }
 
-    protected void setMetadata(MetadataDto metadata) {
-        this.metadata = metadata;
+    public Optional<String> getUrl() {
+        return url;
     }
 }

@@ -40,6 +40,13 @@ public class Queries {
         return nodeService.getSearchableByContentUri(contentURI, filterVisibles);
     }
 
+    @GetMapping("/path")
+    @Operation(summary = "Gets a list of contexts matching given pretty url with contextId, empty list if no matches are found.")
+    @Transactional(readOnly = true)
+    public List<TaxonomyContextDTO> queryByPath(@RequestParam("path") Optional<String> path) {
+        return nodeService.getContextByPath(path);
+    }
+
     @GetMapping("/resources")
     @Operation(summary = "Gets a list of resources matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/resources?contentURI= instead")
     @Transactional(readOnly = true)

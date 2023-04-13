@@ -10,7 +10,6 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.Context;
 import no.ndla.taxonomy.domain.LanguageField;
 import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.util.HashUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -23,10 +22,8 @@ import java.util.Set;
 
 @Service
 public class ContextUpdaterServiceImpl implements ContextUpdaterService {
-    private final NodeRepository nodeRepository;
 
-    public ContextUpdaterServiceImpl(NodeRepository nodeRepository) {
-        this.nodeRepository = nodeRepository;
+    public ContextUpdaterServiceImpl() {
     }
 
     private Set<Context> createContexts(Node entity) {
@@ -37,7 +34,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
             returnedContexts.add(new Context(entity.getPublicId().toString(), LanguageField.fromNode(entity),
                     "/" + entity.getPublicId().getSchemeSpecificPart(), new LanguageField<List<String>>(),
                     entity.getContextType(), Optional.empty(), entity.isVisible(), true, "urn:relevance:core",
-                    HashUtil.longHash(entity.getPublicId())));
+                    HashUtil.semiHash(entity.getPublicId())));
         }
 
         // Get all parent connections, append this entity publicId to the end of the actual path and add
@@ -53,7 +50,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                         parentConnection.getRelevance()
                                 .flatMap(relevance -> Optional.of(relevance.getPublicId().toString()))
                                 .orElse("urn:relevance:core"),
-                        HashUtil.longHash(parentContext.rootId() + parentConnection.getPublicId()));
+                        HashUtil.semiHash(parentContext.rootId() + parentConnection.getPublicId()));
 
             }).forEach(returnedContexts::add);
         }));

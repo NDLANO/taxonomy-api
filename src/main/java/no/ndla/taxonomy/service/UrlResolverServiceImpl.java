@@ -205,10 +205,8 @@ public class UrlResolverServiceImpl implements UrlResolverService {
     }
 
     private List<Node> resolveEntitiesFromPath(String path) {
-        final var pathParts = path.split("/+");
-
         final var returnedList = new ArrayList<Node>();
-
+        final var pathParts = path.split("/+");
         for (String pathPart : pathParts) {
             // Ignore empty parts of the path, including when having leading and/or trailing slashes
             // and multiple slashes

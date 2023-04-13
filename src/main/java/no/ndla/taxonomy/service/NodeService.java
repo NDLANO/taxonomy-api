@@ -23,6 +23,7 @@ import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.service.task.Fetcher;
+import no.ndla.taxonomy.util.TitleUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -180,11 +181,11 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             topicIdsToSearchFor = Set.of(node.getPublicId());
         }
 
-        return filterNodeResourcesByIdsAndReturn(topicIdsToSearchFor, resourceTypeIds, relevancePublicId,
+        return filterNodeResourcesByIdsAndReturn(node, topicIdsToSearchFor, resourceTypeIds, relevancePublicId,
                 resourcesToSort, languageCode);
     }
 
-    private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(Set<URI> nodeIds, Set<URI> resourceTypeIds,
+    private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(Node root, Set<URI> nodeIds, Set<URI> resourceTypeIds,
             URI relevance, Set<ResourceTreeSortable> sortableListToAddTo, Optional<String> languageCode) {
         final List<NodeConnection> nodeResources;
 
@@ -222,7 +223,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                     return childIsResource.orElse(false);
                 }).map(wrappedNodeResource -> {
                     NodeConnection nodeConnection = (NodeConnection) wrappedNodeResource.get();
-                    return new NodeChildDTO(Optional.empty(), nodeConnection,
+                    return new NodeChildDTO(Optional.of(root), nodeConnection,
                             languageCode.orElse(Constants.DefaultLanguage));
                 }).collect(toList());
     }
@@ -330,7 +331,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     public List<TaxonomyContextDTO> getSearchableByContentUri(Optional<URI> contentURI, boolean filterVisibles) {
         var nodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
                 Optional.empty(), contentURI, Optional.empty(), Optional.empty());
-        var contextDtos = nodes.stream().flatMap(node -> {
+        var contextDtos = nodesToContexts(nodes, filterVisibles);
+
+        return contextDtos.stream().sorted(Comparator.comparing(TaxonomyContextDTO::path)).toList();
+    }
+
+    List<TaxonomyContextDTO> nodesToContexts(List<Node> nodes, boolean filterVisibles) {
+        return nodes.stream().flatMap(node -> {
             var parentIds = node.getContexts().stream().map(Context::parentId).flatMap(s -> s.stream().map(URI::create))
                     .toList();
             var contexts = filterVisibles
@@ -352,8 +359,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                         resourceTypes, parentIds, context.isPrimary(), context.contextId());
             });
         }).toList();
-
-        return contextDtos.stream().sorted(Comparator.comparing(TaxonomyContextDTO::path)).toList();
     }
 
     public List<Node> buildAllContexts() {
@@ -361,5 +366,16 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(Boolean.TRUE));
         rootNodes.forEach(cachedUrlUpdaterService::updateContexts);
         return rootNodes;
+    }
+
+    public List<TaxonomyContextDTO> getContextByPath(Optional<String> path) {
+        if (path.isPresent()) {
+            String contextId = TitleUtil.getHashFromPath(path.get());
+            List<Node> nodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
+                    Optional.empty(), Optional.empty(), Optional.of(contextId), Optional.empty());
+            var contexts = nodesToContexts(nodes, false);
+            return contexts.stream().filter(c -> c.contextId().equals(contextId)).toList();
+        }
+        return List.of();
     }
 }

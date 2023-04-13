@@ -28,6 +28,10 @@ public class HashUtil {
         return generateHash(original, 8);
     }
 
+    public static String semiHash(Object original) {
+        return generateHash(original, 12);
+    }
+
     public static String longHash(Object original) {
         return generateHash(original, 16);
     }

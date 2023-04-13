@@ -7,9 +7,13 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.service.dtos.ResolvedUrl;
+import no.ndla.taxonomy.util.HashUtil;
 import org.junit.jupiter.api.Test;
+
+import java.net.URI;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;

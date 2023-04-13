@@ -7,8 +7,12 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.repositories.*;
+import no.ndla.taxonomy.domain.Context;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.repositories.NodeConnectionRepository;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.net.URI;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
@@ -35,7 +40,7 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
 
-        service = new ContextUpdaterServiceImpl(nodeRepository);
+        service = new ContextUpdaterServiceImpl();
     }
 
     @Test
