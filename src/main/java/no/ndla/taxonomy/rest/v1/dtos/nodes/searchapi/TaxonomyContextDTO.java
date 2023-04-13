@@ -16,16 +16,42 @@ import java.util.Optional;
 
 // NOTE: This will need to match `SearchableTaxonomyContext` in `search-api`
 public record TaxonomyContextDTO(
-        @JsonProperty @Schema(description = "The public-id of the node connected via content-uri") URI id,
-        @JsonProperty @Schema(description = "The id of the root parent of the context") URI subjectId,
-        @JsonProperty @Schema(description = "The name of the root parent of the context") LanguageFieldDTO<String> subject,
+        @JsonProperty @Schema(description = "The publicId of the node connected via content-uri") URI publicId,
+        @JsonProperty @Schema(description = "The publicId of the root parent of the context") URI rootId,
+        @JsonProperty @Schema(description = "The name of the root parent of the context") LanguageFieldDTO<String> root,
         @JsonProperty @Schema(description = "The context path") String path,
         @JsonProperty @Schema(description = "A breadcrumb of the names of the context's path") LanguageFieldDTO<List<String>> breadcrumbs,
         @JsonProperty @Schema(description = "Whether a 'standard'-article, 'topic-article'-article or a 'learningpath'") Optional<String> contextType,
         @JsonProperty @Schema(description = "Id of the relevance of the connection of the base") URI relevanceId,
         @JsonProperty @Schema(description = "Name of the relevance of the connection of the base") LanguageFieldDTO<String> relevance,
         @JsonProperty @Schema(description = "Resource-types of the base") List<SearchableTaxonomyResourceType> resourceTypes,
-        @JsonProperty @Schema(description = "List of all parent topic-ids") List<URI> parentTopicIds,
-        @JsonProperty @Schema(description = "Whether the base connection is primary or not") boolean isPrimaryConnection,
+        @JsonProperty @Schema(description = "List of all parent topic-ids") List<URI> parentIds,
+        @JsonProperty @Schema(description = "Whether the base connection is primary or not") boolean isPrimary,
         @JsonProperty @Schema(description = "Unique id of context based on root + connection") String contextId) {
+
+    @JsonProperty
+    public URI id() {
+        return publicId();
+    }
+
+    @JsonProperty
+    public URI subjectId() {
+        return rootId();
+    }
+
+    @JsonProperty
+    public LanguageFieldDTO<String> subject() {
+        return root();
+    }
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    public List<URI> parentTopicIds() {
+        return parentIds();
+    }
+
+    @JsonProperty("isPrimaryConnection")
+    public boolean isPrimaryConnection() {
+        return isPrimary();
+    }
+
 }
