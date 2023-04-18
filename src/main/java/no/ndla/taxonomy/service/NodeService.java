@@ -338,8 +338,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     List<TaxonomyContextDTO> nodesToContexts(List<Node> nodes, boolean filterVisibles) {
         return nodes.stream().flatMap(node -> {
-            var parentIds = node.getContexts().stream().map(Context::parentId).flatMap(s -> s.stream().map(URI::create))
-                    .toList();
             var contexts = filterVisibles
                     ? node.getContexts().stream().filter(Context::isVisible).collect(Collectors.toSet())
                     : node.getContexts();
@@ -356,7 +354,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                         LanguageFieldDTO.fromLanguageField(context.rootName()), context.path(),
                         LanguageFieldDTO.fromLanguageFieldList(breadcrumbs), context.contextType(),
                         URI.create(context.relevanceId()), LanguageFieldDTO.fromLanguageField(relevanceName),
-                        resourceTypes, parentIds, context.isPrimary(), context.contextId());
+                        resourceTypes, context.parentIds().stream().map(URI::create).toList(), context.isPrimary(),
+                        context.isVisible(), context.contextId());
             });
         }).toList();
     }
