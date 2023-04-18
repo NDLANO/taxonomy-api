@@ -108,15 +108,16 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 .collect(toList());
     }
 
-    public List<NodeDTO> getResources(Optional<String> language, Optional<URI> contentUri, Optional<Boolean> isRoot,
+    public List<NodeDTO> getNodesByType(Optional<List<NodeType>> nodeType, Optional<String> language,
+            Optional<URI> contentUri, Optional<String> contextId, Optional<Boolean> isRoot,
             MetadataFilters metadataFilters) {
         final List<NodeDTO> listToReturn = new ArrayList<>();
-        var ids = nodeRepository.findIdsByType(List.of(NodeType.RESOURCE));
+        var ids = nodeRepository.findIdsByType(nodeType);
         final var counter = new AtomicInteger();
         ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
             final var nodes = nodeRepository.findByIdsFiltered(idChunk, metadataFilters.getVisible(),
-                    metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, isRoot);
-            var dtos = nodes.stream().map(node -> new NodeDTO(Optional.empty(), node, language.get(), Optional.empty()))
+                    metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, contextId, isRoot);
+            var dtos = nodes.stream().map(node -> new NodeDTO(Optional.empty(), node, language.get(), contextId))
                     .toList();
             listToReturn.addAll(dtos);
         });

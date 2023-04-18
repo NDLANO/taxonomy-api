@@ -81,7 +81,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by context id") @RequestParam(value = "contextId", required = false) Optional<String> contextId) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         var defaultNodeTypes = getDefaultNodeTypes(nodeType, contentUri, isRoot, metadataFilters);
-        return nodeService.getNodes(language, Optional.of(defaultNodeTypes), contentUri, contextId, isRoot,
+        return nodeService.getNodesByType(Optional.of(defaultNodeTypes), language, contentUri, contextId, isRoot,
                 metadataFilters);
     }
 
