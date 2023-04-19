@@ -20,7 +20,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ConcurrentModificationException;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -90,9 +92,16 @@ public class ChangelogService implements DisposableBean {
                 changelog.setDone(true);
                 changelogRepository.save(changelog);
             }
+        } catch (ConcurrentModificationException cme) {
+            try {
+                logger.info("Another server tried to change entity at the same time: " + cme.getMessage());
+                var random = new Random();
+                Thread.sleep(1000 + random.nextInt(5000));
+            } catch (InterruptedException ie) {
+                // Nothing to see here
+            }
         } catch (Exception exception) {
             logger.info("Failed to process entity " + exception.getMessage());
-            // Another server have already processed this element
         }
     }
 
