@@ -15,7 +15,6 @@ import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -221,18 +220,17 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         NodeConnection result;
         NodeConnection existing = nodeConnectionRepository.findByPublicId(nodeConnection.getPublicId());
         if (existing == null) {
-            // Use correct objects when copying
+            // Check if connection have changed id
             Node parent = nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId());
             Node child = nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId());
-            nodeConnection.setParent(parent);
-            nodeConnection.setChild(child);
-            NodeConnection connection = new NodeConnection(nodeConnection);
-            try {
-                result = nodeConnectionRepository.save(connection);
-            } catch (DataIntegrityViolationException e) {
-                // connection created manually
-                existing = nodeConnectionRepository.findByParentIdAndChildId(parent.getId(), child.getId());
+            existing = nodeConnectionRepository.findByParentIdAndChildId(parent.getId(), child.getId());
+            if (existing != null) {
                 result = updateExisting(existing, nodeConnection);
+            } else {
+                nodeConnection.setParent(parent);
+                nodeConnection.setChild(child);
+                NodeConnection connection = new NodeConnection(nodeConnection);
+                result = nodeConnectionRepository.save(connection);
             }
         } else {
             if (existing.equals(nodeConnection)) {
