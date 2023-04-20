@@ -349,7 +349,9 @@ public class Node extends DomainObject implements EntityWithMetadata {
             return Optional.of("learningpath");
         if (nodeType.equals(NodeType.TOPIC))
             return Optional.of("topic-article");
-        return Optional.of("standard");
+        if (contentUri.getSchemeSpecificPart().startsWith("article"))
+            return Optional.of("standard");
+        return Optional.empty();
     }
 
     public void setNodeType(NodeType nodeType) {

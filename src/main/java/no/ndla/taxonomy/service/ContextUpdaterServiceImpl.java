@@ -15,10 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ContextUpdaterServiceImpl implements ContextUpdaterService {
@@ -33,7 +31,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
         if (entity.isContext()) {
             returnedContexts.add(new Context(entity.getPublicId().toString(), LanguageField.fromNode(entity),
                     "/" + entity.getPublicId().getSchemeSpecificPart(), new LanguageField<List<String>>(),
-                    entity.getContextType(), Optional.empty(), entity.isVisible(), true, "urn:relevance:core",
+                    entity.getContextType(), new ArrayList<>(), entity.isVisible(), true, "urn:relevance:core",
                     HashUtil.semiHash(entity.getPublicId())));
         }
 
@@ -43,10 +41,12 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
             createContexts(parent).stream().map(parentContext -> {
                 var breadcrumbs = LanguageField.listFromLists(parentContext.breadcrumbs(),
                         LanguageField.fromNode(parent));
+                List<String> parentIds = parentContext.parentIds();
+                parentIds.add(parent.getPublicId().toString());
                 return new Context(parentContext.rootId(), parentContext.rootName(),
                         parentContext.path() + "/" + entity.getPublicId().getSchemeSpecificPart(), breadcrumbs,
-                        entity.getContextType(), Optional.of(parent.getPublicId().toString()),
-                        parentContext.isVisible() && entity.isVisible(), parentConnection.isPrimary().orElse(true),
+                        entity.getContextType(), parentIds, parentContext.isVisible() && entity.isVisible(),
+                        parentConnection.isPrimary().orElse(true),
                         parentConnection.getRelevance()
                                 .flatMap(relevance -> Optional.of(relevance.getPublicId().toString()))
                                 .orElse("urn:relevance:core"),

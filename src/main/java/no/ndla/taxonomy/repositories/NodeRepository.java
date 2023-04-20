@@ -46,11 +46,12 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, :metadataFilterKey) IS NOT NULL)
             AND (:metadataFilterValue IS NULL OR cast(jsonb_path_query_array(n.customfields, '$.*') as text) like :metadataFilterValue)
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
+            AND (:contextId IS NULL OR jsonb_contains(n.contexts, jsonb_build_array(jsonb_build_object('contextId',:contextId))) = true)
             AND (:isRoot IS NULL OR n.root = true)
             """)
     List<Node> findByIdsFiltered(Collection<Integer> ids, Optional<Boolean> isVisible,
             Optional<String> metadataFilterKey, Optional<String> metadataFilterValue, Optional<URI> contentUri,
-            Optional<Boolean> isRoot);
+            Optional<String> contextId, Optional<Boolean> isRoot);
 
     @Query(value = "SELECT n.id FROM Node n where n.nodeType = :nodeType ORDER BY n.id", countQuery = "SELECT count(*) from Node n where n.nodeType = :nodeType")
     Page<Integer> findIdsByTypePaginated(Pageable pageable, NodeType nodeType);
@@ -60,7 +61,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             FROM Node n
             WHERE ((:nodeTypes) IS NULL OR n.nodeType in (:nodeTypes))
             """)
-    List<Integer> findIdsByType(List<NodeType> nodeTypes);
+    List<Integer> findIdsByType(Optional<List<NodeType>> nodeTypes);
 
     @Query("""
             SELECT DISTINCT n FROM Node n
