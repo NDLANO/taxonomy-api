@@ -14,6 +14,9 @@ public class SearchableTaxonomyResourceType {
     @JsonProperty
     private HashMap<String, String> name;
 
+    public SearchableTaxonomyResourceType() {
+    }
+
     public SearchableTaxonomyResourceType(ResourceType resourceType) {
         var translations = resourceType.getTranslations();
         this.id = resourceType.getPublicId().toString();

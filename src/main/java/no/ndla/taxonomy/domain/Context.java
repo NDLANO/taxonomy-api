@@ -13,7 +13,7 @@ import java.util.Optional;
 /**
  * Identifies a unique context for any node. A context is a position for a node in the structure, identified by root
  * node and parent-connection
- * 
+ *
  * @param rootId
  *            The publicId of the node at the root of the context.
  * @param rootName
@@ -24,8 +24,8 @@ import java.util.Optional;
  *            Breadcrumbs corresponding with the path.
  * @param contextType
  *            Type resource. Fetched from node.
- * @param parentId
- *            Parent of the node. From the other end of the nodeConnection.
+ * @param parentIds
+ *            Parents of the node. From the other end of the nodeConnection.
  * @param isVisible
  *            Metadata from node.
  * @param isPrimary
@@ -36,6 +36,6 @@ import java.util.Optional;
  *            Hash of root publicId + nodeConnection publicId. Unique for this context.
  */
 public record Context(String rootId, LanguageField<String> rootName, String path,
-        LanguageField<List<String>> breadcrumbs, Optional<String> contextType, Optional<String> parentId,
+        LanguageField<List<String>> breadcrumbs, Optional<String> contextType, List<String> parentIds,
         boolean isVisible, boolean isPrimary, String relevanceId, String contextId) {
 }

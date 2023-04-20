@@ -163,7 +163,7 @@ public class QueryTest extends RestTest {
 
         var firstResult = result[0];
         assertEquals(URI.create("urn:resource:1"), firstResult.id());
-        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:3")),
+        assertEquals(List.of(URI.create("urn:subject:1"), URI.create("urn:topic:1")),
                 firstResult.parentTopicIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:1"), firstResult.subjectId());
         assertEquals("/subject:1/topic:1/resource:1", firstResult.path());
@@ -174,7 +174,7 @@ public class QueryTest extends RestTest {
 
         var secondResult = result[1];
         assertEquals(URI.create("urn:resource:1"), secondResult.id());
-        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:3")),
+        assertEquals(List.of(URI.create("urn:subject:2"), URI.create("urn:topic:2")),
                 secondResult.parentTopicIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:2"), secondResult.subjectId());
         assertEquals("/subject:2/topic:2/resource:1", secondResult.path());
@@ -211,7 +211,7 @@ public class QueryTest extends RestTest {
         assertEquals(3, result.length);
         var firstResult = result[0];
         assertEquals(URI.create("urn:resource:1"), firstResult.id());
-        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:3")),
+        assertEquals(List.of(URI.create("urn:subject:1"), URI.create("urn:topic:1")),
                 firstResult.parentTopicIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:1"), firstResult.subjectId());
         assertEquals("/subject:1/topic:1/resource:1", firstResult.path());
@@ -222,7 +222,7 @@ public class QueryTest extends RestTest {
 
         var secondResult = result[1];
         assertEquals(URI.create("urn:resource:1"), secondResult.id());
-        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:3")),
+        assertEquals(List.of(URI.create("urn:subject:2"), URI.create("urn:topic:2")),
                 secondResult.parentTopicIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:2"), secondResult.subjectId());
         assertEquals("/subject:2/topic:2/resource:1", secondResult.path());
@@ -233,7 +233,7 @@ public class QueryTest extends RestTest {
 
         var thirdResult = result[2];
         assertEquals(URI.create("urn:resource:1"), thirdResult.id());
-        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:3")),
+        assertEquals(List.of(URI.create("urn:subject:3"), URI.create("urn:topic:3")),
                 thirdResult.parentTopicIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:3"), thirdResult.subjectId());
         assertEquals("/subject:3/topic:3/resource:1", thirdResult.path());
@@ -263,9 +263,9 @@ public class QueryTest extends RestTest {
         var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
 
         assertEquals(2, result.length);
-        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2")),
+        assertEquals(List.of(URI.create("urn:subject:1"), URI.create("urn:topic:1")),
                 result[0].parentTopicIds().stream().sorted().toList());
-        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2")),
+        assertEquals(List.of(URI.create("urn:subject:2"), URI.create("urn:topic:2")),
                 result[1].parentTopicIds().stream().sorted().toList());
     }
 
@@ -292,7 +292,7 @@ public class QueryTest extends RestTest {
         assertEquals(3, result.length);
         var firstResult = result[0];
         assertEquals(URI.create("urn:resource:1"), firstResult.id());
-        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:2")),
+        assertEquals(List.of(URI.create("urn:subject:1"), URI.create("urn:topic:1")),
                 firstResult.parentTopicIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:1"), firstResult.subjectId());
         assertEquals("/subject:1/topic:1/resource:1", firstResult.path());
@@ -303,7 +303,7 @@ public class QueryTest extends RestTest {
 
         var secondResult = result[1];
         assertEquals(URI.create("urn:resource:1"), secondResult.id());
-        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:2")),
+        assertEquals(List.of(URI.create("urn:subject:2"), URI.create("urn:topic:2")),
                 secondResult.parentTopicIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:2"), secondResult.subjectId());
         assertEquals("/subject:2/topic:2/resource:1", secondResult.path());
@@ -314,8 +314,7 @@ public class QueryTest extends RestTest {
 
         var thirdResult = result[2];
         assertEquals(URI.create("urn:resource:1"), thirdResult.id());
-        assertEquals(List.of(URI.create("urn:topic:1"), URI.create("urn:topic:2"), URI.create("urn:topic:2")),
-                thirdResult.parentTopicIds().stream().sorted().toList());
+        assertEquals(List.of(URI.create("urn:topic:2")), thirdResult.parentTopicIds().stream().sorted().toList());
         assertEquals(URI.create("urn:topic:2"), thirdResult.subjectId());
         assertEquals("/topic:2/resource:1", thirdResult.path());
         assertEquals(URI.create("urn:relevance:core"), thirdResult.relevanceId());

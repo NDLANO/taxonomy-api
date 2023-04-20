@@ -12,6 +12,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageFieldDTO;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.SearchableTaxonomyResourceType;
+import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.util.TitleUtil;
 
 import java.net.URI;
@@ -66,6 +69,10 @@ public class NodeDTO {
     @Schema(description = "A pretty url based on name and context. Empty if no context.")
     private Optional<String> url = Optional.empty();
 
+    @JsonProperty
+    @Schema(description = "A list of all contexts this node is part of")
+    private List<TaxonomyContextDTO> contexts = new ArrayList<>();
+
     public NodeDTO() {
     }
 
@@ -110,6 +117,20 @@ public class NodeDTO {
             this.url = TitleUtil.createPrettyUrl(this.name, this.contextId);
         });
 
+        var relevanceName = new LanguageField<String>();
+        if (relevance.isPresent()) {
+            relevanceName = LanguageField.fromNode(relevance.get());
+        }
+        LanguageField<String> finalRelevanceName = relevanceName;
+        this.contexts = entity.getContexts().stream().map(ctx -> {
+            return new TaxonomyContextDTO(entity.getPublicId(), URI.create(ctx.rootId()),
+                    LanguageFieldDTO.fromLanguageField(ctx.rootName()), ctx.path(),
+                    LanguageFieldDTO.fromLanguageFieldList(ctx.breadcrumbs()), entity.getContextType(),
+                    URI.create(ctx.relevanceId()), LanguageFieldDTO.fromLanguageField(finalRelevanceName),
+                    entity.getResourceTypes().stream().map(SearchableTaxonomyResourceType::new).toList(),
+                    ctx.parentIds().stream().map(URI::create).toList(), ctx.isPrimary(), ctx.isVisible(),
+                    ctx.contextId());
+        }).toList();
     }
 
     public URI getId() {
@@ -154,6 +175,10 @@ public class NodeDTO {
 
     public Set<String> getSupportedLanguages() {
         return supportedLanguages;
+    }
+
+    public List<TaxonomyContextDTO> getContexts() {
+        return contexts;
     }
 
     public Optional<String> getUrl() {
