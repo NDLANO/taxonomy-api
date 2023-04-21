@@ -21,7 +21,7 @@ interface ExtraSpecification<T> {
 public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends TaxonomyRepository<DOMAIN>> {
     REPO getRepository();
 
-    DTO createDTO(DOMAIN domain, String languageCode);
+    DTO createDTO(DOMAIN domain, String languageCode, Optional<Boolean> includeContexts);
 
     private Specification<DOMAIN> base() {
         return (root, query, criteriaBuilder) -> criteriaBuilder.isNotNull(root.get("id"));
@@ -37,12 +37,13 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
     }
 
     default SearchResultDTO<DTO> search(Optional<String> query, Optional<List<String>> ids, Optional<String> language,
-            int pageSize, int page) {
-        return search(query, ids, language, pageSize, page, Optional.empty());
+            Optional<Boolean> includeContext, int pageSize, int page) {
+        return search(query, ids, language, includeContext, pageSize, page, Optional.empty());
     }
 
     default SearchResultDTO<DTO> search(Optional<String> query, Optional<List<String>> ids, Optional<String> language,
-            int pageSize, int page, Optional<ExtraSpecification<DOMAIN>> applySpecLambda) {
+            Optional<Boolean> includeContexts, int pageSize, int page,
+            Optional<ExtraSpecification<DOMAIN>> applySpecLambda) {
         if (page < 1)
             throw new IllegalArgumentException("page parameter must be bigger than 0");
 
@@ -73,7 +74,7 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
         var fetched = getRepository().findAll(spec, pageRequest);
 
         var languageCode = language.orElse("");
-        var dtos = fetched.stream().map(r -> createDTO(r, languageCode)).collect(Collectors.toList());
+        var dtos = fetched.stream().map(r -> createDTO(r, languageCode, includeContexts)).collect(Collectors.toList());
 
         return new SearchResultDTO<>(fetched.getTotalElements(), page, pageSize, dtos);
     }

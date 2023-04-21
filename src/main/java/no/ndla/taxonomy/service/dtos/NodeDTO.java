@@ -76,7 +76,8 @@ public class NodeDTO {
     public NodeDTO() {
     }
 
-    public NodeDTO(Optional<Node> root, Node entity, String languageCode, Optional<String> contextId) {
+    public NodeDTO(Optional<Node> root, Node entity, String languageCode, Optional<String> contextId,
+            Optional<Boolean> includeContexts) {
         this.id = entity.getPublicId();
         this.contentUri = entity.getContentUri();
 
@@ -117,20 +118,22 @@ public class NodeDTO {
             this.url = TitleUtil.createPrettyUrl(this.name, this.contextId);
         });
 
-        var relevanceName = new LanguageField<String>();
-        if (relevance.isPresent()) {
-            relevanceName = LanguageField.fromNode(relevance.get());
-        }
-        LanguageField<String> finalRelevanceName = relevanceName;
-        this.contexts = entity.getContexts().stream().map(ctx -> {
-            return new TaxonomyContextDTO(entity.getPublicId(), URI.create(ctx.rootId()),
-                    LanguageFieldDTO.fromLanguageField(ctx.rootName()), ctx.path(),
-                    LanguageFieldDTO.fromLanguageFieldList(ctx.breadcrumbs()), entity.getContextType(),
-                    URI.create(ctx.relevanceId()), LanguageFieldDTO.fromLanguageField(finalRelevanceName),
-                    entity.getResourceTypes().stream().map(SearchableTaxonomyResourceType::new).toList(),
-                    ctx.parentIds().stream().map(URI::create).toList(), ctx.isPrimary(), ctx.isVisible(),
-                    ctx.contextId());
-        }).toList();
+        includeContexts.filter(Boolean::booleanValue).ifPresent(includeCtx -> {
+            var relevanceName = new LanguageField<String>();
+            if (relevance.isPresent()) {
+                relevanceName = LanguageField.fromNode(relevance.get());
+            }
+            LanguageField<String> finalRelevanceName = relevanceName;
+            this.contexts = entity.getContexts().stream().map(ctx -> {
+                return new TaxonomyContextDTO(entity.getPublicId(), URI.create(ctx.rootId()),
+                        LanguageFieldDTO.fromLanguageField(ctx.rootName()), ctx.path(),
+                        LanguageFieldDTO.fromLanguageFieldList(ctx.breadcrumbs()), entity.getContextType(),
+                        URI.create(ctx.relevanceId()), LanguageFieldDTO.fromLanguageField(finalRelevanceName),
+                        entity.getResourceTypes().stream().map(SearchableTaxonomyResourceType::new).toList(),
+                        ctx.parentIds().stream().map(URI::create).toList(), ctx.isPrimary(), ctx.isVisible(),
+                        ctx.contextId());
+            }).toList();
+        });
     }
 
     public URI getId() {
