@@ -7,13 +7,12 @@
 
 package no.ndla.taxonomy.domain;
 
+import com.google.common.collect.Sets;
 import no.ndla.taxonomy.config.Constants;
 import org.apache.commons.lang3.SerializationUtils;
 import org.springframework.data.util.Pair;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class LanguageField<V> extends HashMap<String, V> {
@@ -43,14 +42,19 @@ public class LanguageField<V> extends HashMap<String, V> {
         return breadcrumbs;
     }
 
+    /**
+     * Returns accumulated set of language fields. All additional languages from languageField are appended so all
+     * languageLists have the same number of elements. If a language variant is not present, default value is used.
+     */
     public static LanguageField<List<String>> listFromLists(LanguageField<List<String>> listLanguageField,
             LanguageField<String> languageField) {
         var breadcrumbs = SerializationUtils.clone(listLanguageField);
-        languageField.keySet().forEach(key -> {
-            var crumbs = breadcrumbs.computeIfAbsent(key, k -> new ArrayList<>());
-            if (languageField.get(key) != null) {
-                crumbs.add(languageField.get(key));
-            }
+        var languages = Sets.union(listLanguageField.keySet(), languageField.keySet());
+        var defaultValue = languageField.get(Constants.DefaultLanguage);
+        languages.forEach(lang -> {
+            var crumbs = breadcrumbs.computeIfAbsent(lang,
+                    k -> listLanguageField.getOrDefault(Constants.DefaultLanguage, new ArrayList<>()));
+            crumbs.add(languageField.getOrDefault(lang, defaultValue));
         });
         return breadcrumbs;
     }
