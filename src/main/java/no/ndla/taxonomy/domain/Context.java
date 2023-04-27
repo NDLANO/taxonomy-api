@@ -28,6 +28,8 @@ import java.util.Optional;
  *            Parents of the node. From the other end of the nodeConnection.
  * @param isVisible
  *            Metadata from node.
+ * @param isActive
+ *            Metadata from node. True if subjectCategory is active.
  * @param isPrimary
  *            Is this context marked as primary. From nodeConnection.
  * @param relevanceId
@@ -37,5 +39,5 @@ import java.util.Optional;
  */
 public record Context(String rootId, LanguageField<String> rootName, String path,
         LanguageField<List<String>> breadcrumbs, Optional<String> contextType, List<String> parentIds,
-        boolean isVisible, boolean isPrimary, String relevanceId, String contextId) {
+        boolean isVisible, boolean isActive, boolean isPrimary, String relevanceId, String contextId) {
 }
