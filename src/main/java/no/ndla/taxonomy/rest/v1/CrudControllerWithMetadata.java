@@ -13,7 +13,7 @@ import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.EntityWithMetadata;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.exceptions.InvalidDataException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,7 +27,7 @@ import java.net.URI;
 
 public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends CrudController<T> {
     protected CrudControllerWithMetadata(TaxonomyRepository<T> repository,
-            CachedUrlUpdaterService cachedUrlUpdaterService) {
+            ContextUpdaterService cachedUrlUpdaterService) {
         super(repository, cachedUrlUpdaterService);
     }
 

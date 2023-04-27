@@ -15,7 +15,7 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.MetadataFilters;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.*;
@@ -37,7 +37,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     private final NodeService nodeService;
 
     public Topics(NodeRepository nodeRepository, NodeService nodeService,
-            CachedUrlUpdaterService cachedUrlUpdaterService) {
+            ContextUpdaterService cachedUrlUpdaterService) {
         super(nodeRepository, cachedUrlUpdaterService);
 
         this.nodeRepository = nodeRepository;

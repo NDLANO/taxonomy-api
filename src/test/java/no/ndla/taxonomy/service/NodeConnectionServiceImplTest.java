@@ -38,7 +38,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
     @Autowired
     private NodeRepository nodeRepository;
 
-    private CachedUrlUpdaterService cachedUrlUpdaterService;
+    private ContextUpdaterService cachedUrlUpdaterService;
 
     private NodeConnectionServiceImpl service;
 
@@ -47,7 +47,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        cachedUrlUpdaterService = mock(CachedUrlUpdaterService.class);
+        cachedUrlUpdaterService = mock(ContextUpdaterService.class);
 
         service = new NodeConnectionServiceImpl(nodeConnectionRepository, cachedUrlUpdaterService, nodeRepository);
     }
@@ -72,7 +72,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         assertSame(topic2, connection1.getParent().orElse(null));
         assertSame(topic1, connection1.getChild().orElse(null));
 
-        verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(topic1);
+        verify(cachedUrlUpdaterService, atLeastOnce()).updateContexts(topic1);
 
         // Test ranking
         final var connection4 = service.connectParentChild(topic4, topic5, null, null);
@@ -174,7 +174,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         assertTrue(connection1.isPrimary().orElseThrow());
         assertEquals(1, connection1.getRank());
 
-        verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(resource1);
+        verify(cachedUrlUpdaterService, atLeastOnce()).updateContexts(resource1);
 
         final var connection2 = service.connectParentChild(topic1, resource2, relevance, null, Optional.of(true));
         assertNotNull(connection2);
@@ -265,7 +265,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
 
         service.disconnectParentChildConnection(topic1subtopic1);
 
-        verify(cachedUrlUpdaterService).updateCachedUrls(subtopic1);
+        verify(cachedUrlUpdaterService).updateContexts(subtopic1);
 
         assertFalse(topic1subtopic1.getParent().isPresent());
         assertFalse(topic1subtopic1.getChild().isPresent());
@@ -315,7 +315,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
 
         service.disconnectParentChild(topic1, resource1);
 
-        verify(cachedUrlUpdaterService, atLeastOnce()).updateCachedUrls(resource1);
+        verify(cachedUrlUpdaterService, atLeastOnce()).updateContexts(resource1);
 
         assertTrue(topic2resource1.isPrimary().orElseThrow() ^ topic3resource1.isPrimary().orElseThrow());
         assertFalse(topic1resource1.getResource().isPresent());

@@ -30,11 +30,11 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final ResourceTypeRepository resourceTypeRepository;
-    private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final ContextUpdaterService cachedUrlUpdaterService;
 
     public DomainEntityHelperServiceImpl(NodeRepository nodeRepository,
             NodeConnectionRepository nodeConnectionRepository, ResourceTypeRepository resourceTypeRepository,
-            CachedUrlUpdaterService cachedUrlUpdaterService) {
+            ContextUpdaterService cachedUrlUpdaterService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.resourceTypeRepository = resourceTypeRepository;
@@ -80,7 +80,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     public void buildPathsForEntity(URI publicId) {
         DomainEntity domainEntity = getEntityByPublicId(publicId);
         if (domainEntity instanceof Node) {
-            cachedUrlUpdaterService.updateCachedUrls((Node) domainEntity);
+            cachedUrlUpdaterService.updateContexts((Node) domainEntity);
         }
     }
 

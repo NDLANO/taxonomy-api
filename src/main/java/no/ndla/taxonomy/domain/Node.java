@@ -51,14 +51,6 @@ public class Node extends DomainObject implements EntityWithMetadata {
     @UpdateTimestamp
     private Instant updated_at;
 
-    @Type(type = "string-array")
-    @Column(name = "cached_paths", columnDefinition = "text[]")
-    private String[] cachedPaths;
-
-    @Type(type = "string-array")
-    @Column(name = "primary_paths", columnDefinition = "text[]")
-    private String[] primaryPaths;
-
     @Column
     private boolean context;
 
@@ -135,87 +127,8 @@ public class Node extends DomainObject implements EntityWithMetadata {
         super.setPublicId(URI.create("urn:" + nodeType.getName() + ":" + getIdent()));
     }
 
-    public Set<CachedPath> getCachedPaths() {
-        return CachedPath.fromPaths(this.primaryPaths, this.cachedPaths);
-    }
-
-    public void setCachedPaths(Set<CachedPath> cachedPaths) {
-        this.primaryPaths = cachedPaths.stream().filter(CachedPath::isPrimary).map(CachedPath::getPath)
-                .toArray(String[]::new);
-        this.cachedPaths = cachedPaths.stream().filter(s -> !s.isPrimary()).map(CachedPath::getPath)
-                .toArray(String[]::new);
-    }
-
-    public void addCachedPath(CachedPath cachedPath) {
-        this.getCachedPaths().add(cachedPath);
-
-        if (cachedPath.getNode().orElse(null) != this) {
-            cachedPath.setNode(this);
-        }
-    }
-
-    @Deprecated
-    public void removeCachedPath(CachedPath cachedPath) {
-        this.getCachedPaths().remove(cachedPath);
-
-        if (cachedPath.getNode().orElse(null) == this) {
-            cachedPath.setNode(null);
-        }
-    }
-
     public Optional<String> getPrimaryPath() {
-        if (!getContexts().isEmpty()) {
-            return getContexts().stream().filter(Context::isPrimary).map(Context::path).findFirst();
-        }
-        return getCachedPaths().stream().filter(CachedPath::isPrimary).map(CachedPath::getPath).findFirst();
-    }
-
-    public Optional<Context> getPrimaryContext() {
-        return getContexts().stream().filter(Context::isPrimary).findFirst();
-    }
-
-    public Optional<String> getPathByContext(URI contextPublicId) {
-        var cp = getCachedPaths();
-        return cp.stream().sorted((cachedUrl1, cachedUrl2) -> {
-            final var path1 = cachedUrl1.getPath();
-            final var path2 = cachedUrl2.getPath();
-
-            final var path1MatchesContext = path1.startsWith("/" + contextPublicId.getSchemeSpecificPart());
-            final var path2MatchesContext = path2.startsWith("/" + contextPublicId.getSchemeSpecificPart());
-
-            final var path1IsPrimary = cachedUrl1.isPrimary();
-            final var path2IsPrimary = cachedUrl2.isPrimary();
-
-            if (path1IsPrimary && path2IsPrimary && path1MatchesContext && path2MatchesContext) {
-                return 0;
-            }
-
-            if (path1MatchesContext && path2MatchesContext && path1IsPrimary) {
-                return -1;
-            }
-
-            if (path1MatchesContext && path2MatchesContext && path2IsPrimary) {
-                return 1;
-            }
-
-            if (path1MatchesContext && !path2MatchesContext) {
-                return -1;
-            }
-
-            if (path2MatchesContext && !path1MatchesContext) {
-                return 1;
-            }
-
-            if (path1IsPrimary && !path2IsPrimary) {
-                return -1;
-            }
-
-            if (path2IsPrimary && !path1IsPrimary) {
-                return 1;
-            }
-
-            return 0;
-        }).map(CachedPath::getPath).findFirst();
+        return getContexts().stream().filter(Context::isPrimary).map(Context::path).findFirst();
     }
 
     /**
@@ -274,10 +187,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public TreeSet<String> getAllPaths() {
-        if (!getContexts().isEmpty()) {
-            return getContexts().stream().map(Context::path).collect(Collectors.toCollection(TreeSet::new));
-        }
-        return getCachedPaths().stream().map(CachedPath::getPath).collect(Collectors.toCollection(TreeSet::new));
+        return getContexts().stream().map(Context::path).collect(Collectors.toCollection(TreeSet::new));
     }
 
     /*
@@ -573,30 +483,6 @@ public class Node extends DomainObject implements EntityWithMetadata {
         return Optional.empty();
     }
 
-    private List<NodePath> getParentPaths(List<NodePath> oldBasePaths, Node node,
-            Optional<NodeConnection> connectionToChild) {
-        var basePaths = oldBasePaths.stream().map(p -> p.add(node, connectionToChild)).toList();
-
-        var parentConnections = node.getParentConnections().stream().filter(nc -> nc.getParent().isPresent()).toList();
-        if (parentConnections.isEmpty()) {
-            return basePaths;
-        }
-
-        var paths = new ArrayList<NodePath>();
-
-        for (var parentConnection : parentConnections) {
-            var maybeParent = parentConnection.getParent();
-            if (maybeParent.isEmpty())
-                continue;
-            var parent = maybeParent.get();
-
-            var result = this.getParentPaths(basePaths, parent, Optional.of(parentConnection));
-            paths.addAll(result);
-        }
-
-        return paths;
-    }
-
     public Map<String, String> getCustomFields() {
         return this.customfields;
     }
@@ -613,34 +499,6 @@ public class Node extends DomainObject implements EntityWithMetadata {
         var now = Instant.now().toString();
         var newGrepCode = new JsonGrepCode(code, now, now);
         this.grepcodes.add(newGrepCode);
-    }
-
-    public List<NodePath> buildPaths() {
-        var np = new NodePath();
-        var paths = getParentPaths(List.of(np), this, Optional.empty());
-        return paths.stream().sorted(Comparator.comparing(NodePath::toString)).toList();
-    }
-
-    public List<String> buildCrumbs(String languageCode) {
-        List<String> parentCrumbs = this.getParentConnections().stream().findFirst().flatMap(
-                parentConnection -> parentConnection.getParent().map(parent -> buildCrumbs(parent, languageCode)))
-                .orElse(List.of());
-
-        var crumbs = new ArrayList<>(parentCrumbs);
-        var name = this.getTranslation(languageCode).map(Translation::getName).orElse(this.getName());
-        crumbs.add(name);
-        return crumbs;
-    }
-
-    private List<String> buildCrumbs(Node entity, String languageCode) {
-        List<String> parentCrumbs = entity.getParentConnections().stream().findFirst().flatMap(
-                parentConnection -> parentConnection.getParent().map(parent -> buildCrumbs(parent, languageCode)))
-                .orElse(List.of());
-
-        var crumbs = new ArrayList<>(parentCrumbs);
-        var name = entity.getTranslation(languageCode).map(Translation::getName).orElse(entity.getName());
-        crumbs.add(name);
-        return crumbs;
     }
 
     @Override

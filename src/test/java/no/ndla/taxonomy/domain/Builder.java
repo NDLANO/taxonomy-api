@@ -7,7 +7,7 @@
 
 package no.ndla.taxonomy.domain;
 
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.ContextUpdaterService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -23,7 +22,7 @@ import java.util.function.Consumer;
 @Transactional(propagation = Propagation.MANDATORY)
 public class Builder {
     private final EntityManager entityManager;
-    private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final ContextUpdaterService cachedUrlUpdaterService;
     private final Map<String, VersionBuilder> versions = new HashMap<>();
     private final Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();
     private final Map<String, NodeBuilder> nodes = new HashMap<>();
@@ -31,7 +30,7 @@ public class Builder {
     private final Map<String, UrlMappingBuilder> cachedUrlOldRigBuilders = new HashMap<>();
     private int keyCounter = 0;
 
-    public Builder(EntityManager entityManager, CachedUrlUpdaterService cachedUrlUpdaterService) {
+    public Builder(EntityManager entityManager, ContextUpdaterService cachedUrlUpdaterService) {
         this.entityManager = entityManager;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
@@ -158,7 +157,7 @@ public class Builder {
 
         entityManager.persist(node.node);
 
-        cachedUrlUpdaterService.updateCachedUrls(node.node);
+        cachedUrlUpdaterService.updateContexts(node.node);
 
         return node.node;
     }
@@ -327,7 +326,7 @@ public class Builder {
 
         public NodeBuilder nodeType(NodeType nodeType) {
             node.setNodeType(nodeType);
-            cachedUrlUpdaterService.updateCachedUrls(node);
+            cachedUrlUpdaterService.updateContexts(node);
             return this;
         }
 
@@ -368,21 +367,21 @@ public class Builder {
         public NodeBuilder publicId(String id) {
             node.setPublicId(URI.create(id));
 
-            cachedUrlUpdaterService.updateCachedUrls(node);
+            cachedUrlUpdaterService.updateContexts(node);
             return this;
         }
 
         public NodeBuilder isContext(boolean b) {
             node.setContext(b);
 
-            cachedUrlUpdaterService.updateCachedUrls(node);
+            cachedUrlUpdaterService.updateContexts(node);
             return this;
         }
 
         public NodeBuilder isRoot(boolean root) {
             node.setRoot(root);
 
-            cachedUrlUpdaterService.updateCachedUrls(node);
+            cachedUrlUpdaterService.updateContexts(node);
             return this;
         }
 
@@ -430,7 +429,7 @@ public class Builder {
         public NodeBuilder child(Node child) {
             entityManager.persist(NodeConnection.create(node, child));
 
-            cachedUrlUpdaterService.updateCachedUrls(child);
+            cachedUrlUpdaterService.updateContexts(child);
 
             return this;
         }
@@ -474,7 +473,7 @@ public class Builder {
         public NodeBuilder resource(Node resource, boolean primary) {
             entityManager.persist(NodeConnection.create(node, resource, primary));
 
-            cachedUrlUpdaterService.updateCachedUrls(resource);
+            cachedUrlUpdaterService.updateContexts(resource);
 
             return this;
         }

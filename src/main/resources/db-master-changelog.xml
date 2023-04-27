@@ -1389,5 +1389,9 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20230411 Drop cached path fields" author="Gunnar Velle">
+        <dropColumn tableName="node" columnName="cached_paths"/>
+        <dropColumn tableName="node" columnName="primary_paths"/>
+    </changeSet>
 
 </databaseChangeLog>

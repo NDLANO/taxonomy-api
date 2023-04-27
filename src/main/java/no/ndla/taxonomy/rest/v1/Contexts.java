@@ -13,7 +13,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.ContextUpdaterService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,9 +30,9 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class Contexts {
     private final NodeRepository nodeRepository;
-    private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final ContextUpdaterService cachedUrlUpdaterService;
 
-    public Contexts(NodeRepository nodeRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
+    public Contexts(NodeRepository nodeRepository, ContextUpdaterService cachedUrlUpdaterService) {
         this.nodeRepository = nodeRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
@@ -66,7 +66,7 @@ public class Contexts {
         topic.setContext(true);
         URI location = URI.create("/v1/contexts/" + topic.getPublicId());
 
-        cachedUrlUpdaterService.updateCachedUrls(topic);
+        cachedUrlUpdaterService.updateContexts(topic);
 
         return ResponseEntity.created(location).build();
     }
@@ -81,7 +81,7 @@ public class Contexts {
         Node topic = nodeRepository.getByPublicId(id);
         topic.setContext(false);
 
-        cachedUrlUpdaterService.updateCachedUrls(topic);
+        cachedUrlUpdaterService.updateContexts(topic);
     }
 
     public static class ContextIndexDocument {

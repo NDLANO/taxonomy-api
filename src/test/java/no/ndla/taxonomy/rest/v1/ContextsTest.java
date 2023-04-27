@@ -9,7 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ContextsTest extends RestTest {
     @Autowired
-    private CachedUrlUpdaterService cachedUrlUpdaterService;
+    private ContextUpdaterService cachedUrlUpdaterService;
 
     @BeforeEach
     void cleanDatabase() {
@@ -107,7 +107,7 @@ public class ContextsTest extends RestTest {
         topic.setContext(true);
         nodeRepository.saveAndFlush(topic);
 
-        cachedUrlUpdaterService.updateCachedUrls(topic);
+        cachedUrlUpdaterService.updateContexts(topic);
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
         final var topicIndexDocument = testUtils.getObject(NodeDTO.class, response);

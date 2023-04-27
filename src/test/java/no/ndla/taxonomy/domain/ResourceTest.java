@@ -271,11 +271,4 @@ public class ResourceTest {
         final var resource = new Node(NodeType.RESOURCE);
         assertFalse(resource.isContext());
     }
-
-    @Test
-    public void getCachedPaths() {
-        setField(resource, "cachedPaths", new String[] {});
-        setField(resource, "primaryPaths", new String[] {});
-        assertEquals(Set.of(), resource.getCachedPaths());
-    }
 }
