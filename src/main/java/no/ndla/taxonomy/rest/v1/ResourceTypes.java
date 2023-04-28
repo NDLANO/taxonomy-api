@@ -47,7 +47,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @GetMapping
     @Operation(summary = "Gets a list of all resource types")
     @Transactional(readOnly = true)
-    public List<ResourceTypeDTO> index(
+    public List<ResourceTypeDTO> getAllResourceTypes(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         // Returns all resource types that is NOT a subtype
         return resourceTypeRepository.findAllByParentIncludingTranslationsAndFirstLevelSubtypes(null).stream()
@@ -57,7 +57,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single resource type")
     @Transactional(readOnly = true)
-    public ResourceTypeDTO get(@PathVariable("id") URI id,
+    public ResourceTypeDTO getResourceType(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return resourceTypeRepository.findFirstByPublicIdIncludingTranslations(id)
                 .map(resourceType -> new ResourceTypeDTO(resourceType, language, 0))
@@ -68,14 +68,14 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @Operation(summary = "Adds a new resource type", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
+    public ResponseEntity<Void> createResourceType(
             @Parameter(name = "resourceType", description = "The new resource type") @RequestBody ResourceTypePUT command) {
         ResourceType resourceType = new ResourceType();
         if (null != command.parentId) {
             ResourceType parent = resourceTypeRepository.getByPublicId(command.parentId);
             resourceType.setParent(parent);
         }
-        return doPost(resourceType, command);
+        return createEntity(resourceType, command);
     }
 
     @PutMapping("/{id}")
@@ -84,9 +84,9 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable URI id,
+    public void updateResourceType(@PathVariable URI id,
             @Parameter(name = "resourceType", description = "The updated resource type. Fields not included will be set to null.") @RequestBody ResourceTypePUT command) {
-        ResourceType resourceType = doPut(id, command);
+        ResourceType resourceType = updateEntity(id, command);
 
         ResourceType parent = null;
         if (command.parentId != null) {
@@ -101,7 +101,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @GetMapping("/{id}/subtypes")
     @Operation(summary = "Gets subtypes of one resource type")
     @Transactional(readOnly = true)
-    public List<ResourceTypeDTO> getSubtypes(@PathVariable("id") URI id,
+    public List<ResourceTypeDTO> getResourceTypeSubtypes(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @RequestParam(value = "recursive", required = false, defaultValue = "false") @Parameter(description = "If true, sub resource types are fetched recursively") boolean recursive) {
         return resourceTypeRepository.findAllByParentPublicIdIncludingTranslationsAndFirstLevelSubtypes(id).stream()

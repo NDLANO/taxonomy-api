@@ -61,7 +61,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @GetMapping
     @Operation(summary = "Lists all resources")
     @Transactional(readOnly = true)
-    public List<NodeDTO> getAll(
+    public List<NodeDTO> getAllResources(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
@@ -75,7 +75,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @GetMapping("/search")
     @Operation(summary = "Search all resources")
     @Transactional(readOnly = true)
-    public SearchResultDTO<NodeDTO> search(
+    public SearchResultDTO<NodeDTO> searchResources(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @Parameter(description = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
@@ -89,7 +89,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @GetMapping("/page")
     @Operation(summary = "Gets all resources paginated")
     @Transactional(readOnly = true)
-    public SearchResultDTO<NodeDTO> allPaginated(
+    public SearchResultDTO<NodeDTO> getResourcePage(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
@@ -111,7 +111,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @GetMapping("{id}")
     @Operation(summary = "Gets a single resource")
     @Transactional(readOnly = true)
-    public NodeDTO get(@PathVariable("id") URI id,
+    public NodeDTO getResource(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
         return nodeService.getNode(id, language);
     }
@@ -121,18 +121,18 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void updateResource(@PathVariable("id") URI id,
             @Parameter(name = "resource", description = "the updated resource. Fields not included will be set to null.") @RequestBody @Schema(name = "ResourcePOST") ResourceCommand command) {
-        doPut(id, command);
+        updateEntity(id, command);
     }
 
     @PostMapping
     @Operation(summary = "Adds a new resource", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
+    public ResponseEntity<Void> createResource(
             @Parameter(name = "resource", description = "the new resource") @RequestBody @Schema(name = "ResourcePUT") ResourceCommand command) {
-        return doPost(new Node(NodeType.RESOURCE), command);
+        return createEntity(new Node(NodeType.RESOURCE), command);
     }
 
     @PostMapping("{id}/clone")
@@ -140,7 +140,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> clone(
+    public ResponseEntity<Void> cloneResource(
             @Parameter(name = "id", description = "Id of resource to clone", example = "urn:resource:1") @PathVariable("id") URI publicId,
             @Parameter(name = "resource", description = "Object containing contentUri. Other values are ignored.") @RequestBody @Schema(name = "ResourcePOST") ResourceCommand command) {
         var entity = nodeService.cloneNode(publicId, command.contentUri);
@@ -174,7 +174,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteEntity(@PathVariable("id") URI id) {
         nodeService.delete(id);
     }
 }

@@ -40,7 +40,7 @@ public class Contexts {
 
     @GetMapping
     @Operation(summary = "Gets all contexts")
-    public List<ContextDTO> get(
+    public List<ContextDTO> getAllContexts(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
         final var nodes = nodeRepository.findAllByContextIncludingCachedUrlsAndTranslations(true);
@@ -61,7 +61,7 @@ public class Contexts {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
+    public ResponseEntity<Void> createContext(
             @Parameter(name = "context", description = "the new context") @RequestBody ContextPOST command) {
         Node topic = nodeRepository.getByPublicId(command.id);
         topic.setContext(true);
@@ -78,7 +78,7 @@ public class Contexts {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteContext(@PathVariable("id") URI id) {
         Node topic = nodeRepository.getByPublicId(id);
         topic.setContext(false);
 

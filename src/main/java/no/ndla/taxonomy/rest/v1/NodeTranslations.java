@@ -42,7 +42,7 @@ public class NodeTranslations {
     @GetMapping
     @Operation(summary = "Gets all translations for a single node")
     @Transactional(readOnly = true)
-    public List<TranslationDTO> index(@PathVariable("id") URI id) {
+    public List<TranslationDTO> getAllNodeTranslations(@PathVariable("id") URI id) {
         Node node = nodeRepository.getByPublicId(id);
         List<TranslationDTO> result = new ArrayList<>();
         node.getTranslations().forEach(t -> result.add(new TranslationDTO(t)));
@@ -52,7 +52,7 @@ public class NodeTranslations {
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single node")
     @Transactional(readOnly = true)
-    public TranslationDTO get(@PathVariable("id") URI id,
+    public TranslationDTO getNodeTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node node = nodeRepository.getByPublicId(id);
         var translation = node.getTranslation(language).orElseThrow(
@@ -66,7 +66,7 @@ public class NodeTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void createUpdateNodeTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "command", description = "The new or updated translation") @RequestBody TranslationPUT command) {
         Node node = nodeRepository.getByPublicId(id);
@@ -79,7 +79,7 @@ public class NodeTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id,
+    public void deleteNodeTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node node = nodeRepository.getByPublicId(id);
         node.getTranslation(language).ifPresent(translation -> {

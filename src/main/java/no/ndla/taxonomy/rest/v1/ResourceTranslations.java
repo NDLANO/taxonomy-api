@@ -40,7 +40,7 @@ public class ResourceTranslations {
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single resource")
     @Transactional(readOnly = true)
-    public List<ResourceTranslationDTO> index(@PathVariable("id") URI id) {
+    public List<ResourceTranslationDTO> getAllResourceTranslations(@PathVariable("id") URI id) {
         var resource = nodeRepository.getByPublicId(id);
         List<ResourceTranslationDTO> result = new ArrayList<>();
         resource.getTranslations().forEach(t -> result.add(new ResourceTranslationDTO() {
@@ -55,7 +55,7 @@ public class ResourceTranslations {
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single resource")
     @Transactional(readOnly = true)
-    public ResourceTranslationDTO get(@PathVariable("id") URI id,
+    public ResourceTranslationDTO getResourceTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         var resource = nodeRepository.getByPublicId(id);
         var translation = resource.getTranslation(language).orElseThrow(
@@ -74,7 +74,7 @@ public class ResourceTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void createUpdateResourceTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "resource", description = "The new or updated translation") @RequestBody ResourceTranslationPUT command) {
         var resource = nodeRepository.getByPublicId(id);
@@ -87,7 +87,7 @@ public class ResourceTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id,
+    public void deleteResourceTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         final var resource = nodeRepository.getByPublicId(id);
         resource.getTranslation(language).ifPresent((translation) -> {

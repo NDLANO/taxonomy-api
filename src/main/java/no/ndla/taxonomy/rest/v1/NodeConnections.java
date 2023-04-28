@@ -58,7 +58,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @GetMapping
     @Operation(summary = "Gets all connections between node and children")
     @Transactional(readOnly = true)
-    public List<NodeConnectionDTO> index() {
+    public List<NodeConnectionDTO> getAllNodeConnections() {
         final List<NodeConnectionDTO> listToReturn = new ArrayList<>();
         var ids = nodeConnectionRepository.findAllIds();
         final var counter = new AtomicInteger();
@@ -74,7 +74,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between node and children paginated")
     @Transactional(readOnly = true)
-    public SearchResultDTO<NodeConnectionDTO> allPaginated(
+    public SearchResultDTO<NodeConnectionDTO> getNodeConnectionsPage(
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
@@ -92,7 +92,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single connection between a node and a child")
     @Transactional(readOnly = true)
-    public NodeConnectionDTO get(@PathVariable("id") URI id) {
+    public NodeConnectionDTO getNodeConnection(@PathVariable("id") URI id) {
         NodeConnection topicSubtopic = nodeConnectionRepository.getByPublicId(id);
         return new NodeConnectionDTO(topicSubtopic);
     }
@@ -101,7 +101,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @Operation(summary = "Adds a node to a parent", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
+    public ResponseEntity<Void> createNodeConnection(
             @Parameter(name = "connection", description = "The new connection") @RequestBody NodeConnectionPOST command) {
         Node parent = nodeRepository.getByPublicId(command.parentId);
         Node child = nodeRepository.getByPublicId(command.childId);
@@ -121,7 +121,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteEntity(@PathVariable("id") URI id) {
         var connection = nodeConnectionRepository.getByPublicId(id);
         connectionService.disconnectParentChildConnection(connection);
     }
@@ -132,7 +132,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void updateNodeConnection(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "The updated connection") @RequestBody NodeConnectionPUT command) {
         final var connection = nodeConnectionRepository.getByPublicId(id);
         var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;

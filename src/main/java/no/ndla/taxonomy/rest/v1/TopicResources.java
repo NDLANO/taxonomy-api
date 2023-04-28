@@ -51,7 +51,7 @@ public class TopicResources {
     @GetMapping
     @Operation(summary = "Gets all connections between topics and resources")
     @Transactional(readOnly = true)
-    public List<TopicResourceDTO> index() {
+    public List<TopicResourceDTO> getAllTopicResources() {
         return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream().map(TopicResourceDTO::new)
                 .collect(Collectors.toList());
     }
@@ -59,7 +59,7 @@ public class TopicResources {
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between topic and resources paginated")
     @Transactional(readOnly = true)
-    public SearchResultDTO<TopicResourceDTO> allPaginated(
+    public SearchResultDTO<TopicResourceDTO> getTopicResourcePage(
             @Parameter(name = "page", description = "The page to fetch", required = true) Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
@@ -79,7 +79,7 @@ public class TopicResources {
     @GetMapping("/{id}")
     @Operation(summary = "Gets a specific connection between a topic and a resource")
     @Transactional(readOnly = true)
-    public TopicResourceDTO get(@PathVariable("id") URI id) {
+    public TopicResourceDTO getTopicResource(@PathVariable("id") URI id) {
         var resourceConnection = nodeConnectionRepository.getByPublicId(id);
         return new TopicResourceDTO(resourceConnection);
     }
@@ -88,7 +88,7 @@ public class TopicResources {
     @Operation(summary = "Adds a resource to a topic", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
+    public ResponseEntity<Void> createTopicResource(
             @Parameter(name = "connection", description = "new topic/resource connection ") @RequestBody TopicResourcePOST command) {
 
         Node topic = nodeRepository.getByPublicId(command.topicid);
@@ -111,7 +111,7 @@ public class TopicResources {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteTopicResource(@PathVariable("id") URI id) {
         var connection = nodeConnectionRepository.getByPublicId(id);
         connectionService.disconnectParentChildConnection(connection);
     }
@@ -122,7 +122,7 @@ public class TopicResources {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void updateTopicResource(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "Updated topic/resource connection") @RequestBody TopicResourcePUT command) {
         var topicResource = nodeConnectionRepository.getByPublicId(id);
         var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;

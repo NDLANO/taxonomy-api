@@ -53,7 +53,7 @@ public class SubjectTopics {
     @GetMapping
     @Operation(summary = "Gets all connections between subjects and topics")
     @Transactional(readOnly = true)
-    public List<SubjectTopicDTO> index() {
+    public List<SubjectTopicDTO> getAllSubjectTopics() {
         final List<SubjectTopicDTO> listToReturn = new ArrayList<>();
         var ids = nodeConnectionRepository.findAllIds();
         final var counter = new AtomicInteger();
@@ -69,7 +69,7 @@ public class SubjectTopics {
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between subjects and topics paginated")
     @Transactional(readOnly = true)
-    public SearchResultDTO<SubjectTopicDTO> allPaginated(
+    public SearchResultDTO<SubjectTopicDTO> getSubjectTopicPage(
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
@@ -87,7 +87,7 @@ public class SubjectTopics {
     @GetMapping("/{id}")
     @Operation(summary = "Get a specific connection between a subject and a topic")
     @Transactional(readOnly = true)
-    public SubjectTopicDTO get(@PathVariable("id") URI id) {
+    public SubjectTopicDTO getSubjectTopic(@PathVariable("id") URI id) {
         NodeConnection nodeConnection = nodeConnectionRepository.getByPublicId(id);
         return new SubjectTopicDTO(nodeConnection);
     }
@@ -96,7 +96,7 @@ public class SubjectTopics {
     @Operation(summary = "Adds a new topic to a subject", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
+    public ResponseEntity<Void> createSubjectTopic(
             @Parameter(name = "command", description = "The subject and topic getting connected.") @RequestBody SubjectTopicPOST command) {
         var subject = nodeRepository.getByPublicId(command.subjectid);
         var topic = nodeRepository.getByPublicId(command.topicid);
@@ -113,7 +113,7 @@ public class SubjectTopics {
     @Operation(summary = "Removes a topic from a subject", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteSubjectTopic(@PathVariable("id") URI id) {
         connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id));
     }
 
@@ -123,7 +123,7 @@ public class SubjectTopics {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void updateSubjectTopic(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "updated subject/topic connection") @RequestBody SubjectTopicPUT command) {
         var nodeConnection = nodeConnectionRepository.getByPublicId(id);
         var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;

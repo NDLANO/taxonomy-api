@@ -43,7 +43,7 @@ public class Queries {
     @GetMapping("/path")
     @Operation(summary = "Gets a list of contexts matching given pretty url with contextId, empty list if no matches are found.")
     @Transactional(readOnly = true)
-    public List<TaxonomyContextDTO> queryByPath(@RequestParam("path") Optional<String> path) {
+    public List<TaxonomyContextDTO> queryPath(@RequestParam("path") Optional<String> path) {
         return nodeService.getContextByPath(path);
     }
 
@@ -56,7 +56,7 @@ public class Queries {
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
-        return resourceController.getAll(language, contentURI, key, value, isVisible);
+        return resourceController.getAllResources(language, contentURI, key, value, isVisible);
     }
 
     @GetMapping("/topics")
@@ -68,6 +68,6 @@ public class Queries {
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
-        return topicController.getAll(language, Optional.of(contentURI), key, value, isVisible);
+        return topicController.getAllTopics(language, Optional.of(contentURI), key, value, isVisible);
     }
 }

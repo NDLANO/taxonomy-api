@@ -53,7 +53,7 @@ public class TopicSubtopics {
     @GetMapping
     @Operation(summary = "Gets all connections between topics and subtopics")
     @Transactional(readOnly = true)
-    public List<TopicSubtopicDTO> index() {
+    public List<TopicSubtopicDTO> getAllTopicSubtopics() {
         final List<TopicSubtopicDTO> listToReturn = new ArrayList<>();
         var ids = nodeConnectionRepository.findAllIds();
         final var counter = new AtomicInteger();
@@ -69,7 +69,7 @@ public class TopicSubtopics {
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between topics and subtopics paginated")
     @Transactional(readOnly = true)
-    public SearchResultDTO<TopicSubtopicDTO> allPaginated(
+    public SearchResultDTO<TopicSubtopicDTO> getTopicSubtopicPage(
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
@@ -87,7 +87,7 @@ public class TopicSubtopics {
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single connection between a topic and a subtopic")
     @Transactional(readOnly = true)
-    public TopicSubtopicDTO get(@PathVariable("id") URI id) {
+    public TopicSubtopicDTO getTopicSubtopic(@PathVariable("id") URI id) {
         NodeConnection topicSubtopic = nodeConnectionRepository.getByPublicId(id);
         return new TopicSubtopicDTO(topicSubtopic);
     }
@@ -96,7 +96,7 @@ public class TopicSubtopics {
     @Operation(summary = "Adds a subtopic to a topic", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
+    public ResponseEntity<Void> createTopicSubtopic(
             @Parameter(name = "connection", description = "The new connection") @RequestBody TopicSubtopicPOST command) {
         Node topic = nodeRepository.getByPublicId(command.topicid);
         Node subtopic = nodeRepository.getByPublicId(command.subtopicid);
@@ -117,7 +117,7 @@ public class TopicSubtopics {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteTopicSubtopic(@PathVariable("id") URI id) {
         connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id));
     }
 
@@ -127,7 +127,7 @@ public class TopicSubtopics {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void updateTopicSubtopic(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "The updated connection") @RequestBody TopicSubtopicPUT command) {
         final var topicSubtopic = nodeConnectionRepository.getByPublicId(id);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)

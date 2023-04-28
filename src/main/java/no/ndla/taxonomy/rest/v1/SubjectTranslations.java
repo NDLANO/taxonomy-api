@@ -40,7 +40,7 @@ public class SubjectTranslations {
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single subject")
     @Transactional(readOnly = true)
-    public List<SubjectTranslationDTO> index(@PathVariable("id") URI id) {
+    public List<SubjectTranslationDTO> getAllSubjectTranslations(@PathVariable("id") URI id) {
         Node subject = nodeRepository.getByPublicId(id);
         List<SubjectTranslationDTO> result = new ArrayList<>();
         subject.getTranslations().forEach(t -> result.add(new SubjectTranslationDTO() {
@@ -55,7 +55,7 @@ public class SubjectTranslations {
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single subject")
     @Transactional(readOnly = true)
-    public SubjectTranslationDTO get(@PathVariable("id") URI id,
+    public SubjectTranslationDTO getSubjectTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node subject = nodeRepository.getByPublicId(id);
         var translation = subject.getTranslation(language).orElseThrow(
@@ -74,7 +74,7 @@ public class SubjectTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id,
+    public void deleteSubjectTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node subject = nodeRepository.getByPublicId(id);
         subject.getTranslation(language).ifPresent((translation) -> {
@@ -89,7 +89,7 @@ public class SubjectTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void createUpdateSubjectTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "subject", description = "The new or updated translation") @RequestBody SubjectTranslationPUT command) {
         Node subject = nodeRepository.getByPublicId(id);

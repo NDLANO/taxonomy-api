@@ -46,7 +46,7 @@ public class ResourceResourceTypes {
     @Operation(summary = "Adds a resource type to a resource", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
+    public ResponseEntity<Void> createResourceResourceType(
             @Parameter(name = "connection", description = "The new resource/resource type connection") @RequestBody ResourceResourceTypePOST command) {
 
         var resource = nodeRepository.getByPublicId(command.resourceId);
@@ -65,7 +65,7 @@ public class ResourceResourceTypes {
     @Operation(summary = "Removes a resource type from a resource", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteResourceResourceType(@PathVariable("id") URI id) {
         resourceResourceTypeRepository.delete(resourceResourceTypeRepository.getByPublicId(id));
         resourceResourceTypeRepository.flush();
     }
@@ -73,7 +73,7 @@ public class ResourceResourceTypes {
     @GetMapping
     @Operation(summary = "Gets all connections between resources and resource types")
     @Transactional(readOnly = true)
-    public List<ResourceResourceTypeDTO> index() {
+    public List<ResourceResourceTypeDTO> getAllResourceResourceTypes() {
         return resourceResourceTypeRepository.findAllIncludingResourceAndResourceType().stream()
                 .map(ResourceResourceTypeDTO::new).collect(Collectors.toList());
     }
@@ -81,7 +81,7 @@ public class ResourceResourceTypes {
     @GetMapping({ "/{id}" })
     @Operation(summary = "Gets a single connection between resource and resource type")
     @Transactional(readOnly = true)
-    public ResourceResourceTypeDTO get(@PathVariable("id") URI id) {
+    public ResourceResourceTypeDTO getResourceResourceType(@PathVariable("id") URI id) {
         ResourceResourceType result = resourceResourceTypeRepository.getByPublicId(id);
         return new ResourceResourceTypeDTO(result);
     }

@@ -45,7 +45,7 @@ public class Relevances extends CrudController<Relevance> {
     @GetMapping
     @Operation(summary = "Gets all relevances")
     @Transactional(readOnly = true)
-    public List<RelevanceDTO> index(
+    public List<RelevanceDTO> getAllRelevances(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return relevanceRepository.findAllIncludingTranslations().stream()
                 .map(relevance -> new RelevanceDTO(relevance, language)).collect(Collectors.toList());
@@ -54,7 +54,7 @@ public class Relevances extends CrudController<Relevance> {
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single relevance", description = "Default language will be returned if desired language not found or if parameter is omitted.")
     @Transactional(readOnly = true)
-    public RelevanceDTO get(@PathVariable("id") URI id,
+    public RelevanceDTO getRelevance(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return relevanceRepository.findFirstByPublicIdIncludingTranslations(id)
                 .map(relevance -> new RelevanceDTO(relevance, language))
@@ -65,9 +65,9 @@ public class Relevances extends CrudController<Relevance> {
     @Operation(summary = "Creates a new relevance", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
+    public ResponseEntity<Void> createRelevance(
             @Parameter(name = "relevance", description = "The new relevance") @RequestBody RelevancePUT command) {
-        return doPost(new Relevance(), command);
+        return createEntity(new Relevance(), command);
     }
 
     @PutMapping("/{id}")
@@ -75,9 +75,9 @@ public class Relevances extends CrudController<Relevance> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void updateRelevance(@PathVariable("id") URI id,
             @Parameter(name = "relevance", description = "The updated relevance. Fields not included will be set to null.") @RequestBody RelevancePUT command) {
-        doPut(id, command);
+        updateEntity(id, command);
     }
 
     @Schema(name = "Relevance")

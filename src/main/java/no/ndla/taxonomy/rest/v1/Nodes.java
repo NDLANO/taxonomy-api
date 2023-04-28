@@ -71,7 +71,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping
     @Operation(summary = "Gets all nodes")
     @Transactional(readOnly = true)
-    public List<NodeDTO> getAll(
+    public List<NodeDTO> getAllNodes(
             @Parameter(description = "Filter by nodeType, could be a comma separated list, defaults to Topics and Subjects (Resources are quite slow). :^)") @RequestParam(value = "nodeType", required = false) Optional<List<NodeType>> nodeType,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
@@ -89,7 +89,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping("/search")
     @Operation(summary = "Search all nodes")
     @Transactional(readOnly = true)
-    public SearchResultDTO<NodeDTO> search(
+    public SearchResultDTO<NodeDTO> searchNodes(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @Parameter(description = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
@@ -104,7 +104,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping("/page")
     @Operation(summary = "Gets all nodes paginated")
     @Transactional(readOnly = true)
-    public SearchResultDTO<NodeDTO> allPaginated(
+    public SearchResultDTO<NodeDTO> getNodePage(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
@@ -125,7 +125,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single node")
     @Transactional(readOnly = true)
-    public NodeDTO get(@PathVariable("id") URI id,
+    public NodeDTO getNode(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) String language) {
         return new NodeDTO(Optional.empty(), nodeRepository.findFirstByPublicId(id).orElseThrow(
                 () -> new NotFoundHttpResponseException("Node was not found")), language, Optional.empty());
@@ -135,9 +135,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @Operation(summary = "Creates a new node", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
+    public ResponseEntity<Void> createNode(
             @Parameter(name = "connection", description = "The new node") @RequestBody @Schema(name = "NodePOST") NodeCommand command) {
-        return doPost(new Node(command.nodeType), command);
+        return createEntity(new Node(command.nodeType), command);
     }
 
     @PutMapping("/{id}")
@@ -145,9 +145,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void updateNode(@PathVariable("id") URI id,
             @Parameter(name = "node", description = "The updated node. Fields not included will be set to null.") @RequestBody @Schema(name = "NodePUT") NodeCommand command) {
-        doPut(id, command);
+        updateEntity(id, command);
     }
 
     @PutMapping("/{id}/publish")
@@ -155,7 +155,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @Transactional
-    public void publishAsync(@PathVariable("id") URI id,
+    public void publishNode(@PathVariable("id") URI id,
             @Parameter(description = "Version id to publish from. Can be omitted to publish from default.", example = "urn:version:1") @RequestParam(value = "sourceId", required = false) Optional<URI> sourceId,
             @Parameter(description = "Version id to publish to.", example = "urn:version:2") @RequestParam(value = "targetId") URI targetId) {
         nodeService.publishNode(id, sourceId, targetId, true, false);
@@ -206,7 +206,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteEntity(@PathVariable("id") URI id) {
         nodeService.delete(id);
     }
 

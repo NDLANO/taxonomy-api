@@ -44,7 +44,7 @@ public class Versions extends CrudController<Version> {
     @GetMapping
     @Operation(summary = "Gets all versions")
     @Transactional(readOnly = true)
-    public List<VersionDTO> getAll(
+    public List<VersionDTO> getAllVersions(
             @Parameter(description = "Version type", example = "PUBLISHED") @RequestParam(value = "type", required = false, defaultValue = "") Optional<VersionType> versionType,
             @Parameter(description = "Version hash", example = "ndla") @RequestParam(value = "hash", required = false) Optional<String> hash) {
         if (versionType.isPresent())
@@ -58,7 +58,7 @@ public class Versions extends CrudController<Version> {
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single version")
     @Transactional(readOnly = true)
-    public VersionDTO get(@PathVariable("id") URI id) {
+    public VersionDTO getVersion(@PathVariable("id") URI id) {
         return versionRepository.findFirstByPublicId(id).map(VersionDTO::new)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Version not found"));
     }
@@ -67,7 +67,7 @@ public class Versions extends CrudController<Version> {
     @Operation(summary = "Creates a new version", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @Transactional
-    public ResponseEntity<Void> post(
+    public ResponseEntity<Void> createVersion(
             @Parameter(description = "Base new version on version with this id") @RequestParam(value = "sourceId") Optional<URI> sourceId,
             @Parameter(name = "version", description = "The new version") @RequestBody @Schema(name = "VersionPOST") VersionCommand command) {
         // Don't call doPost because we need to create new schema
@@ -81,9 +81,9 @@ public class Versions extends CrudController<Version> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void updateVersion(@PathVariable("id") URI id,
             @Parameter(name = "version", description = "The updated version.") @RequestBody @Schema(name = "VersionPUT") VersionCommand command) {
-        doPut(id, command);
+        updateEntity(id, command);
     }
 
     @DeleteMapping("/{id}")
@@ -92,7 +92,7 @@ public class Versions extends CrudController<Version> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Override
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteEntity(@PathVariable("id") URI id) {
         Optional<Version> version = versionRepository.findFirstByPublicId(id);
         if (version.isEmpty() || version.get().isLocked()) {
             throw new InvalidArgumentServiceException("Cannot delete locked version");
@@ -105,7 +105,7 @@ public class Versions extends CrudController<Version> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @Transactional
-    public void publish(@PathVariable("id") URI id) {
+    public void publishVersion(@PathVariable("id") URI id) {
         Optional<Version> version = versionRepository.findFirstByPublicId(id);
         if (version.isEmpty() || version.get().getVersionType() != VersionType.BETA) {
             throw new InvalidArgumentServiceException("Version has wrong type");

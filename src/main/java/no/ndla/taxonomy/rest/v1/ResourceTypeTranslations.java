@@ -41,7 +41,7 @@ public class ResourceTypeTranslations {
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single resource type")
     @Transactional(readOnly = true)
-    public List<ResourceTypeTranslationDTO> index(@PathVariable("id") URI id) {
+    public List<ResourceTypeTranslationDTO> getAllResourceTypeTranslations(@PathVariable("id") URI id) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         List<ResourceTypeTranslationDTO> result = new ArrayList<>();
         resourceType.getTranslations().forEach(t -> result.add(new ResourceTypeTranslationDTO() {
@@ -56,7 +56,7 @@ public class ResourceTypeTranslations {
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single resource type")
     @Transactional(readOnly = true)
-    public ResourceTypeTranslationDTO get(@PathVariable("id") URI id,
+    public ResourceTypeTranslationDTO getResourceTypeTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         var translation = resourceType.getTranslation(language).orElseThrow(
@@ -76,7 +76,7 @@ public class ResourceTypeTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void createUpdateResourceTypeTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
             @Parameter(name = "resourceType", description = "The new or updated translation") @RequestBody ResourceTypeTranslationPUT command) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
@@ -89,7 +89,7 @@ public class ResourceTypeTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id,
+    public void deleteResourceTypeTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         resourceType.getTranslation(language).ifPresent((translation) -> {

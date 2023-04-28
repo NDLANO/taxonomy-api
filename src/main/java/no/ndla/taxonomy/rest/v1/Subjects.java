@@ -60,7 +60,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @GetMapping
     @Operation(summary = "Gets all subjects")
     @Transactional(readOnly = true)
-    public List<NodeDTO> index(
+    public List<NodeDTO> getAllSubjects(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
@@ -73,7 +73,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @GetMapping("/search")
     @Operation(summary = "Search all subjects")
     @Transactional(readOnly = true)
-    public SearchResultDTO<NodeDTO> search(
+    public SearchResultDTO<NodeDTO> searchSubjects(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
             @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @Parameter(description = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
@@ -87,7 +87,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between node and children paginated")
     @Transactional(readOnly = true)
-    public SearchResultDTO<NodeDTO> allPaginated(
+    public SearchResultDTO<NodeDTO> getSubjectPage(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
@@ -109,7 +109,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single subject", description = "Default language will be returned if desired language not found or if parameter is omitted.")
     @Transactional(readOnly = true)
-    public NodeDTO get(@PathVariable("id") URI id,
+    public NodeDTO getSubject(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
         return nodeRepository.findFirstByPublicId(id).map(subject -> {
             return new NodeDTO(Optional.empty(), subject, language.orElse(Constants.DefaultLanguage), Optional.empty());
@@ -121,29 +121,27 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void updateSubject(@PathVariable("id") URI id,
             @Parameter(name = "subject", description = "The updated subject. Fields not included will be set to null.") @RequestBody @Schema(name = "SubjectPOST") SubjectCommand command) {
-        doPut(id, command);
+        updateEntity(id, command);
     }
 
     @PostMapping
     @Operation(summary = "Creates a new subject", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
+    public ResponseEntity<Void> createSubject(
             @Parameter(name = "subject", description = "The new subject") @RequestBody @Schema(name = "SubjectPUT") SubjectCommand command) {
         final var subject = new Node(NodeType.SUBJECT);
-        return doPost(subject, command);
+        return createEntity(subject, command);
     }
 
     @GetMapping("/{id}/topics")
     @Operation(summary = "Gets all children associated with a subject", description = "This resource is read-only. To update the relationship between nodes, use the resource /subject-topics.")
     @Transactional(readOnly = true)
-    public List<NodeChildDTO> getChildren(@PathVariable("id") URI id,
+    public List<NodeChildDTO> getSubjectChildren(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
             @Parameter(description = "If true, subtopics are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
-            @Deprecated @Parameter(description = "Select by filter id(s). If not specified, all topics will be returned."
-                    + "Multiple ids may be separated with comma or the parameter may be repeated for each id.") @RequestParam(value = "filter", required = false, defaultValue = "") Set<URI> filterIds,
             @Parameter(description = "Select by relevance. If not specified, all nodes will be returned.") @RequestParam(value = "relevance", required = false, defaultValue = "") URI relevance) {
         final var subject = nodeRepository.findFirstByPublicId(id)
                 .orElseThrow(() -> new NotFoundException("Subject", id));
@@ -218,7 +216,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteEntity(@PathVariable("id") URI id) {
         nodeService.delete(id);
     }
 
@@ -227,12 +225,10 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             + "The ordering of resources will be based on the rank of resources relative to the node they belong to.", tags = {
                     "subjects" })
     @Transactional(readOnly = true)
-    public List<NodeChildDTO> getResources(@PathVariable("subjectId") URI subjectId,
+    public List<NodeChildDTO> getSubjectResources(@PathVariable("subjectId") URI subjectId,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
             @Parameter(description = "Filter by resource type id(s). If not specified, resources of all types will be returned."
                     + "Multiple ids may be separated with comma or the parameter may be repeated for each id.") @RequestParam(value = "type", required = false, defaultValue = "") URI[] resourceTypeIds,
-            @Deprecated @Parameter(description = "Select by filter id(s). If not specified, all resources will be returned."
-                    + "Multiple ids may be separated with comma or the parameter may be repeated for each id.") @RequestParam(value = "filter", required = false, defaultValue = "") URI[] filterIds,
             @Parameter(description = "Select by relevance. If not specified, all resources will be returned.") @RequestParam(value = "relevance", required = false, defaultValue = "") URI relevance) {
         final Set<URI> resourceTypeIdSet = resourceTypeIds != null ? Set.of(resourceTypeIds) : Set.of();
 
