@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
@@ -121,7 +122,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable("id") URI id,
-            @Parameter(name = "resource", description = "the updated resource. Fields not included will be set to null.") @RequestBody ResourceCommand command) {
+            @Parameter(name = "resource", description = "the updated resource. Fields not included will be set to null.") @RequestBody @Schema(name = "ResourcePOST") ResourceCommand command) {
         doPut(id, command);
     }
 
@@ -130,7 +131,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @Parameter(name = "resource", description = "the new resource") @RequestBody ResourceCommand command) {
+            @Parameter(name = "resource", description = "the new resource") @RequestBody @Schema(name = "ResourcePUT") ResourceCommand command) {
         return doPost(new Node(NodeType.RESOURCE), command);
     }
 
@@ -141,7 +142,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @Transactional
     public ResponseEntity<Void> clone(
             @Parameter(name = "id", description = "Id of resource to clone", example = "urn:resource:1") @PathVariable("id") URI publicId,
-            @Parameter(name = "resource", description = "Object containing contentUri. Other values are ignored.") @RequestBody ResourceCommand command) {
+            @Parameter(name = "resource", description = "Object containing contentUri. Other values are ignored.") @RequestBody @Schema(name = "ResourcePOST") ResourceCommand command) {
         var entity = nodeService.cloneNode(publicId, command.contentUri);
         URI location = URI.create(getLocation() + "/" + entity.getPublicId());
         return ResponseEntity.created(location).build();

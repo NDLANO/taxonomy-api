@@ -41,29 +41,28 @@ public class ResourceTypeTranslations {
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single resource type")
     @Transactional(readOnly = true)
-    public List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> index(@PathVariable("id") URI id) {
+    public List<ResourceTypeTranslationDTO> index(@PathVariable("id") URI id) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
-        List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> result = new ArrayList<>();
-        resourceType.getTranslations()
-                .forEach(t -> result.add(new ResourceTypeTranslations.ResourceTypeTranslationIndexDocument() {
-                    {
-                        name = t.getName();
-                        language = t.getLanguageCode();
-                    }
-                }));
+        List<ResourceTypeTranslationDTO> result = new ArrayList<>();
+        resourceType.getTranslations().forEach(t -> result.add(new ResourceTypeTranslationDTO() {
+            {
+                name = t.getName();
+                language = t.getLanguageCode();
+            }
+        }));
         return result;
     }
 
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single resource type")
     @Transactional(readOnly = true)
-    public ResourceTypeTranslations.ResourceTypeTranslationIndexDocument get(@PathVariable("id") URI id,
+    public ResourceTypeTranslationDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         var translation = resourceType.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for resource type", id));
 
-        return new ResourceTypeTranslations.ResourceTypeTranslationIndexDocument() {
+        return new ResourceTypeTranslationDTO() {
             {
                 name = translation.getName();
                 language = translation.getLanguageCode();
@@ -79,7 +78,7 @@ public class ResourceTypeTranslations {
     @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @Parameter(name = "resourceType", description = "The new or updated translation") @RequestBody ResourceTypeTranslations.UpdateResourceTypeTranslationCommand command) {
+            @Parameter(name = "resourceType", description = "The new or updated translation") @RequestBody ResourceTypeTranslationPUT command) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         resourceType.addTranslation(command.name, language);
         entityManager.persist(resourceType);
@@ -99,7 +98,8 @@ public class ResourceTypeTranslations {
         });
     }
 
-    public static class ResourceTypeTranslationIndexDocument {
+    @Schema(name = "ResourceTypeTranslation")
+    public static class ResourceTypeTranslationDTO {
         @JsonProperty
         @Schema(description = "The translated name of the resource type", example = "Article")
         public String name;
@@ -109,7 +109,7 @@ public class ResourceTypeTranslations {
         public String language;
     }
 
-    public static class UpdateResourceTypeTranslationCommand {
+    public static class ResourceTypeTranslationPUT {
         @JsonProperty
         @Schema(description = "The translated name of the resource type", example = "Article")
         public String name;

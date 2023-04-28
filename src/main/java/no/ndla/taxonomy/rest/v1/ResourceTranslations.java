@@ -40,10 +40,10 @@ public class ResourceTranslations {
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single resource")
     @Transactional(readOnly = true)
-    public List<ResourceTranslationIndexDocument> index(@PathVariable("id") URI id) {
+    public List<ResourceTranslationDTO> index(@PathVariable("id") URI id) {
         var resource = nodeRepository.getByPublicId(id);
-        List<ResourceTranslationIndexDocument> result = new ArrayList<>();
-        resource.getTranslations().forEach(t -> result.add(new ResourceTranslationIndexDocument() {
+        List<ResourceTranslationDTO> result = new ArrayList<>();
+        resource.getTranslations().forEach(t -> result.add(new ResourceTranslationDTO() {
             {
                 name = t.getName();
                 language = t.getLanguageCode();
@@ -55,12 +55,12 @@ public class ResourceTranslations {
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single resource")
     @Transactional(readOnly = true)
-    public ResourceTranslationIndexDocument get(@PathVariable("id") URI id,
+    public ResourceTranslationDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         var resource = nodeRepository.getByPublicId(id);
         var translation = resource.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for resource", id));
-        return new ResourceTranslationIndexDocument() {
+        return new ResourceTranslationDTO() {
             {
                 name = translation.getName();
                 language = translation.getLanguageCode();
@@ -76,7 +76,7 @@ public class ResourceTranslations {
     @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @Parameter(name = "resource", description = "The new or updated translation") @RequestBody UpdateResourceTranslationCommand command) {
+            @Parameter(name = "resource", description = "The new or updated translation") @RequestBody ResourceTranslationPUT command) {
         var resource = nodeRepository.getByPublicId(id);
         resource.addTranslation(command.name, language);
         entityManager.persist(resource);
@@ -96,7 +96,8 @@ public class ResourceTranslations {
         });
     }
 
-    public static class ResourceTranslationIndexDocument {
+    @Schema(name = "ResourceTranslation")
+    public static class ResourceTranslationDTO {
         @JsonProperty
         @Schema(description = "The translated name of the resource", example = "Introduction to algebra")
         public String name;
@@ -106,7 +107,7 @@ public class ResourceTranslations {
         public String language;
     }
 
-    public static class UpdateResourceTranslationCommand {
+    public static class ResourceTranslationPUT {
         @JsonProperty
         @Schema(description = "The translated name of the resource", example = "Introduction to algebra")
         public String name;

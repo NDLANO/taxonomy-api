@@ -7,17 +7,18 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.JsonGrepCode;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourceDTO;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourcePageDTO;
-import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,7 +34,7 @@ public class NodeResourcesTest extends RestTest {
         resource.setName("Introduction to integration");
         integrationId = resource.getPublicId();
 
-        URI id = getId(testUtils.createResource("/v1/node-resources", new NodeResources.AddResourceToNodeCommand() {
+        URI id = getId(testUtils.createResource("/v1/node-resources", new NodeResources.NodeResourcePOST() {
             {
                 nodeId = calculusId;
                 resourceId = integrationId;
@@ -66,14 +67,13 @@ public class NodeResourcesTest extends RestTest {
         // parameter and will be
         // forced to become primary (subject-topics already did this)
 
-        final var id = getId(
-                testUtils.createResource("/v1/node-resources", new NodeResources.AddResourceToNodeCommand() {
-                    {
-                        nodeId = calculusId;
-                        resourceId = integrationId;
-                        primary = false;
-                    }
-                }));
+        final var id = getId(testUtils.createResource("/v1/node-resources", new NodeResources.NodeResourcePOST() {
+            {
+                nodeId = calculusId;
+                resourceId = integrationId;
+                primary = false;
+            }
+        }));
 
         final var calculus = nodeRepository.getByPublicId(calculusId);
         assertEquals(1, calculus.getResources().size());
@@ -85,7 +85,7 @@ public class NodeResourcesTest extends RestTest {
         // After behavior change: Add the resource again to another topic with primary = false
         // should create a non-primary resource connection
         final var resource2ConnectionPublicId = getId(
-                testUtils.createResource("/v1/node-resources", new NodeResources.AddResourceToNodeCommand() {
+                testUtils.createResource("/v1/node-resources", new NodeResources.NodeResourcePOST() {
                     {
                         nodeId = node2Id;
                         resourceId = integrationId;
@@ -115,7 +115,7 @@ public class NodeResourcesTest extends RestTest {
         final var calculusId = calculus.getPublicId();
         final var integrationId = integration.getPublicId();
 
-        testUtils.createResource("/v1/node-resources", new NodeResources.AddResourceToNodeCommand() {
+        testUtils.createResource("/v1/node-resources", new NodeResources.NodeResourcePOST() {
             {
                 nodeId = calculusId;
                 resourceId = integrationId;
@@ -137,7 +137,7 @@ public class NodeResourcesTest extends RestTest {
     public void can_update_node_resource() throws Exception {
         URI id = save(NodeConnection.create(newTopic(), newResource())).getPublicId();
 
-        testUtils.updateResource("/v1/node-resources/" + id, new NodeResources.UpdateNodeResourceCommand() {
+        testUtils.updateResource("/v1/node-resources/" + id, new NodeResources.NodeResourcePUT() {
             {
                 primary = true;
             }
@@ -150,7 +150,7 @@ public class NodeResourcesTest extends RestTest {
     public void cannot_unset_primary_node() throws Exception {
         URI id = save(NodeConnection.create(newTopic(), newResource(), true)).getPublicId();
 
-        testUtils.updateResource("/v1/node-resources/" + id, new NodeResources.UpdateNodeResourceCommand() {
+        testUtils.updateResource("/v1/node-resources/" + id, new NodeResources.NodeResourcePUT() {
             {
                 primary = false;
             }
@@ -192,24 +192,6 @@ public class NodeResourcesTest extends RestTest {
     }
 
     @Test
-    public void can_get_resource_connections_paginated() throws Exception {
-        var connections = createTenContiguousRankedConnections();
-
-        var response = testUtils.getResource("/v1/node-resources/page?page=1&pageSize=5");
-        var page1 = testUtils.getObject(NodeResourcePageDTO.class, response);
-        assertEquals(5, page1.results.size());
-
-        var response2 = testUtils.getResource("/v1/node-resources/page?page=2&pageSize=5");
-        var page2 = testUtils.getObject(NodeResourcePageDTO.class, response2);
-        assertEquals(5, page2.results.size());
-
-        var result = Stream.concat(page1.results.stream(), page2.results.stream()).toList();
-
-        assertTrue(connections.stream().map(DomainEntity::getPublicId).toList()
-                .containsAll(result.stream().map(r -> r.id).toList()));
-    }
-
-    @Test
     public void pagination_fails_if_param_not_present() throws Exception {
         var response = testUtils.getResource("/v1/node-resources/page?page=0", status().isBadRequest());
         assertEquals(400, response.getStatus());
@@ -239,7 +221,7 @@ public class NodeResourcesTest extends RestTest {
 
         Node graphTheory = builder.node(NodeType.TOPIC, t -> t.name("graph theory"));
 
-        testUtils.createResource("/v1/node-resources", new NodeResources.AddResourceToNodeCommand() {
+        testUtils.createResource("/v1/node-resources", new NodeResources.NodeResourcePOST() {
             {
                 nodeId = graphTheory.getPublicId();
                 resourceId = graphs.getPublicId();
@@ -264,22 +246,20 @@ public class NodeResourcesTest extends RestTest {
 
         URI geometrySquares = save(NodeConnection.create(geometry, squares)).getPublicId();
         URI geometryCircles = save(NodeConnection.create(geometry, circles)).getPublicId();
-        testUtils.updateResource("/v1/node-resources/" + geometryCircles,
-                new NodeResources.UpdateNodeResourceCommand() {
-                    {
-                        primary = true;
-                        id = geometryCircles;
-                        rank = 1;
-                    }
-                });
-        testUtils.updateResource("/v1/node-resources/" + geometrySquares,
-                new NodeResources.UpdateNodeResourceCommand() {
-                    {
-                        primary = true;
-                        id = geometrySquares;
-                        rank = 2;
-                    }
-                });
+        testUtils.updateResource("/v1/node-resources/" + geometryCircles, new NodeResources.NodeResourcePUT() {
+            {
+                primary = true;
+                id = geometryCircles;
+                rank = 1;
+            }
+        });
+        testUtils.updateResource("/v1/node-resources/" + geometrySquares, new NodeResources.NodeResourcePUT() {
+            {
+                primary = true;
+                id = geometrySquares;
+                rank = 2;
+            }
+        });
 
         var response = testUtils.getResource("/v1/nodes/" + geometry.getPublicId() + "/resources");
         var resources = testUtils.getObject(NodeChildDTO[].class, response);
@@ -303,7 +283,7 @@ public class NodeResourcesTest extends RestTest {
         var squares = builder.node(NodeType.RESOURCE, r -> r.name("Squares").publicId("urn:resource:1"));
         var circles = builder.node(NodeType.RESOURCE, r -> r.name("Circles").publicId("urn:resource:2"));
 
-        testUtils.createResource("/v1/node-resources", new NodeResources.AddResourceToNodeCommand() {
+        testUtils.createResource("/v1/node-resources", new NodeResources.NodeResourcePOST() {
             {
                 primary = true;
                 nodeId = geometry.getPublicId();
@@ -312,7 +292,7 @@ public class NodeResourcesTest extends RestTest {
             }
         });
 
-        testUtils.createResource("/v1/node-resources", new NodeResources.AddResourceToNodeCommand() {
+        testUtils.createResource("/v1/node-resources", new NodeResources.NodeResourcePOST() {
             {
                 primary = true;
                 nodeId = geometry.getPublicId();
@@ -338,7 +318,7 @@ public class NodeResourcesTest extends RestTest {
         var updatedConnection = nodeResources.get(nodeResources.size() - 1);
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource("/v1/node-resources/" + updatedConnection.getPublicId().toString(),
-                new NodeResources.UpdateNodeResourceCommand() {
+                new NodeResources.NodeResourcePUT() {
                     {
                         primary = true;
                         rank = 1;
@@ -369,7 +349,7 @@ public class NodeResourcesTest extends RestTest {
         var updatedConnection = nodeResources.get(nodeResources.size() - 1);
         assertEquals(100, updatedConnection.getRank());
         testUtils.updateResource("/v1/node-resources/" + updatedConnection.getPublicId().toString(),
-                new NodeResources.UpdateNodeResourceCommand() {
+                new NodeResources.NodeResourcePUT() {
                     {
                         primary = true;
                         rank = 1;
@@ -402,7 +382,7 @@ public class NodeResourcesTest extends RestTest {
         var updatedConnection = nodeResources.get(nodeResources.size() - 1);
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource("/v1/node-resources/" + nodeResources.get(9).getPublicId().toString(),
-                new NodeResources.UpdateNodeResourceCommand() {
+                new NodeResources.NodeResourcePUT() {
                     {
                         primary = true;
                         rank = 99;

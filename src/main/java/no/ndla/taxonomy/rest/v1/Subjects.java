@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
@@ -121,7 +122,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable("id") URI id,
-            @Parameter(name = "subject", description = "The updated subject. Fields not included will be set to null.") @RequestBody SubjectCommand command) {
+            @Parameter(name = "subject", description = "The updated subject. Fields not included will be set to null.") @RequestBody @Schema(name = "SubjectPOST") SubjectCommand command) {
         doPut(id, command);
     }
 
@@ -130,7 +131,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @Parameter(name = "subject", description = "The new subject") @RequestBody SubjectCommand command) {
+            @Parameter(name = "subject", description = "The new subject") @RequestBody @Schema(name = "SubjectPUT") SubjectCommand command) {
         final var subject = new Node(NodeType.SUBJECT);
         return doPost(subject, command);
     }

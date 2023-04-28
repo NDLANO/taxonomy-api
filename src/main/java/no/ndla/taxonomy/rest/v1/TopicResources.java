@@ -18,6 +18,7 @@ import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.service.NodeConnectionService;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,15 +51,15 @@ public class TopicResources {
     @GetMapping
     @Operation(summary = "Gets all connections between topics and resources")
     @Transactional(readOnly = true)
-    public List<TopicResourceIndexDocument> index() {
-        return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream()
-                .map(TopicResourceIndexDocument::new).collect(Collectors.toList());
+    public List<TopicResourceDTO> index() {
+        return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream().map(TopicResourceDTO::new)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between topic and resources paginated")
     @Transactional(readOnly = true)
-    public TopicResourcePage allPaginated(
+    public SearchResultDTO<TopicResourceDTO> allPaginated(
             @Parameter(name = "page", description = "The page to fetch", required = true) Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
@@ -71,16 +72,16 @@ public class TopicResources {
         var connections = nodeConnectionRepository.findIdsPaginatedByChildNodeType(pageRequest, NodeType.RESOURCE);
         var ids = connections.stream().map(DomainEntity::getId).collect(Collectors.toList());
         var results = nodeConnectionRepository.findByIds(ids);
-        var contents = results.stream().map(TopicResourceIndexDocument::new).collect(Collectors.toList());
-        return new TopicResourcePage(connections.getTotalElements(), contents);
+        var contents = results.stream().map(TopicResourceDTO::new).collect(Collectors.toList());
+        return new SearchResultDTO<>(connections.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a specific connection between a topic and a resource")
     @Transactional(readOnly = true)
-    public TopicResourceIndexDocument get(@PathVariable("id") URI id) {
+    public TopicResourceDTO get(@PathVariable("id") URI id) {
         var resourceConnection = nodeConnectionRepository.getByPublicId(id);
-        return new TopicResourceIndexDocument(resourceConnection);
+        return new TopicResourceDTO(resourceConnection);
     }
 
     @PostMapping
@@ -88,7 +89,7 @@ public class TopicResources {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @Parameter(name = "connection", description = "new topic/resource connection ") @RequestBody AddResourceToTopicCommand command) {
+            @Parameter(name = "connection", description = "new topic/resource connection ") @RequestBody TopicResourcePOST command) {
 
         Node topic = nodeRepository.getByPublicId(command.topicid);
         Node resource = nodeRepository.getByPublicId(command.resourceId);
@@ -122,7 +123,7 @@ public class TopicResources {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable("id") URI id,
-            @Parameter(name = "connection", description = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand command) {
+            @Parameter(name = "connection", description = "Updated topic/resource connection") @RequestBody TopicResourcePUT command) {
         var topicResource = nodeConnectionRepository.getByPublicId(id);
         var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
 
@@ -135,7 +136,7 @@ public class TopicResources {
         connectionService.updateParentChild(topicResource, relevance, rank, primary);
     }
 
-    public static class AddResourceToTopicCommand {
+    public static class TopicResourcePOST {
         @JsonProperty
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic id", example = "urn:topic:345")
         public URI topicid;
@@ -157,7 +158,7 @@ public class TopicResources {
         public URI relevanceId;
     }
 
-    public static class UpdateTopicResourceCommand {
+    public static class TopicResourcePUT {
         @JsonProperty
         @Schema(description = "Topic resource connection id", example = "urn:topic-has-resources:123")
         public URI id;
@@ -175,25 +176,8 @@ public class TopicResources {
         public URI relevanceId;
     }
 
-    public static class TopicResourcePage {
-        @JsonProperty
-        @Schema(description = "Total number of elements")
-        public long totalCount;
-
-        @JsonProperty
-        @Schema(description = "Page containing results")
-        public List<TopicResourceIndexDocument> results;
-
-        TopicResourcePage() {
-        }
-
-        TopicResourcePage(long totalCount, List<TopicResourceIndexDocument> results) {
-            this.totalCount = totalCount;
-            this.results = results;
-        }
-    }
-
-    public static class TopicResourceIndexDocument {
+    @Schema(name = "TopicResource")
+    public static class TopicResourceDTO {
 
         @JsonProperty
         @Schema(description = "Topic id", example = "urn:topic:345")
@@ -219,7 +203,7 @@ public class TopicResources {
         @Schema(description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
-        TopicResourceIndexDocument(NodeConnection topicResource) {
+        TopicResourceDTO(NodeConnection topicResource) {
             id = topicResource.getPublicId();
             topicResource.getParent().ifPresent(topic -> topicid = topic.getPublicId());
             topicResource.getResource().ifPresent(resource -> resourceId = resource.getPublicId());
@@ -228,7 +212,7 @@ public class TopicResources {
             relevanceId = topicResource.getRelevance().map(Relevance::getPublicId).orElse(null);
         }
 
-        TopicResourceIndexDocument() {
+        TopicResourceDTO() {
 
         }
 

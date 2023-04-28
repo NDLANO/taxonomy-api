@@ -45,19 +45,19 @@ public class Relevances extends CrudController<Relevance> {
     @GetMapping
     @Operation(summary = "Gets all relevances")
     @Transactional(readOnly = true)
-    public List<RelevanceIndexDocument> index(
+    public List<RelevanceDTO> index(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return relevanceRepository.findAllIncludingTranslations().stream()
-                .map(relevance -> new RelevanceIndexDocument(relevance, language)).collect(Collectors.toList());
+                .map(relevance -> new RelevanceDTO(relevance, language)).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single relevance", description = "Default language will be returned if desired language not found or if parameter is omitted.")
     @Transactional(readOnly = true)
-    public RelevanceIndexDocument get(@PathVariable("id") URI id,
+    public RelevanceDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return relevanceRepository.findFirstByPublicIdIncludingTranslations(id)
-                .map(relevance -> new RelevanceIndexDocument(relevance, language))
+                .map(relevance -> new RelevanceDTO(relevance, language))
                 .orElseThrow(() -> new NotFoundException("Relevance", id));
     }
 
@@ -66,7 +66,7 @@ public class Relevances extends CrudController<Relevance> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @Parameter(name = "relevance", description = "The new relevance") @RequestBody RelevanceCommand command) {
+            @Parameter(name = "relevance", description = "The new relevance") @RequestBody RelevancePUT command) {
         return doPost(new Relevance(), command);
     }
 
@@ -76,12 +76,12 @@ public class Relevances extends CrudController<Relevance> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable("id") URI id,
-            @Parameter(name = "relevance", description = "The updated relevance. Fields not included will be set to null.") @RequestBody RelevanceCommand command) {
+            @Parameter(name = "relevance", description = "The updated relevance. Fields not included will be set to null.") @RequestBody RelevancePUT command) {
         doPut(id, command);
     }
 
-    @Schema(name = "RelevanceIndexDocument")
-    public static class RelevanceIndexDocument {
+    @Schema(name = "Relevance")
+    public static class RelevanceDTO {
         @JsonProperty
         @Schema(example = "urn:relevance:core")
         public URI id;
@@ -98,10 +98,10 @@ public class Relevances extends CrudController<Relevance> {
         @Schema(description = "List of language codes supported by translations")
         private Set<String> supportedLanguages;
 
-        public RelevanceIndexDocument() {
+        public RelevanceDTO() {
         }
 
-        public RelevanceIndexDocument(Relevance relevance, String language) {
+        public RelevanceDTO(Relevance relevance, String language) {
             this.id = relevance.getPublicId();
 
             var translations = relevance.getTranslations();
@@ -113,7 +113,7 @@ public class Relevances extends CrudController<Relevance> {
         }
     }
 
-    public static class RelevanceCommand implements UpdatableDto<Relevance> {
+    public static class RelevancePUT implements UpdatableDto<Relevance> {
         @JsonProperty
         @Schema(description = "If specified, set the id to this value. Must start with urn:relevance: and be a valid URI. If ommitted, an id will be assigned automatically. Ignored on update", example = "urn:relevance:supplementary")
         public URI id;

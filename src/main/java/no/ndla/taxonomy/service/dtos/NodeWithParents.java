@@ -16,7 +16,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-@Schema(name = "ResourceWithParents")
+@Schema(name = "NodeWithParents")
 public class NodeWithParents extends NodeDTO {
     @JsonProperty
     @Schema(description = "Parent topology nodes and whether or not connection type is primary", example = "["

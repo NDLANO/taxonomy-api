@@ -30,14 +30,14 @@ public class FilterTranslations {
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single filter")
     @Deprecated(forRemoval = true)
-    public List<FilterTranslations.FilterTranslationIndexDocument> index(@PathVariable("id") URI id) {
+    public List<FilterTranslationDTO> index(@PathVariable("id") URI id) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single filter")
     @Deprecated(forRemoval = true)
-    public FilterTranslations.FilterTranslationIndexDocument get(@PathVariable("id") URI id,
+    public FilterTranslationDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
@@ -50,7 +50,7 @@ public class FilterTranslations {
     @Deprecated(forRemoval = true)
     public void put(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @Parameter(name = "filter", description = "The new or updated translation") @RequestBody FilterTranslations.UpdateFilterTranslationCommand command) {
+            @Parameter(name = "filter", description = "The new or updated translation") @RequestBody FilterTranslationPUT command) {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
@@ -64,8 +64,8 @@ public class FilterTranslations {
         throw new NotFoundHttpResponseException("Filter was not found");
     }
 
-    @Schema(name = "FilterTranslationIndexDocument")
-    public static class FilterTranslationIndexDocument {
+    @Schema(name = "FilterTranslation")
+    public static class FilterTranslationDTO {
         @JsonProperty
         @Schema(description = "The translated name of the filter", example = "Carpenter")
         public String name;
@@ -75,7 +75,7 @@ public class FilterTranslations {
         public String language;
     }
 
-    public static class UpdateFilterTranslationCommand {
+    public static class FilterTranslationPUT {
         @JsonProperty
         @Schema(description = "The translated name of the filter", example = "Carpenter")
         public String name;

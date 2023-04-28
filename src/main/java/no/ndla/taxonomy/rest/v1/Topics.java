@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
@@ -107,7 +108,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @Parameter(name = "connection", description = "The new topic") @RequestBody TopicCommand command) {
+            @Parameter(name = "connection", description = "The new topic") @RequestBody @Schema(name = "TopicPOST") TopicCommand command) {
         return doPost(new Node(NodeType.TOPIC), command);
     }
 
@@ -117,7 +118,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable("id") URI id,
-            @Parameter(name = "topic", description = "The updated topic. Fields not included will be set to null.") @RequestBody TopicCommand command) {
+            @Parameter(name = "topic", description = "The updated topic. Fields not included will be set to null.") @RequestBody @Schema(name = "VersionPUT") TopicCommand command) {
         doPut(id, command);
     }
 
@@ -153,7 +154,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/connections")
     @Operation(summary = "Gets all subjects and subtopics this topic is connected to")
     @Transactional(readOnly = true)
-    public List<NodeConnectionDTO> getAllConnections(@PathVariable("id") URI id) {
+    public List<ConnectionDTO> getAllConnections(@PathVariable("id") URI id) {
         return nodeService.getAllConnections(id);
     }
 

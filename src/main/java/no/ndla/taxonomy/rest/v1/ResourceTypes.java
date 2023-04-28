@@ -47,21 +47,20 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @GetMapping
     @Operation(summary = "Gets a list of all resource types")
     @Transactional(readOnly = true)
-    public List<ResourceTypeIndexDocument> index(
+    public List<ResourceTypeDTO> index(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         // Returns all resource types that is NOT a subtype
         return resourceTypeRepository.findAllByParentIncludingTranslationsAndFirstLevelSubtypes(null).stream()
-                .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language, 100))
-                .collect(Collectors.toList());
+                .map(resourceType -> new ResourceTypeDTO(resourceType, language, 100)).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single resource type")
     @Transactional(readOnly = true)
-    public ResourceTypeIndexDocument get(@PathVariable("id") URI id,
+    public ResourceTypeDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
         return resourceTypeRepository.findFirstByPublicIdIncludingTranslations(id)
-                .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language, 0))
+                .map(resourceType -> new ResourceTypeDTO(resourceType, language, 0))
                 .orElseThrow(() -> new NotFoundException("ResourceType", id));
     }
 
@@ -70,7 +69,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @Parameter(name = "resourceType", description = "The new resource type") @RequestBody ResourceTypeCommand command) {
+            @Parameter(name = "resourceType", description = "The new resource type") @RequestBody ResourceTypePUT command) {
         ResourceType resourceType = new ResourceType();
         if (null != command.parentId) {
             ResourceType parent = resourceTypeRepository.getByPublicId(command.parentId);
@@ -86,7 +85,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable URI id,
-            @Parameter(name = "resourceType", description = "The updated resource type. Fields not included will be set to null.") @RequestBody ResourceTypeCommand command) {
+            @Parameter(name = "resourceType", description = "The updated resource type. Fields not included will be set to null.") @RequestBody ResourceTypePUT command) {
         ResourceType resourceType = doPut(id, command);
 
         ResourceType parent = null;
@@ -102,16 +101,15 @@ public class ResourceTypes extends CrudController<ResourceType> {
     @GetMapping("/{id}/subtypes")
     @Operation(summary = "Gets subtypes of one resource type")
     @Transactional(readOnly = true)
-    public List<ResourceTypeIndexDocument> getSubtypes(@PathVariable("id") URI id,
+    public List<ResourceTypeDTO> getSubtypes(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language,
             @RequestParam(value = "recursive", required = false, defaultValue = "false") @Parameter(description = "If true, sub resource types are fetched recursively") boolean recursive) {
         return resourceTypeRepository.findAllByParentPublicIdIncludingTranslationsAndFirstLevelSubtypes(id).stream()
-                .map(resourceType -> new ResourceTypeIndexDocument(resourceType, language, 100))
-                .collect(Collectors.toList());
+                .map(resourceType -> new ResourceTypeDTO(resourceType, language, 100)).collect(Collectors.toList());
     }
 
-    @Schema(name = "ResourceTypeIndexDocument")
-    public static class ResourceTypeIndexDocument {
+    @Schema(name = "ResourceType")
+    public static class ResourceTypeDTO {
         @JsonProperty
         @Schema(example = "urn:resourcetype:1")
         public URI id;
@@ -123,7 +121,7 @@ public class ResourceTypes extends CrudController<ResourceType> {
         @JsonProperty
         @Schema(description = "Sub resource types")
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        public List<ResourceTypeIndexDocument> subtypes = new ArrayList<>();
+        public List<ResourceTypeDTO> subtypes = new ArrayList<>();
 
         @JsonProperty
         @Schema(description = "All translations of this resource type")
@@ -133,10 +131,10 @@ public class ResourceTypes extends CrudController<ResourceType> {
         @Schema(description = "List of language codes supported by translations")
         private Set<String> supportedLanguages;
 
-        public ResourceTypeIndexDocument() {
+        public ResourceTypeDTO() {
         }
 
-        public ResourceTypeIndexDocument(ResourceType resourceType, String language, int recursionLevels) {
+        public ResourceTypeDTO(ResourceType resourceType, String language, int recursionLevels) {
             this.id = resourceType.getPublicId();
 
             var translations = resourceType.getTranslations();
@@ -147,14 +145,14 @@ public class ResourceTypes extends CrudController<ResourceType> {
                     .orElse(resourceType.getName());
 
             if (recursionLevels > 0) {
-                this.subtypes = resourceType.getSubtypes().stream().map(
-                        resourceType1 -> new ResourceTypeIndexDocument(resourceType1, language, recursionLevels - 1))
+                this.subtypes = resourceType.getSubtypes().stream()
+                        .map(resourceType1 -> new ResourceTypeDTO(resourceType1, language, recursionLevels - 1))
                         .collect(Collectors.toList());
             }
         }
     }
 
-    public static class ResourceTypeCommand implements UpdatableDto<ResourceType> {
+    public static class ResourceTypePUT implements UpdatableDto<ResourceType> {
         @JsonProperty
         @Schema(description = "If specified, the new resource type will be a child of the mentioned resource type.")
         public URI parentId;

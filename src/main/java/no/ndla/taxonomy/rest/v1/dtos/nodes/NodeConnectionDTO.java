@@ -15,7 +15,8 @@ import no.ndla.taxonomy.service.dtos.MetadataDto;
 
 import java.net.URI;
 
-public class ParentChildIndexDocument {
+@Schema(name = "NodeConnection")
+public class NodeConnectionDTO {
     @JsonProperty
     @Schema(description = "Parent id", example = "urn:topic:234")
     public URI parentId;
@@ -44,10 +45,10 @@ public class ParentChildIndexDocument {
     @Schema(description = "Metadata for entity. Read only.")
     private MetadataDto metadata;
 
-    ParentChildIndexDocument() {
+    NodeConnectionDTO() {
     }
 
-    public ParentChildIndexDocument(NodeConnection nodeConnection) {
+    public NodeConnectionDTO(NodeConnection nodeConnection) {
         id = nodeConnection.getPublicId();
         nodeConnection.getParent().ifPresent(topic -> parentId = topic.getPublicId());
         nodeConnection.getChild().ifPresent(subtopic -> childId = subtopic.getPublicId());

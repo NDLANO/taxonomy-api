@@ -47,7 +47,7 @@ public class ResourceResourceTypes {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @Parameter(name = "connection", description = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) {
+            @Parameter(name = "connection", description = "The new resource/resource type connection") @RequestBody ResourceResourceTypePOST command) {
 
         var resource = nodeRepository.getByPublicId(command.resourceId);
 
@@ -73,20 +73,20 @@ public class ResourceResourceTypes {
     @GetMapping
     @Operation(summary = "Gets all connections between resources and resource types")
     @Transactional(readOnly = true)
-    public List<ResourceResourceTypeIndexDocument> index() {
+    public List<ResourceResourceTypeDTO> index() {
         return resourceResourceTypeRepository.findAllIncludingResourceAndResourceType().stream()
-                .map(ResourceResourceTypeIndexDocument::new).collect(Collectors.toList());
+                .map(ResourceResourceTypeDTO::new).collect(Collectors.toList());
     }
 
     @GetMapping({ "/{id}" })
     @Operation(summary = "Gets a single connection between resource and resource type")
     @Transactional(readOnly = true)
-    public ResourceResourceTypeIndexDocument get(@PathVariable("id") URI id) {
+    public ResourceResourceTypeDTO get(@PathVariable("id") URI id) {
         ResourceResourceType result = resourceResourceTypeRepository.getByPublicId(id);
-        return new ResourceResourceTypeIndexDocument(result);
+        return new ResourceResourceTypeDTO(result);
     }
 
-    public static class CreateResourceResourceTypeCommand {
+    public static class ResourceResourceTypePOST {
         @JsonProperty
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource id", example = "urn:resource:123")
         URI resourceId;
@@ -96,8 +96,8 @@ public class ResourceResourceTypes {
         URI resourceTypeId;
     }
 
-    @Schema(name = "ResourceTypeIndexDocument")
-    public static class ResourceResourceTypeIndexDocument {
+    @Schema(name = "ResourceResourceType")
+    public static class ResourceResourceTypeDTO {
         @JsonProperty
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource type id", example = "urn:resource:123")
         URI resourceId;
@@ -110,10 +110,10 @@ public class ResourceResourceTypes {
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource to resource type connection id", example = "urn:resource-has-resourcetypes:12")
         URI id;
 
-        public ResourceResourceTypeIndexDocument() {
+        public ResourceResourceTypeDTO() {
         }
 
-        public ResourceResourceTypeIndexDocument(ResourceResourceType resourceResourceType) {
+        public ResourceResourceTypeDTO(ResourceResourceType resourceResourceType) {
             id = resourceResourceType.getPublicId();
             resourceId = resourceResourceType.getNode().getPublicId();
             resourceTypeId = resourceResourceType.getResourceType().getPublicId();

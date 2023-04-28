@@ -33,7 +33,7 @@ public class TopicFilters {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public ResponseEntity<Void> post(
-            @Parameter(name = "topic filter", description = "The new topic filter") @RequestBody AddFilterToTopicCommand command) {
+            @Parameter(name = "topic filter", description = "The new topic filter") @RequestBody TopicFilterPOST command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
@@ -43,7 +43,7 @@ public class TopicFilters {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public void put(@PathVariable("id") URI id,
-            @Parameter(name = "topic filter", description = "The updated topic filter", required = true) @RequestBody UpdateTopicFilterCommand command) {
+            @Parameter(name = "topic filter", description = "The updated topic filter", required = true) @RequestBody TopicFilterPUT command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
@@ -61,11 +61,11 @@ public class TopicFilters {
     @GetMapping
     @Operation(summary = "Gets all connections between topics and filters")
     @Deprecated(forRemoval = true)
-    public List<TopicFilterIndexDocument> index() {
+    public List<TopicFilterDTO> index() {
         return List.of();
     }
 
-    public static class AddFilterToTopicCommand {
+    public static class TopicFilterPOST {
         @JsonProperty
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic id", example = "urn:topic:123")
         public URI topicId;
@@ -79,12 +79,12 @@ public class TopicFilters {
         public URI relevanceId;
     }
 
-    public static class UpdateTopicFilterCommand {
+    public static class TopicFilterPUT {
         public URI relevanceId;
     }
 
-    @Schema(name = "TopicFilterIndexDocument")
-    public static class TopicFilterIndexDocument {
+    @Schema(name = "TopicFilter")
+    public static class TopicFilterDTO {
         @JsonProperty
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic id", example = "urn:topic:123")
         public URI topicId;
@@ -101,7 +101,7 @@ public class TopicFilters {
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
-        public TopicFilterIndexDocument() {
+        public TopicFilterDTO() {
         }
     }
 }

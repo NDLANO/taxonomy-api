@@ -22,6 +22,7 @@ import java.util.Optional;
 /**
  * Represents Node or Resource in child context
  */
+@Schema(name = "NodeChild")
 public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
 
     @Schema(description = "Parent id in the current context, null if none exists")

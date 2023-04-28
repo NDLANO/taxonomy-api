@@ -10,6 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
@@ -93,6 +94,7 @@ public class Filters extends ObsoleteCrudController {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @Schema(name = "Filter")
     public class FilterDTO {
     }
 }

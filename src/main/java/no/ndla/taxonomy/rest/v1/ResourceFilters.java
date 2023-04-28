@@ -34,7 +34,7 @@ public class ResourceFilters {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public ResponseEntity<Void> post(
-            @Parameter(name = "resource filter", description = "The new resource filter") @RequestBody AddFilterToResourceCommand command) {
+            @Parameter(name = "resource filter", description = "The new resource filter") @RequestBody ResourceFiltersPOST command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
@@ -44,7 +44,7 @@ public class ResourceFilters {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public void put(@PathVariable("id") URI id,
-            @Parameter(name = "resource filter", description = "The updated resource filter", required = true) @RequestBody UpdateResourceFilterCommand command) {
+            @Parameter(name = "resource filter", description = "The updated resource filter", required = true) @RequestBody ResourceFilterPUT command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
@@ -60,7 +60,7 @@ public class ResourceFilters {
 
     @GetMapping("/{id}")
     @Deprecated(forRemoval = true)
-    public ResourceFilterIndexDocument get(
+    public ResourceFilterDTO get(
             @Parameter(name = "id", description = "The id of the connection to get", required = true) @PathVariable URI id) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
@@ -68,11 +68,11 @@ public class ResourceFilters {
     @GetMapping
     @Operation(summary = "Gets all connections between resources and filters")
     @Deprecated(forRemoval = true)
-    public List<ResourceFilterIndexDocument> index() {
+    public List<ResourceFilterDTO> index() {
         return List.of();
     }
 
-    public static class AddFilterToResourceCommand {
+    public static class ResourceFiltersPOST {
         @JsonProperty
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource id", example = "urn:resource:123")
         public URI resourceId;
@@ -86,12 +86,12 @@ public class ResourceFilters {
         public URI relevanceId;
     }
 
-    public static class UpdateResourceFilterCommand {
+    public static class ResourceFilterPUT {
         public URI relevanceId;
     }
 
-    @Schema(name = "ResourceFilterIndexDocument")
-    public static class ResourceFilterIndexDocument {
+    @Schema(name = "ResourceFilter")
+    public static class ResourceFilterDTO {
         @JsonProperty
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource id", example = "urn:resource:123")
         public URI resourceId;
@@ -108,7 +108,7 @@ public class ResourceFilters {
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
-        public ResourceFilterIndexDocument() {
+        public ResourceFilterDTO() {
         }
     }
 }

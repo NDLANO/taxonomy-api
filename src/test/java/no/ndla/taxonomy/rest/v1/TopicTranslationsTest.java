@@ -68,12 +68,11 @@ public class TopicTranslationsTest extends RestTest {
         Node trigonometry = builder.node(NodeType.TOPIC, t -> t.name("Trigonometry"));
         URI id = trigonometry.getPublicId();
 
-        testUtils.updateResource("/v1/topics/" + id + "/translations/nb",
-                new TopicTranslations.UpdateTopicTranslationCommand() {
-                    {
-                        name = "Trigonometri";
-                    }
-                });
+        testUtils.updateResource("/v1/topics/" + id + "/translations/nb", new TopicTranslations.TopicTranslationPUT() {
+            {
+                name = "Trigonometri";
+            }
+        });
 
         assertEquals("Trigonometri", trigonometry.getTranslation("nb").get().getName());
     }
@@ -97,7 +96,7 @@ public class TopicTranslationsTest extends RestTest {
                         .translation("de", l -> l.name("Trigonometrie")));
         URI id = topic.getPublicId();
 
-        var translations = testUtils.getObject(TopicTranslations.TopicTranslationIndexDocument[].class,
+        var translations = testUtils.getObject(TopicTranslations.TopicTranslationDTO[].class,
                 testUtils.getResource("/v1/topics/" + id + "/translations"));
 
         assertEquals(3, translations.length);
@@ -112,7 +111,7 @@ public class TopicTranslationsTest extends RestTest {
                 t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")));
         URI id = topic.getPublicId();
 
-        var translation = testUtils.getObject(TopicTranslations.TopicTranslationIndexDocument.class,
+        var translation = testUtils.getObject(TopicTranslations.TopicTranslationDTO.class,
                 testUtils.getResource("/v1/topics/" + id + "/translations/nb"));
         assertEquals("Trigonometri", translation.name);
         assertEquals("nb", translation.language);

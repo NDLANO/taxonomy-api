@@ -21,6 +21,7 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Schema(name = "Node")
 public class NodeDTO {
     @Schema(description = "Node id", example = "urn:topic:234")
     private URI id;

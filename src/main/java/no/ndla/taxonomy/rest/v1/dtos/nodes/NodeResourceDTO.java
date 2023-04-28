@@ -8,6 +8,7 @@ import no.ndla.taxonomy.service.dtos.MetadataDto;
 
 import java.net.URI;
 
+@Schema(name = "NodeResource")
 public class NodeResourceDTO {
 
     @JsonProperty

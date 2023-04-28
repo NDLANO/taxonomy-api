@@ -19,6 +19,7 @@ import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.service.NodeConnectionService;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,13 +53,13 @@ public class TopicSubtopics {
     @GetMapping
     @Operation(summary = "Gets all connections between topics and subtopics")
     @Transactional(readOnly = true)
-    public List<TopicSubtopicIndexDocument> index() {
-        final List<TopicSubtopicIndexDocument> listToReturn = new ArrayList<>();
+    public List<TopicSubtopicDTO> index() {
+        final List<TopicSubtopicDTO> listToReturn = new ArrayList<>();
         var ids = nodeConnectionRepository.findAllIds();
         final var counter = new AtomicInteger();
         ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
             final var connections = nodeConnectionRepository.findByIds(idChunk);
-            var dtos = connections.stream().map(TopicSubtopicIndexDocument::new).toList();
+            var dtos = connections.stream().map(TopicSubtopicDTO::new).toList();
             listToReturn.addAll(dtos);
         });
 
@@ -68,7 +69,7 @@ public class TopicSubtopics {
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between topics and subtopics paginated")
     @Transactional(readOnly = true)
-    public TopicSubtopicPage allPaginated(
+    public SearchResultDTO<TopicSubtopicDTO> allPaginated(
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
@@ -79,17 +80,16 @@ public class TopicSubtopics {
 
         var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
         var results = nodeConnectionRepository.findByIds(ids.getContent());
-        var contents = results.stream().map(TopicSubtopics.TopicSubtopicIndexDocument::new)
-                .collect(Collectors.toList());
-        return new TopicSubtopicPage(ids.getTotalElements(), contents);
+        var contents = results.stream().map(TopicSubtopicDTO::new).collect(Collectors.toList());
+        return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single connection between a topic and a subtopic")
     @Transactional(readOnly = true)
-    public TopicSubtopicIndexDocument get(@PathVariable("id") URI id) {
+    public TopicSubtopicDTO get(@PathVariable("id") URI id) {
         NodeConnection topicSubtopic = nodeConnectionRepository.getByPublicId(id);
-        return new TopicSubtopicIndexDocument(topicSubtopic);
+        return new TopicSubtopicDTO(topicSubtopic);
     }
 
     @PostMapping
@@ -97,7 +97,7 @@ public class TopicSubtopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @Parameter(name = "connection", description = "The new connection") @RequestBody AddSubtopicToTopicCommand command) {
+            @Parameter(name = "connection", description = "The new connection") @RequestBody TopicSubtopicPOST command) {
         Node topic = nodeRepository.getByPublicId(command.topicid);
         Node subtopic = nodeRepository.getByPublicId(command.subtopicid);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
@@ -128,7 +128,7 @@ public class TopicSubtopics {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable("id") URI id,
-            @Parameter(name = "connection", description = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
+            @Parameter(name = "connection", description = "The updated connection") @RequestBody TopicSubtopicPUT command) {
         final var topicSubtopic = nodeConnectionRepository.getByPublicId(id);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
                 : null;
@@ -137,7 +137,7 @@ public class TopicSubtopics {
         connectionService.updateParentChild(topicSubtopic, relevance, rank, Optional.empty());
     }
 
-    public static class AddSubtopicToTopicCommand {
+    public static class TopicSubtopicPOST {
         @JsonProperty
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic id", example = "urn:topic:234")
         public URI topicid;
@@ -159,7 +159,7 @@ public class TopicSubtopics {
         public URI relevanceId;
     }
 
-    public static class UpdateTopicSubtopicCommand {
+    public static class TopicSubtopicPUT {
         @JsonProperty
         @Schema(description = "Connection id", example = "urn:topic-has-subtopics:345")
         public URI id;
@@ -177,25 +177,8 @@ public class TopicSubtopics {
         public URI relevanceId;
     }
 
-    public static class TopicSubtopicPage {
-        @JsonProperty
-        @Schema(description = "Total number of elements")
-        public long totalCount;
-
-        @JsonProperty
-        @Schema(description = "Page containing results")
-        public List<TopicSubtopicIndexDocument> results;
-
-        TopicSubtopicPage() {
-        }
-
-        TopicSubtopicPage(long totalCount, List<TopicSubtopicIndexDocument> results) {
-            this.totalCount = totalCount;
-            this.results = results;
-        }
-    }
-
-    public static class TopicSubtopicIndexDocument {
+    @Schema(name = "TopicSubtopic")
+    public static class TopicSubtopicDTO {
         @JsonProperty
         @Schema(description = "Topic id", example = "urn:topic:234")
         public URI topicid;
@@ -220,10 +203,10 @@ public class TopicSubtopics {
         @Schema(description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
 
-        TopicSubtopicIndexDocument() {
+        TopicSubtopicDTO() {
         }
 
-        TopicSubtopicIndexDocument(NodeConnection nodeConnection) {
+        TopicSubtopicDTO(NodeConnection nodeConnection) {
             id = nodeConnection.getPublicId();
             nodeConnection.getParent().ifPresent(topic -> topicid = topic.getPublicId());
             nodeConnection.getChild().ifPresent(subtopic -> subtopicid = subtopic.getPublicId());

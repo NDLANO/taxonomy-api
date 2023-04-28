@@ -21,9 +21,9 @@ import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourceDTO;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourcePageDTO;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeConnectionService;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,7 +66,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between node and resources paginated")
     @Transactional(readOnly = true)
-    public NodeResourcePageDTO allPaginated(
+    public SearchResultDTO<NodeResourceDTO> allPaginated(
             @Parameter(name = "page", description = "The page to fetch", required = true) Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
 
@@ -81,7 +81,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
         var ids = connections.stream().map(DomainEntity::getId).toList();
         var results = nodeConnectionRepository.findByIds(ids);
         var contents = results.stream().map(NodeResourceDTO::new).collect(Collectors.toList());
-        return new NodeResourcePageDTO(connections.getTotalElements(), contents);
+        return new SearchResultDTO<>(connections.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
     @GetMapping("/{id}")
@@ -97,7 +97,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @Parameter(name = "connection", description = "new node/resource connection ") @RequestBody AddResourceToNodeCommand command) {
+            @Parameter(name = "connection", description = "new node/resource connection ") @RequestBody NodeResourcePOST command) {
         var parent = nodeRepository.getByPublicId(command.nodeId);
         var child = nodeRepository.getByPublicId(command.resourceId);
         var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
@@ -127,7 +127,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable("id") URI id,
-            @Parameter(name = "connection", description = "Updated node/resource connection") @RequestBody UpdateNodeResourceCommand command) {
+            @Parameter(name = "connection", description = "Updated node/resource connection") @RequestBody NodeResourcePUT command) {
         final var nodeResource = nodeConnectionRepository.getByPublicId(id);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
                 : null;
@@ -140,7 +140,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
                 Optional.empty());
     }
 
-    public static class AddResourceToNodeCommand {
+    public static class NodeResourcePOST {
         @JsonProperty
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Node id", example = "urn:node:345")
         public URI nodeId;
@@ -162,7 +162,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
         public URI relevanceId;
     }
 
-    public static class UpdateNodeResourceCommand {
+    public static class NodeResourcePUT {
         @JsonProperty
         @Schema(description = "Node resource connection id", example = "urn:node-resource:123")
         public URI id;

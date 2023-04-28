@@ -26,8 +26,8 @@ public class ResourceTypeTranslationsTest extends RestTest {
         builder.resourceType(t -> t.name("Lecture").translation("Forelesning", "nb"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resource-types?language=nb");
-        ResourceTypes.ResourceTypeIndexDocument[] resourceTypes = testUtils
-                .getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
+        ResourceTypes.ResourceTypeDTO[] resourceTypes = testUtils.getObject(ResourceTypes.ResourceTypeDTO[].class,
+                response);
 
         assertEquals(2, resourceTypes.length);
         assertAnyTrue(resourceTypes, s -> s.name.equals("Artikkel"));
@@ -38,14 +38,14 @@ public class ResourceTypeTranslationsTest extends RestTest {
     public void can_get_single_resource_type() throws Exception {
         URI id = builder.resourceType(t -> t.name("Article").translation("Artikkel", "nb")).getPublicId();
 
-        ResourceTypes.ResourceTypeIndexDocument resourceType = getResourceTypeIndexDocument(id, "nb");
+        ResourceTypes.ResourceTypeDTO resourceType = getResourceTypeIndexDocument(id, "nb");
         assertEquals("Artikkel", resourceType.name);
     }
 
     @Test
     public void fallback_to_default_language() throws Exception {
         URI id = builder.resourceType(t -> t.name("Article")).getPublicId();
-        ResourceTypes.ResourceTypeIndexDocument resourceType = getResourceTypeIndexDocument(id, "XX");
+        ResourceTypes.ResourceTypeDTO resourceType = getResourceTypeIndexDocument(id, "XX");
         assertEquals("Article", resourceType.name);
     }
 
@@ -53,7 +53,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
     public void can_get_default_language() throws Exception {
         URI id = builder.resourceType(t -> t.name("Article").translation("Artikkel", "nb")).getPublicId();
 
-        ResourceTypes.ResourceTypeIndexDocument resourceType = getResourceTypeIndexDocument(id, null);
+        ResourceTypes.ResourceTypeDTO resourceType = getResourceTypeIndexDocument(id, null);
         assertEquals("Article", resourceType.name);
     }
 
@@ -63,7 +63,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
         URI id = article.getPublicId();
 
         testUtils.updateResource("/v1/resource-types/" + id + "/translations/nb",
-                new ResourceTypeTranslations.UpdateResourceTypeTranslationCommand() {
+                new ResourceTypeTranslations.ResourceTypeTranslationPUT() {
                     {
                         name = "Artikkel";
                     }
@@ -88,8 +88,8 @@ public class ResourceTypeTranslationsTest extends RestTest {
                 .translation("Article", "en").translation("Artikel", "de"));
         URI id = resourceType.getPublicId();
 
-        ResourceTypeTranslations.ResourceTypeTranslationIndexDocument[] translations = testUtils.getObject(
-                ResourceTypeTranslations.ResourceTypeTranslationIndexDocument[].class,
+        ResourceTypeTranslations.ResourceTypeTranslationDTO[] translations = testUtils.getObject(
+                ResourceTypeTranslations.ResourceTypeTranslationDTO[].class,
                 testUtils.getResource("/v1/resource-types/" + id + "/translations"));
 
         assertEquals(3, translations.length);
@@ -103,18 +103,17 @@ public class ResourceTypeTranslationsTest extends RestTest {
         ResourceType resourceType = builder.resourceType(t -> t.name("Article").translation("Artikkel", "nb"));
         URI id = resourceType.getPublicId();
 
-        ResourceTypeTranslations.ResourceTypeTranslationIndexDocument translation = testUtils.getObject(
-                ResourceTypeTranslations.ResourceTypeTranslationIndexDocument.class,
+        ResourceTypeTranslations.ResourceTypeTranslationDTO translation = testUtils.getObject(
+                ResourceTypeTranslations.ResourceTypeTranslationDTO.class,
                 testUtils.getResource("/v1/resource-types/" + id + "/translations/nb"));
         assertEquals("Artikkel", translation.name);
         assertEquals("nb", translation.language);
     }
 
-    private ResourceTypes.ResourceTypeIndexDocument getResourceTypeIndexDocument(URI id, String language)
-            throws Exception {
+    private ResourceTypes.ResourceTypeDTO getResourceTypeIndexDocument(URI id, String language) throws Exception {
         String path = "/v1/resource-types/" + id;
         if (isNotEmpty(language))
             path = path + "?language=" + language;
-        return testUtils.getObject(ResourceTypes.ResourceTypeIndexDocument.class, testUtils.getResource(path));
+        return testUtils.getObject(ResourceTypes.ResourceTypeDTO.class, testUtils.getResource(path));
     }
 }

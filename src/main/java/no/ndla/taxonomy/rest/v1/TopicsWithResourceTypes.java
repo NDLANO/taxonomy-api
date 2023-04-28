@@ -34,7 +34,7 @@ public class TopicsWithResourceTypes {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Deprecated(forRemoval = true)
     public ResponseEntity<Void> post(
-            @Parameter(name = "connection", description = "The new resource/resource type connection") @RequestBody CreateTopicResourceTypeCommand command) {
+            @Parameter(name = "connection", description = "The new resource/resource type connection") @RequestBody TopicResourceTypePOST command) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
@@ -50,18 +50,18 @@ public class TopicsWithResourceTypes {
     @GetMapping
     @Operation(summary = "Gets all connections between topics and resource types")
     @Deprecated(forRemoval = true)
-    public List<TopicResourceTypeIndexDocument> index() {
+    public List<TopicResourceTypeDTO> index() {
         return List.of();
     }
 
     @GetMapping({ "/{id}" })
     @Operation(summary = "Gets a single connection between topic and resource type")
     @Deprecated(forRemoval = true)
-    public TopicResourceTypeIndexDocument get(@PathVariable("id") URI id) {
+    public TopicResourceTypeDTO get(@PathVariable("id") URI id) {
         throw new NotFoundHttpResponseException("Endpoint deprecated");
     }
 
-    public static class CreateTopicResourceTypeCommand {
+    public static class TopicResourceTypePOST {
         @JsonProperty
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic id", example = "urn:topic:123")
         URI topicId;
@@ -71,8 +71,8 @@ public class TopicsWithResourceTypes {
         URI resourceTypeId;
     }
 
-    @Schema(name = "ResourceTypeIndexDocument")
-    public static class TopicResourceTypeIndexDocument {
+    @Schema(name = "TopicResourceType")
+    public static class TopicResourceTypeDTO {
         @JsonProperty
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic type id", example = "urn:topic:123")
         URI topicId;

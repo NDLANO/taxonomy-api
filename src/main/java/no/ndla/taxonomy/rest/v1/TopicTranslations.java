@@ -41,10 +41,10 @@ public class TopicTranslations {
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single topic")
     @Transactional(readOnly = true)
-    public List<TopicTranslations.TopicTranslationIndexDocument> index(@PathVariable("id") URI id) {
+    public List<TopicTranslationDTO> index(@PathVariable("id") URI id) {
         Node topic = nodeRepository.getByPublicId(id);
-        List<TopicTranslations.TopicTranslationIndexDocument> result = new ArrayList<>();
-        topic.getTranslations().forEach(t -> result.add(new TopicTranslations.TopicTranslationIndexDocument() {
+        List<TopicTranslationDTO> result = new ArrayList<>();
+        topic.getTranslations().forEach(t -> result.add(new TopicTranslationDTO() {
             {
                 name = t.getName();
                 language = t.getLanguageCode();
@@ -56,12 +56,12 @@ public class TopicTranslations {
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single topic")
     @Transactional(readOnly = true)
-    public TopicTranslations.TopicTranslationIndexDocument get(@PathVariable("id") URI id,
+    public TopicTranslationDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node topic = nodeRepository.getByPublicId(id);
         var translation = topic.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for topic", id));
-        return new TopicTranslations.TopicTranslationIndexDocument() {
+        return new TopicTranslationDTO() {
             {
                 name = translation.getName();
                 language = translation.getLanguageCode();
@@ -77,7 +77,7 @@ public class TopicTranslations {
     @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @Parameter(name = "topic", description = "The new or updated translation") @RequestBody TopicTranslations.UpdateTopicTranslationCommand command) {
+            @Parameter(name = "topic", description = "The new or updated translation") @RequestBody TopicTranslationPUT command) {
         var topic = nodeRepository.getByPublicId(id);
         topic.addTranslation(command.name, language);
         entityManager.persist(topic);
@@ -97,7 +97,8 @@ public class TopicTranslations {
         });
     }
 
-    public static class TopicTranslationIndexDocument {
+    @Schema(name = "TopicTranslation")
+    public static class TopicTranslationDTO {
         @JsonProperty
         @Schema(description = "The translated name of the topic", example = "Trigonometry")
         public String name;
@@ -107,7 +108,7 @@ public class TopicTranslations {
         public String language;
     }
 
-    public static class UpdateTopicTranslationCommand {
+    public static class TopicTranslationPUT {
         @JsonProperty
         @Schema(description = "The translated name of the topic", example = "Trigonometry")
         public String name;

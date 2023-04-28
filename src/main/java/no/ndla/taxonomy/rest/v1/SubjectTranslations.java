@@ -40,10 +40,10 @@ public class SubjectTranslations {
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single subject")
     @Transactional(readOnly = true)
-    public List<SubjectTranslationIndexDocument> index(@PathVariable("id") URI id) {
+    public List<SubjectTranslationDTO> index(@PathVariable("id") URI id) {
         Node subject = nodeRepository.getByPublicId(id);
-        List<SubjectTranslationIndexDocument> result = new ArrayList<>();
-        subject.getTranslations().forEach(t -> result.add(new SubjectTranslationIndexDocument() {
+        List<SubjectTranslationDTO> result = new ArrayList<>();
+        subject.getTranslations().forEach(t -> result.add(new SubjectTranslationDTO() {
             {
                 name = t.getName();
                 language = t.getLanguageCode();
@@ -55,13 +55,13 @@ public class SubjectTranslations {
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single subject")
     @Transactional(readOnly = true)
-    public SubjectTranslationIndexDocument get(@PathVariable("id") URI id,
+    public SubjectTranslationDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node subject = nodeRepository.getByPublicId(id);
         var translation = subject.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for subject", id));
 
-        return new SubjectTranslationIndexDocument() {
+        return new SubjectTranslationDTO() {
             {
                 name = translation.getName();
                 language = translation.getLanguageCode();
@@ -91,13 +91,14 @@ public class SubjectTranslations {
     @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @Parameter(name = "subject", description = "The new or updated translation") @RequestBody UpdateSubjectTranslationCommand command) {
+            @Parameter(name = "subject", description = "The new or updated translation") @RequestBody SubjectTranslationPUT command) {
         Node subject = nodeRepository.getByPublicId(id);
         subject.addTranslation(command.name, language);
         entityManager.persist(subject);
     }
 
-    public static class SubjectTranslationIndexDocument {
+    @Schema(name = "SubjectTranslation")
+    public static class SubjectTranslationDTO {
         @JsonProperty
         @Schema(description = "The translated name of the subject", example = "Mathematics")
         public String name;
@@ -107,7 +108,7 @@ public class SubjectTranslations {
         public String language;
     }
 
-    public static class UpdateSubjectTranslationCommand {
+    public static class SubjectTranslationPUT {
         @JsonProperty
         @Schema(description = "The translated name of the subject", example = "Mathematics")
         public String name;

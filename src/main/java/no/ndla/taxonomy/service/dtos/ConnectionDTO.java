@@ -16,8 +16,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /** */
-@Schema(name = "Connections")
-public class NodeConnectionDTO {
+@Schema(name = "Connection")
+public class ConnectionDTO {
 
     @JsonProperty
     @Schema(description = "The id of the subject-topic or topic-subtopic connection", example = "urn:subject-topic:1")
@@ -39,10 +39,10 @@ public class NodeConnectionDTO {
     @Schema(description = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
     private Boolean isPrimary;
 
-    public NodeConnectionDTO() {
+    public ConnectionDTO() {
     }
 
-    private NodeConnectionDTO(NodeConnection connection, boolean isParentConnection) {
+    private ConnectionDTO(NodeConnection connection, boolean isParentConnection) {
         this.connectionId = connection.getPublicId();
         this.isPrimary = true;
 
@@ -60,12 +60,12 @@ public class NodeConnectionDTO {
         }
     }
 
-    public static NodeConnectionDTO parentConnection(NodeConnection connection) {
-        return new NodeConnectionDTO(connection, true);
+    public static ConnectionDTO parentConnection(NodeConnection connection) {
+        return new ConnectionDTO(connection, true);
     }
 
-    public static NodeConnectionDTO childConnection(NodeConnection connection) {
-        return new NodeConnectionDTO(connection, false);
+    public static ConnectionDTO childConnection(NodeConnection connection) {
+        return new ConnectionDTO(connection, false);
     }
 
     public URI getConnectionId() {

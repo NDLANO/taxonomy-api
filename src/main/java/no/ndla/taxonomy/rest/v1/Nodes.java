@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
@@ -21,7 +22,7 @@ import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
-import no.ndla.taxonomy.service.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ConnectionDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
@@ -135,7 +136,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> post(
-            @Parameter(name = "connection", description = "The new node") @RequestBody NodeCommand command) {
+            @Parameter(name = "connection", description = "The new node") @RequestBody @Schema(name = "NodePOST") NodeCommand command) {
         return doPost(new Node(command.nodeType), command);
     }
 
@@ -145,7 +146,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void put(@PathVariable("id") URI id,
-            @Parameter(name = "node", description = "The updated node. Fields not included will be set to null.") @RequestBody NodeCommand command) {
+            @Parameter(name = "node", description = "The updated node. Fields not included will be set to null.") @RequestBody @Schema(name = "NodePUT") NodeCommand command) {
         doPut(id, command);
     }
 
@@ -196,7 +197,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/connections")
     @Operation(summary = "Gets all parents and children this node is connected to")
     @Transactional(readOnly = true)
-    public List<NodeConnectionDTO> getAllConnections(@PathVariable("id") URI id) {
+    public List<ConnectionDTO> getAllConnections(@PathVariable("id") URI id) {
         return nodeService.getAllConnections(id);
     }
 

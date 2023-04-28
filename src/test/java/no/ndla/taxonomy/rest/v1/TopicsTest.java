@@ -11,7 +11,7 @@ import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
-import no.ndla.taxonomy.service.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ConnectionDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -185,7 +185,7 @@ public class TopicsTest extends RestTest {
         testSeeder.topicNodeConnectionsTestSetup();
 
         var response = testUtils.getResource("/v1/topics/urn:topic:2000/connections");
-        var connections = testUtils.getObject(NodeConnectionDTO[].class, response);
+        var connections = testUtils.getObject(ConnectionDTO[].class, response);
 
         assertEquals(3, connections.length, "Correct number of connections");
         assertAllTrue(connections, c -> c.getPaths().size() > 0); // all connections have at least one path
@@ -222,7 +222,7 @@ public class TopicsTest extends RestTest {
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().getGrepCodes().size() == 0);
     }
 
-    private void connectionsHaveCorrectTypes(NodeConnectionDTO[] connections) {
+    private void connectionsHaveCorrectTypes(ConnectionDTO[] connections) {
         ConnectionTypeCounter connectionTypeCounter = new ConnectionTypeCounter(connections).countTypes();
         assertEquals(1, connectionTypeCounter.getParentCount());
         assertEquals(2, connectionTypeCounter.getChildCount());
@@ -363,12 +363,12 @@ public class TopicsTest extends RestTest {
     }
 
     private static class ConnectionTypeCounter {
-        private final NodeConnectionDTO[] connections;
+        private final ConnectionDTO[] connections;
         private int subjectCount;
         private int parentCount;
         private int childCount;
 
-        ConnectionTypeCounter(NodeConnectionDTO[] connections) {
+        ConnectionTypeCounter(ConnectionDTO[] connections) {
             this.connections = connections;
         }
 
@@ -388,7 +388,7 @@ public class TopicsTest extends RestTest {
             subjectCount = 0;
             parentCount = 0;
             childCount = 0;
-            for (NodeConnectionDTO connection : connections) {
+            for (ConnectionDTO connection : connections) {
                 switch (connection.getType()) {
                 case "parent-subject":
                     subjectCount++;

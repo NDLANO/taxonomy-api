@@ -69,7 +69,7 @@ public class ResourceTranslationsTest extends RestTest {
         URI id = resource.getPublicId();
 
         testUtils.updateResource("/v1/resources/" + id + "/translations/nb",
-                new ResourceTranslations.UpdateResourceTranslationCommand() {
+                new ResourceTranslations.ResourceTranslationPUT() {
                     {
                         name = "Introduksjon til algebra";
                     }
@@ -97,8 +97,8 @@ public class ResourceTranslationsTest extends RestTest {
                         .translation("de", l -> l.name("Introduktion bis Algebra")));
         URI id = resource.getPublicId();
 
-        ResourceTranslations.ResourceTranslationIndexDocument[] translations = testUtils.getObject(
-                ResourceTranslations.ResourceTranslationIndexDocument[].class,
+        ResourceTranslations.ResourceTranslationDTO[] translations = testUtils.getObject(
+                ResourceTranslations.ResourceTranslationDTO[].class,
                 testUtils.getResource("/v1/resources/" + id + "/translations"));
 
         assertEquals(3, translations.length);
@@ -113,8 +113,8 @@ public class ResourceTranslationsTest extends RestTest {
                 t -> t.name("Introduction to algrebra").translation("nb", l -> l.name("Introduksjon til algebra")));
         URI id = resource.getPublicId();
 
-        ResourceTranslations.ResourceTranslationIndexDocument translation = testUtils.getObject(
-                ResourceTranslations.ResourceTranslationIndexDocument.class,
+        ResourceTranslations.ResourceTranslationDTO translation = testUtils.getObject(
+                ResourceTranslations.ResourceTranslationDTO.class,
                 testUtils.getResource("/v1/resources/" + id + "/translations/nb"));
         assertEquals("Introduksjon til algebra", translation.name);
         assertEquals("nb", translation.language);

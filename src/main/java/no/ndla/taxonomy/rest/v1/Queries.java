@@ -50,6 +50,7 @@ public class Queries {
     @GetMapping("/resources")
     @Operation(summary = "Gets a list of resources matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/resources?contentURI= instead")
     @Transactional(readOnly = true)
+    @Deprecated
     public List<NodeDTO> queryResources(@RequestParam("contentURI") Optional<URI> contentURI,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
@@ -61,6 +62,7 @@ public class Queries {
     @GetMapping("/topics")
     @Operation(summary = "Gets a list of topics matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/topics?contentURI= instead")
     @Transactional(readOnly = true)
+    @Deprecated
     public List<NodeDTO> queryTopics(@RequestParam("contentURI") URI contentURI,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,

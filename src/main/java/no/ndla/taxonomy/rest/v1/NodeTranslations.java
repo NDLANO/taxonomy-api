@@ -68,7 +68,7 @@ public class NodeTranslations {
     @Transactional
     public void put(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @Parameter(name = "command", description = "The new or updated translation") @RequestBody UpdateTranslationCommand command) {
+            @Parameter(name = "command", description = "The new or updated translation") @RequestBody TranslationPUT command) {
         Node node = nodeRepository.getByPublicId(id);
         node.addTranslation(command.name, language);
         entityManager.persist(node);
@@ -88,6 +88,7 @@ public class NodeTranslations {
         });
     }
 
+    @Schema(name = "Translation")
     public static class TranslationDTO implements Comparable<TranslationDTO> {
         public TranslationDTO() {
         }
@@ -111,7 +112,7 @@ public class NodeTranslations {
         }
     }
 
-    public static class UpdateTranslationCommand {
+    public static class TranslationPUT {
         @JsonProperty
         @Schema(description = "The translated name of the node", example = "Trigonometry")
         public String name;

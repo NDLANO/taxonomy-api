@@ -35,7 +35,7 @@ public class ContextsTest extends RestTest {
         builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).publicId("urn:subject:1").name("Subject 1"));
 
         var response = testUtils.getResource("/v1/contexts");
-        var contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
+        var contexts = testUtils.getObject(Contexts.ContextDTO[].class, response);
 
         assertEquals(1, contexts.length);
         assertEquals("urn:subject:1", contexts[0].id.toString());
@@ -48,7 +48,7 @@ public class ContextsTest extends RestTest {
         builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").name("Topic 1").isContext(true));
 
         var response = testUtils.getResource("/v1/contexts");
-        var contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
+        var contexts = testUtils.getObject(Contexts.ContextDTO[].class, response);
 
         assertEquals(1, contexts.length);
         assertEquals("urn:topic:1", contexts[0].id.toString());
@@ -60,7 +60,7 @@ public class ContextsTest extends RestTest {
     public void can_add_topic_as_context() throws Exception {
         Node topic = builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:ct:2"));
 
-        testUtils.createResource("/v1/contexts", new Contexts.CreateContextCommand() {
+        testUtils.createResource("/v1/contexts", new Contexts.ContextPOST() {
             {
                 id = topic.getPublicId();
             }
@@ -88,7 +88,7 @@ public class ContextsTest extends RestTest {
                 .isContext(true));
 
         var response = testUtils.getResource("/v1/contexts?language=nb");
-        var contexts = testUtils.getObject(Contexts.ContextIndexDocument[].class, response);
+        var contexts = testUtils.getObject(Contexts.ContextDTO[].class, response);
 
         assertEquals(2, contexts.length);
 
