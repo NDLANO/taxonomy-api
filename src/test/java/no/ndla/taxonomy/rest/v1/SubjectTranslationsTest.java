@@ -9,7 +9,9 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -98,7 +100,7 @@ public class SubjectTranslationsTest extends RestTest {
                         .translation("en", l -> l.name("Mathematics")).translation("de", l -> l.name("Mathematik")));
         URI id = subject.getPublicId();
 
-        var translations = testUtils.getObject(SubjectTranslations.SubjectTranslationDTO[].class,
+        var translations = testUtils.getObject(TranslationDTO[].class,
                 testUtils.getResource("/v1/subjects/" + id + "/translations"));
 
         assertEquals(3, translations.length);
@@ -113,7 +115,7 @@ public class SubjectTranslationsTest extends RestTest {
                 s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
         URI id = subject.getPublicId();
 
-        var translation = testUtils.getObject(SubjectTranslations.SubjectTranslationDTO.class,
+        var translation = testUtils.getObject(TranslationDTO.class,
                 testUtils.getResource("/v1/subjects/" + id + "/translations/nb"));
         assertEquals("Matematikk", translation.name);
         assertEquals("nb", translation.language);

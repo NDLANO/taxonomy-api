@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,10 +41,10 @@ public class SubjectTranslations {
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single subject")
     @Transactional(readOnly = true)
-    public List<SubjectTranslationDTO> getAllSubjectTranslations(@PathVariable("id") URI id) {
+    public List<TranslationDTO> getAllSubjectTranslations(@PathVariable("id") URI id) {
         Node subject = nodeRepository.getByPublicId(id);
-        List<SubjectTranslationDTO> result = new ArrayList<>();
-        subject.getTranslations().forEach(t -> result.add(new SubjectTranslationDTO() {
+        List<TranslationDTO> result = new ArrayList<>();
+        subject.getTranslations().forEach(t -> result.add(new TranslationDTO() {
             {
                 name = t.getName();
                 language = t.getLanguageCode();
@@ -55,13 +56,13 @@ public class SubjectTranslations {
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single subject")
     @Transactional(readOnly = true)
-    public SubjectTranslationDTO getSubjectTranslation(@PathVariable("id") URI id,
+    public TranslationDTO getSubjectTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node subject = nodeRepository.getByPublicId(id);
         var translation = subject.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for subject", id));
 
-        return new SubjectTranslationDTO() {
+        return new TranslationDTO() {
             {
                 name = translation.getName();
                 language = translation.getLanguageCode();
@@ -95,17 +96,6 @@ public class SubjectTranslations {
         Node subject = nodeRepository.getByPublicId(id);
         subject.addTranslation(command.name, language);
         entityManager.persist(subject);
-    }
-
-    @Schema(name = "SubjectTranslation")
-    public static class SubjectTranslationDTO {
-        @JsonProperty
-        @Schema(description = "The translated name of the subject", example = "Mathematics")
-        public String name;
-
-        @JsonProperty
-        @Schema(description = "ISO 639-1 language code", example = "en")
-        public String language;
     }
 
     public static class SubjectTranslationPUT {

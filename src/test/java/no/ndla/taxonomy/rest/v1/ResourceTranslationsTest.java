@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -97,8 +98,7 @@ public class ResourceTranslationsTest extends RestTest {
                         .translation("de", l -> l.name("Introduktion bis Algebra")));
         URI id = resource.getPublicId();
 
-        ResourceTranslations.ResourceTranslationDTO[] translations = testUtils.getObject(
-                ResourceTranslations.ResourceTranslationDTO[].class,
+        TranslationDTO[] translations = testUtils.getObject(TranslationDTO[].class,
                 testUtils.getResource("/v1/resources/" + id + "/translations"));
 
         assertEquals(3, translations.length);
@@ -113,8 +113,7 @@ public class ResourceTranslationsTest extends RestTest {
                 t -> t.name("Introduction to algrebra").translation("nb", l -> l.name("Introduksjon til algebra")));
         URI id = resource.getPublicId();
 
-        ResourceTranslations.ResourceTranslationDTO translation = testUtils.getObject(
-                ResourceTranslations.ResourceTranslationDTO.class,
+        TranslationDTO translation = testUtils.getObject(TranslationDTO.class,
                 testUtils.getResource("/v1/resources/" + id + "/translations/nb"));
         assertEquals("Introduksjon til algebra", translation.name);
         assertEquals("nb", translation.language);

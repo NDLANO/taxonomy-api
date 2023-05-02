@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.ResourceType;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -88,8 +89,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
                 .translation("Article", "en").translation("Artikel", "de"));
         URI id = resourceType.getPublicId();
 
-        ResourceTypeTranslations.ResourceTypeTranslationDTO[] translations = testUtils.getObject(
-                ResourceTypeTranslations.ResourceTypeTranslationDTO[].class,
+        TranslationDTO[] translations = testUtils.getObject(TranslationDTO[].class,
                 testUtils.getResource("/v1/resource-types/" + id + "/translations"));
 
         assertEquals(3, translations.length);
@@ -103,8 +103,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
         ResourceType resourceType = builder.resourceType(t -> t.name("Article").translation("Artikkel", "nb"));
         URI id = resourceType.getPublicId();
 
-        ResourceTypeTranslations.ResourceTypeTranslationDTO translation = testUtils.getObject(
-                ResourceTypeTranslations.ResourceTypeTranslationDTO.class,
+        TranslationDTO translation = testUtils.getObject(TranslationDTO.class,
                 testUtils.getResource("/v1/resource-types/" + id + "/translations/nb"));
         assertEquals("Artikkel", translation.name);
         assertEquals("nb", translation.language);

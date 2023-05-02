@@ -17,7 +17,7 @@ import no.ndla.taxonomy.domain.JsonTranslation;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
-import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import no.ndla.taxonomy.service.UpdatableDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

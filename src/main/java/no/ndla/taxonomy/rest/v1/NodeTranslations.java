@@ -13,9 +13,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,30 +86,6 @@ public class NodeTranslations {
             node.removeTranslation(language);
             entityManager.persist(node);
         });
-    }
-
-    @Schema(name = "Translation")
-    public static class TranslationDTO implements Comparable<TranslationDTO> {
-        public TranslationDTO() {
-        }
-
-        public TranslationDTO(Translation translation) {
-            name = translation.getName();
-            language = translation.getLanguageCode();
-        }
-
-        @JsonProperty
-        @Schema(description = "The translated name of the node", example = "Trigonometry")
-        public String name;
-
-        @JsonProperty
-        @Schema(description = "ISO 639-1 language code", example = "en")
-        public String language;
-
-        @Override
-        public int compareTo(TranslationDTO o) {
-            return language.compareTo(o.language);
-        }
     }
 
     public static class TranslationPUT {

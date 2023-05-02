@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,10 +41,10 @@ public class ResourceTranslations {
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single resource")
     @Transactional(readOnly = true)
-    public List<ResourceTranslationDTO> getAllResourceTranslations(@PathVariable("id") URI id) {
+    public List<TranslationDTO> getAllResourceTranslations(@PathVariable("id") URI id) {
         var resource = nodeRepository.getByPublicId(id);
-        List<ResourceTranslationDTO> result = new ArrayList<>();
-        resource.getTranslations().forEach(t -> result.add(new ResourceTranslationDTO() {
+        List<TranslationDTO> result = new ArrayList<>();
+        resource.getTranslations().forEach(t -> result.add(new TranslationDTO() {
             {
                 name = t.getName();
                 language = t.getLanguageCode();
@@ -55,12 +56,12 @@ public class ResourceTranslations {
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single resource")
     @Transactional(readOnly = true)
-    public ResourceTranslationDTO getResourceTranslation(@PathVariable("id") URI id,
+    public TranslationDTO getResourceTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         var resource = nodeRepository.getByPublicId(id);
         var translation = resource.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for resource", id));
-        return new ResourceTranslationDTO() {
+        return new TranslationDTO() {
             {
                 name = translation.getName();
                 language = translation.getLanguageCode();
@@ -94,17 +95,6 @@ public class ResourceTranslations {
             resource.removeTranslation(language);
             nodeRepository.save(resource);
         });
-    }
-
-    @Schema(name = "ResourceTranslation")
-    public static class ResourceTranslationDTO {
-        @JsonProperty
-        @Schema(description = "The translated name of the resource", example = "Introduction to algebra")
-        public String name;
-
-        @JsonProperty
-        @Schema(description = "ISO 639-1 language code", example = "en")
-        public String language;
     }
 
     public static class ResourceTranslationPUT {

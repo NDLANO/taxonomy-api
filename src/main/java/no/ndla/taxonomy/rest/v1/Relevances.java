@@ -16,7 +16,7 @@ import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import no.ndla.taxonomy.service.UpdatableDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

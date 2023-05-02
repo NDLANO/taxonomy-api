@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,10 +42,10 @@ public class TopicTranslations {
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single topic")
     @Transactional(readOnly = true)
-    public List<TopicTranslationDTO> getAllTopicTranslations(@PathVariable("id") URI id) {
+    public List<TranslationDTO> getAllTopicTranslations(@PathVariable("id") URI id) {
         Node topic = nodeRepository.getByPublicId(id);
-        List<TopicTranslationDTO> result = new ArrayList<>();
-        topic.getTranslations().forEach(t -> result.add(new TopicTranslationDTO() {
+        List<TranslationDTO> result = new ArrayList<>();
+        topic.getTranslations().forEach(t -> result.add(new TranslationDTO() {
             {
                 name = t.getName();
                 language = t.getLanguageCode();
@@ -56,12 +57,12 @@ public class TopicTranslations {
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single topic")
     @Transactional(readOnly = true)
-    public TopicTranslationDTO getTopicTranslation(@PathVariable("id") URI id,
+    public TranslationDTO getTopicTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node topic = nodeRepository.getByPublicId(id);
         var translation = topic.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for topic", id));
-        return new TopicTranslationDTO() {
+        return new TranslationDTO() {
             {
                 name = translation.getName();
                 language = translation.getLanguageCode();
@@ -95,17 +96,6 @@ public class TopicTranslations {
             topic.removeTranslation(language);
             entityManager.persist(topic);
         });
-    }
-
-    @Schema(name = "TopicTranslation")
-    public static class TopicTranslationDTO {
-        @JsonProperty
-        @Schema(description = "The translated name of the topic", example = "Trigonometry")
-        public String name;
-
-        @JsonProperty
-        @Schema(description = "ISO 639-1 language code", example = "en")
-        public String language;
     }
 
     public static class TopicTranslationPUT {

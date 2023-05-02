@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.Translation;
-import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
 
 import java.net.URI;
 import java.util.Objects;
