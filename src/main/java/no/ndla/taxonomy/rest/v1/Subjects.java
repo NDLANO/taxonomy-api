@@ -18,7 +18,6 @@ import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
@@ -45,21 +44,6 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
 
-    @Deprecated
-    @GetMapping("/search")
-    @Operation(summary = "Search all subjects")
-    @Transactional(readOnly = true)
-    public SearchResultDTO<NodeDTO> searchSubjects(
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
-            @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
-            @Parameter(description = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
-            @Parameter(description = "Query to search names") @RequestParam(value = "query", required = false) Optional<String> query,
-            @Parameter(description = "Ids to fetch for query") @RequestParam(value = "ids", required = false) Optional<List<String>> ids
-
-    ) {
-        return nodeService.searchByNodeType(query, ids, language, pageSize, page, Optional.of(NodeType.SUBJECT));
-    }
-
     public Subjects(TreeSorter treeSorter, ContextUpdaterService cachedUrlUpdaterService,
             RecursiveNodeTreeService recursiveNodeTreeService, NodeService nodeService, NodeRepository nodeRepository,
             NodeConnectionRepository nodeConnectionRepository) {
@@ -83,7 +67,23 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         return nodeService.getNodesByType(Optional.of(List.of(NodeType.SUBJECT)), language, Optional.empty(),
-                Optional.empty(), Optional.empty(), metadataFilters);
+                Optional.empty(), Optional.empty(), metadataFilters, Optional.of(false));
+    }
+
+    @Deprecated
+    @GetMapping("/search")
+    @Operation(summary = "Search all subjects")
+    @Transactional(readOnly = true)
+    public SearchResultDTO<NodeDTO> searchSubjects(
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
+            @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
+            @Parameter(description = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
+            @Parameter(description = "Query to search names") @RequestParam(value = "query", required = false) Optional<String> query,
+            @Parameter(description = "Ids to fetch for query") @RequestParam(value = "ids", required = false) Optional<List<String>> ids
+
+    ) {
+        return nodeService.searchByNodeType(query, ids, language, Optional.of(false), pageSize, page,
+                Optional.of(NodeType.SUBJECT));
     }
 
     @Deprecated
@@ -103,9 +103,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         var ids = nodeRepository.findIdsByTypePaginated(PageRequest.of(page.get() - 1, pageSize.get()),
                 NodeType.SUBJECT);
         var results = nodeRepository.findByIds(ids.getContent());
-        var contents = results.stream()
-                .map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb"), Optional.empty()))
-                .collect(Collectors.toList());
+        var contents = results.stream().map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb"),
+                Optional.empty(), Optional.of(false))).collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
@@ -115,10 +114,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @Transactional(readOnly = true)
     public NodeDTO getSubject(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
-        return nodeRepository
-                .findFirstByPublicId(id).map(subject -> new NodeDTO(Optional.empty(), subject,
-                        language.orElse(Constants.DefaultLanguage), Optional.empty()))
-                .orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
+        return nodeService.getNode(id, language, Optional.of(false));
     }
 
     @Deprecated
@@ -178,7 +174,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         }).toList();
 
         connections.stream().map(nodeConnection -> new NodeChildDTO(Optional.of(subject), nodeConnection,
-                language.orElse(Constants.DefaultLanguage))).forEach(returnList::add);
+                language.orElse(Constants.DefaultLanguage), Optional.of(false))).forEach(returnList::add);
 
         var filtered = returnList.stream().filter(childDTO -> childrenIds.contains(childDTO.getParentId())
                 || subject.getPublicId().equals(childDTO.getParentId())).toList();
@@ -245,6 +241,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         // If null is sent to query it will be ignored, otherwise it will filter by relevance
         final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
 
-        return nodeService.getResourcesByNodeId(subjectId, resourceTypeIdSet, relevanceArgument, language, true);
+        return nodeService.getResourcesByNodeId(subjectId, resourceTypeIdSet, relevanceArgument, language, true,
+                Optional.of(false));
     }
 }

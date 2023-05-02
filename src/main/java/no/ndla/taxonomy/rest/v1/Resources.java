@@ -70,7 +70,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         return nodeService.getNodesByType(Optional.of(List.of(NodeType.RESOURCE)), language, contentUri,
-                Optional.empty(), Optional.empty(), metadataFilters);
+                Optional.empty(), Optional.empty(), metadataFilters, Optional.of(false));
     }
 
     @Deprecated
@@ -82,10 +82,9 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @Parameter(description = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
             @Parameter(description = "Query to search names") @RequestParam(value = "query", required = false) Optional<String> query,
-            @Parameter(description = "Ids to fetch for query") @RequestParam(value = "ids", required = false) Optional<List<String>> ids
-
-    ) {
-        return nodeService.searchByNodeType(query, ids, language, pageSize, page, Optional.of(NodeType.RESOURCE));
+            @Parameter(description = "Ids to fetch for query") @RequestParam(value = "ids", required = false) Optional<List<String>> ids) {
+        return nodeService.searchByNodeType(query, ids, language, Optional.of(false), pageSize, page,
+                Optional.of(NodeType.RESOURCE));
     }
 
     @Deprecated
@@ -105,9 +104,8 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         var pageRequest = PageRequest.of(page.get() - 1, pageSize.get());
         var ids = nodeRepository.findIdsByTypePaginated(pageRequest, NodeType.RESOURCE);
         var results = nodeRepository.findByIds(ids.getContent());
-        var contents = results.stream()
-                .map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb"), Optional.empty()))
-                .collect(Collectors.toList());
+        var contents = results.stream().map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb"),
+                Optional.empty(), Optional.of(false))).collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
@@ -117,7 +115,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @Transactional(readOnly = true)
     public NodeDTO getResource(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
-        return nodeService.getNode(id, language);
+        return nodeService.getNode(id, language, Optional.of(false));
     }
 
     @Deprecated
