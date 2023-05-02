@@ -10,6 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import liquibase.pro.packaged.O;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
@@ -56,7 +57,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         return nodeService.getNodesByType(Optional.of(List.of(NodeType.TOPIC)), language, contentUri, Optional.empty(),
-                Optional.empty(), metadataFilters);
+                Optional.empty(), metadataFilters, Optional.of(false));
     }
 
     @GetMapping("/search")
@@ -67,10 +68,9 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @Parameter(description = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
             @Parameter(description = "Query to search names") @RequestParam(value = "query", required = false) Optional<String> query,
-            @Parameter(description = "Ids to fetch for query") @RequestParam(value = "ids", required = false) Optional<List<String>> ids
-
-    ) {
-        return nodeService.searchByNodeType(query, ids, language, pageSize, page, Optional.of(NodeType.TOPIC));
+            @Parameter(description = "Ids to fetch for query") @RequestParam(value = "ids", required = false) Optional<List<String>> ids) {
+        return nodeService.searchByNodeType(query, ids, language, Optional.of(false), pageSize, page,
+                Optional.of(NodeType.TOPIC));
     }
 
     @GetMapping("/page")
@@ -88,9 +88,8 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
         var ids = nodeRepository.findIdsByTypePaginated(PageRequest.of(page.get() - 1, pageSize.get()), NodeType.TOPIC);
         var results = nodeRepository.findByIds(ids.getContent());
-        var contents = results.stream()
-                .map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb"), Optional.empty()))
-                .collect(Collectors.toList());
+        var contents = results.stream().map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb"),
+                Optional.empty(), Optional.of(false))).collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
@@ -99,7 +98,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @Transactional(readOnly = true)
     public NodeDTO get(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
-        return nodeService.getNode(id, language);
+        return nodeService.getNode(id, language, Optional.of(false));
     }
 
     @PostMapping
@@ -186,7 +185,8 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             resourceTypeIdSet = new HashSet<>(Arrays.asList(resourceTypeIds));
         }
 
-        return nodeService.getResourcesByNodeId(topicId, resourceTypeIdSet, relevance, language, recursive);
+        return nodeService.getResourcesByNodeId(topicId, resourceTypeIdSet, relevance, language, recursive,
+                Optional.of(false));
     }
 
     @PutMapping("/{id}/makeResourcesPrimary")
