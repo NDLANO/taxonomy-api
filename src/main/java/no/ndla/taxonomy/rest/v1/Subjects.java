@@ -115,9 +115,10 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @Transactional(readOnly = true)
     public NodeDTO getSubject(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
-        return nodeRepository.findFirstByPublicId(id).map(subject -> {
-            return new NodeDTO(Optional.empty(), subject, language.orElse(Constants.DefaultLanguage), Optional.empty());
-        }).orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
+        return nodeRepository
+                .findFirstByPublicId(id).map(subject -> new NodeDTO(Optional.empty(), subject,
+                        language.orElse(Constants.DefaultLanguage), Optional.empty()))
+                .orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
     }
 
     @Deprecated

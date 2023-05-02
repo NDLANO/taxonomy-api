@@ -7,16 +7,17 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
+import no.ndla.taxonomy.rest.v1.dtos.TopicResourceDTO;
+import no.ndla.taxonomy.rest.v1.dtos.TopicResourcePOST;
+import no.ndla.taxonomy.rest.v1.dtos.TopicResourcePUT;
 import no.ndla.taxonomy.service.NodeConnectionService;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
@@ -142,85 +143,4 @@ public class TopicResources {
         connectionService.updateParentChild(topicResource, relevance, rank, primary);
     }
 
-    public static class TopicResourcePOST {
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic id", example = "urn:topic:345")
-        public URI topicid;
-
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource id", example = "urn:resource:345")
-        public URI resourceId;
-
-        @JsonProperty
-        @Schema(description = "Primary connection", example = "true")
-        public boolean primary = true;
-
-        @JsonProperty
-        @Schema(description = "Order in which resource is sorted for the topic", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
-
-    public static class TopicResourcePUT {
-        @JsonProperty
-        @Schema(description = "Topic resource connection id", example = "urn:topic-has-resources:123")
-        public URI id;
-
-        @JsonProperty
-        @Schema(description = "Primary connection", example = "true")
-        public boolean primary;
-
-        @JsonProperty
-        @Schema(description = "Order in which the resource will be sorted for this topic.", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
-
-    @Schema(name = "TopicResource")
-    public static class TopicResourceDTO {
-
-        @JsonProperty
-        @Schema(description = "Topic id", example = "urn:topic:345")
-        public URI topicid;
-
-        @JsonProperty
-        @Schema(description = "Resource id", example = "urn:resource:345")
-        URI resourceId;
-
-        @JsonProperty
-        @Schema(description = "Topic resource connection id", example = "urn:topic-has-resources:123")
-        public URI id;
-
-        @JsonProperty
-        @Schema(description = "Primary connection", example = "true")
-        public boolean primary;
-
-        @JsonProperty
-        @Schema(description = "Order in which the resource is sorted for the topic", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-
-        TopicResourceDTO(NodeConnection topicResource) {
-            id = topicResource.getPublicId();
-            topicResource.getParent().ifPresent(topic -> topicid = topic.getPublicId());
-            topicResource.getResource().ifPresent(resource -> resourceId = resource.getPublicId());
-            primary = topicResource.isPrimary().orElse(false);
-            rank = topicResource.getRank();
-            relevanceId = topicResource.getRelevance().map(Relevance::getPublicId).orElse(null);
-        }
-
-        TopicResourceDTO() {
-
-        }
-
-    }
 }

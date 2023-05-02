@@ -8,6 +8,8 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.rest.v1.dtos.RelevanceDTO;
+import no.ndla.taxonomy.rest.v1.dtos.RelevancePUT;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -25,7 +27,7 @@ public class RelevancesTest extends RestTest {
         builder.relevance(f -> f.publicId("urn:relevance:1").name("Core material"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/relevances/" + "urn:relevance:1");
-        Relevances.RelevanceDTO relevance = testUtils.getObject(Relevances.RelevanceDTO.class, response);
+        RelevanceDTO relevance = testUtils.getObject(RelevanceDTO.class, response);
 
         assertEquals("Core material", relevance.name);
     }
@@ -37,7 +39,7 @@ public class RelevancesTest extends RestTest {
         builder.relevance(f -> f.publicId("urn:relevance:2").name("Supplementary material"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/relevances");
-        Relevances.RelevanceDTO[] relevances = testUtils.getObject(Relevances.RelevanceDTO[].class, response);
+        RelevanceDTO[] relevances = testUtils.getObject(RelevanceDTO[].class, response);
 
         assertEquals(2, relevances.length);
         assertAnyTrue(relevances, f -> f.name.equals("Core material"));
@@ -54,7 +56,7 @@ public class RelevancesTest extends RestTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        Relevances.RelevancePUT command = new Relevances.RelevancePUT() {
+        RelevancePUT command = new RelevancePUT() {
             {
                 id = URI.create("urn:relevance:1");
                 name = "name";
@@ -69,7 +71,7 @@ public class RelevancesTest extends RestTest {
     public void can_update_relevance() throws Exception {
         URI id = builder.relevance().getPublicId();
 
-        Relevances.RelevancePUT command = new Relevances.RelevancePUT() {
+        RelevancePUT command = new RelevancePUT() {
             {
                 name = "Supplementary material";
             }

@@ -9,6 +9,9 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPOST;
+import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPUT;
+import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -29,7 +32,7 @@ public class NodeConnectionsTest extends RestTest {
         calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus")).getPublicId();
         integrationId = builder.node(NodeType.TOPIC, t -> t.name("integration")).getPublicId();
 
-        URI id = getId(testUtils.createResource("/v1/node-connections", new NodeConnections.NodeConnectionPOST() {
+        URI id = getId(testUtils.createResource("/v1/node-connections", new NodeConnectionPOST() {
             {
                 parentId = calculusId;
                 childId = integrationId;
@@ -49,7 +52,7 @@ public class NodeConnectionsTest extends RestTest {
         URI integrationId = builder.node("integration", NodeType.TOPIC, t -> t.name("integration")).getPublicId();
         URI calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus").child("integration")).getPublicId();
 
-        testUtils.createResource("/v1/node-connections", new NodeConnections.NodeConnectionPOST() {
+        testUtils.createResource("/v1/node-connections", new NodeConnectionPOST() {
             {
                 parentId = calculusId;
                 childId = integrationId;
@@ -63,7 +66,7 @@ public class NodeConnectionsTest extends RestTest {
                 .getPublicId();
         URI calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus")).getPublicId();
 
-        testUtils.createResource("/v1/node-connections", new NodeConnections.NodeConnectionPOST() {
+        testUtils.createResource("/v1/node-connections", new NodeConnectionPOST() {
             {
                 parentId = calculusId;
                 childId = integrationId;
@@ -145,7 +148,7 @@ public class NodeConnectionsTest extends RestTest {
                 t -> t.name("Alternating currents").publicId("urn:topic:11"));
         Node wiring = builder.node(NodeType.TOPIC, t -> t.name("Wiring").publicId("urn:topic:12"));
 
-        testUtils.createResource("/v1/node-connections", new NodeConnections.NodeConnectionPOST() {
+        testUtils.createResource("/v1/node-connections", new NodeConnectionPOST() {
             {
                 parentId = electricity.getPublicId();
                 childId = alternatingCurrents.getPublicId();
@@ -153,7 +156,7 @@ public class NodeConnectionsTest extends RestTest {
             }
         });
 
-        testUtils.createResource("/v1/node-connections", new NodeConnections.NodeConnectionPOST() {
+        testUtils.createResource("/v1/node-connections", new NodeConnectionPOST() {
             {
                 parentId = electricity.getPublicId();
                 childId = wiring.getPublicId();
@@ -163,8 +166,7 @@ public class NodeConnectionsTest extends RestTest {
 
         MockHttpServletResponse response = testUtils
                 .getResource("/v1/subjects/" + subject.getPublicId() + "/topics?recursive=true");
-        TopicSubtopics.TopicSubtopicDTO[] topics = testUtils.getObject(TopicSubtopics.TopicSubtopicDTO[].class,
-                response);
+        TopicSubtopicDTO[] topics = testUtils.getObject(TopicSubtopicDTO[].class, response);
 
         assertEquals(electricity.getPublicId(), topics[0].id);
         assertEquals(wiring.getPublicId(), topics[1].id);
@@ -174,7 +176,7 @@ public class NodeConnectionsTest extends RestTest {
     @Test
     public void can_update_child_rank() throws Exception {
         URI id = save(NodeConnection.create(newTopic(), newTopic())).getPublicId();
-        testUtils.updateResource("/v1/node-connections/" + id, new NodeConnections.NodeConnectionPUT() {
+        testUtils.updateResource("/v1/node-connections/" + id, new NodeConnectionPUT() {
             {
                 primary = true;
                 rank = 99;
@@ -193,7 +195,7 @@ public class NodeConnectionsTest extends RestTest {
         NodeConnection updatedConnection = nodeConnections.get(nodeConnections.size() - 1);
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource("/v1/node-connections/" + updatedConnection.getPublicId().toString(),
-                new NodeConnections.NodeConnectionPUT() {
+                new NodeConnectionPUT() {
                     {
                         primary = true;
                         rank = 1;
@@ -225,7 +227,7 @@ public class NodeConnectionsTest extends RestTest {
         NodeConnection updatedConnection = nodeConnections.get(nodeConnections.size() - 1);
         assertEquals(100, updatedConnection.getRank());
         testUtils.updateResource("/v1/node-connections/" + updatedConnection.getPublicId().toString(),
-                new NodeConnections.NodeConnectionPUT() {
+                new NodeConnectionPUT() {
                     {
                         primary = true;
                         rank = 1;
@@ -259,7 +261,7 @@ public class NodeConnectionsTest extends RestTest {
         NodeConnection updatedConnection = nodeConnections.get(nodeConnections.size() - 1);
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource("/v1/node-connections/" + nodeConnections.get(9).getPublicId().toString(),
-                new NodeConnections.NodeConnectionPUT() {
+                new NodeConnectionPUT() {
                     {
                         primary = true;
                         rank = 99;

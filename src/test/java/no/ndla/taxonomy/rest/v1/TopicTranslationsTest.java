@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.TranslationDTO;
@@ -69,7 +70,7 @@ public class TopicTranslationsTest extends RestTest {
         Node trigonometry = builder.node(NodeType.TOPIC, t -> t.name("Trigonometry"));
         URI id = trigonometry.getPublicId();
 
-        testUtils.updateResource("/v1/topics/" + id + "/translations/nb", new TopicTranslations.TopicTranslationPUT() {
+        testUtils.updateResource("/v1/topics/" + id + "/translations/nb", new TranslationPUT() {
             {
                 name = "Trigonometri";
             }

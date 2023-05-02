@@ -253,7 +253,7 @@
                     <jsonLibrary>jackson2</jsonLibrary>
                     <classPatterns>
                         <pattern>no.ndla.taxonomy.service.dtos.*</pattern>
-                        <pattern>no.ndla.taxonomy.rest.v1.**</pattern>
+                        <pattern>no.ndla.taxonomy.rest.v1.dtos.**</pattern>
                     </classPatterns>
                     <excludeClassPatterns>
                         <pattern>no.ndla.taxonomy.domain.*</pattern>

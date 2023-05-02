@@ -9,6 +9,8 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.rest.v1.dtos.ContextDTO;
+import no.ndla.taxonomy.rest.v1.dtos.ContextPOST;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +37,7 @@ public class ContextsTest extends RestTest {
         builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).publicId("urn:subject:1").name("Subject 1"));
 
         var response = testUtils.getResource("/v1/contexts");
-        var contexts = testUtils.getObject(Contexts.ContextDTO[].class, response);
+        var contexts = testUtils.getObject(ContextDTO[].class, response);
 
         assertEquals(1, contexts.length);
         assertEquals("urn:subject:1", contexts[0].id.toString());
@@ -48,7 +50,7 @@ public class ContextsTest extends RestTest {
         builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").name("Topic 1").isContext(true));
 
         var response = testUtils.getResource("/v1/contexts");
-        var contexts = testUtils.getObject(Contexts.ContextDTO[].class, response);
+        var contexts = testUtils.getObject(ContextDTO[].class, response);
 
         assertEquals(1, contexts.length);
         assertEquals("urn:topic:1", contexts[0].id.toString());
@@ -60,7 +62,7 @@ public class ContextsTest extends RestTest {
     public void can_add_topic_as_context() throws Exception {
         Node topic = builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:ct:2"));
 
-        testUtils.createResource("/v1/contexts", new Contexts.ContextPOST() {
+        testUtils.createResource("/v1/contexts", new ContextPOST() {
             {
                 id = topic.getPublicId();
             }
@@ -88,7 +90,7 @@ public class ContextsTest extends RestTest {
                 .isContext(true));
 
         var response = testUtils.getResource("/v1/contexts?language=nb");
-        var contexts = testUtils.getObject(Contexts.ContextDTO[].class, response);
+        var contexts = testUtils.getObject(ContextDTO[].class, response);
 
         assertEquals(2, contexts.length);
 

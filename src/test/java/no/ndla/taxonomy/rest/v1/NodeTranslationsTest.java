@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.TranslationDTO;
@@ -68,7 +69,7 @@ public class NodeTranslationsTest extends RestTest {
         Node trigonometry = builder.node(NodeType.NODE, t -> t.name("Trigonometry"));
         URI id = trigonometry.getPublicId();
 
-        testUtils.updateResource("/v1/nodes/" + id + "/translations/nb", new NodeTranslations.TranslationPUT() {
+        testUtils.updateResource("/v1/nodes/" + id + "/translations/nb", new TranslationPUT() {
             {
                 name = "Trigonometri";
             }
@@ -76,7 +77,7 @@ public class NodeTranslationsTest extends RestTest {
 
         assertEquals("Trigonometri", trigonometry.getTranslation("nb").get().getName());
 
-        testUtils.updateResource("/v1/nodes/" + id + "/translations/nn", new NodeTranslations.TranslationPUT() {
+        testUtils.updateResource("/v1/nodes/" + id + "/translations/nn", new TranslationPUT() {
             {
                 name = "Trigonometri";
             }
@@ -91,7 +92,7 @@ public class NodeTranslationsTest extends RestTest {
         Node trigonometry = builder.node(NodeType.NODE, t -> t.name("Trigonometry").translation("Trignometry", "nb"));
         URI id = trigonometry.getPublicId();
 
-        testUtils.updateResource("/v1/nodes/" + id + "/translations/nb", new NodeTranslations.TranslationPUT() {
+        testUtils.updateResource("/v1/nodes/" + id + "/translations/nb", new TranslationPUT() {
             {
                 name = "Trigonometri";
             }

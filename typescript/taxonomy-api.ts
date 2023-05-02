@@ -1,9 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2023-05-02 14:15:44.
-
-export interface Contexts {
-}
+// Generated using typescript-generator version 3.2.1263 on 2023-05-02 15:07:58.
 
 export interface Context {
     id: string;
@@ -15,14 +12,35 @@ export interface ContextPOST {
     id: string;
 }
 
-export interface CrudController<T> {
-}
-
-export interface CrudControllerWithMetadata<T> extends CrudController<T> {
-}
-
-export interface NodeConnections extends CrudControllerWithMetadata<any> {
-    allNodeConnections: NodeConnection[];
+export interface NodeConnection {
+    /**
+     * Parent id
+     */
+    parentId: string;
+    /**
+     * Child id
+     */
+    childId: string;
+    /**
+     * Connection id
+     */
+    id: string;
+    /**
+     * Backwards compatibility: Always true. Ignored on insert/update
+     */
+    primary: boolean;
+    /**
+     * Order in which subtopic is sorted for the topic
+     */
+    rank: number;
+    /**
+     * Relevance id
+     */
+    relevanceId: string;
+    /**
+     * Metadata for entity. Read only.
+     */
+    metadata: Metadata;
 }
 
 export interface NodeConnectionPOST {
@@ -64,8 +82,35 @@ export interface NodeConnectionPUT {
     relevanceId: string;
 }
 
-export interface NodeResources extends CrudControllerWithMetadata<any> {
-    allNodeResources: NodeResource[];
+export interface NodeResource {
+    /**
+     * Node id
+     */
+    nodeId: string;
+    /**
+     * Resource id
+     */
+    resourceId: string;
+    /**
+     * Node resource connection id
+     */
+    id: string;
+    /**
+     * Primary connection
+     */
+    primary: boolean;
+    /**
+     * Order in which the resource is sorted for the node
+     */
+    rank: number;
+    /**
+     * Relevance id
+     */
+    relevanceId: string;
+    /**
+     * Metadata for entity. Read only.
+     */
+    metadata: Metadata;
 }
 
 export interface NodeResourcePOST {
@@ -110,26 +155,10 @@ export interface NodeResourcePUT {
     relevanceId: string;
 }
 
-export interface NodeTranslations {
-}
-
-export interface TranslationPUT {
-    /**
-     * The translated name of the node
-     */
-    name: string;
-}
-
-export interface Nodes extends CrudControllerWithMetadata<any> {
-}
-
-export interface Queries {
-}
-
-export interface Relevances extends CrudController<any> {
-}
-
 export interface Relevance {
+    /**
+     * Specifies if node is core or supplementary
+     */
     id: string;
     /**
      * The name of the relevance
@@ -156,8 +185,11 @@ export interface RelevancePUT {
     name: string;
 }
 
-export interface ResourceResourceTypes {
-    allResourceResourceTypes: ResourceResourceType[];
+export interface ResolvedOldUrl {
+    /**
+     * URL path for resource
+     */
+    path: string;
 }
 
 export interface ResourceResourceType {
@@ -184,32 +216,6 @@ export interface ResourceResourceTypePOST {
      * Resource type id
      */
     resourceTypeId: string;
-}
-
-/**
- * @deprecated
- */
-export interface ResourceTranslations {
-}
-
-export interface ResourceTranslationPUT {
-    /**
-     * The translated name of the resource
-     */
-    name: string;
-}
-
-export interface ResourceTypeTranslations {
-}
-
-export interface ResourceTypeTranslationPUT {
-    /**
-     * The translated name of the resource type
-     */
-    name: string;
-}
-
-export interface ResourceTypes extends CrudController<any> {
 }
 
 export interface ResourceType {
@@ -245,19 +251,6 @@ export interface ResourceTypePUT {
      * The name of the resource type
      */
     name: string;
-}
-
-/**
- * @deprecated
- */
-export interface Resources extends CrudControllerWithMetadata<any> {
-}
-
-/**
- * @deprecated
- */
-export interface SubjectTopics {
-    allSubjectTopics: SubjectTopic[];
 }
 
 export interface SubjectTopic {
@@ -329,32 +322,6 @@ export interface SubjectTopicPUT {
     relevanceId: string;
 }
 
-/**
- * @deprecated
- */
-export interface SubjectTranslations {
-}
-
-export interface SubjectTranslationPUT {
-    /**
-     * The translated name of the subject
-     */
-    name: string;
-}
-
-/**
- * @deprecated
- */
-export interface Subjects extends CrudControllerWithMetadata<any> {
-}
-
-/**
- * @deprecated
- */
-export interface TopicResources {
-    allTopicResources: TopicResource[];
-}
-
 export interface TopicResource {
     /**
      * Topic id
@@ -422,13 +389,6 @@ export interface TopicResourcePUT {
      * Relevance id
      */
     relevanceId: string;
-}
-
-/**
- * @deprecated
- */
-export interface TopicSubtopics {
-    allTopicSubtopics: TopicSubtopic[];
 }
 
 export interface TopicSubtopic {
@@ -500,33 +460,11 @@ export interface TopicSubtopicPUT {
     relevanceId: string;
 }
 
-/**
- * @deprecated
- */
-export interface TopicTranslations {
-}
-
-export interface TopicTranslationPUT {
+export interface TranslationPUT {
     /**
-     * The translated name of the topic
+     * The translated name of the element. Used wherever translated texts are used.
      */
     name: string;
-}
-
-/**
- * @deprecated
- */
-export interface Topics extends CrudControllerWithMetadata<any> {
-}
-
-export interface UrlResolver {
-}
-
-export interface ResolvedOldUrl {
-    /**
-     * URL path for resource
-     */
-    path: string;
 }
 
 export interface UrlMapping {
@@ -542,151 +480,6 @@ export interface UrlMapping {
      * Subject URN for resource in new system (optional)
      */
     subjectId: string;
-}
-
-export interface Versions extends CrudController<any> {
-}
-
-export interface NodeCommand {
-    nodeId?: string;
-    /**
-     * Type of node. Values are subject, topic. Required on create.
-     */
-    nodeType: any;
-    /**
-     * ID of content introducing this node. Must be a valid URI, but preferably not a URL.
-     */
-    contentUri: string;
-    /**
-     * The name of the node. Required on create.
-     */
-    name: string;
-    /**
-     * The node is a root node. Default is false. Only used if present.
-     */
-    root: boolean;
-}
-
-export interface ResourceCommand {
-    /**
-     * If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.
-     */
-    id: string;
-    /**
-     * The ID of this resource in the system where the content is stored. This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier for the system, and <id> is the id of this content in that system.
-     */
-    contentUri: string;
-    /**
-     * The name of the resource
-     */
-    name: string;
-}
-
-export interface SubjectCommand {
-    /**
-     * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
-     */
-    id: string;
-    /**
-     * ID of article introducing this subject. Must be a valid URI, but preferably not a URL.
-     */
-    contentUri: string;
-    /**
-     * The name of the subject
-     */
-    name: string;
-}
-
-export interface TopicCommand {
-    /**
-     * If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.
-     */
-    id: string;
-    /**
-     * ID of article introducing this topic. Must be a valid URI, but preferably not a URL.
-     */
-    contentUri: string;
-    /**
-     * The name of the topic
-     */
-    name: string;
-}
-
-export interface VersionCommand {
-    /**
-     * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
-     */
-    id: string;
-    /**
-     * If specified, set the name to this value.
-     */
-    name: string;
-    /**
-     * If specified, set the locked property to this value.
-     */
-    locked: boolean;
-}
-
-export interface NodeConnection {
-    /**
-     * Parent id
-     */
-    parentId: string;
-    /**
-     * Child id
-     */
-    childId: string;
-    /**
-     * Connection id
-     */
-    id: string;
-    /**
-     * Backwards compatibility: Always true. Ignored on insert/update
-     */
-    primary: boolean;
-    /**
-     * Order in which subtopic is sorted for the topic
-     */
-    rank: number;
-    /**
-     * Relevance id
-     */
-    relevanceId: string;
-    /**
-     * Metadata for entity. Read only.
-     */
-    metadata: Metadata;
-}
-
-export interface NodeResource {
-    /**
-     * Node id
-     */
-    nodeId: string;
-    /**
-     * Resource id
-     */
-    resourceId: string;
-    /**
-     * Node resource connection id
-     */
-    id: string;
-    /**
-     * Primary connection
-     */
-    primary: boolean;
-    /**
-     * Order in which the resource is sorted for the node
-     */
-    rank: number;
-    /**
-     * Relevance id
-     */
-    relevanceId: string;
-    /**
-     * Metadata for entity. Read only.
-     */
-    metadata: Metadata;
 }
 
 export interface SearchableTaxonomyResourceType {

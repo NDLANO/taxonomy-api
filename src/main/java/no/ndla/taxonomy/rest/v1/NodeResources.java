@@ -7,10 +7,8 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.NodeConnection;
@@ -21,6 +19,8 @@ import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourceDTO;
+import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePOST;
+import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePUT;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeConnectionService;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
@@ -140,43 +140,4 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
                 Optional.empty());
     }
 
-    public static class NodeResourcePOST {
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Node id", example = "urn:node:345")
-        public URI nodeId;
-
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource id", example = "urn:resource:345")
-        public URI resourceId;
-
-        @JsonProperty
-        @Schema(description = "Primary connection", example = "true")
-        public boolean primary = true;
-
-        @JsonProperty
-        @Schema(description = "Order in which resource is sorted for the node", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
-
-    public static class NodeResourcePUT {
-        @JsonProperty
-        @Schema(description = "Node resource connection id", example = "urn:node-resource:123")
-        public URI id;
-
-        @JsonProperty
-        @Schema(description = "Primary connection", example = "true")
-        public boolean primary;
-
-        @JsonProperty
-        @Schema(description = "Order in which the resource will be sorted for this node.", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
 }

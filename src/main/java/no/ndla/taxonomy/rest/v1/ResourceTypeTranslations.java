@@ -7,14 +7,13 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
+import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
 import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -79,7 +78,7 @@ public class ResourceTypeTranslations {
     @Transactional
     public void createUpdateResourceTypeTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @Parameter(name = "resourceType", description = "The new or updated translation") @RequestBody ResourceTypeTranslationPUT command) {
+            @Parameter(name = "resourceType", description = "The new or updated translation") @RequestBody TranslationPUT command) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         resourceType.addTranslation(command.name, language);
         entityManager.persist(resourceType);
@@ -99,9 +98,4 @@ public class ResourceTypeTranslations {
         });
     }
 
-    public static class ResourceTypeTranslationPUT {
-        @JsonProperty
-        @Schema(description = "The translated name of the resource type", example = "Article")
-        public String name;
-    }
 }

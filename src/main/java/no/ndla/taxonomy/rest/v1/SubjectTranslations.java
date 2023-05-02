@@ -7,14 +7,13 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
 import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -96,15 +95,10 @@ public class SubjectTranslations {
     @Transactional
     public void createUpdateSubjectTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @Parameter(name = "subject", description = "The new or updated translation") @RequestBody SubjectTranslationPUT command) {
+            @Parameter(name = "subject", description = "The new or updated translation") @RequestBody TranslationPUT command) {
         Node subject = nodeRepository.getByPublicId(id);
         subject.addTranslation(command.name, language);
         entityManager.persist(subject);
     }
 
-    public static class SubjectTranslationPUT {
-        @JsonProperty
-        @Schema(description = "The translated name of the subject", example = "Mathematics")
-        public String name;
-    }
 }

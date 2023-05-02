@@ -9,11 +9,12 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.rest.v1.dtos.ContextDTO;
+import no.ndla.taxonomy.rest.v1.dtos.ContextPOST;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -85,32 +86,4 @@ public class Contexts {
         cachedUrlUpdaterService.updateContexts(topic);
     }
 
-    @Schema(name = "Context")
-    public static class ContextDTO {
-        public URI id;
-        public String path;
-        public String name;
-
-        private ContextDTO(URI id, String name, String path) {
-            this.id = id;
-            this.name = name;
-            this.path = path;
-        }
-
-        public URI getId() {
-            return id;
-        }
-
-        public String getPath() {
-            return path;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
-    public static class ContextPOST {
-        public URI id;
-    }
 }

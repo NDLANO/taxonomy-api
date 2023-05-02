@@ -7,10 +7,8 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
@@ -20,6 +18,8 @@ import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPOST;
+import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPUT;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeConnectionService;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
@@ -143,46 +143,6 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
         var primary = Optional.of(command.primary);
 
         connectionService.updateParentChild(connection, relevance, rank, primary);
-    }
-
-    public static class NodeConnectionPOST {
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, title = "Parent id", example = "urn:topic:234")
-        public URI parentId;
-
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Child id", example = "urn:topic:234")
-        public URI childId;
-
-        @JsonProperty
-        @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
-        public boolean primary = true;
-
-        @JsonProperty
-        @Schema(description = "Order in which to sort the child for the parent", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
-
-    public static class NodeConnectionPUT {
-        @JsonProperty
-        @Schema(description = "Connection id", example = "urn:node-has-child:345")
-        public URI id;
-
-        @JsonProperty
-        @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
-        public boolean primary;
-
-        @JsonProperty
-        @Schema(description = "Order in which subtopic is sorted for the topic", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
     }
 
 }

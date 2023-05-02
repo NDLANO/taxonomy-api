@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.junit.jupiter.api.Test;
@@ -69,12 +70,11 @@ public class ResourceTranslationsTest extends RestTest {
         var resource = builder.node(NodeType.RESOURCE, t -> t.name("Introduction to algrebra"));
         URI id = resource.getPublicId();
 
-        testUtils.updateResource("/v1/resources/" + id + "/translations/nb",
-                new ResourceTranslations.ResourceTranslationPUT() {
-                    {
-                        name = "Introduksjon til algebra";
-                    }
-                });
+        testUtils.updateResource("/v1/resources/" + id + "/translations/nb", new TranslationPUT() {
+            {
+                name = "Introduksjon til algebra";
+            }
+        });
 
         assertEquals("Introduksjon til algebra", resource.getTranslation("nb").orElseThrow().getName());
     }

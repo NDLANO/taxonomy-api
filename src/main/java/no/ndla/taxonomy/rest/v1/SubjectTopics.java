@@ -7,17 +7,16 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
+import no.ndla.taxonomy.rest.v1.dtos.SubjectTopicDTO;
+import no.ndla.taxonomy.rest.v1.dtos.SubjectTopicPOST;
+import no.ndla.taxonomy.rest.v1.dtos.SubjectTopicPUT;
 import no.ndla.taxonomy.service.NodeConnectionService;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
@@ -138,86 +137,4 @@ public class SubjectTopics {
         connectionService.updateParentChild(nodeConnection, relevance, rank, Optional.empty());
     }
 
-    public static class SubjectTopicPOST {
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Subject id", example = "urn:subject:123")
-        public URI subjectid;
-
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic id", example = "urn:topic:234")
-        public URI topicid;
-
-        @JsonProperty
-        @Schema(description = "Backwards compatibility: Always true, ignored on insert/update.", example = "true")
-        public boolean primary;
-
-        @JsonProperty
-        @Schema(description = "Order in which the topic should be sorted for the topic", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
-
-    public static class SubjectTopicPUT {
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "connection id", example = "urn:subject-topic:2")
-        public URI id;
-
-        @JsonProperty
-        @Schema(description = "If true, set this subject as the primary subject for this topic. This will replace any other primary subject for this topic. You must have one primary subject, so it is not allowed to set the currently primary subject to not be primary any more.", example = "true")
-        public boolean primary;
-
-        @JsonProperty
-        @Schema(description = "Order in which the topic should be sorted for the subject", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
-
-
-    @Schema(name = "SubjectTopic")
-    public static class SubjectTopicDTO {
-        @JsonProperty
-        @Schema(description = "Subject id", example = "urn:subject:123")
-        public URI subjectid;
-
-        @JsonProperty
-        @Schema(description = "Topic id", example = "urn:topic:345")
-        public URI topicid;
-
-        @JsonProperty
-        @Schema(description = "Connection id", example = "urn:subject-has-topics:34")
-        public URI id;
-
-        @JsonProperty
-        @Schema(description = "primary", example = "true")
-        public boolean primary;
-
-        @JsonProperty
-        @Schema(description = "Order in which the topic is sorted under the subject", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-
-        SubjectTopicDTO() {
-        }
-
-        SubjectTopicDTO(NodeConnection nodeConnection) {
-            id = nodeConnection.getPublicId();
-
-            subjectid = nodeConnection.getParent().map(Node::getPublicId).orElse(null);
-
-            topicid = nodeConnection.getChild().map(Node::getPublicId).orElse(null);
-
-            primary = true;
-            rank = nodeConnection.getRank();
-            relevanceId = nodeConnection.getRelevance().map(Relevance::getPublicId).orElse(null);
-        }
-    }
 }
