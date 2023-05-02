@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @RestController
-@Deprecated
 @RequestMapping(path = { "/v1/topic-subtopics" })
 public class TopicSubtopics {
     private final NodeRepository nodeRepository;
@@ -51,6 +50,7 @@ public class TopicSubtopics {
         this.relevanceRepository = relevanceRepository;
     }
 
+    @Deprecated
     @GetMapping
     @Operation(summary = "Gets all connections between topics and subtopics")
     @Transactional(readOnly = true)
@@ -67,6 +67,7 @@ public class TopicSubtopics {
         return listToReturn;
     }
 
+    @Deprecated
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between topics and subtopics paginated")
     @Transactional(readOnly = true)
@@ -85,6 +86,7 @@ public class TopicSubtopics {
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
+    @Deprecated
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single connection between a topic and a subtopic")
     @Transactional(readOnly = true)
@@ -93,6 +95,7 @@ public class TopicSubtopics {
         return new TopicSubtopicDTO(topicSubtopic);
     }
 
+    @Deprecated
     @PostMapping
     @Operation(summary = "Adds a subtopic to a topic", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -112,6 +115,7 @@ public class TopicSubtopics {
         return ResponseEntity.created(location).build();
     }
 
+    @Deprecated
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Removes a connection between a topic and a subtopic", security = {
@@ -122,6 +126,7 @@ public class TopicSubtopics {
         connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id));
     }
 
+    @Deprecated
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Updates a connection between a topic and a subtopic", description = "Use to update which topic is primary to a subtopic or to alter sorting order", security = {

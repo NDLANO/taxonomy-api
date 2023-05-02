@@ -11,7 +11,7 @@ import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourceDTO;
+import no.ndla.taxonomy.rest.v1.dtos.NodeResourceDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import org.junit.jupiter.api.Test;

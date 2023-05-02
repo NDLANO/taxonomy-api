@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @RestController
-@Deprecated
 @RequestMapping(path = { "/v1/subject-topics" })
 public class SubjectTopics {
     private final NodeConnectionService connectionService;
@@ -51,6 +50,7 @@ public class SubjectTopics {
         this.relevanceRepository = relevanceRepository;
     }
 
+    @Deprecated
     @GetMapping
     @Operation(summary = "Gets all connections between subjects and topics")
     @Transactional(readOnly = true)
@@ -67,6 +67,7 @@ public class SubjectTopics {
         return listToReturn;
     }
 
+    @Deprecated
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between subjects and topics paginated")
     @Transactional(readOnly = true)
@@ -85,6 +86,7 @@ public class SubjectTopics {
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
+    @Deprecated
     @GetMapping("/{id}")
     @Operation(summary = "Get a specific connection between a subject and a topic")
     @Transactional(readOnly = true)
@@ -93,6 +95,7 @@ public class SubjectTopics {
         return new SubjectTopicDTO(nodeConnection);
     }
 
+    @Deprecated
     @PostMapping
     @Operation(summary = "Adds a new topic to a subject", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -109,6 +112,7 @@ public class SubjectTopics {
         return ResponseEntity.created(location).build();
     }
 
+    @Deprecated
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Removes a topic from a subject", security = { @SecurityRequirement(name = "oauth") })
@@ -118,6 +122,7 @@ public class SubjectTopics {
         connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id));
     }
 
+    @Deprecated
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Updates a connection between subject and topic", description = "Use to update which subject is primary to a topic or to change sorting order.", security = {
@@ -172,6 +177,7 @@ public class SubjectTopics {
         @Schema(description = "Relevance id", example = "urn:relevance:core")
         public URI relevanceId;
     }
+
 
     @Schema(name = "SubjectTopic")
     public static class SubjectTopicDTO {

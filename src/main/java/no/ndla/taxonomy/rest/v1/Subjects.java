@@ -37,7 +37,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @RestController
-@Deprecated
 @RequestMapping(path = { "/v1/subjects" })
 public class Subjects extends CrudControllerWithMetadata<Node> {
     private final TreeSorter topicTreeSorter;
@@ -46,31 +45,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
 
-    public Subjects(TreeSorter treeSorter, ContextUpdaterService cachedUrlUpdaterService,
-            RecursiveNodeTreeService recursiveNodeTreeService, NodeService nodeService, NodeRepository nodeRepository,
-            NodeConnectionRepository nodeConnectionRepository) {
-        super(nodeRepository, cachedUrlUpdaterService);
-
-        this.topicTreeSorter = treeSorter;
-        this.recursiveNodeTreeService = recursiveNodeTreeService;
-        this.nodeService = nodeService;
-        this.nodeRepository = nodeRepository;
-        this.nodeConnectionRepository = nodeConnectionRepository;
-    }
-
-    @GetMapping
-    @Operation(summary = "Gets all subjects")
-    @Transactional(readOnly = true)
-    public List<NodeDTO> getAllSubjects(
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
-            @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
-            @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
-            @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
-        MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        return nodeService.getNodesByType(Optional.of(List.of(NodeType.SUBJECT)), language, Optional.empty(),
-                Optional.empty(), Optional.empty(), metadataFilters);
-    }
-
+    @Deprecated
     @GetMapping("/search")
     @Operation(summary = "Search all subjects")
     @Transactional(readOnly = true)
@@ -85,6 +60,33 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         return nodeService.searchByNodeType(query, ids, language, pageSize, page, Optional.of(NodeType.SUBJECT));
     }
 
+    public Subjects(TreeSorter treeSorter, ContextUpdaterService cachedUrlUpdaterService,
+            RecursiveNodeTreeService recursiveNodeTreeService, NodeService nodeService, NodeRepository nodeRepository,
+            NodeConnectionRepository nodeConnectionRepository) {
+        super(nodeRepository, cachedUrlUpdaterService);
+
+        this.topicTreeSorter = treeSorter;
+        this.recursiveNodeTreeService = recursiveNodeTreeService;
+        this.nodeService = nodeService;
+        this.nodeRepository = nodeRepository;
+        this.nodeConnectionRepository = nodeConnectionRepository;
+    }
+
+    @Deprecated
+    @GetMapping
+    @Operation(summary = "Gets all subjects")
+    @Transactional(readOnly = true)
+    public List<NodeDTO> getAllSubjects(
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
+            @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
+            @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
+            @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
+        MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
+        return nodeService.getNodesByType(Optional.of(List.of(NodeType.SUBJECT)), language, Optional.empty(),
+                Optional.empty(), Optional.empty(), metadataFilters);
+    }
+
+    @Deprecated
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between node and children paginated")
     @Transactional(readOnly = true)
@@ -107,6 +109,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
+    @Deprecated
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single subject", description = "Default language will be returned if desired language not found or if parameter is omitted.")
     @Transactional(readOnly = true)
@@ -117,6 +120,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         }).orElseThrow(() -> new NotFoundHttpResponseException("Subject not found"));
     }
 
+    @Deprecated
     @PutMapping("/{id}")
     @Operation(summary = "Updates a subject", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -127,6 +131,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         updateEntity(id, command);
     }
 
+    @Deprecated
     @PostMapping
     @Operation(summary = "Creates a new subject", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -137,6 +142,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         return createEntity(subject, command);
     }
 
+    @Deprecated
     @GetMapping("/{id}/topics")
     @Operation(summary = "Gets all children associated with a subject", description = "This resource is read-only. To update the relationship between nodes, use the resource /subject-topics.")
     @Transactional(readOnly = true)
@@ -212,6 +218,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         return foundFilter.get();
     }
 
+    @Deprecated
     @DeleteMapping("/{id}")
     @Operation(summary = "Deletes a single entity by id", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
@@ -221,6 +228,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         nodeService.delete(id);
     }
 
+    @Deprecated
     @GetMapping("/{subjectId}/resources")
     @Operation(summary = "Gets all resources for a subject. Searches recursively in all children of this node."
             + "The ordering of resources will be based on the rank of resources relative to the node they belong to.", tags = {

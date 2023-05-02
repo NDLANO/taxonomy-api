@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@Deprecated
 @RequestMapping(path = { "/v1/subjects/{id}/translations" })
 public class SubjectTranslations {
     private final NodeRepository nodeRepository;
@@ -39,6 +38,7 @@ public class SubjectTranslations {
         this.entityManager = entityManager;
     }
 
+    @Deprecated
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single subject")
     @Transactional(readOnly = true)
@@ -54,6 +54,7 @@ public class SubjectTranslations {
         return result;
     }
 
+    @Deprecated
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single subject")
     @Transactional(readOnly = true)
@@ -71,6 +72,7 @@ public class SubjectTranslations {
         };
     }
 
+    @Deprecated
     @DeleteMapping("/{language}")
     @Operation(summary = "Deletes a translation", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -85,6 +87,7 @@ public class SubjectTranslations {
         });
     }
 
+    @Deprecated
     @PutMapping("/{language}")
     @Operation(summary = "Creates or updates a translation of a subject", security = {
             @SecurityRequirement(name = "oauth") })

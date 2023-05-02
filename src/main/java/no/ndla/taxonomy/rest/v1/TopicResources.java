@@ -32,7 +32,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@Deprecated
 @RequestMapping(path = { "/v1/topic-resources" })
 public class TopicResources {
 
@@ -49,6 +48,7 @@ public class TopicResources {
         this.relevanceRepository = relevanceRepository;
     }
 
+    @Deprecated
     @GetMapping
     @Operation(summary = "Gets all connections between topics and resources")
     @Transactional(readOnly = true)
@@ -57,6 +57,7 @@ public class TopicResources {
                 .collect(Collectors.toList());
     }
 
+    @Deprecated
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between topic and resources paginated")
     @Transactional(readOnly = true)
@@ -77,6 +78,7 @@ public class TopicResources {
         return new SearchResultDTO<>(connections.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
+    @Deprecated
     @GetMapping("/{id}")
     @Operation(summary = "Gets a specific connection between a topic and a resource")
     @Transactional(readOnly = true)
@@ -85,6 +87,7 @@ public class TopicResources {
         return new TopicResourceDTO(resourceConnection);
     }
 
+    @Deprecated
     @PostMapping
     @Operation(summary = "Adds a resource to a topic", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -107,6 +110,7 @@ public class TopicResources {
         return ResponseEntity.created(location).build();
     }
 
+    @Deprecated
     @DeleteMapping("/{id}")
     @Operation(summary = "Removes a resource from a topic", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -117,6 +121,7 @@ public class TopicResources {
         connectionService.disconnectParentChildConnection(connection);
     }
 
+    @Deprecated
     @PutMapping("/{id}")
     @Operation(summary = "Updates a connection between a topic and a resource", description = "Use to update which topic is primary to the resource or to change sorting order.", security = {
             @SecurityRequirement(name = "oauth") })

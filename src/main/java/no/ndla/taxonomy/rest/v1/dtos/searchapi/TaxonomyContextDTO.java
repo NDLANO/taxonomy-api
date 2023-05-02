@@ -5,7 +5,7 @@
  * See LICENSE
  */
 
-package no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi;
+package no.ndla.taxonomy.rest.v1.dtos.searchapi;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -20,7 +20,7 @@ import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourceDTO;
+import no.ndla.taxonomy.rest.v1.dtos.NodeResourceDTO;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeConnectionService;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;

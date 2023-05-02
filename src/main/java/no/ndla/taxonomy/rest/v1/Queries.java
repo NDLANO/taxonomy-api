@@ -9,7 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
+import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.springframework.transaction.annotation.Transactional;

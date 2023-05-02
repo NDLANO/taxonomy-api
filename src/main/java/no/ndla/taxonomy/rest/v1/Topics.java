@@ -32,7 +32,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@Deprecated
 @RequestMapping(path = { "/v1/topics" })
 public class Topics extends CrudControllerWithMetadata<Node> {
     private final NodeRepository nodeRepository;
@@ -46,6 +45,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         this.nodeService = nodeService;
     }
 
+    @Deprecated
     @GetMapping
     @Operation(summary = "Gets all topics")
     @Transactional(readOnly = true)
@@ -61,6 +61,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
                 Optional.empty(), metadataFilters);
     }
 
+    @Deprecated
     @GetMapping("/search")
     @Operation(summary = "Search all topics")
     @Transactional(readOnly = true)
@@ -75,6 +76,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         return nodeService.searchByNodeType(query, ids, language, pageSize, page, Optional.of(NodeType.TOPIC));
     }
 
+    @Deprecated
     @GetMapping("/page")
     @Operation(summary = "Gets all topics paginated")
     @Transactional(readOnly = true)
@@ -96,6 +98,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
+    @Deprecated
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single topic")
     @Transactional(readOnly = true)
@@ -104,6 +107,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         return nodeService.getNode(id, language);
     }
 
+    @Deprecated
     @PostMapping
     @Operation(summary = "Creates a new topic", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -113,6 +117,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         return createEntity(new Node(NodeType.TOPIC), command);
     }
 
+    @Deprecated
     @PutMapping("/{id}")
     @Operation(summary = "Updates a single topic", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -123,6 +128,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         updateEntity(id, command);
     }
 
+    @Deprecated
     @GetMapping("/{id}/topics")
     @Operation(summary = "Gets all subtopics for this topic")
     @Transactional(readOnly = true)
@@ -132,6 +138,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         return nodeService.getFilteredChildConnections(id, language.orElse(Constants.DefaultLanguage));
     }
 
+    @Deprecated
     @GetMapping("/{id}/connections")
     @Operation(summary = "Gets all subjects and subtopics this topic is connected to")
     @Transactional(readOnly = true)
@@ -139,6 +146,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         return nodeService.getAllConnections(id);
     }
 
+    @Deprecated
     @DeleteMapping("/{id}")
     @Operation(description = "Deletes a single entity by id", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -148,6 +156,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         nodeService.delete(id);
     }
 
+    @Deprecated
     @GetMapping("/{id}/resources")
     @Operation(summary = "Gets all resources for the given topic", tags = { "topics" })
     @Transactional(readOnly = true)
@@ -169,6 +178,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         return nodeService.getResourcesByNodeId(topicId, resourceTypeIdSet, relevance, language, recursive);
     }
 
+    @Deprecated
     @PutMapping("/{id}/makeResourcesPrimary")
     @Operation(summary = "Makes all connected resources primary", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")

@@ -37,7 +37,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@Deprecated
 @RequestMapping(path = "/v1/resources")
 public class Resources extends CrudControllerWithMetadata<Node> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
@@ -59,6 +58,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         return "/v1/resources";
     }
 
+    @Deprecated
     @GetMapping
     @Operation(summary = "Lists all resources")
     @Transactional(readOnly = true)
@@ -73,6 +73,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                 Optional.empty(), Optional.empty(), metadataFilters);
     }
 
+    @Deprecated
     @GetMapping("/search")
     @Operation(summary = "Search all resources")
     @Transactional(readOnly = true)
@@ -87,6 +88,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         return nodeService.searchByNodeType(query, ids, language, pageSize, page, Optional.of(NodeType.RESOURCE));
     }
 
+    @Deprecated
     @GetMapping("/page")
     @Operation(summary = "Gets all resources paginated")
     @Transactional(readOnly = true)
@@ -109,6 +111,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
+    @Deprecated
     @GetMapping("{id}")
     @Operation(summary = "Gets a single resource")
     @Transactional(readOnly = true)
@@ -117,6 +120,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         return nodeService.getNode(id, language);
     }
 
+    @Deprecated
     @PutMapping("{id}")
     @Operation(summary = "Updates a resource", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -127,6 +131,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         updateEntity(id, command);
     }
 
+    @Deprecated
     @PostMapping
     @Operation(summary = "Adds a new resource", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
@@ -136,6 +141,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         return createEntity(new Node(NodeType.RESOURCE), command);
     }
 
+    @Deprecated
     @PostMapping("{id}/clone")
     @Operation(summary = "Clones a resource, including resource-types and translations", security = {
             @SecurityRequirement(name = "oauth") })
@@ -149,6 +155,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         return ResponseEntity.created(location).build();
     }
 
+    @Deprecated
     @GetMapping("{id}/resource-types")
     @Operation(summary = "Gets all resource types associated with this resource")
     @Transactional(readOnly = true)
@@ -161,6 +168,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                 .toList();
     }
 
+    @Deprecated
     @GetMapping("{id}/full")
     @Operation(summary = "Gets all parent topics, all filters and resourceTypes for this resource")
     @Transactional(readOnly = true)
@@ -170,6 +178,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         return new NodeWithParents(node, language.orElse(Constants.DefaultLanguage));
     }
 
+    @Deprecated
     @DeleteMapping("{id}")
     @Operation(summary = "Deletes a single entity by id", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")

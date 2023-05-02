@@ -8,7 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeConnectionDTO;
+import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
