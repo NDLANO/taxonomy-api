@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2023-05-02 07:54:10.
+// Generated using typescript-generator version 3.2.1263 on 2023-05-02 14:15:44.
 
 export interface Contexts {
 }
@@ -113,17 +113,6 @@ export interface NodeResourcePUT {
 export interface NodeTranslations {
 }
 
-export interface Translation {
-    /**
-     * The translated name of the node
-     */
-    name: string;
-    /**
-     * ISO 639-1 language code
-     */
-    language: string;
-}
-
 export interface TranslationPUT {
     /**
      * The translated name of the node
@@ -203,17 +192,6 @@ export interface ResourceResourceTypePOST {
 export interface ResourceTranslations {
 }
 
-export interface ResourceTranslation {
-    /**
-     * The translated name of the resource
-     */
-    name: string;
-    /**
-     * ISO 639-1 language code
-     */
-    language: string;
-}
-
 export interface ResourceTranslationPUT {
     /**
      * The translated name of the resource
@@ -222,17 +200,6 @@ export interface ResourceTranslationPUT {
 }
 
 export interface ResourceTypeTranslations {
-}
-
-export interface ResourceTypeTranslation {
-    /**
-     * The translated name of the resource type
-     */
-    name: string;
-    /**
-     * ISO 639-1 language code
-     */
-    language: string;
 }
 
 export interface ResourceTypeTranslationPUT {
@@ -366,17 +333,6 @@ export interface SubjectTopicPUT {
  * @deprecated
  */
 export interface SubjectTranslations {
-}
-
-export interface SubjectTranslation {
-    /**
-     * The translated name of the subject
-     */
-    name: string;
-    /**
-     * ISO 639-1 language code
-     */
-    language: string;
 }
 
 export interface SubjectTranslationPUT {
@@ -548,17 +504,6 @@ export interface TopicSubtopicPUT {
  * @deprecated
  */
 export interface TopicTranslations {
-}
-
-export interface TopicTranslation {
-    /**
-     * The translated name of the topic
-     */
-    name: string;
-    /**
-     * ISO 639-1 language code
-     */
-    language: string;
 }
 
 export interface TopicTranslationPUT {
@@ -888,6 +833,17 @@ export interface SearchResult<T> {
     page: number;
     pageSize: number;
     results: T[];
+}
+
+export interface Translation {
+    /**
+     * The translated name of the node
+     */
+    name: string;
+    /**
+     * ISO 639-1 language code
+     */
+    language: string;
 }
 
 export interface Version {
