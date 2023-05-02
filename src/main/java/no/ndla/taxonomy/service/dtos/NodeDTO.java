@@ -56,7 +56,7 @@ public class NodeDTO {
 
     @JsonProperty
     @Schema(description = "Resource type(s)", example = "[{\"id\": \"urn:resourcetype:1\",\"name\":\"lecture\"}]")
-    private TreeSet<ResourceTypeDTO> resourceTypes = new TreeSet<>();
+    private TreeSet<ResourceTypeWithConnectionDTO> resourceTypes = new TreeSet<>();
 
     @JsonProperty
     @Schema(description = "The type of node", example = "resource")
@@ -168,7 +168,7 @@ public class NodeDTO {
         return breadcrumbs;
     }
 
-    public Set<ResourceTypeDTO> getResourceTypes() {
+    public Set<ResourceTypeWithConnectionDTO> getResourceTypes() {
         return resourceTypes;
     }
 
