@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
+@Deprecated
 @RequestMapping(path = { "/v1/topic-resources" })
 public class TopicResources {
 

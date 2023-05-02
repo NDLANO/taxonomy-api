@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @RestController
+@Deprecated
 @RequestMapping(path = { "/v1/topic-subtopics" })
 public class TopicSubtopics {
     private final NodeRepository nodeRepository;

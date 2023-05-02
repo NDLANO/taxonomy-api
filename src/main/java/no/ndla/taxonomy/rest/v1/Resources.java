@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
+@Deprecated
 @RequestMapping(path = "/v1/resources")
 public class Resources extends CrudControllerWithMetadata<Node> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;

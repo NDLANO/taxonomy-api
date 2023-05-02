@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @RestController
+@Deprecated
 @RequestMapping(path = { "/v1/subject-topics" })
 public class SubjectTopics {
     private final NodeConnectionService connectionService;

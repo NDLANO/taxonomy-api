@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@Deprecated
 @RequestMapping(path = { "/v1/topics/{id}/translations" })
 public class TopicTranslations {
 

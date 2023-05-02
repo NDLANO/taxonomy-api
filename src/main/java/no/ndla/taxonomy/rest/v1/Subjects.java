@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @RestController
+@Deprecated
 @RequestMapping(path = { "/v1/subjects" })
 public class Subjects extends CrudControllerWithMetadata<Node> {
     private final TreeSorter topicTreeSorter;
