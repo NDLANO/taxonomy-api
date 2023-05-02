@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2023-05-02 15:07:58.
+// Generated using typescript-generator version 3.2.1263 on 2023-05-02 15:56:52.
 
 export interface Context {
     id: string;
@@ -588,7 +588,7 @@ export interface Node {
     /**
      * The type of node
      */
-    nodeType: any;
+    nodeType: NodeType;
     /**
      * An id unique for this context.
      */
@@ -641,7 +641,7 @@ export interface Translation {
 
 export interface Version {
     id: string;
-    versionType: any;
+    versionType: VersionType;
     name: string;
     hash: string;
     /**
@@ -652,3 +652,7 @@ export interface Version {
     published: string;
     archived: string;
 }
+
+export type NodeType = "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE";
+
+export type VersionType = "BETA" | "PUBLISHED" | "ARCHIVED";
