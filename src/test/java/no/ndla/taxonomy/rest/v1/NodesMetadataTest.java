@@ -9,7 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.dtos.MetadataDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -39,7 +39,7 @@ public class NodesMetadataTest extends RestTest {
         URI publicId = builder.node().getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/nodes/" + publicId + "/metadata");
-        final var metadata = testUtils.getObject(MetadataDto.class, response);
+        final var metadata = testUtils.getObject(MetadataDTO.class, response);
 
         assertNotNull(metadata);
         assertTrue(metadata.isVisible());
@@ -49,7 +49,7 @@ public class NodesMetadataTest extends RestTest {
     void can_update_metadata_for_node() throws Exception {
         URI publicId = builder.node().getPublicId();
 
-        testUtils.updateResource("/v1/nodes/" + publicId + "/metadata", new MetadataDto() {
+        testUtils.updateResource("/v1/nodes/" + publicId + "/metadata", new MetadataDTO() {
             {
                 visible = false;
                 grepCodes = Set.of("KM123");
@@ -72,7 +72,7 @@ public class NodesMetadataTest extends RestTest {
     void can_remove_metadata_for_node() throws Exception {
         URI publicId = builder.node(n -> n.customField("key", "value").grepCode("KM123")).getPublicId();
 
-        testUtils.updateResource("/v1/nodes/" + publicId + "/metadata", new MetadataDto() {
+        testUtils.updateResource("/v1/nodes/" + publicId + "/metadata", new MetadataDTO() {
             {
                 visible = true;
                 grepCodes = Set.of();

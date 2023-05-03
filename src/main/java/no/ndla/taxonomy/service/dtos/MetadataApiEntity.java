@@ -32,7 +32,7 @@ public class MetadataApiEntity {
     public MetadataApiEntity() {
     }
 
-    public MetadataApiEntity(MetadataDto entityMetadataObject) {
+    public MetadataApiEntity(MetadataDTO entityMetadataObject) {
         if (entityMetadataObject.getGrepCodes() != null) {
             this.competenceAims = new HashSet<>();
             entityMetadataObject.getGrepCodes().forEach(aim -> addCompetenceAim(new CompetenceAim(aim)));

@@ -39,7 +39,7 @@ public class NodeDTO {
 
     @Schema(description = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private MetadataDto metadata;
+    private MetadataDTO metadata;
 
     @Schema(description = "Relevance id", example = "urn:relevance:core")
     public URI relevanceId;
@@ -98,7 +98,7 @@ public class NodeDTO {
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
                 .map(Translation::getName).orElse(entity.getName());
 
-        this.metadata = new MetadataDto(entity.getMetadata());
+        this.metadata = new MetadataDTO(entity.getMetadata());
 
         this.resourceTypes = entity.getResourceResourceTypes().stream()
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
@@ -154,7 +154,7 @@ public class NodeDTO {
         return paths;
     }
 
-    public MetadataDto getMetadata() {
+    public MetadataDTO getMetadata() {
         return metadata;
     }
 

@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Schema(name = "Metadata")
-public class MetadataDto {
+public class MetadataDTO {
     @JsonIgnore
     public String publicId;
 
@@ -32,16 +32,16 @@ public class MetadataDto {
     @Schema
     public Map<String, String> customFields;
 
-    public MetadataDto() {
+    public MetadataDTO() {
     }
 
-    public MetadataDto(Metadata metadata) {
+    public MetadataDTO(Metadata metadata) {
         this.visible = metadata.isVisible();
         this.grepCodes = metadata.getGrepCodes().stream().map(JsonGrepCode::code).collect(Collectors.toSet());
         this.customFields = metadata.getCustomFields();
     }
 
-    public MetadataDto(MetadataApiEntity metadataApiEntity) {
+    public MetadataDTO(MetadataApiEntity metadataApiEntity) {
         this.publicId = metadataApiEntity.getPublicId();
         this.visible = metadataApiEntity.isVisible().orElse(null);
 
@@ -52,8 +52,8 @@ public class MetadataDto {
         customFields = metadataApiEntity.getCustomFields().map(HashMap::new).orElse(null);
     }
 
-    public static MetadataDto of(MetadataDto metadataDto) {
-        final var newMetadataDto = new MetadataDto();
+    public static MetadataDTO of(MetadataDTO metadataDto) {
+        final var newMetadataDto = new MetadataDTO();
         newMetadataDto.setPublicId(metadataDto.getPublicId());
         newMetadataDto.setGrepCodes(metadataDto.getGrepCodes());
         newMetadataDto.setVisible(metadataDto.isVisible());

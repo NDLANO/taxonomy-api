@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.dtos.MetadataDTO;
 
 import java.net.URI;
 
@@ -43,7 +43,7 @@ public class NodeConnectionDTO {
 
     @JsonProperty
     @Schema(description = "Metadata for entity. Read only.")
-    private MetadataDto metadata;
+    private MetadataDTO metadata;
 
     NodeConnectionDTO() {
     }
@@ -55,6 +55,6 @@ public class NodeConnectionDTO {
         relevanceId = nodeConnection.getRelevance().map(Relevance::getPublicId).orElse(null);
         primary = true;
         rank = nodeConnection.getRank();
-        metadata = new MetadataDto(nodeConnection.getMetadata());
+        metadata = new MetadataDTO(nodeConnection.getMetadata());
     }
 }

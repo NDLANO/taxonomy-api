@@ -14,7 +14,7 @@ import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePOST;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePUT;
-import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.dtos.MetadataDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import org.junit.jupiter.api.Test;
 
@@ -405,7 +405,7 @@ public class NodeResourcesTest extends RestTest {
     @Test
     public void update_metadata_for_connection() throws Exception {
         URI id = save(NodeConnection.create(newTopic(), newResource())).getPublicId();
-        testUtils.updateResource("/v1/node-resources/" + id + "/metadata", new MetadataDto() {
+        testUtils.updateResource("/v1/node-resources/" + id + "/metadata", new MetadataDTO() {
             {
                 visible = false;
                 grepCodes = Set.of("KM123");

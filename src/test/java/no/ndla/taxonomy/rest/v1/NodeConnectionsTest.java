@@ -12,7 +12,7 @@ import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionDTO;
 import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPOST;
 import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPUT;
 import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicDTO;
-import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.dtos.MetadataDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -283,7 +283,7 @@ public class NodeConnectionsTest extends RestTest {
     @Test
     public void update_metadata_for_connection() throws Exception {
         URI id = save(NodeConnection.create(newTopic(), newTopic())).getPublicId();
-        testUtils.updateResource("/v1/node-connections/" + id + "/metadata", new MetadataDto() {
+        testUtils.updateResource("/v1/node-connections/" + id + "/metadata", new MetadataDTO() {
             {
                 visible = false;
                 grepCodes = Set.of("KM123");
