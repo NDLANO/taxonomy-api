@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
+import java.util.Optional;
 
 import static no.ndla.taxonomy.TestUtils.assertAllTrue;
 import static no.ndla.taxonomy.TestUtils.getId;
@@ -52,8 +53,8 @@ public class VersionsTest extends RestTest {
             VersionDTO version = testUtils.getObject(VersionDTO.class, response);
             assertEquals(versionId, version.getId());
             assertNotNull(version.getHash());
-            assertNull(version.getPublished());
-            assertNull(version.getArchived());
+            assertEquals(Optional.empty(), version.getPublished());
+            assertEquals(Optional.empty(), version.getArchived());
         }
         {
             MockHttpServletResponse response = testUtils.getResource("/v1/versions/urn:version:2",

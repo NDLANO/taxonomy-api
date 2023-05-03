@@ -52,7 +52,7 @@ public class NodesTest extends RestTest {
         final var node = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("trigonometry", node.getName());
-        assertEquals("urn:article:1", node.getContentUri().toString());
+        assertEquals("Optional[urn:article:1]", node.getContentUri().toString());
         assertEquals("/subject:1/topic:1", node.getPath());
         assertEquals(List.of("maths", "trigonometry"), node.getBreadcrumbs());
 
@@ -385,7 +385,7 @@ public class NodesTest extends RestTest {
         final var node = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("Maths vg1", node.getName());
-        assertEquals("urn:frontpage:1", node.getContentUri().toString());
+        assertEquals("Optional[urn:frontpage:1]", node.getContentUri().toString());
         assertEquals("/subject:1/subject:2", node.getPath());
 
         assertNotNull(node.getMetadata());

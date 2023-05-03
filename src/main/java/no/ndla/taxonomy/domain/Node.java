@@ -140,7 +140,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
      *            If this is present, return context with this publicId as root. Else pick context containing roots
      *            publicId.
      * 
-     * @return
+     * @return Context
      */
     public Optional<Context> pickContext(Optional<String> contextId, Optional<Node> root) {
         var contexts = getContexts();
@@ -260,8 +260,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
 
     public void addResourceResourceType(ResourceResourceType resourceResourceType) {
         if (this.getNodeType() != NodeType.RESOURCE)
-            throw new IllegalArgumentException(
-                    "ResourceResourceType can only be associated with " + NodeType.RESOURCE.toString());
+            throw new IllegalArgumentException("ResourceResourceType can only be associated with " + NodeType.RESOURCE);
 
         this.resourceResourceTypes.add(resourceResourceType);
 

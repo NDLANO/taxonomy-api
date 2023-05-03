@@ -573,7 +573,7 @@ export interface NodeChild extends Node {
 export interface Node {
     id: string;
     name: string;
-    contentUri: string;
+    contentUri?: string;
     path: string;
     paths: string[];
     metadata: Metadata;
@@ -589,7 +589,7 @@ export interface Node {
     /**
      * An id unique for this context.
      */
-    contextId: string;
+    contextId?: string;
     url?: string;
     contexts: TaxonomyContext[];
 }
@@ -646,8 +646,8 @@ export interface Version {
      */
     locked: boolean;
     created: DateAsString;
-    published: DateAsString;
-    archived: DateAsString;
+    published?: DateAsString;
+    archived?: DateAsString;
 }
 
 export type DateAsString = string;

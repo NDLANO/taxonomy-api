@@ -48,7 +48,7 @@ public class TopicsTest extends RestTest {
         final var topic = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("trigonometry", topic.getName());
-        assertEquals("urn:article:1", topic.getContentUri().toString());
+        assertEquals("Optional[urn:article:1]", topic.getContentUri().toString());
         assertEquals("/subject:1/topic:1", topic.getPath());
 
         assertNotNull(topic.getMetadata());

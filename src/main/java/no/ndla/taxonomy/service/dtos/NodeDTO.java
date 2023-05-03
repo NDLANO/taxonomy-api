@@ -29,7 +29,7 @@ public class NodeDTO {
     private String name;
 
     @Schema(description = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
-    private URI contentUri;
+    private Optional<URI> contentUri = Optional.empty();
 
     @Schema(description = "The primary path for this node", example = "/subject:1/topic:1")
     private String path;
@@ -63,7 +63,7 @@ public class NodeDTO {
 
     @JsonProperty
     @Schema(description = "An id unique for this context.")
-    private String contextId;
+    private Optional<String> contextId = Optional.empty();
 
     @JsonProperty
     @Schema(description = "A pretty url based on name and context. Empty if no context.")
@@ -79,7 +79,7 @@ public class NodeDTO {
     public NodeDTO(Optional<Node> root, Node entity, String languageCode, Optional<String> contextId,
             Optional<Boolean> includeContexts) {
         this.id = entity.getPublicId();
-        this.contentUri = entity.getContentUri();
+        this.contentUri = Optional.ofNullable(entity.getContentUri());
 
         this.paths = entity.getAllPaths();
 
@@ -112,8 +112,8 @@ public class NodeDTO {
             this.breadcrumbs = LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity))
                     .get(languageCode);
             this.relevanceId = URI.create(ctx.relevanceId());
-            this.contextId = ctx.contextId();
-            this.url = TitleUtil.createPrettyUrl(this.name, this.contextId);
+            this.contextId = Optional.of(ctx.contextId());
+            this.url = TitleUtil.createPrettyUrl(this.name, ctx.contextId());
         });
 
         includeContexts.filter(Boolean::booleanValue).ifPresent(includeCtx -> {
@@ -142,7 +142,7 @@ public class NodeDTO {
         return name;
     }
 
-    public URI getContentUri() {
+    public Optional<URI> getContentUri() {
         return contentUri;
     }
 

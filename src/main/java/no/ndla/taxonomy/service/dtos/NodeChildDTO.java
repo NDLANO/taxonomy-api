@@ -55,7 +55,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         this.isPrimary = nodeConnection.isPrimary().orElse(false);
         {
             final Relevance relevance = nodeConnection.getRelevance().orElse(null);
-            this.relevanceId = relevance != null ? relevance.getPublicId() : null;
+            this.relevanceId = relevance != null ? relevance.getPublicId() : URI.create("urn:relevance:core");
         }
     }
 
@@ -70,7 +70,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         this.isPrimary = nodeConnection.isPrimary().orElse(false);
         {
             final Relevance relevance = nodeConnection.getRelevance().orElse(null);
-            this.relevanceId = relevance != null ? relevance.getPublicId() : null;
+            this.relevanceId = relevance != null ? relevance.getPublicId() : URI.create("urn:relevance:core");
         }
     }
 
