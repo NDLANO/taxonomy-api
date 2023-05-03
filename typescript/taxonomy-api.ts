@@ -1,6 +1,3 @@
-/* tslint:disable */
-/* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2023-05-02 15:56:52.
 
 export interface Context {
     id: string;
@@ -648,10 +645,12 @@ export interface Version {
      * Is the version locked
      */
     locked: boolean;
-    created: string;
-    published: string;
-    archived: string;
+    created: DateAsString;
+    published: DateAsString;
+    archived: DateAsString;
 }
+
+export type DateAsString = string;
 
 export type NodeType = "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE";
 
