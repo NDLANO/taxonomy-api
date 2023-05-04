@@ -87,4 +87,9 @@ public class NodeConnectionDTO {
     public Boolean getPrimary() {
         return isPrimary;
     }
+
+    @JsonProperty
+    public Boolean isPrimary() {
+        return isPrimary;
+    }
 }
