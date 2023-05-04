@@ -108,7 +108,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         this.connectionId = connectionId;
     }
 
-    @JsonProperty
+    @JsonProperty("isPrimary")
     public boolean isPrimary() {
         return isPrimary;
     }
