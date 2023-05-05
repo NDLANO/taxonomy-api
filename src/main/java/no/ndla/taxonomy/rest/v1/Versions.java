@@ -15,7 +15,7 @@ import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
+import no.ndla.taxonomy.rest.v1.commands.VersionPostPut;
 import no.ndla.taxonomy.service.VersionService;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
@@ -69,7 +69,7 @@ public class Versions extends CrudController<Version> {
     @Transactional
     public ResponseEntity<Void> createVersion(
             @Parameter(description = "Base new version on version with this id") @RequestParam(value = "sourceId") Optional<URI> sourceId,
-            @Parameter(name = "version", description = "The new version") @RequestBody @Schema(name = "VersionPOST") VersionCommand command) {
+            @Parameter(name = "version", description = "The new version") @RequestBody @Schema(name = "VersionPOST") VersionPostPut command) {
         // Don't call doPost because we need to create new schema
         Version version = versionService.createNewVersion(sourceId, command);
         URI location = URI.create(getLocation() + "/" + version.getPublicId());
@@ -82,7 +82,7 @@ public class Versions extends CrudController<Version> {
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @Transactional
     public void updateVersion(@PathVariable("id") URI id,
-            @Parameter(name = "version", description = "The updated version.") @RequestBody @Schema(name = "VersionPUT") VersionCommand command) {
+            @Parameter(name = "version", description = "The updated version.") @RequestBody @Schema(name = "VersionPUT") VersionPostPut command) {
         updateEntity(id, command);
     }
 

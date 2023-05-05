@@ -11,12 +11,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import liquibase.pro.packaged.O;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
+import no.ndla.taxonomy.rest.v1.commands.TopicPostPut;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.MetadataFilters;
 import no.ndla.taxonomy.service.NodeService;
@@ -112,7 +111,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createTopic(
-            @Parameter(name = "connection", description = "The new topic") @RequestBody @Schema(name = "TopicPOST") TopicCommand command) {
+            @Parameter(name = "connection", description = "The new topic") @RequestBody @Schema(name = "TopicPOST") TopicPostPut command) {
         return createEntity(new Node(NodeType.TOPIC), command);
     }
 
@@ -123,7 +122,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void updateTopic(@PathVariable("id") URI id,
-            @Parameter(name = "topic", description = "The updated topic. Fields not included will be set to null.") @RequestBody @Schema(name = "VersionPUT") TopicCommand command) {
+            @Parameter(name = "topic", description = "The updated topic. Fields not included will be set to null.") @RequestBody @Schema(name = "VersionPUT") TopicPostPut command) {
         updateEntity(id, command);
     }
 

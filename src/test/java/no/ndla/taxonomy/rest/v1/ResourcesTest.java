@@ -12,7 +12,7 @@ import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.ResourceType;
-import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
+import no.ndla.taxonomy.rest.v1.commands.ResourcePostPut;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.NodeWithParents;
@@ -175,7 +175,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_create_resource() throws Exception {
-        URI id = getId(testUtils.createResource("/v1/resources", new ResourceCommand() {
+        URI id = getId(testUtils.createResource("/v1/resources", new ResourcePostPut() {
             {
                 name = "testresource";
                 contentUri = URI.create("urn:article:1");
@@ -189,7 +189,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void can_create_resource_with_id() throws Exception {
-        final var command = new ResourceCommand() {
+        final var command = new ResourcePostPut() {
             {
                 id = URI.create("urn:resource:1");
                 name = "name";
@@ -209,7 +209,7 @@ public class ResourcesTest extends RestTest {
                                 .translation("nb", tr -> tr.name("Fagstoff nb")).contentUri("urn:article:1"))
                 .getPublicId();
 
-        final var command = new ResourceCommand() {
+        final var command = new ResourcePostPut() {
             {
                 contentUri = URI.create("urn:article:2");
             }
@@ -228,7 +228,7 @@ public class ResourcesTest extends RestTest {
         assertEquals(oldRes.getResourceTypes().size(), newRes.getResourceTypes().size());
 
         // contentUri can be null
-        URI id2 = getId(testUtils.createResource("/v1/resources/" + publicId + "/clone", new ResourceCommand()));
+        URI id2 = getId(testUtils.createResource("/v1/resources/" + publicId + "/clone", new ResourcePostPut()));
         assertNotNull(id2);
         var resWithoutContentUri = nodeRepository.findByPublicId(id2);
         assertNull(resWithoutContentUri.getContentUri());
@@ -239,7 +239,7 @@ public class ResourcesTest extends RestTest {
     public void can_update_resource() throws Exception {
         URI publicId = newResource().getPublicId();
 
-        final var command = new ResourceCommand() {
+        final var command = new ResourcePostPut() {
             {
                 id = publicId;
                 name = "The inner planets";
@@ -259,7 +259,7 @@ public class ResourcesTest extends RestTest {
         URI publicId = newResource().getPublicId();
         URI randomId = URI.create("urn:resource:random");
 
-        final var command = new ResourceCommand() {
+        final var command = new ResourcePostPut() {
             {
                 id = randomId;
                 name = "The inner planets";
@@ -280,7 +280,7 @@ public class ResourcesTest extends RestTest {
                 .node(NodeType.RESOURCE, r -> r.isVisible(false).grepCode("KM123").customField("key", "value"))
                 .getPublicId();
 
-        final var command = new ResourceCommand() {
+        final var command = new ResourcePostPut() {
             {
                 id = publicId;
                 name = "physics";
@@ -302,7 +302,7 @@ public class ResourcesTest extends RestTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        final var command = new ResourceCommand() {
+        final var command = new ResourcePostPut() {
             {
                 id = URI.create("urn:resource:1");
                 name = "name";
@@ -380,7 +380,7 @@ public class ResourcesTest extends RestTest {
     public void resources_can_have_same_name() throws Exception {
         builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1").name("What is maths?"));
 
-        final var command = new ResourceCommand() {
+        final var command = new ResourcePostPut() {
             {
                 id = URI.create("urn:resource:2");
                 name = "What is maths?";

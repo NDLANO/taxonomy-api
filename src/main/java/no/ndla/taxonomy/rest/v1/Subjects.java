@@ -18,7 +18,7 @@ import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
+import no.ndla.taxonomy.rest.v1.commands.SubjectPostPut;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
@@ -124,7 +124,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void updateSubject(@PathVariable("id") URI id,
-            @Parameter(name = "subject", description = "The updated subject. Fields not included will be set to null.") @RequestBody @Schema(name = "SubjectPOST") SubjectCommand command) {
+            @Parameter(name = "subject", description = "The updated subject. Fields not included will be set to null.") @RequestBody @Schema(name = "SubjectPOST") SubjectPostPut command) {
         updateEntity(id, command);
     }
 
@@ -134,7 +134,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createSubject(
-            @Parameter(name = "subject", description = "The new subject") @RequestBody @Schema(name = "SubjectPUT") SubjectCommand command) {
+            @Parameter(name = "subject", description = "The new subject") @RequestBody @Schema(name = "SubjectPUT") SubjectPostPut command) {
         final var subject = new Node(NodeType.SUBJECT);
         return createEntity(subject, command);
     }

@@ -20,7 +20,7 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.UUID;
 
-public class NodeCommand implements UpdatableDto<Node> {
+public class NodePostPut implements UpdatableDto<Node> {
     @JsonProperty
     @Schema(description = "If specified, set the node_id to this value. If omitted, an uuid will be assigned automatically.")
     public String nodeId;

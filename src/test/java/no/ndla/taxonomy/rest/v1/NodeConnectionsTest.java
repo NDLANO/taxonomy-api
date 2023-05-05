@@ -115,9 +115,9 @@ public class NodeConnectionsTest extends RestTest {
 
         var result = Stream.concat(page1.getResults().stream(), page2.getResults().stream()).toList();
 
-        //noinspection SuspiciousMethodCalls
+        // noinspection SuspiciousMethodCalls
         assertTrue(connections.stream().map(DomainEntity::getPublicId).map(Object::toString).toList()
-                .containsAll(result.stream().map(r -> ((LinkedHashMap<String, String>)r).get("id")).toList()));
+                .containsAll(result.stream().map(r -> ((LinkedHashMap<String, String>) r).get("id")).toList()));
     }
 
     @Test

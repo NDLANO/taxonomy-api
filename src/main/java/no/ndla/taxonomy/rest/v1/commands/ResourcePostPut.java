@@ -15,7 +15,7 @@ import no.ndla.taxonomy.service.UpdatableDto;
 import java.net.URI;
 import java.util.Optional;
 
-public class ResourceCommand implements UpdatableDto<Node> {
+public class ResourcePostPut implements UpdatableDto<Node> {
     @JsonProperty
     @Schema(description = "If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:resource:2")
     public URI id;

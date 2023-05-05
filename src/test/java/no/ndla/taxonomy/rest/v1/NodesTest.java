@@ -12,7 +12,7 @@ import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
+import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
 import no.ndla.taxonomy.service.dtos.ConnectionDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
@@ -230,9 +230,9 @@ public class NodesTest extends RestTest {
 
         var result = Stream.concat(page1.getResults().stream(), page2.getResults().stream()).toList();
 
-        //noinspection SuspiciousMethodCalls
+        // noinspection SuspiciousMethodCalls
         assertTrue(List.of(node1, node2).stream().map(DomainEntity::getPublicId).map(Object::toString).toList()
-                .containsAll(result.stream().map(r -> ((LinkedHashMap<String, String>)r).get("id")).toList()));
+                .containsAll(result.stream().map(r -> ((LinkedHashMap<String, String>) r).get("id")).toList()));
     }
 
     @Test
@@ -489,7 +489,7 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_create_node() throws Exception {
-        final var createNodeCommand = new NodeCommand() {
+        final var createNodeCommand = new NodePostPut() {
             {
                 nodeType = NodeType.NODE;
                 name = "node";
@@ -510,7 +510,7 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_create_topic() throws Exception {
-        final var createNodeCommand = new NodeCommand() {
+        final var createNodeCommand = new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
                 name = "trigonometry";
@@ -529,7 +529,7 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_create_subject() throws Exception {
-        final var createNodeCommand = new NodeCommand() {
+        final var createNodeCommand = new NodePostPut() {
             {
                 nodeType = NodeType.SUBJECT;
                 name = "Maths";
@@ -548,7 +548,7 @@ public class NodesTest extends RestTest {
 
     @Test
     public void can_create_topic_with_id() throws Exception {
-        final var createNodeCommand = new NodeCommand() {
+        final var createNodeCommand = new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
                 nodeId = "1";
@@ -564,7 +564,7 @@ public class NodesTest extends RestTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        final var command = new NodeCommand() {
+        final var command = new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
                 nodeId = "1";
@@ -580,7 +580,7 @@ public class NodesTest extends RestTest {
     public void can_update_node() throws Exception {
         Node n = builder.node();
 
-        testUtils.updateResource("/v1/nodes/" + n.getPublicId(), new NodeCommand() {
+        testUtils.updateResource("/v1/nodes/" + n.getPublicId(), new NodePostPut() {
             {
                 nodeType = n.getNodeType();
                 nodeId = n.getIdent();
@@ -599,7 +599,7 @@ public class NodesTest extends RestTest {
         URI publicId = builder.node(NodeType.TOPIC).getPublicId();
         URI randomId = URI.create("urn:topic:random");
 
-        testUtils.updateResource("/v1/nodes/" + publicId, new NodeCommand() {
+        testUtils.updateResource("/v1/nodes/" + publicId, new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
                 nodeId = "random";
@@ -618,7 +618,7 @@ public class NodesTest extends RestTest {
         Node n = builder.node(); // NODE
         String ident = n.getIdent();
 
-        var command = new NodeCommand() {
+        var command = new NodePostPut() {
             {
                 nodeType = NodeType.SUBJECT;
                 nodeId = ident;
@@ -639,7 +639,7 @@ public class NodesTest extends RestTest {
     public void can_update_node_without_changing_metadata() throws Exception {
         Node n = builder.node(s -> s.isVisible(false).grepCode("KM123").customField("key", "value"));
 
-        final var command = new NodeCommand() {
+        final var command = new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
                 name = "physics";

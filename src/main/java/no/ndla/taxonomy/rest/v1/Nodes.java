@@ -18,7 +18,7 @@ import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
+import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.ConnectionDTO;
@@ -137,7 +137,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createNode(
-            @Parameter(name = "connection", description = "The new node") @RequestBody @Schema(name = "NodePOST") NodeCommand command) {
+            @Parameter(name = "connection", description = "The new node") @RequestBody @Schema(name = "NodePOST") NodePostPut command) {
         return createEntity(new Node(command.nodeType), command);
     }
 
@@ -147,7 +147,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void updateNode(@PathVariable("id") URI id,
-            @Parameter(name = "node", description = "The updated node. Fields not included will be set to null.") @RequestBody @Schema(name = "NodePUT") NodeCommand command) {
+            @Parameter(name = "node", description = "The updated node. Fields not included will be set to null.") @RequestBody @Schema(name = "NodePUT") NodePostPut command) {
         updateEntity(id, command);
     }
 

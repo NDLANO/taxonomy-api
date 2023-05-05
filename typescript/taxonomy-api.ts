@@ -1,4 +1,84 @@
 
+export interface NodeCommand {
+    nodeId?: string;
+    /**
+     * Type of node. Values are subject, topic. Required on create.
+     */
+    nodeType: NodeType;
+    /**
+     * ID of content introducing this node. Must be a valid URI, but preferably not a URL.
+     */
+    contentUri: string;
+    /**
+     * The name of the node. Required on create.
+     */
+    name: string;
+    /**
+     * The node is a root node. Default is false. Only used if present.
+     */
+    root: boolean;
+}
+
+export interface ResourceCommand {
+    /**
+     * If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.
+     */
+    id: string;
+    /**
+     * The ID of this resource in the system where the content is stored. This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier for the system, and <id> is the id of this content in that system.
+     */
+    contentUri: string;
+    /**
+     * The name of the resource
+     */
+    name: string;
+}
+
+export interface SubjectCommand {
+    /**
+     * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
+     */
+    id: string;
+    /**
+     * ID of article introducing this subject. Must be a valid URI, but preferably not a URL.
+     */
+    contentUri: string;
+    /**
+     * The name of the subject
+     */
+    name: string;
+}
+
+export interface TopicCommand {
+    /**
+     * If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.
+     */
+    id: string;
+    /**
+     * ID of article introducing this topic. Must be a valid URI, but preferably not a URL.
+     */
+    contentUri: string;
+    /**
+     * The name of the topic
+     */
+    name: string;
+}
+
+export interface VersionCommand {
+    /**
+     * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
+     */
+    id: string;
+    /**
+     * If specified, set the name to this value.
+     */
+    name: string;
+    /**
+     * If specified, set the locked property to this value.
+     */
+    locked: boolean;
+}
+
 export interface Context {
     id: string;
     path: string;

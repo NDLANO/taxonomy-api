@@ -10,7 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
+import no.ndla.taxonomy.rest.v1.commands.TopicPostPut;
 import no.ndla.taxonomy.service.dtos.ConnectionDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
@@ -230,7 +230,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_create_topic() throws Exception {
-        final var createTopicCommand = new TopicCommand() {
+        final var createTopicCommand = new TopicPostPut() {
             {
                 name = "trigonometry";
                 contentUri = URI.create("urn:article:1");
@@ -247,7 +247,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_create_topic_with_id() throws Exception {
-        final var createTopicCommand = new TopicCommand() {
+        final var createTopicCommand = new TopicPostPut() {
             {
                 id = URI.create("urn:topic:1");
                 name = "trigonometry";
@@ -262,7 +262,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        final var command = new TopicCommand() {
+        final var command = new TopicPostPut() {
             {
                 id = URI.create("urn:topic:1");
                 name = "name";
@@ -277,7 +277,7 @@ public class TopicsTest extends RestTest {
     public void can_update_topic() throws Exception {
         URI publicId = builder.node(NodeType.TOPIC).getPublicId();
 
-        testUtils.updateResource("/v1/topics/" + publicId, new TopicCommand() {
+        testUtils.updateResource("/v1/topics/" + publicId, new TopicPostPut() {
             {
                 id = publicId;
                 name = "trigonometry";
@@ -295,7 +295,7 @@ public class TopicsTest extends RestTest {
         URI publicId = builder.node(NodeType.TOPIC).getPublicId();
         URI randomId = URI.create("urn:topic:random");
 
-        testUtils.updateResource("/v1/topics/" + publicId, new TopicCommand() {
+        testUtils.updateResource("/v1/topics/" + publicId, new TopicPostPut() {
             {
                 id = randomId;
                 name = "trigonometry";

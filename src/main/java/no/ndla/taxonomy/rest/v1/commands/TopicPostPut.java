@@ -15,7 +15,7 @@ import no.ndla.taxonomy.service.UpdatableDto;
 import java.net.URI;
 import java.util.Optional;
 
-public class TopicCommand implements UpdatableDto<Node> {
+public class TopicPostPut implements UpdatableDto<Node> {
     @JsonProperty
     @Schema(description = "If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:topic:1")
     public URI id;

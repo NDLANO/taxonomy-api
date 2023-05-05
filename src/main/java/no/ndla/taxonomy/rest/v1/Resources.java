@@ -16,7 +16,7 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
-import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
+import no.ndla.taxonomy.rest.v1.commands.ResourcePostPut;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.MetadataFilters;
 import no.ndla.taxonomy.service.NodeService;
@@ -125,7 +125,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void updateResource(@PathVariable("id") URI id,
-            @Parameter(name = "resource", description = "the updated resource. Fields not included will be set to null.") @RequestBody @Schema(name = "ResourcePOST") ResourceCommand command) {
+            @Parameter(name = "resource", description = "the updated resource. Fields not included will be set to null.") @RequestBody @Schema(name = "ResourcePOST") ResourcePostPut command) {
         updateEntity(id, command);
     }
 
@@ -135,7 +135,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createResource(
-            @Parameter(name = "resource", description = "the new resource") @RequestBody @Schema(name = "ResourcePUT") ResourceCommand command) {
+            @Parameter(name = "resource", description = "the new resource") @RequestBody @Schema(name = "ResourcePUT") ResourcePostPut command) {
         return createEntity(new Node(NodeType.RESOURCE), command);
     }
 
@@ -147,7 +147,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @Transactional
     public ResponseEntity<Void> cloneResource(
             @Parameter(name = "id", description = "Id of resource to clone", example = "urn:resource:1") @PathVariable("id") URI publicId,
-            @Parameter(name = "resource", description = "Object containing contentUri. Other values are ignored.") @RequestBody @Schema(name = "ResourcePOST") ResourceCommand command) {
+            @Parameter(name = "resource", description = "Object containing contentUri. Other values are ignored.") @RequestBody @Schema(name = "ResourcePOST") ResourcePostPut command) {
         var entity = nodeService.cloneNode(publicId, command.contentUri);
         URI location = URI.create(getLocation() + "/" + entity.getPublicId());
         return ResponseEntity.created(location).build();

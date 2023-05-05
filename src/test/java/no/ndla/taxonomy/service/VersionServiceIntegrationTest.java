@@ -10,7 +10,7 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
-import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
+import no.ndla.taxonomy.rest.v1.commands.VersionPostPut;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ public class VersionServiceIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void can_create_new_version_with_own_schema() {
-        final var command = new VersionCommand() {
+        final var command = new VersionPostPut() {
             {
                 name = "Beta";
             }
@@ -55,7 +55,7 @@ public class VersionServiceIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     public void can_publish_version() {
-        final var command = new VersionCommand() {
+        final var command = new VersionPostPut() {
             {
                 name = "Beta";
             }

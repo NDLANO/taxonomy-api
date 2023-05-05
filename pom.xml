@@ -256,8 +256,9 @@
                         <class>no.ndla.taxonomy.domain.VersionType</class>
                     </classes>
                     <classPatterns>
-                        <pattern>no.ndla.taxonomy.service.dtos.*</pattern>
+                        <pattern>no.ndla.taxonomy.rest.v1.commands.**</pattern>
                         <pattern>no.ndla.taxonomy.rest.v1.dtos.**</pattern>
+                        <pattern>no.ndla.taxonomy.service.dtos.*</pattern>
                     </classPatterns>
                     <excludeClasses>
                         <excludeClass>java.lang.Comparable</excludeClass>
