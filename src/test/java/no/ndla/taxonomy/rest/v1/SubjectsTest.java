@@ -38,7 +38,7 @@ public class SubjectsTest extends RestTest {
         var subject = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("english", subject.getName());
-        assertEquals("urn:article:1", subject.getContentUri().toString());
+        assertEquals("Optional[urn:article:1]", subject.getContentUri().toString());
         assertEquals("/subject:1", subject.getPath());
 
         assertNotNull(subject.getMetadata());
@@ -199,11 +199,11 @@ public class SubjectsTest extends RestTest {
 
         assertEquals(3, topics.length);
         assertAnyTrue(topics,
-                t -> "statics".equals(t.getName()) && "urn:article:1".equals(t.getContentUri().toString()));
+                t -> "statics".equals(t.getName()) && "Optional[urn:article:1]".equals(t.getContentUri().toString()));
+        assertAnyTrue(topics, t -> "electricity".equals(t.getName())
+                && "Optional[urn:article:2]".equals(t.getContentUri().toString()));
         assertAnyTrue(topics,
-                t -> "electricity".equals(t.getName()) && "urn:article:2".equals(t.getContentUri().toString()));
-        assertAnyTrue(topics,
-                t -> "optics".equals(t.getName()) && "urn:article:3".equals(t.getContentUri().toString()));
+                t -> "optics".equals(t.getName()) && "Optional[urn:article:3]".equals(t.getContentUri().toString()));
         assertAnyTrue(topics, t -> t.isPrimary());
         assertAllTrue(topics, t -> isValidId(t.getId()));
         assertAllTrue(topics, t -> isValidId(t.getConnectionId()));

@@ -8,6 +8,10 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.rest.v1.dtos.SubjectTopicPUT;
+import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicDTO;
+import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicPOST;
+import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicPUT;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -29,7 +33,7 @@ public class TopicSubtopicsTest extends RestTest {
         calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus")).getPublicId();
         integrationId = builder.node(NodeType.TOPIC, t -> t.name("integration")).getPublicId();
 
-        URI id = getId(testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {
+        URI id = getId(testUtils.createResource("/v1/topic-subtopics", new TopicSubtopicPOST() {
             {
                 topicid = calculusId;
                 subtopicid = integrationId;
@@ -49,7 +53,7 @@ public class TopicSubtopicsTest extends RestTest {
         URI integrationId = builder.node("integration", NodeType.TOPIC, t -> t.name("integration")).getPublicId();
         URI calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus").child("integration")).getPublicId();
 
-        testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {
+        testUtils.createResource("/v1/topic-subtopics", new TopicSubtopicPOST() {
             {
                 topicid = calculusId;
                 subtopicid = integrationId;
@@ -74,8 +78,7 @@ public class TopicSubtopicsTest extends RestTest {
                 .getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topic-subtopics");
-        TopicSubtopics.TopicSubtopicIndexDocument[] topicSubtopics = testUtils
-                .getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);
+        TopicSubtopicDTO[] topicSubtopics = testUtils.getObject(TopicSubtopicDTO[].class, response);
 
         assertEquals(2, topicSubtopics.length);
         assertAnyTrue(topicSubtopics,
@@ -96,8 +99,7 @@ public class TopicSubtopicsTest extends RestTest {
         id = topicSubtopic.getPublicId();
 
         MockHttpServletResponse resource = testUtils.getResource("/v1/topic-subtopics/" + id);
-        TopicSubtopics.TopicSubtopicIndexDocument topicSubtopicIndexDocument = testUtils
-                .getObject(TopicSubtopics.TopicSubtopicIndexDocument.class, resource);
+        TopicSubtopicDTO topicSubtopicIndexDocument = testUtils.getObject(TopicSubtopicDTO.class, resource);
 
         assertEquals(topicid, topicSubtopicIndexDocument.topicid);
 
@@ -110,8 +112,7 @@ public class TopicSubtopicsTest extends RestTest {
                 t -> t.name("electricity").child(NodeType.TOPIC, st -> st.name("alternating currents"))
                         .child(NodeType.TOPIC, st -> st.name("wiring")));
         MockHttpServletResponse response = testUtils.getResource(("/v1/topic-subtopics"));
-        TopicSubtopics.TopicSubtopicIndexDocument[] subtopics = testUtils
-                .getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);
+        TopicSubtopicDTO[] subtopics = testUtils.getObject(TopicSubtopicDTO[].class, response);
 
         assertAllTrue(subtopics, st -> st.rank == 0);
     }
@@ -125,7 +126,7 @@ public class TopicSubtopicsTest extends RestTest {
                 t -> t.name("Alternating currents").publicId("urn:topic:11"));
         Node wiring = builder.node(NodeType.TOPIC, t -> t.name("Wiring").publicId("urn:topic:12"));
 
-        testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {
+        testUtils.createResource("/v1/topic-subtopics", new TopicSubtopicPOST() {
             {
                 topicid = electricity.getPublicId();
                 subtopicid = alternatingCurrents.getPublicId();
@@ -133,7 +134,7 @@ public class TopicSubtopicsTest extends RestTest {
             }
         });
 
-        testUtils.createResource("/v1/topic-subtopics", new TopicSubtopics.AddSubtopicToTopicCommand() {
+        testUtils.createResource("/v1/topic-subtopics", new TopicSubtopicPOST() {
             {
                 topicid = electricity.getPublicId();
                 subtopicid = wiring.getPublicId();
@@ -143,8 +144,7 @@ public class TopicSubtopicsTest extends RestTest {
 
         MockHttpServletResponse response = testUtils
                 .getResource("/v1/subjects/" + subject.getPublicId() + "/topics?recursive=true");
-        TopicSubtopics.TopicSubtopicIndexDocument[] topics = testUtils
-                .getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);
+        TopicSubtopicDTO[] topics = testUtils.getObject(TopicSubtopicDTO[].class, response);
 
         assertEquals(electricity.getPublicId(), topics[0].id);
         assertEquals(wiring.getPublicId(), topics[1].id);
@@ -155,7 +155,7 @@ public class TopicSubtopicsTest extends RestTest {
     public void can_update_subtopic_rank() throws Exception {
         URI id = save(NodeConnection.create(newTopic(), newTopic())).getPublicId();
 
-        testUtils.updateResource("/v1/topic-subtopics/" + id, new TopicSubtopics.UpdateTopicSubtopicCommand() {
+        testUtils.updateResource("/v1/topic-subtopics/" + id, new TopicSubtopicPUT() {
             {
                 primary = true;
                 rank = 99;
@@ -176,7 +176,7 @@ public class TopicSubtopicsTest extends RestTest {
         NodeConnection updatedConnection = topicSubtopics.get(topicSubtopics.size() - 1);
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource("/v1/topic-subtopics/" + updatedConnection.getPublicId().toString(),
-                new TopicSubtopics.UpdateTopicSubtopicCommand() {
+                new TopicSubtopicPUT() {
                     {
                         primary = true;
                         rank = 1;
@@ -188,8 +188,7 @@ public class TopicSubtopicsTest extends RestTest {
         for (NodeConnection topicSubtopic : topicSubtopics) {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/topic-subtopics/" + topicSubtopic.getPublicId().toString());
-            TopicSubtopics.TopicSubtopicIndexDocument connectionFromDb = testUtils
-                    .getObject(TopicSubtopics.TopicSubtopicIndexDocument.class, response);
+            TopicSubtopicDTO connectionFromDb = testUtils.getObject(TopicSubtopicDTO.class, response);
             // verify that the other connections have had their rank bumped up 1
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
@@ -209,7 +208,7 @@ public class TopicSubtopicsTest extends RestTest {
         NodeConnection updatedConnection = topicSubtopics.get(topicSubtopics.size() - 1);
         assertEquals(100, updatedConnection.getRank());
         testUtils.updateResource("/v1/topic-subtopics/" + updatedConnection.getPublicId().toString(),
-                new SubjectTopics.UpdateSubjectTopicCommand() {
+                new SubjectTopicPUT() {
                     {
                         primary = true;
                         rank = 1;
@@ -221,8 +220,7 @@ public class TopicSubtopicsTest extends RestTest {
         for (NodeConnection topicSubtopic : topicSubtopics) {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/topic-subtopics/" + topicSubtopic.getPublicId().toString());
-            TopicSubtopics.TopicSubtopicIndexDocument connectionFromDb = testUtils
-                    .getObject(TopicSubtopics.TopicSubtopicIndexDocument.class, response);
+            TopicSubtopicDTO connectionFromDb = testUtils.getObject(TopicSubtopicDTO.class, response);
             // verify that only the contiguous connections are updated
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
@@ -244,7 +242,7 @@ public class TopicSubtopicsTest extends RestTest {
         NodeConnection updatedConnection = topicSubtopics.get(topicSubtopics.size() - 1);
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource("/v1/topic-subtopics/" + topicSubtopics.get(9).getPublicId().toString(),
-                new SubjectTopics.UpdateSubjectTopicCommand() {
+                new SubjectTopicPUT() {
                     {
                         primary = true;
                         rank = 99;
@@ -256,8 +254,7 @@ public class TopicSubtopicsTest extends RestTest {
         for (NodeConnection topicSubtopic : topicSubtopics) {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/topic-subtopics/" + topicSubtopic.getPublicId().toString());
-            TopicSubtopics.TopicSubtopicIndexDocument connection = testUtils
-                    .getObject(TopicSubtopics.TopicSubtopicIndexDocument.class, response);
+            TopicSubtopicDTO connection = testUtils.getObject(TopicSubtopicDTO.class, response);
             if (!connection.id.equals(updatedConnection.getPublicId())) {
                 assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);
             }

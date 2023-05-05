@@ -8,7 +8,9 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -68,12 +70,11 @@ public class ResourceTranslationsTest extends RestTest {
         var resource = builder.node(NodeType.RESOURCE, t -> t.name("Introduction to algrebra"));
         URI id = resource.getPublicId();
 
-        testUtils.updateResource("/v1/resources/" + id + "/translations/nb",
-                new ResourceTranslations.UpdateResourceTranslationCommand() {
-                    {
-                        name = "Introduksjon til algebra";
-                    }
-                });
+        testUtils.updateResource("/v1/resources/" + id + "/translations/nb", new TranslationPUT() {
+            {
+                name = "Introduksjon til algebra";
+            }
+        });
 
         assertEquals("Introduksjon til algebra", resource.getTranslation("nb").orElseThrow().getName());
     }
@@ -97,8 +98,7 @@ public class ResourceTranslationsTest extends RestTest {
                         .translation("de", l -> l.name("Introduktion bis Algebra")));
         URI id = resource.getPublicId();
 
-        ResourceTranslations.ResourceTranslationIndexDocument[] translations = testUtils.getObject(
-                ResourceTranslations.ResourceTranslationIndexDocument[].class,
+        TranslationDTO[] translations = testUtils.getObject(TranslationDTO[].class,
                 testUtils.getResource("/v1/resources/" + id + "/translations"));
 
         assertEquals(3, translations.length);
@@ -113,8 +113,7 @@ public class ResourceTranslationsTest extends RestTest {
                 t -> t.name("Introduction to algrebra").translation("nb", l -> l.name("Introduksjon til algebra")));
         URI id = resource.getPublicId();
 
-        ResourceTranslations.ResourceTranslationIndexDocument translation = testUtils.getObject(
-                ResourceTranslations.ResourceTranslationIndexDocument.class,
+        TranslationDTO translation = testUtils.getObject(TranslationDTO.class,
                 testUtils.getResource("/v1/resources/" + id + "/translations/nb"));
         assertEquals("Introduksjon til algebra", translation.name);
         assertEquals("nb", translation.language);

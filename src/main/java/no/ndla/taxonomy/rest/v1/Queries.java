@@ -9,7 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
+import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,29 +43,31 @@ public class Queries {
     @GetMapping("/path")
     @Operation(summary = "Gets a list of contexts matching given pretty url with contextId, empty list if no matches are found.")
     @Transactional(readOnly = true)
-    public List<TaxonomyContextDTO> queryByPath(@RequestParam("path") Optional<String> path) {
+    public List<TaxonomyContextDTO> queryPath(@RequestParam("path") Optional<String> path) {
         return nodeService.getContextByPath(path);
     }
 
     @GetMapping("/resources")
     @Operation(summary = "Gets a list of resources matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/resources?contentURI= instead")
     @Transactional(readOnly = true)
+    @Deprecated
     public List<NodeDTO> queryResources(@RequestParam("contentURI") Optional<URI> contentURI,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
-        return resourceController.getAll(language, contentURI, key, value, isVisible);
+        return resourceController.getAllResources(language, contentURI, key, value, isVisible);
     }
 
     @GetMapping("/topics")
     @Operation(summary = "Gets a list of topics matching given contentURI, empty list of no matches are found. DEPRECATED: Use /v1/topics?contentURI= instead")
     @Transactional(readOnly = true)
+    @Deprecated
     public List<NodeDTO> queryTopics(@RequestParam("contentURI") URI contentURI,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = "", required = false) Optional<String> language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Fitler by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible) {
-        return topicController.getAll(language, Optional.of(contentURI), key, value, isVisible);
+        return topicController.getAllTopics(language, Optional.of(contentURI), key, value, isVisible);
     }
 }

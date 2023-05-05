@@ -11,16 +11,16 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.rest.v1.NodeTranslations.TranslationDTO;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageFieldDTO;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.SearchableTaxonomyResourceType;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
+import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
+import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
+import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.util.TitleUtil;
 
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Schema(name = "Node")
 public class NodeDTO {
     @Schema(description = "Node id", example = "urn:topic:234")
     private URI id;
@@ -29,7 +29,7 @@ public class NodeDTO {
     private String name;
 
     @Schema(description = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
-    private URI contentUri;
+    private Optional<URI> contentUri = Optional.empty();
 
     @Schema(description = "The primary path for this node", example = "/subject:1/topic:1")
     private String path;
@@ -39,7 +39,7 @@ public class NodeDTO {
 
     @Schema(description = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private MetadataDto metadata;
+    private MetadataDTO metadata;
 
     @Schema(description = "Relevance id", example = "urn:relevance:core")
     public URI relevanceId;
@@ -55,7 +55,7 @@ public class NodeDTO {
 
     @JsonProperty
     @Schema(description = "Resource type(s)", example = "[{\"id\": \"urn:resourcetype:1\",\"name\":\"lecture\"}]")
-    private TreeSet<ResourceTypeDTO> resourceTypes = new TreeSet<>();
+    private TreeSet<ResourceTypeWithConnectionDTO> resourceTypes = new TreeSet<>();
 
     @JsonProperty
     @Schema(description = "The type of node", example = "resource")
@@ -63,7 +63,7 @@ public class NodeDTO {
 
     @JsonProperty
     @Schema(description = "An id unique for this context.")
-    private String contextId;
+    private Optional<String> contextId = Optional.empty();
 
     @JsonProperty
     @Schema(description = "A pretty url based on name and context. Empty if no context.")
@@ -79,7 +79,7 @@ public class NodeDTO {
     public NodeDTO(Optional<Node> root, Node entity, String languageCode, Optional<String> contextId,
             Optional<Boolean> includeContexts) {
         this.id = entity.getPublicId();
-        this.contentUri = entity.getContentUri();
+        this.contentUri = Optional.ofNullable(entity.getContentUri());
 
         this.paths = entity.getAllPaths();
 
@@ -98,7 +98,7 @@ public class NodeDTO {
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
                 .map(Translation::getName).orElse(entity.getName());
 
-        this.metadata = new MetadataDto(entity.getMetadata());
+        this.metadata = new MetadataDTO(entity.getMetadata());
 
         this.resourceTypes = entity.getResourceResourceTypes().stream()
                 .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
@@ -112,8 +112,8 @@ public class NodeDTO {
             this.breadcrumbs = LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity))
                     .get(languageCode);
             this.relevanceId = URI.create(ctx.relevanceId());
-            this.contextId = ctx.contextId();
-            this.url = TitleUtil.createPrettyUrl(this.name, this.contextId);
+            this.contextId = Optional.of(ctx.contextId());
+            this.url = TitleUtil.createPrettyUrl(this.name, ctx.contextId());
         });
 
         includeContexts.filter(Boolean::booleanValue).ifPresent(includeCtx -> {
@@ -142,7 +142,7 @@ public class NodeDTO {
         return name;
     }
 
-    public URI getContentUri() {
+    public Optional<URI> getContentUri() {
         return contentUri;
     }
 
@@ -154,7 +154,7 @@ public class NodeDTO {
         return paths;
     }
 
-    public MetadataDto getMetadata() {
+    public MetadataDTO getMetadata() {
         return metadata;
     }
 
@@ -170,7 +170,7 @@ public class NodeDTO {
         return breadcrumbs;
     }
 
-    public Set<ResourceTypeDTO> getResourceTypes() {
+    public Set<ResourceTypeWithConnectionDTO> getResourceTypes() {
         return resourceTypes;
     }
 

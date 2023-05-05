@@ -9,6 +9,8 @@ package no.ndla.taxonomy.rest.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import no.ndla.taxonomy.TestUtils;
+import no.ndla.taxonomy.rest.v1.dtos.ResolvedOldUrl;
+import no.ndla.taxonomy.rest.v1.dtos.UrlMapping;
 import no.ndla.taxonomy.service.AbstractIntegrationTest;
 import no.ndla.taxonomy.service.UrlResolverService;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,8 +84,7 @@ public class UrlResolverMockTest extends AbstractIntegrationTest {
         ResultActions result = mvc.perform(get("/v1/url/mapping?url=" + oldUrl).accept(APPLICATION_JSON_UTF8));
 
         result.andExpect(status().isOk());
-        UrlResolver.ResolvedOldUrl resolvedOldUrl = testUtils.getObject(UrlResolver.ResolvedOldUrl.class,
-                result.andReturn().getResponse());
+        ResolvedOldUrl resolvedOldUrl = testUtils.getObject(ResolvedOldUrl.class, result.andReturn().getResponse());
         assertEquals(newPath, resolvedOldUrl.path);
     }
 
@@ -94,7 +95,7 @@ public class UrlResolverMockTest extends AbstractIntegrationTest {
         URI subjectId = new URI("urn:subject:11");
 
         ResultActions result = mvc.perform(put("/v1/url/mapping")
-                .content(new ObjectMapper().writeValueAsString(new UrlResolver.UrlMapping(oldUrl, nodeId, subjectId)))
+                .content(new ObjectMapper().writeValueAsString(new UrlMapping(oldUrl, nodeId, subjectId)))
                 .contentType(MediaType.APPLICATION_JSON_UTF8));
 
         result.andExpect(status().isNoContent());
@@ -103,7 +104,7 @@ public class UrlResolverMockTest extends AbstractIntegrationTest {
 
     @Test
     public void putOldUrlBadParameters() throws Exception {
-        UrlResolver.UrlMapping urlMapping = new UrlResolver.UrlMapping();
+        UrlMapping urlMapping = new UrlMapping();
         urlMapping.url = "ndla.no/nb/node/183926?fag=127013";
         urlMapping.nodeId = "b a d";
         urlMapping.subjectId = "b a d";
@@ -125,7 +126,7 @@ public class UrlResolverMockTest extends AbstractIntegrationTest {
                 any(), any());
 
         ResultActions result = mvc.perform(put("/v1/url/mapping")
-                .content(new ObjectMapper().writeValueAsString(new UrlResolver.UrlMapping(oldUrl, nodeId, subjectId)))
+                .content(new ObjectMapper().writeValueAsString(new UrlMapping(oldUrl, nodeId, subjectId)))
                 .contentType(MediaType.APPLICATION_JSON_UTF8));
 
         result.andExpect(status().isNotFound());

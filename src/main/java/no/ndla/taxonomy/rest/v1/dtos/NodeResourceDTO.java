@@ -1,13 +1,21 @@
-package no.ndla.taxonomy.rest.v1.dtos.nodes;
+/*
+ * Part of NDLA taxonomy-api
+ * Copyright (C) 2023 NDLA
+ *
+ * See LICENSE
+ */
+
+package no.ndla.taxonomy.rest.v1.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.dtos.MetadataDTO;
 
 import java.net.URI;
 
+@Schema(name = "NodeResource")
 public class NodeResourceDTO {
 
     @JsonProperty
@@ -36,7 +44,7 @@ public class NodeResourceDTO {
 
     @JsonProperty
     @Schema(description = "Metadata for entity. Read only.")
-    private MetadataDto metadata;
+    private MetadataDTO metadata;
 
     public NodeResourceDTO() {
     }
@@ -48,6 +56,6 @@ public class NodeResourceDTO {
         primary = nodeResource.isPrimary().orElse(false);
         rank = nodeResource.getRank();
         relevanceId = nodeResource.getRelevance().map(DomainEntity::getPublicId).orElse(null);
-        metadata = new MetadataDto(nodeResource.getMetadata());
+        metadata = new MetadataDTO(nodeResource.getMetadata());
     }
 }

@@ -8,24 +8,27 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.TestSeeder;
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.DomainEntity;
+import no.ndla.taxonomy.domain.JsonGrepCode;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
-import no.ndla.taxonomy.service.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ConnectionDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
-import org.apache.commons.lang3.ArrayUtils;
-import org.assertj.core.util.Arrays;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 import javax.persistence.EntityManager;
 import java.net.URI;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,7 +58,7 @@ public class NodesTest extends RestTest {
         final var node = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("trigonometry", node.getName());
-        assertEquals("urn:article:1", node.getContentUri().toString());
+        assertEquals("Optional[urn:article:1]", node.getContentUri().toString());
         assertEquals("/subject:1/topic:1", node.getPath());
         assertEquals(List.of("maths", "trigonometry"), node.getBreadcrumbs());
 
@@ -210,6 +213,26 @@ public class NodesTest extends RestTest {
         assertAllTrue(nodes, t -> t.getMetadata() != null);
         assertAllTrue(nodes, t -> t.getMetadata().isVisible());
         assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
+    }
+
+    @Test
+    public void can_get_nodes_paginated() throws Exception {
+        var node1 = builder.node(NodeType.NODE);
+        var node2 = builder.node(NodeType.NODE);
+
+        var response = testUtils.getResource("/v1/nodes/page?nodeType=NODE&page=1&pageSize=1");
+        var page1 = testUtils.getObject(SearchResultDTO.class, response);
+        assertEquals(1, page1.getResults().size());
+
+        var response2 = testUtils.getResource("/v1/nodes/page?nodeType=NODE&page=2&pageSize=1");
+        var page2 = testUtils.getObject(SearchResultDTO.class, response2);
+        assertEquals(1, page2.getResults().size());
+
+        var result = Stream.concat(page1.getResults().stream(), page2.getResults().stream()).toList();
+
+        //noinspection SuspiciousMethodCalls
+        assertTrue(List.of(node1, node2).stream().map(DomainEntity::getPublicId).map(Object::toString).toList()
+                .containsAll(result.stream().map(r -> ((LinkedHashMap<String, String>)r).get("id")).toList()));
     }
 
     @Test
@@ -388,7 +411,7 @@ public class NodesTest extends RestTest {
         final var node = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("Maths vg1", node.getName());
-        assertEquals("urn:frontpage:1", node.getContentUri().toString());
+        assertEquals("Optional[urn:frontpage:1]", node.getContentUri().toString());
         assertEquals("/subject:1/subject:2", node.getPath());
 
         assertNotNull(node.getMetadata());
@@ -421,7 +444,7 @@ public class NodesTest extends RestTest {
         testSeeder.topicNodeConnectionsTestSetup();
 
         var response = testUtils.getResource("/v1/nodes/urn:topic:2000/connections");
-        final var connections = testUtils.getObject(NodeConnectionDTO[].class, response);
+        final var connections = testUtils.getObject(ConnectionDTO[].class, response);
 
         assertEquals(3, connections.length, "Correct number of connections");
         assertAllTrue(connections, c -> c.getPaths().size() > 0); // all connections have at least one path
@@ -429,7 +452,7 @@ public class NodesTest extends RestTest {
         connectionsHaveCorrectTypes(connections);
     }
 
-    private void connectionsHaveCorrectTypes(NodeConnectionDTO[] connections) {
+    private void connectionsHaveCorrectTypes(ConnectionDTO[] connections) {
         ConnectionTypeCounter connectionTypeCounter = new ConnectionTypeCounter(connections).countTypes();
         assertEquals(1, connectionTypeCounter.getParentCount());
         assertEquals(2, connectionTypeCounter.getChildCount());
@@ -751,12 +774,12 @@ public class NodesTest extends RestTest {
     }
 
     private static class ConnectionTypeCounter {
-        private final NodeConnectionDTO[] connections;
+        private final ConnectionDTO[] connections;
         private int subjectCount;
         private int parentCount;
         private int childCount;
 
-        ConnectionTypeCounter(NodeConnectionDTO[] connections) {
+        ConnectionTypeCounter(ConnectionDTO[] connections) {
             this.connections = connections;
         }
 
@@ -776,7 +799,7 @@ public class NodesTest extends RestTest {
             subjectCount = 0;
             parentCount = 0;
             childCount = 0;
-            for (NodeConnectionDTO connection : connections) {
+            for (ConnectionDTO connection : connections) {
                 switch (connection.getType()) {
                 case "parent-subject":
                     subjectCount++;

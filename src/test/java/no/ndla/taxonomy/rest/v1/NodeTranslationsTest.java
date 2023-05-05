@@ -9,8 +9,10 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -67,21 +69,19 @@ public class NodeTranslationsTest extends RestTest {
         Node trigonometry = builder.node(NodeType.NODE, t -> t.name("Trigonometry"));
         URI id = trigonometry.getPublicId();
 
-        testUtils.updateResource("/v1/nodes/" + id + "/translations/nb",
-                new NodeTranslations.UpdateTranslationCommand() {
-                    {
-                        name = "Trigonometri";
-                    }
-                });
+        testUtils.updateResource("/v1/nodes/" + id + "/translations/nb", new TranslationPUT() {
+            {
+                name = "Trigonometri";
+            }
+        });
 
         assertEquals("Trigonometri", trigonometry.getTranslation("nb").get().getName());
 
-        testUtils.updateResource("/v1/nodes/" + id + "/translations/nn",
-                new NodeTranslations.UpdateTranslationCommand() {
-                    {
-                        name = "Trigonometri";
-                    }
-                });
+        testUtils.updateResource("/v1/nodes/" + id + "/translations/nn", new TranslationPUT() {
+            {
+                name = "Trigonometri";
+            }
+        });
 
         assertEquals("Trigonometri", trigonometry.getTranslation("nn").get().getName());
         assertEquals(2, trigonometry.getTranslations().size());
@@ -92,12 +92,11 @@ public class NodeTranslationsTest extends RestTest {
         Node trigonometry = builder.node(NodeType.NODE, t -> t.name("Trigonometry").translation("Trignometry", "nb"));
         URI id = trigonometry.getPublicId();
 
-        testUtils.updateResource("/v1/nodes/" + id + "/translations/nb",
-                new NodeTranslations.UpdateTranslationCommand() {
-                    {
-                        name = "Trigonometri";
-                    }
-                });
+        testUtils.updateResource("/v1/nodes/" + id + "/translations/nb", new TranslationPUT() {
+            {
+                name = "Trigonometri";
+            }
+        });
 
         assertEquals("Trigonometri", trigonometry.getTranslation("nb").get().getName());
         assertEquals(1, trigonometry.getTranslations().size());
@@ -121,7 +120,7 @@ public class NodeTranslationsTest extends RestTest {
                         .translation("de", l -> l.name("Trigonometrie")));
         URI id = topic.getPublicId();
 
-        var translations = testUtils.getObject(NodeTranslations.TranslationDTO[].class,
+        var translations = testUtils.getObject(TranslationDTO[].class,
                 testUtils.getResource("/v1/nodes/" + id + "/translations"));
 
         assertEquals(3, translations.length);
@@ -136,7 +135,7 @@ public class NodeTranslationsTest extends RestTest {
                 t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")));
         URI id = topic.getPublicId();
 
-        var translation = testUtils.getObject(NodeTranslations.TranslationDTO.class,
+        var translation = testUtils.getObject(TranslationDTO.class,
                 testUtils.getResource("/v1/nodes/" + id + "/translations/nb"));
         assertEquals("Trigonometri", translation.name);
         assertEquals("nb", translation.language);

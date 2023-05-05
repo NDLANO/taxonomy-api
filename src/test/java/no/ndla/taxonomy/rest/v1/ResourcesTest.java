@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
@@ -49,7 +50,7 @@ public class ResourcesTest extends RestTest {
         final var resource = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("introduction to trigonometry", resource.getName());
-        assertEquals("urn:article:1", resource.getContentUri().toString());
+        assertEquals("Optional[urn:article:1]", resource.getContentUri().toString());
         assertEquals("/subject:1/topic:1/resource:1", resource.getPath());
 
         assertTrue(resource.getMetadata().isVisible());
@@ -409,7 +410,7 @@ public class ResourcesTest extends RestTest {
         final NodeChildDTO t = result.getParents().iterator().next();
         assertEquals(topic.getName(), t.getName());
         assertTrue(t.isPrimary());
-        assertEquals(URI.create("urn:article:6662"), t.getContentUri());
+        assertEquals(Optional.of(URI.create("urn:article:6662")), t.getContentUri());
     }
 
     @Test
@@ -486,14 +487,14 @@ public class ResourcesTest extends RestTest {
         final var result = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(4, result.length);
-        assertAnyTrue(result,
-                r -> "resource a".equals(r.getName()) && "urn:article:a".equals(r.getContentUri().toString()));
-        assertAnyTrue(result,
-                r -> "resource aa".equals(r.getName()) && "urn:article:aa".equals(r.getContentUri().toString()));
-        assertAnyTrue(result,
-                r -> "resource aaa".equals(r.getName()) && "urn:article:aaa".equals(r.getContentUri().toString()));
-        assertAnyTrue(result,
-                r -> "resource aab".equals(r.getName()) && "urn:article:aab".equals(r.getContentUri().toString()));
+        assertAnyTrue(result, r -> "resource a".equals(r.getName())
+                && "Optional[urn:article:a]".equals(r.getContentUri().toString()));
+        assertAnyTrue(result, r -> "resource aa".equals(r.getName())
+                && "Optional[urn:article:aa]".equals(r.getContentUri().toString()));
+        assertAnyTrue(result, r -> "resource aaa".equals(r.getName())
+                && "Optional[urn:article:aaa]".equals(r.getContentUri().toString()));
+        assertAnyTrue(result, r -> "resource aab".equals(r.getName())
+                && "Optional[urn:article:aab]".equals(r.getContentUri().toString()));
         assertAllTrue(result, r -> !r.getPaths().isEmpty());
         assertAllTrue(result, NodeChildDTO::isPrimary);
     }
@@ -685,7 +686,7 @@ public class ResourcesTest extends RestTest {
         var response = testUtils.getResource("/v1/subjects/" + id + "/resources");
         final var resources = testUtils.getObject(NodeChildDTO[].class, response);
 
-        assertEquals("urn:article:1", resources[0].getContentUri().toString());
+        assertEquals("Optional[urn:article:1]", resources[0].getContentUri().toString());
         // assertEquals("/subject:1/topic:1:1/resource:1", resources[0].getPath());
     }
 

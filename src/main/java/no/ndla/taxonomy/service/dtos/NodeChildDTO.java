@@ -22,6 +22,7 @@ import java.util.Optional;
 /**
  * Represents Node or Resource in child context
  */
+@Schema(name = "NodeChild")
 public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
 
     @Schema(description = "Parent id in the current context, null if none exists")
@@ -54,7 +55,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         this.isPrimary = nodeConnection.isPrimary().orElse(false);
         {
             final Relevance relevance = nodeConnection.getRelevance().orElse(null);
-            this.relevanceId = relevance != null ? relevance.getPublicId() : null;
+            this.relevanceId = relevance != null ? relevance.getPublicId() : URI.create("urn:relevance:core");
         }
     }
 
@@ -69,7 +70,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         this.isPrimary = nodeConnection.isPrimary().orElse(false);
         {
             final Relevance relevance = nodeConnection.getRelevance().orElse(null);
-            this.relevanceId = relevance != null ? relevance.getPublicId() : null;
+            this.relevanceId = relevance != null ? relevance.getPublicId() : URI.create("urn:relevance:core");
         }
     }
 

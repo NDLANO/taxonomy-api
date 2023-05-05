@@ -7,14 +7,13 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
+import no.ndla.taxonomy.rest.v1.dtos.ResolvedOldUrl;
+import no.ndla.taxonomy.rest.v1.dtos.UrlMapping;
 import no.ndla.taxonomy.service.UrlResolverService;
 import no.ndla.taxonomy.service.dtos.ResolvedUrl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,33 +66,4 @@ public class UrlResolver {
         }
     }
 
-    public static class ResolvedOldUrl {
-        @JsonProperty
-        @Schema(description = "URL path for resource", example = "'/subject:1/topic:12/resource:12'")
-        public String path;
-    }
-
-    public static class UrlMapping {
-        @Schema(description = "URL for resource in old system", example = "ndla.no/nb/node/183926?fag=127013")
-        @JsonProperty
-        public String url;
-
-        @Schema(description = "Node URN for resource in new system", example = "urn:topic:1:183926")
-        @JsonProperty
-        public String nodeId;
-
-        @Schema(description = "Subject URN for resource in new system (optional)", example = "urn:subject:5")
-        @JsonProperty
-        public String subjectId;
-
-        @JsonCreator
-        public UrlMapping() {
-        }
-
-        public UrlMapping(String url, URI nodeId, URI subjectId) {
-            this.url = url;
-            this.nodeId = nodeId.toString();
-            this.subjectId = subjectId.toString();
-        }
-    }
 }

@@ -1,5 +1,13 @@
-package no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi;
+/*
+ * Part of NDLA taxonomy-api
+ * Copyright (C) 2023 NDLA
+ *
+ * See LICENSE
+ */
 
+package no.ndla.taxonomy.rest.v1.dtos.searchapi;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.LanguageField;
 import no.ndla.taxonomy.domain.Node;
 import org.springframework.data.util.Pair;
@@ -8,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+@Schema(name = "LanguageField")
 public class LanguageFieldDTO<V> extends HashMap<String, V> {
 
     public LanguageFieldDTO() {

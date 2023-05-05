@@ -14,11 +14,11 @@ import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageFieldDTO;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.SearchableTaxonomyResourceType;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
+import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
+import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
+import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
-import no.ndla.taxonomy.service.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ConnectionDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
@@ -117,13 +117,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return listToReturn;
     }
 
-    public List<NodeConnectionDTO> getAllConnections(URI nodePublicId) {
+    public List<ConnectionDTO> getAllConnections(URI nodePublicId) {
         final var node = nodeRepository.findFirstByPublicId(nodePublicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
 
         return Stream
-                .concat(connectionService.getParentConnections(node).stream().map(NodeConnectionDTO::parentConnection),
-                        connectionService.getChildConnections(node).stream().map(NodeConnectionDTO::childConnection))
+                .concat(connectionService.getParentConnections(node).stream().map(ConnectionDTO::parentConnection),
+                        connectionService.getChildConnections(node).stream().map(ConnectionDTO::childConnection))
                 .toList();
     }
 

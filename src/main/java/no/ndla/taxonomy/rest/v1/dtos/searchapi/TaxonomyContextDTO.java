@@ -5,7 +5,7 @@
  * See LICENSE
  */
 
-package no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi;
+package no.ndla.taxonomy.rest.v1.dtos.searchapi;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 // NOTE: This will need to match `SearchableTaxonomyContext` in `search-api`
+@Schema(name = "TaxonomyContext")
 public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "The publicId of the node connected via content-uri") URI publicId,
         @JsonProperty @Schema(description = "The publicId of the root parent of the context") URI rootId,
