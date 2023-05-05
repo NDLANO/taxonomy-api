@@ -549,11 +549,7 @@ export interface Connection {
     targetId: string;
     paths: string[];
     type: string;
-    /**
-     * True if owned by this topic, false if it has its primary connection elsewhere
-     */
     isPrimary: boolean;
-    primary: boolean;
 }
 
 export interface Metadata {
@@ -567,7 +563,7 @@ export interface NodeChild extends Node {
     connectionId: string;
     rank: number;
     parent: string;
-    primary: boolean;
+    isPrimary: boolean;
 }
 
 export interface Node {
