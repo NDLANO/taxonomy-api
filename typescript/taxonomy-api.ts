@@ -619,8 +619,8 @@ export interface TaxonomyContext {
     contextId: string;
     id: string;
     subject: Record<string, string>;
-    parentTopicIds: string[];
     subjectId: string;
+    parentTopicIds: string[];
     isPrimaryConnection: boolean;
 }
 
