@@ -17,10 +17,8 @@ Please note that this API is all about metadata. The actual content is stored in
 stored with each node, subject, topic and resource in this API. 
 
 The resources are categorised according to subjects and topics. A subject is a high-level field of study, such as Mathematics
-or Science, loosely based on the subject curricula at [udir.no](https://www.udir.no/kl06/MAT1-04?lplang=eng), whereas a topic 
-is a hierarchical sub-division of the subject into subject areas. The topics may be loosely based on the subject areas at 
-[udir.no](https://www.udir.no/kl06/MAT1-04/Hele/Hovedomraader?lplang=eng), or they may follow a different structure imposed by the
-editors.
+or Science, loosely based on the subject curricula at [udir.no](https://www.udir.no/lk20/eng04-02?lang=eng), whereas a topic 
+is a hierarchical sub-division of the subject into subject areas.
 
 This organisation gives us a tree representation of the content, where the subjects are at the roots of the tree, the 
 topics make up the branches, and the resources are the leaves. Note, however, that this is not a strict tree-structure, 
@@ -30,7 +28,7 @@ hirerarchy with new types later.
 
 The taxonomy data model consists of *entities* and *connections* between entities. 
 
-The central entities in the taxonomy are Node (Subject, Topic, Resource) and Resource type. The taxonomy stores metadata 
+The central entities in the taxonomy are Node (Subject, Topic, Resource) and Resource-type. The taxonomy stores metadata 
 for each entity, such as name and content URI. Translations of names can also be stored. 
 
 In addition to the entities, the taxonomy stores the connections you make between entities. Each connection also has 
@@ -86,28 +84,74 @@ flowchart TB
     resT3 --> pRes2
 ```
 
+### Subjects and topics
+
+First, create a subject with the name Mathematics with a POST call to `/v1/nodes` and nodetype SUBJECT. When this call 
+returns you'll get a location. This location contains the path to this node within the nodes resource, e.g., 
+`/v1/nodes/urn:subject:342`, where `urn:subject:342` is the ID of the newly created node. Any time you need to change 
+or retrieve this subject you'll be using this ID. The nodetype specifies the resulting id of the node. 
+
+Next, create two Topic entities for Geometry and Statistics (POST to `/v1/nodes` with nodetype TOPIC). If you have topic 
+descriptions that you want to use as the content for these entities, you can include their content URI. The content URIs 
+can also be added later (PUT to `/v1/nodes/{id}`).
+
+The subject and topic can now be connected with a POST call to `/v1/node-connections`.
+Use the IDs for the two entities you want to connect. Nodes usually only have one parent, but resources often have multiple.
+
+A topic can have subtopics. In our example Trigonometry is a subtopic of Geometry. To connect the two, create a topic named Trigonometry.
+Then add a connection between the Geometry topic and the Trigonometry topic with a POST call to `/v1/node-connections`.
+
+The figure above also contains a topic for Statistics and the subtopic Probability. These can be connected in the same
+manner as previously described. The subject Mathematics will then have two topics, while each topic will have a subtopic.
+Call GET on `/v1/nodes/{id}/nodes` to list out the children connected to the node. From this example you will get two topics: 
+Geometry and Statistics.
+
+A GET call to `/v1/nodes` will yield all the nodes. This endpoint supports some parameters allowing you to get what you need. 
+Nodetype SUBJECT gives you all the subjects. To limit the amount of data returned, resources are omitted unless you specify
+`nodeType=RESOURCE`. This may change later.
+
+A resource (or learning resource) represents (for now) an article or a learning path. Its Content URI is
+an ID referring to the actual content which is stored in a different API, e.g., the Article API or the LearningPath API.
+
+Resources are created with a POST call to `/v1/nodes` and nodetype RESOURCE. You can connect your resources
+to nodes by making a POST call to `/v1/node-connections`. (Legacy `/v1/topic-resources`) You can update a resource
+(for instance, change its Content URI) by making a PUT call to `/v1/nodes/{id}`.
+
+List all resources connected to a node with a GET call to `/v1/nodes/{id}/resources`. The endpoint supports the parameter `recursive`
+which allows you to fetch resources for the specified node, and all its children. (Legacy endpoint `/v1/subjects/{id}/resources`
+specifies `recursive=true` by default). For the Mathematics node, this would return nothing unless you specify `recursive=true`.
+With recursive this call would return a list with these five entities: Tangens, Sine and Cosine, What is probability?, Adding probabilities, and
+Probability questions.
+
+If you retrieve all resources connected to the node Statistics, you'll get an empty list, because it doesn't have any
+resources connected directly to it. If you ask for all resources recursively, you'll get the three resources from the
+Probability topic, since it is a subtopic of Statistics.
+
+<details>
+  <summary>Legacy info</summary>
+
 ### Subjects and topics (legacy endpoints)
 
 First, create a subject with the name Mathematics with a POST call to `/v1/subjects`. When this call returns you'll get a location.
-This location contains the path to this subject within the subjects resource, e.g., `/v1/subjects/urn:subject:342`, where `urn:subject:342` 
+This location contains the path to this subject within the subjects resource, e.g., `/v1/subjects/urn:subject:342`, where `urn:subject:342`
 is the ID of the newly created subject. Any time you need to change or retrieve this subject you'll be using this ID.
 
 Next, create two Topic entities for Geometry and Statistics (POST to `/v1/topics`). If you have topic descriptions that you want to use
 as the content for these entities, you can include their content URI. The content URIs can also be added later (PUT to `/v1/subjects` or `/v1/topics`).
 
-The subject and topic can now be connected with a POST call to `/v1/subject-topics`. 
+The subject and topic can now be connected with a POST call to `/v1/subject-topics`.
 Use the IDs for the two entities you want to connect. Topics and resources can have multiple parent connections.
 The first connection between a subject and a topic will automatically be marked as the primary connection (see "Multiple parent connections" for details).
 
-A topic can have subtopics. In our example Trigonometry is a subtopic of Geometry. To connect the two, create a topic named Trigonometry. 
-Then add a connection between the Geometry topic and the Trigonometry topic with a POST call to `/v1/topic-subtopics`. 
+A topic can have subtopics. In our example Trigonometry is a subtopic of Geometry. To connect the two, create a topic named Trigonometry.
+Then add a connection between the Geometry topic and the Trigonometry topic with a POST call to `/v1/topic-subtopics`.
 
-The figure above also contains a topic for Statistics and the subtopic Probability. These can be connected in the same 
+The figure above also contains a topic for Statistics and the subtopic Probability. These can be connected in the same
 manner as previously described. The subject Mathematics will then have two topics, while each topic will have a subtopic.
-Call GET on `/v1/subjects/{id}/topics` to list out the topics connected to the subject. From this example you will get two topics: Geometry and Statistics. 
+Call GET on `/v1/subjects/{id}/topics` to list out the topics connected to the subject. From this example you will get two topics: Geometry and Statistics.
 
-A GET call to `/v1/topics` will yield both topics and subtopics. The only thing differentiating a topic 
-from a subtopic is the connection in `/v1/topic-subtopics`. Similar to the connections between a subject and its topics, you can 
+A GET call to `/v1/topics` will yield both topics and subtopics. The only thing differentiating a topic
+from a subtopic is the connection in `/v1/topic-subtopics`. Similar to the connections between a subject and its topics, you can
 get all subtopics for a topic with a GET call to `/v1/topics/{id}/subtopics`.
 
 ### Resources (legacy endpoint)
@@ -128,49 +172,7 @@ Probability questions.
 If you retrieve all resources connected to the topic Statistics, you'll get an empty list, because it doesn't have any
 resources connected directly to it. If you ask for all resources recursively, you'll get the three resources from the
 Probability topic, since it is a sub topic of Statistics.
-
-
-### Nodes
-
-First, create a subject with the name Mathematics with a POST call to `/v1/nodes` and nodetype SUBJECT. When this call 
-returns you'll get a location. This location contains the path to this node within the nodes resource, e.g., 
-`/v1/nodes/urn:subject:342`, where `urn:subject:342` is the ID of the newly created node. Any time you need to change 
-or retrieve this subject you'll be using this ID. The nodetype specifies the resulting id of the node. 
-
-Next, create two Topic entities for Geometry and Statistics (POST to `/v1/nodes` with nodetype TOPIC). If you have topic 
-descriptions that you want to use as the content for these entities, you can include their content URI. The content URIs 
-can also be added later (PUT to `/v1/nodes/{id}`).
-
-The subject and topic can now be connected with a POST call to `/v1/node-connections`.
-Use the IDs for the two entities you want to connect. Nodes can only have one parent, but resources can have multiple.
-
-A topic can have subtopics. In our example Trigonometry is a subtopic of Geometry. To connect the two, create a topic named Trigonometry.
-Then add a connection between the Geometry topic and the Trigonometry topic with a POST call to `/v1/node-connections`.
-
-The figure above also contains a topic for Statistics and the subtopic Probability. These can be connected in the same
-manner as previously described. The subject Mathematics will then have two topics, while each topic will have a subtopic.
-Call GET on `/v1/nodes/{id}/nodes` to list out the children connected to the node. From this example you will get two topics: 
-Geometry and Statistics.
-
-A GET call to `/v1/nodes` will yield all the nodes. This endpoint supports some parameters allowing you to get what you need. 
-Nodetype SUBJECT gives you all the subjects, same as the old `/v1/subjects`.
-
-A resource (or learning resource) represents (for now) an article or a learning path. Its Content URI is
-an ID referring to the actual content which is stored in a different API, e.g., the Article API or the Learning Path API.
-
-Resources are created with a POST call to `/v1/nodes` and nodetype RESOURCE. You can connect your resources
-to nodes by making a POST call to `/v1/node-connections`. (Legacy `/v1/topic-resources`) You can update a resource
-(for instance, change its Content URI) by making a PUT call to `/v1/nodes/{id}`.
-
-List all resources connected to a node with a GET call to `/v1/nodes/{id}/resources`. The endpoint supports the parameter `recursive`
-which allows you to fetch resources for the specified node, and all its children. (Legacy endpoint `/v1/subjects/{id}/resources`
-specifies `recursive=true` by default). For the Mathematics node, this would return nothing unless you specify `recursive=true`.
-With recursive this call would return a list with these five entities: Tangens, Sine and Cosine, What is probability?, Adding probabilities, and
-Probability questions.
-
-If you retrieve all resources connected to the node Statistics, you'll get an empty list, because it doesn't have any
-resources connected directly to it. If you ask for all resources recursively, you'll get the three resources from the
-Probability topic, since it is a subtopic of Statistics.
+</details>
 
 ### Updating entities and connections
 
@@ -181,8 +183,7 @@ the current entity with a GET call to the correct service and then return the ob
 The API cannot check which fields should be unset, which is why all fields must be present (unless it should be unset). 
 
 You should verify that your changes are correct with a GET call after the PUT request (similarly for POST). This is by design, so 
-that the client verifies that the changes on the server are correct. 
-
+that the client verifies that the changes on the server are correct.
 
 ### Resource types
 
@@ -191,12 +192,12 @@ In theory, you could make the hierarchy deeper, but that's probably not needed.
 
 To tag a resource with resource types, first create a resource type with a POST call to `/v1/resource-types`. Then 
 connect the Resource to the resource type with a POST call to `/v1/resource-resourcetypes` including both the ID of the 
-resource and the resource type. A resource can have multiple resource types, in that case you make several calls POST to `/v1/resource-types`. 
+resource and the resource type. A resource can have multiple resource types, in that case you make several calls POST 
+to `/v1/resource-resourcetypes`. 
 
 When you get all resources for a subject or topic you can choose to get only resources matching a particular resource type 
 (or a list of resource types). For our example, a GET call to `/v1/nodes/{id}/resources?type={resourceTypeId}` with `resourceTypeId` 
 corresponding to the ID of Articles will give you a list of three entities; Sine and Cosine, What is probability, and Adding probability.
-
 
 ### Multiple parent connections
 Multiple parent connections for nodes are not allowed, except for resources! But as some topics such as Statistics may 
@@ -241,11 +242,11 @@ the path is directly derived from the taxonomy itself. The hostname and scheme a
 taxonomy API. When you perform a GET call on an entity (using the entity ID), you will also get the primary path to the entity along with 
 the name and content URI.
 
-The taxonomy API generates paths for all entities. The path of an entity is determined by following the connections from 
-it to the root of the hierarchy, picking up the IDs of the 
-entities along the way. Entities without connections do not have URLs (except nodes specified as root-nodes of the hierarchy). 
-Using the above figure as an example, we can derive the following paths: 
+The taxonomy API generates contexts for all entities. The context of an entity is determined by following the connections from 
+it to the root of the hierarchy, picking up the IDs of the entities along the way. Entities without connections do not 
+have URLs (except nodes specified as root-nodes of the hierarchy).
 
+Using the above figure as an example, we can derive the following paths:
 
 | Name                  | ID               | Path(s)                                                                         | 
 |-----------------------|------------------|---------------------------------------------------------------------------------|
