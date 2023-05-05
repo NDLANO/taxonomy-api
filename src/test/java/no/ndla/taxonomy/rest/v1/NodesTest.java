@@ -8,21 +8,27 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.TestSeeder;
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.DomainEntity;
+import no.ndla.taxonomy.domain.JsonGrepCode;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
 import no.ndla.taxonomy.service.dtos.ConnectionDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManager;
 import java.net.URI;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -207,6 +213,26 @@ public class NodesTest extends RestTest {
         assertAllTrue(nodes, t -> t.getMetadata() != null);
         assertAllTrue(nodes, t -> t.getMetadata().isVisible());
         assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
+    }
+
+    @Test
+    public void can_get_nodes_paginated() throws Exception {
+        var node1 = builder.node(NodeType.NODE);
+        var node2 = builder.node(NodeType.NODE);
+
+        var response = testUtils.getResource("/v1/nodes/page?nodeType=NODE&page=1&pageSize=1");
+        var page1 = testUtils.getObject(SearchResultDTO.class, response);
+        assertEquals(1, page1.getResults().size());
+
+        var response2 = testUtils.getResource("/v1/nodes/page?nodeType=NODE&page=2&pageSize=1");
+        var page2 = testUtils.getObject(SearchResultDTO.class, response2);
+        assertEquals(1, page2.getResults().size());
+
+        var result = Stream.concat(page1.getResults().stream(), page2.getResults().stream()).toList();
+
+        //noinspection SuspiciousMethodCalls
+        assertTrue(List.of(node1, node2).stream().map(DomainEntity::getPublicId).map(Object::toString).toList()
+                .containsAll(result.stream().map(r -> ((LinkedHashMap<String, String>)r).get("id")).toList()));
     }
 
     @Test

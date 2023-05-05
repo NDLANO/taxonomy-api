@@ -7,20 +7,19 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.JsonGrepCode;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePOST;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePUT;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -191,6 +190,25 @@ public class NodeResourcesTest extends RestTest {
         assertAnyTrue(topicResources,
                 t -> calculus.getPublicId().equals(t.nodeId) && integration.getPublicId().equals(t.resourceId));
         assertAllTrue(topicResources, t -> isValidId(t.id));
+    }
+
+    @Test
+    public void can_get_resource_connections_paginated() throws Exception {
+        var connections = createTenContiguousRankedConnections();
+
+        var response = testUtils.getResource("/v1/node-resources/page?page=1&pageSize=5");
+        var page1 = testUtils.getObject(SearchResultDTO.class, response);
+        assertEquals(5, page1.getResults().size());
+
+        var response2 = testUtils.getResource("/v1/node-resources/page?page=2&pageSize=5");
+        var page2 = testUtils.getObject(SearchResultDTO.class, response2);
+        assertEquals(5, page2.getResults().size());
+
+        var result = Stream.concat(page1.getResults().stream(), page2.getResults().stream()).toList();
+
+        //noinspection SuspiciousMethodCalls
+        assertTrue(connections.stream().map(DomainEntity::getPublicId).map(Object::toString).toList()
+                .containsAll(result.stream().map(r -> ((LinkedHashMap<String, String>)r).get("id")).toList()));
     }
 
     @Test

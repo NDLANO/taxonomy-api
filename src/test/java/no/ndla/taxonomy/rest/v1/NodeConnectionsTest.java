@@ -13,12 +13,14 @@ import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPOST;
 import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPUT;
 import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicDTO;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -97,6 +99,25 @@ public class NodeConnectionsTest extends RestTest {
         assertAnyTrue(parentChildren, t -> electricityId.equals(t.parentId) && alternatingCurrentId.equals(t.childId));
         assertAnyTrue(parentChildren, t -> calculusId.equals(t.parentId) && integrationId.equals(t.childId));
         assertAllTrue(parentChildren, t -> isValidId(t.id));
+    }
+
+    @Test
+    public void can_get_node_connections_paginated() throws Exception {
+        List<NodeConnection> connections = createTenContiguousRankedConnections();
+
+        var response = testUtils.getResource("/v1/node-connections/page?page=1&pageSize=5");
+        var page1 = testUtils.getObject(SearchResultDTO.class, response);
+        assertEquals(5, page1.getResults().size());
+
+        var response2 = testUtils.getResource("/v1/node-connections/page?page=2&pageSize=5");
+        var page2 = testUtils.getObject(SearchResultDTO.class, response2);
+        assertEquals(5, page2.getResults().size());
+
+        var result = Stream.concat(page1.getResults().stream(), page2.getResults().stream()).toList();
+
+        //noinspection SuspiciousMethodCalls
+        assertTrue(connections.stream().map(DomainEntity::getPublicId).map(Object::toString).toList()
+                .containsAll(result.stream().map(r -> ((LinkedHashMap<String, String>)r).get("id")).toList()));
     }
 
     @Test
