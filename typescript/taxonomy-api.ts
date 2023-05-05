@@ -1,5 +1,5 @@
 
-export interface NodeCommand {
+export interface NodePostPut {
     nodeId?: string;
     /**
      * Type of node. Values are subject, topic. Required on create.
@@ -19,7 +19,7 @@ export interface NodeCommand {
     root: boolean;
 }
 
-export interface ResourceCommand {
+export interface ResourcePostPut {
     /**
      * If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.
      */
@@ -34,7 +34,7 @@ export interface ResourceCommand {
     name: string;
 }
 
-export interface SubjectCommand {
+export interface SubjectPostPut {
     /**
      * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
      */
@@ -49,7 +49,7 @@ export interface SubjectCommand {
     name: string;
 }
 
-export interface TopicCommand {
+export interface TopicPostPut {
     /**
      * If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.
      */
@@ -64,7 +64,7 @@ export interface TopicCommand {
     name: string;
 }
 
-export interface VersionCommand {
+export interface VersionPostPut {
     /**
      * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
      */
@@ -619,8 +619,8 @@ export interface TaxonomyContext {
     contextId: string;
     id: string;
     subject: Record<string, string>;
-    subjectId: string;
     parentTopicIds: string[];
+    subjectId: string;
     isPrimaryConnection: boolean;
 }
 
