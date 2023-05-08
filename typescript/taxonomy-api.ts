@@ -2,28 +2,28 @@
 export interface NodePostPut {
     nodeId?: string;
     /**
-     * Type of node. Values are subject, topic. Required on create.
+     * Type of node.
      */
     nodeType: NodeType;
     /**
      * ID of content introducing this node. Must be a valid URI, but preferably not a URL.
      */
-    contentUri: string;
+    contentUri?: string;
     /**
      * The name of the node. Required on create.
      */
-    name: string;
+    name?: string;
     /**
      * The node is a root node. Default is false. Only used if present.
      */
-    root: boolean;
+    root?: boolean;
 }
 
 export interface ResourcePostPut {
     /**
      * If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.
      */
-    id: string;
+    id?: string;
     /**
      * The ID of this resource in the system where the content is stored. This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier for the system, and <id> is the id of this content in that system.
      */
@@ -113,7 +113,7 @@ export interface NodeConnection {
     /**
      * Relevance id
      */
-    relevanceId: string;
+    relevanceId?: string;
     /**
      * Metadata for entity. Read only.
      */
@@ -127,36 +127,32 @@ export interface NodeConnectionPOST {
      */
     childId: string;
     /**
-     * Backwards compatibility: Always true. Ignored on insert/update
+     * If this connection is primary.
      */
-    primary: boolean;
+    primary?: boolean;
     /**
      * Order in which to sort the child for the parent
      */
-    rank: number;
+    rank?: number;
     /**
      * Relevance id
      */
-    relevanceId: string;
+    relevanceId?: string;
 }
 
 export interface NodeConnectionPUT {
     /**
-     * Connection id
+     * If this connection is primary.
      */
-    id: string;
-    /**
-     * Backwards compatibility: Always true. Ignored on insert/update
-     */
-    primary: boolean;
+    primary?: boolean;
     /**
      * Order in which subtopic is sorted for the topic
      */
-    rank: number;
+    rank?: number;
     /**
      * Relevance id
      */
-    relevanceId: string;
+    relevanceId?: string;
 }
 
 export interface NodeResource {
@@ -183,7 +179,7 @@ export interface NodeResource {
     /**
      * Relevance id
      */
-    relevanceId: string;
+    relevanceId?: string;
     /**
      * Metadata for entity. Read only.
      */
@@ -202,15 +198,15 @@ export interface NodeResourcePOST {
     /**
      * Primary connection
      */
-    primary: boolean;
+    primary?: boolean;
     /**
      * Order in which resource is sorted for the node
      */
-    rank: number;
+    rank?: number;
     /**
      * Relevance id
      */
-    relevanceId: string;
+    relevanceId?: string;
 }
 
 export interface NodeResourcePUT {
@@ -221,15 +217,15 @@ export interface NodeResourcePUT {
     /**
      * Primary connection
      */
-    primary: boolean;
+    primary?: boolean;
     /**
      * Order in which the resource will be sorted for this node.
      */
-    rank: number;
+    rank?: number;
     /**
      * Relevance id
      */
-    relevanceId: string;
+    relevanceId?: string;
 }
 
 export interface Relevance {
@@ -619,8 +615,8 @@ export interface TaxonomyContext {
     contextId: string;
     id: string;
     subject: Record<string, string>;
-    parentTopicIds: string[];
     subjectId: string;
+    parentTopicIds: string[];
     isPrimaryConnection: boolean;
 }
 
@@ -653,7 +649,7 @@ export interface Node {
     path: string;
     paths: string[];
     metadata: Metadata;
-    relevanceId: string;
+    relevanceId?: string;
     translations: Translation[];
     supportedLanguages: string[];
     breadcrumbs: string[];
