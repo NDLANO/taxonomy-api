@@ -98,14 +98,12 @@ public class TopicResources {
 
         Node topic = nodeRepository.getByPublicId(command.topicid);
         Node resource = nodeRepository.getByPublicId(command.resourceId);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
-                : null;
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
 
-        var primary = Optional.of(command.primary);
-        var rank = command.rank == 0 ? null : command.rank;
+        var rank = command.rank.orElse(null);
 
         final NodeConnection topicResource;
-        topicResource = connectionService.connectParentChild(topic, resource, relevance, rank, primary);
+        topicResource = connectionService.connectParentChild(topic, resource, relevance, rank, command.primary);
 
         URI location = URI.create("/topic-resources/" + topicResource.getPublicId());
         return ResponseEntity.created(location).build();
@@ -132,15 +130,13 @@ public class TopicResources {
     public void updateTopicResource(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "Updated topic/resource connection") @RequestBody TopicResourcePUT command) {
         var topicResource = nodeConnectionRepository.getByPublicId(id);
-        var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
 
-        if (topicResource.isPrimary().orElse(false) && !command.primary) {
+        if (topicResource.isPrimary().orElse(false) && !command.primary.orElse(false)) {
             throw new PrimaryParentRequiredException();
         }
-        var rank = command.rank > 0 ? command.rank : null;
-        var primary = Optional.of(command.primary);
 
-        connectionService.updateParentChild(topicResource, relevance, rank, primary);
+        connectionService.updateParentChild(topicResource, relevance, command.rank, command.primary);
     }
 
 }

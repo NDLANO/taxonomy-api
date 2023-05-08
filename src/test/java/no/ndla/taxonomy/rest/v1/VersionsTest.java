@@ -165,7 +165,7 @@ public class VersionsTest extends RestTest {
             {
                 id = newUri;
                 name = "New name";
-                locked = true;
+                locked = Optional.of(true);
             }
         };
 

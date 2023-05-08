@@ -21,8 +21,8 @@ public class SubjectPostPut implements UpdatableDto<Node> {
     public URI id;
 
     @JsonProperty
-    @Schema(description = "ID of article introducing this subject. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
-    public URI contentUri;
+    @Schema(description = "ID of frontpage connected to this subject. Must be a valid URI, but preferably not a URL.", example = "urn:frontpage:1")
+    public Optional<URI> contentUri;
 
     @JsonProperty
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "The name of the subject", example = "Mathematics")
@@ -40,6 +40,6 @@ public class SubjectPostPut implements UpdatableDto<Node> {
         subject.setContext(true);
         subject.setRoot(true);
         subject.setName(name);
-        subject.setContentUri(contentUri);
+        contentUri.ifPresent(subject::setContentUri);
     }
 }

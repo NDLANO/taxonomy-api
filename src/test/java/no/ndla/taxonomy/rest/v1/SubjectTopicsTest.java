@@ -19,10 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -91,8 +88,8 @@ public class SubjectTopicsTest extends RestTest {
 
         testUtils.updateResource("/v1/subject-topics/" + id, new SubjectTopicPUT() {
             {
-                primary = true;
-                rank = 12;
+                primary = Optional.of(true);
+                rank = Optional.of(12);
             }
         });
 
@@ -114,8 +111,8 @@ public class SubjectTopicsTest extends RestTest {
         testUtils.updateResource("/v1/subject-topics/" + updatedConnection.getPublicId().toString(),
                 new SubjectTopicPUT() {
                     {
-                        primary = true;
-                        rank = 1;
+                        primary = Optional.of(true);
+                        rank = Optional.of(1);
                     }
                 });
         assertEquals(1, updatedConnection.getRank());
@@ -145,8 +142,8 @@ public class SubjectTopicsTest extends RestTest {
         testUtils.updateResource("/v1/subject-topics/" + updatedConnection.getPublicId().toString(),
                 new SubjectTopicPUT() {
                     {
-                        primary = true;
-                        rank = 1;
+                        primary = Optional.of(true);
+                        rank = Optional.of(1);
                     }
                 });
         assertEquals(1, updatedConnection.getRank());
@@ -179,8 +176,8 @@ public class SubjectTopicsTest extends RestTest {
         testUtils.updateResource("/v1/subject-topics/" + subjectTopics.get(9).getPublicId().toString(),
                 new SubjectTopicPUT() {
                     {
-                        primary = true;
-                        rank = 99;
+                        primary = Optional.of(true);
+                        rank = Optional.of(99);
                     }
                 });
         assertEquals(99, updatedConnection.getRank());
@@ -268,17 +265,15 @@ public class SubjectTopicsTest extends RestTest {
 
         testUtils.updateResource("/v1/subject-topics/" + geometryMaths.getPublicId(), new SubjectTopicPUT() {
             {
-                primary = true;
-                id = geometryMaths.getPublicId();
-                rank = 2;
+                primary = Optional.of(true);
+                rank = Optional.of(2);
             }
         });
 
         testUtils.updateResource("/v1/subject-topics/" + statisticsMaths.getPublicId(), new SubjectTopicPUT() {
             {
-                primary = true;
-                id = statisticsMaths.getPublicId();
-                rank = 1;
+                primary = Optional.of(true);
+                rank = Optional.of(1);
             }
         });
 
@@ -304,31 +299,29 @@ public class SubjectTopicsTest extends RestTest {
 
         testUtils.updateResource("/v1/subject-topics/" + geometryMaths.getPublicId(), new SubjectTopicPUT() {
             {
-                primary = true;
-                id = geometryMaths.getPublicId();
-                rank = 2;
+                primary = Optional.of(true);
+                rank = Optional.of(2);
             }
         });
 
         testUtils.updateResource("/v1/subject-topics/" + statisticsMaths.getPublicId(), new SubjectTopicPUT() {
             {
-                primary = true;
-                id = statisticsMaths.getPublicId();
-                rank = 1;
+                primary = Optional.of(true);
+                rank = Optional.of(1);
             }
         });
 
         testUtils.updateResource("/v1/topic-subtopics/" + tst1.getPublicId(), new SubjectTopicPUT() {
             {
-                primary = true;
-                rank = 2;
+                primary = Optional.of(true);
+                rank = Optional.of(2);
             }
         });
 
         testUtils.updateResource("/v1/topic-subtopics/" + tst2.getPublicId(), new SubjectTopicPUT() {
             {
-                primary = true;
-                rank = 1;
+                primary = Optional.of(true);
+                rank = Optional.of(1);
             }
         });
         MockHttpServletResponse response = testUtils.getResource("/v1/subjects/urn:subject:1/topics?recursive=true");
@@ -351,14 +344,14 @@ public class SubjectTopicsTest extends RestTest {
             {
                 subjectid = mathematics.getPublicId();
                 topicid = geometry.getPublicId();
-                rank = 2;
+                rank = Optional.of(2);
             }
         });
         testUtils.createResource("/v1/subject-topics", new SubjectTopicPOST() {
             {
                 subjectid = mathematics.getPublicId();
                 topicid = statistics.getPublicId();
-                rank = 1;
+                rank = Optional.of(1);
             }
         });
 

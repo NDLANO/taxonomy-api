@@ -253,7 +253,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         }
 
         node.getResourceChildren().forEach(cc -> {
-            connectionService.updateParentChild(cc, cc.getRelevance().orElse(null), cc.getRank(), Optional.of(true));
+            connectionService.updateParentChild(cc, cc.getRelevance().orElse(null), Optional.of(cc.getRank()),
+                    Optional.of(true));
         });
 
         return node.getResourceChildren().stream()

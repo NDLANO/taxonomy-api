@@ -31,7 +31,7 @@ public class NodeConnectionDTO {
     public URI id;
 
     @JsonProperty
-    @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
+    @Schema(description = "Is this connection primary", example = "true")
     public boolean primary;
 
     @JsonProperty

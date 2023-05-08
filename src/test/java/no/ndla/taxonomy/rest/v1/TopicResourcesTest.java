@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -73,7 +74,7 @@ public class TopicResourcesTest extends RestTest {
             {
                 topicid = calculusId;
                 resourceId = integrationId;
-                primary = false;
+                primary = Optional.of(false);
             }
         }));
 
@@ -91,7 +92,7 @@ public class TopicResourcesTest extends RestTest {
                     {
                         topicid = topic2Id;
                         resourceId = integrationId;
-                        primary = false;
+                        primary = Optional.of(false);
                     }
                 }));
 
@@ -138,7 +139,7 @@ public class TopicResourcesTest extends RestTest {
 
         testUtils.updateResource("/v1/topic-resources/" + id, new TopicResourcePUT() {
             {
-                primary = true;
+                primary = Optional.of(true);
             }
         });
 
@@ -151,7 +152,7 @@ public class TopicResourcesTest extends RestTest {
 
         testUtils.updateResource("/v1/topic-resources/" + id, new TopicResourcePUT() {
             {
-                primary = false;
+                primary = Optional.of(false);
             }
         }, status().is4xxClientError());
     }
@@ -215,7 +216,7 @@ public class TopicResourcesTest extends RestTest {
             {
                 topicid = graphTheory.getPublicId();
                 resourceId = graphs.getPublicId();
-                primary = true;
+                primary = Optional.of(true);
             }
         });
 
@@ -238,16 +239,14 @@ public class TopicResourcesTest extends RestTest {
         URI geometryCircles = save(NodeConnection.create(geometry, circles)).getPublicId();
         testUtils.updateResource("/v1/topic-resources/" + geometryCircles, new TopicResourcePUT() {
             {
-                primary = true;
-                id = geometryCircles;
-                rank = 1;
+                primary = Optional.of(true);
+                rank = Optional.of(1);
             }
         });
         testUtils.updateResource("/v1/topic-resources/" + geometrySquares, new TopicResourcePUT() {
             {
-                primary = true;
-                id = geometrySquares;
-                rank = 2;
+                primary = Optional.of(true);
+                rank = Optional.of(2);
             }
         });
 
@@ -275,19 +274,19 @@ public class TopicResourcesTest extends RestTest {
 
         testUtils.createResource("/v1/topic-resources", new TopicResourcePOST() {
             {
-                primary = true;
+                primary = Optional.of(true);
                 topicid = geometry.getPublicId();
                 resourceId = squares.getPublicId();
-                rank = 2;
+                rank = Optional.of(2);
             }
         });
 
         testUtils.createResource("/v1/topic-resources", new TopicResourcePOST() {
             {
-                primary = true;
+                primary = Optional.of(true);
                 topicid = geometry.getPublicId();
                 resourceId = circles.getPublicId();
-                rank = 1;
+                rank = Optional.of(1);
             }
         });
 
@@ -310,8 +309,8 @@ public class TopicResourcesTest extends RestTest {
         testUtils.updateResource("/v1/topic-resources/" + updatedConnection.getPublicId().toString(),
                 new TopicResourcePUT() {
                     {
-                        primary = true;
-                        rank = 1;
+                        primary = Optional.of(true);
+                        rank = Optional.of(1);
                     }
                 });
         assertEquals(1, updatedConnection.getRank());
@@ -341,8 +340,8 @@ public class TopicResourcesTest extends RestTest {
         testUtils.updateResource("/v1/topic-resources/" + updatedConnection.getPublicId().toString(),
                 new TopicResourcePUT() {
                     {
-                        primary = true;
-                        rank = 1;
+                        primary = Optional.of(true);
+                        rank = Optional.of(1);
                     }
                 });
         assertEquals(1, updatedConnection.getRank());
@@ -374,8 +373,8 @@ public class TopicResourcesTest extends RestTest {
         testUtils.updateResource("/v1/topic-resources/" + topicResources.get(9).getPublicId().toString(),
                 new TopicResourcePUT() {
                     {
-                        primary = true;
-                        rank = 99;
+                        primary = Optional.of(true);
+                        rank = Optional.of(99);
                     }
                 });
         assertEquals(99, updatedConnection.getRank());

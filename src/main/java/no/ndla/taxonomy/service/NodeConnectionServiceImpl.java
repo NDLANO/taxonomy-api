@@ -216,10 +216,9 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     }
 
     @Override
-    public void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Integer newRank,
+    public void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Optional<Integer> newRank,
             Optional<Boolean> isPrimary) {
-        if (newRank != null)
-            updateRank(nodeConnection, newRank);
+        newRank.ifPresent(integer -> updateRank(nodeConnection, integer));
         isPrimary.ifPresent(primary -> updatePrimaryConnection(nodeConnection, primary));
         updateRelevance(nodeConnection, relevance);
     }

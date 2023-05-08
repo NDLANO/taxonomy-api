@@ -16,10 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -130,7 +127,7 @@ public class TopicSubtopicsTest extends RestTest {
             {
                 topicid = electricity.getPublicId();
                 subtopicid = alternatingCurrents.getPublicId();
-                rank = 2;
+                rank = Optional.of(2);
             }
         });
 
@@ -138,7 +135,7 @@ public class TopicSubtopicsTest extends RestTest {
             {
                 topicid = electricity.getPublicId();
                 subtopicid = wiring.getPublicId();
-                rank = 1;
+                rank = Optional.of(1);
             }
         });
 
@@ -157,8 +154,8 @@ public class TopicSubtopicsTest extends RestTest {
 
         testUtils.updateResource("/v1/topic-subtopics/" + id, new TopicSubtopicPUT() {
             {
-                primary = true;
-                rank = 99;
+                primary = Optional.of(true);
+                rank = Optional.of(99);
             }
         });
 
@@ -178,8 +175,8 @@ public class TopicSubtopicsTest extends RestTest {
         testUtils.updateResource("/v1/topic-subtopics/" + updatedConnection.getPublicId().toString(),
                 new TopicSubtopicPUT() {
                     {
-                        primary = true;
-                        rank = 1;
+                        primary = Optional.of(true);
+                        rank = Optional.of(1);
                     }
                 });
         assertEquals(1, updatedConnection.getRank());
@@ -210,8 +207,8 @@ public class TopicSubtopicsTest extends RestTest {
         testUtils.updateResource("/v1/topic-subtopics/" + updatedConnection.getPublicId().toString(),
                 new SubjectTopicPUT() {
                     {
-                        primary = true;
-                        rank = 1;
+                        primary = Optional.of(true);
+                        rank = Optional.of(1);
                     }
                 });
         assertEquals(1, updatedConnection.getRank());
@@ -244,8 +241,8 @@ public class TopicSubtopicsTest extends RestTest {
         testUtils.updateResource("/v1/topic-subtopics/" + topicSubtopics.get(9).getPublicId().toString(),
                 new SubjectTopicPUT() {
                     {
-                        primary = true;
-                        rank = 99;
+                        primary = Optional.of(true);
+                        rank = Optional.of(99);
                     }
                 });
         assertEquals(99, updatedConnection.getRank());
