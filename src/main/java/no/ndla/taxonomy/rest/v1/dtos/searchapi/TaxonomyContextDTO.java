@@ -28,6 +28,7 @@ public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "Resource-types of the base") List<SearchableTaxonomyResourceType> resourceTypes,
         @JsonProperty @Schema(description = "List of all parent topic-ids") List<URI> parentIds,
         @JsonProperty @Schema(description = "Whether the base connection is primary or not") boolean isPrimary,
+        @JsonProperty @Schema(description = "Whether the base connection is marked as active subject") boolean isActive,
         @JsonProperty @Schema(description = "Whether the base connection is visible or not") boolean isVisible,
         @JsonProperty @Schema(description = "Unique id of context based on root + connection") String contextId) {
 
