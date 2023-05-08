@@ -14,6 +14,7 @@ import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
 
 import java.net.URI;
+import java.util.Optional;
 
 @Schema(name = "NodeResource")
 public class NodeResourceDTO {
@@ -40,7 +41,7 @@ public class NodeResourceDTO {
 
     @JsonProperty
     @Schema(description = "Relevance id", example = "urn:relevance:core")
-    public URI relevanceId;
+    public Optional<URI> relevanceId;
 
     @JsonProperty
     @Schema(description = "Metadata for entity. Read only.")
@@ -55,7 +56,7 @@ public class NodeResourceDTO {
         nodeResource.getResource().ifPresent(resource -> resourceId = resource.getPublicId());
         primary = nodeResource.isPrimary().orElse(false);
         rank = nodeResource.getRank();
-        relevanceId = nodeResource.getRelevance().map(DomainEntity::getPublicId).orElse(null);
+        relevanceId = nodeResource.getRelevance().map(DomainEntity::getPublicId);
         metadata = new MetadataDTO(nodeResource.getMetadata());
     }
 }

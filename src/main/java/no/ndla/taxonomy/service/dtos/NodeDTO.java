@@ -42,7 +42,7 @@ public class NodeDTO {
     private MetadataDTO metadata;
 
     @Schema(description = "Relevance id", example = "urn:relevance:core")
-    public URI relevanceId;
+    public Optional<URI> relevanceId;
 
     @Schema(description = "All translations of this node")
     private TreeSet<TranslationDTO> translations = new TreeSet<>();
@@ -87,7 +87,7 @@ public class NodeDTO {
 
         Optional<Relevance> relevance = entity.getParentConnections().stream().findFirst()
                 .flatMap(NodeConnection::getRelevance);
-        this.relevanceId = relevance.map(Relevance::getPublicId).orElse(URI.create("urn:relevance:core"));
+        this.relevanceId = relevance.map(Relevance::getPublicId);
 
         var translations = entity.getTranslations();
         this.translations = translations.stream().map(TranslationDTO::new)
@@ -111,7 +111,7 @@ public class NodeDTO {
             this.path = ctx.path();
             this.breadcrumbs = LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity))
                     .get(languageCode);
-            this.relevanceId = URI.create(ctx.relevanceId());
+            this.relevanceId = Optional.of(URI.create(ctx.relevanceId()));
             this.contextId = Optional.of(ctx.contextId());
             this.url = TitleUtil.createPrettyUrl(this.name, ctx.contextId());
         });
@@ -158,7 +158,7 @@ public class NodeDTO {
         return metadata;
     }
 
-    public URI getRelevanceId() {
+    public Optional<URI> getRelevanceId() {
         return relevanceId;
     }
 
