@@ -10,7 +10,7 @@ package no.ndla.taxonomy.service;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
-import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
+import no.ndla.taxonomy.rest.v1.commands.VersionPostPut;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.slf4j.Logger;
@@ -87,7 +87,7 @@ public class VersionService {
     }
 
     @Transactional
-    public Version createNewVersion(Optional<URI> sourceId, VersionCommand command) {
+    public Version createNewVersion(Optional<URI> sourceId, VersionPostPut command) {
         Version entity = new Version();
         command.getId().ifPresent(id -> {
             validator.validate(id, entity);

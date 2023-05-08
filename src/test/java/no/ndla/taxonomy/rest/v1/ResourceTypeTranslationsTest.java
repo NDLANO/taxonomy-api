@@ -8,6 +8,9 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.ResourceType;
+import no.ndla.taxonomy.rest.v1.dtos.ResourceTypeDTO;
+import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -26,8 +29,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
         builder.resourceType(t -> t.name("Lecture").translation("Forelesning", "nb"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resource-types?language=nb");
-        ResourceTypes.ResourceTypeIndexDocument[] resourceTypes = testUtils
-                .getObject(ResourceTypes.ResourceTypeIndexDocument[].class, response);
+        ResourceTypeDTO[] resourceTypes = testUtils.getObject(ResourceTypeDTO[].class, response);
 
         assertEquals(2, resourceTypes.length);
         assertAnyTrue(resourceTypes, s -> s.name.equals("Artikkel"));
@@ -38,14 +40,14 @@ public class ResourceTypeTranslationsTest extends RestTest {
     public void can_get_single_resource_type() throws Exception {
         URI id = builder.resourceType(t -> t.name("Article").translation("Artikkel", "nb")).getPublicId();
 
-        ResourceTypes.ResourceTypeIndexDocument resourceType = getResourceTypeIndexDocument(id, "nb");
+        ResourceTypeDTO resourceType = getResourceTypeIndexDocument(id, "nb");
         assertEquals("Artikkel", resourceType.name);
     }
 
     @Test
     public void fallback_to_default_language() throws Exception {
         URI id = builder.resourceType(t -> t.name("Article")).getPublicId();
-        ResourceTypes.ResourceTypeIndexDocument resourceType = getResourceTypeIndexDocument(id, "XX");
+        ResourceTypeDTO resourceType = getResourceTypeIndexDocument(id, "XX");
         assertEquals("Article", resourceType.name);
     }
 
@@ -53,7 +55,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
     public void can_get_default_language() throws Exception {
         URI id = builder.resourceType(t -> t.name("Article").translation("Artikkel", "nb")).getPublicId();
 
-        ResourceTypes.ResourceTypeIndexDocument resourceType = getResourceTypeIndexDocument(id, null);
+        ResourceTypeDTO resourceType = getResourceTypeIndexDocument(id, null);
         assertEquals("Article", resourceType.name);
     }
 
@@ -62,12 +64,11 @@ public class ResourceTypeTranslationsTest extends RestTest {
         ResourceType article = builder.resourceType(t -> t.name("Article"));
         URI id = article.getPublicId();
 
-        testUtils.updateResource("/v1/resource-types/" + id + "/translations/nb",
-                new ResourceTypeTranslations.UpdateResourceTypeTranslationCommand() {
-                    {
-                        name = "Artikkel";
-                    }
-                });
+        testUtils.updateResource("/v1/resource-types/" + id + "/translations/nb", new TranslationPUT() {
+            {
+                name = "Artikkel";
+            }
+        });
 
         assertEquals("Artikkel", article.getTranslation("nb").get().getName());
     }
@@ -88,8 +89,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
                 .translation("Article", "en").translation("Artikel", "de"));
         URI id = resourceType.getPublicId();
 
-        ResourceTypeTranslations.ResourceTypeTranslationIndexDocument[] translations = testUtils.getObject(
-                ResourceTypeTranslations.ResourceTypeTranslationIndexDocument[].class,
+        TranslationDTO[] translations = testUtils.getObject(TranslationDTO[].class,
                 testUtils.getResource("/v1/resource-types/" + id + "/translations"));
 
         assertEquals(3, translations.length);
@@ -103,18 +103,16 @@ public class ResourceTypeTranslationsTest extends RestTest {
         ResourceType resourceType = builder.resourceType(t -> t.name("Article").translation("Artikkel", "nb"));
         URI id = resourceType.getPublicId();
 
-        ResourceTypeTranslations.ResourceTypeTranslationIndexDocument translation = testUtils.getObject(
-                ResourceTypeTranslations.ResourceTypeTranslationIndexDocument.class,
+        TranslationDTO translation = testUtils.getObject(TranslationDTO.class,
                 testUtils.getResource("/v1/resource-types/" + id + "/translations/nb"));
         assertEquals("Artikkel", translation.name);
         assertEquals("nb", translation.language);
     }
 
-    private ResourceTypes.ResourceTypeIndexDocument getResourceTypeIndexDocument(URI id, String language)
-            throws Exception {
+    private ResourceTypeDTO getResourceTypeIndexDocument(URI id, String language) throws Exception {
         String path = "/v1/resource-types/" + id;
         if (isNotEmpty(language))
             path = path + "?language=" + language;
-        return testUtils.getObject(ResourceTypes.ResourceTypeIndexDocument.class, testUtils.getResource(path));
+        return testUtils.getObject(ResourceTypeDTO.class, testUtils.getResource(path));
     }
 }

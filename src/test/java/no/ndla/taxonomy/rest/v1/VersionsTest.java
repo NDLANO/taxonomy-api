@@ -9,15 +9,14 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
-import no.ndla.taxonomy.domain.exceptions.NotFoundException;
-import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
+import no.ndla.taxonomy.rest.v1.commands.VersionPostPut;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
+import java.util.Optional;
 
 import static no.ndla.taxonomy.TestUtils.assertAllTrue;
 import static no.ndla.taxonomy.TestUtils.getId;
@@ -52,8 +51,8 @@ public class VersionsTest extends RestTest {
             VersionDTO version = testUtils.getObject(VersionDTO.class, response);
             assertEquals(versionId, version.getId());
             assertNotNull(version.getHash());
-            assertNull(version.getPublished());
-            assertNull(version.getArchived());
+            assertEquals(Optional.empty(), version.getPublished());
+            assertEquals(Optional.empty(), version.getArchived());
         }
         {
             MockHttpServletResponse response = testUtils.getResource("/v1/versions/urn:version:2",
@@ -99,7 +98,7 @@ public class VersionsTest extends RestTest {
 
     @Test
     public void can_create_version() throws Exception {
-        final var createVersionCommand = new VersionCommand() {
+        final var createVersionCommand = new VersionPostPut() {
             {
                 id = URI.create("urn:version:1");
                 name = "Beta";
@@ -118,7 +117,7 @@ public class VersionsTest extends RestTest {
     @Test
     public void can_create_version_based_on_existing() throws Exception {
         Version published = builder.version(v -> v.type(VersionType.PUBLISHED));
-        final var createVersionCommand = new VersionCommand() {
+        final var createVersionCommand = new VersionPostPut() {
             {
                 id = URI.create("urn:version:1");
                 name = "Beta";
@@ -162,7 +161,7 @@ public class VersionsTest extends RestTest {
     public void can_update_version() throws Exception {
         Version version = builder.version();// BETA
         URI newUri = URI.create("urn:version:1");
-        final var updateVersionCommand = new VersionCommand() {
+        final var updateVersionCommand = new VersionPostPut() {
             {
                 id = newUri;
                 name = "New name";

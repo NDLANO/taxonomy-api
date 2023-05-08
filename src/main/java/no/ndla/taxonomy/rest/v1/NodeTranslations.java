@@ -7,15 +7,14 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +41,7 @@ public class NodeTranslations {
     @GetMapping
     @Operation(summary = "Gets all translations for a single node")
     @Transactional(readOnly = true)
-    public List<TranslationDTO> index(@PathVariable("id") URI id) {
+    public List<TranslationDTO> getAllNodeTranslations(@PathVariable("id") URI id) {
         Node node = nodeRepository.getByPublicId(id);
         List<TranslationDTO> result = new ArrayList<>();
         node.getTranslations().forEach(t -> result.add(new TranslationDTO(t)));
@@ -52,7 +51,7 @@ public class NodeTranslations {
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single node")
     @Transactional(readOnly = true)
-    public TranslationDTO get(@PathVariable("id") URI id,
+    public TranslationDTO getNodeTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node node = nodeRepository.getByPublicId(id);
         var translation = node.getTranslation(language).orElseThrow(
@@ -66,9 +65,9 @@ public class NodeTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void createUpdateNodeTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @Parameter(name = "command", description = "The new or updated translation") @RequestBody UpdateTranslationCommand command) {
+            @Parameter(name = "command", description = "The new or updated translation") @RequestBody TranslationPUT command) {
         Node node = nodeRepository.getByPublicId(id);
         node.addTranslation(command.name, language);
         entityManager.persist(node);
@@ -79,7 +78,7 @@ public class NodeTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id,
+    public void deleteNodeTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         Node node = nodeRepository.getByPublicId(id);
         node.getTranslation(language).ifPresent(translation -> {
@@ -88,32 +87,4 @@ public class NodeTranslations {
         });
     }
 
-    public static class TranslationDTO implements Comparable<TranslationDTO> {
-        public TranslationDTO() {
-        }
-
-        public TranslationDTO(Translation translation) {
-            name = translation.getName();
-            language = translation.getLanguageCode();
-        }
-
-        @JsonProperty
-        @Schema(description = "The translated name of the node", example = "Trigonometry")
-        public String name;
-
-        @JsonProperty
-        @Schema(description = "ISO 639-1 language code", example = "en")
-        public String language;
-
-        @Override
-        public int compareTo(TranslationDTO o) {
-            return language.compareTo(o.language);
-        }
-    }
-
-    public static class UpdateTranslationCommand {
-        @JsonProperty
-        @Schema(description = "The translated name of the node", example = "Trigonometry")
-        public String name;
-    }
 }

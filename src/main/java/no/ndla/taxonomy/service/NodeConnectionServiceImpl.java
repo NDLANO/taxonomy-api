@@ -29,11 +29,11 @@ import java.util.logging.Logger;
 @Service
 public class NodeConnectionServiceImpl implements NodeConnectionService {
     private final NodeConnectionRepository nodeConnectionRepository;
-    private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final ContextUpdaterService cachedUrlUpdaterService;
     private final NodeRepository nodeRepository;
 
     public NodeConnectionServiceImpl(NodeConnectionRepository nodeConnectionRepository,
-            CachedUrlUpdaterService cachedUrlUpdaterService, NodeRepository nodeRepository) {
+            ContextUpdaterService cachedUrlUpdaterService, NodeRepository nodeRepository) {
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
         this.nodeRepository = nodeRepository;
@@ -65,7 +65,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         updateRank(connection, rank);
         updateRelevance(connection, relevance);
 
-        cachedUrlUpdaterService.updateCachedUrls(child);
+        cachedUrlUpdaterService.updateContexts(child);
 
         return connection;
     }
@@ -148,11 +148,11 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
                     childToDisconnect.getParentConnections().stream().findFirst().ifPresent(nextConnection -> {
                         nextConnection.setPrimary(true);
                         nodeConnectionRepository.saveAndFlush(nextConnection);
-                        nextConnection.getResource().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
+                        nextConnection.getResource().ifPresent(cachedUrlUpdaterService::updateContexts);
                     });
                 }
             }
-            cachedUrlUpdaterService.updateCachedUrls(childToDisconnect);
+            cachedUrlUpdaterService.updateContexts(childToDisconnect);
         });
 
         nodeConnectionRepository.flush();
@@ -185,8 +185,8 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
 
         saveConnections(updatedConnectables);
 
-        updatedConnectables.forEach(updatedConnectable -> updatedConnectable.getChild()
-                .ifPresent(cachedUrlUpdaterService::updateCachedUrls));
+        updatedConnectables.forEach(
+                updatedConnectable -> updatedConnectable.getChild().ifPresent(cachedUrlUpdaterService::updateContexts));
 
         if (!setPrimaryTo && !foundNewPrimary.get()) {
             throw new InvalidArgumentServiceException(

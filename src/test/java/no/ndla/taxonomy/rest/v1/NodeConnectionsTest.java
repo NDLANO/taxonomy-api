@@ -8,9 +8,12 @@
 package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeConnectionPage;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.ParentChildIndexDocument;
-import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPOST;
+import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPUT;
+import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicDTO;
+import no.ndla.taxonomy.service.dtos.MetadataDTO;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -31,7 +34,7 @@ public class NodeConnectionsTest extends RestTest {
         calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus")).getPublicId();
         integrationId = builder.node(NodeType.TOPIC, t -> t.name("integration")).getPublicId();
 
-        URI id = getId(testUtils.createResource("/v1/node-connections", new NodeConnections.AddChildToParentCommand() {
+        URI id = getId(testUtils.createResource("/v1/node-connections", new NodeConnectionPOST() {
             {
                 parentId = calculusId;
                 childId = integrationId;
@@ -51,7 +54,7 @@ public class NodeConnectionsTest extends RestTest {
         URI integrationId = builder.node("integration", NodeType.TOPIC, t -> t.name("integration")).getPublicId();
         URI calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus").child("integration")).getPublicId();
 
-        testUtils.createResource("/v1/node-connections", new NodeConnections.AddChildToParentCommand() {
+        testUtils.createResource("/v1/node-connections", new NodeConnectionPOST() {
             {
                 parentId = calculusId;
                 childId = integrationId;
@@ -65,7 +68,7 @@ public class NodeConnectionsTest extends RestTest {
                 .getPublicId();
         URI calculusId = builder.node(NodeType.TOPIC, t -> t.name("calculus")).getPublicId();
 
-        testUtils.createResource("/v1/node-connections", new NodeConnections.AddChildToParentCommand() {
+        testUtils.createResource("/v1/node-connections", new NodeConnectionPOST() {
             {
                 parentId = calculusId;
                 childId = integrationId;
@@ -90,7 +93,7 @@ public class NodeConnectionsTest extends RestTest {
                 .getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/node-connections");
-        ParentChildIndexDocument[] parentChildren = testUtils.getObject(ParentChildIndexDocument[].class, response);
+        NodeConnectionDTO[] parentChildren = testUtils.getObject(NodeConnectionDTO[].class, response);
 
         assertEquals(2, parentChildren.length);
         assertAnyTrue(parentChildren, t -> electricityId.equals(t.parentId) && alternatingCurrentId.equals(t.childId));
@@ -102,18 +105,19 @@ public class NodeConnectionsTest extends RestTest {
     public void can_get_node_connections_paginated() throws Exception {
         List<NodeConnection> connections = createTenContiguousRankedConnections();
 
-        MockHttpServletResponse response = testUtils.getResource("/v1/node-connections/page?page=1&pageSize=5");
-        NodeConnectionPage page1 = testUtils.getObject(NodeConnectionPage.class, response);
-        assertEquals(5, page1.results.size());
+        var response = testUtils.getResource("/v1/node-connections/page?page=1&pageSize=5");
+        var page1 = testUtils.getObject(SearchResultDTO.class, response);
+        assertEquals(5, page1.getResults().size());
 
-        MockHttpServletResponse response2 = testUtils.getResource("/v1/node-connections/page?page=2&pageSize=5");
-        NodeConnectionPage page2 = testUtils.getObject(NodeConnectionPage.class, response2);
-        assertEquals(5, page2.results.size());
+        var response2 = testUtils.getResource("/v1/node-connections/page?page=2&pageSize=5");
+        var page2 = testUtils.getObject(SearchResultDTO.class, response2);
+        assertEquals(5, page2.getResults().size());
 
-        var result = Stream.concat(page1.results.stream(), page2.results.stream()).collect(Collectors.toList());
+        var result = Stream.concat(page1.getResults().stream(), page2.getResults().stream()).toList();
 
-        assertTrue(connections.stream().map(DomainEntity::getPublicId).collect(Collectors.toList())
-                .containsAll(result.stream().map(r -> r.id).collect(Collectors.toList())));
+        // noinspection SuspiciousMethodCalls
+        assertTrue(connections.stream().map(DomainEntity::getPublicId).map(Object::toString).toList()
+                .containsAll(result.stream().map(r -> ((LinkedHashMap<String, String>) r).get("id")).toList()));
     }
 
     @Test
@@ -139,8 +143,7 @@ public class NodeConnectionsTest extends RestTest {
         id = topicSubtopic.getPublicId();
 
         MockHttpServletResponse resource = testUtils.getResource("/v1/node-connections/" + id);
-        ParentChildIndexDocument parentChildIndexDocument = testUtils.getObject(ParentChildIndexDocument.class,
-                resource);
+        NodeConnectionDTO parentChildIndexDocument = testUtils.getObject(NodeConnectionDTO.class, resource);
 
         assertEquals(topicid, parentChildIndexDocument.parentId);
         assertEquals(subtopicid, parentChildIndexDocument.childId);
@@ -152,7 +155,7 @@ public class NodeConnectionsTest extends RestTest {
                 t -> t.name("electricity").child(NodeType.TOPIC, st -> st.name("alternating currents"))
                         .child(NodeType.TOPIC, st -> st.name("wiring")));
         MockHttpServletResponse response = testUtils.getResource(("/v1/node-connections"));
-        ParentChildIndexDocument[] children = testUtils.getObject(ParentChildIndexDocument[].class, response);
+        NodeConnectionDTO[] children = testUtils.getObject(NodeConnectionDTO[].class, response);
 
         assertAllTrue(children, st -> st.rank == 0);
     }
@@ -166,7 +169,7 @@ public class NodeConnectionsTest extends RestTest {
                 t -> t.name("Alternating currents").publicId("urn:topic:11"));
         Node wiring = builder.node(NodeType.TOPIC, t -> t.name("Wiring").publicId("urn:topic:12"));
 
-        testUtils.createResource("/v1/node-connections", new NodeConnections.AddChildToParentCommand() {
+        testUtils.createResource("/v1/node-connections", new NodeConnectionPOST() {
             {
                 parentId = electricity.getPublicId();
                 childId = alternatingCurrents.getPublicId();
@@ -174,7 +177,7 @@ public class NodeConnectionsTest extends RestTest {
             }
         });
 
-        testUtils.createResource("/v1/node-connections", new NodeConnections.AddChildToParentCommand() {
+        testUtils.createResource("/v1/node-connections", new NodeConnectionPOST() {
             {
                 parentId = electricity.getPublicId();
                 childId = wiring.getPublicId();
@@ -184,8 +187,7 @@ public class NodeConnectionsTest extends RestTest {
 
         MockHttpServletResponse response = testUtils
                 .getResource("/v1/subjects/" + subject.getPublicId() + "/topics?recursive=true");
-        TopicSubtopics.TopicSubtopicIndexDocument[] topics = testUtils
-                .getObject(TopicSubtopics.TopicSubtopicIndexDocument[].class, response);
+        TopicSubtopicDTO[] topics = testUtils.getObject(TopicSubtopicDTO[].class, response);
 
         assertEquals(electricity.getPublicId(), topics[0].id);
         assertEquals(wiring.getPublicId(), topics[1].id);
@@ -195,7 +197,7 @@ public class NodeConnectionsTest extends RestTest {
     @Test
     public void can_update_child_rank() throws Exception {
         URI id = save(NodeConnection.create(newTopic(), newTopic())).getPublicId();
-        testUtils.updateResource("/v1/node-connections/" + id, new NodeConnections.UpdateNodeChildCommand() {
+        testUtils.updateResource("/v1/node-connections/" + id, new NodeConnectionPUT() {
             {
                 primary = true;
                 rank = 99;
@@ -214,7 +216,7 @@ public class NodeConnectionsTest extends RestTest {
         NodeConnection updatedConnection = nodeConnections.get(nodeConnections.size() - 1);
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource("/v1/node-connections/" + updatedConnection.getPublicId().toString(),
-                new NodeConnections.UpdateNodeChildCommand() {
+                new NodeConnectionPUT() {
                     {
                         primary = true;
                         rank = 1;
@@ -226,7 +228,7 @@ public class NodeConnectionsTest extends RestTest {
         for (NodeConnection nodeConnection : nodeConnections) {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/node-connections/" + nodeConnection.getPublicId().toString());
-            ParentChildIndexDocument connectionFromDb = testUtils.getObject(ParentChildIndexDocument.class, response);
+            NodeConnectionDTO connectionFromDb = testUtils.getObject(NodeConnectionDTO.class, response);
             // verify that the other connections have had their rank bumped up 1
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
@@ -246,7 +248,7 @@ public class NodeConnectionsTest extends RestTest {
         NodeConnection updatedConnection = nodeConnections.get(nodeConnections.size() - 1);
         assertEquals(100, updatedConnection.getRank());
         testUtils.updateResource("/v1/node-connections/" + updatedConnection.getPublicId().toString(),
-                new NodeConnections.UpdateNodeChildCommand() {
+                new NodeConnectionPUT() {
                     {
                         primary = true;
                         rank = 1;
@@ -258,7 +260,7 @@ public class NodeConnectionsTest extends RestTest {
         for (NodeConnection nodeConnection : nodeConnections) {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/node-connections/" + nodeConnection.getPublicId().toString());
-            ParentChildIndexDocument connectionFromDb = testUtils.getObject(ParentChildIndexDocument.class, response);
+            NodeConnectionDTO connectionFromDb = testUtils.getObject(NodeConnectionDTO.class, response);
             // verify that only the contiguous connections are updated
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
@@ -280,7 +282,7 @@ public class NodeConnectionsTest extends RestTest {
         NodeConnection updatedConnection = nodeConnections.get(nodeConnections.size() - 1);
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource("/v1/node-connections/" + nodeConnections.get(9).getPublicId().toString(),
-                new NodeConnections.UpdateNodeChildCommand() {
+                new NodeConnectionPUT() {
                     {
                         primary = true;
                         rank = 99;
@@ -292,7 +294,7 @@ public class NodeConnectionsTest extends RestTest {
         for (NodeConnection nodeConnection : nodeConnections) {
             MockHttpServletResponse response = testUtils
                     .getResource("/v1/node-connections/" + nodeConnection.getPublicId().toString());
-            ParentChildIndexDocument connection = testUtils.getObject(ParentChildIndexDocument.class, response);
+            NodeConnectionDTO connection = testUtils.getObject(NodeConnectionDTO.class, response);
             if (!connection.id.equals(updatedConnection.getPublicId())) {
                 assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);
             }
@@ -302,7 +304,7 @@ public class NodeConnectionsTest extends RestTest {
     @Test
     public void update_metadata_for_connection() throws Exception {
         URI id = save(NodeConnection.create(newTopic(), newTopic())).getPublicId();
-        testUtils.updateResource("/v1/node-connections/" + id + "/metadata", new MetadataDto() {
+        testUtils.updateResource("/v1/node-connections/" + id + "/metadata", new MetadataDTO() {
             {
                 visible = false;
                 grepCodes = Set.of("KM123");

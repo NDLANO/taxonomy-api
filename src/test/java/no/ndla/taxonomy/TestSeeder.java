@@ -9,7 +9,7 @@ package no.ndla.taxonomy;
 
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.service.ContextUpdaterService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,11 +29,11 @@ public class TestSeeder {
     private final ResourceTypeRepository resourceTypeRepository;
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
-    private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final ContextUpdaterService cachedUrlUpdaterService;
 
     public TestSeeder(RelevanceRepository relevanceRepository, ResourceTypeRepository resourceTypeRepository,
             NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            CachedUrlUpdaterService cachedUrlUpdaterService) {
+            ContextUpdaterService cachedUrlUpdaterService) {
         this.relevanceRepository = relevanceRepository;
         this.resourceTypeRepository = resourceTypeRepository;
         this.nodeRepository = nodeRepository;
@@ -71,7 +71,7 @@ public class TestSeeder {
         }
 
         nodeRepository.saveAndFlush(resource);
-        cachedUrlUpdaterService.updateCachedUrls(resource);
+        cachedUrlUpdaterService.updateContexts(resource);
 
         return resource;
     }
@@ -122,7 +122,7 @@ public class TestSeeder {
 
         nodeRepository.saveAndFlush(node);
 
-        cachedUrlUpdaterService.updateCachedUrls(node);
+        cachedUrlUpdaterService.updateContexts(node);
 
         return node;
     }
@@ -149,7 +149,7 @@ public class TestSeeder {
 
         nodeConnectionRepository.saveAndFlush(nodeConnection);
 
-        nodeConnection.getParent().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
+        nodeConnection.getParent().ifPresent(cachedUrlUpdaterService::updateContexts);
 
         return nodeConnection;
     }
@@ -177,7 +177,7 @@ public class TestSeeder {
 
         nodeResource.setRelevance(relevance);
 
-        nodeResource.getParent().ifPresent(cachedUrlUpdaterService::updateCachedUrls);
+        nodeResource.getParent().ifPresent(cachedUrlUpdaterService::updateContexts);
 
         return nodeConnectionRepository.saveAndFlush(nodeResource);
     }

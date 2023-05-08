@@ -14,11 +14,11 @@ import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.LanguageFieldDTO;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.SearchableTaxonomyResourceType;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.searchapi.TaxonomyContextDTO;
+import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
+import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
+import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
-import no.ndla.taxonomy.service.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ConnectionDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
@@ -56,7 +56,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final DomainEntityHelperService domainEntityHelperService;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
-    private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final ContextUpdaterService cachedUrlUpdaterService;
     private final RelevanceRepository relevanceRepository;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -70,7 +70,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             NodeConnectionService connectionService, NodeConnectionRepository nodeConnectionRepository,
             NodeRepository nodeRepository, RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter topicTreeSorter, TreeSorter treeSorter, VersionService versionService,
-            CachedUrlUpdaterService cachedUrlUpdaterService, RelevanceRepository relevanceRepository) {
+            ContextUpdaterService cachedUrlUpdaterService, RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -99,25 +99,17 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("nodeType"), nodeType);
     }
 
-    public List<NodeDTO> getNodes(Optional<String> language, Optional<List<NodeType>> nodeType,
-            Optional<URI> contentUri, Optional<String> contextId, Optional<Boolean> isRoot,
-            MetadataFilters metadataFilters) {
-        final List<Node> filtered = nodeRepository.findByNodeType(nodeType, metadataFilters.getVisible(),
-                metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, contextId, isRoot);
-        return filtered.stream().distinct().map(n -> new NodeDTO(Optional.empty(), n, language.get(), contextId))
-                .collect(toList());
-    }
-
     public List<NodeDTO> getNodesByType(Optional<List<NodeType>> nodeType, Optional<String> language,
             Optional<URI> contentUri, Optional<String> contextId, Optional<Boolean> isRoot,
-            MetadataFilters metadataFilters) {
+            MetadataFilters metadataFilters, Optional<Boolean> includeContexts) {
         final List<NodeDTO> listToReturn = new ArrayList<>();
         var ids = nodeRepository.findIdsByType(nodeType);
         final var counter = new AtomicInteger();
         ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
             final var nodes = nodeRepository.findByIdsFiltered(idChunk, metadataFilters.getVisible(),
                     metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, contextId, isRoot);
-            var dtos = nodes.stream().map(node -> new NodeDTO(Optional.empty(), node, language.get(), contextId))
+            var dtos = nodes.stream()
+                    .map(node -> new NodeDTO(Optional.empty(), node, language.get(), contextId, includeContexts))
                     .toList();
             listToReturn.addAll(dtos);
         });
@@ -125,13 +117,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return listToReturn;
     }
 
-    public List<NodeConnectionDTO> getAllConnections(URI nodePublicId) {
+    public List<ConnectionDTO> getAllConnections(URI nodePublicId) {
         final var node = nodeRepository.findFirstByPublicId(nodePublicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
 
         return Stream
-                .concat(connectionService.getParentConnections(node).stream().map(NodeConnectionDTO::parentConnection),
-                        connectionService.getChildConnections(node).stream().map(NodeConnectionDTO::childConnection))
+                .concat(connectionService.getParentConnections(node).stream().map(ConnectionDTO::parentConnection),
+                        connectionService.getChildConnections(node).stream().map(ConnectionDTO::childConnection))
                 .toList();
     }
 
@@ -141,15 +133,17 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         final List<NodeConnection> childConnections = nodeConnectionRepository
                 .findAllByParentPublicIdIncludingChildAndChildTranslations(nodePublicId);
 
-        final var wrappedList = childConnections.stream()
-                .map(nodeConnection -> new NodeChildDTO(Optional.of(node), nodeConnection, languageCode)).toList();
+        final var wrappedList = childConnections.stream().map(
+                nodeConnection -> new NodeChildDTO(Optional.of(node), nodeConnection, languageCode, Optional.of(false)))
+                .toList();
 
         return topicTreeSorter.sortList(wrappedList);
     }
 
-    public NodeDTO getNode(URI publicId, Optional<String> language) {
+    public NodeDTO getNode(URI publicId, Optional<String> language, Optional<Boolean> includeContexts) {
         var node = getNode(publicId);
-        return new NodeDTO(Optional.empty(), node, language.orElse(Constants.DefaultLanguage), Optional.empty());
+        return new NodeDTO(Optional.empty(), node, language.orElse(Constants.DefaultLanguage), Optional.empty(),
+                includeContexts);
     }
 
     public Node getNode(URI publicId) {
@@ -158,7 +152,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public List<NodeChildDTO> getResourcesByNodeId(URI nodePublicId, Set<URI> resourceTypeIds, URI relevancePublicId,
-            Optional<String> languageCode, boolean recursive) {
+            Optional<String> languageCode, boolean recursive, Optional<Boolean> includeContexts) {
         final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
 
         final Set<URI> topicIdsToSearchFor;
@@ -183,11 +177,12 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         }
 
         return filterNodeResourcesByIdsAndReturn(node, topicIdsToSearchFor, resourceTypeIds, relevancePublicId,
-                resourcesToSort, languageCode);
+                resourcesToSort, languageCode, includeContexts);
     }
 
     private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(Node root, Set<URI> nodeIds, Set<URI> resourceTypeIds,
-            URI relevance, Set<ResourceTreeSortable> sortableListToAddTo, Optional<String> languageCode) {
+            URI relevance, Set<ResourceTreeSortable> sortableListToAddTo, Optional<String> languageCode,
+            Optional<Boolean> includeContexts) {
         final List<NodeConnection> nodeResources;
 
         if (resourceTypeIds.size() > 0) {
@@ -225,7 +220,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 }).map(wrappedNodeResource -> {
                     NodeConnection nodeConnection = (NodeConnection) wrappedNodeResource.get();
                     return new NodeChildDTO(Optional.of(root), nodeConnection,
-                            languageCode.orElse(Constants.DefaultLanguage));
+                            languageCode.orElse(Constants.DefaultLanguage), includeContexts);
                 }).collect(toList());
     }
 
@@ -235,14 +230,15 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     @Override
-    public NodeDTO createDTO(Node node, String languageCode) {
-        return new NodeDTO(Optional.empty(), node, languageCode, Optional.empty());
+    public NodeDTO createDTO(Node node, String languageCode, Optional<Boolean> includeContexts) {
+        return new NodeDTO(Optional.empty(), node, languageCode, Optional.empty(), includeContexts);
     }
 
     public SearchResultDTO<NodeDTO> searchByNodeType(Optional<String> query, Optional<List<String>> ids,
-            Optional<String> language, int pageSize, int page, Optional<NodeType> nodeType) {
+            Optional<String> language, Optional<Boolean> includeContexts, int pageSize, int page,
+            Optional<NodeType> nodeType) {
         Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
-        return SearchService.super.search(query, ids, language, pageSize, page, nodeSpecLambda);
+        return SearchService.super.search(query, ids, language, includeContexts, pageSize, page, nodeSpecLambda);
     }
 
     @Transactional
@@ -364,7 +360,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     public List<Node> buildAllContexts() {
         List<Node> rootNodes = nodeRepository.findByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
                 Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(Boolean.TRUE));
-        rootNodes.forEach(cachedUrlUpdaterService::updateCachedUrls);
+        rootNodes.forEach(cachedUrlUpdaterService::updateContexts);
         return rootNodes;
     }
 

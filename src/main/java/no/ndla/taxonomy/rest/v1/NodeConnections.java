@@ -7,10 +7,8 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
@@ -19,10 +17,12 @@ import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeConnectionPage;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.ParentChildIndexDocument;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPOST;
+import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPUT;
+import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeConnectionService;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +47,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
 
     public NodeConnections(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
             NodeConnectionService connectionService, RelevanceRepository relevanceRepository,
-            CachedUrlUpdaterService cachedUrlUpdaterService) {
+            ContextUpdaterService cachedUrlUpdaterService) {
         super(nodeConnectionRepository, cachedUrlUpdaterService);
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
@@ -58,13 +58,13 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @GetMapping
     @Operation(summary = "Gets all connections between node and children")
     @Transactional(readOnly = true)
-    public List<ParentChildIndexDocument> index() {
-        final List<ParentChildIndexDocument> listToReturn = new ArrayList<>();
+    public List<NodeConnectionDTO> getAllNodeConnections() {
+        final List<NodeConnectionDTO> listToReturn = new ArrayList<>();
         var ids = nodeConnectionRepository.findAllIds();
         final var counter = new AtomicInteger();
         ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
             final var connections = nodeConnectionRepository.findByIds(idChunk);
-            var dtos = connections.stream().map(ParentChildIndexDocument::new).toList();
+            var dtos = connections.stream().map(NodeConnectionDTO::new).toList();
             listToReturn.addAll(dtos);
         });
 
@@ -74,7 +74,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between node and children paginated")
     @Transactional(readOnly = true)
-    public NodeConnectionPage allPaginated(
+    public SearchResultDTO<NodeConnectionDTO> getNodeConnectionsPage(
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
@@ -85,24 +85,24 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
 
         var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
         var results = nodeConnectionRepository.findByIds(ids.getContent());
-        var contents = results.stream().map(ParentChildIndexDocument::new).collect(Collectors.toList());
-        return new NodeConnectionPage(ids.getTotalElements(), contents);
+        var contents = results.stream().map(NodeConnectionDTO::new).collect(Collectors.toList());
+        return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single connection between a node and a child")
     @Transactional(readOnly = true)
-    public ParentChildIndexDocument get(@PathVariable("id") URI id) {
+    public NodeConnectionDTO getNodeConnection(@PathVariable("id") URI id) {
         NodeConnection topicSubtopic = nodeConnectionRepository.getByPublicId(id);
-        return new ParentChildIndexDocument(topicSubtopic);
+        return new NodeConnectionDTO(topicSubtopic);
     }
 
     @PostMapping
     @Operation(summary = "Adds a node to a parent", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
-            @Parameter(name = "connection", description = "The new connection") @RequestBody AddChildToParentCommand command) {
+    public ResponseEntity<Void> createNodeConnection(
+            @Parameter(name = "connection", description = "The new connection") @RequestBody NodeConnectionPOST command) {
         Node parent = nodeRepository.getByPublicId(command.parentId);
         Node child = nodeRepository.getByPublicId(command.childId);
         Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
@@ -121,7 +121,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteEntity(@PathVariable("id") URI id) {
         var connection = nodeConnectionRepository.getByPublicId(id);
         connectionService.disconnectParentChildConnection(connection);
     }
@@ -132,8 +132,8 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
-            @Parameter(name = "connection", description = "The updated connection") @RequestBody UpdateNodeChildCommand command) {
+    public void updateNodeConnection(@PathVariable("id") URI id,
+            @Parameter(name = "connection", description = "The updated connection") @RequestBody NodeConnectionPUT command) {
         final var connection = nodeConnectionRepository.getByPublicId(id);
         var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
         var rank = command.rank > 0 ? command.rank : null;
@@ -143,46 +143,6 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
         var primary = Optional.of(command.primary);
 
         connectionService.updateParentChild(connection, relevance, rank, primary);
-    }
-
-    public static class AddChildToParentCommand {
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, title = "Parent id", example = "urn:topic:234")
-        public URI parentId;
-
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Child id", example = "urn:topic:234")
-        public URI childId;
-
-        @JsonProperty
-        @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
-        public boolean primary = true;
-
-        @JsonProperty
-        @Schema(description = "Order in which to sort the child for the parent", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
-
-    public static class UpdateNodeChildCommand {
-        @JsonProperty
-        @Schema(description = "Connection id", example = "urn:node-has-child:345")
-        public URI id;
-
-        @JsonProperty
-        @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
-        public boolean primary;
-
-        @JsonProperty
-        @Schema(description = "Order in which subtopic is sorted for the topic", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
     }
 
 }

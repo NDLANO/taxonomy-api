@@ -13,7 +13,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
+import no.ndla.taxonomy.rest.v1.dtos.ContextDTO;
+import no.ndla.taxonomy.rest.v1.dtos.ContextPOST;
+import no.ndla.taxonomy.service.ContextUpdaterService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,27 +32,27 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class Contexts {
     private final NodeRepository nodeRepository;
-    private final CachedUrlUpdaterService cachedUrlUpdaterService;
+    private final ContextUpdaterService cachedUrlUpdaterService;
 
-    public Contexts(NodeRepository nodeRepository, CachedUrlUpdaterService cachedUrlUpdaterService) {
+    public Contexts(NodeRepository nodeRepository, ContextUpdaterService cachedUrlUpdaterService) {
         this.nodeRepository = nodeRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
     }
 
     @GetMapping
     @Operation(summary = "Gets all contexts")
-    public List<ContextIndexDocument> get(
+    public List<ContextDTO> getAllContexts(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
 
         final var nodes = nodeRepository.findAllByContextIncludingCachedUrlsAndTranslations(true);
 
         final var contextDocuments = new ArrayList<>(nodes.stream()
-                .map(topic -> new ContextIndexDocument(topic.getPublicId(),
+                .map(topic -> new ContextDTO(topic.getPublicId(),
                         topic.getTranslation(language).map(Translation::getName).orElse(topic.getName()),
                         topic.getPrimaryPath().orElse(null)))
                 .toList());
 
-        contextDocuments.sort(Comparator.comparing(ContextIndexDocument::getId));
+        contextDocuments.sort(Comparator.comparing(ContextDTO::getId));
 
         return contextDocuments;
     }
@@ -60,13 +62,13 @@ public class Contexts {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
-            @Parameter(name = "context", description = "the new context") @RequestBody CreateContextCommand command) {
+    public ResponseEntity<Void> createContext(
+            @Parameter(name = "context", description = "the new context") @RequestBody ContextPOST command) {
         Node topic = nodeRepository.getByPublicId(command.id);
         topic.setContext(true);
         URI location = URI.create("/v1/contexts/" + topic.getPublicId());
 
-        cachedUrlUpdaterService.updateCachedUrls(topic);
+        cachedUrlUpdaterService.updateContexts(topic);
 
         return ResponseEntity.created(location).build();
     }
@@ -77,38 +79,11 @@ public class Contexts {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteContext(@PathVariable("id") URI id) {
         Node topic = nodeRepository.getByPublicId(id);
         topic.setContext(false);
 
-        cachedUrlUpdaterService.updateCachedUrls(topic);
+        cachedUrlUpdaterService.updateContexts(topic);
     }
 
-    public static class ContextIndexDocument {
-        public URI id;
-        public String path;
-        public String name;
-
-        private ContextIndexDocument(URI id, String name, String path) {
-            this.id = id;
-            this.name = name;
-            this.path = path;
-        }
-
-        public URI getId() {
-            return id;
-        }
-
-        public String getPath() {
-            return path;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
-    public static class CreateContextCommand {
-        public URI id;
-    }
 }

@@ -22,6 +22,7 @@ import java.util.Optional;
 /**
  * Represents Node or Resource in child context
  */
+@Schema(name = "NodeChild")
 public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
 
     @Schema(description = "Parent id in the current context, null if none exists")
@@ -39,9 +40,10 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
     @Schema(description = "Relevance id", example = "urn:relevance:core")
     private URI relevanceId;
 
-    public NodeChildDTO(Optional<Node> root, NodeConnection nodeConnection, String language) {
+    public NodeChildDTO(Optional<Node> root, NodeConnection nodeConnection, String language,
+            Optional<Boolean> includeContexts) {
         super(root, nodeConnection.getChild().orElseThrow(() -> new NotFoundException("Child was not found")), language,
-                Optional.empty());
+                Optional.empty(), includeContexts);
 
         // This must be enabled when ed is updated to update metadata for connections.
         // this.metadata = new MetadataDto(nodeConnection.getMetadata());
@@ -53,7 +55,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         this.isPrimary = nodeConnection.isPrimary().orElse(false);
         {
             final Relevance relevance = nodeConnection.getRelevance().orElse(null);
-            this.relevanceId = relevance != null ? relevance.getPublicId() : null;
+            this.relevanceId = relevance != null ? relevance.getPublicId() : URI.create("urn:relevance:core");
         }
     }
 
@@ -61,14 +63,14 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
      * Special constructor used to get parents for resource/full
      */
     public NodeChildDTO(Node parent, NodeConnection nodeConnection, String language) {
-        super(Optional.empty(), parent, language, Optional.empty());
+        super(Optional.empty(), parent, language, Optional.empty(), Optional.of(false));
 
         this.rank = nodeConnection.getRank();
         this.connectionId = nodeConnection.getPublicId();
         this.isPrimary = nodeConnection.isPrimary().orElse(false);
         {
             final Relevance relevance = nodeConnection.getRelevance().orElse(null);
-            this.relevanceId = relevance != null ? relevance.getPublicId() : null;
+            this.relevanceId = relevance != null ? relevance.getPublicId() : URI.create("urn:relevance:core");
         }
     }
 
@@ -107,7 +109,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         this.connectionId = connectionId;
     }
 
-    @JsonProperty
+    @JsonProperty("isPrimary")
     public boolean isPrimary() {
         return isPrimary;
     }

@@ -13,8 +13,8 @@ import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.EntityWithMetadata;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
-import no.ndla.taxonomy.service.CachedUrlUpdaterService;
-import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.ContextUpdaterService;
+import no.ndla.taxonomy.service.dtos.MetadataDTO;
 import no.ndla.taxonomy.service.exceptions.InvalidDataException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,16 +27,16 @@ import java.net.URI;
 
 public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends CrudController<T> {
     protected CrudControllerWithMetadata(TaxonomyRepository<T> repository,
-            CachedUrlUpdaterService cachedUrlUpdaterService) {
+            ContextUpdaterService cachedUrlUpdaterService) {
         super(repository, cachedUrlUpdaterService);
     }
 
     @GetMapping("/{id}/metadata")
     @Operation(summary = "Gets metadata for entity")
-    public MetadataDto getMetadata(@PathVariable("id") URI id) {
+    public MetadataDTO getMetadata(@PathVariable("id") URI id) {
         var entity = repository.findByPublicId(id);
         if (entity instanceof EntityWithMetadata em) {
-            return new MetadataDto(em.getMetadata());
+            return new MetadataDTO(em.getMetadata());
         }
         throw new NotFoundException("Entity", id);
     }
@@ -45,12 +45,12 @@ public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Operation(summary = "Updates metadata for entity", security = { @SecurityRequirement(name = "oauth") })
     @Transactional
-    public MetadataDto putMetadata(@PathVariable("id") URI id, @RequestBody MetadataDto entityToUpdate)
+    public MetadataDTO putMetadata(@PathVariable("id") URI id, @RequestBody MetadataDTO entityToUpdate)
             throws InvalidDataException {
         var entity = repository.findByPublicId(id);
         if (entity instanceof EntityWithMetadata em) {
             var result = em.getMetadata().mergeWith(entityToUpdate);
-            return new MetadataDto(result);
+            return new MetadataDTO(result);
         }
         throw new NotFoundException("Entity", id);
     }

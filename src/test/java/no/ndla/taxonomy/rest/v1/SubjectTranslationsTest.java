@@ -9,10 +9,12 @@ package no.ndla.taxonomy.rest.v1;
 
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 
@@ -71,12 +73,11 @@ public class SubjectTranslationsTest extends RestTest {
         Node mathematics = builder.node(NodeType.SUBJECT, s -> s.name("Mathematics"));
         URI id = mathematics.getPublicId();
 
-        testUtils.updateResource("/v1/subjects/" + id + "/translations/nb",
-                new SubjectTranslations.UpdateSubjectTranslationCommand() {
-                    {
-                        name = "Matematikk";
-                    }
-                });
+        testUtils.updateResource("/v1/subjects/" + id + "/translations/nb", new TranslationPUT() {
+            {
+                name = "Matematikk";
+            }
+        });
 
         assertEquals("Matematikk", mathematics.getTranslation("nb").get().getName());
     }
@@ -99,7 +100,7 @@ public class SubjectTranslationsTest extends RestTest {
                         .translation("en", l -> l.name("Mathematics")).translation("de", l -> l.name("Mathematik")));
         URI id = subject.getPublicId();
 
-        var translations = testUtils.getObject(SubjectTranslations.SubjectTranslationIndexDocument[].class,
+        var translations = testUtils.getObject(TranslationDTO[].class,
                 testUtils.getResource("/v1/subjects/" + id + "/translations"));
 
         assertEquals(3, translations.length);
@@ -114,7 +115,7 @@ public class SubjectTranslationsTest extends RestTest {
                 s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
         URI id = subject.getPublicId();
 
-        var translation = testUtils.getObject(SubjectTranslations.SubjectTranslationIndexDocument.class,
+        var translation = testUtils.getObject(TranslationDTO.class,
                 testUtils.getResource("/v1/subjects/" + id + "/translations/nb"));
         assertEquals("Matematikk", translation.name);
         assertEquals("nb", translation.language);

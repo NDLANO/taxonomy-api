@@ -11,12 +11,11 @@ import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
+import no.ndla.taxonomy.rest.v1.commands.SubjectPostPut;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
 import java.util.stream.Collectors;
@@ -38,7 +37,7 @@ public class SubjectsTest extends RestTest {
         var subject = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("english", subject.getName());
-        assertEquals("urn:article:1", subject.getContentUri().toString());
+        assertEquals("Optional[urn:article:1]", subject.getContentUri().toString());
         assertEquals("/subject:1", subject.getPath());
 
         assertNotNull(subject.getMetadata());
@@ -68,7 +67,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_create_subject() throws Exception {
-        final var createSubjectCommand = new SubjectCommand() {
+        final var createSubjectCommand = new SubjectPostPut() {
             {
                 name = "testsubject";
                 contentUri = URI.create("urn:article:1");
@@ -86,7 +85,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_create_subject_with_id() throws Exception {
-        final var command = new SubjectCommand() {
+        final var command = new SubjectPostPut() {
             {
                 id = URI.create("urn:subject:1");
                 name = "name";
@@ -103,7 +102,7 @@ public class SubjectsTest extends RestTest {
     public void can_update_subject() throws Exception {
         URI publicId = builder.node(NodeType.SUBJECT).getPublicId();
 
-        final var command = new SubjectCommand() {
+        final var command = new SubjectPostPut() {
             {
                 id = publicId;
                 name = "physics";
@@ -123,7 +122,7 @@ public class SubjectsTest extends RestTest {
         URI publicId = builder.node(NodeType.SUBJECT).getPublicId();
         URI randomId = URI.create("urn:subject:random");
 
-        final var command = new SubjectCommand() {
+        final var command = new SubjectPostPut() {
             {
                 id = randomId;
                 name = "random";
@@ -144,7 +143,7 @@ public class SubjectsTest extends RestTest {
                 .node(NodeType.SUBJECT, s -> s.isVisible(false).grepCode("KM123").customField("key", "value"))
                 .getPublicId();
 
-        final var command = new SubjectCommand() {
+        final var command = new SubjectPostPut() {
             {
                 id = publicId;
                 name = "physics";
@@ -165,7 +164,7 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        final var command = new SubjectCommand() {
+        final var command = new SubjectPostPut() {
             {
                 id = URI.create("urn:subject:1");
                 name = "name";
@@ -199,11 +198,11 @@ public class SubjectsTest extends RestTest {
 
         assertEquals(3, topics.length);
         assertAnyTrue(topics,
-                t -> "statics".equals(t.getName()) && "urn:article:1".equals(t.getContentUri().toString()));
+                t -> "statics".equals(t.getName()) && "Optional[urn:article:1]".equals(t.getContentUri().toString()));
+        assertAnyTrue(topics, t -> "electricity".equals(t.getName())
+                && "Optional[urn:article:2]".equals(t.getContentUri().toString()));
         assertAnyTrue(topics,
-                t -> "electricity".equals(t.getName()) && "urn:article:2".equals(t.getContentUri().toString()));
-        assertAnyTrue(topics,
-                t -> "optics".equals(t.getName()) && "urn:article:3".equals(t.getContentUri().toString()));
+                t -> "optics".equals(t.getName()) && "Optional[urn:article:3]".equals(t.getContentUri().toString()));
         assertAnyTrue(topics, t -> t.isPrimary());
         assertAllTrue(topics, t -> isValidId(t.getId()));
         assertAllTrue(topics, t -> isValidId(t.getConnectionId()));

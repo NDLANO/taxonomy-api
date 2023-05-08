@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
@@ -17,11 +18,10 @@ import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.rest.v1.commands.NodeCommand;
+import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
-import no.ndla.taxonomy.service.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.service.dtos.ConnectionDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
@@ -45,7 +45,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     private final TreeSorter treeSorter;
 
     public Nodes(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            NodeService nodeService, CachedUrlUpdaterService cachedUrlUpdaterService,
+            NodeService nodeService, ContextUpdaterService cachedUrlUpdaterService,
             RecursiveNodeTreeService recursiveNodeTreeService, TreeSorter treeSorter) {
         super(nodeRepository, cachedUrlUpdaterService);
 
@@ -70,7 +70,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping
     @Operation(summary = "Gets all nodes")
     @Transactional(readOnly = true)
-    public List<NodeDTO> getAll(
+    public List<NodeDTO> getAllNodes(
             @Parameter(description = "Filter by nodeType, could be a comma separated list, defaults to Topics and Subjects (Resources are quite slow). :^)") @RequestParam(value = "nodeType", required = false) Optional<List<NodeType>> nodeType,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
@@ -78,35 +78,38 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false) Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false) Optional<Boolean> isVisible,
-            @Parameter(description = "Filter by context id") @RequestParam(value = "contextId", required = false) Optional<String> contextId) {
+            @Parameter(description = "Filter by context id") @RequestParam(value = "contextId", required = false) Optional<String> contextId,
+            @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false) Optional<Boolean> includeContexts) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         var defaultNodeTypes = getDefaultNodeTypes(nodeType, contentUri, isRoot, metadataFilters);
         return nodeService.getNodesByType(Optional.of(defaultNodeTypes), language, contentUri, contextId, isRoot,
-                metadataFilters);
+                metadataFilters, includeContexts);
     }
 
     @GetMapping("/search")
     @Operation(summary = "Search all nodes")
     @Transactional(readOnly = true)
-    public SearchResultDTO<NodeDTO> search(
+    public SearchResultDTO<NodeDTO> searchNodes(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @Parameter(description = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
             @Parameter(description = "Query to search names") @RequestParam(value = "query", required = false) Optional<String> query,
             @Parameter(description = "Ids to fetch for query") @RequestParam(value = "ids", required = false) Optional<List<String>> ids,
-            @Parameter(description = "Filter by nodeType") @RequestParam(value = "nodeType", required = false) Optional<NodeType> nodeType
+            @Parameter(description = "Filter by nodeType") @RequestParam(value = "nodeType", required = false) Optional<NodeType> nodeType,
+            @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false) Optional<Boolean> includeContexts
 
     ) {
-        return nodeService.searchByNodeType(query, ids, language, pageSize, page, nodeType);
+        return nodeService.searchByNodeType(query, ids, language, includeContexts, pageSize, page, nodeType);
     }
 
     @GetMapping("/page")
     @Operation(summary = "Gets all nodes paginated")
     @Transactional(readOnly = true)
-    public SearchResultDTO<NodeDTO> allPaginated(
+    public SearchResultDTO<NodeDTO> getNodePage(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
-            @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
+            @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize,
+            @Parameter(name = "includeContexts", description = "Include all contexts") Optional<Boolean> includeContexts) {
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
         }
@@ -115,8 +118,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
         var ids = nodeRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
         var results = nodeRepository.findByIds(ids.getContent());
-        var contents = results.stream()
-                .map(node -> new NodeDTO(Optional.empty(), node, language.orElse("nb"), Optional.empty()))
+        var contents = results.stream().map(
+                node -> new NodeDTO(Optional.empty(), node, language.orElse("nb"), Optional.empty(), includeContexts))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
@@ -124,19 +127,18 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single node")
     @Transactional(readOnly = true)
-    public NodeDTO get(@PathVariable("id") URI id,
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) String language) {
-        return new NodeDTO(Optional.empty(), nodeRepository.findFirstByPublicId(id).orElseThrow(
-                () -> new NotFoundHttpResponseException("Node was not found")), language, Optional.empty());
+    public NodeDTO getNode(@PathVariable("id") URI id,
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
+        return nodeService.getNode(id, language, Optional.of(true));
     }
 
     @PostMapping
     @Operation(summary = "Creates a new node", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
-            @Parameter(name = "connection", description = "The new node") @RequestBody NodeCommand command) {
-        return doPost(new Node(command.nodeType), command);
+    public ResponseEntity<Void> createNode(
+            @Parameter(name = "connection", description = "The new node") @RequestBody @Schema(name = "NodePOST") NodePostPut command) {
+        return createEntity(new Node(command.nodeType), command);
     }
 
     @PutMapping("/{id}")
@@ -144,9 +146,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
-            @Parameter(name = "node", description = "The updated node. Fields not included will be set to null.") @RequestBody NodeCommand command) {
-        doPut(id, command);
+    public void updateNode(@PathVariable("id") URI id,
+            @Parameter(name = "node", description = "The updated node. Fields not included will be set to null.") @RequestBody @Schema(name = "NodePUT") NodePostPut command) {
+        updateEntity(id, command);
     }
 
     @PutMapping("/{id}/publish")
@@ -154,7 +156,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @Transactional
-    public void publishAsync(@PathVariable("id") URI id,
+    public void publishNode(@PathVariable("id") URI id,
             @Parameter(description = "Version id to publish from. Can be omitted to publish from default.", example = "urn:version:1") @RequestParam(value = "sourceId", required = false) Optional<URI> sourceId,
             @Parameter(description = "Version id to publish to.", example = "urn:version:2") @RequestParam(value = "targetId") URI targetId) {
         nodeService.publishNode(id, sourceId, targetId, true, false);
@@ -166,7 +168,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     public List<NodeChildDTO> getChildren(@Parameter(name = "id", required = true) @PathVariable("id") URI id,
             @Parameter(description = "Filter by nodeType, could be a comma separated list, defaults to Topics and Subjects (Resources are quite slow). :^)") @RequestParam(value = "nodeType", required = false) Optional<List<NodeType>> nodeType,
             @Parameter(description = "If true, children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
+            @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false) Optional<Boolean> includeContexts) {
         final var node = nodeRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundException("Node", id));
 
         final List<URI> childrenIds;
@@ -185,7 +188,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         final var returnList = new ArrayList<NodeChildDTO>();
 
         children.stream().map(nodeConnection -> new NodeChildDTO(Optional.of(node), nodeConnection,
-                language.orElse(Constants.DefaultLanguage))).forEach(returnList::add);
+                language.orElse(Constants.DefaultLanguage), includeContexts)).forEach(returnList::add);
 
         var filtered = returnList.stream().filter(childDTO -> childrenIds.contains(childDTO.getParentId())
                 || node.getPublicId().equals(childDTO.getParentId())).toList();
@@ -196,7 +199,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @GetMapping("/{id}/connections")
     @Operation(summary = "Gets all parents and children this node is connected to")
     @Transactional(readOnly = true)
-    public List<NodeConnectionDTO> getAllConnections(@PathVariable("id") URI id) {
+    public List<ConnectionDTO> getAllConnections(@PathVariable("id") URI id) {
         return nodeService.getAllConnections(id);
     }
 
@@ -205,7 +208,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteEntity(@PathVariable("id") URI id) {
         nodeService.delete(id);
     }
 
@@ -214,6 +217,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @Transactional(readOnly = true)
     public List<NodeChildDTO> getResources(@Parameter(name = "id", required = true) @PathVariable("id") URI nodeId,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
+            @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false) Optional<Boolean> includeContexts,
             @Parameter(description = "If true, resources from children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive,
             @Parameter(description = "Select by resource type id(s). If not specified, resources of all types will be returned. "
                     + "Multiple ids may be separated with comma or the parameter may be repeated for each id.") @RequestParam(value = "type", required = false) URI[] resourceTypeIds,
@@ -226,7 +230,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             resourceTypeIdSet = new HashSet<>(Arrays.asList(resourceTypeIds));
         }
 
-        return nodeService.getResourcesByNodeId(nodeId, resourceTypeIdSet, relevance, language, recursive);
+        return nodeService.getResourcesByNodeId(nodeId, resourceTypeIdSet, relevance, language, recursive,
+                includeContexts);
     }
 
     @PutMapping("/{id}/makeResourcesPrimary")

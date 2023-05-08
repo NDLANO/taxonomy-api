@@ -16,7 +16,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-@Schema(name = "ResourceWithParents")
+@Schema(name = "NodeWithParents")
 public class NodeWithParents extends NodeDTO {
     @JsonProperty
     @Schema(description = "Parent topology nodes and whether or not connection type is primary", example = "["
@@ -30,7 +30,7 @@ public class NodeWithParents extends NodeDTO {
     }
 
     public NodeWithParents(Node node, String languageCode) {
-        super(Optional.empty(), node, languageCode, Optional.empty());
+        super(Optional.empty(), node, languageCode, Optional.empty(), Optional.of(false));
 
         node.getParentConnections().stream().map(nodeResource -> {
             Node parent = nodeResource.getParent().orElseThrow(() -> new NotFoundException("Parent not found"));

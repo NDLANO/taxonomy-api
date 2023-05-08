@@ -7,17 +7,19 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
+import no.ndla.taxonomy.rest.v1.dtos.TopicResourceDTO;
+import no.ndla.taxonomy.rest.v1.dtos.TopicResourcePOST;
+import no.ndla.taxonomy.rest.v1.dtos.TopicResourcePUT;
 import no.ndla.taxonomy.service.NodeConnectionService;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,18 +49,20 @@ public class TopicResources {
         this.relevanceRepository = relevanceRepository;
     }
 
+    @Deprecated
     @GetMapping
     @Operation(summary = "Gets all connections between topics and resources")
     @Transactional(readOnly = true)
-    public List<TopicResourceIndexDocument> index() {
-        return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream()
-                .map(TopicResourceIndexDocument::new).collect(Collectors.toList());
+    public List<TopicResourceDTO> getAllTopicResources() {
+        return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream().map(TopicResourceDTO::new)
+                .collect(Collectors.toList());
     }
 
+    @Deprecated
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between topic and resources paginated")
     @Transactional(readOnly = true)
-    public TopicResourcePage allPaginated(
+    public SearchResultDTO<TopicResourceDTO> getTopicResourcePage(
             @Parameter(name = "page", description = "The page to fetch", required = true) Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
@@ -71,24 +75,26 @@ public class TopicResources {
         var connections = nodeConnectionRepository.findIdsPaginatedByChildNodeType(pageRequest, NodeType.RESOURCE);
         var ids = connections.stream().map(DomainEntity::getId).collect(Collectors.toList());
         var results = nodeConnectionRepository.findByIds(ids);
-        var contents = results.stream().map(TopicResourceIndexDocument::new).collect(Collectors.toList());
-        return new TopicResourcePage(connections.getTotalElements(), contents);
+        var contents = results.stream().map(TopicResourceDTO::new).collect(Collectors.toList());
+        return new SearchResultDTO<>(connections.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
+    @Deprecated
     @GetMapping("/{id}")
     @Operation(summary = "Gets a specific connection between a topic and a resource")
     @Transactional(readOnly = true)
-    public TopicResourceIndexDocument get(@PathVariable("id") URI id) {
+    public TopicResourceDTO getTopicResource(@PathVariable("id") URI id) {
         var resourceConnection = nodeConnectionRepository.getByPublicId(id);
-        return new TopicResourceIndexDocument(resourceConnection);
+        return new TopicResourceDTO(resourceConnection);
     }
 
+    @Deprecated
     @PostMapping
     @Operation(summary = "Adds a resource to a topic", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
-            @Parameter(name = "connection", description = "new topic/resource connection ") @RequestBody AddResourceToTopicCommand command) {
+    public ResponseEntity<Void> createTopicResource(
+            @Parameter(name = "connection", description = "new topic/resource connection ") @RequestBody TopicResourcePOST command) {
 
         Node topic = nodeRepository.getByPublicId(command.topicid);
         Node resource = nodeRepository.getByPublicId(command.resourceId);
@@ -105,24 +111,26 @@ public class TopicResources {
         return ResponseEntity.created(location).build();
     }
 
+    @Deprecated
     @DeleteMapping("/{id}")
     @Operation(summary = "Removes a resource from a topic", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteTopicResource(@PathVariable("id") URI id) {
         var connection = nodeConnectionRepository.getByPublicId(id);
         connectionService.disconnectParentChildConnection(connection);
     }
 
+    @Deprecated
     @PutMapping("/{id}")
     @Operation(summary = "Updates a connection between a topic and a resource", description = "Use to update which topic is primary to the resource or to change sorting order.", security = {
             @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
-            @Parameter(name = "connection", description = "Updated topic/resource connection") @RequestBody UpdateTopicResourceCommand command) {
+    public void updateTopicResource(@PathVariable("id") URI id,
+            @Parameter(name = "connection", description = "Updated topic/resource connection") @RequestBody TopicResourcePUT command) {
         var topicResource = nodeConnectionRepository.getByPublicId(id);
         var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
 
@@ -135,102 +143,4 @@ public class TopicResources {
         connectionService.updateParentChild(topicResource, relevance, rank, primary);
     }
 
-    public static class AddResourceToTopicCommand {
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic id", example = "urn:topic:345")
-        public URI topicid;
-
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource id", example = "urn:resource:345")
-        public URI resourceId;
-
-        @JsonProperty
-        @Schema(description = "Primary connection", example = "true")
-        public boolean primary = true;
-
-        @JsonProperty
-        @Schema(description = "Order in which resource is sorted for the topic", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
-
-    public static class UpdateTopicResourceCommand {
-        @JsonProperty
-        @Schema(description = "Topic resource connection id", example = "urn:topic-has-resources:123")
-        public URI id;
-
-        @JsonProperty
-        @Schema(description = "Primary connection", example = "true")
-        public boolean primary;
-
-        @JsonProperty
-        @Schema(description = "Order in which the resource will be sorted for this topic.", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
-
-    public static class TopicResourcePage {
-        @JsonProperty
-        @Schema(description = "Total number of elements")
-        public long totalCount;
-
-        @JsonProperty
-        @Schema(description = "Page containing results")
-        public List<TopicResourceIndexDocument> results;
-
-        TopicResourcePage() {
-        }
-
-        TopicResourcePage(long totalCount, List<TopicResourceIndexDocument> results) {
-            this.totalCount = totalCount;
-            this.results = results;
-        }
-    }
-
-    public static class TopicResourceIndexDocument {
-
-        @JsonProperty
-        @Schema(description = "Topic id", example = "urn:topic:345")
-        public URI topicid;
-
-        @JsonProperty
-        @Schema(description = "Resource id", example = "urn:resource:345")
-        URI resourceId;
-
-        @JsonProperty
-        @Schema(description = "Topic resource connection id", example = "urn:topic-has-resources:123")
-        public URI id;
-
-        @JsonProperty
-        @Schema(description = "Primary connection", example = "true")
-        public boolean primary;
-
-        @JsonProperty
-        @Schema(description = "Order in which the resource is sorted for the topic", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-
-        TopicResourceIndexDocument(NodeConnection topicResource) {
-            id = topicResource.getPublicId();
-            topicResource.getParent().ifPresent(topic -> topicid = topic.getPublicId());
-            topicResource.getResource().ifPresent(resource -> resourceId = resource.getPublicId());
-            primary = topicResource.isPrimary().orElse(false);
-            rank = topicResource.getRank();
-            relevanceId = topicResource.getRelevance().map(Relevance::getPublicId).orElse(null);
-        }
-
-        TopicResourceIndexDocument() {
-
-        }
-
-    }
 }

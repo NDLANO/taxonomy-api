@@ -7,7 +7,7 @@
 
 package no.ndla.taxonomy.domain;
 
-import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.dtos.MetadataDTO;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -49,7 +49,7 @@ public class Metadata implements Serializable {
         this.visible = metadata.isVisible();
     }
 
-    public Metadata mergeWith(MetadataDto toMerge) {
+    public Metadata mergeWith(MetadataDTO toMerge) {
         if (toMerge.visible != null) {
             setVisible(toMerge.visible);
         }

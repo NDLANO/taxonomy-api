@@ -12,7 +12,7 @@ import no.ndla.taxonomy.repositories.ChangelogRepository;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.VersionRepository;
-import no.ndla.taxonomy.rest.v1.commands.VersionCommand;
+import no.ndla.taxonomy.rest.v1.commands.VersionPostPut;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,7 +76,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_to_schema() throws Exception {
-        final var command = new VersionCommand() {
+        final var command = new VersionPostPut() {
             {
                 name = "Beta";
             }
@@ -108,7 +108,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertNotEquals(node.getId(), published.getId());// node should have 1, published 3
         assertEquals(node.getName(), published.getName());
         assertEquals(node.getNodeType(), published.getNodeType());
-        assertEquals(1, published.getCachedPaths().size());
+        assertEquals(1, published.getContexts().size());
         assertEquals(node.getMetadata().isVisible(), published.getMetadata().isVisible());
         assertEquals(node.getMetadata().getGrepCodes().size(), published.getMetadata().getGrepCodes().size());
         assertAnyTrue(published.getMetadata().getGrepCodes(), grepCode -> grepCode.getCode().equals("KM123"));
@@ -125,7 +125,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_with_resource_to_schema() throws Exception {
-        final var command = new VersionCommand() {
+        final var command = new VersionPostPut() {
             {
                 name = "Beta";
             }
@@ -174,7 +174,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_sub_node_with_resource_to_schema() throws Exception {
-        final var command = new VersionCommand() {
+        final var command = new VersionPostPut() {
             {
                 name = "Beta";
             }
@@ -212,7 +212,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_tree_with_resources_to_schema() throws Exception {
-        final var command = new VersionCommand() {
+        final var command = new VersionPostPut() {
             {
                 name = "Beta";
             }
@@ -260,7 +260,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_tree_with_reused_resource_to_schema() throws Exception {
-        final var command = new VersionCommand() {
+        final var command = new VersionPostPut() {
             {
                 name = "Beta";
             }
@@ -299,7 +299,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
 
         assertNotNull(updated);
         assertNotEquals(updated.getId(), resource.getId());
-        assertNotNull(updated.getCachedPaths());
+        assertNotNull(updated.getContexts());
         assertEquals(2, updated.getParentConnections().size()); // Should be used twice
         assertAnyTrue(updated.getParentConnections(),
                 nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:1")));
@@ -312,7 +312,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_in_tree_to_schema() throws Exception {
-        final var command = new VersionCommand() {
+        final var command = new VersionPostPut() {
             {
                 name = "Beta";
             }
@@ -355,7 +355,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_tree_with_reused_resource_twice_to_schema() throws Exception {
-        final var command = new VersionCommand() {
+        final var command = new VersionPostPut() {
             {
                 name = "Beta";
             }
@@ -390,7 +390,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertNotNull(updated);
-        assertNotNull(updated.getCachedPaths());
+        assertNotNull(updated.getContexts());
         assertEquals(2, updated.getParentConnections().size()); // Should be used twice
         assertAnyTrue(updated.getParentConnections(),
                 nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:1")));
@@ -403,7 +403,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_reused_resource_with_translations_to_schema() throws Exception {
-        final var command = new VersionCommand() {
+        final var command = new VersionPostPut() {
             {
                 name = "Beta";
             }
@@ -467,7 +467,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
 
         assertNotNull(updated);
-        assertNotNull(updated.getCachedPaths());
+        assertNotNull(updated.getContexts());
         assertEquals(2, updated.getParentConnections().size()); // Should be used twice
         assertAnyTrue(updated.getParentConnections(),
                 nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:1")));
@@ -487,7 +487,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_twice_to_schema() throws Exception {
-        final var command = new VersionCommand() {
+        final var command = new VersionPostPut() {
             {
                 name = "Beta";
             }
@@ -546,7 +546,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_tree_to_schema_async() throws Exception {
-        final var command = new VersionCommand() {
+        final var command = new VersionPostPut() {
             {
                 name = "Beta";
             }
