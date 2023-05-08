@@ -610,6 +610,10 @@ export interface TaxonomyContext {
      */
     isPrimary: boolean;
     /**
+     * Whether the base connection is marked as active subject
+     */
+    isActive: boolean;
+    /**
      * Whether the base connection is visible or not
      */
     isVisible: boolean;
