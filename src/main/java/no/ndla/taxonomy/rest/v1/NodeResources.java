@@ -100,11 +100,11 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
             @Parameter(name = "connection", description = "new node/resource connection ") @RequestBody NodeResourcePOST command) {
         var parent = nodeRepository.getByPublicId(command.nodeId);
         var child = nodeRepository.getByPublicId(command.resourceId);
-        var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
-        var rank = command.rank == 0 ? null : command.rank;
-        var primary = Optional.of(command.primary);
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var rank = command.rank.orElse(null);
 
-        final var nodeConnection = connectionService.connectParentChild(parent, child, relevance, rank, primary);
+        final var nodeConnection = connectionService.connectParentChild(parent, child, relevance, rank,
+                command.primary);
 
         var location = URI.create("/node-resources/" + nodeConnection.getPublicId());
         return ResponseEntity.created(location).build();
@@ -129,15 +129,14 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     public void updateNodeResource(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "Updated node/resource connection") @RequestBody NodeResourcePUT command) {
         final var nodeResource = nodeConnectionRepository.getByPublicId(id);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
-                : null;
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var rank = command.rank.orElse(null);
 
-        if (nodeResource.isPrimary().orElse(false) && !command.primary) {
+        if (nodeResource.isPrimary().orElse(false) && !command.primary.orElse(false)) {
             throw new PrimaryParentRequiredException();
         }
 
-        connectionService.updateParentChild(nodeResource, relevance, command.rank > 0 ? command.rank : null,
-                Optional.empty());
+        connectionService.updateParentChild(nodeResource, relevance, rank, command.primary);
     }
 
 }
