@@ -13,6 +13,7 @@ import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
 
 import java.net.URI;
+import java.util.Optional;
 
 @Schema(name = "TopicResource")
 public class TopicResourceDTO {
@@ -39,7 +40,7 @@ public class TopicResourceDTO {
 
     @JsonProperty
     @Schema(description = "Relevance id", example = "urn:relevance:core")
-    public URI relevanceId;
+    public Optional<URI> relevanceId;
 
     public TopicResourceDTO(NodeConnection topicResource) {
         id = topicResource.getPublicId();
@@ -47,11 +48,10 @@ public class TopicResourceDTO {
         topicResource.getResource().ifPresent(resource -> resourceId = resource.getPublicId());
         primary = topicResource.isPrimary().orElse(false);
         rank = topicResource.getRank();
-        relevanceId = topicResource.getRelevance().map(Relevance::getPublicId).orElse(null);
+        relevanceId = topicResource.getRelevance().map(Relevance::getPublicId);
     }
 
     TopicResourceDTO() {
-
     }
 
 }

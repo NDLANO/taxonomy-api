@@ -173,7 +173,7 @@ public class NodeConnectionsTest extends RestTest {
             {
                 parentId = electricity.getPublicId();
                 childId = alternatingCurrents.getPublicId();
-                rank = 2;
+                rank = Optional.of(2);
             }
         });
 
@@ -181,7 +181,7 @@ public class NodeConnectionsTest extends RestTest {
             {
                 parentId = electricity.getPublicId();
                 childId = wiring.getPublicId();
-                rank = 1;
+                rank = Optional.of(1);
             }
         });
 
@@ -199,8 +199,8 @@ public class NodeConnectionsTest extends RestTest {
         URI id = save(NodeConnection.create(newTopic(), newTopic())).getPublicId();
         testUtils.updateResource("/v1/node-connections/" + id, new NodeConnectionPUT() {
             {
-                primary = true;
-                rank = 99;
+                primary = Optional.of(true);
+                rank = Optional.of(99);
             }
         });
         assertEquals(99, nodeConnectionRepository.getByPublicId(id).getRank());
@@ -218,8 +218,8 @@ public class NodeConnectionsTest extends RestTest {
         testUtils.updateResource("/v1/node-connections/" + updatedConnection.getPublicId().toString(),
                 new NodeConnectionPUT() {
                     {
-                        primary = true;
-                        rank = 1;
+                        primary = Optional.of(true);
+                        rank = Optional.of(1);
                     }
                 });
         assertEquals(1, updatedConnection.getRank());
@@ -250,8 +250,8 @@ public class NodeConnectionsTest extends RestTest {
         testUtils.updateResource("/v1/node-connections/" + updatedConnection.getPublicId().toString(),
                 new NodeConnectionPUT() {
                     {
-                        primary = true;
-                        rank = 1;
+                        primary = Optional.of(true);
+                        rank = Optional.of(1);
                     }
                 });
         assertEquals(1, updatedConnection.getRank());
@@ -284,8 +284,8 @@ public class NodeConnectionsTest extends RestTest {
         testUtils.updateResource("/v1/node-connections/" + nodeConnections.get(9).getPublicId().toString(),
                 new NodeConnectionPUT() {
                     {
-                        primary = true;
-                        rank = 99;
+                        primary = Optional.of(true);
+                        rank = Optional.of(99);
                     }
                 });
         assertEquals(99, updatedConnection.getRank());

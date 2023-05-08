@@ -72,7 +72,7 @@ public class NodeResourcesTest extends RestTest {
             {
                 nodeId = calculusId;
                 resourceId = integrationId;
-                primary = false;
+                primary = Optional.of(false);
             }
         }));
 
@@ -90,7 +90,7 @@ public class NodeResourcesTest extends RestTest {
                     {
                         nodeId = node2Id;
                         resourceId = integrationId;
-                        primary = false;
+                        primary = Optional.of(false);
                     }
                 }));
 
@@ -140,7 +140,7 @@ public class NodeResourcesTest extends RestTest {
 
         testUtils.updateResource("/v1/node-resources/" + id, new NodeResourcePUT() {
             {
-                primary = true;
+                primary = Optional.of(true);
             }
         });
 
@@ -153,7 +153,7 @@ public class NodeResourcesTest extends RestTest {
 
         testUtils.updateResource("/v1/node-resources/" + id, new NodeResourcePUT() {
             {
-                primary = false;
+                primary = Optional.of(false);
             }
         }, status().is4xxClientError());
     }
@@ -245,7 +245,7 @@ public class NodeResourcesTest extends RestTest {
             {
                 nodeId = graphTheory.getPublicId();
                 resourceId = graphs.getPublicId();
-                primary = true;
+                primary = Optional.of(true);
             }
         });
 
@@ -268,16 +268,14 @@ public class NodeResourcesTest extends RestTest {
         URI geometryCircles = save(NodeConnection.create(geometry, circles)).getPublicId();
         testUtils.updateResource("/v1/node-resources/" + geometryCircles, new NodeResourcePUT() {
             {
-                primary = true;
-                id = geometryCircles;
-                rank = 1;
+                primary = Optional.of(true);
+                rank = Optional.of(1);
             }
         });
         testUtils.updateResource("/v1/node-resources/" + geometrySquares, new NodeResourcePUT() {
             {
-                primary = true;
-                id = geometrySquares;
-                rank = 2;
+                primary = Optional.of(true);
+                rank = Optional.of(2);
             }
         });
 
@@ -305,19 +303,19 @@ public class NodeResourcesTest extends RestTest {
 
         testUtils.createResource("/v1/node-resources", new NodeResourcePOST() {
             {
-                primary = true;
+                primary = Optional.of(true);
                 nodeId = geometry.getPublicId();
                 resourceId = squares.getPublicId();
-                rank = 2;
+                rank = Optional.of(2);
             }
         });
 
         testUtils.createResource("/v1/node-resources", new NodeResourcePOST() {
             {
-                primary = true;
+                primary = Optional.of(true);
                 nodeId = geometry.getPublicId();
                 resourceId = circles.getPublicId();
-                rank = 1;
+                rank = Optional.of(1);
             }
         });
 
@@ -340,8 +338,8 @@ public class NodeResourcesTest extends RestTest {
         testUtils.updateResource("/v1/node-resources/" + updatedConnection.getPublicId().toString(),
                 new NodeResourcePUT() {
                     {
-                        primary = true;
-                        rank = 1;
+                        primary = Optional.of(true);
+                        rank = Optional.of(1);
                     }
                 });
         assertEquals(1, updatedConnection.getRank());
@@ -371,8 +369,8 @@ public class NodeResourcesTest extends RestTest {
         testUtils.updateResource("/v1/node-resources/" + updatedConnection.getPublicId().toString(),
                 new NodeResourcePUT() {
                     {
-                        primary = true;
-                        rank = 1;
+                        primary = Optional.of(true);
+                        rank = Optional.of(1);
                     }
                 });
         assertEquals(1, updatedConnection.getRank());
@@ -404,8 +402,8 @@ public class NodeResourcesTest extends RestTest {
         testUtils.updateResource("/v1/node-resources/" + nodeResources.get(9).getPublicId().toString(),
                 new NodeResourcePUT() {
                     {
-                        primary = true;
-                        rank = 99;
+                        primary = Optional.of(true);
+                        rank = Optional.of(99);
                     }
                 });
         assertEquals(99, updatedConnection.getRank());

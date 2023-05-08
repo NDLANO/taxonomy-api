@@ -18,7 +18,7 @@ import java.util.Optional;
 public class ResourcePostPut implements UpdatableDto<Node> {
     @JsonProperty
     @Schema(description = "If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.", example = "urn:resource:2")
-    public URI id;
+    public Optional<URI> id = Optional.empty();
 
     @JsonProperty
     @Schema(description = "The ID of this resource in the system where the content is stored. This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier "
@@ -31,13 +31,13 @@ public class ResourcePostPut implements UpdatableDto<Node> {
 
     @Override
     public Optional<URI> getId() {
-        return Optional.ofNullable(id);
+        return id;
     }
 
     @Override
     public void apply(Node entity) {
         if (getId().isPresent())
-            entity.setPublicId(id);
+            entity.setPublicId(getId().get());
         entity.setName(name);
         entity.setContentUri(contentUri);
     }

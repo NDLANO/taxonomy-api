@@ -23,32 +23,32 @@ import java.util.UUID;
 public class NodePostPut implements UpdatableDto<Node> {
     @JsonProperty
     @Schema(description = "If specified, set the node_id to this value. If omitted, an uuid will be assigned automatically.")
-    public String nodeId;
+    public Optional<String> nodeId = Optional.empty();
 
     @JsonProperty
     @Enumerated(EnumType.STRING)
-    @Schema(description = "Type of node. Values are subject, topic. Required on create.", example = "topic")
+    @Schema(description = "Type of node.", example = "topic")
     public NodeType nodeType;
 
     @JsonProperty
     @Schema(description = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
-    public URI contentUri;
+    public Optional<URI> contentUri;
 
     @JsonProperty
     @Schema(description = "The name of the node. Required on create.", example = "Trigonometry")
-    public String name;
+    public Optional<String> name;
 
     @JsonProperty
     @Schema(description = "The node is a root node. Default is false. Only used if present.")
-    public Boolean root;
+    public Optional<Boolean> root;
 
     public Optional<String> getNodeId() {
-        return Optional.ofNullable(nodeId);
+        return nodeId;
     }
 
     @JsonIgnore
     public URI getPublicId() {
-        return URI.create("urn:" + nodeType.getName() + ":" + nodeId);
+        return URI.create("urn:" + nodeType.getName() + ":" + nodeId.get());
     }
 
     @Override
@@ -59,17 +59,11 @@ public class NodePostPut implements UpdatableDto<Node> {
         if (getNodeId().isPresent()) {
             node.setPublicId(getPublicId());
         }
-        if (root != null) {
-            node.setRoot(root);
-        }
         if (nodeType != null) {
             node.setNodeType(nodeType);
         }
-        if (name != null) {
-            node.setName(name);
-        }
-        if (contentUri != null) {
-            node.setContentUri(contentUri);
-        }
+        root.ifPresent(node::setRoot);
+        name.ifPresent(node::setName);
+        contentUri.ifPresent(node::setContentUri);
     }
 }

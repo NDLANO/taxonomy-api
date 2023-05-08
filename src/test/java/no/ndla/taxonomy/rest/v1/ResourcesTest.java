@@ -191,14 +191,14 @@ public class ResourcesTest extends RestTest {
     public void can_create_resource_with_id() throws Exception {
         final var command = new ResourcePostPut() {
             {
-                id = URI.create("urn:resource:1");
+                id = Optional.of(URI.create("urn:resource:1"));
                 name = "name";
             }
         };
 
         testUtils.createResource("/v1/resources", command);
 
-        assertNotNull(nodeRepository.getByPublicId(command.id));
+        assertNotNull(nodeRepository.getByPublicId(command.getId().get()));
     }
 
     @Test
@@ -241,7 +241,7 @@ public class ResourcesTest extends RestTest {
 
         final var command = new ResourcePostPut() {
             {
-                id = publicId;
+                id = Optional.of(publicId);
                 name = "The inner planets";
                 contentUri = URI.create("urn:article:1");
             }
@@ -261,7 +261,7 @@ public class ResourcesTest extends RestTest {
 
         final var command = new ResourcePostPut() {
             {
-                id = randomId;
+                id = Optional.of(randomId);
                 name = "The inner planets";
                 contentUri = URI.create("urn:article:1");
             }
@@ -282,7 +282,7 @@ public class ResourcesTest extends RestTest {
 
         final var command = new ResourcePostPut() {
             {
-                id = publicId;
+                id = Optional.of(publicId);
                 name = "physics";
                 contentUri = URI.create("urn:article:1");
             }
@@ -304,7 +304,7 @@ public class ResourcesTest extends RestTest {
     public void duplicate_ids_not_allowed() throws Exception {
         final var command = new ResourcePostPut() {
             {
-                id = URI.create("urn:resource:1");
+                id = Optional.of(URI.create("urn:resource:1"));
                 name = "name";
             }
         };
@@ -382,7 +382,7 @@ public class ResourcesTest extends RestTest {
 
         final var command = new ResourcePostPut() {
             {
-                id = URI.create("urn:resource:2");
+                id = Optional.of(URI.create("urn:resource:2"));
                 name = "What is maths?";
             }
         };

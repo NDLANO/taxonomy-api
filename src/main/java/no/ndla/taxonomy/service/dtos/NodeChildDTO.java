@@ -38,7 +38,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
     private int rank;
 
     @Schema(description = "Relevance id", example = "urn:relevance:core")
-    private URI relevanceId;
+    private Optional<URI> relevanceId;
 
     public NodeChildDTO(Optional<Node> root, NodeConnection nodeConnection, String language,
             Optional<Boolean> includeContexts) {
@@ -54,8 +54,8 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         this.connectionId = nodeConnection.getPublicId();
         this.isPrimary = nodeConnection.isPrimary().orElse(false);
         {
-            final Relevance relevance = nodeConnection.getRelevance().orElse(null);
-            this.relevanceId = relevance != null ? relevance.getPublicId() : URI.create("urn:relevance:core");
+            Optional<Relevance> relevance = nodeConnection.getRelevance();
+            this.relevanceId = relevance.map(Relevance::getPublicId);
         }
     }
 
@@ -69,8 +69,8 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         this.connectionId = nodeConnection.getPublicId();
         this.isPrimary = nodeConnection.isPrimary().orElse(false);
         {
-            final Relevance relevance = nodeConnection.getRelevance().orElse(null);
-            this.relevanceId = relevance != null ? relevance.getPublicId() : URI.create("urn:relevance:core");
+            Optional<Relevance> relevance = nodeConnection.getRelevance();
+            this.relevanceId = relevance.map(Relevance::getPublicId);
         }
     }
 
@@ -130,12 +130,12 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         this.rank = rank;
     }
 
-    public URI getRelevanceId() {
+    public Optional<URI> getRelevanceId() {
         return relevanceId;
     }
 
     public void setRelevanceId(URI relevanceId) {
-        this.relevanceId = relevanceId;
+        this.relevanceId = Optional.ofNullable(relevanceId);
     }
 
     @Override

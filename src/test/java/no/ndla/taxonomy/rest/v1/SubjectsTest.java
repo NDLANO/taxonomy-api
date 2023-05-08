@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
@@ -70,7 +71,7 @@ public class SubjectsTest extends RestTest {
         final var createSubjectCommand = new SubjectPostPut() {
             {
                 name = "testsubject";
-                contentUri = URI.create("urn:article:1");
+                contentUri = Optional.of(URI.create("urn:article:1"));
             }
         };
 
@@ -79,7 +80,7 @@ public class SubjectsTest extends RestTest {
 
         Node subject = nodeRepository.getByPublicId(id);
         assertEquals(createSubjectCommand.name, subject.getName());
-        assertEquals(createSubjectCommand.contentUri, subject.getContentUri());
+        assertEquals(createSubjectCommand.contentUri.get(), subject.getContentUri());
         assertTrue(subject.isRoot()); // all subjects are roots
     }
 
@@ -106,7 +107,7 @@ public class SubjectsTest extends RestTest {
             {
                 id = publicId;
                 name = "physics";
-                contentUri = URI.create("urn:article:1");
+                contentUri = Optional.of(URI.create("urn:article:1"));
             }
         };
 
@@ -114,7 +115,7 @@ public class SubjectsTest extends RestTest {
 
         Node subject = nodeRepository.getByPublicId(publicId);
         assertEquals(command.name, subject.getName());
-        assertEquals(command.contentUri, subject.getContentUri());
+        assertEquals(command.contentUri.get(), subject.getContentUri());
     }
 
     @Test
@@ -126,7 +127,7 @@ public class SubjectsTest extends RestTest {
             {
                 id = randomId;
                 name = "random";
-                contentUri = URI.create("urn:article:1");
+                contentUri = Optional.of(URI.create("urn:article:1"));
             }
         };
 
@@ -134,7 +135,7 @@ public class SubjectsTest extends RestTest {
 
         Node subject = nodeRepository.getByPublicId(randomId);
         assertEquals(command.name, subject.getName());
-        assertEquals(command.contentUri, subject.getContentUri());
+        assertEquals(command.contentUri.get(), subject.getContentUri());
     }
 
     @Test
@@ -147,7 +148,7 @@ public class SubjectsTest extends RestTest {
             {
                 id = publicId;
                 name = "physics";
-                contentUri = URI.create("urn:article:1");
+                contentUri = Optional.of(URI.create("urn:article:1"));
             }
         };
 
@@ -155,7 +156,7 @@ public class SubjectsTest extends RestTest {
 
         Node subject = nodeRepository.getByPublicId(publicId);
         assertEquals(command.name, subject.getName());
-        assertEquals(command.contentUri, subject.getContentUri());
+        assertEquals(command.contentUri.get(), subject.getContentUri());
         assertFalse(subject.getMetadata().isVisible());
         assertTrue(subject.getMetadata().getGrepCodes().stream().map(JsonGrepCode::getCode).collect(Collectors.toSet())
                 .contains("KM123"));

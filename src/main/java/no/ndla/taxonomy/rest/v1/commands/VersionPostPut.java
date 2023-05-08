@@ -26,7 +26,7 @@ public class VersionPostPut implements UpdatableDto<Version> {
 
     @JsonProperty
     @Schema(description = "If specified, set the locked property to this value.")
-    public Boolean locked;
+    public Optional<Boolean> locked = Optional.empty();
 
     @Override
     public Optional<URI> getId() {
@@ -40,8 +40,6 @@ public class VersionPostPut implements UpdatableDto<Version> {
         if (name != null) {
             entity.setName(name);
         }
-        if (locked != null) {
-            entity.setLocked(locked);
-        }
+        locked.ifPresent(entity::setLocked);
     }
 }

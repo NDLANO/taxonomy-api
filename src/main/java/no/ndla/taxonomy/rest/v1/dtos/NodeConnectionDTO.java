@@ -14,6 +14,7 @@ import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
 
 import java.net.URI;
+import java.util.Optional;
 
 @Schema(name = "NodeConnection")
 public class NodeConnectionDTO {
@@ -30,7 +31,7 @@ public class NodeConnectionDTO {
     public URI id;
 
     @JsonProperty
-    @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
+    @Schema(description = "Is this connection primary", example = "true")
     public boolean primary;
 
     @JsonProperty
@@ -39,7 +40,7 @@ public class NodeConnectionDTO {
 
     @JsonProperty
     @Schema(description = "Relevance id", example = "urn:relevance:core")
-    public URI relevanceId;
+    public Optional<URI> relevanceId;
 
     @JsonProperty
     @Schema(description = "Metadata for entity. Read only.")
@@ -52,7 +53,7 @@ public class NodeConnectionDTO {
         id = nodeConnection.getPublicId();
         nodeConnection.getParent().ifPresent(topic -> parentId = topic.getPublicId());
         nodeConnection.getChild().ifPresent(subtopic -> childId = subtopic.getPublicId());
-        relevanceId = nodeConnection.getRelevance().map(Relevance::getPublicId).orElse(null);
+        relevanceId = nodeConnection.getRelevance().map(Relevance::getPublicId);
         primary = true;
         rank = nodeConnection.getRank();
         metadata = new MetadataDTO(nodeConnection.getMetadata());

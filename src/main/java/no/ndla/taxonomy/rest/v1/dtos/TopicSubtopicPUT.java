@@ -11,21 +11,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.net.URI;
+import java.util.Optional;
 
 public class TopicSubtopicPUT {
     @JsonProperty
-    @Schema(description = "Connection id", example = "urn:topic-has-subtopics:345")
-    public URI id;
-
-    @JsonProperty
-    @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
-    public boolean primary;
+    @Schema(description = "Is this connection primary", example = "true")
+    public Optional<Boolean> primary;
 
     @JsonProperty
     @Schema(description = "Order in which subtopic is sorted for the topic", example = "1")
-    public int rank;
+    public Optional<Integer> rank;
 
     @JsonProperty
     @Schema(description = "Relevance id", example = "urn:relevance:core")
-    public URI relevanceId;
+    public Optional<URI> relevanceId;
 }

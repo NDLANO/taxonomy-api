@@ -231,7 +231,7 @@ public class NodesTest extends RestTest {
         var result = Stream.concat(page1.getResults().stream(), page2.getResults().stream()).toList();
 
         // noinspection SuspiciousMethodCalls
-        assertTrue(List.of(node1, node2).stream().map(DomainEntity::getPublicId).map(Object::toString).toList()
+        assertTrue(Stream.of(node1, node2).map(DomainEntity::getPublicId).map(Object::toString).toList()
                 .containsAll(result.stream().map(r -> ((LinkedHashMap<String, String>) r).get("id")).toList()));
     }
 
@@ -454,6 +454,7 @@ public class NodesTest extends RestTest {
 
     private void connectionsHaveCorrectTypes(ConnectionDTO[] connections) {
         ConnectionTypeCounter connectionTypeCounter = new ConnectionTypeCounter(connections).countTypes();
+        assertEquals(0, connectionTypeCounter.getSubjectCount());
         assertEquals(1, connectionTypeCounter.getParentCount());
         assertEquals(2, connectionTypeCounter.getChildCount());
     }
@@ -492,9 +493,9 @@ public class NodesTest extends RestTest {
         final var createNodeCommand = new NodePostPut() {
             {
                 nodeType = NodeType.NODE;
-                name = "node";
-                contentUri = URI.create("urn:article:1");
-                root = Boolean.TRUE;
+                name = Optional.of("node");
+                contentUri = Optional.of(URI.create("urn:article:1"));
+                root = Optional.of(Boolean.TRUE);
             }
         };
 
@@ -503,9 +504,9 @@ public class NodesTest extends RestTest {
 
         Node node = nodeRepository.getByPublicId(id);
         assertEquals(createNodeCommand.nodeType, node.getNodeType());
-        assertEquals(createNodeCommand.name, node.getName());
-        assertEquals(createNodeCommand.contentUri, node.getContentUri());
-        assertEquals(createNodeCommand.root, node.isRoot());
+        assertEquals(createNodeCommand.name.get(), node.getName());
+        assertEquals(createNodeCommand.contentUri.get(), node.getContentUri());
+        assertEquals(createNodeCommand.root.get(), node.isRoot());
     }
 
     @Test
@@ -513,8 +514,8 @@ public class NodesTest extends RestTest {
         final var createNodeCommand = new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
-                name = "trigonometry";
-                contentUri = URI.create("urn:article:1");
+                name = Optional.of("trigonometry");
+                contentUri = Optional.of(URI.create("urn:article:1"));
             }
         };
 
@@ -523,8 +524,8 @@ public class NodesTest extends RestTest {
 
         Node node = nodeRepository.getByPublicId(id);
         assertEquals(createNodeCommand.nodeType, node.getNodeType());
-        assertEquals(createNodeCommand.name, node.getName());
-        assertEquals(createNodeCommand.contentUri, node.getContentUri());
+        assertEquals(createNodeCommand.name.get(), node.getName());
+        assertEquals(createNodeCommand.contentUri.get(), node.getContentUri());
     }
 
     @Test
@@ -532,8 +533,8 @@ public class NodesTest extends RestTest {
         final var createNodeCommand = new NodePostPut() {
             {
                 nodeType = NodeType.SUBJECT;
-                name = "Maths";
-                contentUri = URI.create("urn:frontpage:1");
+                name = Optional.of("Maths");
+                contentUri = Optional.of(URI.create("urn:frontpage:1"));
             }
         };
 
@@ -542,8 +543,8 @@ public class NodesTest extends RestTest {
 
         Node node = nodeRepository.getByPublicId(id);
         assertEquals(createNodeCommand.nodeType, node.getNodeType());
-        assertEquals(createNodeCommand.name, node.getName());
-        assertEquals(createNodeCommand.contentUri, node.getContentUri());
+        assertEquals(createNodeCommand.name.get(), node.getName());
+        assertEquals(createNodeCommand.contentUri.get(), node.getContentUri());
     }
 
     @Test
@@ -551,15 +552,15 @@ public class NodesTest extends RestTest {
         final var createNodeCommand = new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
-                nodeId = "1";
-                name = "trigonometry";
+                nodeId = Optional.of("1");
+                name = Optional.of("trigonometry");
             }
         };
 
         testUtils.createResource("/v1/nodes", createNodeCommand);
 
         Node node = nodeRepository.getByPublicId(createNodeCommand.getPublicId());
-        assertEquals(createNodeCommand.name, node.getName());
+        assertEquals(createNodeCommand.name.get(), node.getName());
     }
 
     @Test
@@ -567,8 +568,8 @@ public class NodesTest extends RestTest {
         final var command = new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
-                nodeId = "1";
-                name = "name";
+                nodeId = Optional.of("1");
+                name = Optional.of("name");
             }
         };
 
@@ -583,9 +584,9 @@ public class NodesTest extends RestTest {
         testUtils.updateResource("/v1/nodes/" + n.getPublicId(), new NodePostPut() {
             {
                 nodeType = n.getNodeType();
-                nodeId = n.getIdent();
-                name = "trigonometry";
-                contentUri = URI.create("urn:article:1");
+                nodeId = Optional.of(n.getIdent());
+                name = Optional.of("trigonometry");
+                contentUri = Optional.of(URI.create("urn:article:1"));
             }
         });
 
@@ -602,9 +603,9 @@ public class NodesTest extends RestTest {
         testUtils.updateResource("/v1/nodes/" + publicId, new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
-                nodeId = "random";
-                name = "trigonometry";
-                contentUri = URI.create("urn:article:1");
+                nodeId = Optional.of("random");
+                name = Optional.of("trigonometry");
+                contentUri = Optional.of(URI.create("urn:article:1"));
             }
         });
 
@@ -621,9 +622,9 @@ public class NodesTest extends RestTest {
         var command = new NodePostPut() {
             {
                 nodeType = NodeType.SUBJECT;
-                nodeId = ident;
-                name = "trigonometry";
-                contentUri = URI.create("urn:article:1");
+                nodeId = Optional.of(ident);
+                name = Optional.of("trigonometry");
+                contentUri = Optional.of(URI.create("urn:article:1"));
             }
         };
 
@@ -642,8 +643,8 @@ public class NodesTest extends RestTest {
         final var command = new NodePostPut() {
             {
                 nodeType = NodeType.TOPIC;
-                name = "physics";
-                contentUri = URI.create("urn:article:1");
+                name = Optional.of("physics");
+                contentUri = Optional.of(URI.create("urn:article:1"));
             }
         };
 
@@ -651,8 +652,8 @@ public class NodesTest extends RestTest {
 
         Node node = nodeRepository.getByPublicId(n.getPublicId());
         assertEquals(command.nodeType, node.getNodeType());
-        assertEquals(command.name, node.getName());
-        assertEquals(command.contentUri, node.getContentUri());
+        assertEquals(command.name.get(), node.getName());
+        assertEquals(command.contentUri.get(), node.getContentUri());
 
         assertFalse(node.getMetadata().isVisible());
         assertTrue(node.getMetadata().getGrepCodes().stream().map(JsonGrepCode::getCode).collect(Collectors.toSet())
@@ -801,17 +802,10 @@ public class NodesTest extends RestTest {
             childCount = 0;
             for (ConnectionDTO connection : connections) {
                 switch (connection.getType()) {
-                case "parent-subject":
-                    subjectCount++;
-                    break;
-                case "parent-topic":
-                    parentCount++;
-                    break;
-                case "subtopic":
-                    childCount++;
-                    break;
-                default:
-                    fail("Unexpected connection type :" + connection.getType());
+                case "parent-subject" -> subjectCount++;
+                case "parent-topic" -> parentCount++;
+                case "subtopic" -> childCount++;
+                default -> fail("Unexpected connection type :" + connection.getType());
                 }
             }
             return this;

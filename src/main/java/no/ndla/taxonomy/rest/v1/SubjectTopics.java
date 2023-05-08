@@ -103,8 +103,8 @@ public class SubjectTopics {
             @Parameter(name = "command", description = "The subject and topic getting connected.") @RequestBody SubjectTopicPOST command) {
         var subject = nodeRepository.getByPublicId(command.subjectid);
         var topic = nodeRepository.getByPublicId(command.topicid);
-        var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
-        var rank = command.rank == 0 ? null : command.rank;
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var rank = command.rank.orElse(null);
         final var nodeConnection = connectionService.connectParentChild(subject, topic, relevance, rank,
                 Optional.empty());
         var location = URI.create("/subject-topics/" + nodeConnection.getPublicId());
@@ -131,10 +131,9 @@ public class SubjectTopics {
     public void updateSubjectTopic(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "updated subject/topic connection") @RequestBody SubjectTopicPUT command) {
         var nodeConnection = nodeConnectionRepository.getByPublicId(id);
-        var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
-        var rank = command.rank > 0 ? command.rank : null;
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
 
-        connectionService.updateParentChild(nodeConnection, relevance, rank, Optional.empty());
+        connectionService.updateParentChild(nodeConnection, relevance, command.rank, Optional.empty());
     }
 
 }

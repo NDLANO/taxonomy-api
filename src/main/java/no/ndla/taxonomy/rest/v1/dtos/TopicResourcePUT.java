@@ -11,21 +11,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.net.URI;
+import java.util.Optional;
 
 public class TopicResourcePUT {
     @JsonProperty
-    @Schema(description = "Topic resource connection id", example = "urn:topic-has-resources:123")
-    public URI id;
-
-    @JsonProperty
     @Schema(description = "Primary connection", example = "true")
-    public boolean primary;
+    public Optional<Boolean> primary;
 
     @JsonProperty
     @Schema(description = "Order in which the resource will be sorted for this topic.", example = "1")
-    public int rank;
+    public Optional<Integer> rank;
 
     @JsonProperty
     @Schema(description = "Relevance id", example = "urn:relevance:core")
-    public URI relevanceId;
+    public Optional<URI> relevanceId;
 }

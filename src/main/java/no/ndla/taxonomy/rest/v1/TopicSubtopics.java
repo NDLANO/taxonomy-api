@@ -105,9 +105,8 @@ public class TopicSubtopics {
             @Parameter(name = "connection", description = "The new connection") @RequestBody TopicSubtopicPOST command) {
         Node topic = nodeRepository.getByPublicId(command.topicid);
         Node subtopic = nodeRepository.getByPublicId(command.subtopicid);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
-                : null;
-        var rank = command.rank == 0 ? null : command.rank;
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var rank = command.rank.orElse(null);
 
         final var topicSubtopic = connectionService.connectParentChild(topic, subtopic, relevance, rank,
                 Optional.empty());
@@ -137,11 +136,9 @@ public class TopicSubtopics {
     public void updateTopicSubtopic(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "The updated connection") @RequestBody TopicSubtopicPUT command) {
         final var topicSubtopic = nodeConnectionRepository.getByPublicId(id);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
-                : null;
-        var rank = command.rank > 0 ? command.rank : null;
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
 
-        connectionService.updateParentChild(topicSubtopic, relevance, rank, Optional.empty());
+        connectionService.updateParentChild(topicSubtopic, relevance, command.rank, Optional.empty());
     }
 
 }
