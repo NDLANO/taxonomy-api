@@ -105,11 +105,10 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
             @Parameter(name = "connection", description = "The new connection") @RequestBody NodeConnectionPOST command) {
         Node parent = nodeRepository.getByPublicId(command.parentId);
         Node child = nodeRepository.getByPublicId(command.childId);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
-                : null;
-
-        final var nodeConnection = connectionService.connectParentChild(parent, child, relevance,
-                command.rank == 0 ? null : command.rank, Optional.empty());
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var rank = command.rank.orElse(null);
+        final var nodeConnection = connectionService.connectParentChild(parent, child, relevance, rank,
+                command.primary);
 
         URI location = URI.create("/node-child/" + nodeConnection.getPublicId());
         return ResponseEntity.created(location).build();
@@ -135,14 +134,13 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     public void updateNodeConnection(@PathVariable("id") URI id,
             @Parameter(name = "connection", description = "The updated connection") @RequestBody NodeConnectionPUT command) {
         final var connection = nodeConnectionRepository.getByPublicId(id);
-        var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
-        var rank = command.rank > 0 ? command.rank : null;
-        if (connection.isPrimary().orElse(false) && !command.primary) {
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var rank = command.rank.orElse(null);
+        if (connection.isPrimary().orElse(false) && !command.primary.orElse(false)) {
             throw new PrimaryParentRequiredException();
         }
-        var primary = Optional.of(command.primary);
 
-        connectionService.updateParentChild(connection, relevance, rank, primary);
+        connectionService.updateParentChild(connection, relevance, rank, command.primary);
     }
 
 }

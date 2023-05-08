@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.net.URI;
+import java.util.Optional;
 
 public class NodeConnectionPOST {
     @JsonProperty
@@ -22,14 +23,14 @@ public class NodeConnectionPOST {
     public URI childId;
 
     @JsonProperty
-    @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
-    public boolean primary = true;
+    @Schema(description = "If this connection is primary.", example = "true")
+    public Optional<Boolean> primary = Optional.of(true);
 
     @JsonProperty
     @Schema(description = "Order in which to sort the child for the parent", example = "1")
-    public int rank;
+    public Optional<Integer> rank;
 
     @JsonProperty
     @Schema(description = "Relevance id", example = "urn:relevance:core")
-    public URI relevanceId;
+    public Optional<URI> relevanceId;
 }
