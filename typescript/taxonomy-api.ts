@@ -211,10 +211,6 @@ export interface NodeResourcePOST {
 
 export interface NodeResourcePUT {
     /**
-     * Node resource connection id
-     */
-    id: string;
-    /**
      * Primary connection
      */
     primary?: boolean;
