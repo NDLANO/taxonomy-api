@@ -342,7 +342,7 @@ export interface ResourceTypeWithConnection {
     connectionId: string;
     id: string;
     name: string;
-    parentId: string;
+    parentId?: string;
     /**
      * List of language codes supported by translations
      */

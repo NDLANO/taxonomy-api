@@ -370,10 +370,10 @@ public class ResourcesTest extends RestTest {
         assertEquals(2, result.length);
         assertAnyTrue(result,
                 rt -> rt.getName().equals("Article") && rt.getId().toString().equals("urn:resourcetype:2")
-                        && rt.getParentId().toString().equals("urn:resourcetype:1")
+                        && rt.getParentId().get().toString().equals("urn:resourcetype:1")
                         && rt.getConnectionId().toString().contains("urn:resource-resourcetype"));
         assertAnyTrue(result, rt -> rt.getName().equals("Video") && rt.getId().toString().equals("urn:resourcetype:3")
-                && rt.getParentId().toString().equals("urn:resourcetype:1"));
+                && rt.getParentId().get().toString().equals("urn:resourcetype:1"));
     }
 
     @Test
