@@ -1,99 +1,61 @@
 
-export interface NodePostPut {
-    nodeId?: string;
-    /**
-     * Type of node.
-     */
-    nodeType: NodeType;
-    /**
-     * ID of content introducing this node. Must be a valid URI, but preferably not a URL.
-     */
-    contentUri?: string;
-    /**
-     * The name of the node. Required on create.
-     */
-    name?: string;
-    /**
-     * The node is a root node. Default is false. Only used if present.
-     */
-    root?: boolean;
-}
-
-export interface ResourcePostPut {
-    /**
-     * If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.
-     */
-    id?: string;
-    /**
-     * The ID of this resource in the system where the content is stored. This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier for the system, and <id> is the id of this content in that system.
-     */
-    contentUri: string;
-    /**
-     * The name of the resource
-     */
-    name: string;
-}
-
-export interface SubjectPostPut {
-    /**
-     * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
-     */
-    id: string;
-    /**
-     * ID of frontpage connected to this subject. Must be a valid URI, but preferably not a URL.
-     */
-    contentUri?: string;
-    /**
-     * The name of the subject
-     */
-    name: string;
-}
-
-export interface TopicPostPut {
-    /**
-     * If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.
-     */
-    id: string;
-    /**
-     * ID of article introducing this topic. Must be a valid URI, but preferably not a URL.
-     */
-    contentUri: string;
-    /**
-     * The name of the topic
-     */
-    name: string;
-}
-
-export interface VersionPostPut {
-    /**
-     * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
-     */
-    id: string;
-    /**
-     * If specified, set the name to this value.
-     */
-    name: string;
-    /**
-     * If specified, set the locked property to this value.
-     */
-    locked?: boolean;
+export interface Connection {
+    connectionId: string;
+    isPrimary: boolean;
+    paths: string[];
+    targetId: string;
+    type: string;
 }
 
 export interface Context {
     id: string;
-    path: string;
     name: string;
+    path: string;
 }
 
 export interface ContextPOST {
     id: string;
 }
 
-export interface NodeConnection {
+export interface Metadata {
+    customFields: Record<string, string>;
+    grepCodes: string[];
+    visible: boolean;
+}
+
+export interface Node {
+    breadcrumbs: string[];
+    contentUri?: string;
     /**
-     * Parent id
+     * An id unique for this context.
      */
+    contextId?: string;
+    contexts: TaxonomyContext[];
+    id: string;
+    metadata: Metadata;
+    name: string;
+    /**
+     * The type of node
+     */
+    nodeType: NodeType;
+    path: string;
+    paths: string[];
+    relevanceId?: string;
+    resourceTypes: ResourceTypeWithConnection[];
+    supportedLanguages: string[];
+    translations: Translation[];
+    url?: string;
+}
+
+export interface NodeChild extends Node {
+    connectionId: string;
+    isPrimary: boolean;
+    parent: string;
     parentId: string;
+    rank: number;
+}
+
+export interface NodeConnection {
     /**
      * Child id
      */
@@ -102,6 +64,14 @@ export interface NodeConnection {
      * Connection id
      */
     id: string;
+    /**
+     * Metadata for entity. Read only.
+     */
+    metadata: Metadata;
+    /**
+     * Parent id
+     */
+    parentId: string;
     /**
      * Is this connection primary
      */
@@ -114,18 +84,14 @@ export interface NodeConnection {
      * Relevance id
      */
     relevanceId?: string;
-    /**
-     * Metadata for entity. Read only.
-     */
-    metadata: Metadata;
 }
 
 export interface NodeConnectionPOST {
-    parentId: string;
     /**
      * Child id
      */
     childId: string;
+    parentId: string;
     /**
      * If this connection is primary.
      */
@@ -155,19 +121,39 @@ export interface NodeConnectionPUT {
     relevanceId?: string;
 }
 
+export interface NodePostPut {
+    /**
+     * ID of content introducing this node. Must be a valid URI, but preferably not a URL.
+     */
+    contentUri?: string;
+    /**
+     * The name of the node. Required on create.
+     */
+    name?: string;
+    nodeId?: string;
+    /**
+     * Type of node.
+     */
+    nodeType: NodeType;
+    /**
+     * The node is a root node. Default is false. Only used if present.
+     */
+    root?: boolean;
+}
+
 export interface NodeResource {
-    /**
-     * Node id
-     */
-    nodeId: string;
-    /**
-     * Resource id
-     */
-    resourceId: string;
     /**
      * Node resource connection id
      */
     id: string;
+    /**
+     * Metadata for entity. Read only.
+     */
+    metadata: Metadata;
+    /**
+     * Node id
+     */
+    nodeId: string;
     /**
      * Primary connection
      */
@@ -181,9 +167,9 @@ export interface NodeResource {
      */
     relevanceId?: string;
     /**
-     * Metadata for entity. Read only.
+     * Resource id
      */
-    metadata: Metadata;
+    resourceId: string;
 }
 
 export interface NodeResourcePOST {
@@ -191,10 +177,6 @@ export interface NodeResourcePOST {
      * Node id
      */
     nodeId: string;
-    /**
-     * Resource id
-     */
-    resourceId: string;
     /**
      * Primary connection
      */
@@ -207,6 +189,10 @@ export interface NodeResourcePOST {
      * Relevance id
      */
     relevanceId?: string;
+    /**
+     * Resource id
+     */
+    resourceId: string;
 }
 
 export interface NodeResourcePUT {
@@ -224,6 +210,10 @@ export interface NodeResourcePUT {
     relevanceId?: string;
 }
 
+export interface NodeWithParents extends Node {
+    parents: NodeChild[];
+}
+
 export interface Relevance {
     /**
      * Specifies if node is core or supplementary
@@ -234,13 +224,13 @@ export interface Relevance {
      */
     name: string;
     /**
-     * All translations of this relevance
-     */
-    translations: Translation[];
-    /**
      * List of language codes supported by translations
      */
     supportedLanguages: string[];
+    /**
+     * All translations of this relevance
+     */
+    translations: Translation[];
 }
 
 export interface RelevancePUT {
@@ -261,7 +251,34 @@ export interface ResolvedOldUrl {
     path: string;
 }
 
+export interface ResolvedUrl {
+    contentUri: string;
+    id: string;
+    name: string;
+    parents: string[];
+    path: string;
+}
+
+export interface ResourcePostPut {
+    /**
+     * The ID of this resource in the system where the content is stored. This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier for the system, and <id> is the id of this content in that system.
+     */
+    contentUri: string;
+    /**
+     * If specified, set the id to this value. Must start with urn:resource: and be a valid URI. If omitted, an id will be assigned automatically.
+     */
+    id?: string;
+    /**
+     * The name of the resource
+     */
+    name: string;
+}
+
 export interface ResourceResourceType {
+    /**
+     * Resource to resource type connection id
+     */
+    id: string;
     /**
      * Resource type id
      */
@@ -270,10 +287,6 @@ export interface ResourceResourceType {
      * Resource type id
      */
     resourceTypeId: string;
-    /**
-     * Resource to resource type connection id
-     */
-    id: string;
 }
 
 export interface ResourceResourceTypePOST {
@@ -298,20 +311,16 @@ export interface ResourceType {
      */
     subtypes: ResourceType[];
     /**
-     * All translations of this resource type
-     */
-    translations: Translation[];
-    /**
      * List of language codes supported by translations
      */
     supportedLanguages: string[];
+    /**
+     * All translations of this resource type
+     */
+    translations: Translation[];
 }
 
 export interface ResourceTypePUT {
-    /**
-     * If specified, the new resource type will be a child of the mentioned resource type.
-     */
-    parentId: string;
     /**
      * If specified, set the id to this value. Must start with urn:resourcetype: and be a valid URI. If omitted, an id will be assigned automatically.
      */
@@ -320,17 +329,52 @@ export interface ResourceTypePUT {
      * The name of the resource type
      */
     name: string;
+    /**
+     * If specified, the new resource type will be a child of the mentioned resource type.
+     */
+    parentId: string;
+}
+
+export interface ResourceTypeWithConnection {
+    connectionId: string;
+    id: string;
+    name: string;
+    parentId: string;
+    /**
+     * List of language codes supported by translations
+     */
+    supportedLanguages: string[];
+    translations: Translation[];
+}
+
+export interface SearchResult<T> {
+    page: number;
+    pageSize: number;
+    results: T[];
+    totalCount: number;
+}
+
+export interface SearchableTaxonomyResourceType {
+    id: string;
+    name: Record<string, string>;
+}
+
+export interface SubjectPostPut {
+    /**
+     * ID of frontpage connected to this subject. Must be a valid URI, but preferably not a URL.
+     */
+    contentUri?: string;
+    /**
+     * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
+     */
+    id: string;
+    /**
+     * The name of the subject
+     */
+    name: string;
 }
 
 export interface SubjectTopic {
-    /**
-     * Subject id
-     */
-    subjectid: string;
-    /**
-     * Topic id
-     */
-    topicid: string;
     /**
      * Connection id
      */
@@ -347,9 +391,6 @@ export interface SubjectTopic {
      * Relevance id
      */
     relevanceId?: string;
-}
-
-export interface SubjectTopicPOST {
     /**
      * Subject id
      */
@@ -358,6 +399,9 @@ export interface SubjectTopicPOST {
      * Topic id
      */
     topicid: string;
+}
+
+export interface SubjectTopicPOST {
     /**
      * Backwards compatibility: Always true, ignored on insert/update.
      */
@@ -370,6 +414,14 @@ export interface SubjectTopicPOST {
      * Relevance id
      */
     relevanceId?: string;
+    /**
+     * Subject id
+     */
+    subjectid: string;
+    /**
+     * Topic id
+     */
+    topicid: string;
 }
 
 export interface SubjectTopicPUT {
@@ -387,15 +439,86 @@ export interface SubjectTopicPUT {
     relevanceId?: string;
 }
 
+export interface TaxonomyContext {
+    /**
+     * A breadcrumb of the names of the context's path
+     */
+    breadcrumbs: Record<string, string[]>;
+    /**
+     * Unique id of context based on root + connection
+     */
+    contextId: string;
+    /**
+     * Whether a 'standard'-article, 'topic-article'-article or a 'learningpath'
+     */
+    contextType?: string;
+    id: string;
+    /**
+     * Whether the base connection is marked as active subject
+     */
+    isActive: boolean;
+    /**
+     * Whether the base connection is primary or not
+     */
+    isPrimary: boolean;
+    isPrimaryConnection: boolean;
+    /**
+     * Whether the base connection is visible or not
+     */
+    isVisible: boolean;
+    /**
+     * List of all parent topic-ids
+     */
+    parentIds: string[];
+    parentTopicIds: string[];
+    /**
+     * The context path
+     */
+    path: string;
+    /**
+     * The publicId of the node connected via content-uri
+     */
+    publicId: string;
+    /**
+     * Name of the relevance of the connection of the base
+     */
+    relevance: Record<string, string>;
+    /**
+     * Id of the relevance of the connection of the base
+     */
+    relevanceId: string;
+    /**
+     * Resource-types of the base
+     */
+    resourceTypes: SearchableTaxonomyResourceType[];
+    /**
+     * The name of the root parent of the context
+     */
+    root: Record<string, string>;
+    /**
+     * The publicId of the root parent of the context
+     */
+    rootId: string;
+    subject: Record<string, string>;
+    subjectId: string;
+}
+
+export interface TopicPostPut {
+    /**
+     * ID of article introducing this topic. Must be a valid URI, but preferably not a URL.
+     */
+    contentUri: string;
+    /**
+     * If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.
+     */
+    id: string;
+    /**
+     * The name of the topic
+     */
+    name: string;
+}
+
 export interface TopicResource {
-    /**
-     * Topic id
-     */
-    topicid: string;
-    /**
-     * Resource id
-     */
-    resourceId: string;
     /**
      * Topic resource connection id
      */
@@ -412,17 +535,17 @@ export interface TopicResource {
      * Relevance id
      */
     relevanceId?: string;
-}
-
-export interface TopicResourcePOST {
-    /**
-     * Topic id
-     */
-    topicid: string;
     /**
      * Resource id
      */
     resourceId: string;
+    /**
+     * Topic id
+     */
+    topicid: string;
+}
+
+export interface TopicResourcePOST {
     /**
      * Primary connection
      */
@@ -435,6 +558,14 @@ export interface TopicResourcePOST {
      * Relevance id
      */
     relevanceId?: string;
+    /**
+     * Resource id
+     */
+    resourceId: string;
+    /**
+     * Topic id
+     */
+    topicid: string;
 }
 
 export interface TopicResourcePUT {
@@ -454,14 +585,6 @@ export interface TopicResourcePUT {
 
 export interface TopicSubtopic {
     /**
-     * Topic id
-     */
-    topicid: string;
-    /**
-     * Subtopic id
-     */
-    subtopicid: string;
-    /**
      * Connection id
      */
     id: string;
@@ -477,17 +600,17 @@ export interface TopicSubtopic {
      * Relevance id
      */
     relevanceId?: string;
-}
-
-export interface TopicSubtopicPOST {
-    /**
-     * Topic id
-     */
-    topicid: string;
     /**
      * Subtopic id
      */
     subtopicid: string;
+    /**
+     * Topic id
+     */
+    topicid: string;
+}
+
+export interface TopicSubtopicPOST {
     /**
      * Is this connection primary
      */
@@ -500,6 +623,14 @@ export interface TopicSubtopicPOST {
      * Relevance id
      */
     relevanceId?: string;
+    /**
+     * Subtopic id
+     */
+    subtopicid: string;
+    /**
+     * Topic id
+     */
+    topicid: string;
 }
 
 export interface TopicSubtopicPUT {
@@ -517,6 +648,17 @@ export interface TopicSubtopicPUT {
     relevanceId?: string;
 }
 
+export interface Translation {
+    /**
+     * ISO 639-1 language code
+     */
+    language: string;
+    /**
+     * The translated name of the node
+     */
+    name: string;
+}
+
 export interface TranslationPUT {
     /**
      * The translated name of the element. Used wherever translated texts are used.
@@ -526,10 +668,6 @@ export interface TranslationPUT {
 
 export interface UrlMapping {
     /**
-     * URL for resource in old system
-     */
-    url: string;
-    /**
      * Node URN for resource in new system
      */
     nodeId: string;
@@ -537,177 +675,39 @@ export interface UrlMapping {
      * Subject URN for resource in new system (optional)
      */
     subjectId: string;
-}
-
-export interface SearchableTaxonomyResourceType {
-    id: string;
-    name: Record<string, string>;
-}
-
-export interface TaxonomyContext {
     /**
-     * The publicId of the node connected via content-uri
+     * URL for resource in old system
      */
-    publicId: string;
-    /**
-     * The publicId of the root parent of the context
-     */
-    rootId: string;
-    /**
-     * The name of the root parent of the context
-     */
-    root: Record<string, string>;
-    /**
-     * The context path
-     */
-    path: string;
-    /**
-     * A breadcrumb of the names of the context's path
-     */
-    breadcrumbs: Record<string, string[]>;
-    /**
-     * Whether a 'standard'-article, 'topic-article'-article or a 'learningpath'
-     */
-    contextType?: string;
-    /**
-     * Id of the relevance of the connection of the base
-     */
-    relevanceId: string;
-    /**
-     * Name of the relevance of the connection of the base
-     */
-    relevance: Record<string, string>;
-    /**
-     * Resource-types of the base
-     */
-    resourceTypes: SearchableTaxonomyResourceType[];
-    /**
-     * List of all parent topic-ids
-     */
-    parentIds: string[];
-    /**
-     * Whether the base connection is primary or not
-     */
-    isPrimary: boolean;
-    /**
-     * Whether the base connection is marked as active subject
-     */
-    isActive: boolean;
-    /**
-     * Whether the base connection is visible or not
-     */
-    isVisible: boolean;
-    /**
-     * Unique id of context based on root + connection
-     */
-    contextId: string;
-    id: string;
-    subject: Record<string, string>;
-    subjectId: string;
-    parentTopicIds: string[];
-    isPrimaryConnection: boolean;
-}
-
-export interface Connection {
-    connectionId: string;
-    targetId: string;
-    paths: string[];
-    type: string;
-    isPrimary: boolean;
-}
-
-export interface Metadata {
-    grepCodes: string[];
-    visible: boolean;
-    customFields: Record<string, string>;
-}
-
-export interface NodeChild extends Node {
-    parentId: string;
-    connectionId: string;
-    rank: number;
-    parent: string;
-    isPrimary: boolean;
-}
-
-export interface Node {
-    id: string;
-    name: string;
-    contentUri?: string;
-    path: string;
-    paths: string[];
-    metadata: Metadata;
-    relevanceId?: string;
-    translations: Translation[];
-    supportedLanguages: string[];
-    breadcrumbs: string[];
-    resourceTypes: ResourceTypeWithConnection[];
-    /**
-     * The type of node
-     */
-    nodeType: NodeType;
-    /**
-     * An id unique for this context.
-     */
-    contextId?: string;
-    url?: string;
-    contexts: TaxonomyContext[];
-}
-
-export interface NodeWithParents extends Node {
-    parents: NodeChild[];
-}
-
-export interface ResolvedUrl {
-    id: string;
-    contentUri: string;
-    name: string;
-    parents: string[];
-    path: string;
-}
-
-export interface ResourceTypeWithConnection {
-    id: string;
-    parentId: string;
-    name: string;
-    translations: Translation[];
-    /**
-     * List of language codes supported by translations
-     */
-    supportedLanguages: string[];
-    connectionId: string;
-}
-
-export interface SearchResult<T> {
-    totalCount: number;
-    page: number;
-    pageSize: number;
-    results: T[];
-}
-
-export interface Translation {
-    /**
-     * The translated name of the node
-     */
-    name: string;
-    /**
-     * ISO 639-1 language code
-     */
-    language: string;
+    url: string;
 }
 
 export interface Version {
-    id: string;
-    versionType: VersionType;
-    name: string;
+    archived?: DateAsString;
+    created: DateAsString;
     hash: string;
+    id: string;
     /**
      * Is the version locked
      */
     locked: boolean;
-    created: DateAsString;
+    name: string;
     published?: DateAsString;
-    archived?: DateAsString;
+    versionType: VersionType;
+}
+
+export interface VersionPostPut {
+    /**
+     * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
+     */
+    id: string;
+    /**
+     * If specified, set the locked property to this value.
+     */
+    locked?: boolean;
+    /**
+     * If specified, set the name to this value.
+     */
+    name: string;
 }
 
 export type DateAsString = string;

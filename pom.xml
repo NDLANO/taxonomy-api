@@ -278,6 +278,8 @@
                     <outputFile>typescript/taxonomy-api.ts</outputFile>
                     <outputFileType>implementationFile</outputFileType>
                     <removeTypeNameSuffix>DTO</removeTypeNameSuffix>
+                    <sortDeclarations>true</sortDeclarations>
+                    <sortTypeDeclarations>true</sortTypeDeclarations>
                 </configuration>
             </plugin>
         </plugins>
