@@ -603,8 +603,8 @@ export interface TaxonomyContext {
     contextId: string;
     id: string;
     subject: Record<string, string>;
-    subjectId: string;
     parentTopicIds: string[];
+    subjectId: string;
     isPrimaryConnection: boolean;
 }
 
