@@ -15,6 +15,7 @@ import no.ndla.taxonomy.domain.Translation;
 
 import java.net.URI;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -27,7 +28,7 @@ public class ResourceTypeWithConnectionDTO implements Comparable<ResourceTypeWit
 
     @JsonProperty
     @Schema(example = "urn:resourcetype:1")
-    private URI parentId;
+    private Optional<URI> parentId = Optional.empty();
 
     @JsonProperty
     @Schema(description = "The name of the resource type", example = "Lecture")
@@ -59,7 +60,7 @@ public class ResourceTypeWithConnectionDTO implements Comparable<ResourceTypeWit
         this.supportedLanguages = this.translations.stream().map(t -> t.language)
                 .collect(Collectors.toCollection(TreeSet::new));
 
-        resourceType.getParent().map(ResourceType::getPublicId).ifPresent(publicId -> this.parentId = publicId);
+        this.parentId = resourceType.getParent().map(ResourceType::getPublicId);
 
         this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
                 .map(Translation::getName).orElse(resourceType.getName());
@@ -71,7 +72,7 @@ public class ResourceTypeWithConnectionDTO implements Comparable<ResourceTypeWit
         return id;
     }
 
-    public URI getParentId() {
+    public Optional<URI> getParentId() {
         return parentId;
     }
 

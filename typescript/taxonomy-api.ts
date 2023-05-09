@@ -50,6 +50,9 @@ export interface Node {
 export interface NodeChild extends Node {
     connectionId: string;
     isPrimary: boolean;
+    /**
+     * @deprecated
+     */
     parent: string;
     parentId: string;
     rank: number;
@@ -339,7 +342,7 @@ export interface ResourceTypeWithConnection {
     connectionId: string;
     id: string;
     name: string;
-    parentId: string;
+    parentId?: string;
     /**
      * List of language codes supported by translations
      */
@@ -452,7 +455,10 @@ export interface TaxonomyContext {
      * Whether a 'standard'-article, 'topic-article'-article or a 'learningpath'
      */
     contextType?: string;
-    id: string;
+    /**
+     * @deprecated
+     */
+    id?: string;
     /**
      * Whether the base connection is marked as active subject
      */
@@ -461,7 +467,10 @@ export interface TaxonomyContext {
      * Whether the base connection is primary or not
      */
     isPrimary: boolean;
-    isPrimaryConnection: boolean;
+    /**
+     * @deprecated
+     */
+    isPrimaryConnection?: boolean;
     /**
      * Whether the base connection is visible or not
      */
@@ -470,7 +479,10 @@ export interface TaxonomyContext {
      * List of all parent topic-ids
      */
     parentIds: string[];
-    parentTopicIds: string[];
+    /**
+     * @deprecated
+     */
+    parentTopicIds?: string[];
     /**
      * The context path
      */
@@ -486,7 +498,7 @@ export interface TaxonomyContext {
     /**
      * Id of the relevance of the connection of the base
      */
-    relevanceId: string;
+    relevanceId?: string;
     /**
      * Resource-types of the base
      */
@@ -499,8 +511,14 @@ export interface TaxonomyContext {
      * The publicId of the root parent of the context
      */
     rootId: string;
-    subject: Record<string, string>;
-    subjectId: string;
+    /**
+     * @deprecated
+     */
+    subject?: Record<string, string>;
+    /**
+     * @deprecated
+     */
+    subjectId?: string;
 }
 
 export interface TopicPostPut {

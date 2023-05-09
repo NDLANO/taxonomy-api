@@ -23,7 +23,7 @@ public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "The context path") String path,
         @JsonProperty @Schema(description = "A breadcrumb of the names of the context's path") LanguageFieldDTO<List<String>> breadcrumbs,
         @JsonProperty @Schema(description = "Whether a 'standard'-article, 'topic-article'-article or a 'learningpath'") Optional<String> contextType,
-        @JsonProperty @Schema(description = "Id of the relevance of the connection of the base") URI relevanceId,
+        @JsonProperty @Schema(description = "Id of the relevance of the connection of the base") Optional<URI> relevanceId,
         @JsonProperty @Schema(description = "Name of the relevance of the connection of the base") LanguageFieldDTO<String> relevance,
         @JsonProperty @Schema(description = "Resource-types of the base") List<SearchableTaxonomyResourceType> resourceTypes,
         @JsonProperty @Schema(description = "List of all parent topic-ids") List<URI> parentIds,
@@ -33,28 +33,33 @@ public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "Unique id of context based on root + connection") String contextId) {
 
     @JsonProperty
-    public URI id() {
-        return publicId();
+    @Deprecated
+    public Optional<URI> id() {
+        return Optional.of(publicId());
     }
 
     @JsonProperty
-    public URI subjectId() {
-        return rootId();
+    @Deprecated
+    public Optional<URI> subjectId() {
+        return Optional.of(rootId());
     }
 
     @JsonProperty
-    public LanguageFieldDTO<String> subject() {
-        return root();
+    @Deprecated
+    public Optional<LanguageFieldDTO<String>> subject() {
+        return Optional.of(root());
     }
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    public List<URI> parentTopicIds() {
-        return parentIds();
+    @Deprecated
+    public Optional<List<URI>> parentTopicIds() {
+        return Optional.of(parentIds());
     }
 
     @JsonProperty("isPrimaryConnection")
-    public boolean isPrimaryConnection() {
-        return isPrimary();
+    @Deprecated
+    public Optional<Boolean> isPrimaryConnection() {
+        return Optional.of(isPrimary());
     }
 
 }
