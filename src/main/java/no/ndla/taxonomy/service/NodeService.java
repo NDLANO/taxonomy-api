@@ -351,9 +351,10 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 return new TaxonomyContextDTO(node.getPublicId(), URI.create(context.rootId()),
                         LanguageFieldDTO.fromLanguageField(context.rootName()), context.path(),
                         LanguageFieldDTO.fromLanguageFieldList(breadcrumbs), context.contextType(),
-                        URI.create(context.relevanceId()), LanguageFieldDTO.fromLanguageField(relevanceName),
-                        resourceTypes, context.parentIds().stream().map(URI::create).toList(), context.isPrimary(),
-                        context.isActive(), context.isVisible(), context.contextId());
+                        Optional.of(URI.create(context.relevanceId())),
+                        LanguageFieldDTO.fromLanguageField(relevanceName), resourceTypes,
+                        context.parentIds().stream().map(URI::create).toList(), context.isPrimary(), context.isActive(),
+                        context.isVisible(), context.contextId());
             });
         }).toList();
     }

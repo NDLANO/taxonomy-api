@@ -126,7 +126,8 @@ public class NodeDTO {
                 return new TaxonomyContextDTO(entity.getPublicId(), URI.create(ctx.rootId()),
                         LanguageFieldDTO.fromLanguageField(ctx.rootName()), ctx.path(),
                         LanguageFieldDTO.fromLanguageFieldList(ctx.breadcrumbs()), entity.getContextType(),
-                        URI.create(ctx.relevanceId()), LanguageFieldDTO.fromLanguageField(finalRelevanceName),
+                        Optional.of(URI.create(ctx.relevanceId())),
+                        LanguageFieldDTO.fromLanguageField(finalRelevanceName),
                         entity.getResourceTypes().stream().map(SearchableTaxonomyResourceType::new).toList(),
                         ctx.parentIds().stream().map(URI::create).toList(), ctx.isPrimary(), ctx.isActive(),
                         ctx.isVisible(), ctx.contextId());

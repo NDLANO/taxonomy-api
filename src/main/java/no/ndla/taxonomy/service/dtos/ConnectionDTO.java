@@ -84,6 +84,7 @@ public class ConnectionDTO {
         return type;
     }
 
+    @Deprecated
     public Boolean getPrimary() {
         return isPrimary;
     }
