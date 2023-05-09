@@ -28,9 +28,9 @@ public class TopicResourcePOST {
 
     @JsonProperty
     @Schema(description = "Order in which resource is sorted for the topic", example = "1")
-    public Optional<Integer> rank;
+    public Optional<Integer> rank = Optional.empty();
 
     @JsonProperty
     @Schema(description = "Relevance id", example = "urn:relevance:core")
-    public Optional<URI> relevanceId;
+    public Optional<URI> relevanceId = Optional.empty();
 }

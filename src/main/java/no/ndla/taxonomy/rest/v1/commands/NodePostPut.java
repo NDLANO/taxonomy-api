@@ -32,15 +32,15 @@ public class NodePostPut implements UpdatableDto<Node> {
 
     @JsonProperty
     @Schema(description = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
-    public Optional<URI> contentUri;
+    public Optional<URI> contentUri = Optional.empty();
 
     @JsonProperty
     @Schema(description = "The name of the node. Required on create.", example = "Trigonometry")
-    public Optional<String> name;
+    public Optional<String> name = Optional.empty();
 
     @JsonProperty
     @Schema(description = "The node is a root node. Default is false. Only used if present.")
-    public Optional<Boolean> root;
+    public Optional<Boolean> root = Optional.empty();
 
     public Optional<String> getNodeId() {
         return nodeId;

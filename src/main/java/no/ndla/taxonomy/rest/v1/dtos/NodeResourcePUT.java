@@ -15,18 +15,14 @@ import java.util.Optional;
 
 public class NodeResourcePUT {
     @JsonProperty
-    @Schema(description = "Node resource connection id", example = "urn:node-resource:123")
-    public URI id;
-
-    @JsonProperty
     @Schema(description = "Primary connection", example = "true")
-    public Optional<Boolean> primary;
+    public Optional<Boolean> primary = Optional.empty();
 
     @JsonProperty
     @Schema(description = "Order in which the resource will be sorted for this node.", example = "1")
-    public Optional<Integer> rank;
+    public Optional<Integer> rank = Optional.empty();
 
     @JsonProperty
     @Schema(description = "Relevance id", example = "urn:relevance:core")
-    public Optional<URI> relevanceId;
+    public Optional<URI> relevanceId = Optional.empty();
 }

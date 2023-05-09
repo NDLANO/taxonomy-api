@@ -22,7 +22,7 @@ public class SubjectPostPut implements UpdatableDto<Node> {
 
     @JsonProperty
     @Schema(description = "ID of frontpage connected to this subject. Must be a valid URI, but preferably not a URL.", example = "urn:frontpage:1")
-    public Optional<URI> contentUri;
+    public Optional<URI> contentUri = Optional.empty();
 
     @JsonProperty
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "The name of the subject", example = "Mathematics")

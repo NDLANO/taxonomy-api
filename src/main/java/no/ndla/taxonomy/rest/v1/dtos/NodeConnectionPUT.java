@@ -16,13 +16,13 @@ import java.util.Optional;
 public class NodeConnectionPUT {
     @JsonProperty
     @Schema(description = "If this connection is primary.", example = "true")
-    public Optional<Boolean> primary;
+    public Optional<Boolean> primary = Optional.empty();
 
     @JsonProperty
     @Schema(description = "Order in which subtopic is sorted for the topic", example = "1")
-    public Optional<Integer> rank;
+    public Optional<Integer> rank = Optional.empty();
 
     @JsonProperty
     @Schema(description = "Relevance id", example = "urn:relevance:core")
-    public Optional<URI> relevanceId;
+    public Optional<URI> relevanceId = Optional.empty();
 }

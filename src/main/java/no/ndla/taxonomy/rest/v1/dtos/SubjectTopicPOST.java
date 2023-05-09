@@ -24,13 +24,13 @@ public class SubjectTopicPOST {
 
     @JsonProperty
     @Schema(description = "Backwards compatibility: Always true, ignored on insert/update.", example = "true")
-    public Optional<Boolean> primary;
+    public Optional<Boolean> primary = Optional.empty();
 
     @JsonProperty
     @Schema(description = "Order in which the topic should be sorted for the topic", example = "1")
-    public Optional<Integer> rank;
+    public Optional<Integer> rank = Optional.empty();
 
     @JsonProperty
     @Schema(description = "Relevance id", example = "urn:relevance:core")
-    public Optional<URI> relevanceId;
+    public Optional<URI> relevanceId = Optional.empty();
 }
