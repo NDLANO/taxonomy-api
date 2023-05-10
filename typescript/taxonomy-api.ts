@@ -717,7 +717,7 @@ export interface VersionPostPut {
     /**
      * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
      */
-    id: string;
+    id?: string;
     /**
      * If specified, set the locked property to this value.
      */

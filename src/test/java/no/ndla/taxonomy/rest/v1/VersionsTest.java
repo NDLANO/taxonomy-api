@@ -100,7 +100,7 @@ public class VersionsTest extends RestTest {
     public void can_create_version() throws Exception {
         final var createVersionCommand = new VersionPostPut() {
             {
-                id = URI.create("urn:version:1");
+                id = Optional.of(URI.create("urn:version:1"));
                 name = "Beta";
             }
         };
@@ -109,7 +109,7 @@ public class VersionsTest extends RestTest {
         URI id = getId(response);
 
         Version version = versionRepository.getByPublicId(id);
-        assertEquals(createVersionCommand.id, version.getPublicId());
+        assertEquals(createVersionCommand.id.get(), version.getPublicId());
         assertEquals(VersionType.BETA, version.getVersionType());
         assertEquals("Beta", version.getName());
     }
@@ -119,7 +119,7 @@ public class VersionsTest extends RestTest {
         Version published = builder.version(v -> v.type(VersionType.PUBLISHED));
         final var createVersionCommand = new VersionPostPut() {
             {
-                id = URI.create("urn:version:1");
+                id = Optional.of(URI.create("urn:version:1"));
                 name = "Beta";
             }
         };
@@ -129,7 +129,7 @@ public class VersionsTest extends RestTest {
         URI id = getId(response);
 
         Version version = versionRepository.getByPublicId(id);
-        assertEquals(createVersionCommand.id, version.getPublicId());
+        assertEquals(createVersionCommand.id.get(), version.getPublicId());
         assertEquals(VersionType.BETA, version.getVersionType());
         assertEquals("Beta", version.getName());
     }
@@ -163,7 +163,7 @@ public class VersionsTest extends RestTest {
         URI newUri = URI.create("urn:version:1");
         final var updateVersionCommand = new VersionPostPut() {
             {
-                id = newUri;
+                id = Optional.of(newUri);
                 name = "New name";
                 locked = Optional.of(true);
             }
@@ -173,7 +173,7 @@ public class VersionsTest extends RestTest {
                 updateVersionCommand);
 
         Version updated = versionRepository.getByPublicId(newUri);
-        assertEquals(updateVersionCommand.id, updated.getPublicId());
+        assertEquals(updateVersionCommand.id.get(), updated.getPublicId());
         assertEquals(VersionType.BETA, updated.getVersionType());
         assertEquals("New name", updated.getName());
         assertTrue(updated.isLocked());

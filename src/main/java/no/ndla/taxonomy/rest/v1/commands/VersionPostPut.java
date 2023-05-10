@@ -18,7 +18,7 @@ import java.util.Optional;
 public class VersionPostPut implements UpdatableDto<Version> {
     @JsonProperty
     @Schema(description = "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:subject:1")
-    public URI id;
+    public Optional<URI> id = Optional.empty();
 
     @JsonProperty
     @Schema(description = "If specified, set the name to this value.", example = "Beta 2022")
@@ -30,13 +30,13 @@ public class VersionPostPut implements UpdatableDto<Version> {
 
     @Override
     public Optional<URI> getId() {
-        return Optional.ofNullable(id);
+        return id;
     }
 
     @Override
     public void apply(Version entity) {
         if (getId().isPresent())
-            entity.setPublicId(id);
+            entity.setPublicId(getId().get());
         if (name != null) {
             entity.setName(name);
         }
