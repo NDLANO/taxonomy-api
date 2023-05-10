@@ -88,7 +88,7 @@ public class SubjectsTest extends RestTest {
     public void can_create_subject_with_id() throws Exception {
         final var command = new SubjectPostPut() {
             {
-                id = URI.create("urn:subject:1");
+                id = Optional.of(URI.create("urn:subject:1"));
                 name = "name";
             }
         };
@@ -96,7 +96,7 @@ public class SubjectsTest extends RestTest {
         var response = testUtils.createResource("/v1/subjects", command);
         assertEquals("/v1/subjects/urn:subject:1", response.getHeader("Location"));
 
-        assertNotNull(nodeRepository.getByPublicId(command.id));
+        assertNotNull(nodeRepository.getByPublicId(command.getId().get()));
     }
 
     @Test
@@ -105,7 +105,7 @@ public class SubjectsTest extends RestTest {
 
         final var command = new SubjectPostPut() {
             {
-                id = publicId;
+                id = Optional.of(publicId);
                 name = "physics";
                 contentUri = Optional.of(URI.create("urn:article:1"));
             }
@@ -125,7 +125,7 @@ public class SubjectsTest extends RestTest {
 
         final var command = new SubjectPostPut() {
             {
-                id = randomId;
+                id = Optional.of(randomId);
                 name = "random";
                 contentUri = Optional.of(URI.create("urn:article:1"));
             }
@@ -146,7 +146,7 @@ public class SubjectsTest extends RestTest {
 
         final var command = new SubjectPostPut() {
             {
-                id = publicId;
+                id = Optional.of(publicId);
                 name = "physics";
                 contentUri = Optional.of(URI.create("urn:article:1"));
             }
@@ -167,7 +167,7 @@ public class SubjectsTest extends RestTest {
     public void duplicate_ids_not_allowed() throws Exception {
         final var command = new SubjectPostPut() {
             {
-                id = URI.create("urn:subject:1");
+                id = Optional.of(URI.create("urn:subject:1"));
                 name = "name";
             }
         };

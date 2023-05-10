@@ -18,7 +18,7 @@ import java.util.Optional;
 public class SubjectPostPut implements UpdatableDto<Node> {
     @JsonProperty
     @Schema(description = "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.", example = "urn:subject:1")
-    public URI id;
+    public Optional<URI> id = Optional.empty();
 
     @JsonProperty
     @Schema(description = "ID of frontpage connected to this subject. Must be a valid URI, but preferably not a URL.", example = "urn:frontpage:1")
@@ -30,13 +30,13 @@ public class SubjectPostPut implements UpdatableDto<Node> {
 
     @Override
     public Optional<URI> getId() {
-        return Optional.ofNullable(id);
+        return id;
     }
 
     @Override
     public void apply(Node subject) {
         if (getId().isPresent())
-            subject.setPublicId(id);
+            subject.setPublicId(getId().get());
         subject.setContext(true);
         subject.setRoot(true);
         subject.setName(name);

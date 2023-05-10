@@ -370,7 +370,7 @@ export interface SubjectPostPut {
     /**
      * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
      */
-    id: string;
+    id?: string;
     /**
      * The name of the subject
      */
@@ -529,7 +529,7 @@ export interface TopicPostPut {
     /**
      * If specified, set the id to this value. Must start with urn:topic: and be a valid URI. If omitted, an id will be assigned automatically.
      */
-    id: string;
+    id?: string;
     /**
      * The name of the topic
      */

@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManager;
 import java.net.URI;
+import java.util.Optional;
 import java.util.Set;
 
 import static no.ndla.taxonomy.TestUtils.*;
@@ -249,14 +250,14 @@ public class TopicsTest extends RestTest {
     public void can_create_topic_with_id() throws Exception {
         final var createTopicCommand = new TopicPostPut() {
             {
-                id = URI.create("urn:topic:1");
+                id = Optional.of(URI.create("urn:topic:1"));
                 name = "trigonometry";
             }
         };
 
         testUtils.createResource("/v1/topics", createTopicCommand);
 
-        Node topic = nodeRepository.getByPublicId(createTopicCommand.id);
+        Node topic = nodeRepository.getByPublicId(createTopicCommand.getId().get());
         assertEquals(createTopicCommand.name, topic.getName());
     }
 
@@ -264,7 +265,7 @@ public class TopicsTest extends RestTest {
     public void duplicate_ids_not_allowed() throws Exception {
         final var command = new TopicPostPut() {
             {
-                id = URI.create("urn:topic:1");
+                id = Optional.of(URI.create("urn:topic:1"));
                 name = "name";
             }
         };
@@ -279,7 +280,7 @@ public class TopicsTest extends RestTest {
 
         testUtils.updateResource("/v1/topics/" + publicId, new TopicPostPut() {
             {
-                id = publicId;
+                id = Optional.of(publicId);
                 name = "trigonometry";
                 contentUri = URI.create("urn:article:1");
             }
@@ -297,7 +298,7 @@ public class TopicsTest extends RestTest {
 
         testUtils.updateResource("/v1/topics/" + publicId, new TopicPostPut() {
             {
-                id = randomId;
+                id = Optional.of(randomId);
                 name = "trigonometry";
                 contentUri = URI.create("urn:article:1");
             }
