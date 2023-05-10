@@ -28,7 +28,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
     private Set<Context> createContexts(Node node) {
         final var returnedContexts = new HashSet<Context>();
 
-        boolean activeContext = node.getCustomFields().getOrDefault(Constants.SubjectCategory, "")
+        boolean activeContext = node.getCustomFields().getOrDefault(Constants.SubjectCategory, Constants.Active)
                 .equals(Constants.Active);
         // This entity can be root path
         if (node.isContext()) {
