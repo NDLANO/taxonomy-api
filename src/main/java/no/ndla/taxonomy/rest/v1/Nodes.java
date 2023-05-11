@@ -57,11 +57,11 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     }
 
     private List<NodeType> getDefaultNodeTypes(Optional<List<NodeType>> nodeType, Optional<URI> contentURI,
-            Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
+            Optional<String> contextId, Optional<Boolean> isRoot, MetadataFilters metadataFilters) {
         if (nodeType.isPresent() && nodeType.get().size() > 0) {
             return nodeType.get();
         }
-        if (contentURI.isEmpty() && isRoot.isEmpty() && !metadataFilters.hasFilters()) {
+        if (contentURI.isEmpty() && contextId.isEmpty() && isRoot.isEmpty() && !metadataFilters.hasFilters()) {
             return List.of(NodeType.TOPIC, NodeType.NODE, NodeType.SUBJECT);
         }
         return List.of(NodeType.values());
@@ -81,7 +81,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by context id") @RequestParam(value = "contextId", required = false) Optional<String> contextId,
             @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false) Optional<Boolean> includeContexts) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        var defaultNodeTypes = getDefaultNodeTypes(nodeType, contentUri, isRoot, metadataFilters);
+        var defaultNodeTypes = getDefaultNodeTypes(nodeType, contentUri, contextId, isRoot, metadataFilters);
         return nodeService.getNodesByType(Optional.of(defaultNodeTypes), language, contentUri, contextId, isRoot,
                 metadataFilters, includeContexts);
     }
