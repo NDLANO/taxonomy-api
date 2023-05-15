@@ -7,6 +7,8 @@
 
 package no.ndla.taxonomy.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +39,7 @@ import java.util.Optional;
  * @param contextId
  *            Hash of root publicId + nodeConnection publicId. Unique for this context.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record Context(String rootId, LanguageField<String> rootName, String path,
         LanguageField<List<String>> breadcrumbs, Optional<String> contextType, List<String> parentIds,
         boolean isVisible, boolean isActive, boolean isPrimary, String relevanceId, String contextId) {
