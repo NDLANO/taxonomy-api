@@ -9,13 +9,14 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
-import no.ndla.taxonomy.rest.v1.commands.ResourceCommand;
+import no.ndla.taxonomy.rest.v1.commands.ResourcePostPut;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.MetadataFilters;
 import no.ndla.taxonomy.service.NodeService;
@@ -57,10 +58,11 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         return "/v1/resources";
     }
 
+    @Deprecated
     @GetMapping
     @Operation(summary = "Lists all resources")
     @Transactional(readOnly = true)
-    public List<NodeDTO> getAll(
+    public List<NodeDTO> getAllResources(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false) Optional<URI> contentUri,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false) Optional<String> key,
@@ -71,10 +73,11 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                 Optional.empty(), Optional.empty(), metadataFilters, Optional.of(false));
     }
 
+    @Deprecated
     @GetMapping("/search")
     @Operation(summary = "Search all resources")
     @Transactional(readOnly = true)
-    public SearchResultDTO<NodeDTO> search(
+    public SearchResultDTO<NodeDTO> searchResources(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(description = "How many results to return per page") @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
             @Parameter(description = "Which page to fetch") @RequestParam(value = "page", defaultValue = "1") int page,
@@ -84,10 +87,11 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                 Optional.of(NodeType.RESOURCE));
     }
 
+    @Deprecated
     @GetMapping("/page")
     @Operation(summary = "Gets all resources paginated")
     @Transactional(readOnly = true)
-    public SearchResultDTO<NodeDTO> allPaginated(
+    public SearchResultDTO<NodeDTO> getResourcePage(
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false) Optional<String> language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
@@ -105,46 +109,51 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
+    @Deprecated
     @GetMapping("{id}")
     @Operation(summary = "Gets a single resource")
     @Transactional(readOnly = true)
-    public NodeDTO get(@PathVariable("id") URI id,
+    public NodeDTO getResource(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
         return nodeService.getNode(id, language, Optional.of(false));
     }
 
+    @Deprecated
     @PutMapping("{id}")
     @Operation(summary = "Updates a resource", security = { @SecurityRequirement(name = "oauth") })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
-            @Parameter(name = "resource", description = "the updated resource. Fields not included will be set to null.") @RequestBody ResourceCommand command) {
-        doPut(id, command);
+    public void updateResource(@PathVariable("id") URI id,
+            @Parameter(name = "resource", description = "the updated resource. Fields not included will be set to null.") @RequestBody @Schema(name = "ResourcePOST") ResourcePostPut command) {
+        updateEntity(id, command);
     }
 
+    @Deprecated
     @PostMapping
     @Operation(summary = "Adds a new resource", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
-            @Parameter(name = "resource", description = "the new resource") @RequestBody ResourceCommand command) {
-        return doPost(new Node(NodeType.RESOURCE), command);
+    public ResponseEntity<Void> createResource(
+            @Parameter(name = "resource", description = "the new resource") @RequestBody @Schema(name = "ResourcePUT") ResourcePostPut command) {
+        return createEntity(new Node(NodeType.RESOURCE), command);
     }
 
+    @Deprecated
     @PostMapping("{id}/clone")
     @Operation(summary = "Clones a resource, including resource-types and translations", security = {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> clone(
+    public ResponseEntity<Void> cloneResource(
             @Parameter(name = "id", description = "Id of resource to clone", example = "urn:resource:1") @PathVariable("id") URI publicId,
-            @Parameter(name = "resource", description = "Object containing contentUri. Other values are ignored.") @RequestBody ResourceCommand command) {
+            @Parameter(name = "resource", description = "Object containing contentUri. Other values are ignored.") @RequestBody @Schema(name = "ResourcePOST") ResourcePostPut command) {
         var entity = nodeService.cloneNode(publicId, command.contentUri);
         URI location = URI.create(getLocation() + "/" + entity.getPublicId());
         return ResponseEntity.created(location).build();
     }
 
+    @Deprecated
     @GetMapping("{id}/resource-types")
     @Operation(summary = "Gets all resource types associated with this resource")
     @Transactional(readOnly = true)
@@ -157,6 +166,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                 .toList();
     }
 
+    @Deprecated
     @GetMapping("{id}/full")
     @Operation(summary = "Gets all parent topics, all filters and resourceTypes for this resource")
     @Transactional(readOnly = true)
@@ -166,12 +176,13 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         return new NodeWithParents(node, language.orElse(Constants.DefaultLanguage));
     }
 
+    @Deprecated
     @DeleteMapping("{id}")
     @Operation(summary = "Deletes a single entity by id", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteEntity(@PathVariable("id") URI id) {
         nodeService.delete(id);
     }
 }

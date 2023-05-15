@@ -7,10 +7,8 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
@@ -18,7 +16,11 @@ import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
+import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicDTO;
+import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicPOST;
+import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicPUT;
 import no.ndla.taxonomy.service.NodeConnectionService;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,26 +51,28 @@ public class TopicSubtopics {
         this.relevanceRepository = relevanceRepository;
     }
 
+    @Deprecated
     @GetMapping
     @Operation(summary = "Gets all connections between topics and subtopics")
     @Transactional(readOnly = true)
-    public List<TopicSubtopicIndexDocument> index() {
-        final List<TopicSubtopicIndexDocument> listToReturn = new ArrayList<>();
+    public List<TopicSubtopicDTO> getAllTopicSubtopics() {
+        final List<TopicSubtopicDTO> listToReturn = new ArrayList<>();
         var ids = nodeConnectionRepository.findAllIds();
         final var counter = new AtomicInteger();
         ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
             final var connections = nodeConnectionRepository.findByIds(idChunk);
-            var dtos = connections.stream().map(TopicSubtopicIndexDocument::new).toList();
+            var dtos = connections.stream().map(TopicSubtopicDTO::new).toList();
             listToReturn.addAll(dtos);
         });
 
         return listToReturn;
     }
 
+    @Deprecated
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between topics and subtopics paginated")
     @Transactional(readOnly = true)
-    public TopicSubtopicPage allPaginated(
+    public SearchResultDTO<TopicSubtopicDTO> getTopicSubtopicPage(
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
         if (page.isEmpty() || pageSize.isEmpty()) {
@@ -79,30 +83,30 @@ public class TopicSubtopics {
 
         var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
         var results = nodeConnectionRepository.findByIds(ids.getContent());
-        var contents = results.stream().map(TopicSubtopics.TopicSubtopicIndexDocument::new)
-                .collect(Collectors.toList());
-        return new TopicSubtopicPage(ids.getTotalElements(), contents);
+        var contents = results.stream().map(TopicSubtopicDTO::new).collect(Collectors.toList());
+        return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
+    @Deprecated
     @GetMapping("/{id}")
     @Operation(summary = "Gets a single connection between a topic and a subtopic")
     @Transactional(readOnly = true)
-    public TopicSubtopicIndexDocument get(@PathVariable("id") URI id) {
+    public TopicSubtopicDTO getTopicSubtopic(@PathVariable("id") URI id) {
         NodeConnection topicSubtopic = nodeConnectionRepository.getByPublicId(id);
-        return new TopicSubtopicIndexDocument(topicSubtopic);
+        return new TopicSubtopicDTO(topicSubtopic);
     }
 
+    @Deprecated
     @PostMapping
     @Operation(summary = "Adds a subtopic to a topic", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
-            @Parameter(name = "connection", description = "The new connection") @RequestBody AddSubtopicToTopicCommand command) {
+    public ResponseEntity<Void> createTopicSubtopic(
+            @Parameter(name = "connection", description = "The new connection") @RequestBody TopicSubtopicPOST command) {
         Node topic = nodeRepository.getByPublicId(command.topicid);
         Node subtopic = nodeRepository.getByPublicId(command.subtopicid);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
-                : null;
-        var rank = command.rank == 0 ? null : command.rank;
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var rank = command.rank.orElse(null);
 
         final var topicSubtopic = connectionService.connectParentChild(topic, subtopic, relevance, rank,
                 Optional.empty());
@@ -111,125 +115,30 @@ public class TopicSubtopics {
         return ResponseEntity.created(location).build();
     }
 
+    @Deprecated
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Removes a connection between a topic and a subtopic", security = {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteTopicSubtopic(@PathVariable("id") URI id) {
         connectionService.disconnectParentChildConnection(nodeConnectionRepository.getByPublicId(id));
     }
 
+    @Deprecated
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Updates a connection between a topic and a subtopic", description = "Use to update which topic is primary to a subtopic or to alter sorting order", security = {
             @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
-            @Parameter(name = "connection", description = "The updated connection") @RequestBody UpdateTopicSubtopicCommand command) {
+    public void updateTopicSubtopic(@PathVariable("id") URI id,
+            @Parameter(name = "connection", description = "The updated connection") @RequestBody TopicSubtopicPUT command) {
         final var topicSubtopic = nodeConnectionRepository.getByPublicId(id);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
-                : null;
-        var rank = command.rank > 0 ? command.rank : null;
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
 
-        connectionService.updateParentChild(topicSubtopic, relevance, rank, Optional.empty());
+        connectionService.updateParentChild(topicSubtopic, relevance, command.rank, Optional.empty());
     }
 
-    public static class AddSubtopicToTopicCommand {
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Topic id", example = "urn:topic:234")
-        public URI topicid;
-
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Subtopic id", example = "urn:topic:234")
-        public URI subtopicid;
-
-        @JsonProperty
-        @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
-        public boolean primary = true;
-
-        @JsonProperty
-        @Schema(description = "Order in which to sort the subtopic for the topic", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
-
-    public static class UpdateTopicSubtopicCommand {
-        @JsonProperty
-        @Schema(description = "Connection id", example = "urn:topic-has-subtopics:345")
-        public URI id;
-
-        @JsonProperty
-        @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
-        public boolean primary;
-
-        @JsonProperty
-        @Schema(description = "Order in which subtopic is sorted for the topic", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
-
-    public static class TopicSubtopicPage {
-        @JsonProperty
-        @Schema(description = "Total number of elements")
-        public long totalCount;
-
-        @JsonProperty
-        @Schema(description = "Page containing results")
-        public List<TopicSubtopicIndexDocument> results;
-
-        TopicSubtopicPage() {
-        }
-
-        TopicSubtopicPage(long totalCount, List<TopicSubtopicIndexDocument> results) {
-            this.totalCount = totalCount;
-            this.results = results;
-        }
-    }
-
-    public static class TopicSubtopicIndexDocument {
-        @JsonProperty
-        @Schema(description = "Topic id", example = "urn:topic:234")
-        public URI topicid;
-
-        @JsonProperty
-        @Schema(description = "Subtopic id", example = "urn:topic:234")
-        public URI subtopicid;
-
-        @JsonProperty
-        @Schema(description = "Connection id", example = "urn:topic-has-subtopics:345")
-        public URI id;
-
-        @JsonProperty
-        @Schema(description = "Backwards compatibility: Always true. Ignored on insert/update", example = "true")
-        public boolean primary;
-
-        @JsonProperty
-        @Schema(description = "Order in which subtopic is sorted for the topic", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-
-        TopicSubtopicIndexDocument() {
-        }
-
-        TopicSubtopicIndexDocument(NodeConnection nodeConnection) {
-            id = nodeConnection.getPublicId();
-            nodeConnection.getParent().ifPresent(topic -> topicid = topic.getPublicId());
-            nodeConnection.getChild().ifPresent(subtopic -> subtopicid = subtopic.getPublicId());
-            relevanceId = nodeConnection.getRelevance().map(Relevance::getPublicId).orElse(null);
-            primary = true;
-            rank = nodeConnection.getRank();
-        }
-    }
 }

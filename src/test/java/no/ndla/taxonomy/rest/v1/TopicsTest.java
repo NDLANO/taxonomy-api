@@ -10,8 +10,8 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.rest.v1.commands.TopicCommand;
-import no.ndla.taxonomy.service.dtos.NodeConnectionDTO;
+import no.ndla.taxonomy.rest.v1.commands.TopicPostPut;
+import no.ndla.taxonomy.service.dtos.ConnectionDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManager;
 import java.net.URI;
+import java.util.Optional;
 import java.util.Set;
 
 import static no.ndla.taxonomy.TestUtils.*;
@@ -48,7 +49,7 @@ public class TopicsTest extends RestTest {
         final var topic = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("trigonometry", topic.getName());
-        assertEquals("urn:article:1", topic.getContentUri().toString());
+        assertEquals("Optional[urn:article:1]", topic.getContentUri().toString());
         assertEquals("/subject:1/topic:1", topic.getPath());
 
         assertNotNull(topic.getMetadata());
@@ -185,7 +186,7 @@ public class TopicsTest extends RestTest {
         testSeeder.topicNodeConnectionsTestSetup();
 
         var response = testUtils.getResource("/v1/topics/urn:topic:2000/connections");
-        var connections = testUtils.getObject(NodeConnectionDTO[].class, response);
+        var connections = testUtils.getObject(ConnectionDTO[].class, response);
 
         assertEquals(3, connections.length, "Correct number of connections");
         assertAllTrue(connections, c -> c.getPaths().size() > 0); // all connections have at least one path
@@ -222,7 +223,7 @@ public class TopicsTest extends RestTest {
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().getGrepCodes().size() == 0);
     }
 
-    private void connectionsHaveCorrectTypes(NodeConnectionDTO[] connections) {
+    private void connectionsHaveCorrectTypes(ConnectionDTO[] connections) {
         ConnectionTypeCounter connectionTypeCounter = new ConnectionTypeCounter(connections).countTypes();
         assertEquals(1, connectionTypeCounter.getParentCount());
         assertEquals(2, connectionTypeCounter.getChildCount());
@@ -230,7 +231,7 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_create_topic() throws Exception {
-        final var createTopicCommand = new TopicCommand() {
+        final var createTopicCommand = new TopicPostPut() {
             {
                 name = "trigonometry";
                 contentUri = URI.create("urn:article:1");
@@ -247,24 +248,24 @@ public class TopicsTest extends RestTest {
 
     @Test
     public void can_create_topic_with_id() throws Exception {
-        final var createTopicCommand = new TopicCommand() {
+        final var createTopicCommand = new TopicPostPut() {
             {
-                id = URI.create("urn:topic:1");
+                id = Optional.of(URI.create("urn:topic:1"));
                 name = "trigonometry";
             }
         };
 
         testUtils.createResource("/v1/topics", createTopicCommand);
 
-        Node topic = nodeRepository.getByPublicId(createTopicCommand.id);
+        Node topic = nodeRepository.getByPublicId(createTopicCommand.getId().get());
         assertEquals(createTopicCommand.name, topic.getName());
     }
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        final var command = new TopicCommand() {
+        final var command = new TopicPostPut() {
             {
-                id = URI.create("urn:topic:1");
+                id = Optional.of(URI.create("urn:topic:1"));
                 name = "name";
             }
         };
@@ -277,9 +278,9 @@ public class TopicsTest extends RestTest {
     public void can_update_topic() throws Exception {
         URI publicId = builder.node(NodeType.TOPIC).getPublicId();
 
-        testUtils.updateResource("/v1/topics/" + publicId, new TopicCommand() {
+        testUtils.updateResource("/v1/topics/" + publicId, new TopicPostPut() {
             {
-                id = publicId;
+                id = Optional.of(publicId);
                 name = "trigonometry";
                 contentUri = URI.create("urn:article:1");
             }
@@ -295,9 +296,9 @@ public class TopicsTest extends RestTest {
         URI publicId = builder.node(NodeType.TOPIC).getPublicId();
         URI randomId = URI.create("urn:topic:random");
 
-        testUtils.updateResource("/v1/topics/" + publicId, new TopicCommand() {
+        testUtils.updateResource("/v1/topics/" + publicId, new TopicPostPut() {
             {
-                id = randomId;
+                id = Optional.of(randomId);
                 name = "trigonometry";
                 contentUri = URI.create("urn:article:1");
             }
@@ -363,12 +364,12 @@ public class TopicsTest extends RestTest {
     }
 
     private static class ConnectionTypeCounter {
-        private final NodeConnectionDTO[] connections;
+        private final ConnectionDTO[] connections;
         private int subjectCount;
         private int parentCount;
         private int childCount;
 
-        ConnectionTypeCounter(NodeConnectionDTO[] connections) {
+        ConnectionTypeCounter(ConnectionDTO[] connections) {
             this.connections = connections;
         }
 
@@ -388,7 +389,7 @@ public class TopicsTest extends RestTest {
             subjectCount = 0;
             parentCount = 0;
             childCount = 0;
-            for (NodeConnectionDTO connection : connections) {
+            for (ConnectionDTO connection : connections) {
                 switch (connection.getType()) {
                 case "parent-subject":
                     subjectCount++;

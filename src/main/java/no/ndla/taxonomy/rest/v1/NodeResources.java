@@ -7,10 +7,8 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.NodeConnection;
@@ -20,10 +18,12 @@ import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourceDTO;
-import no.ndla.taxonomy.rest.v1.dtos.nodes.NodeResourcePageDTO;
+import no.ndla.taxonomy.rest.v1.dtos.NodeResourceDTO;
+import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePOST;
+import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePUT;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeConnectionService;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,7 +58,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @GetMapping
     @Operation(summary = "Gets all connections between node and resources")
     @Transactional(readOnly = true)
-    public List<NodeResourceDTO> index() {
+    public List<NodeResourceDTO> getAllNodeResources() {
         return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream().map(NodeResourceDTO::new)
                 .collect(Collectors.toList());
     }
@@ -66,7 +66,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @GetMapping("/page")
     @Operation(summary = "Gets all connections between node and resources paginated")
     @Transactional(readOnly = true)
-    public NodeResourcePageDTO allPaginated(
+    public SearchResultDTO<NodeResourceDTO> getNodeResourcesPage(
             @Parameter(name = "page", description = "The page to fetch", required = true) Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
 
@@ -81,13 +81,13 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
         var ids = connections.stream().map(DomainEntity::getId).toList();
         var results = nodeConnectionRepository.findByIds(ids);
         var contents = results.stream().map(NodeResourceDTO::new).collect(Collectors.toList());
-        return new NodeResourcePageDTO(connections.getTotalElements(), contents);
+        return new SearchResultDTO<>(connections.getTotalElements(), page.get(), pageSize.get(), contents);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Gets a specific connection between a node and a resource")
     @Transactional(readOnly = true)
-    public NodeResourceDTO get(@PathVariable("id") URI id) {
+    public NodeResourceDTO getNodeResource(@PathVariable("id") URI id) {
         NodeConnection connection = nodeConnectionRepository.getByPublicId(id);
         return new NodeResourceDTO(connection);
     }
@@ -96,15 +96,15 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @Operation(summary = "Adds a resource to a node", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
-            @Parameter(name = "connection", description = "new node/resource connection ") @RequestBody AddResourceToNodeCommand command) {
+    public ResponseEntity<Void> createNodeResource(
+            @Parameter(name = "connection", description = "new node/resource connection ") @RequestBody NodeResourcePOST command) {
         var parent = nodeRepository.getByPublicId(command.nodeId);
         var child = nodeRepository.getByPublicId(command.resourceId);
-        var relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId) : null;
-        var rank = command.rank == 0 ? null : command.rank;
-        var primary = Optional.of(command.primary);
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var rank = command.rank.orElse(null);
 
-        final var nodeConnection = connectionService.connectParentChild(parent, child, relevance, rank, primary);
+        final var nodeConnection = connectionService.connectParentChild(parent, child, relevance, rank,
+                command.primary);
 
         var location = URI.create("/node-resources/" + nodeConnection.getPublicId());
         return ResponseEntity.created(location).build();
@@ -115,7 +115,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteEntity(@PathVariable("id") URI id) {
         var connection = nodeConnectionRepository.getByPublicId(id);
         connectionService.disconnectParentChildConnection(connection);
     }
@@ -126,57 +126,15 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
-            @Parameter(name = "connection", description = "Updated node/resource connection") @RequestBody UpdateNodeResourceCommand command) {
+    public void updateNodeResource(@PathVariable("id") URI id,
+            @Parameter(name = "connection", description = "Updated node/resource connection") @RequestBody NodeResourcePUT command) {
         final var nodeResource = nodeConnectionRepository.getByPublicId(id);
-        Relevance relevance = command.relevanceId != null ? relevanceRepository.getByPublicId(command.relevanceId)
-                : null;
-
-        if (nodeResource.isPrimary().orElse(false) && !command.primary) {
+        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        if (nodeResource.isPrimary().orElse(false) && !command.primary.orElse(false)) {
             throw new PrimaryParentRequiredException();
         }
 
-        connectionService.updateParentChild(nodeResource, relevance, command.rank > 0 ? command.rank : null,
-                Optional.empty());
+        connectionService.updateParentChild(nodeResource, relevance, command.rank, command.primary);
     }
 
-    public static class AddResourceToNodeCommand {
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Node id", example = "urn:node:345")
-        public URI nodeId;
-
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource id", example = "urn:resource:345")
-        public URI resourceId;
-
-        @JsonProperty
-        @Schema(description = "Primary connection", example = "true")
-        public boolean primary = true;
-
-        @JsonProperty
-        @Schema(description = "Order in which resource is sorted for the node", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
-
-    public static class UpdateNodeResourceCommand {
-        @JsonProperty
-        @Schema(description = "Node resource connection id", example = "urn:node-resource:123")
-        public URI id;
-
-        @JsonProperty
-        @Schema(description = "Primary connection", example = "true")
-        public boolean primary;
-
-        @JsonProperty
-        @Schema(description = "Order in which the resource will be sorted for this node.", example = "1")
-        public int rank;
-
-        @JsonProperty
-        @Schema(description = "Relevance id", example = "urn:relevance:core")
-        public URI relevanceId;
-    }
 }

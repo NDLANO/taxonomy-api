@@ -16,6 +16,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import java.net.URI;
 import java.time.Instant;
+import java.util.Optional;
 
 @Schema(name = "Version")
 public class VersionDTO {
@@ -46,11 +47,11 @@ public class VersionDTO {
 
     @JsonProperty
     @Schema(description = "Timestamp for when version was published")
-    private Instant published;
+    private Optional<Instant> published = Optional.empty();
 
     @JsonProperty
     @Schema(description = "Timestamp for when version was archived")
-    private Instant archived;
+    private Optional<Instant> archived = Optional.empty();
 
     public VersionDTO() {
     }
@@ -62,8 +63,8 @@ public class VersionDTO {
         this.hash = version.getHash();
         this.locked = version.isLocked();
         this.created = version.getCreated();
-        this.published = version.getPublished();
-        this.archived = version.getArchived();
+        this.published = Optional.ofNullable(version.getPublished());
+        this.archived = Optional.ofNullable(version.getArchived());
     }
 
     public URI getId() {
@@ -86,11 +87,11 @@ public class VersionDTO {
         return created;
     }
 
-    public Instant getPublished() {
+    public Optional<Instant> getPublished() {
         return published;
     }
 
-    public Instant getArchived() {
+    public Optional<Instant> getArchived() {
         return archived;
     }
 }

@@ -245,6 +245,43 @@
                     </directories>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>cz.habarta.typescript-generator</groupId>
+                <artifactId>typescript-generator-maven-plugin</artifactId>
+                <version>3.2.1263</version>
+                <configuration>
+                    <jsonLibrary>jackson2</jsonLibrary>
+                    <classes>
+                        <class>no.ndla.taxonomy.domain.NodeType</class>
+                        <class>no.ndla.taxonomy.domain.VersionType</class>
+                    </classes>
+                    <classPatterns>
+                        <pattern>no.ndla.taxonomy.rest.v1.commands.**</pattern>
+                        <pattern>no.ndla.taxonomy.rest.v1.dtos.**</pattern>
+                        <pattern>no.ndla.taxonomy.service.dtos.*</pattern>
+                    </classPatterns>
+                    <excludeClasses>
+                        <excludeClass>java.lang.Comparable</excludeClass>
+                        <excludeClass>no.ndla.taxonomy.service.dtos.MetadataApiEntity</excludeClass>
+                        <excludeClass>no.ndla.taxonomy.service.TreeSorter$Sortable</excludeClass>
+                        <excludeClass>no.ndla.taxonomy.service.UpdatableDto</excludeClass>
+                    </excludeClasses>
+                    <customTypeMappings>
+                        <mapping>java.net.URI:string</mapping>
+                    </customTypeMappings>
+                    <mapDate>asString</mapDate>
+                    <mapMap>asRecord</mapMap>
+                    <noEslintDisable>true</noEslintDisable>
+                    <noFileComment>true</noFileComment>
+                    <noTslintDisable>true</noTslintDisable>
+                    <outputKind>module</outputKind>
+                    <outputFile>typescript/taxonomy-api.ts</outputFile>
+                    <outputFileType>implementationFile</outputFileType>
+                    <removeTypeNameSuffix>DTO</removeTypeNameSuffix>
+                    <sortDeclarations>true</sortDeclarations>
+                    <sortTypeDeclarations>true</sortTypeDeclarations>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <profiles>

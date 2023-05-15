@@ -22,6 +22,7 @@ import java.util.Optional;
 /**
  * Represents Node or Resource in child context
  */
+@Schema(name = "NodeChild")
 public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
 
     @Schema(description = "Parent id in the current context, null if none exists")
@@ -37,7 +38,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
     private int rank;
 
     @Schema(description = "Relevance id", example = "urn:relevance:core")
-    private URI relevanceId;
+    private Optional<URI> relevanceId;
 
     public NodeChildDTO(Optional<Node> root, NodeConnection nodeConnection, String language,
             Optional<Boolean> includeContexts) {
@@ -53,8 +54,8 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         this.connectionId = nodeConnection.getPublicId();
         this.isPrimary = nodeConnection.isPrimary().orElse(false);
         {
-            final Relevance relevance = nodeConnection.getRelevance().orElse(null);
-            this.relevanceId = relevance != null ? relevance.getPublicId() : null;
+            Optional<Relevance> relevance = nodeConnection.getRelevance();
+            this.relevanceId = relevance.map(Relevance::getPublicId);
         }
     }
 
@@ -68,8 +69,8 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         this.connectionId = nodeConnection.getPublicId();
         this.isPrimary = nodeConnection.isPrimary().orElse(false);
         {
-            final Relevance relevance = nodeConnection.getRelevance().orElse(null);
-            this.relevanceId = relevance != null ? relevance.getPublicId() : null;
+            Optional<Relevance> relevance = nodeConnection.getRelevance();
+            this.relevanceId = relevance.map(Relevance::getPublicId);
         }
     }
 
@@ -88,6 +89,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
 
     }
 
+    @Deprecated
     public URI getParent() {
         return parentId;
     }
@@ -113,6 +115,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         return isPrimary;
     }
 
+    @Deprecated
     public boolean getPrimary() {
         return isPrimary;
     }
@@ -129,12 +132,12 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
         this.rank = rank;
     }
 
-    public URI getRelevanceId() {
+    public Optional<URI> getRelevanceId() {
         return relevanceId;
     }
 
     public void setRelevanceId(URI relevanceId) {
-        this.relevanceId = relevanceId;
+        this.relevanceId = Optional.ofNullable(relevanceId);
     }
 
     @Override

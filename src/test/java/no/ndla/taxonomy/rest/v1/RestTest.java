@@ -13,7 +13,7 @@ import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.AbstractIntegrationTest;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeService;
-import no.ndla.taxonomy.service.dtos.MetadataDto;
+import no.ndla.taxonomy.service.dtos.MetadataDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,8 +64,8 @@ public abstract class RestTest extends AbstractIntegrationTest {
 
     protected Builder builder;
 
-    private MetadataDto createMetadataObject(URI publicId) {
-        final var metadata = new MetadataDto();
+    private MetadataDTO createMetadataObject(URI publicId) {
+        final var metadata = new MetadataDTO();
         metadata.setPublicId(publicId.toString());
 
         // Can search for RESOURCE1 where publicId is urn:resource:1 in the test

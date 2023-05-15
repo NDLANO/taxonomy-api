@@ -7,16 +7,16 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
+import no.ndla.taxonomy.rest.v1.dtos.ResourceResourceTypeDTO;
+import no.ndla.taxonomy.rest.v1.dtos.ResourceResourceTypePOST;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -46,8 +46,8 @@ public class ResourceResourceTypes {
     @Operation(summary = "Adds a resource type to a resource", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public ResponseEntity<Void> post(
-            @Parameter(name = "connection", description = "The new resource/resource type connection") @RequestBody CreateResourceResourceTypeCommand command) {
+    public ResponseEntity<Void> createResourceResourceType(
+            @Parameter(name = "connection", description = "The new resource/resource type connection") @RequestBody ResourceResourceTypePOST command) {
 
         var resource = nodeRepository.getByPublicId(command.resourceId);
 
@@ -65,7 +65,7 @@ public class ResourceResourceTypes {
     @Operation(summary = "Removes a resource type from a resource", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id) {
+    public void deleteResourceResourceType(@PathVariable("id") URI id) {
         resourceResourceTypeRepository.delete(resourceResourceTypeRepository.getByPublicId(id));
         resourceResourceTypeRepository.flush();
     }
@@ -73,50 +73,17 @@ public class ResourceResourceTypes {
     @GetMapping
     @Operation(summary = "Gets all connections between resources and resource types")
     @Transactional(readOnly = true)
-    public List<ResourceResourceTypeIndexDocument> index() {
+    public List<ResourceResourceTypeDTO> getAllResourceResourceTypes() {
         return resourceResourceTypeRepository.findAllIncludingResourceAndResourceType().stream()
-                .map(ResourceResourceTypeIndexDocument::new).collect(Collectors.toList());
+                .map(ResourceResourceTypeDTO::new).collect(Collectors.toList());
     }
 
     @GetMapping({ "/{id}" })
     @Operation(summary = "Gets a single connection between resource and resource type")
     @Transactional(readOnly = true)
-    public ResourceResourceTypeIndexDocument get(@PathVariable("id") URI id) {
+    public ResourceResourceTypeDTO getResourceResourceType(@PathVariable("id") URI id) {
         ResourceResourceType result = resourceResourceTypeRepository.getByPublicId(id);
-        return new ResourceResourceTypeIndexDocument(result);
+        return new ResourceResourceTypeDTO(result);
     }
 
-    public static class CreateResourceResourceTypeCommand {
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource id", example = "urn:resource:123")
-        URI resourceId;
-
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource type id", example = "urn:resourcetype:234")
-        URI resourceTypeId;
-    }
-
-    @Schema(name = "ResourceTypeIndexDocument")
-    public static class ResourceResourceTypeIndexDocument {
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource type id", example = "urn:resource:123")
-        URI resourceId;
-
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource type id", example = "urn:resourcetype:234")
-        URI resourceTypeId;
-
-        @JsonProperty
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource to resource type connection id", example = "urn:resource-has-resourcetypes:12")
-        URI id;
-
-        public ResourceResourceTypeIndexDocument() {
-        }
-
-        public ResourceResourceTypeIndexDocument(ResourceResourceType resourceResourceType) {
-            id = resourceResourceType.getPublicId();
-            resourceId = resourceResourceType.getNode().getPublicId();
-            resourceTypeId = resourceResourceType.getResourceType().getPublicId();
-        }
-    }
 }

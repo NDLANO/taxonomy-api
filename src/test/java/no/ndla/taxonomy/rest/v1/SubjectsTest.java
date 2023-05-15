@@ -11,14 +11,14 @@ import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.rest.v1.commands.SubjectCommand;
+import no.ndla.taxonomy.rest.v1.commands.SubjectPostPut;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static no.ndla.taxonomy.TestUtils.*;
@@ -38,7 +38,7 @@ public class SubjectsTest extends RestTest {
         var subject = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("english", subject.getName());
-        assertEquals("urn:article:1", subject.getContentUri().toString());
+        assertEquals("Optional[urn:article:1]", subject.getContentUri().toString());
         assertEquals("/subject:1", subject.getPath());
 
         assertNotNull(subject.getMetadata());
@@ -68,10 +68,10 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_create_subject() throws Exception {
-        final var createSubjectCommand = new SubjectCommand() {
+        final var createSubjectCommand = new SubjectPostPut() {
             {
                 name = "testsubject";
-                contentUri = URI.create("urn:article:1");
+                contentUri = Optional.of(URI.create("urn:article:1"));
             }
         };
 
@@ -80,15 +80,15 @@ public class SubjectsTest extends RestTest {
 
         Node subject = nodeRepository.getByPublicId(id);
         assertEquals(createSubjectCommand.name, subject.getName());
-        assertEquals(createSubjectCommand.contentUri, subject.getContentUri());
+        assertEquals(createSubjectCommand.contentUri.get(), subject.getContentUri());
         assertTrue(subject.isRoot()); // all subjects are roots
     }
 
     @Test
     public void can_create_subject_with_id() throws Exception {
-        final var command = new SubjectCommand() {
+        final var command = new SubjectPostPut() {
             {
-                id = URI.create("urn:subject:1");
+                id = Optional.of(URI.create("urn:subject:1"));
                 name = "name";
             }
         };
@@ -96,18 +96,18 @@ public class SubjectsTest extends RestTest {
         var response = testUtils.createResource("/v1/subjects", command);
         assertEquals("/v1/subjects/urn:subject:1", response.getHeader("Location"));
 
-        assertNotNull(nodeRepository.getByPublicId(command.id));
+        assertNotNull(nodeRepository.getByPublicId(command.getId().get()));
     }
 
     @Test
     public void can_update_subject() throws Exception {
         URI publicId = builder.node(NodeType.SUBJECT).getPublicId();
 
-        final var command = new SubjectCommand() {
+        final var command = new SubjectPostPut() {
             {
-                id = publicId;
+                id = Optional.of(publicId);
                 name = "physics";
-                contentUri = URI.create("urn:article:1");
+                contentUri = Optional.of(URI.create("urn:article:1"));
             }
         };
 
@@ -115,7 +115,7 @@ public class SubjectsTest extends RestTest {
 
         Node subject = nodeRepository.getByPublicId(publicId);
         assertEquals(command.name, subject.getName());
-        assertEquals(command.contentUri, subject.getContentUri());
+        assertEquals(command.contentUri.get(), subject.getContentUri());
     }
 
     @Test
@@ -123,11 +123,11 @@ public class SubjectsTest extends RestTest {
         URI publicId = builder.node(NodeType.SUBJECT).getPublicId();
         URI randomId = URI.create("urn:subject:random");
 
-        final var command = new SubjectCommand() {
+        final var command = new SubjectPostPut() {
             {
-                id = randomId;
+                id = Optional.of(randomId);
                 name = "random";
-                contentUri = URI.create("urn:article:1");
+                contentUri = Optional.of(URI.create("urn:article:1"));
             }
         };
 
@@ -135,7 +135,7 @@ public class SubjectsTest extends RestTest {
 
         Node subject = nodeRepository.getByPublicId(randomId);
         assertEquals(command.name, subject.getName());
-        assertEquals(command.contentUri, subject.getContentUri());
+        assertEquals(command.contentUri.get(), subject.getContentUri());
     }
 
     @Test
@@ -144,11 +144,11 @@ public class SubjectsTest extends RestTest {
                 .node(NodeType.SUBJECT, s -> s.isVisible(false).grepCode("KM123").customField("key", "value"))
                 .getPublicId();
 
-        final var command = new SubjectCommand() {
+        final var command = new SubjectPostPut() {
             {
-                id = publicId;
+                id = Optional.of(publicId);
                 name = "physics";
-                contentUri = URI.create("urn:article:1");
+                contentUri = Optional.of(URI.create("urn:article:1"));
             }
         };
 
@@ -156,7 +156,7 @@ public class SubjectsTest extends RestTest {
 
         Node subject = nodeRepository.getByPublicId(publicId);
         assertEquals(command.name, subject.getName());
-        assertEquals(command.contentUri, subject.getContentUri());
+        assertEquals(command.contentUri.get(), subject.getContentUri());
         assertFalse(subject.getMetadata().isVisible());
         assertTrue(subject.getMetadata().getGrepCodes().stream().map(JsonGrepCode::getCode).collect(Collectors.toSet())
                 .contains("KM123"));
@@ -165,9 +165,9 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void duplicate_ids_not_allowed() throws Exception {
-        final var command = new SubjectCommand() {
+        final var command = new SubjectPostPut() {
             {
-                id = URI.create("urn:subject:1");
+                id = Optional.of(URI.create("urn:subject:1"));
                 name = "name";
             }
         };
@@ -199,11 +199,11 @@ public class SubjectsTest extends RestTest {
 
         assertEquals(3, topics.length);
         assertAnyTrue(topics,
-                t -> "statics".equals(t.getName()) && "urn:article:1".equals(t.getContentUri().toString()));
+                t -> "statics".equals(t.getName()) && "Optional[urn:article:1]".equals(t.getContentUri().toString()));
+        assertAnyTrue(topics, t -> "electricity".equals(t.getName())
+                && "Optional[urn:article:2]".equals(t.getContentUri().toString()));
         assertAnyTrue(topics,
-                t -> "electricity".equals(t.getName()) && "urn:article:2".equals(t.getContentUri().toString()));
-        assertAnyTrue(topics,
-                t -> "optics".equals(t.getName()) && "urn:article:3".equals(t.getContentUri().toString()));
+                t -> "optics".equals(t.getName()) && "Optional[urn:article:3]".equals(t.getContentUri().toString()));
         assertAnyTrue(topics, t -> t.isPrimary());
         assertAllTrue(topics, t -> isValidId(t.getId()));
         assertAllTrue(topics, t -> isValidId(t.getConnectionId()));

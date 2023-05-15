@@ -7,14 +7,14 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
+import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,29 +41,28 @@ public class ResourceTypeTranslations {
     @GetMapping
     @Operation(summary = "Gets all relevanceTranslations for a single resource type")
     @Transactional(readOnly = true)
-    public List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> index(@PathVariable("id") URI id) {
+    public List<TranslationDTO> getAllResourceTypeTranslations(@PathVariable("id") URI id) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
-        List<ResourceTypeTranslations.ResourceTypeTranslationIndexDocument> result = new ArrayList<>();
-        resourceType.getTranslations()
-                .forEach(t -> result.add(new ResourceTypeTranslations.ResourceTypeTranslationIndexDocument() {
-                    {
-                        name = t.getName();
-                        language = t.getLanguageCode();
-                    }
-                }));
+        List<TranslationDTO> result = new ArrayList<>();
+        resourceType.getTranslations().forEach(t -> result.add(new TranslationDTO() {
+            {
+                name = t.getName();
+                language = t.getLanguageCode();
+            }
+        }));
         return result;
     }
 
     @GetMapping("/{language}")
     @Operation(summary = "Gets a single translation for a single resource type")
     @Transactional(readOnly = true)
-    public ResourceTypeTranslations.ResourceTypeTranslationIndexDocument get(@PathVariable("id") URI id,
+    public TranslationDTO getResourceTypeTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         var translation = resourceType.getTranslation(language).orElseThrow(
                 () -> new NotFoundException("translation with language code " + language + " for resource type", id));
 
-        return new ResourceTypeTranslations.ResourceTypeTranslationIndexDocument() {
+        return new TranslationDTO() {
             {
                 name = translation.getName();
                 language = translation.getLanguageCode();
@@ -77,9 +76,9 @@ public class ResourceTypeTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void put(@PathVariable("id") URI id,
+    public void createUpdateResourceTypeTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language,
-            @Parameter(name = "resourceType", description = "The new or updated translation") @RequestBody ResourceTypeTranslations.UpdateResourceTypeTranslationCommand command) {
+            @Parameter(name = "resourceType", description = "The new or updated translation") @RequestBody TranslationPUT command) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         resourceType.addTranslation(command.name, language);
         entityManager.persist(resourceType);
@@ -90,7 +89,7 @@ public class ResourceTypeTranslations {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void delete(@PathVariable("id") URI id,
+    public void deleteResourceTypeTranslation(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true) @PathVariable("language") String language) {
         ResourceType resourceType = resourceTypeRepository.getByPublicId(id);
         resourceType.getTranslation(language).ifPresent((translation) -> {
@@ -99,19 +98,4 @@ public class ResourceTypeTranslations {
         });
     }
 
-    public static class ResourceTypeTranslationIndexDocument {
-        @JsonProperty
-        @Schema(description = "The translated name of the resource type", example = "Article")
-        public String name;
-
-        @JsonProperty
-        @Schema(description = "ISO 639-1 language code", example = "en")
-        public String language;
-    }
-
-    public static class UpdateResourceTypeTranslationCommand {
-        @JsonProperty
-        @Schema(description = "The translated name of the resource type", example = "Article")
-        public String name;
-    }
 }

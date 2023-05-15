@@ -10,6 +10,8 @@ package no.ndla.taxonomy.rest.v1;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceType;
+import no.ndla.taxonomy.rest.v1.dtos.ResourceResourceTypeDTO;
+import no.ndla.taxonomy.rest.v1.dtos.ResourceResourceTypePOST;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -30,13 +32,12 @@ public class ResourceResourceTypesTest extends RestTest {
 
         URI textTypeId = newResourceType().name("text").getPublicId();
 
-        URI id = getId(testUtils.createResource("/v1/resource-resourcetypes",
-                new ResourceResourceTypes.CreateResourceResourceTypeCommand() {
-                    {
-                        resourceId = integrationResourceId;
-                        resourceTypeId = textTypeId;
-                    }
-                }));
+        URI id = getId(testUtils.createResource("/v1/resource-resourcetypes", new ResourceResourceTypePOST() {
+            {
+                resourceId = integrationResourceId;
+                resourceTypeId = textTypeId;
+            }
+        }));
 
         var resource = nodeRepository.getByPublicId(integrationResourceId);
         assertEquals(1, resource.getResourceTypes().size());
@@ -52,13 +53,12 @@ public class ResourceResourceTypesTest extends RestTest {
         ResourceType resourceType = newResourceType().name("text");
         save(integrationResource.addResourceType(resourceType));
 
-        testUtils.createResource("/v1/resource-resourcetypes",
-                new ResourceResourceTypes.CreateResourceResourceTypeCommand() {
-                    {
-                        resourceId = integrationResource.getPublicId();
-                        resourceTypeId = resourceType.getPublicId();
-                    }
-                }, status().isConflict());
+        testUtils.createResource("/v1/resource-resourcetypes", new ResourceResourceTypePOST() {
+            {
+                resourceId = integrationResource.getPublicId();
+                resourceTypeId = resourceType.getPublicId();
+            }
+        }, status().isConflict());
     }
 
     @Test
@@ -84,8 +84,8 @@ public class ResourceResourceTypesTest extends RestTest {
         save(integration.addResourceType(text));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resource-resourcetypes");
-        ResourceResourceTypes.ResourceResourceTypeIndexDocument[] resourceResourcetypes = testUtils
-                .getObject(ResourceResourceTypes.ResourceResourceTypeIndexDocument[].class, response);
+        ResourceResourceTypeDTO[] resourceResourcetypes = testUtils.getObject(ResourceResourceTypeDTO[].class,
+                response);
         assertEquals(2, resourceResourcetypes.length);
         assertAnyTrue(resourceResourcetypes,
                 t -> trigonometry.getPublicId().equals(t.resourceId) && article.getPublicId().equals(t.resourceTypeId));
@@ -102,8 +102,7 @@ public class ResourceResourceTypesTest extends RestTest {
         URI id = save(resourceResourceType).getPublicId();
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resource-resourcetypes/" + id);
-        ResourceResourceTypes.ResourceResourceTypeIndexDocument result = testUtils
-                .getObject(ResourceResourceTypes.ResourceResourceTypeIndexDocument.class, response);
+        ResourceResourceTypeDTO result = testUtils.getObject(ResourceResourceTypeDTO.class, response);
 
         assertEquals(resource.getPublicId(), result.resourceId);
         assertEquals(resourceType.getPublicId(), result.resourceTypeId);
@@ -120,8 +119,7 @@ public class ResourceResourceTypesTest extends RestTest {
         resourceType.setPublicId(URI.create("urn:resourcetype:article"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resource-resourcetypes/" + id);
-        ResourceResourceTypes.ResourceResourceTypeIndexDocument result = testUtils
-                .getObject(ResourceResourceTypes.ResourceResourceTypeIndexDocument.class, response);
+        ResourceResourceTypeDTO result = testUtils.getObject(ResourceResourceTypeDTO.class, response);
 
         assertEquals(resource.getPublicId(), result.resourceId);
         assertEquals(URI.create("urn:resourcetype:article"), result.resourceTypeId);
