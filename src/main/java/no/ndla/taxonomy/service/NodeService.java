@@ -103,11 +103,11 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Optional<URI> contentUri, Optional<String> contextId, Optional<Boolean> isRoot,
             MetadataFilters metadataFilters, Optional<Boolean> includeContexts) {
         final List<NodeDTO> listToReturn = new ArrayList<>();
-        var ids = nodeRepository.findIdsByType(nodeType);
+        var ids = nodeRepository.findIdsFiltered(nodeType, metadataFilters.getVisible(), metadataFilters.getKey(),
+                metadataFilters.getLikeQueryValue(), contentUri, contextId, isRoot);
         final var counter = new AtomicInteger();
         ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
-            final var nodes = nodeRepository.findByIdsFiltered(idChunk, metadataFilters.getVisible(),
-                    metadataFilters.getKey(), metadataFilters.getLikeQueryValue(), contentUri, contextId, isRoot);
+            final var nodes = nodeRepository.findByIds(idChunk);
             var dtos = nodes.stream()
                     .map(node -> new NodeDTO(Optional.empty(), node, language.get(), contextId, includeContexts))
                     .toList();

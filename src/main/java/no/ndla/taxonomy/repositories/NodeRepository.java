@@ -31,6 +31,8 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             SELECT DISTINCT n FROM Node n
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType rt
+            LEFT JOIN FETCH n.parentConnections pc
+            LEFT JOIN FETCH pc.relevance
             WHERE n.id in :ids
             """)
     List<Node> findByIds(Collection<Integer> ids);
@@ -50,6 +52,20 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             AND (:isRoot IS NULL OR n.root = true)
             """)
     List<Node> findByIdsFiltered(Collection<Integer> ids, Optional<Boolean> isVisible,
+            Optional<String> metadataFilterKey, Optional<String> metadataFilterValue, Optional<URI> contentUri,
+            Optional<String> contextId, Optional<Boolean> isRoot);
+
+    @Query("""
+            SELECT n.id FROM Node n
+            WHERE ((:nodeTypes) IS NULL OR n.nodeType in (:nodeTypes))
+            AND (:isVisible IS NULL OR n.visible = :isVisible)
+            AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, :metadataFilterKey) IS NOT NULL)
+            AND (:metadataFilterValue IS NULL OR cast(jsonb_path_query_array(n.customfields, '$.*') as text) like :metadataFilterValue)
+            AND (:contentUri IS NULL OR n.contentUri = :contentUri)
+            AND (:contextId IS NULL OR jsonb_contains(n.contexts, jsonb_build_array(jsonb_build_object('contextId',:contextId))) = true)
+            AND (:isRoot IS NULL OR n.root = true)
+            """)
+    List<Integer> findIdsFiltered(Optional<List<NodeType>> nodeTypes, Optional<Boolean> isVisible,
             Optional<String> metadataFilterKey, Optional<String> metadataFilterValue, Optional<URI> contentUri,
             Optional<String> contextId, Optional<Boolean> isRoot);
 
