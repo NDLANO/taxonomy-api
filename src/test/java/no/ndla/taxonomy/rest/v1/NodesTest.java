@@ -13,10 +13,8 @@ import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
-import no.ndla.taxonomy.service.dtos.ConnectionDTO;
-import no.ndla.taxonomy.service.dtos.NodeChildDTO;
-import no.ndla.taxonomy.service.dtos.NodeDTO;
-import no.ndla.taxonomy.service.dtos.SearchResultDTO;
+import no.ndla.taxonomy.rest.v1.commands.ResourcePostPut;
+import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -771,6 +769,58 @@ public class NodesTest extends RestTest {
             var updated4 = nodeRepository.getByPublicId(URI.create("urn:topic:2"));
             assertFalse(updated4.getResourceChildren().stream().allMatch(nr -> nr.isPrimary().orElse(false)));
         }
+    }
+
+    @Test
+    public void full_node_has_parents() throws Exception {
+        testSeeder.resourceInDualSubjectsTestSetup();
+        {
+            var response = testUtils.getResource("/v1/nodes/urn:resource:1/full");
+            final var result = testUtils.getObject(NodeWithParents.class, response);
+            assertNotNull(result.getPaths());
+            assertEquals(2, result.getParents().size());
+            assertEquals(0, result.getContexts().size());
+        }
+        {
+            var response = testUtils.getResource("/v1/nodes/urn:resource:1/full?includeContexts=true");
+            final var result = testUtils.getObject(NodeWithParents.class, response);
+            assertNotNull(result.getPaths());
+            assertEquals(2, result.getParents().size());
+            assertEquals(2, result.getContexts().size());
+        }
+    }
+
+    @Test
+    public void can_clone_node() throws Exception {
+        URI publicId = builder
+                .node(NodeType.RESOURCE,
+                        r -> r.name("Resource").resourceType(rt -> rt.name("Fagstoff"))
+                                .translation("nb", tr -> tr.name("Fagstoff nb")).contentUri("urn:article:1"))
+                .getPublicId();
+
+        final var command = new NodePostPut() {
+            {
+                contentUri = Optional.of(URI.create("urn:article:2"));
+            }
+        };
+        URI id = getId(testUtils.createResource("/v1/nodes/" + publicId + "/clone", command));
+        assertNotNull(id);
+
+        var oldRes = nodeRepository.getByPublicId(publicId);
+        var newRes = nodeRepository.getByPublicId(id);
+        assertNotEquals(publicId, id);
+        assertEquals(oldRes.getName(), newRes.getName());
+        assertEquals("urn:article:1", oldRes.getContentUri().toString());
+        assertEquals("urn:article:2", newRes.getContentUri().toString());
+        assertNotEquals(oldRes.getContentUri().toString(), newRes.getContentUri().toString());
+        assertEquals(oldRes.getTranslations().size(), newRes.getTranslations().size());
+        assertEquals(oldRes.getResourceTypes().size(), newRes.getResourceTypes().size());
+
+        // contentUri can be null
+        URI id2 = getId(testUtils.createResource("/v1/nodes/" + publicId + "/clone", new NodePostPut()));
+        assertNotNull(id2);
+        var resWithoutContentUri = nodeRepository.findByPublicId(id2);
+        assertNull(resWithoutContentUri.getContentUri());
 
     }
 

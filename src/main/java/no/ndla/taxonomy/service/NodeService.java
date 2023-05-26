@@ -319,10 +319,10 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         }
     }
 
-    public Node cloneNode(URI publicId, URI contentUri) {
+    public Node cloneNode(URI publicId, Optional<URI> contentUri) {
         final var node = getNode(publicId);
         var cloned = new Node(node, false);
-        cloned.setContentUri(contentUri);
+        cloned.setContentUri(contentUri.orElse(null)); // Set to null if not provided
         return nodeRepository.save(cloned);
     }
 

@@ -20,10 +20,7 @@ import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
 import no.ndla.taxonomy.service.*;
-import no.ndla.taxonomy.service.dtos.ConnectionDTO;
-import no.ndla.taxonomy.service.dtos.NodeChildDTO;
-import no.ndla.taxonomy.service.dtos.NodeDTO;
-import no.ndla.taxonomy.service.dtos.SearchResultDTO;
+import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -234,6 +231,16 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                 includeContexts);
     }
 
+    @GetMapping("{id}/full")
+    @Operation(summary = "Gets node including information about all parents, and resourceTypes for this resource")
+    @Transactional(readOnly = true)
+    public NodeWithParents getNodeFull(@PathVariable("id") URI id,
+            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language,
+            @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false) Optional<Boolean> includeContexts) {
+        var node = nodeService.getNode(id);
+        return new NodeWithParents(node, language.orElse(Constants.DefaultLanguage), includeContexts);
+    }
+
     @PutMapping("/{id}/makeResourcesPrimary")
     @Operation(summary = "Makes all connected resources primary", security = { @SecurityRequirement(name = "oauth") })
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
@@ -242,5 +249,18 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(name = "id", required = true) @PathVariable("id") URI nodeId,
             @Parameter(description = "If true, children are fetched recursively") @RequestParam(value = "recursive", required = false, defaultValue = "false") boolean recursive) {
         return ResponseEntity.of(Optional.of(nodeService.makeAllResourcesPrimary(nodeId, recursive)));
+    }
+
+    @PostMapping("{id}/clone")
+    @Operation(summary = "Clones a node, presumably a resource, including resource-types and translations", security = {
+            @SecurityRequirement(name = "oauth") })
+    @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
+    @Transactional
+    public ResponseEntity<Void> cloneResource(
+            @Parameter(name = "id", description = "Id of node to clone", example = "urn:resource:1") @PathVariable("id") URI publicId,
+            @Parameter(name = "node", description = "Object containing contentUri. Other values are ignored.") @RequestBody @Schema(name = "NodePOST") NodePostPut command) {
+        var entity = nodeService.cloneNode(publicId, command.contentUri);
+        URI location = URI.create(getLocation() + "/" + entity.getPublicId());
+        return ResponseEntity.created(location).build();
     }
 }
