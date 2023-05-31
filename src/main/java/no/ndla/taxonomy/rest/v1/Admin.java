@@ -5,7 +5,7 @@
  * See LICENSE
  */
 
-package no.ndla.taxonomy.rest;
+package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import no.ndla.taxonomy.service.NodeService;
@@ -16,16 +16,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/internal")
-public class InternalController {
+@RequestMapping(path = { "/v1/admin" })
+public class Admin {
     private final NodeService nodeService;
 
-    public InternalController(NodeService nodeService) {
+    public Admin(NodeService nodeService) {
         this.nodeService = nodeService;
     }
 
     @GetMapping("/buildContexts")
-    @Operation(summary = "Updates contexts for all roots")
+    @Operation(summary = "Updates contexts for all roots. Requires taxonomy:admin access.")
     @Transactional
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public void buildAllContexts() {
