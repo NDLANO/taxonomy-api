@@ -264,6 +264,10 @@
                             <style>PALANTIR</style>
                         </palantirJavaFormat>
                     </java>
+                    <licenseHeader>
+                        <file>${project.basedir}/license-header</file>
+                        <delimiter>package </delimiter>
+                    </licenseHeader>
                 </configuration>
             </plugin>
             <plugin>
