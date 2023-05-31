@@ -148,7 +148,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     public ResponseEntity<Void> cloneResource(
             @Parameter(name = "id", description = "Id of resource to clone", example = "urn:resource:1") @PathVariable("id") URI publicId,
             @Parameter(name = "resource", description = "Object containing contentUri. Other values are ignored.") @RequestBody @Schema(name = "ResourcePOST") ResourcePostPut command) {
-        var entity = nodeService.cloneNode(publicId, command.contentUri);
+        var entity = nodeService.cloneNode(publicId, Optional.ofNullable(command.contentUri));
         URI location = URI.create(getLocation() + "/" + entity.getPublicId());
         return ResponseEntity.created(location).build();
     }
@@ -173,7 +173,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     public NodeWithParents getResourceFull(@PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage) Optional<String> language) {
         var node = nodeService.getNode(id);
-        return new NodeWithParents(node, language.orElse(Constants.DefaultLanguage));
+        return new NodeWithParents(node, language.orElse(Constants.DefaultLanguage), Optional.of(false));
     }
 
     @Deprecated
