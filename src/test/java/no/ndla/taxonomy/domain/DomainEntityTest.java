@@ -7,16 +7,15 @@
 
 package no.ndla.taxonomy.domain;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.spy;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class DomainEntityTest {
     private DomainEntity domainEntity;

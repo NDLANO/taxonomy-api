@@ -7,6 +7,13 @@
 
 package no.ndla.taxonomy.service;
 
+import java.util.ConcurrentModificationException;
+import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import no.ndla.taxonomy.domain.Changelog;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.repositories.ChangelogRepository;
@@ -20,14 +27,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ConcurrentModificationException;
-import java.util.Optional;
-import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
 @Service
 @Transactional
 public class ChangelogService implements DisposableBean {
@@ -37,8 +36,10 @@ public class ChangelogService implements DisposableBean {
     private final VersionService versionService;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    public ChangelogService(ChangelogRepository changelogRepository,
-            DomainEntityHelperService domainEntityHelperService, VersionService versionService) {
+    public ChangelogService(
+            ChangelogRepository changelogRepository,
+            DomainEntityHelperService domainEntityHelperService,
+            VersionService versionService) {
         this.changelogRepository = changelogRepository;
         this.domainEntityHelperService = domainEntityHelperService;
         this.versionService = versionService;

@@ -7,14 +7,13 @@
 
 package no.ndla.taxonomy.service;
 
+import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Optional;
 
 /**
  * Takes a http request and extracts a given header. Returns a database schema name.

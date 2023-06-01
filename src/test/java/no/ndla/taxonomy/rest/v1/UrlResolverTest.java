@@ -7,23 +7,21 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.service.dtos.ResolvedUrl;
-import no.ndla.taxonomy.util.HashUtil;
-import org.junit.jupiter.api.Test;
-
-import java.net.URI;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.service.dtos.ResolvedUrl;
+import org.junit.jupiter.api.Test;
 
 public class UrlResolverTest extends RestTest {
 
     @Test
     public void can_resolve_url_for_subject() throws Exception {
-        builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).publicId("urn:subject:1").contentUri("urn:article:1").name("the subject"));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
+                .publicId("urn:subject:1")
+                .contentUri("urn:article:1")
+                .name("the subject"));
 
         ResolvedUrl url = resolveUrl("/subject:1");
 
@@ -35,8 +33,11 @@ public class UrlResolverTest extends RestTest {
 
     @Test
     public void can_resolve_url_for_topic() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC,
-                t -> t.publicId("urn:topic:1").name("the topic").contentUri("urn:article:1")));
+        builder.node(
+                NodeType.SUBJECT,
+                s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC, t -> t.publicId("urn:topic:1")
+                        .name("the topic")
+                        .contentUri("urn:article:1")));
 
         ResolvedUrl url = resolveUrl("/subject:1/topic:1");
 
@@ -48,7 +49,8 @@ public class UrlResolverTest extends RestTest {
 
     @Test
     public void can_resolve_url_for_subtopic() throws Exception {
-        builder.node(NodeType.SUBJECT,
+        builder.node(
+                NodeType.SUBJECT,
                 s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC, t -> t.publicId("urn:topic:1")
                         .child(NodeType.TOPIC, st -> st.publicId("urn:topic:2").contentUri("urn:article:1"))));
 
@@ -59,8 +61,10 @@ public class UrlResolverTest extends RestTest {
 
     @Test
     public void can_resolve_url_for_resource() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC, t -> t
-                .publicId("urn:topic:1").resource(r -> r.publicId("urn:resource:1").contentUri("urn:article:1"))));
+        builder.node(
+                NodeType.SUBJECT,
+                s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC, t -> t.publicId("urn:topic:1")
+                        .resource(r -> r.publicId("urn:resource:1").contentUri("urn:article:1"))));
 
         ResolvedUrl url = resolveUrl("/subject:1/topic:1/resource:1");
         assertEquals("urn:article:1", url.getContentUri().toString());
@@ -69,8 +73,10 @@ public class UrlResolverTest extends RestTest {
 
     @Test
     public void ignores_multiple_or_leading_or_trailing_slashes() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC, t -> t
-                .publicId("urn:topic:1").resource(r -> r.publicId("urn:resource:1").contentUri("urn:article:1"))));
+        builder.node(
+                NodeType.SUBJECT,
+                s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC, t -> t.publicId("urn:topic:1")
+                        .resource(r -> r.publicId("urn:resource:1").contentUri("urn:article:1"))));
 
         {
             ResolvedUrl url = resolveUrl("/subject:1/topic:1/resource:1");
@@ -100,8 +106,9 @@ public class UrlResolverTest extends RestTest {
 
     @Test
     public void gets_404_on_wrong_path_to_resource() throws Exception {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC,
-                t -> t.publicId("urn:topic:1").resource(r -> r.publicId("urn:resource:1"))));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
+                .publicId("urn:subject:1")
+                .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1").resource(r -> r.publicId("urn:resource:1"))));
 
         testUtils.getResource("/v1/url/resolve?path=/subject:1/topic:2/resource:1", status().isNotFound());
         testUtils.getResource("/v1/url/resolve?path=/subject:1/topic:1/resource:1", status().isOk());

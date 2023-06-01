@@ -7,19 +7,15 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.Node;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
 import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.Test;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RankableConnectionUpdaterTest {
     private void verifyOrder(List<NodeConnection> list, List<String> expectedOrder) {
@@ -126,8 +122,9 @@ public class RankableConnectionUpdaterTest {
         final var rankable7 = new NodeConnection("urn:7", relevance, 13);
         final var rankable8 = new NodeConnection("urn:8", relevance, 20);
 
-        final var rankableList = Arrays.nonNullElementsIn(new NodeConnection[] { rankable1, rankable2, rankable3,
-                rankable4, rankable5, rankable6, rankable7, rankable8 });
+        final var rankableList = Arrays.nonNullElementsIn(new NodeConnection[] {
+            rankable1, rankable2, rankable3, rankable4, rankable5, rankable6, rankable7, rankable8
+        });
 
         assertEquals(0, rankable1.getRank());
         assertEquals(1, rankable2.getRank());

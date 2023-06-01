@@ -8,20 +8,17 @@
 package no.ndla.taxonomy.rest.v1.dtos.searchapi;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 import no.ndla.taxonomy.domain.LanguageField;
 import no.ndla.taxonomy.domain.Node;
 import org.springframework.data.util.Pair;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-
 @Schema(name = "LanguageField")
 public class LanguageFieldDTO<V> extends HashMap<String, V> {
 
-    public LanguageFieldDTO() {
-
-    }
+    public LanguageFieldDTO() {}
 
     public LanguageFieldDTO(List<Pair<String, V>> translations) {
         translations.forEach(t -> {
@@ -57,5 +54,4 @@ public class LanguageFieldDTO<V> extends HashMap<String, V> {
 
         return languageField;
     }
-
 }

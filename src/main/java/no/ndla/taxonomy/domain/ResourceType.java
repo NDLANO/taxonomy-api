@@ -9,18 +9,19 @@ package no.ndla.taxonomy.domain;
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import io.hypersistence.utils.hibernate.type.json.JsonStringType;
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
+import javax.persistence.*;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 
-import javax.persistence.*;
-import java.net.URI;
-import java.util.*;
-import java.util.stream.Collectors;
-
 @Entity
-@TypeDefs({ @TypeDef(name = "json", typeClass = JsonStringType.class),
-        @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
+@TypeDefs({
+    @TypeDef(name = "json", typeClass = JsonStringType.class),
+    @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
+})
 public class ResourceType extends DomainObject implements Comparable<ResourceType> {
 
     public ResourceType() {
@@ -31,15 +32,18 @@ public class ResourceType extends DomainObject implements Comparable<ResourceTyp
         setName(resourceType.getName());
         setParent(parent);
         setPublicId(resourceType.getPublicId());
-        this.translations = resourceType.getTranslations().stream().map(JsonTranslation::new).toList();
+        this.translations = resourceType.getTranslations().stream()
+                .map(JsonTranslation::new)
+                .toList();
     }
 
     @ManyToOne
     @JoinColumn(name = "parent_id")
     private ResourceType parent;
 
-    @OneToMany(mappedBy = "parent", cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH,
-            CascadeType.PERSIST })
+    @OneToMany(
+            mappedBy = "parent",
+            cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST})
     private Set<ResourceType> subtypes = new HashSet<>();
 
     @Type(type = "jsonb")

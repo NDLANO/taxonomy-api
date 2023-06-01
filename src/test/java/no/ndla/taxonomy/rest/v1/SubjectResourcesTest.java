@@ -7,13 +7,13 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SubjectResourcesTest extends RestTest {
     @Autowired

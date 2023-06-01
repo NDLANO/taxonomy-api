@@ -7,6 +7,9 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.net.URI;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.ResourceType;
@@ -14,10 +17,6 @@ import no.ndla.taxonomy.domain.exceptions.IdFormatException;
 import no.ndla.taxonomy.service.URNValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.net.URI;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class URNValidatorTest {
     private URNValidator validator;

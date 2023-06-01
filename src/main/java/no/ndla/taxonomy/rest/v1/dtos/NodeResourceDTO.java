@@ -9,12 +9,11 @@ package no.ndla.taxonomy.rest.v1.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.net.URI;
+import java.util.Optional;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
-
-import java.net.URI;
-import java.util.Optional;
 
 @Schema(name = "NodeResource")
 public class NodeResourceDTO {
@@ -47,8 +46,7 @@ public class NodeResourceDTO {
     @Schema(description = "Metadata for entity. Read only.")
     private MetadataDTO metadata;
 
-    public NodeResourceDTO() {
-    }
+    public NodeResourceDTO() {}
 
     public NodeResourceDTO(NodeConnection nodeResource) {
         id = nodeResource.getPublicId();

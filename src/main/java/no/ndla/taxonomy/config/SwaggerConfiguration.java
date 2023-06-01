@@ -20,13 +20,12 @@ import io.swagger.v3.oas.models.security.OAuthFlow;
 import io.swagger.v3.oas.models.security.OAuthFlows;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import java.util.List;
+import java.util.Map;
 import org.springdoc.core.customizers.OpenApiCustomiser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
-import java.util.Map;
 
 @Configuration
 public class SwaggerConfiguration {
@@ -54,47 +53,60 @@ public class SwaggerConfiguration {
 
     @Bean
     public OpenAPI API() {
-        return new OpenAPI().components(components()).servers(servers()).info(new Info().title("NDLA Taxonomy API")
-                .description("Rest service and graph database for organizing content.\n\n"
-                        + "When you remove an entity, its associations are also deleted. E.g., if you remove a subject, its associations to any topics are removed. The topics themselves are not affected.")
-                .version("v1").contact(new Contact().name(contactName).email(contactEmail).url(contactUrl))
-                .termsOfService(termsUrl)
-                .license(new License().name("GPL 3.0").url("https://www.gnu.org/licenses/gpl-3.0.en.html")));
+        return new OpenAPI()
+                .components(components())
+                .servers(servers())
+                .info(new Info()
+                        .title("NDLA Taxonomy API")
+                        .description(
+                                "Rest service and graph database for organizing content.\n\n"
+                                        + "When you remove an entity, its associations are also deleted. E.g., if you remove a subject, its associations to any topics are removed. The topics themselves are not affected.")
+                        .version("v1")
+                        .contact(new Contact()
+                                .name(contactName)
+                                .email(contactEmail)
+                                .url(contactUrl))
+                        .termsOfService(termsUrl)
+                        .license(new License().name("GPL 3.0").url("https://www.gnu.org/licenses/gpl-3.0.en.html")));
     }
 
     private List<Server> servers() {
         String url;
         switch (environment) {
-        case "local":
-            url = "http://api-gateway.ndla-local/taxonomy";
-            break;
-        case "prod":
-            url = "https://api.ndla.no/taxonomy";
-            break;
-        case "test":
-        case "staging":
-            url = String.format("https://api.%s.ndla.no/taxonomy", environment);
-            break;
-        default:
-            url = String.format("http://localhost:%s", port);
+            case "local":
+                url = "http://api-gateway.ndla-local/taxonomy";
+                break;
+            case "prod":
+                url = "https://api.ndla.no/taxonomy";
+                break;
+            case "test":
+            case "staging":
+                url = String.format("https://api.%s.ndla.no/taxonomy", environment);
+                break;
+            default:
+                url = String.format("http://localhost:%s", port);
         }
         return List.of(new Server().url(url));
     }
 
     private Components components() {
-        SecurityScheme implicit = new SecurityScheme().type(SecurityScheme.Type.OAUTH2)
+        SecurityScheme implicit = new SecurityScheme()
+                .type(SecurityScheme.Type.OAUTH2)
                 .flows(new OAuthFlows().implicit(new OAuthFlow().authorizationUrl(issuer + "authorize")));
-        Parameter header = new HeaderParameter().in("header").schema(new StringSchema()).name("versionHash");
+        Parameter header =
+                new HeaderParameter().in("header").schema(new StringSchema()).name("versionHash");
         Header version = new Header().description("versionHash").schema(new StringSchema());
-        return new Components().securitySchemes(Map.of("oauth", implicit)).addParameters("versionHash", header)
+        return new Components()
+                .securitySchemes(Map.of("oauth", implicit))
+                .addParameters("versionHash", header)
                 .addHeaders("versionHash", version);
     }
 
     @Bean
     public OpenApiCustomiser headerParameterOpenAPICustomiser() {
-        return openApi -> openApi.getPaths().values().stream().flatMap(pathItem -> pathItem.readOperations().stream())
-                .forEach(operation -> operation
-                        .addParametersItem(new HeaderParameter().$ref("#/components/parameters/versionHash")));
+        return openApi -> openApi.getPaths().values().stream()
+                .flatMap(pathItem -> pathItem.readOperations().stream())
+                .forEach(operation ->
+                        operation.addParametersItem(new HeaderParameter().$ref("#/components/parameters/versionHash")));
     }
-
 }

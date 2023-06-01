@@ -1,18 +1,24 @@
+/*
+ * Part of NDLA taxonomy-api
+ * Copyright (C) 2022 NDLA
+ *
+ * See LICENSE
+ */
+
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.DomainEntity;
-import no.ndla.taxonomy.repositories.TaxonomyRepository;
-import no.ndla.taxonomy.service.dtos.SearchResultDTO;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.domain.Specification;
+import static org.springframework.data.jpa.domain.Specification.where;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static org.springframework.data.jpa.domain.Specification.where;
+import no.ndla.taxonomy.domain.DomainEntity;
+import no.ndla.taxonomy.repositories.TaxonomyRepository;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 
 interface ExtraSpecification<T> {
     Specification<T> applySpecification(Specification<T> spec);
@@ -28,24 +34,33 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
     }
 
     private Specification<DOMAIN> withNameLike(String name) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.like(criteriaBuilder.lower(root.get("name")),
-                "%" + name.toLowerCase() + "%");
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%");
     }
 
     private Specification<DOMAIN> withPublicIdsIn(List<URI> ids) {
         return (root, query, criteriaBuilder) -> root.get("publicId").in(ids);
     }
 
-    default SearchResultDTO<DTO> search(Optional<String> query, Optional<List<String>> ids, Optional<String> language,
-            Optional<Boolean> includeContext, int pageSize, int page) {
+    default SearchResultDTO<DTO> search(
+            Optional<String> query,
+            Optional<List<String>> ids,
+            Optional<String> language,
+            Optional<Boolean> includeContext,
+            int pageSize,
+            int page) {
         return search(query, ids, language, includeContext, pageSize, page, Optional.empty());
     }
 
-    default SearchResultDTO<DTO> search(Optional<String> query, Optional<List<String>> ids, Optional<String> language,
-            Optional<Boolean> includeContexts, int pageSize, int page,
+    default SearchResultDTO<DTO> search(
+            Optional<String> query,
+            Optional<List<String>> ids,
+            Optional<String> language,
+            Optional<Boolean> includeContexts,
+            int pageSize,
+            int page,
             Optional<ExtraSpecification<DOMAIN>> applySpecLambda) {
-        if (page < 1)
-            throw new IllegalArgumentException("page parameter must be bigger than 0");
+        if (page < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
 
         var pageRequest = PageRequest.of(page - 1, pageSize);
         Specification<DOMAIN> spec = where(base());
@@ -55,16 +70,17 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
         }
 
         if (ids.isPresent()) {
-            List<URI> urisToPass = ids.get().stream().flatMap(id -> {
-                try {
-                    return Optional.of(new URI(id)).stream();
-                } catch (URISyntaxException ignored) {
-                    /* ignore invalid urls sent by user */ }
-                return Optional.<URI> empty().stream();
-            }).collect(Collectors.toList());
+            List<URI> urisToPass = ids.get().stream()
+                    .flatMap(id -> {
+                        try {
+                            return Optional.of(new URI(id)).stream();
+                        } catch (URISyntaxException ignored) {
+                            /* ignore invalid urls sent by user */ }
+                        return Optional.<URI>empty().stream();
+                    })
+                    .collect(Collectors.toList());
 
-            if (!urisToPass.isEmpty())
-                spec = spec.and(withPublicIdsIn(urisToPass));
+            if (!urisToPass.isEmpty()) spec = spec.and(withPublicIdsIn(urisToPass));
         }
 
         if (applySpecLambda.isPresent()) {
@@ -74,7 +90,9 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
         var fetched = getRepository().findAll(spec, pageRequest);
 
         var languageCode = language.orElse("");
-        var dtos = fetched.stream().map(r -> createDTO(r, languageCode, includeContexts)).collect(Collectors.toList());
+        var dtos = fetched.stream()
+                .map(r -> createDTO(r, languageCode, includeContexts))
+                .collect(Collectors.toList());
 
         return new SearchResultDTO<>(fetched.getTotalElements(), page, pageSize, dtos);
     }

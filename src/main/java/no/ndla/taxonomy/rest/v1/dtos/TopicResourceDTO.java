@@ -9,11 +9,10 @@ package no.ndla.taxonomy.rest.v1.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.Relevance;
-
 import java.net.URI;
 import java.util.Optional;
+import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.Relevance;
 
 @Schema(name = "TopicResource")
 public class TopicResourceDTO {
@@ -51,7 +50,5 @@ public class TopicResourceDTO {
         relevanceId = topicResource.getRelevance().map(Relevance::getPublicId);
     }
 
-    TopicResourceDTO() {
-    }
-
+    TopicResourceDTO() {}
 }

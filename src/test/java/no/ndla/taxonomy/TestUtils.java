@@ -7,6 +7,20 @@
 
 package no.ndla.taxonomy;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
+import static org.springframework.test.util.AssertionErrors.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.function.Predicate;
+import javax.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -19,21 +33,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.context.WebApplicationContext;
 
-import javax.persistence.EntityManager;
-import java.io.IOException;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.function.Predicate;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
-import static org.springframework.test.util.AssertionErrors.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
-
 @Component
 public class TestUtils {
 
@@ -42,10 +41,14 @@ public class TestUtils {
     private final MockMvc mockMvc;
 
     @Autowired
-    public TestUtils(HttpMessageConverter<?>[] converters, WebApplicationContext webApplicationContext,
+    public TestUtils(
+            HttpMessageConverter<?>[] converters,
+            WebApplicationContext webApplicationContext,
             EntityManager entityManager) {
         mappingJackson2HttpMessageConverter = Arrays.stream(converters)
-                .filter(hmc -> hmc instanceof MappingJackson2HttpMessageConverter).findAny().orElse(null);
+                .filter(hmc -> hmc instanceof MappingJackson2HttpMessageConverter)
+                .findAny()
+                .orElse(null);
 
         this.entityManager = entityManager;
 
@@ -67,12 +70,16 @@ public class TestUtils {
             throws Exception {
         entityManager.flush();
         return mockMvc.perform(post(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
-                .andExpect(resultMatcher).andReturn().getResponse();
+                .andExpect(resultMatcher)
+                .andReturn()
+                .getResponse();
     }
 
     public MockHttpServletResponse getResource(String path, ResultMatcher resultMatcher) throws Exception {
         entityManager.flush();
-        return mockMvc.perform(get(path).accept(APPLICATION_JSON_UTF8)).andExpect(resultMatcher).andReturn()
+        return mockMvc.perform(get(path).accept(APPLICATION_JSON_UTF8))
+                .andExpect(resultMatcher)
+                .andReturn()
                 .getResponse();
     }
 
@@ -86,7 +93,10 @@ public class TestUtils {
 
     public MockHttpServletResponse deleteResource(String path, ResultMatcher resultMatcher) throws Exception {
         entityManager.flush();
-        return mockMvc.perform(delete(path)).andExpect(resultMatcher).andReturn().getResponse();
+        return mockMvc.perform(delete(path))
+                .andExpect(resultMatcher)
+                .andReturn()
+                .getResponse();
     }
 
     public MockHttpServletResponse updateResource(String path) throws Exception {
@@ -101,11 +111,15 @@ public class TestUtils {
             throws Exception {
         entityManager.flush();
         if (command == null)
-            return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8)).andExpect(resultMatcher).andReturn()
+            return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8))
+                    .andExpect(resultMatcher)
+                    .andReturn()
                     .getResponse();
         else
             return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
-                    .andExpect(resultMatcher).andReturn().getResponse();
+                    .andExpect(resultMatcher)
+                    .andReturn()
+                    .getResponse();
     }
 
     public static URI getId(MockHttpServletResponse response) {
@@ -135,12 +149,10 @@ public class TestUtils {
         while (objects.hasNext()) {
             V next = objects.next();
             className = next.getClass().getSimpleName();
-            if (predicate.test(next))
-                return;
+            if (predicate.test(next)) return;
         }
 
-        if (null == className)
-            fail("Empty collection");
+        if (null == className) fail("Empty collection");
         fail("No " + className + " matching predicate found.");
     }
 

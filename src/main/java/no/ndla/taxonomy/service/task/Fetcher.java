@@ -7,19 +7,17 @@
 
 package no.ndla.taxonomy.service.task;
 
-import no.ndla.taxonomy.domain.DomainEntity;
-import no.ndla.taxonomy.service.DomainEntityHelperService;
-
 import java.net.URI;
 import java.util.Optional;
+import no.ndla.taxonomy.domain.DomainEntity;
+import no.ndla.taxonomy.service.DomainEntityHelperService;
 
 public class Fetcher extends Task<DomainEntity> {
     private DomainEntityHelperService domainEntityHelperService;
     private URI publicId;
     private boolean addIsPublishing;
 
-    public Fetcher() {
-    }
+    public Fetcher() {}
 
     public void setDomainEntityHelperService(DomainEntityHelperService domainEntityHelperService) {
         this.domainEntityHelperService = domainEntityHelperService;
@@ -35,7 +33,7 @@ public class Fetcher extends Task<DomainEntity> {
 
     @Override
     protected Optional<DomainEntity> execute() {
-        return domainEntityHelperService.getProcessedEntityByPublicId(this.publicId, this.addIsPublishing,
-                this.cleanUp);
+        return domainEntityHelperService.getProcessedEntityByPublicId(
+                this.publicId, this.addIsPublishing, this.cleanUp);
     }
 }

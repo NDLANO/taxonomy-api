@@ -7,11 +7,10 @@
 
 package no.ndla.taxonomy.service;
 
+import java.util.Optional;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 /**
  * Gets the database schema name from the version context to be used in the multi tenancy provider.

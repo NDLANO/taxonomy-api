@@ -9,7 +9,6 @@ package no.ndla.taxonomy.rest.v1.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.net.URI;
 import java.util.Optional;
 

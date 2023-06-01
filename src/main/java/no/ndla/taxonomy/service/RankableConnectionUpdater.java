@@ -7,19 +7,18 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.NodeConnection;
-
 import java.util.Comparator;
 import java.util.List;
+import no.ndla.taxonomy.domain.NodeConnection;
 
 public class RankableConnectionUpdater {
 
-    public static List<NodeConnection> rank(List<NodeConnection> existingConnections, NodeConnection updatedConnection,
-            int desiredRank) {
+    public static List<NodeConnection> rank(
+            List<NodeConnection> existingConnections, NodeConnection updatedConnection, int desiredRank) {
         updatedConnection.setRank(desiredRank);
         if (!existingConnections.isEmpty()) {
-            existingConnections
-                    .removeIf(subjectTopic -> subjectTopic.getPublicId().equals(updatedConnection.getPublicId()));
+            existingConnections.removeIf(
+                    subjectTopic -> subjectTopic.getPublicId().equals(updatedConnection.getPublicId()));
             existingConnections.sort(Comparator.comparingInt(NodeConnection::getRank));
             int newIndex = insertInRankOrder(existingConnections, updatedConnection);
             if (!connectionWasInsertedAtEnd(newIndex)) {
@@ -35,8 +34,8 @@ public class RankableConnectionUpdater {
         return insertedAtIndex == -1;
     }
 
-    private static void updateAdjacentRankedConnections(List<NodeConnection> existingConnections,
-            NodeConnection updatedConnection, int startFromIndex) {
+    private static void updateAdjacentRankedConnections(
+            List<NodeConnection> existingConnections, NodeConnection updatedConnection, int startFromIndex) {
         int lastUpdatedConnectionRank = updatedConnection.getRank();
         for (int i = startFromIndex; i < existingConnections.size(); i++) {
             NodeConnection currentItem = existingConnections.get(i);
@@ -44,8 +43,7 @@ public class RankableConnectionUpdater {
             if (currentRank <= lastUpdatedConnectionRank) {
                 currentItem.setRank(lastUpdatedConnectionRank + 1);
                 lastUpdatedConnectionRank = lastUpdatedConnectionRank + 1;
-            } else
-                return;
+            } else return;
         }
     }
 

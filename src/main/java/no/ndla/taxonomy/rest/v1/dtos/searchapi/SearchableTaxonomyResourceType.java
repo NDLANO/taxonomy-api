@@ -7,12 +7,11 @@
 
 package no.ndla.taxonomy.rest.v1.dtos.searchapi;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import no.ndla.taxonomy.domain.ResourceType;
-
-import java.util.HashMap;
-
 import static no.ndla.taxonomy.config.Constants.DefaultLanguage;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.HashMap;
+import no.ndla.taxonomy.domain.ResourceType;
 
 public class SearchableTaxonomyResourceType {
     @JsonProperty
@@ -21,8 +20,7 @@ public class SearchableTaxonomyResourceType {
     @JsonProperty
     private HashMap<String, String> name;
 
-    public SearchableTaxonomyResourceType() {
-    }
+    public SearchableTaxonomyResourceType() {}
 
     public SearchableTaxonomyResourceType(ResourceType resourceType) {
         var translations = resourceType.getTranslations();

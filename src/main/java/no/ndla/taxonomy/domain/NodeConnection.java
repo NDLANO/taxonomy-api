@@ -9,17 +9,18 @@ package no.ndla.taxonomy.domain;
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import io.hypersistence.utils.hibernate.type.json.JsonStringType;
-import org.hibernate.annotations.*;
-
-import javax.persistence.Entity;
-import javax.persistence.*;
 import java.net.URI;
 import java.time.Instant;
 import java.util.*;
+import javax.persistence.*;
+import javax.persistence.Entity;
+import org.hibernate.annotations.*;
 
 @Entity
-@TypeDefs({ @TypeDef(name = "json", typeClass = JsonStringType.class),
-        @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class) })
+@TypeDefs({
+    @TypeDef(name = "json", typeClass = JsonStringType.class),
+    @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
+})
 public class NodeConnection extends DomainEntity
         implements EntityWithMetadata, Comparable<NodeConnection>, SortableResourceConnection {
     @ManyToOne
@@ -250,12 +251,12 @@ public class NodeConnection extends DomainEntity
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         NodeConnection that = (NodeConnection) o;
-        return rank == that.rank && Objects.equals(parent, that.parent) && Objects.equals(child, that.child)
+        return rank == that.rank
+                && Objects.equals(parent, that.parent)
+                && Objects.equals(child, that.child)
                 && Objects.equals(relevance, that.relevance);
     }
 }

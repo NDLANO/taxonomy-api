@@ -9,12 +9,12 @@ package no.ndla.taxonomy.rest.v1.dtos.searchapi;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
 // NOTE: This will need to match `SearchableTaxonomyContext` in `search-api`
+// spotless:off
 @Schema(name = "TaxonomyContext")
 public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "The publicId of the node connected via content-uri") URI publicId,
@@ -31,7 +31,7 @@ public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "Whether the base connection is marked as active subject") boolean isActive,
         @JsonProperty @Schema(description = "Whether the base connection is visible or not") boolean isVisible,
         @JsonProperty @Schema(description = "Unique id of context based on root + connection") String contextId) {
-
+// spotless:on
     @JsonProperty
     @Deprecated
     public Optional<URI> id() {
@@ -61,5 +61,4 @@ public record TaxonomyContextDTO(
     public Optional<Boolean> isPrimaryConnection() {
         return Optional.of(isPrimary());
     }
-
 }

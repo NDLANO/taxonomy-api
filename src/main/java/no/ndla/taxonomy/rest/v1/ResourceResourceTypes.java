@@ -10,6 +10,9 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.net.URI;
+import java.util.List;
+import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -23,31 +26,32 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @RestController
-@RequestMapping(path = { "/v1/resource-resourcetypes" })
+@RequestMapping(path = {"/v1/resource-resourcetypes"})
 public class ResourceResourceTypes {
 
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final ResourceTypeRepository resourceTypeRepository;
     private final NodeRepository nodeRepository;
 
-    public ResourceResourceTypes(ResourceResourceTypeRepository resourceResourceTypeRepository,
-            ResourceTypeRepository resourceTypeRepository, NodeRepository nodeRepository) {
+    public ResourceResourceTypes(
+            ResourceResourceTypeRepository resourceResourceTypeRepository,
+            ResourceTypeRepository resourceTypeRepository,
+            NodeRepository nodeRepository) {
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.resourceTypeRepository = resourceTypeRepository;
         this.nodeRepository = nodeRepository;
     }
 
     @PostMapping
-    @Operation(summary = "Adds a resource type to a resource", security = { @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Adds a resource type to a resource",
+            security = {@SecurityRequirement(name = "oauth")})
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createResourceResourceType(
-            @Parameter(name = "connection", description = "The new resource/resource type connection") @RequestBody ResourceResourceTypePOST command) {
+            @Parameter(name = "connection", description = "The new resource/resource type connection") @RequestBody
+                    ResourceResourceTypePOST command) {
 
         var resource = nodeRepository.getByPublicId(command.resourceId);
 
@@ -60,9 +64,11 @@ public class ResourceResourceTypes {
         return ResponseEntity.created(location).build();
     }
 
-    @DeleteMapping({ "/{id}" })
+    @DeleteMapping({"/{id}"})
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Removes a resource type from a resource", security = { @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Removes a resource type from a resource",
+            security = {@SecurityRequirement(name = "oauth")})
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void deleteResourceResourceType(@PathVariable("id") URI id) {
@@ -75,15 +81,15 @@ public class ResourceResourceTypes {
     @Transactional(readOnly = true)
     public List<ResourceResourceTypeDTO> getAllResourceResourceTypes() {
         return resourceResourceTypeRepository.findAllIncludingResourceAndResourceType().stream()
-                .map(ResourceResourceTypeDTO::new).collect(Collectors.toList());
+                .map(ResourceResourceTypeDTO::new)
+                .collect(Collectors.toList());
     }
 
-    @GetMapping({ "/{id}" })
+    @GetMapping({"/{id}"})
     @Operation(summary = "Gets a single connection between resource and resource type")
     @Transactional(readOnly = true)
     public ResourceResourceTypeDTO getResourceResourceType(@PathVariable("id") URI id) {
         ResourceResourceType result = resourceResourceTypeRepository.getByPublicId(id);
         return new ResourceResourceTypeDTO(result);
     }
-
 }

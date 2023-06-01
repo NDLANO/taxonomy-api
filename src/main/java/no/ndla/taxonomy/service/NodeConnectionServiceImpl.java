@@ -7,6 +7,10 @@
 
 package no.ndla.taxonomy.service;
 
+import java.net.URI;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
@@ -20,11 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.net.URI;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
-
 @Transactional(propagation = Propagation.MANDATORY)
 @Service
 public class NodeConnectionServiceImpl implements NodeConnectionService {
@@ -32,15 +31,17 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     private final ContextUpdaterService cachedUrlUpdaterService;
     private final NodeRepository nodeRepository;
 
-    public NodeConnectionServiceImpl(NodeConnectionRepository nodeConnectionRepository,
-            ContextUpdaterService cachedUrlUpdaterService, NodeRepository nodeRepository) {
+    public NodeConnectionServiceImpl(
+            NodeConnectionRepository nodeConnectionRepository,
+            ContextUpdaterService cachedUrlUpdaterService,
+            NodeRepository nodeRepository) {
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
         this.nodeRepository = nodeRepository;
     }
 
-    private NodeConnection doCreateConnection(Node parent, Node child, boolean requestedPrimary, Relevance relevance,
-            int rank) {
+    private NodeConnection doCreateConnection(
+            Node parent, Node child, boolean requestedPrimary, Relevance relevance, int rank) {
         if (child.getParentConnections().size() == 0) {
             // First connected is always primary regardless of request
             requestedPrimary = true;
@@ -70,8 +71,8 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         return connection;
     }
 
-    private NodeConnection createConnection(Node parent, Node child, Relevance relevance, int rank,
-            Optional<Boolean> isPrimary) {
+    private NodeConnection createConnection(
+            Node parent, Node child, Relevance relevance, int rank, Optional<Boolean> isPrimary) {
         return doCreateConnection(parent, child, isPrimary.orElse(true), relevance, rank);
     }
 
@@ -80,11 +81,10 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     }
 
     @Override
-    public NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank,
-            Optional<Boolean> isPrimary) {
+    public NodeConnection connectParentChild(
+            Node parent, Node child, Relevance relevance, Integer rank, Optional<Boolean> isPrimary) {
         if (child.getParentConnections().size() > 0) {
-            if (child.getNodeType() != NodeType.RESOURCE)
-                throw new DuplicateConnectionException();
+            if (child.getNodeType() != NodeType.RESOURCE) throw new DuplicateConnectionException();
 
             var alreadyConnectedResource = parent.getResourceChildren().stream()
                     .anyMatch(connection -> connection.getChild().orElse(null) == child);
@@ -105,9 +105,16 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         Node parentConnected = parent;
 
         var ttl = 100;
-        while (parentConnected.getParentConnections().stream().findFirst().map(NodeConnection::getParent).isPresent()) {
-            Logger.getLogger(this.getClass().toString()).info(parentConnected.getPublicId().toString());
-            parentConnected = parentConnected.getParentConnections().stream().findFirst().orElseThrow().getParent()
+        while (parentConnected.getParentConnections().stream()
+                .findFirst()
+                .map(NodeConnection::getParent)
+                .isPresent()) {
+            Logger.getLogger(this.getClass().toString())
+                    .info(parentConnected.getPublicId().toString());
+            parentConnected = parentConnected.getParentConnections().stream()
+                    .findFirst()
+                    .orElseThrow()
+                    .getParent()
                     .orElseThrow();
 
             if (ttl-- < 0) {
@@ -119,7 +126,10 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         }
 
         if (rank == null) {
-            rank = parent.getChildConnections().stream().map(NodeConnection::getRank).max(Integer::compare).orElse(0)
+            rank = parent.getChildConnections().stream()
+                            .map(NodeConnection::getRank)
+                            .max(Integer::compare)
+                            .orElse(0)
                     + 1;
         }
 
@@ -128,9 +138,10 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
 
     @Override
     public void disconnectParentChild(Node parent, Node child) {
-        new HashSet<>(parent.getChildConnections()).stream()
-                .filter(connection -> connection.getChild().orElse(null) == child)
-                .forEach(this::disconnectParentChildConnection); // (It will never be more than one record)
+        new HashSet<>(parent.getChildConnections())
+                .stream()
+                        .filter(connection -> connection.getChild().orElse(null) == child)
+                        .forEach(this::disconnectParentChildConnection); // (It will never be more than one record)
     }
 
     @Override
@@ -145,11 +156,13 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
                 // Set next connection to primary if disconnecting the primary connection
                 var isPrimaryConnection = nodeConnection.isPrimary().orElse(false);
                 if (isPrimaryConnection) {
-                    childToDisconnect.getParentConnections().stream().findFirst().ifPresent(nextConnection -> {
-                        nextConnection.setPrimary(true);
-                        nodeConnectionRepository.saveAndFlush(nextConnection);
-                        nextConnection.getResource().ifPresent(cachedUrlUpdaterService::updateContexts);
-                    });
+                    childToDisconnect.getParentConnections().stream()
+                            .findFirst()
+                            .ifPresent(nextConnection -> {
+                                nextConnection.setPrimary(true);
+                                nodeConnectionRepository.saveAndFlush(nextConnection);
+                                nextConnection.getResource().ifPresent(cachedUrlUpdaterService::updateContexts);
+                            });
                 }
             }
             cachedUrlUpdaterService.updateContexts(childToDisconnect);
@@ -170,7 +183,8 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         // Updates all other nodes connected to this parent
         final var foundNewPrimary = new AtomicBoolean(false);
         connectable.getChild().ifPresent(node -> node.getParentConnections().stream()
-                .filter(connectable1 -> connectable1 != connectable).forEachOrdered(connectable1 -> {
+                .filter(connectable1 -> connectable1 != connectable)
+                .forEachOrdered(connectable1 -> {
                     if (!setPrimaryTo && !foundNewPrimary.get()) {
                         connectable1.setPrimary(true);
                         foundNewPrimary.set(true);
@@ -195,9 +209,12 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     }
 
     private void updateRank(NodeConnection rankable, int newRank) {
-        final var updatedConnections = RankableConnectionUpdater.rank(new ArrayList<>(rankable.getParent()
-                .orElseThrow(() -> new IllegalStateException("Rankable parent not found")).getChildConnections()),
-                rankable, newRank);
+        final var updatedConnections = RankableConnectionUpdater.rank(
+                new ArrayList<>(rankable.getParent()
+                        .orElseThrow(() -> new IllegalStateException("Rankable parent not found"))
+                        .getChildConnections()),
+                rankable,
+                newRank);
         saveConnections(updatedConnections);
     }
 
@@ -216,7 +233,10 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     }
 
     @Override
-    public void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Optional<Integer> newRank,
+    public void updateParentChild(
+            NodeConnection nodeConnection,
+            Relevance relevance,
+            Optional<Integer> newRank,
             Optional<Boolean> isPrimary) {
         newRank.ifPresent(integer -> updateRank(nodeConnection, integer));
         isPrimary.ifPresent(primary -> updatePrimaryConnection(nodeConnection, primary));
@@ -225,7 +245,8 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
 
     @Override
     public void replacePrimaryConnectionsFor(Node entity) {
-        entity.getChildConnections().stream().filter(connection -> connection.isPrimary().orElse(false))
+        entity.getChildConnections().stream()
+                .filter(connection -> connection.isPrimary().orElse(false))
                 .forEach(connection -> {
                     try {
                         updatePrimaryConnection(connection, false);
@@ -254,7 +275,8 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
 
     @Override
     public void disconnectAllParents(URI nodeId) {
-        var node = nodeRepository.findFirstByPublicId(nodeId)
+        var node = nodeRepository
+                .findFirstByPublicId(nodeId)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
         node.getParentConnections().forEach(this::disconnectParentChildConnection);
     }

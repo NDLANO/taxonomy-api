@@ -7,6 +7,8 @@
 
 package no.ndla.taxonomy.security;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkException;
 import com.auth0.jwk.JwkProvider;
@@ -15,6 +17,13 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import java.io.IOException;
+import java.security.interfaces.RSAPublicKey;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,16 +34,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.security.interfaces.RSAPublicKey;
-
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Profile("auth")
 @Component
@@ -73,7 +72,8 @@ public class AuthFilter extends GenericFilterBean {
         String authorizationHeader = request.getHeader("authorization");
         if (!isBlank(authorizationHeader) && (authorizationHeader.startsWith("Bearer"))) {
             SecurityContextHolder.getContext()
-                    .setAuthentication(new JWTAuthentication(verifyWebToken(authorizationHeader.substring(6).trim())));
+                    .setAuthentication(new JWTAuthentication(
+                            verifyWebToken(authorizationHeader.substring(6).trim())));
         }
     }
 

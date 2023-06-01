@@ -7,12 +7,11 @@
 
 package no.ndla.taxonomy.service;
 
+import java.net.URI;
+import java.util.Optional;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
-
-import java.net.URI;
-import java.util.Optional;
 
 public interface DomainEntityHelperService {
     Node getNodeByPublicId(URI publicId);

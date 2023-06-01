@@ -7,11 +7,10 @@
 
 package no.ndla.taxonomy.domain;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 public class LanguageFieldTest {
 
@@ -53,8 +52,8 @@ public class LanguageFieldTest {
         node2.setName("Name 2");
         node2.addTranslation("Name 2", "nb");
 
-        var languageField = LanguageField.listFromLists(LanguageField.listFromNode(node),
-                LanguageField.fromNode(node2));
+        var languageField =
+                LanguageField.listFromLists(LanguageField.listFromNode(node), LanguageField.fromNode(node2));
         assertEquals(1, languageField.size());
         assertEquals(List.of("Name", "Name 2"), languageField.get("nb"));
     }
@@ -73,8 +72,8 @@ public class LanguageFieldTest {
         node3.setName("Name 3");
         node3.addTranslation("Name 3", "nb");
 
-        var languageField = LanguageField.listFromLists(LanguageField.listFromNode(node),
-                LanguageField.fromNode(node2));
+        var languageField =
+                LanguageField.listFromLists(LanguageField.listFromNode(node), LanguageField.fromNode(node2));
         assertEquals(1, languageField.size());
         assertEquals(List.of("Name", "Name 2"), languageField.get("nb"));
 
@@ -97,8 +96,8 @@ public class LanguageFieldTest {
         node2.addTranslation("Name 2 nb", "nb");
         node2.addTranslation("Name 2 en", "en");
 
-        var languageField = LanguageField.listFromLists(LanguageField.listFromNode(node),
-                LanguageField.fromNode(node2));
+        var languageField =
+                LanguageField.listFromLists(LanguageField.listFromNode(node), LanguageField.fromNode(node2));
         assertEquals(3, languageField.size());
         assertEquals(List.of("Name nb", "Name 2 nb"), languageField.get("nb"));
         assertEquals(List.of("Name nn", "Name 2 nb"), languageField.get("nn"));
@@ -114,7 +113,5 @@ public class LanguageFieldTest {
         assertEquals(List.of("Name nn", "Name 2 nb", "Name 3"), languageField2.get("nn"));
         assertEquals(List.of("Name nb", "Name 2 en", "Name 3"), languageField2.get("en"));
         assertEquals(List.of("Name nb", "Name 2 nb", "Name 3 se"), languageField2.get("se"));
-
     }
-
 }

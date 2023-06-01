@@ -7,10 +7,9 @@
 
 package no.ndla.taxonomy.service;
 
+import java.net.URI;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.exceptions.IdFormatException;
-
-import java.net.URI;
 
 public class URNValidator {
     public void validate(URI id, DomainEntity entity) {

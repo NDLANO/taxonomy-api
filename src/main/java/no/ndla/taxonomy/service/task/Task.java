@@ -7,11 +7,10 @@
 
 package no.ndla.taxonomy.service.task;
 
-import no.ndla.taxonomy.domain.DomainEntity;
-import no.ndla.taxonomy.service.VersionContext;
-
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import no.ndla.taxonomy.domain.DomainEntity;
+import no.ndla.taxonomy.service.VersionContext;
 
 public abstract class Task<T extends DomainEntity> implements Callable<T> {
     private String version;

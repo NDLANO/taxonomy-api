@@ -7,6 +7,9 @@
 
 package no.ndla.taxonomy.service;
 
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -19,10 +22,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.net.URI;
-import java.util.*;
-import java.util.stream.Collectors;
-
 @Component
 @Transactional(readOnly = true)
 public class DomainEntityHelperServiceImpl implements DomainEntityHelperService {
@@ -32,8 +31,10 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     private final ResourceTypeRepository resourceTypeRepository;
     private final ContextUpdaterService cachedUrlUpdaterService;
 
-    public DomainEntityHelperServiceImpl(NodeRepository nodeRepository,
-            NodeConnectionRepository nodeConnectionRepository, ResourceTypeRepository resourceTypeRepository,
+    public DomainEntityHelperServiceImpl(
+            NodeRepository nodeRepository,
+            NodeConnectionRepository nodeConnectionRepository,
+            ResourceTypeRepository resourceTypeRepository,
             ContextUpdaterService cachedUrlUpdaterService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
@@ -44,7 +45,8 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public Node getNodeByPublicId(URI publicId) {
-        return nodeRepository.findFirstByPublicId(publicId)
+        return nodeRepository
+                .findFirstByPublicId(publicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node", publicId));
     }
 
@@ -52,12 +54,12 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Transactional(propagation = Propagation.MANDATORY)
     public DomainEntity getEntityByPublicId(URI publicId) {
         switch (publicId.getSchemeSpecificPart().split(":")[0]) {
-        case "subject", "topic", "node", "resource" -> {
-            return nodeRepository.findFirstByPublicId(publicId).orElse(null);
-        }
-        case "node-connection", "subject-topic", "topic-subtopic", "node-resource", "topic-resource" -> {
-            return nodeConnectionRepository.findByPublicId(publicId);
-        }
+            case "subject", "topic", "node", "resource" -> {
+                return nodeRepository.findFirstByPublicId(publicId).orElse(null);
+            }
+            case "node-connection", "subject-topic", "topic-subtopic", "node-resource", "topic-resource" -> {
+                return nodeConnectionRepository.findByPublicId(publicId);
+            }
         }
         throw new NotFoundServiceException("Entity of type not found");
     }
@@ -65,12 +67,12 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Override
     public TaxonomyRepository getRepository(URI publicId) {
         switch (publicId.getSchemeSpecificPart().split(":")[0]) {
-        case "subject", "topic", "node", "resource" -> {
-            return nodeRepository;
-        }
-        case "node-connection", "subject-topic", "topic-subtopic", "node-resource", "topic-resource" -> {
-            return nodeConnectionRepository;
-        }
+            case "subject", "topic", "node", "resource" -> {
+                return nodeRepository;
+            }
+            case "node-connection", "subject-topic", "topic-subtopic", "node-resource", "topic-resource" -> {
+                return nodeConnectionRepository;
+            }
         }
         throw new NotFoundServiceException(String.format("Unknown repository requested: %s", publicId));
     }
@@ -139,7 +141,6 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             return updateNodeConnection((NodeConnection) domainEntity, cleanUp);
         }
         throw new IllegalArgumentException("Wrong type of element to update: " + domainEntity.getEntityName());
-
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
@@ -166,7 +167,9 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             // ResourceTypes
             Collection<URI> typesToSet = new HashSet<>();
             Collection<URI> typesToKeep = new HashSet<>();
-            List<URI> existingTypes = existing.getResourceTypes().stream().map(DomainEntity::getPublicId).toList();
+            List<URI> existingTypes = existing.getResourceTypes().stream()
+                    .map(DomainEntity::getPublicId)
+                    .toList();
             node.getResourceTypes().forEach(resourceType -> {
                 if (existingTypes.contains(resourceType.getPublicId())) {
                     typesToKeep.add(resourceType.getPublicId());
@@ -176,15 +179,17 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             });
             if (!typesToSet.isEmpty()) {
                 Map<URI, URI> reusedUris = node.getResourceResourceTypes().stream()
-                        .filter(resourceResourceType -> typesToSet
-                                .contains(resourceResourceType.getResourceType().getPublicId()))
+                        .filter(resourceResourceType -> typesToSet.contains(
+                                resourceResourceType.getResourceType().getPublicId()))
                         .collect(Collectors.toMap(
-                                resourceResourceType -> resourceResourceType.getResourceType().getPublicId(),
+                                resourceResourceType ->
+                                        resourceResourceType.getResourceType().getPublicId(),
                                 ResourceResourceType::getPublicId));
 
                 Collection<ResourceResourceType> toRemove = new HashSet<>();
                 existing.getResourceResourceTypes().forEach(resourceResourceType -> {
-                    if (!typesToKeep.contains(resourceResourceType.getResourceType().getPublicId())) {
+                    if (!typesToKeep.contains(
+                            resourceResourceType.getResourceType().getPublicId())) {
                         toRemove.add(resourceResourceType);
                     }
                 });
@@ -201,7 +206,9 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             result = nodeRepository.save(existing);
 
             // delete orphans
-            List<URI> childIds = node.getChildConnections().stream().map(DomainEntity::getPublicId).toList();
+            List<URI> childIds = node.getChildConnections().stream()
+                    .map(DomainEntity::getPublicId)
+                    .toList();
             result.getChildConnections().forEach(nodeConnection -> {
                 if (!childIds.contains(nodeConnection.getPublicId())) {
                     // Connection deleted
@@ -221,8 +228,10 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         NodeConnection existing = nodeConnectionRepository.findByPublicId(nodeConnection.getPublicId());
         if (existing == null) {
             // Check if connection have changed id
-            Node parent = nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId());
-            Node child = nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId());
+            Node parent = nodeRepository.findByPublicId(
+                    nodeConnection.getParent().get().getPublicId());
+            Node child = nodeRepository.findByPublicId(
+                    nodeConnection.getChild().get().getPublicId());
             existing = nodeConnectionRepository.findByParentIdAndChildId(parent.getId(), child.getId());
             if (existing != null) {
                 existing.setPublicId(nodeConnection.getPublicId());
@@ -238,8 +247,10 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
                 return Optional.of(existing);
             }
             logger.debug("Updating nodeconnection " + nodeConnection.getPublicId());
-            existing.setParent(nodeRepository.findByPublicId(nodeConnection.getParent().get().getPublicId()));
-            existing.setChild(nodeRepository.findByPublicId(nodeConnection.getChild().get().getPublicId()));
+            existing.setParent(nodeRepository.findByPublicId(
+                    nodeConnection.getParent().get().getPublicId()));
+            existing.setChild(nodeRepository.findByPublicId(
+                    nodeConnection.getChild().get().getPublicId()));
             result = updateExisting(existing, nodeConnection);
         }
         if (cleanUp) {
@@ -267,8 +278,8 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         if (resourceType.getParent().isPresent()) {
             parent = ensureResourceTypesExists(resourceType.getParent().get());
         }
-        Optional<ResourceType> existing = resourceTypeRepository
-                .findFirstByPublicIdIncludingTranslations(resourceType.getPublicId());
+        Optional<ResourceType> existing =
+                resourceTypeRepository.findFirstByPublicIdIncludingTranslations(resourceType.getPublicId());
         if (existing.isEmpty()) {
             // Create resource type
             ResourceType rt = new ResourceType(resourceType, parent);
@@ -276,5 +287,4 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         }
         return existing.get();
     }
-
 }

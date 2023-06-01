@@ -7,11 +7,11 @@
 
 package no.ndla.taxonomy.domain;
 
+import java.net.URI;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.net.URI;
 
 @Entity
 @Table(name = "url_map")
@@ -56,6 +56,6 @@ public class UrlMapping {
 
     public void setSubject_id(String subject_id) {
         this.subject_id = URI.create(subject_id).toString(); // if not valid URI - will force an
-                                                             // IllegalArgumentException
+        // IllegalArgumentException
     }
 }

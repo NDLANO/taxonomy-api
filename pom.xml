@@ -242,8 +242,6 @@
                 </executions>
                 <configuration>
                     <!-- Docs: https://github.com/diffplug/spotless/tree/main/plugin-maven -->
-                    <!-- Only files different from master will be formatted -->
-                    <ratchetFrom>origin/master</ratchetFrom>
                     <formats>
                         <format>
                             <includes>

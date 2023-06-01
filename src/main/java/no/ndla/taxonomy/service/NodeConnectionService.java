@@ -7,17 +7,16 @@
 
 package no.ndla.taxonomy.service;
 
+import java.net.URI;
+import java.util.Collection;
+import java.util.Optional;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
 
-import java.net.URI;
-import java.util.Collection;
-import java.util.Optional;
-
 public interface NodeConnectionService {
-    NodeConnection connectParentChild(Node parent, Node child, Relevance relevance, Integer rank,
-            Optional<Boolean> isPrimary);
+    NodeConnection connectParentChild(
+            Node parent, Node child, Relevance relevance, Integer rank, Optional<Boolean> isPrimary);
 
     void disconnectParentChild(Node parent, Node child);
 
@@ -25,8 +24,8 @@ public interface NodeConnectionService {
 
     void disconnectAllParents(URI nodeId);
 
-    void updateParentChild(NodeConnection nodeConnection, Relevance relevance, Optional<Integer> newRank,
-            Optional<Boolean> isPrimary);
+    void updateParentChild(
+            NodeConnection nodeConnection, Relevance relevance, Optional<Integer> newRank, Optional<Boolean> isPrimary);
 
     void replacePrimaryConnectionsFor(Node entity);
 

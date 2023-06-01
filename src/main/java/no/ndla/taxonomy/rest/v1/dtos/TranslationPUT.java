@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public class TranslationPUT {
     @JsonProperty
-    @Schema(description = "The translated name of the element. Used wherever translated texts are used.", example = "Trigonometry")
+    @Schema(
+            description = "The translated name of the element. Used wherever translated texts are used.",
+            example = "Trigonometry")
     public String name;
 }

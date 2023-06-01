@@ -7,6 +7,12 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
+import static no.ndla.taxonomy.TestUtils.getId;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.net.URI;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.ResourceResourceType;
 import no.ndla.taxonomy.domain.ResourceType;
@@ -14,13 +20,6 @@ import no.ndla.taxonomy.rest.v1.dtos.ResourceResourceTypeDTO;
 import no.ndla.taxonomy.rest.v1.dtos.ResourceResourceTypePOST;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
-
-import java.net.URI;
-
-import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
-import static no.ndla.taxonomy.TestUtils.getId;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ResourceResourceTypesTest extends RestTest {
 
@@ -53,12 +52,15 @@ public class ResourceResourceTypesTest extends RestTest {
         ResourceType resourceType = newResourceType().name("text");
         save(integrationResource.addResourceType(resourceType));
 
-        testUtils.createResource("/v1/resource-resourcetypes", new ResourceResourceTypePOST() {
-            {
-                resourceId = integrationResource.getPublicId();
-                resourceTypeId = resourceType.getPublicId();
-            }
-        }, status().isConflict());
+        testUtils.createResource(
+                "/v1/resource-resourcetypes",
+                new ResourceResourceTypePOST() {
+                    {
+                        resourceId = integrationResource.getPublicId();
+                        resourceTypeId = resourceType.getPublicId();
+                    }
+                },
+                status().isConflict());
     }
 
     @Test
@@ -84,13 +86,17 @@ public class ResourceResourceTypesTest extends RestTest {
         save(integration.addResourceType(text));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/resource-resourcetypes");
-        ResourceResourceTypeDTO[] resourceResourcetypes = testUtils.getObject(ResourceResourceTypeDTO[].class,
-                response);
+        ResourceResourceTypeDTO[] resourceResourcetypes =
+                testUtils.getObject(ResourceResourceTypeDTO[].class, response);
         assertEquals(2, resourceResourcetypes.length);
-        assertAnyTrue(resourceResourcetypes,
-                t -> trigonometry.getPublicId().equals(t.resourceId) && article.getPublicId().equals(t.resourceTypeId));
-        assertAnyTrue(resourceResourcetypes,
-                t -> integration.getPublicId().equals(t.resourceId) && text.getPublicId().equals(t.resourceTypeId));
+        assertAnyTrue(
+                resourceResourcetypes,
+                t -> trigonometry.getPublicId().equals(t.resourceId)
+                        && article.getPublicId().equals(t.resourceTypeId));
+        assertAnyTrue(
+                resourceResourcetypes,
+                t -> integration.getPublicId().equals(t.resourceId)
+                        && text.getPublicId().equals(t.resourceTypeId));
     }
 
     @Test

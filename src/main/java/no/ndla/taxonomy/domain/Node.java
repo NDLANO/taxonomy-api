@@ -10,22 +10,23 @@ package no.ndla.taxonomy.domain;
 import io.hypersistence.utils.hibernate.type.array.StringArrayType;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import io.hypersistence.utils.hibernate.type.json.JsonStringType;
-import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
-import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
-import org.hibernate.annotations.*;
-
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.*;
 import java.net.URI;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
+import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
+import org.hibernate.annotations.*;
 
 @Entity
-@TypeDefs({ @TypeDef(name = "json", typeClass = JsonStringType.class),
-        @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class),
-        @TypeDef(name = "string-array", typeClass = StringArrayType.class) })
+@TypeDefs({
+    @TypeDef(name = "json", typeClass = JsonStringType.class),
+    @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class),
+    @TypeDef(name = "string-array", typeClass = StringArrayType.class)
+})
 public class Node extends DomainObject implements EntityWithMetadata {
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<NodeConnection> parentConnections = new TreeSet<>();
@@ -80,8 +81,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
     private Set<Context> contexts = new HashSet<>();
 
     // Needed for hibernate
-    public Node() {
-    }
+    public Node() {}
 
     public Node(NodeType nodeType) {
         setNodeType(nodeType);
@@ -107,7 +107,8 @@ public class Node extends DomainObject implements EntityWithMetadata {
             updatePublicID();
         }
 
-        this.translations = node.getTranslations().stream().map(JsonTranslation::new).toList();
+        this.translations =
+                node.getTranslations().stream().map(JsonTranslation::new).toList();
         TreeSet<ResourceResourceType> rrts = new TreeSet<>();
         for (ResourceResourceType rt : node.getResourceResourceTypes()) {
             ResourceResourceType rrt = new ResourceResourceType();
@@ -128,36 +129,43 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public Optional<String> getPrimaryPath() {
-        return getContexts().stream().filter(Context::isPrimary).map(Context::path).findFirst();
+        return getContexts().stream()
+                .filter(Context::isPrimary)
+                .map(Context::path)
+                .findFirst();
     }
 
     /**
      * Picks a context based on parameters. If no parameters or no root matching, pick by matching path and primary
-     * 
+     *
      * @param contextId
      *            If this is present, return the context with corresponding id
      * @param root
      *            If this is present, return context with this publicId as root. Else pick context containing roots
      *            publicId.
-     * 
+     *
      * @return Context
      */
     public Optional<Context> pickContext(Optional<String> contextId, Optional<Node> root) {
         var contexts = getContexts();
-        var maybeContext = contextId.flatMap(id -> contexts.stream().filter(c -> c.contextId().equals(id)).findFirst());
+        var maybeContext = contextId.flatMap(
+                id -> contexts.stream().filter(c -> c.contextId().equals(id)).findFirst());
         if (maybeContext.isPresent()) {
             return maybeContext;
         }
-        var maybeRoot = root.flatMap(
-                node -> contexts.stream().filter(c -> c.rootId().equals(node.getPublicId().toString())).findFirst());
+        var maybeRoot = root.flatMap(node -> contexts.stream()
+                .filter(c -> c.rootId().equals(node.getPublicId().toString()))
+                .findFirst());
         if (maybeRoot.isPresent()) {
             return maybeRoot;
         }
         return contexts.stream().min((context1, context2) -> {
             final var inPath1 = context1.path()
-                    .contains(root.map(node -> node.getPublicId().getSchemeSpecificPart()).orElse("other"));
+                    .contains(root.map(node -> node.getPublicId().getSchemeSpecificPart())
+                            .orElse("other"));
             final var inPath2 = context2.path()
-                    .contains(root.map(node -> node.getPublicId().getSchemeSpecificPart()).orElse("other"));
+                    .contains(root.map(node -> node.getPublicId().getSchemeSpecificPart())
+                            .orElse("other"));
 
             if (inPath1 && inPath2) {
                 if (context1.isPrimary() && context2.isPrimary()) {
@@ -217,12 +225,15 @@ public class Node extends DomainObject implements EntityWithMetadata {
 
     public Collection<NodeConnection> getResourceChildren() {
         return this.childConnections.stream()
-                .filter(cc -> cc.getChild().map(child -> child.getNodeType() == NodeType.RESOURCE).orElse(false))
+                .filter(cc -> cc.getChild()
+                        .map(child -> child.getNodeType() == NodeType.RESOURCE)
+                        .orElse(false))
                 .collect(Collectors.toSet());
     }
 
     public Collection<ResourceType> getResourceTypes() {
-        return getResourceResourceTypes().stream().map(ResourceResourceType::getResourceType)
+        return getResourceResourceTypes().stream()
+                .map(ResourceResourceType::getResourceType)
                 .collect(Collectors.toSet());
     }
 
@@ -252,8 +263,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
 
     private Optional<ResourceResourceType> getResourceType(ResourceType resourceType) {
         for (ResourceResourceType resourceResourceType : resourceResourceTypes) {
-            if (resourceResourceType.getResourceType().equals(resourceType))
-                return Optional.of(resourceResourceType);
+            if (resourceResourceType.getResourceType().equals(resourceType)) return Optional.of(resourceResourceType);
         }
         return Optional.empty();
     }
@@ -310,18 +320,28 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public Collection<Node> getChildNodes() {
-        return childConnections.stream().map(NodeConnection::getChild).filter(Optional::isPresent).map(Optional::get)
+        return childConnections.stream()
+                .map(NodeConnection::getChild)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .toList();
     }
 
     public Collection<Node> getParentNodes() {
-        return parentConnections.stream().map(NodeConnection::getParent).filter(Optional::isPresent).map(Optional::get)
+        return parentConnections.stream()
+                .map(NodeConnection::getParent)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .toList();
     }
 
     public Collection<Node> getResources() {
-        return childConnections.stream().map(NodeConnection::getChild).filter(Optional::isPresent).map(Optional::get)
-                .filter(s -> s.getNodeType() == NodeType.RESOURCE).toList();
+        return childConnections.stream()
+                .map(NodeConnection::getChild)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(s -> s.getNodeType() == NodeType.RESOURCE)
+                .toList();
     }
 
     public void setIdent(String ident) {
@@ -342,14 +362,10 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public Optional<String> getContextType() {
-        if (contentUri == null)
-            return Optional.empty();
-        if (contentUri.getSchemeSpecificPart().startsWith("learningpath"))
-            return Optional.of("learningpath");
-        if (nodeType.equals(NodeType.TOPIC))
-            return Optional.of("topic-article");
-        if (contentUri.getSchemeSpecificPart().startsWith("article"))
-            return Optional.of("standard");
+        if (contentUri == null) return Optional.empty();
+        if (contentUri.getSchemeSpecificPart().startsWith("learningpath")) return Optional.of("learningpath");
+        if (nodeType.equals(NodeType.TOPIC)) return Optional.of("topic-article");
+        if (contentUri.getSchemeSpecificPart().startsWith("article")) return Optional.of("standard");
         return Optional.empty();
     }
 
@@ -462,22 +478,23 @@ public class Node extends DomainObject implements EntityWithMetadata {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         Node that = (Node) o;
-        return context == that.context && root == that.root && Objects.equals(contentUri, that.contentUri)
-                && nodeType == that.nodeType && ident.equals(that.ident)
+        return context == that.context
+                && root == that.root
+                && Objects.equals(contentUri, that.contentUri)
+                && nodeType == that.nodeType
+                && ident.equals(that.ident)
                 && Objects.equals(translations, that.translations)
-                && Objects.equals(this.customfields, that.customfields) && this.visible == that.visible
+                && Objects.equals(this.customfields, that.customfields)
+                && this.visible == that.visible
                 && Objects.equals(this.grepcodes, that.grepcodes);
     }
 
     public Optional<Node> getPrimaryNode() {
         for (var node : this.parentConnections) {
-            if (node.isPrimary().orElse(false))
-                return node.getParent();
+            if (node.isPrimary().orElse(false)) return node.getParent();
         }
         return Optional.empty();
     }

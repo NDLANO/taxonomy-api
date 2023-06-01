@@ -9,13 +9,12 @@ package no.ndla.taxonomy.security;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
-import java.util.*;
 
 public class JWTAuthentication implements Authentication {
 
@@ -56,7 +55,8 @@ public class JWTAuthentication implements Authentication {
         List<GrantedAuthority> authorities = new ArrayList<>();
         for (String jwtPermissionString : allPermissions) {
             final JWTPermission jwtPermission = new JWTPermission(jwtPermissionString);
-            if (jwtPermission.getApi() != null && jwtPermission.getPermission() != null
+            if (jwtPermission.getApi() != null
+                    && jwtPermission.getPermission() != null
                     && jwtPermission.getApi().equals(TAXONOMY_API)) {
                 if (jwtPermission.getPermission().equals(WRITE_PERMISSION))
                     authorities.add(new SimpleGrantedAuthority("TAXONOMY_WRITE"));

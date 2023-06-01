@@ -7,6 +7,9 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
+import static org.junit.jupiter.api.Assertions.*;
+
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.dtos.ContextDTO;
@@ -17,9 +20,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletResponse;
-
-import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class ContextsTest extends RestTest {
     @Autowired
@@ -34,7 +34,10 @@ public class ContextsTest extends RestTest {
     public void all_subjects_are_contexts() throws Exception {
         nodeRepository.flush();
 
-        builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).publicId("urn:subject:1").name("Subject 1"));
+        builder.node(s -> s.nodeType(NodeType.SUBJECT)
+                .isContext(true)
+                .publicId("urn:subject:1")
+                .name("Subject 1"));
 
         var response = testUtils.getResource("/v1/contexts");
         var contexts = testUtils.getObject(ContextDTO[].class, response);
@@ -47,7 +50,10 @@ public class ContextsTest extends RestTest {
 
     @Test
     public void topics_can_be_contexts() throws Exception {
-        builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").name("Topic 1").isContext(true));
+        builder.node(t -> t.nodeType(NodeType.TOPIC)
+                .publicId("urn:topic:1")
+                .name("Topic 1")
+                .isContext(true));
 
         var response = testUtils.getResource("/v1/contexts");
         var contexts = testUtils.getObject(ContextDTO[].class, response);
@@ -73,7 +79,8 @@ public class ContextsTest extends RestTest {
 
     @Test
     public void can_remove_topic_as_context() throws Exception {
-        Node topic = builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").isContext(true));
+        Node topic = builder.node(
+                t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").isContext(true));
 
         testUtils.deleteResource("/v1/contexts/urn:topic:1");
         assertFalse(topic.isContext());
@@ -83,10 +90,16 @@ public class ContextsTest extends RestTest {
     public void can_get_translated_contexts() throws Exception {
         nodeRepository.deleteAllAndFlush();
 
-        builder.node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).publicId("urn:subject:1").name("Subject 1")
+        builder.node(s -> s.nodeType(NodeType.SUBJECT)
+                .isContext(true)
+                .publicId("urn:subject:1")
+                .name("Subject 1")
                 .translation("Fag 1", "nb"));
 
-        builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1").name("Topic 1").translation("Emne 1", "nb")
+        builder.node(t -> t.nodeType(NodeType.TOPIC)
+                .publicId("urn:topic:1")
+                .name("Topic 1")
+                .translation("Emne 1", "nb")
                 .isContext(true));
 
         var response = testUtils.getResource("/v1/contexts?language=nb");
@@ -103,8 +116,10 @@ public class ContextsTest extends RestTest {
     public void root_context_is_more_important_than_primary_parent() throws Exception {
         Node topic = builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1"));
 
-        Node subject = builder
-                .node(s -> s.nodeType(NodeType.SUBJECT).isContext(true).publicId("urn:subject:1").child(topic));
+        Node subject = builder.node(s -> s.nodeType(NodeType.SUBJECT)
+                .isContext(true)
+                .publicId("urn:subject:1")
+                .child(topic));
 
         topic.setContext(true);
         nodeRepository.saveAndFlush(topic);

@@ -1,3 +1,10 @@
+/*
+ * Part of NDLA taxonomy-api
+ * Copyright (C) 2023 NDLA
+ *
+ * See LICENSE
+ */
+
 package no.ndla.taxonomy.config;
 
 public final class Constants {

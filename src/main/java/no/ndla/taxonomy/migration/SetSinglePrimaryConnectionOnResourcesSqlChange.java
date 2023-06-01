@@ -7,6 +7,7 @@
 
 package no.ndla.taxonomy.migration;
 
+import java.sql.SQLException;
 import liquibase.change.custom.CustomSqlChange;
 import liquibase.database.Database;
 import liquibase.database.jvm.JdbcConnection;
@@ -19,16 +20,14 @@ import liquibase.statement.SqlStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
-
 public class SetSinglePrimaryConnectionOnResourcesSqlChange implements CustomSqlChange {
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private JdbcConnection connection;
 
     private void setRandomPrimary(int resourceId) throws CustomChangeException {
-        try (var query = connection
-                .prepareStatement("SELECT id FROM topic_resource WHERE resource_id = " + resourceId + " LIMIT 1")) {
+        try (var query = connection.prepareStatement(
+                "SELECT id FROM topic_resource WHERE resource_id = " + resourceId + " LIMIT 1")) {
             logger.info("Setting random primary for resource " + resourceId);
 
             final var result = query.executeQuery();
@@ -60,9 +59,9 @@ public class SetSinglePrimaryConnectionOnResourcesSqlChange implements CustomSql
 
             final var connectionIdToKeep = result.getInt(1);
 
-            try (var updateQuery = connection
-                    .prepareStatement("UPDATE topic_resource SET is_primary = FALSE WHERE id != " + connectionIdToKeep
-                            + " AND resource_id = " + resourceId)) {
+            try (var updateQuery =
+                    connection.prepareStatement("UPDATE topic_resource SET is_primary = FALSE WHERE id != "
+                            + connectionIdToKeep + " AND resource_id = " + resourceId)) {
                 updateQuery.executeUpdate();
             }
         } catch (SQLException | DatabaseException e) {
@@ -116,12 +115,10 @@ public class SetSinglePrimaryConnectionOnResourcesSqlChange implements CustomSql
     }
 
     @Override
-    public void setUp() throws SetupException {
-    }
+    public void setUp() throws SetupException {}
 
     @Override
-    public void setFileOpener(ResourceAccessor resourceAccessor) {
-    }
+    public void setFileOpener(ResourceAccessor resourceAccessor) {}
 
     @Override
     public ValidationErrors validate(Database database) {

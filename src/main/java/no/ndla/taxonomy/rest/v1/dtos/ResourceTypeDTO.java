@@ -10,16 +10,14 @@ package no.ndla.taxonomy.rest.v1.dtos;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import no.ndla.taxonomy.domain.JsonTranslation;
-import no.ndla.taxonomy.domain.ResourceType;
-import no.ndla.taxonomy.rest.v1.ResourceTypes;
-import no.ndla.taxonomy.service.dtos.TranslationDTO;
-
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import no.ndla.taxonomy.domain.JsonTranslation;
+import no.ndla.taxonomy.domain.ResourceType;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 
 @Schema(name = "ResourceType")
 public class ResourceTypeDTO {
@@ -44,17 +42,20 @@ public class ResourceTypeDTO {
     @Schema(description = "List of language codes supported by translations")
     private Set<String> supportedLanguages;
 
-    public ResourceTypeDTO() {
-    }
+    public ResourceTypeDTO() {}
 
     public ResourceTypeDTO(ResourceType resourceType, String language, int recursionLevels) {
         this.id = resourceType.getPublicId();
 
         var translations = resourceType.getTranslations();
         this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
-        this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
+        this.supportedLanguages =
+                this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
 
-        this.name = resourceType.getTranslation(language).map(JsonTranslation::getName).orElse(resourceType.getName());
+        this.name = resourceType
+                .getTranslation(language)
+                .map(JsonTranslation::getName)
+                .orElse(resourceType.getName());
 
         if (recursionLevels > 0) {
             this.subtypes = resourceType.getSubtypes().stream()

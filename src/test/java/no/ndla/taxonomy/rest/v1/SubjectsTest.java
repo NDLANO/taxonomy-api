@@ -7,6 +7,13 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import static no.ndla.taxonomy.TestUtils.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.net.URI;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Node;
@@ -17,22 +24,16 @@ import no.ndla.taxonomy.service.dtos.NodeDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.net.URI;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static no.ndla.taxonomy.TestUtils.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 public class SubjectsTest extends RestTest {
     @Autowired
     private TestSeeder testSeeder;
 
     @Test
     public void can_get_single_subject() throws Exception {
-        builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("english").contentUri("urn:article:1").publicId("urn:subject:1"));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
+                .name("english")
+                .contentUri("urn:article:1")
+                .publicId("urn:subject:1"));
 
         var response = testUtils.getResource("/v1/subjects/urn:subject:1");
         var subject = testUtils.getObject(NodeDTO.class, response);
@@ -140,8 +141,9 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_update_subject_without_changing_metadata() throws Exception {
-        URI publicId = builder
-                .node(NodeType.SUBJECT, s -> s.isVisible(false).grepCode("KM123").customField("key", "value"))
+        URI publicId = builder.node(
+                        NodeType.SUBJECT,
+                        s -> s.isVisible(false).grepCode("KM123").customField("key", "value"))
                 .getPublicId();
 
         final var command = new SubjectPostPut() {
@@ -158,7 +160,9 @@ public class SubjectsTest extends RestTest {
         assertEquals(command.name, subject.getName());
         assertEquals(command.contentUri.get(), subject.getContentUri());
         assertFalse(subject.getMetadata().isVisible());
-        assertTrue(subject.getMetadata().getGrepCodes().stream().map(JsonGrepCode::getCode).collect(Collectors.toSet())
+        assertTrue(subject.getMetadata().getGrepCodes().stream()
+                .map(JsonGrepCode::getCode)
+                .collect(Collectors.toSet())
                 .contains("KM123"));
         assertTrue(subject.getCustomFields().containsValue("value"));
     }
@@ -178,8 +182,8 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_delete_subject() throws Exception {
-        URI id = builder.node(NodeType.SUBJECT,
-                s -> s.child(NodeType.TOPIC, t -> t.publicId("urn:topic:1")).translation("nb", tr -> tr.name("fag")))
+        URI id = builder.node(NodeType.SUBJECT, s -> s.child(NodeType.TOPIC, t -> t.publicId("urn:topic:1"))
+                        .translation("nb", tr -> tr.name("fag")))
                 .getPublicId();
 
         testUtils.deleteResource("/v1/subjects/" + id);
@@ -188,22 +192,28 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_topics() throws Exception {
-        Node subject = builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("physics")
-                        .child(NodeType.TOPIC, t -> t.name("statics").contentUri("urn:article:1"))
-                        .child(NodeType.TOPIC, t -> t.name("electricity").contentUri("urn:article:2"))
-                        .child(NodeType.TOPIC, t -> t.name("optics").contentUri("urn:article:3")));
+        Node subject = builder.node(NodeType.SUBJECT, s -> s.isContext(true)
+                .name("physics")
+                .child(NodeType.TOPIC, t -> t.name("statics").contentUri("urn:article:1"))
+                .child(NodeType.TOPIC, t -> t.name("electricity").contentUri("urn:article:2"))
+                .child(NodeType.TOPIC, t -> t.name("optics").contentUri("urn:article:3")));
 
         var response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics");
         var topics = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(3, topics.length);
-        assertAnyTrue(topics,
-                t -> "statics".equals(t.getName()) && "Optional[urn:article:1]".equals(t.getContentUri().toString()));
-        assertAnyTrue(topics, t -> "electricity".equals(t.getName())
-                && "Optional[urn:article:2]".equals(t.getContentUri().toString()));
-        assertAnyTrue(topics,
-                t -> "optics".equals(t.getName()) && "Optional[urn:article:3]".equals(t.getContentUri().toString()));
+        assertAnyTrue(
+                topics,
+                t -> "statics".equals(t.getName())
+                        && "Optional[urn:article:1]".equals(t.getContentUri().toString()));
+        assertAnyTrue(
+                topics,
+                t -> "electricity".equals(t.getName())
+                        && "Optional[urn:article:2]".equals(t.getContentUri().toString()));
+        assertAnyTrue(
+                topics,
+                t -> "optics".equals(t.getName())
+                        && "Optional[urn:article:3]".equals(t.getContentUri().toString()));
         assertAnyTrue(topics, t -> t.isPrimary());
         assertAllTrue(topics, t -> isValidId(t.getId()));
         assertAllTrue(topics, t -> isValidId(t.getConnectionId()));
@@ -218,14 +228,16 @@ public class SubjectsTest extends RestTest {
 
     @Test
     public void can_get_topics_recursively() throws Exception {
-        URI subjectId = builder
-                .node("subject", NodeType.SUBJECT,
-                        s -> s.isContext(true).name("subject").publicId("urn:subject:1").child("parent", NodeType.TOPIC,
-                                parent -> parent.name("parent topic").publicId("urn:topic:a").child("child",
-                                        NodeType.TOPIC,
-                                        child -> child.name("child topic").publicId("urn:topic:aa")
-                                                .child("grandchild", NodeType.TOPIC, grandchild -> grandchild
-                                                        .name("grandchild topic").publicId("urn:topic:aaa")))))
+        URI subjectId = builder.node("subject", NodeType.SUBJECT, s -> s.isContext(true)
+                        .name("subject")
+                        .publicId("urn:subject:1")
+                        .child("parent", NodeType.TOPIC, parent -> parent.name("parent topic")
+                                .publicId("urn:topic:a")
+                                .child("child", NodeType.TOPIC, child -> child.name("child topic")
+                                        .publicId("urn:topic:aa")
+                                        .child("grandchild", NodeType.TOPIC, grandchild -> grandchild
+                                                .name("grandchild topic")
+                                                .publicId("urn:topic:aaa")))))
                 .getPublicId();
 
         var response = testUtils.getResource("/v1/subjects/" + subjectId + "/topics?recursive=true");
@@ -275,14 +287,14 @@ public class SubjectsTest extends RestTest {
     public void recursive_topics_with_relevance_are_ordered_relative_to_parent() throws Exception {
         testSeeder.recursiveNodesBySubjectNodeIdAndRelevanceTestSetup();
         // test core relevance
-        var response = testUtils
-                .getResource("/v1/subjects/urn:subject:1/topics?recursive=true&relevance=urn:relevance:core");
+        var response =
+                testUtils.getResource("/v1/subjects/urn:subject:1/topics?recursive=true&relevance=urn:relevance:core");
         var topics = testUtils.getObject(NodeChildDTO[].class, response);
         assertEquals(5, topics.length);
 
         // test supplementary relevance
-        var response2 = testUtils
-                .getResource("/v1/subjects/urn:subject:1/topics?recursive=true&relevance=urn:relevance:supplementary");
+        var response2 = testUtils.getResource(
+                "/v1/subjects/urn:subject:1/topics?recursive=true&relevance=urn:relevance:supplementary");
         var topics2 = testUtils.getObject(NodeChildDTO[].class, response2);
         assertEquals(4, topics2.length);
     }

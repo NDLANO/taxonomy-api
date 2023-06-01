@@ -9,11 +9,10 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import no.ndla.taxonomy.domain.NodeConnection;
-
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
+import no.ndla.taxonomy.domain.NodeConnection;
 
 /** */
 @Schema(name = "Connection")
@@ -28,7 +27,9 @@ public class ConnectionDTO {
     private URI targetId;
 
     @JsonProperty
-    @Schema(description = "The path part of the url for the subject or subtopic connected to this topic", example = "/subject:1/topic:1")
+    @Schema(
+            description = "The path part of the url for the subject or subtopic connected to this topic",
+            example = "/subject:1/topic:1")
     private Set<String> paths = new HashSet<>();
 
     @JsonProperty
@@ -36,11 +37,12 @@ public class ConnectionDTO {
     private String type;
 
     @JsonProperty
-    @Schema(description = "True if owned by this topic, false if it has its primary connection elsewhere", example = "true")
+    @Schema(
+            description = "True if owned by this topic, false if it has its primary connection elsewhere",
+            example = "true")
     private Boolean isPrimary;
 
-    public ConnectionDTO() {
-    }
+    public ConnectionDTO() {}
 
     private ConnectionDTO(NodeConnection connection, boolean isParentConnection) {
         this.connectionId = connection.getPublicId();

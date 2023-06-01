@@ -7,6 +7,13 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import static no.ndla.taxonomy.TestUtils.assertAllTrue;
+import static no.ndla.taxonomy.TestUtils.getId;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.net.URI;
+import java.util.Optional;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.rest.v1.commands.VersionPostPut;
@@ -14,14 +21,6 @@ import no.ndla.taxonomy.service.dtos.VersionDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
-
-import java.net.URI;
-import java.util.Optional;
-
-import static no.ndla.taxonomy.TestUtils.assertAllTrue;
-import static no.ndla.taxonomy.TestUtils.getId;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class VersionsTest extends RestTest {
 
@@ -38,7 +37,6 @@ public class VersionsTest extends RestTest {
         MockHttpServletResponse response = testUtils.getResource("/v1/versions");
         VersionDTO[] versions = testUtils.getObject(VersionDTO[].class, response);
         assertEquals(2, versions.length);
-
     }
 
     @Test
@@ -55,8 +53,8 @@ public class VersionsTest extends RestTest {
             assertEquals(Optional.empty(), version.getArchived());
         }
         {
-            MockHttpServletResponse response = testUtils.getResource("/v1/versions/urn:version:2",
-                    status().is4xxClientError());
+            MockHttpServletResponse response =
+                    testUtils.getResource("/v1/versions/urn:version:2", status().is4xxClientError());
             assertEquals(404, response.getStatus());
             assertEquals("{\"error\":\"Version not found\"}", response.getContentAsString());
         }
@@ -72,8 +70,8 @@ public class VersionsTest extends RestTest {
             assertEquals(version.getHash(), versions[0].getHash());
         }
         {
-            MockHttpServletResponse response = testUtils.getResource("/v1/versions/?hash=random",
-                    status().is4xxClientError());
+            MockHttpServletResponse response =
+                    testUtils.getResource("/v1/versions/?hash=random", status().is4xxClientError());
             assertEquals(404, response.getStatus());
             assertEquals("{\"error\":\"Version not found\"}", response.getContentAsString());
         }
@@ -81,7 +79,7 @@ public class VersionsTest extends RestTest {
 
     @Test
     public void can_get_versions_of_type() throws Exception {
-        Version version = builder.version();// BETA
+        Version version = builder.version(); // BETA
         MockHttpServletResponse response = testUtils.getResource("/v1/versions/?type=BETA");
         VersionDTO[] versions = testUtils.getObject(VersionDTO[].class, response);
         assertEquals(1, versions.length);
@@ -124,8 +122,8 @@ public class VersionsTest extends RestTest {
             }
         };
 
-        MockHttpServletResponse response = testUtils.createResource("/v1/versions?sourceId=" + published.getPublicId(),
-                createVersionCommand);
+        MockHttpServletResponse response =
+                testUtils.createResource("/v1/versions?sourceId=" + published.getPublicId(), createVersionCommand);
         URI id = getId(response);
 
         Version version = versionRepository.getByPublicId(id);
@@ -136,7 +134,7 @@ public class VersionsTest extends RestTest {
 
     @Test
     public void can_delete_version() throws Exception {
-        Version version = builder.version();// BETA
+        Version version = builder.version(); // BETA
         testUtils.deleteResource("/v1/versions/" + version.getPublicId());
         try {
             versionRepository.getByPublicId(version.getPublicId());
@@ -150,8 +148,8 @@ public class VersionsTest extends RestTest {
     public void cannot_delete_locked_version() throws Exception {
         Version locked = builder.version(v -> v.locked(true));
         {
-            MockHttpServletResponse response = testUtils.deleteResource("/v1/versions/" + locked.getPublicId(),
-                    status().is4xxClientError());
+            MockHttpServletResponse response =
+                    testUtils.deleteResource("/v1/versions/" + locked.getPublicId(), status().is4xxClientError());
             assertEquals(400, response.getStatus());
             assertEquals("{\"error\":\"Cannot delete locked version\"}", response.getContentAsString());
         }
@@ -159,7 +157,7 @@ public class VersionsTest extends RestTest {
 
     @Test
     public void can_update_version() throws Exception {
-        Version version = builder.version();// BETA
+        Version version = builder.version(); // BETA
         URI newUri = URI.create("urn:version:1");
         final var updateVersionCommand = new VersionPostPut() {
             {
@@ -169,8 +167,8 @@ public class VersionsTest extends RestTest {
             }
         };
 
-        MockHttpServletResponse response = testUtils.updateResource("/v1/versions/" + version.getPublicId(),
-                updateVersionCommand);
+        MockHttpServletResponse response =
+                testUtils.updateResource("/v1/versions/" + version.getPublicId(), updateVersionCommand);
 
         Version updated = versionRepository.getByPublicId(newUri);
         assertEquals(updateVersionCommand.id.get(), updated.getPublicId());
@@ -182,9 +180,9 @@ public class VersionsTest extends RestTest {
 
     @Test
     public void can_publish_version() throws Exception {
-        Version version = builder.version();// BETA
-        MockHttpServletResponse response = testUtils
-                .updateResource("/v1/versions/" + version.getPublicId() + "/publish", null);
+        Version version = builder.version(); // BETA
+        MockHttpServletResponse response =
+                testUtils.updateResource("/v1/versions/" + version.getPublicId() + "/publish", null);
 
         Version updated = versionRepository.getByPublicId(version.getPublicId());
         assertEquals(VersionType.PUBLISHED, updated.getVersionType());
@@ -211,8 +209,8 @@ public class VersionsTest extends RestTest {
     public void publishing_version_unpublishes_current() throws Exception {
         Version published = builder.version(v -> v.type(VersionType.PUBLISHED));
         Version beta = builder.version();
-        MockHttpServletResponse response = testUtils.updateResource("/v1/versions/" + beta.getPublicId() + "/publish",
-                null);
+        MockHttpServletResponse response =
+                testUtils.updateResource("/v1/versions/" + beta.getPublicId() + "/publish", null);
 
         Version updated = versionRepository.getByPublicId(beta.getPublicId());
         assertEquals(VersionType.PUBLISHED, updated.getVersionType());
@@ -222,5 +220,4 @@ public class VersionsTest extends RestTest {
         assertEquals(VersionType.ARCHIVED, unpublished.getVersionType());
         assertNotNull(unpublished.getArchived());
     }
-
 }

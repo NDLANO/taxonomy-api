@@ -7,16 +7,15 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.service.dtos.ResolvedUrl;
-
 import java.net.URI;
 import java.util.Optional;
+import no.ndla.taxonomy.service.dtos.ResolvedUrl;
 
 public interface UrlResolverService {
     /**
      * @param oldUrl
      *            url previously imported into taxonomy with taxonomy-import
-     * 
+     *
      * @return return a resolved URL or null
      */
     Optional<String> resolveOldUrl(String oldUrl);

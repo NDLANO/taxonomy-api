@@ -1,8 +1,14 @@
+/*
+ * Part of NDLA taxonomy-api
+ * Copyright (C) 2022 NDLA
+ *
+ * See LICENSE
+ */
+
 package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.util.List;
 
 @Schema(name = "SearchResult")

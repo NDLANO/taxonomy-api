@@ -1,3 +1,10 @@
+/*
+ * Part of NDLA taxonomy-api
+ * Copyright (C) 2023 NDLA
+ *
+ * See LICENSE
+ */
+
 package no.ndla.taxonomy.domain;
 
 import java.util.ArrayList;
@@ -16,7 +23,8 @@ public interface Translatable {
     }
 
     default Optional<JsonTranslation> getTranslation(String languageCode) {
-        return getTranslations().stream().filter(translation -> translation.getLanguageCode().equals(languageCode))
+        return getTranslations().stream()
+                .filter(translation -> translation.getLanguageCode().equals(languageCode))
                 .findFirst();
     }
 
@@ -25,7 +33,8 @@ public interface Translatable {
             nodeTranslation.setParent(this);
         }
         var newTranslations = new ArrayList<>(getTranslations().stream()
-                .filter(t -> !Objects.equals(t.getLanguageCode(), nodeTranslation.getLanguageCode())).toList());
+                .filter(t -> !Objects.equals(t.getLanguageCode(), nodeTranslation.getLanguageCode()))
+                .toList());
         newTranslations.add(nodeTranslation);
         setTranslations(newTranslations);
         return nodeTranslation;
@@ -38,7 +47,8 @@ public interface Translatable {
 
     default void removeTranslation(JsonTranslation translation) {
         translation.setParent(null);
-        var newTranslations = new ArrayList<>(getTranslations().stream().filter(t -> t != translation).toList());
+        var newTranslations = new ArrayList<>(
+                getTranslations().stream().filter(t -> t != translation).toList());
         setTranslations(newTranslations);
     }
 

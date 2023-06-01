@@ -9,7 +9,6 @@ package no.ndla.taxonomy.rest.v1.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.net.URI;
 
 public class ResourceResourceTypePOST {
@@ -18,6 +17,9 @@ public class ResourceResourceTypePOST {
     public URI resourceId;
 
     @JsonProperty
-    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Resource type id", example = "urn:resourcetype:234")
+    @Schema(
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            description = "Resource type id",
+            example = "urn:resourcetype:234")
     public URI resourceTypeId;
 }

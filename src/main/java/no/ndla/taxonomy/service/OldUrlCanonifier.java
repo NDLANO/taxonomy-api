@@ -16,9 +16,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class OldUrlCanonifier {
 
-    private static final String[] KNOWN_NODE_PREFIXES = new String[] { "printpdf", "easyreader", "h5p/embed",
-            "h5pcontent", "aktualitet", "package", "fagstoff", "oppgave", "print" };
-    private static final String[] KNOWN_NODE_SUFFIXES = new String[] { "/menu", "/oembed", "/download", "/lightbox" };
+    private static final String[] KNOWN_NODE_PREFIXES = new String[] {
+        "printpdf", "easyreader", "h5p/embed", "h5pcontent", "aktualitet", "package", "fagstoff", "oppgave", "print"
+    };
+    private static final String[] KNOWN_NODE_SUFFIXES = new String[] {"/menu", "/oembed", "/download", "/lightbox"};
 
     public String canonify(String oldUrl) {
         oldUrl = replaceKnownNodePrefixes(oldUrl);
@@ -50,8 +51,7 @@ public class OldUrlCanonifier {
                     partToRemove = oldUrl.substring(start, indexOfSlashAfter + 1);
                 } else if (indexOfQuestionMark != -1) {
                     partToRemove = oldUrl.substring(start, indexOfQuestionMark);
-                } else
-                    partToRemove = suffix;
+                } else partToRemove = suffix;
                 return oldUrl.replace(partToRemove, "");
             }
         }

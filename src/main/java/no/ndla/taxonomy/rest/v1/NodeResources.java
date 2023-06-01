@@ -10,10 +10,13 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -31,13 +34,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 @RestController
-@RequestMapping(path = { "/v1/node-resources" })
+@RequestMapping(path = {"/v1/node-resources"})
 public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
 
     private final NodeRepository nodeRepository;
@@ -45,8 +43,11 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     private final NodeConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
 
-    public NodeResources(NodeRepository nodeRepository, NodeConnectionService connectionService,
-            NodeConnectionRepository nodeConnectionRepository, RelevanceRepository relevanceRepository,
+    public NodeResources(
+            NodeRepository nodeRepository,
+            NodeConnectionService connectionService,
+            NodeConnectionRepository nodeConnectionRepository,
+            RelevanceRepository relevanceRepository,
             ContextUpdaterService cachedUrlUpdaterService) {
         super(nodeConnectionRepository, cachedUrlUpdaterService);
         this.nodeConnectionRepository = nodeConnectionRepository;
@@ -59,7 +60,8 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @Operation(summary = "Gets all connections between node and resources")
     @Transactional(readOnly = true)
     public List<NodeResourceDTO> getAllNodeResources() {
-        return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream().map(NodeResourceDTO::new)
+        return nodeConnectionRepository.findAllByChildNodeType(NodeType.RESOURCE).stream()
+                .map(NodeResourceDTO::new)
                 .collect(Collectors.toList());
     }
 
@@ -68,13 +70,13 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     @Transactional(readOnly = true)
     public SearchResultDTO<NodeResourceDTO> getNodeResourcesPage(
             @Parameter(name = "page", description = "The page to fetch", required = true) Optional<Integer> page,
-            @Parameter(name = "pageSize", description = "Size of page to fetch", required = true) Optional<Integer> pageSize) {
+            @Parameter(name = "pageSize", description = "Size of page to fetch", required = true)
+                    Optional<Integer> pageSize) {
 
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
         }
-        if (page.get() < 1)
-            throw new IllegalArgumentException("page parameter must be bigger than 0");
+        if (page.get() < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
 
         var pageRequest = PageRequest.of(page.get() - 1, pageSize.get());
         var connections = nodeConnectionRepository.findIdsPaginatedByChildNodeType(pageRequest, NodeType.RESOURCE);
@@ -93,25 +95,31 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     }
 
     @PostMapping
-    @Operation(summary = "Adds a resource to a node", security = { @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Adds a resource to a node",
+            security = {@SecurityRequirement(name = "oauth")})
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createNodeResource(
-            @Parameter(name = "connection", description = "new node/resource connection ") @RequestBody NodeResourcePOST command) {
+            @Parameter(name = "connection", description = "new node/resource connection ") @RequestBody
+                    NodeResourcePOST command) {
         var parent = nodeRepository.getByPublicId(command.nodeId);
         var child = nodeRepository.getByPublicId(command.resourceId);
-        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var relevance =
+                command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
         var rank = command.rank.orElse(null);
 
-        final var nodeConnection = connectionService.connectParentChild(parent, child, relevance, rank,
-                command.primary);
+        final var nodeConnection =
+                connectionService.connectParentChild(parent, child, relevance, rank, command.primary);
 
         var location = URI.create("/node-resources/" + nodeConnection.getPublicId());
         return ResponseEntity.created(location).build();
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Removes a resource from a node", security = { @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Removes a resource from a node",
+            security = {@SecurityRequirement(name = "oauth")})
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
@@ -121,20 +129,24 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Updates a connection between a node and a resource", description = "Use to update which node is primary to the resource or to change sorting order.", security = {
-            @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Updates a connection between a node and a resource",
+            description = "Use to update which node is primary to the resource or to change sorting order.",
+            security = {@SecurityRequirement(name = "oauth")})
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void updateNodeResource(@PathVariable("id") URI id,
-            @Parameter(name = "connection", description = "Updated node/resource connection") @RequestBody NodeResourcePUT command) {
+    public void updateNodeResource(
+            @PathVariable("id") URI id,
+            @Parameter(name = "connection", description = "Updated node/resource connection") @RequestBody
+                    NodeResourcePUT command) {
         final var nodeResource = nodeConnectionRepository.getByPublicId(id);
-        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var relevance =
+                command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
         if (nodeResource.isPrimary().orElse(false) && !command.primary.orElse(false)) {
             throw new PrimaryParentRequiredException();
         }
 
         connectionService.updateParentChild(nodeResource, relevance, command.rank, command.primary);
     }
-
 }

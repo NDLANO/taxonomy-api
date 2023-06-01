@@ -24,5 +24,4 @@ public class VersionContext {
     public static void clear() {
         currentVersion.remove();
     }
-
 }

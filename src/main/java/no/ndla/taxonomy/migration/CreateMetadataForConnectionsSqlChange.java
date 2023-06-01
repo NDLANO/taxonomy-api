@@ -7,6 +7,11 @@
 
 package no.ndla.taxonomy.migration;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import liquibase.change.custom.CustomSqlChange;
 import liquibase.database.Database;
 import liquibase.database.jvm.JdbcConnection;
@@ -18,12 +23,6 @@ import liquibase.resource.ResourceAccessor;
 import liquibase.statement.SqlStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Instant;
 
 public class CreateMetadataForConnectionsSqlChange implements CustomSqlChange {
 
@@ -75,47 +74,47 @@ public class CreateMetadataForConnectionsSqlChange implements CustomSqlChange {
                 metadataIdRS.next();
                 int oldMetadataId = metadataIdRS.getInt(1);
 
-                PreparedStatement getMetadata = connection.prepareStatement(String
-                        .format("SELECT visible from %s where id = ?", String.format("%s%s", getSchema(), "metadata")));
+                PreparedStatement getMetadata = connection.prepareStatement(String.format(
+                        "SELECT visible from %s where id = ?", String.format("%s%s", getSchema(), "metadata")));
                 getMetadata.setInt(1, oldMetadataId);
                 ResultSet metadataRs = getMetadata.executeQuery();
                 metadataRs.next();
                 boolean visible = metadataRs.getObject(1, Boolean.class);
-                PreparedStatement insertMetadata = connection.prepareStatement(
-                        String.format("insert into %s (visible, created_at) values (?, ?) returning id",
-                                String.format("%s%s", getSchema(), "metadata")));
+                PreparedStatement insertMetadata = connection.prepareStatement(String.format(
+                        "insert into %s (visible, created_at) values (?, ?) returning id",
+                        String.format("%s%s", getSchema(), "metadata")));
                 insertMetadata.setBoolean(1, visible);
                 insertMetadata.setTimestamp(2, Timestamp.from(Instant.now()));
                 ResultSet resultSet = insertMetadata.executeQuery();
                 resultSet.next();
                 Integer newMetadataId = resultSet.getObject(1, Integer.class);
 
-                PreparedStatement getGrepCode = connection
-                        .prepareStatement(String.format("select grep_code_id from %s where metadata_id = ?",
-                                String.format("%s%s", getSchema(), "metadata_grep_code")));
+                PreparedStatement getGrepCode = connection.prepareStatement(String.format(
+                        "select grep_code_id from %s where metadata_id = ?",
+                        String.format("%s%s", getSchema(), "metadata_grep_code")));
                 getGrepCode.setInt(1, oldMetadataId);
                 ResultSet grepCodesRs = getGrepCode.executeQuery();
                 while (grepCodesRs.next()) {
                     int grepCodeId = grepCodesRs.getInt(1);
-                    PreparedStatement insertGrepCode = connection
-                            .prepareStatement(String.format("insert into %s (metadata_id, grep_code_id) values (?, ?)",
-                                    String.format("%s%s", getSchema(), "metadata_grep_code")));
+                    PreparedStatement insertGrepCode = connection.prepareStatement(String.format(
+                            "insert into %s (metadata_id, grep_code_id) values (?, ?)",
+                            String.format("%s%s", getSchema(), "metadata_grep_code")));
                     insertGrepCode.setInt(1, newMetadataId);
                     insertGrepCode.setInt(2, grepCodeId);
                     insertGrepCode.executeUpdate();
                 }
 
-                PreparedStatement getCustomFields = connection
-                        .prepareStatement(String.format("select custom_field_id, value from %s where metadata_id = ?",
-                                String.format("%s%s", getSchema(), "custom_field_value")));
+                PreparedStatement getCustomFields = connection.prepareStatement(String.format(
+                        "select custom_field_id, value from %s where metadata_id = ?",
+                        String.format("%s%s", getSchema(), "custom_field_value")));
                 getCustomFields.setInt(1, oldMetadataId);
                 ResultSet customFieldsRS = getCustomFields.executeQuery();
                 while (customFieldsRS.next()) {
                     int customFieldId = customFieldsRS.getInt(1);
                     String value = customFieldsRS.getString(2);
-                    PreparedStatement insertCustomField = connection.prepareStatement(
-                            String.format("insert into %s (metadata_id, custom_field_id, value) values (?, ?, ?)",
-                                    String.format("%s%s", getSchema(), "custom_field_value")));
+                    PreparedStatement insertCustomField = connection.prepareStatement(String.format(
+                            "insert into %s (metadata_id, custom_field_id, value) values (?, ?, ?)",
+                            String.format("%s%s", getSchema(), "custom_field_value")));
                     insertCustomField.setInt(1, newMetadataId);
                     insertCustomField.setInt(2, customFieldId);
                     insertCustomField.setString(3, value);
@@ -129,7 +128,6 @@ public class CreateMetadataForConnectionsSqlChange implements CustomSqlChange {
                 updateTable.executeUpdate();
             }
         }
-
     }
 
     @Override
@@ -138,14 +136,10 @@ public class CreateMetadataForConnectionsSqlChange implements CustomSqlChange {
     }
 
     @Override
-    public void setUp() throws SetupException {
-
-    }
+    public void setUp() throws SetupException {}
 
     @Override
-    public void setFileOpener(ResourceAccessor resourceAccessor) {
-
-    }
+    public void setFileOpener(ResourceAccessor resourceAccessor) {}
 
     @Override
     public ValidationErrors validate(Database database) {

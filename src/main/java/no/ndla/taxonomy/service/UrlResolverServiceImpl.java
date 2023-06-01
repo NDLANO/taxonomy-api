@@ -7,6 +7,10 @@
 
 package no.ndla.taxonomy.service;
 
+import java.net.URI;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.UrlMapping;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -18,11 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.net.URI;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-
 @Service
 @Transactional(readOnly = true)
 public class UrlResolverServiceImpl implements UrlResolverService {
@@ -33,7 +32,9 @@ public class UrlResolverServiceImpl implements UrlResolverService {
     private final UrlMappingRepository urlMappingRepository;
 
     @Autowired
-    public UrlResolverServiceImpl(UrlMappingRepository urlMappingRepository, NodeRepository nodeRepository,
+    public UrlResolverServiceImpl(
+            UrlMappingRepository urlMappingRepository,
+            NodeRepository nodeRepository,
             OldUrlCanonifier oldUrlCanonifier) {
         this.nodeRepository = nodeRepository;
         this.urlMappingRepository = urlMappingRepository;
@@ -69,7 +70,8 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
     private List<String> getAllPaths(URI publicId) {
         try {
-            return getEntityFromPublicId(publicId).stream().flatMap(x -> x.getAllPaths().stream())
+            return getEntityFromPublicId(publicId).stream()
+                    .flatMap(x -> x.getAllPaths().stream())
                     .collect(Collectors.toList());
         } catch (InvalidArgumentServiceException e) {
             return List.of();
@@ -78,8 +80,11 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
     private Optional<String> getPrimaryPath(URI publicId) {
         try {
-            return getEntityFromPublicId(publicId).stream().map(Node::getPrimaryPath).filter(Optional::isPresent)
-                    .map(Optional::get).findFirst();
+            return getEntityFromPublicId(publicId).stream()
+                    .map(Node::getPrimaryPath)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .findFirst();
         } catch (InvalidArgumentServiceException e) {
             return Optional.empty();
         }
@@ -156,8 +161,10 @@ public class UrlResolverServiceImpl implements UrlResolverService {
         final var lastEntity = new AtomicReference<Node>();
         for (final var entity : entities) {
             if (lastEntity.get() != null) {
-                if (entity.getParentConnections().stream().noneMatch(parentConnection -> parentConnection.getParent()
-                        .filter(parent -> parent.equals(lastEntity.get())).isPresent())) {
+                if (entity.getParentConnections().stream().noneMatch(parentConnection -> parentConnection
+                        .getParent()
+                        .filter(parent -> parent.equals(lastEntity.get()))
+                        .isPresent())) {
                     throw new NotFoundServiceException(
                             lastEntity.get().getPublicId() + " has no child with ID " + entity.getPublicId());
                 }
@@ -189,14 +196,19 @@ public class UrlResolverServiceImpl implements UrlResolverService {
             // Create a list of parents with publicId in reversed order, not including the node
             // itself
             resolvedUrl.setParents(resolvedPathComponents.subList(0, resolvedPathComponents.size() - 1).stream()
-                    .map(Node::getPublicId).sorted(Collections.reverseOrder()).collect(Collectors.toList()));
+                    .map(Node::getPublicId)
+                    .sorted(Collections.reverseOrder())
+                    .collect(Collectors.toList()));
 
             resolvedUrl.setName(leafElement.getName());
 
             // Generate a string path from the sorted list of parent nodes, a cleaned version of the
             // provided string path parameter
-            resolvedUrl.setPath("/" + resolvedPathComponents.stream().map(Node::getPublicId)
-                    .map(URI::getSchemeSpecificPart).collect(Collectors.joining("/")));
+            resolvedUrl.setPath("/"
+                    + resolvedPathComponents.stream()
+                            .map(Node::getPublicId)
+                            .map(URI::getSchemeSpecificPart)
+                            .collect(Collectors.joining("/")));
 
             return Optional.of(resolvedUrl);
         } catch (NotFoundServiceException e) {
@@ -214,8 +226,9 @@ public class UrlResolverServiceImpl implements UrlResolverService {
                 continue;
             }
 
-            final var resolved = getEntityFromPublicId(URI.create("urn:" + pathPart)).orElseThrow(
-                    () -> new NotFoundServiceException("Element with Id " + pathPart + " could not be found"));
+            final var resolved = getEntityFromPublicId(URI.create("urn:" + pathPart))
+                    .orElseThrow(
+                            () -> new NotFoundServiceException("Element with Id " + pathPart + " could not be found"));
 
             returnedList.add(resolved);
         }

@@ -7,6 +7,13 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import static no.ndla.taxonomy.TestUtils.assertAllTrue;
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.net.URI;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
@@ -15,14 +22,6 @@ import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.net.URI;
-
-import static no.ndla.taxonomy.TestUtils.assertAllTrue;
-import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class SubjectTranslationsTest extends RestTest {
     @BeforeEach
@@ -84,8 +83,8 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_delete_translation() throws Exception {
-        Node subject = builder.node(NodeType.SUBJECT,
-                s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
+        Node subject =
+                builder.node(NodeType.SUBJECT, s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
         URI id = subject.getPublicId();
 
         testUtils.deleteResource("/v1/subjects/" + id + "/translations/nb");
@@ -95,13 +94,14 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_all_translations() throws Exception {
-        Node subject = builder.node(NodeType.SUBJECT,
-                s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk"))
-                        .translation("en", l -> l.name("Mathematics")).translation("de", l -> l.name("Mathematik")));
+        Node subject = builder.node(NodeType.SUBJECT, s -> s.name("Mathematics")
+                .translation("nb", l -> l.name("Matematikk"))
+                .translation("en", l -> l.name("Mathematics"))
+                .translation("de", l -> l.name("Mathematik")));
         URI id = subject.getPublicId();
 
-        var translations = testUtils.getObject(TranslationDTO[].class,
-                testUtils.getResource("/v1/subjects/" + id + "/translations"));
+        var translations = testUtils.getObject(
+                TranslationDTO[].class, testUtils.getResource("/v1/subjects/" + id + "/translations"));
 
         assertEquals(3, translations.length);
         assertAnyTrue(translations, t -> t.name.equals("Matematikk") && t.language.equals("nb"));
@@ -111,24 +111,22 @@ public class SubjectTranslationsTest extends RestTest {
 
     @Test
     public void can_get_single_translation() throws Exception {
-        Node subject = builder.node(NodeType.SUBJECT,
-                s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
+        Node subject =
+                builder.node(NodeType.SUBJECT, s -> s.name("Mathematics").translation("nb", l -> l.name("Matematikk")));
         URI id = subject.getPublicId();
 
-        var translation = testUtils.getObject(TranslationDTO.class,
-                testUtils.getResource("/v1/subjects/" + id + "/translations/nb"));
+        var translation = testUtils.getObject(
+                TranslationDTO.class, testUtils.getResource("/v1/subjects/" + id + "/translations/nb"));
         assertEquals("Matematikk", translation.name);
         assertEquals("nb", translation.language);
     }
 
     @Test
     public void can_get_topics_with_language() throws Exception {
-        Node subject = builder.node(NodeType.SUBJECT,
-                s -> s.name("physics")
-                        .child(NodeType.TOPIC, t -> t.name("statics").translation("nb", tr -> tr.name("statikk")))
-                        .child(NodeType.TOPIC,
-                                t -> t.name("electricity").translation("nb", tr -> tr.name("elektrisitet")))
-                        .child(NodeType.TOPIC, t -> t.name("optics").translation("nb", tr -> tr.name("optikk"))));
+        Node subject = builder.node(NodeType.SUBJECT, s -> s.name("physics")
+                .child(NodeType.TOPIC, t -> t.name("statics").translation("nb", tr -> tr.name("statikk")))
+                .child(NodeType.TOPIC, t -> t.name("electricity").translation("nb", tr -> tr.name("elektrisitet")))
+                .child(NodeType.TOPIC, t -> t.name("optics").translation("nb", tr -> tr.name("optikk"))));
 
         var response = testUtils.getResource("/v1/subjects/" + subject.getPublicId() + "/topics?language=nb");
         var topics = testUtils.getObject(NodeChildDTO[].class, response);
@@ -145,10 +143,13 @@ public class SubjectTranslationsTest extends RestTest {
         builder.resourceType("article", rt -> rt.name("Article").translation("nb", tr -> tr.name("Artikkel")));
 
         URI id = builder.node(NodeType.SUBJECT, s -> s.name("subject")
-                .child(NodeType.TOPIC, t -> t.name("Trigonometry").resource(r -> r.name("Introduction to trigonometry")
-                        .translation("nb", tr -> tr.name("Introduksjon til trigonometri")).resourceType("article")))
-                .child(NodeType.TOPIC, t -> t.name("Calculus").resource(r -> r.name("Introduction to calculus")
-                        .translation("nb", tr -> tr.name("Introduksjon til calculus")).resourceType("article"))))
+                        .child(NodeType.TOPIC, t -> t.name("Trigonometry")
+                                .resource(r -> r.name("Introduction to trigonometry")
+                                        .translation("nb", tr -> tr.name("Introduksjon til trigonometri"))
+                                        .resourceType("article")))
+                        .child(NodeType.TOPIC, t -> t.name("Calculus").resource(r -> r.name("Introduction to calculus")
+                                .translation("nb", tr -> tr.name("Introduksjon til calculus"))
+                                .resourceType("article"))))
                 .getPublicId();
 
         var response = testUtils.getResource("/v1/subjects/" + id + "/resources?language=nb");
@@ -158,13 +159,13 @@ public class SubjectTranslationsTest extends RestTest {
 
         assertAnyTrue(resources, r -> r.getName().equals("Introduksjon til trigonometri"));
         assertAnyTrue(resources, r -> r.getName().equals("Introduksjon til calculus"));
-        assertAllTrue(resources, r -> r.getResourceTypes().iterator().next().getName().equals("Artikkel"));
+        assertAllTrue(
+                resources, r -> r.getResourceTypes().iterator().next().getName().equals("Artikkel"));
     }
 
     private NodeDTO getSubject(URI id, String language) throws Exception {
         String path = "/v1/subjects/" + id;
-        if (isNotEmpty(language))
-            path = path + "?language=" + language;
+        if (isNotEmpty(language)) path = path + "?language=" + language;
         return testUtils.getObject(NodeDTO.class, testUtils.getResource(path));
     }
 }

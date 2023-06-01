@@ -7,6 +7,12 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import static no.ndla.taxonomy.TestUtils.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.net.URI;
+import java.util.*;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
@@ -17,13 +23,6 @@ import no.ndla.taxonomy.service.RankableConnectionUpdater;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
-
-import java.net.URI;
-import java.util.*;
-
-import static no.ndla.taxonomy.TestUtils.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class SubjectTopicsTest extends RestTest {
 
@@ -63,12 +62,15 @@ public class SubjectTopicsTest extends RestTest {
         URI subjectId = physics.getPublicId();
         URI topicId = trigonometry.getPublicId();
 
-        testUtils.createResource("/v1/subject-topics", new SubjectTopicPOST() {
-            {
-                this.subjectid = subjectId;
-                this.topicid = topicId;
-            }
-        }, status().isConflict());
+        testUtils.createResource(
+                "/v1/subject-topics",
+                new SubjectTopicPOST() {
+                    {
+                        this.subjectid = subjectId;
+                        this.topicid = topicId;
+                    }
+                },
+                status().isConflict());
     }
 
     @Test
@@ -102,14 +104,14 @@ public class SubjectTopicsTest extends RestTest {
     @Test
     public void update_subject_rank_modifies_other_contiguous_ranks() throws Exception {
         List<NodeConnection> subjectTopics = createTenContiguousRankedNodeConnections(); // creates ranks 1, 2, 3, 4, 5,
-                                                                                         // 6, 7, 8, 9, 10
+        // 6, 7, 8, 9, 10
         Map<String, Integer> mappedRanks = mapNodeConnectionRanks(subjectTopics);
 
         // make the last object the first
         NodeConnection updatedConnection = subjectTopics.get(subjectTopics.size() - 1);
         assertEquals(10, updatedConnection.getRank());
-        testUtils.updateResource("/v1/subject-topics/" + updatedConnection.getPublicId().toString(),
-                new SubjectTopicPUT() {
+        testUtils.updateResource(
+                "/v1/subject-topics/" + updatedConnection.getPublicId().toString(), new SubjectTopicPUT() {
                     {
                         primary = Optional.of(true);
                         rank = Optional.of(1);
@@ -119,8 +121,8 @@ public class SubjectTopicsTest extends RestTest {
 
         // verify that the other connections have been updated
         for (NodeConnection subjectTopic : subjectTopics) {
-            MockHttpServletResponse response = testUtils
-                    .getResource("/v1/subject-topics/" + subjectTopic.getPublicId().toString());
+            MockHttpServletResponse response = testUtils.getResource(
+                    "/v1/subject-topics/" + subjectTopic.getPublicId().toString());
             SubjectTopicDTO connectionFromDb = testUtils.getObject(SubjectTopicDTO.class, response);
             // verify that the other connections have had their rank bumped up 1
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
@@ -133,14 +135,14 @@ public class SubjectTopicsTest extends RestTest {
     @Test
     public void update_subject_rank_modifies_other_noncontiguous_ranks() throws Exception {
         List<NodeConnection> subjectTopics = createTenNonContiguousRankedNodeConnections(); // creates ranks 1, 2, 3, 4,
-                                                                                            // 5, 60, 70, 80, 90, 100
+        // 5, 60, 70, 80, 90, 100
         Map<String, Integer> mappedRanks = mapNodeConnectionRanks(subjectTopics);
 
         // make the last object the first
         NodeConnection updatedConnection = subjectTopics.get(subjectTopics.size() - 1);
         assertEquals(100, updatedConnection.getRank());
-        testUtils.updateResource("/v1/subject-topics/" + updatedConnection.getPublicId().toString(),
-                new SubjectTopicPUT() {
+        testUtils.updateResource(
+                "/v1/subject-topics/" + updatedConnection.getPublicId().toString(), new SubjectTopicPUT() {
                     {
                         primary = Optional.of(true);
                         rank = Optional.of(1);
@@ -150,8 +152,8 @@ public class SubjectTopicsTest extends RestTest {
 
         // verify that the other connections have been updated
         for (NodeConnection subjectTopic : subjectTopics) {
-            MockHttpServletResponse response = testUtils
-                    .getResource("/v1/subject-topics/" + subjectTopic.getPublicId().toString());
+            MockHttpServletResponse response = testUtils.getResource(
+                    "/v1/subject-topics/" + subjectTopic.getPublicId().toString());
             SubjectTopicDTO connectionFromDb = testUtils.getObject(SubjectTopicDTO.class, response);
             // verify that only the contiguous connections are updated
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
@@ -173,8 +175,8 @@ public class SubjectTopicsTest extends RestTest {
         // set rank for last object to higher than any existing
         NodeConnection updatedConnection = subjectTopics.get(subjectTopics.size() - 1);
         assertEquals(10, updatedConnection.getRank());
-        testUtils.updateResource("/v1/subject-topics/" + subjectTopics.get(9).getPublicId().toString(),
-                new SubjectTopicPUT() {
+        testUtils.updateResource(
+                "/v1/subject-topics/" + subjectTopics.get(9).getPublicId().toString(), new SubjectTopicPUT() {
                     {
                         primary = Optional.of(true);
                         rank = Optional.of(99);
@@ -184,8 +186,8 @@ public class SubjectTopicsTest extends RestTest {
 
         // verify that the other connections are unchanged
         for (NodeConnection subjectTopic : subjectTopics) {
-            MockHttpServletResponse response = testUtils
-                    .getResource("/v1/subject-topics/" + subjectTopic.getPublicId().toString());
+            MockHttpServletResponse response = testUtils.getResource(
+                    "/v1/subject-topics/" + subjectTopic.getPublicId().toString());
             SubjectTopicDTO connection = testUtils.getObject(SubjectTopicDTO.class, response);
             if (!connection.id.equals(updatedConnection.getPublicId())) {
                 assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);
@@ -245,7 +247,8 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void topic_has_default_rank() throws Exception {
-        builder.node(NodeType.SUBJECT,
+        builder.node(
+                NodeType.SUBJECT,
                 s -> s.isContext(true).name("Mathematics").child(NodeType.TOPIC, t -> t.name("Geometry")));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/subject-topics");
@@ -256,8 +259,8 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_change_sorting_order_for_topics() throws Exception {
-        Node mathematics = builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("Mathematics").publicId("urn:subject:1"));
+        Node mathematics = builder.node(
+                NodeType.SUBJECT, s -> s.isContext(true).name("Mathematics").publicId("urn:subject:1"));
         Node geometry = builder.node(NodeType.TOPIC, t -> t.name("Geometry").publicId("urn:topic:1"));
         Node statistics = builder.node(NodeType.TOPIC, t -> t.name("Statistics").publicId("urn:topic:2"));
         NodeConnection geometryMaths = save(NodeConnection.create(mathematics, geometry));
@@ -286,8 +289,8 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_change_sorting_order_for_subtopics() throws Exception {
-        Node mathematics = builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("Mathematics").publicId("urn:subject:1"));
+        Node mathematics = builder.node(
+                NodeType.SUBJECT, s -> s.isContext(true).name("Mathematics").publicId("urn:subject:1"));
         Node geometry = builder.node(NodeType.TOPIC, t -> t.name("Geometry").publicId("urn:topic:1"));
         Node statistics = builder.node(NodeType.TOPIC, t -> t.name("Statistics").publicId("urn:topic:2"));
         Node subtopic1 = builder.node(NodeType.TOPIC, t -> t.name("Subtopic 1").publicId("urn:topic:aa"));
@@ -335,8 +338,8 @@ public class SubjectTopicsTest extends RestTest {
 
     @Test
     public void can_create_topic_with_rank() throws Exception {
-        Node mathematics = builder.node(NodeType.SUBJECT,
-                s -> s.isContext(true).name("Mathematics").publicId("urn:subject:1"));
+        Node mathematics = builder.node(
+                NodeType.SUBJECT, s -> s.isContext(true).name("Mathematics").publicId("urn:subject:1"));
         Node geometry = builder.node(NodeType.TOPIC, t -> t.name("Geometry").publicId("urn:topic:1"));
         Node statistics = builder.node(NodeType.TOPIC, t -> t.name("Statistics").publicId("urn:topic:2"));
 

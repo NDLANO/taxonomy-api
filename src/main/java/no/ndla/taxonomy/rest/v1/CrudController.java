@@ -9,6 +9,9 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
@@ -25,10 +28,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 
 public abstract class CrudController<T extends DomainEntity> {
     protected TaxonomyRepository<T> repository;
@@ -47,7 +46,9 @@ public abstract class CrudController<T extends DomainEntity> {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Deletes a single entity by id", security = { @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Deletes a single entity by id",
+            security = {@SecurityRequirement(name = "oauth")})
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
@@ -56,7 +57,9 @@ public abstract class CrudController<T extends DomainEntity> {
         repository.flush();
     }
 
-    @Operation(summary = "Updates a single entity by id", security = { @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Updates a single entity by id",
+            security = {@SecurityRequirement(name = "oauth")})
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     protected T updateEntity(URI id, UpdatableDto<T> command) {
@@ -71,7 +74,9 @@ public abstract class CrudController<T extends DomainEntity> {
         return entity;
     }
 
-    @Operation(summary = "Creates a single entity", security = { @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Creates a single entity",
+            security = {@SecurityRequirement(name = "oauth")})
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     protected ResponseEntity<Void> createEntity(T entity, UpdatableDto<T> command) {
@@ -100,6 +105,7 @@ public abstract class CrudController<T extends DomainEntity> {
     }
 
     protected String getLocation() {
-        return locations.computeIfAbsent(getClass(), aClass -> aClass.getAnnotation(RequestMapping.class).path()[0]);
+        return locations.computeIfAbsent(
+                getClass(), aClass -> aClass.getAnnotation(RequestMapping.class).path()[0]);
     }
 }
