@@ -9,6 +9,13 @@ package no.ndla.taxonomy.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import javax.sql.DataSource;
 import liquibase.exception.LiquibaseException;
 import liquibase.integration.spring.SpringLiquibase;
 import org.slf4j.Logger;
@@ -20,14 +27,6 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
-
-import javax.sql.DataSource;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 @Configuration
 public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
@@ -57,7 +56,9 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
     public void afterPropertiesSet() throws Exception {
         try {
             List<String> schemas = new ArrayList<>();
-            ResultSet resultSet = dataSource.getConnection().prepareStatement("SELECT hash FROM version")
+            ResultSet resultSet = dataSource
+                    .getConnection()
+                    .prepareStatement("SELECT hash FROM version")
                     .executeQuery();
             while (resultSet.next()) {
                 schemas.add(String.format("%s_%s", defaultSchema, resultSet.getString(1)));
@@ -65,7 +66,8 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
             this.runOnAllSchemas(dataSource, schemas);
         } catch (SQLException | LiquibaseException exception) {
             // No version table
-            logger.info("Failed to find version table in database. Does not run migration on alternative schemas",
+            logger.info(
+                    "Failed to find version table in database. Does not run migration on alternative schemas",
                     exception);
         }
     }

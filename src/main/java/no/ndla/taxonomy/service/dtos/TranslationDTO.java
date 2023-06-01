@@ -10,12 +10,10 @@ package no.ndla.taxonomy.service.dtos;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import no.ndla.taxonomy.domain.Translation;
-import no.ndla.taxonomy.rest.v1.NodeTranslations;
 
 @Schema(name = "Translation")
 public class TranslationDTO implements Comparable<TranslationDTO> {
-    public TranslationDTO() {
-    }
+    public TranslationDTO() {}
 
     public TranslationDTO(Translation translation) {
         name = translation.getName();

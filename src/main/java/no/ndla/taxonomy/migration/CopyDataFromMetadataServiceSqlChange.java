@@ -7,6 +7,13 @@
 
 package no.ndla.taxonomy.migration;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import liquibase.change.custom.CustomSqlChange;
 import liquibase.database.Database;
 import liquibase.database.jvm.JdbcConnection;
@@ -21,14 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 
 public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
     final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -60,7 +59,8 @@ public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
     private void populateMetadataForTable(JdbcConnection connection, String baseUrl, String table)
             throws SQLException, DatabaseException {
         logger.info(String.format("Updating %s with metadata", table));
-        ResultSet result = connection.prepareStatement(String.format("SELECT id, public_id from %s", table))
+        ResultSet result = connection
+                .prepareStatement(String.format("SELECT id, public_id from %s", table))
                 .executeQuery();
         Map<String, Integer> batch = new HashMap<>();
         if (result != null) {
@@ -69,7 +69,8 @@ public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
                 if (batch.size() == 100 || result.isLast()) {
                     String publicIds = String.join(",", batch.keySet());
                     MetadataApiEntity[] entities = restTemplate
-                            .getForEntity(baseUrl + "?publicIds=" + publicIds, MetadataApiEntity[].class).getBody();
+                            .getForEntity(baseUrl + "?publicIds=" + publicIds, MetadataApiEntity[].class)
+                            .getBody();
                     assert entities != null;
                     for (MetadataApiEntity entity : entities) {
                         assert entity != null;
@@ -81,14 +82,15 @@ public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
                         resultSet.next();
                         Integer metadataId = resultSet.getObject(1, Integer.class);
 
-                        PreparedStatement updateTable = connection
-                                .prepareStatement(String.format("update %s set metadata_id = ? where id = ?", table));
+                        PreparedStatement updateTable = connection.prepareStatement(
+                                String.format("update %s set metadata_id = ? where id = ?", table));
                         updateTable.setInt(1, metadataId);
                         updateTable.setInt(2, batch.get(entity.getPublicId()));
                         updateTable.executeUpdate();
 
                         if (entity.getCompetenceAims().isPresent()) {
-                            for (MetadataApiEntity.CompetenceAim competanceAim : entity.getCompetenceAims().get()) {
+                            for (MetadataApiEntity.CompetenceAim competanceAim :
+                                    entity.getCompetenceAims().get()) {
                                 Integer grepId = createOrGetGrepCodeId(competanceAim.getCode(), connection);
                                 PreparedStatement insertGrepCode = connection.prepareStatement(
                                         "insert into metadata_grep_code (metadata_id, grep_code_id) values (?, ?)");
@@ -99,7 +101,8 @@ public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
                         }
 
                         if (entity.getCustomFields().isPresent()) {
-                            Map<String, String> customFieldMap = entity.getCustomFields().get();
+                            Map<String, String> customFieldMap =
+                                    entity.getCustomFields().get();
                             for (String customField : customFieldMap.keySet()) {
                                 Integer customFieldId = createOrGetCustomFieldId(customField, connection);
                                 String value = customFieldMap.get(customField);
@@ -111,7 +114,6 @@ public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
                                 statement.executeUpdate();
                             }
                         }
-
                     }
                     batch.clear();
                 }
@@ -124,8 +126,8 @@ public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
         if (customFields.containsKey(customField)) {
             return customFields.get(customField);
         }
-        PreparedStatement statement = connection
-                .prepareStatement("insert into custom_field (key, created_at) values (?, ?) returning id");
+        PreparedStatement statement =
+                connection.prepareStatement("insert into custom_field (key, created_at) values (?, ?) returning id");
         statement.setString(1, customField);
         statement.setTimestamp(2, Timestamp.from(Instant.now()));
         ResultSet resultSet = statement.executeQuery();
@@ -140,8 +142,8 @@ public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
         if (grepCodes.containsKey(code)) {
             return grepCodes.get(code);
         }
-        PreparedStatement statement = connection
-                .prepareStatement("insert into grep_code (code, created_at) values (?, ?) returning id");
+        PreparedStatement statement =
+                connection.prepareStatement("insert into grep_code (code, created_at) values (?, ?) returning id");
         statement.setString(1, code);
         statement.setTimestamp(2, Timestamp.from(Instant.now()));
         ResultSet resultSet = statement.executeQuery();
@@ -157,12 +159,10 @@ public class CopyDataFromMetadataServiceSqlChange implements CustomSqlChange {
     }
 
     @Override
-    public void setUp() throws SetupException {
-    }
+    public void setUp() throws SetupException {}
 
     @Override
-    public void setFileOpener(ResourceAccessor resourceAccessor) {
-    }
+    public void setFileOpener(ResourceAccessor resourceAccessor) {}
 
     @Override
     public ValidationErrors validate(Database database) {

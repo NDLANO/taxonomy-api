@@ -14,5 +14,4 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @Profile("!default")
 @EnableAsync
 @Configuration
-public class AsyncConfig {
-}
+public class AsyncConfig {}

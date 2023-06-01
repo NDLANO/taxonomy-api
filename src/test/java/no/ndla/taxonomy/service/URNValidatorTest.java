@@ -7,15 +7,14 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.DomainEntity;
-import no.ndla.taxonomy.domain.exceptions.IdFormatException;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import no.ndla.taxonomy.domain.DomainEntity;
+import no.ndla.taxonomy.domain.exceptions.IdFormatException;
+import org.junit.jupiter.api.Test;
 
 public class URNValidatorTest {
     @Test
@@ -46,6 +45,5 @@ public class URNValidatorTest {
         }
     }
 
-    private static class TestEntity extends DomainEntity {
-    }
+    private static class TestEntity extends DomainEntity {}
 }

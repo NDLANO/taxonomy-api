@@ -10,15 +10,14 @@ package no.ndla.taxonomy.service.dtos;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.util.TitleUtil;
-
-import java.net.URI;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Schema(name = "Node")
 public class NodeDTO {
@@ -28,7 +27,9 @@ public class NodeDTO {
     @Schema(description = "The name of the node", example = "Trigonometry")
     private String name;
 
-    @Schema(description = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+    @Schema(
+            description = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.",
+            example = "urn:article:1")
     private Optional<URI> contentUri = Optional.empty();
 
     @Schema(description = "The primary path for this node", example = "/subject:1/topic:1")
@@ -73,30 +74,37 @@ public class NodeDTO {
     @Schema(description = "A list of all contexts this node is part of")
     private List<TaxonomyContextDTO> contexts = new ArrayList<>();
 
-    public NodeDTO() {
-    }
+    public NodeDTO() {}
 
-    public NodeDTO(Optional<Node> root, Node entity, String languageCode, Optional<String> contextId,
+    public NodeDTO(
+            Optional<Node> root,
+            Node entity,
+            String languageCode,
+            Optional<String> contextId,
             Optional<Boolean> includeContexts) {
         this.id = entity.getPublicId();
         this.contentUri = Optional.ofNullable(entity.getContentUri());
 
         this.paths = entity.getAllPaths();
 
-        this.path = entity.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
+        this.path =
+                entity.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
 
-        Optional<Relevance> relevance = entity.getParentConnections().stream().findFirst()
-                .flatMap(NodeConnection::getRelevance);
+        Optional<Relevance> relevance =
+                entity.getParentConnections().stream().findFirst().flatMap(NodeConnection::getRelevance);
         this.relevanceId = relevance.map(Relevance::getPublicId);
 
         var translations = entity.getTranslations();
-        this.translations = translations.stream().map(TranslationDTO::new)
-                .collect(Collectors.toCollection(TreeSet::new));
-        this.supportedLanguages = this.translations.stream().map(t -> t.language)
-                .collect(Collectors.toCollection(TreeSet::new));
+        this.translations =
+                translations.stream().map(TranslationDTO::new).collect(Collectors.toCollection(TreeSet::new));
+        this.supportedLanguages =
+                this.translations.stream().map(t -> t.language).collect(Collectors.toCollection(TreeSet::new));
 
-        this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), languageCode)).findFirst()
-                .map(Translation::getName).orElse(entity.getName());
+        this.name = translations.stream()
+                .filter(t -> Objects.equals(t.getLanguageCode(), languageCode))
+                .findFirst()
+                .map(Translation::getName)
+                .orElse(entity.getName());
 
         this.metadata = new MetadataDTO(entity.getMetadata());
 
@@ -122,16 +130,27 @@ public class NodeDTO {
                 relevanceName = LanguageField.fromNode(relevance.get());
             }
             LanguageField<String> finalRelevanceName = relevanceName;
-            this.contexts = entity.getContexts().stream().map(ctx -> {
-                return new TaxonomyContextDTO(entity.getPublicId(), URI.create(ctx.rootId()),
-                        LanguageFieldDTO.fromLanguageField(ctx.rootName()), ctx.path(),
-                        LanguageFieldDTO.fromLanguageFieldList(ctx.breadcrumbs()), entity.getContextType(),
-                        Optional.of(URI.create(ctx.relevanceId())),
-                        LanguageFieldDTO.fromLanguageField(finalRelevanceName),
-                        entity.getResourceTypes().stream().map(SearchableTaxonomyResourceType::new).toList(),
-                        ctx.parentIds().stream().map(URI::create).toList(), ctx.isPrimary(), ctx.isActive(),
-                        ctx.isVisible(), ctx.contextId());
-            }).toList();
+            this.contexts = entity.getContexts().stream()
+                    .map(ctx -> {
+                        return new TaxonomyContextDTO(
+                                entity.getPublicId(),
+                                URI.create(ctx.rootId()),
+                                LanguageFieldDTO.fromLanguageField(ctx.rootName()),
+                                ctx.path(),
+                                LanguageFieldDTO.fromLanguageFieldList(ctx.breadcrumbs()),
+                                entity.getContextType(),
+                                Optional.of(URI.create(ctx.relevanceId())),
+                                LanguageFieldDTO.fromLanguageField(finalRelevanceName),
+                                entity.getResourceTypes().stream()
+                                        .map(SearchableTaxonomyResourceType::new)
+                                        .toList(),
+                                ctx.parentIds().stream().map(URI::create).toList(),
+                                ctx.isPrimary(),
+                                ctx.isActive(),
+                                ctx.isVisible(),
+                                ctx.contextId());
+                    })
+                    .toList();
         });
     }
 

@@ -7,6 +7,15 @@
 
 package no.ndla.taxonomy.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.Set;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,16 +26,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
@@ -109,13 +108,25 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         builder.node(n -> n.nodeType(NodeType.TOPIC));
         var subject = builder.node(n -> n.nodeType(NodeType.SUBJECT));
 
-        var subjects = nodeService.searchByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
-                Optional.empty(), 10, 1, Optional.of(NodeType.SUBJECT));
+        var subjects = nodeService.searchByNodeType(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                10,
+                1,
+                Optional.of(NodeType.SUBJECT));
 
-        var topics = nodeService.searchByNodeType(Optional.empty(), Optional.empty(), Optional.empty(),
-                Optional.empty(), 10, 1, Optional.of(NodeType.TOPIC));
-        var all = nodeService.searchByNodeType(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
-                10, 1, Optional.empty());
+        var topics = nodeService.searchByNodeType(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                10,
+                1,
+                Optional.of(NodeType.TOPIC));
+        var all = nodeService.searchByNodeType(
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), 10, 1, Optional.empty());
 
         assertEquals(subjects.getResults().get(0).getId(), subject.getPublicId());
 
@@ -131,8 +142,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         builder.node(n -> n.nodeType(NodeType.TOPIC).name("Hund"));
         var tiger = builder.node(n -> n.nodeType(NodeType.TOPIC).name("Tiger"));
 
-        var result = nodeService.search(Optional.of("tiger"), Optional.empty(), Optional.empty(), Optional.empty(), 10,
-                1);
+        var result =
+                nodeService.search(Optional.of("tiger"), Optional.empty(), Optional.empty(), Optional.empty(), 10, 1);
 
         assertEquals(result.getResults().get(0).getId(), tiger.getPublicId());
         assertEquals(result.getTotalCount(), 1);
@@ -149,18 +160,17 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         idList.add("urn:topic:1");
         idList.add("urn:topic:2");
 
-        var result = nodeService.search(Optional.empty(), Optional.of(idList), Optional.empty(), Optional.empty(), 10,
-                1);
+        var result =
+                nodeService.search(Optional.empty(), Optional.of(idList), Optional.empty(), Optional.empty(), 10, 1);
 
         assertEquals(result.getResults().get(0).getId(), new URI("urn:topic:1"));
         assertEquals(result.getResults().get(1).getId(), new URI("urn:topic:2"));
         assertEquals(result.getTotalCount(), 2);
 
-        var result2 = nodeService.search(Optional.of("Ape"), Optional.of(idList), Optional.empty(), Optional.empty(),
-                10, 1);
+        var result2 =
+                nodeService.search(Optional.of("Ape"), Optional.of(idList), Optional.empty(), Optional.empty(), 10, 1);
 
         assertEquals(result2.getResults().get(0).getId(), new URI("urn:topic:1"));
         assertEquals(result2.getTotalCount(), 1);
     }
-
 }

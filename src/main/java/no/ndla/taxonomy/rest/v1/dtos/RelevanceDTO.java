@@ -9,14 +9,13 @@ package no.ndla.taxonomy.rest.v1.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import no.ndla.taxonomy.domain.Relevance;
-import no.ndla.taxonomy.domain.Translation;
-import no.ndla.taxonomy.service.dtos.TranslationDTO;
-
 import java.net.URI;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.Translation;
+import no.ndla.taxonomy.service.dtos.TranslationDTO;
 
 @Schema(name = "Relevance")
 public class RelevanceDTO {
@@ -36,17 +35,20 @@ public class RelevanceDTO {
     @Schema(description = "List of language codes supported by translations")
     private Set<String> supportedLanguages;
 
-    public RelevanceDTO() {
-    }
+    public RelevanceDTO() {}
 
     public RelevanceDTO(Relevance relevance, String language) {
         this.id = relevance.getPublicId();
 
         var translations = relevance.getTranslations();
         this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
-        this.supportedLanguages = this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
+        this.supportedLanguages =
+                this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
 
-        this.name = translations.stream().filter(t -> Objects.equals(t.getLanguageCode(), language)).findFirst()
-                .map(Translation::getName).orElse(relevance.getName());
+        this.name = translations.stream()
+                .filter(t -> Objects.equals(t.getLanguageCode(), language))
+                .findFirst()
+                .map(Translation::getName)
+                .orElse(relevance.getName());
     }
 }

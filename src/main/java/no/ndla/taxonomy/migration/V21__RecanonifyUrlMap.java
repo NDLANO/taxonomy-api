@@ -7,6 +7,10 @@
 
 package no.ndla.taxonomy.migration;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import liquibase.change.custom.CustomSqlChange;
 import liquibase.database.Database;
 import liquibase.database.jvm.JdbcConnection;
@@ -17,11 +21,6 @@ import liquibase.statement.SqlStatement;
 import liquibase.statement.core.RawSqlStatement;
 import no.ndla.taxonomy.service.OldUrlCanonifier;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
 public class V21__RecanonifyUrlMap implements CustomSqlChange {
 
     @Override
@@ -30,12 +29,10 @@ public class V21__RecanonifyUrlMap implements CustomSqlChange {
     }
 
     @Override
-    public void setUp() {
-    }
+    public void setUp() {}
 
     @Override
-    public void setFileOpener(ResourceAccessor resourceAccessor) {
-    }
+    public void setFileOpener(ResourceAccessor resourceAccessor) {}
 
     @Override
     public ValidationErrors validate(Database database) {
@@ -51,7 +48,8 @@ public class V21__RecanonifyUrlMap implements CustomSqlChange {
         JdbcConnection connection = (JdbcConnection) database.getConnection();
 
         try {
-            ResultSet result = connection.prepareStatement("SELECT old_url from URL_MAP").executeQuery();
+            ResultSet result =
+                    connection.prepareStatement("SELECT old_url from URL_MAP").executeQuery();
             if (result != null) {
                 while (result.next()) {
                     String oldUrl = result.getString(1);

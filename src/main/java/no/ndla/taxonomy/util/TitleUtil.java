@@ -7,15 +7,13 @@
 
 package no.ndla.taxonomy.util;
 
-import org.jsoup.Jsoup;
-
 import java.util.Optional;
+import org.jsoup.Jsoup;
 
 public class TitleUtil {
 
     public static Optional<String> createPrettyUrl(String source, String hash) {
-        if (source == null || hash == null)
-            return Optional.empty();
+        if (source == null || hash == null) return Optional.empty();
         var text = Jsoup.parse(source).text();
         String[] words = text.split("\\s+");
         StringBuilder sb = new StringBuilder("/");

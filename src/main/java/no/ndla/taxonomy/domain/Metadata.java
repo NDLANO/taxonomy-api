@@ -7,12 +7,11 @@
 
 package no.ndla.taxonomy.domain;
 
-import no.ndla.taxonomy.service.dtos.MetadataDTO;
-
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import no.ndla.taxonomy.service.dtos.MetadataDTO;
 
 public class Metadata implements Serializable {
     private Instant updatedAt;
@@ -27,9 +26,7 @@ public class Metadata implements Serializable {
 
     private EntityWithMetadata parent;
 
-    public Metadata() {
-
-    }
+    public Metadata() {}
 
     public Metadata(EntityWithMetadata parent) {
         this.parent = parent;
@@ -117,13 +114,13 @@ public class Metadata implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         Metadata that = (Metadata) o;
-        return visible == that.visible && Objects.equals(updatedAt, that.updatedAt)
-                && Objects.equals(createdAt, that.createdAt) && Objects.equals(grepCodes, that.grepCodes)
+        return visible == that.visible
+                && Objects.equals(updatedAt, that.updatedAt)
+                && Objects.equals(createdAt, that.createdAt)
+                && Objects.equals(grepCodes, that.grepCodes)
                 && Objects.equals(customFields, that.customFields);
     }
 }

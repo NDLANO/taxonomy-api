@@ -7,11 +7,10 @@
 
 package no.ndla.taxonomy.service;
 
-import no.ndla.taxonomy.domain.SortableResourceConnection;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
+import no.ndla.taxonomy.domain.SortableResourceConnection;
 
 public class ResourceTreeSortable implements TreeSorter.Sortable {
     private final int rank;
@@ -22,9 +21,13 @@ public class ResourceTreeSortable implements TreeSorter.Sortable {
     private final String type;
 
     public ResourceTreeSortable(SortableResourceConnection resourceConnection) {
-        this.id = resourceConnection.getResource().orElseThrow(() -> new IllegalArgumentException("Resource not set"))
+        this.id = resourceConnection
+                .getResource()
+                .orElseThrow(() -> new IllegalArgumentException("Resource not set"))
                 .getPublicId();
-        this.parentId = resourceConnection.getParent().orElseThrow(() -> new IllegalArgumentException("Parent not set"))
+        this.parentId = resourceConnection
+                .getParent()
+                .orElseThrow(() -> new IllegalArgumentException("Parent not set"))
                 .getPublicId();
         this.rank = resourceConnection.getRank();
         this.resourceConnection = resourceConnection;

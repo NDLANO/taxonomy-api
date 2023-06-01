@@ -41,7 +41,7 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
         return headers;
     }
 
-    @ExceptionHandler({ JWTVerificationException.class, AccessDeniedException.class })
+    @ExceptionHandler({JWTVerificationException.class, AccessDeniedException.class})
     protected ResponseEntity<String> handleAuthenticationExceptions(RuntimeException exception) {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.UNAUTHORIZED);
     }
@@ -51,21 +51,28 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.SERVICE_UNAVAILABLE);
     }
 
-    @ExceptionHandler({ ChildNotFoundException.class, NotFoundException.class, NotFoundServiceException.class,
-            NotFoundHttpResponseException.class })
+    @ExceptionHandler({
+        ChildNotFoundException.class,
+        NotFoundException.class,
+        NotFoundServiceException.class,
+        NotFoundHttpResponseException.class
+    })
     protected ResponseEntity<String> handleNotFoundServiceException(RuntimeException exception) {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler({ DuplicateIdException.class, DuplicateConnectionException.class })
+    @ExceptionHandler({DuplicateIdException.class, DuplicateConnectionException.class})
     protected ResponseEntity<String> handleConflictExceptions(RuntimeException exception) {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler({ IdFormatException.class, InvalidArgumentServiceException.class, IllegalArgumentException.class,
-            PrimaryParentRequiredException.class })
+    @ExceptionHandler({
+        IdFormatException.class,
+        InvalidArgumentServiceException.class,
+        IllegalArgumentException.class,
+        PrimaryParentRequiredException.class
+    })
     protected ResponseEntity<String> handleInvalidArgumentExceptions(RuntimeException exception) {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.BAD_REQUEST);
     }
-
 }

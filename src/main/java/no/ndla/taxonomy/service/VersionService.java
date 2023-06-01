@@ -7,6 +7,13 @@
 
 package no.ndla.taxonomy.service;
 
+import java.net.URI;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
@@ -18,14 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
-import java.net.URI;
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Transactional(readOnly = true)
 @Service
@@ -45,12 +44,15 @@ public class VersionService {
 
     @Transactional
     public void delete(URI publicId) {
-        final var versionToDelete = versionRepository.findFirstByPublicId(publicId)
+        final var versionToDelete = versionRepository
+                .findFirstByPublicId(publicId)
                 .orElseThrow(() -> new NotFoundServiceException("Version was not found"));
 
         String schema = schemaFromHash(versionToDelete.getHash());
         try {
-            entityManager.createNativeQuery(String.format("DROP SCHEMA %s CASCADE", schema)).executeUpdate();
+            entityManager
+                    .createNativeQuery(String.format("DROP SCHEMA %s CASCADE", schema))
+                    .executeUpdate();
         } catch (PersistenceException pe) {
             logger.warn("Failed to drop schema. Possible manual cleanup required");
         }
@@ -62,7 +64,8 @@ public class VersionService {
     }
 
     public List<VersionDTO> getVersionsOfType(VersionType versionType) {
-        return versionRepository.findByVersionType(versionType).stream().map(VersionDTO::new)
+        return versionRepository.findByVersionType(versionType).stream()
+                .map(VersionDTO::new)
                 .collect(Collectors.toList());
     }
 
@@ -106,15 +109,15 @@ public class VersionService {
 
         String schema = schemaFromHash(version.getHash());
         // JPA does not like functions returning void so adds a count(*) to sql.
-        entityManager.createNativeQuery(
-                String.format("SELECT count(*) from clone_schema('%s', '%s', true, false)", sourceSchema, schema))
+        entityManager
+                .createNativeQuery(String.format(
+                        "SELECT count(*) from clone_schema('%s', '%s', true, false)", sourceSchema, schema))
                 .getSingleResult();
         return version;
     }
 
     public String schemaFromHash(String hash) {
-        if (hash != null)
-            return String.format("%s%s", defaultSchema, "_" + hash);
+        if (hash != null) return String.format("%s%s", defaultSchema, "_" + hash);
         return defaultSchema;
     }
 }

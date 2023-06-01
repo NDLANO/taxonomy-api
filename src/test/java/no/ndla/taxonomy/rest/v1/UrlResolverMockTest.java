@@ -7,7 +7,20 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.verify;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.util.Optional;
 import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.rest.v1.dtos.ResolvedOldUrl;
 import no.ndla.taxonomy.rest.v1.dtos.UrlMapping;
@@ -27,20 +40,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.net.URI;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.verify;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -84,7 +83,8 @@ public class UrlResolverMockTest extends AbstractIntegrationTest {
         ResultActions result = mvc.perform(get("/v1/url/mapping?url=" + oldUrl).accept(APPLICATION_JSON_UTF8));
 
         result.andExpect(status().isOk());
-        ResolvedOldUrl resolvedOldUrl = testUtils.getObject(ResolvedOldUrl.class, result.andReturn().getResponse());
+        ResolvedOldUrl resolvedOldUrl =
+                testUtils.getObject(ResolvedOldUrl.class, result.andReturn().getResponse());
         assertEquals(newPath, resolvedOldUrl.path);
     }
 
@@ -109,9 +109,9 @@ public class UrlResolverMockTest extends AbstractIntegrationTest {
         urlMapping.nodeId = "b a d";
         urlMapping.subjectId = "b a d";
 
-        ResultActions result = mvc
-                .perform(put("/v1/url/mapping").content(new ObjectMapper().writeValueAsString(urlMapping))
-                        .contentType(MediaType.APPLICATION_JSON_UTF8));
+        ResultActions result = mvc.perform(put("/v1/url/mapping")
+                .content(new ObjectMapper().writeValueAsString(urlMapping))
+                .contentType(MediaType.APPLICATION_JSON_UTF8));
 
         result.andExpect(status().isBadRequest());
     }
@@ -122,8 +122,9 @@ public class UrlResolverMockTest extends AbstractIntegrationTest {
         URI nodeId = new URI("urn:topic:1:183926");
         URI subjectId = new URI("urn:subject:11");
 
-        doThrow(new UrlResolverService.NodeIdNotFoundExeption("")).when(this.urlResolverService).putUrlMapping(any(),
-                any(), any());
+        doThrow(new UrlResolverService.NodeIdNotFoundExeption(""))
+                .when(this.urlResolverService)
+                .putUrlMapping(any(), any(), any());
 
         ResultActions result = mvc.perform(put("/v1/url/mapping")
                 .content(new ObjectMapper().writeValueAsString(new UrlMapping(oldUrl, nodeId, subjectId)))

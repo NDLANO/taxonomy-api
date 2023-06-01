@@ -1,8 +1,14 @@
+/*
+ * Part of NDLA taxonomy-api
+ * Copyright (C) 2023 NDLA
+ *
+ * See LICENSE
+ */
+
 package no.ndla.taxonomy.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -30,8 +36,7 @@ public class JsonTranslation implements Serializable, Translation {
         this.languageCode = languageCode;
     }
 
-    public JsonTranslation() {
-    }
+    public JsonTranslation() {}
 
     @Override
     public String getName() {
@@ -60,10 +65,8 @@ public class JsonTranslation implements Serializable, Translation {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         var that = (JsonTranslation) o;
         return Objects.equals(this.getLanguageCode(), that.getLanguageCode())
                 && Objects.equals(this.getName(), that.getName());

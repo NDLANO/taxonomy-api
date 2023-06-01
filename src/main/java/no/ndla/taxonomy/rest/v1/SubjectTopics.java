@@ -10,6 +10,12 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -26,23 +32,19 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
 @RestController
-@RequestMapping(path = { "/v1/subject-topics" })
+@RequestMapping(path = {"/v1/subject-topics"})
 public class SubjectTopics {
     private final NodeConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
 
-    public SubjectTopics(NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
-            NodeConnectionService connectionService, RelevanceRepository relevanceRepository) {
+    public SubjectTopics(
+            NodeRepository nodeRepository,
+            NodeConnectionRepository nodeConnectionRepository,
+            NodeConnectionService connectionService,
+            RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -57,11 +59,14 @@ public class SubjectTopics {
         final List<SubjectTopicDTO> listToReturn = new ArrayList<>();
         var ids = nodeConnectionRepository.findAllIds();
         final var counter = new AtomicInteger();
-        ids.stream().collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000)).values().forEach(idChunk -> {
-            final var connections = nodeConnectionRepository.findByIds(idChunk);
-            var dtos = connections.stream().map(SubjectTopicDTO::new).toList();
-            listToReturn.addAll(dtos);
-        });
+        ids.stream()
+                .collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000))
+                .values()
+                .forEach(idChunk -> {
+                    final var connections = nodeConnectionRepository.findByIds(idChunk);
+                    var dtos = connections.stream().map(SubjectTopicDTO::new).toList();
+                    listToReturn.addAll(dtos);
+                });
 
         return listToReturn;
     }
@@ -76,8 +81,7 @@ public class SubjectTopics {
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
         }
-        if (page.get() < 1)
-            throw new IllegalArgumentException("page parameter must be bigger than 0");
+        if (page.get() < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
 
         var ids = nodeConnectionRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
         var results = nodeConnectionRepository.findByIds(ids.getContent());
@@ -96,17 +100,21 @@ public class SubjectTopics {
 
     @Deprecated
     @PostMapping
-    @Operation(summary = "Adds a new topic to a subject", security = { @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Adds a new topic to a subject",
+            security = {@SecurityRequirement(name = "oauth")})
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createSubjectTopic(
-            @Parameter(name = "command", description = "The subject and topic getting connected.") @RequestBody SubjectTopicPOST command) {
+            @Parameter(name = "command", description = "The subject and topic getting connected.") @RequestBody
+                    SubjectTopicPOST command) {
         var subject = nodeRepository.getByPublicId(command.subjectid);
         var topic = nodeRepository.getByPublicId(command.topicid);
-        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var relevance =
+                command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
         var rank = command.rank.orElse(null);
-        final var nodeConnection = connectionService.connectParentChild(subject, topic, relevance, rank,
-                Optional.empty());
+        final var nodeConnection =
+                connectionService.connectParentChild(subject, topic, relevance, rank, Optional.empty());
         var location = URI.create("/subject-topics/" + nodeConnection.getPublicId());
         return ResponseEntity.created(location).build();
     }
@@ -114,7 +122,9 @@ public class SubjectTopics {
     @Deprecated
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Removes a topic from a subject", security = { @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Removes a topic from a subject",
+            security = {@SecurityRequirement(name = "oauth")})
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public void deleteSubjectTopic(@PathVariable("id") URI id) {
@@ -124,16 +134,20 @@ public class SubjectTopics {
     @Deprecated
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Updates a connection between subject and topic", description = "Use to update which subject is primary to a topic or to change sorting order.", security = {
-            @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Updates a connection between subject and topic",
+            description = "Use to update which subject is primary to a topic or to change sorting order.",
+            security = {@SecurityRequirement(name = "oauth")})
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
-    public void updateSubjectTopic(@PathVariable("id") URI id,
-            @Parameter(name = "connection", description = "updated subject/topic connection") @RequestBody SubjectTopicPUT command) {
+    public void updateSubjectTopic(
+            @PathVariable("id") URI id,
+            @Parameter(name = "connection", description = "updated subject/topic connection") @RequestBody
+                    SubjectTopicPUT command) {
         var nodeConnection = nodeConnectionRepository.getByPublicId(id);
-        var relevance = command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var relevance =
+                command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
 
         connectionService.updateParentChild(nodeConnection, relevance, command.rank, Optional.empty());
     }
-
 }

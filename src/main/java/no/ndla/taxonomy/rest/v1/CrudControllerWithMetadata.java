@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.net.URI;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.EntityWithMetadata;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
@@ -23,11 +24,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.net.URI;
-
 public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends CrudController<T> {
-    protected CrudControllerWithMetadata(TaxonomyRepository<T> repository,
-            ContextUpdaterService cachedUrlUpdaterService) {
+    protected CrudControllerWithMetadata(
+            TaxonomyRepository<T> repository, ContextUpdaterService cachedUrlUpdaterService) {
         super(repository, cachedUrlUpdaterService);
     }
 
@@ -43,7 +42,9 @@ public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends
 
     @PutMapping(path = "/{id}/metadata")
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
-    @Operation(summary = "Updates metadata for entity", security = { @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Updates metadata for entity",
+            security = {@SecurityRequirement(name = "oauth")})
     @Transactional
     public MetadataDTO putMetadata(@PathVariable("id") URI id, @RequestBody MetadataDTO entityToUpdate)
             throws InvalidDataException {

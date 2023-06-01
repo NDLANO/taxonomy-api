@@ -15,8 +15,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 public class HashUtil {
     private static String generateHash(Object original, int length) {
         String hash = new DigestUtils("SHA3-256").digestAsHex(original.toString());
-        if (length > 0)
-            return hash.substring(0, length);
+        if (length > 0) return hash.substring(0, length);
         return hash;
     }
 

@@ -7,13 +7,12 @@
 
 package no.ndla.taxonomy;
 
+import java.net.URI;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.net.URI;
 
 /**
  * This class replaces some SQL files that was used to seed the database for various tests. The SQL statements has been
@@ -31,8 +30,11 @@ public class TestSeeder {
     private final NodeConnectionRepository nodeConnectionRepository;
     private final ContextUpdaterService cachedUrlUpdaterService;
 
-    public TestSeeder(RelevanceRepository relevanceRepository, ResourceTypeRepository resourceTypeRepository,
-            NodeRepository nodeRepository, NodeConnectionRepository nodeConnectionRepository,
+    public TestSeeder(
+            RelevanceRepository relevanceRepository,
+            ResourceTypeRepository resourceTypeRepository,
+            NodeRepository nodeRepository,
+            NodeConnectionRepository nodeConnectionRepository,
             ContextUpdaterService cachedUrlUpdaterService) {
         this.relevanceRepository = relevanceRepository;
         this.resourceTypeRepository = resourceTypeRepository;
@@ -131,8 +133,8 @@ public class TestSeeder {
         return createNodeConnection(publicId, parent, child, rank, null);
     }
 
-    private NodeConnection createNodeConnection(String publicId, Node parent, Node child, Integer rank,
-            Relevance relevance) {
+    private NodeConnection createNodeConnection(
+            String publicId, Node parent, Node child, Integer rank, Relevance relevance) {
         final var nodeConnection = NodeConnection.create(parent, child);
 
         if (publicId != null) {
@@ -154,13 +156,13 @@ public class TestSeeder {
         return nodeConnection;
     }
 
-    private NodeConnection createNodeResource(String publicId, Node node, Node resource, Boolean isPrimary,
-            Integer rank) {
+    private NodeConnection createNodeResource(
+            String publicId, Node node, Node resource, Boolean isPrimary, Integer rank) {
         return createNodeResource(publicId, node, resource, isPrimary, rank, null);
     }
 
-    private NodeConnection createNodeResource(String publicId, Node node, Node resource, Boolean isPrimary,
-            Integer rank, Relevance relevance) {
+    private NodeConnection createNodeResource(
+            String publicId, Node node, Node resource, Boolean isPrimary, Integer rank, Relevance relevance) {
         final var nodeResource = NodeConnection.create(node, resource);
 
         if (publicId != null) {

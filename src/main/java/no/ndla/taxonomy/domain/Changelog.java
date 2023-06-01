@@ -7,27 +7,30 @@
 
 package no.ndla.taxonomy.domain;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
 import java.net.URI;
 import java.sql.Timestamp;
+import javax.persistence.Column;
+import javax.persistence.Entity;
 
 @Entity
 public class Changelog extends DomainEntity {
 
     @Column
     private String sourceSchema;
+
     @Column
     private String destinationSchema;
+
     @Column
     private Timestamp timestamp;
+
     @Column
     private boolean cleanUp;
+
     @Column
     private boolean done;
 
-    public Changelog() {
-    }
+    public Changelog() {}
 
     public Changelog(String sourceSchema, String destinationSchema, URI publicId, boolean cleanUp) {
         setPublicId(publicId);

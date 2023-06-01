@@ -7,6 +7,9 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import java.net.URI;
+import java.util.Set;
+import javax.persistence.EntityManager;
 import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
@@ -21,10 +24,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityManager;
-import java.net.URI;
-import java.util.Set;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -69,7 +68,8 @@ public abstract class RestTest extends AbstractIntegrationTest {
         metadata.setPublicId(publicId.toString());
 
         // Can search for RESOURCE1 where publicId is urn:resource:1 in the test
-        metadata.setGrepCodes(Set.of(publicId.getSchemeSpecificPart().replace(":", "").toUpperCase()));
+        metadata.setGrepCodes(
+                Set.of(publicId.getSchemeSpecificPart().replace(":", "").toUpperCase()));
 
         metadata.setVisible(true);
 

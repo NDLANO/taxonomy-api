@@ -7,20 +7,19 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.net.URI;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
-
-import java.net.URI;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class NodesMetadataTest extends RestTest {
 
@@ -49,18 +48,22 @@ public class NodesMetadataTest extends RestTest {
     void can_update_metadata_for_node() throws Exception {
         URI publicId = builder.node().getPublicId();
 
-        testUtils.updateResource("/v1/nodes/" + publicId + "/metadata", new MetadataDTO() {
-            {
-                visible = false;
-                grepCodes = Set.of("KM123");
-                customFields = Map.of("key", "value");
-            }
-        }, status().isOk());
+        testUtils.updateResource(
+                "/v1/nodes/" + publicId + "/metadata",
+                new MetadataDTO() {
+                    {
+                        visible = false;
+                        grepCodes = Set.of("KM123");
+                        customFields = Map.of("key", "value");
+                    }
+                },
+                status().isOk());
 
         Node node = nodeRepository.getByPublicId(publicId);
         assertNotNull(node.getMetadata());
         assertFalse(node.getMetadata().isVisible());
-        Set<String> codes = node.getMetadata().getGrepCodes().stream().map(JsonGrepCode::getCode)
+        Set<String> codes = node.getMetadata().getGrepCodes().stream()
+                .map(JsonGrepCode::getCode)
                 .collect(Collectors.toSet());
         assertTrue(codes.contains("KM123"));
         var customFieldValues = node.getMetadata().getCustomFields();
@@ -70,15 +73,19 @@ public class NodesMetadataTest extends RestTest {
 
     @Test
     void can_remove_metadata_for_node() throws Exception {
-        URI publicId = builder.node(n -> n.customField("key", "value").grepCode("KM123")).getPublicId();
+        URI publicId = builder.node(n -> n.customField("key", "value").grepCode("KM123"))
+                .getPublicId();
 
-        testUtils.updateResource("/v1/nodes/" + publicId + "/metadata", new MetadataDTO() {
-            {
-                visible = true;
-                grepCodes = Set.of();
-                customFields = Map.of();
-            }
-        }, status().isOk());
+        testUtils.updateResource(
+                "/v1/nodes/" + publicId + "/metadata",
+                new MetadataDTO() {
+                    {
+                        visible = true;
+                        grepCodes = Set.of();
+                        customFields = Map.of();
+                    }
+                },
+                status().isOk());
 
         Node node = nodeRepository.getByPublicId(publicId);
         assertNotNull(node.getMetadata());

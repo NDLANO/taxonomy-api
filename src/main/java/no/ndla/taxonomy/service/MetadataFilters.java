@@ -44,5 +44,4 @@ public class MetadataFilters {
     public boolean hasFilters() {
         return getKey().isPresent() || getValue().isPresent() || getVisible().isPresent();
     }
-
 }

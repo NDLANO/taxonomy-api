@@ -7,6 +7,8 @@
 
 package no.ndla.taxonomy.migration;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
 import liquibase.change.custom.CustomSqlChange;
 import liquibase.database.Database;
 import liquibase.database.jvm.JdbcConnection;
@@ -18,9 +20,6 @@ import liquibase.resource.ResourceAccessor;
 import liquibase.statement.SqlStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
 
 public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
     final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -37,23 +36,23 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
                     final var connectionId = filtersResult.getInt(1);
                     final var filterId = filtersResult.getInt(2);
 
-                    try (var filterExistsOnDestinationQuery = connection
-                            .prepareStatement("SELECT COUNT(*) FROM resource_filter WHERE filter_id = " + filterId
-                                    + " AND resource_id = " + destinationId)) {
+                    try (var filterExistsOnDestinationQuery =
+                            connection.prepareStatement("SELECT COUNT(*) FROM resource_filter WHERE filter_id = "
+                                    + filterId + " AND resource_id = " + destinationId)) {
                         final var filterExistsResult = filterExistsOnDestinationQuery.executeQuery();
                         filterExistsResult.next();
 
                         final var existsCount = filterExistsResult.getInt(1);
 
                         if (existsCount == 0) {
-                            try (final var updateQuery = connection
-                                    .prepareStatement("UPDATE resource_filter SET resource_id = " + destinationId
-                                            + " WHERE id = " + connectionId)) {
+                            try (final var updateQuery =
+                                    connection.prepareStatement("UPDATE resource_filter SET resource_id = "
+                                            + destinationId + " WHERE id = " + connectionId)) {
                                 updateQuery.executeUpdate();
                             }
                         } else {
-                            try (final var deleteQuery = connection
-                                    .prepareStatement("DELETE FROM resource_filter WHERE id = " + connectionId)) {
+                            try (final var deleteQuery = connection.prepareStatement(
+                                    "DELETE FROM resource_filter WHERE id = " + connectionId)) {
                                 deleteQuery.executeUpdate();
                             }
                         }
@@ -69,18 +68,18 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
                     final var connectionId = resourceTypeResult.getInt(1);
                     final var resourceTypeId = resourceTypeResult.getInt(2);
 
-                    try (var existsOnDestinationQuery = connection
-                            .prepareStatement("SELECT COUNT(*) FROM resource_resource_type WHERE resource_type_id = "
-                                    + resourceTypeId + " AND resource_id = " + destinationId)) {
+                    try (var existsOnDestinationQuery = connection.prepareStatement(
+                            "SELECT COUNT(*) FROM resource_resource_type WHERE resource_type_id = " + resourceTypeId
+                                    + " AND resource_id = " + destinationId)) {
                         final var existsOnDestinationResult = existsOnDestinationQuery.executeQuery();
                         existsOnDestinationResult.next();
 
                         final var existsCount = existsOnDestinationResult.getInt(1);
 
                         if (existsCount == 0) {
-                            try (final var updateQuery = connection
-                                    .prepareStatement("UPDATE resource_resource_type SET resource_id = " + destinationId
-                                            + " WHERE id = " + connectionId)) {
+                            try (final var updateQuery =
+                                    connection.prepareStatement("UPDATE resource_resource_type SET resource_id = "
+                                            + destinationId + " WHERE id = " + connectionId)) {
                                 updateQuery.executeUpdate();
                             }
                         } else {
@@ -101,18 +100,18 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
                     final var connectionId = resourceTypeResult.getInt(1);
                     final var resourceTypeId = resourceTypeResult.getInt(2);
 
-                    try (var existsOnDestinationQuery = connection
-                            .prepareStatement("SELECT COUNT(*) FROM resource_resource_type WHERE resource_type_id = "
-                                    + resourceTypeId + " AND resource_id = " + destinationId)) {
+                    try (var existsOnDestinationQuery = connection.prepareStatement(
+                            "SELECT COUNT(*) FROM resource_resource_type WHERE resource_type_id = " + resourceTypeId
+                                    + " AND resource_id = " + destinationId)) {
                         final var existsOnDestinationResult = existsOnDestinationQuery.executeQuery();
                         existsOnDestinationResult.next();
 
                         final var existsCount = existsOnDestinationResult.getInt(1);
 
                         if (existsCount == 0) {
-                            try (final var updateQuery = connection
-                                    .prepareStatement("UPDATE resource_resource_type SET resource_id = " + destinationId
-                                            + " WHERE id = " + connectionId)) {
+                            try (final var updateQuery =
+                                    connection.prepareStatement("UPDATE resource_resource_type SET resource_id = "
+                                            + destinationId + " WHERE id = " + connectionId)) {
                                 updateQuery.executeUpdate();
                             }
                         } else {
@@ -152,9 +151,9 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
                         final var id = updateSelectResult.getInt(1);
                         final var topicId = updateSelectResult.getInt(2);
 
-                        try (var existsQuery = connection
-                                .prepareStatement("SELECT COUNT(*) FROM topic_resource WHERE topic_id = " + topicId
-                                        + " AND resource_id = " + destinationResourceId)) {
+                        try (var existsQuery =
+                                connection.prepareStatement("SELECT COUNT(*) FROM topic_resource WHERE topic_id = "
+                                        + topicId + " AND resource_id = " + destinationResourceId)) {
                             final var existsResult = existsQuery.executeQuery();
 
                             if (!existsResult.next()) {
@@ -162,14 +161,14 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
                             }
 
                             if (existsResult.getInt(1) == 0) {
-                                try (var updateConnectionsQuery = connection
-                                        .prepareStatement("UPDATE topic_resource SET resource_id =  "
+                                try (var updateConnectionsQuery =
+                                        connection.prepareStatement("UPDATE topic_resource SET resource_id =  "
                                                 + destinationResourceId + " WHERE id = " + id)) {
                                     updateConnectionsQuery.executeUpdate();
                                 }
                             } else {
-                                try (var deleteConnectionQuery = connection
-                                        .prepareStatement("DELETE FROM topic_resource WHERE id = " + id)) {
+                                try (var deleteConnectionQuery =
+                                        connection.prepareStatement("DELETE FROM topic_resource WHERE id = " + id)) {
                                     if (deleteConnectionQuery.executeUpdate() != 1) {
                                         throw new CustomChangeException(
                                                 "Unexpected change rows from delete topic_resource query");
@@ -180,13 +179,13 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
                     }
                 }
 
-                try (var removeTranslationsQuery = connection
-                        .prepareStatement("DELETE FROM resource_translation WHERE resource_id = " + sourceResourceId)) {
+                try (var removeTranslationsQuery = connection.prepareStatement(
+                        "DELETE FROM resource_translation WHERE resource_id = " + sourceResourceId)) {
                     removeTranslationsQuery.executeUpdate();
                 }
 
-                try (var deleteResourceQuery = connection
-                        .prepareStatement("DELETE FROM resource WHERE id = " + sourceResourceId)) {
+                try (var deleteResourceQuery =
+                        connection.prepareStatement("DELETE FROM resource WHERE id = " + sourceResourceId)) {
                     deleteResourceQuery.executeUpdate();
                 }
             }
@@ -252,12 +251,10 @@ public class MergeSharedContentResourcesSqlChange implements CustomSqlChange {
     }
 
     @Override
-    public void setUp() throws SetupException {
-    }
+    public void setUp() throws SetupException {}
 
     @Override
-    public void setFileOpener(ResourceAccessor resourceAccessor) {
-    }
+    public void setFileOpener(ResourceAccessor resourceAccessor) {}
 
     @Override
     public ValidationErrors validate(Database database) {

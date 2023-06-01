@@ -7,6 +7,11 @@
 
 package no.ndla.taxonomy.service;
 
+import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.net.URI;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
@@ -20,12 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.net.URI;
-
-import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
@@ -43,11 +42,13 @@ class DomainEntityHelperServiceImplTest extends AbstractIntegrationTest {
     private DomainEntityHelperServiceImpl service;
 
     @BeforeEach
-    void setUp(@Autowired NodeRepository nodeRepository, @Autowired NodeConnectionRepository nodeConnectionRepository,
+    void setUp(
+            @Autowired NodeRepository nodeRepository,
+            @Autowired NodeConnectionRepository nodeConnectionRepository,
             @Autowired ResourceTypeRepository resourceTypeRepository,
             @Autowired ContextUpdaterService cachedUrlUpdaterService) {
-        service = new DomainEntityHelperServiceImpl(nodeRepository, nodeConnectionRepository, resourceTypeRepository,
-                cachedUrlUpdaterService);
+        service = new DomainEntityHelperServiceImpl(
+                nodeRepository, nodeConnectionRepository, resourceTypeRepository, cachedUrlUpdaterService);
 
         topic1 = new Node(NodeType.TOPIC);
         topic1.setPublicId(URI.create("urn:topic:test:1"));
@@ -80,7 +81,6 @@ class DomainEntityHelperServiceImplTest extends AbstractIntegrationTest {
         resource2 = new Node(NodeType.RESOURCE);
         resource2.setPublicId(URI.create("urn:resource:test:2"));
         resource2 = nodeRepository.save(resource2);
-
     }
 
     @Test

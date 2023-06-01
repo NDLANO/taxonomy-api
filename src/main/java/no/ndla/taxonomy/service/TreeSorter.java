@@ -8,10 +8,9 @@
 package no.ndla.taxonomy.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.springframework.stereotype.Component;
-
 import java.net.URI;
 import java.util.*;
+import org.springframework.stereotype.Component;
 
 @Component
 public class TreeSorter {
@@ -19,7 +18,8 @@ public class TreeSorter {
         final var itemsToAdd = new ArrayList<T>();
 
         elementsToAddFrom.getOrDefault(parentId, List.of()).stream()
-                .sorted(Comparator.comparingInt(Sortable::getSortableRank)).forEachOrdered(element -> {
+                .sorted(Comparator.comparingInt(Sortable::getSortableRank))
+                .forEachOrdered(element -> {
                     itemsToAdd.add(element);
                     itemsToAdd.addAll(addElements(elementsToAddFrom, element.getSortableId()));
                 });
@@ -42,7 +42,7 @@ public class TreeSorter {
      * @param elements
      *            Elements to sort
      * @param <T>
-     * 
+     *
      * @return sorted flat list
      */
     public <T extends Sortable> List<T> sortList(Collection<T> elements) {

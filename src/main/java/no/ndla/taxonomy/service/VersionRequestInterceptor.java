@@ -7,13 +7,11 @@
 
 package no.ndla.taxonomy.service;
 
-import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.AsyncHandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
-
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Optional;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.AsyncHandlerInterceptor;
 
 /**
  * Interceptor which extracts http header and places a database schema name in the VersionContext object.
@@ -32,7 +30,9 @@ public class VersionRequestInterceptor implements AsyncHandlerInterceptor {
         if (request.getRequestURI().startsWith("/v1/versions")) {
             VersionContext.clear();
         }
-        return Optional.of(request).map(versionHeaderExtractor::getVersionSchemaFromHeader).map(this::setVersionContext)
+        return Optional.of(request)
+                .map(versionHeaderExtractor::getVersionSchemaFromHeader)
+                .map(this::setVersionContext)
                 .orElse(false);
     }
 

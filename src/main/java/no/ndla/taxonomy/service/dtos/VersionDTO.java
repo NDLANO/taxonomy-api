@@ -9,14 +9,13 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import no.ndla.taxonomy.domain.Version;
-import no.ndla.taxonomy.domain.VersionType;
-
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Optional;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import no.ndla.taxonomy.domain.Version;
+import no.ndla.taxonomy.domain.VersionType;
 
 @Schema(name = "Version")
 public class VersionDTO {
@@ -53,8 +52,7 @@ public class VersionDTO {
     @Schema(description = "Timestamp for when version was archived")
     private Optional<Instant> archived = Optional.empty();
 
-    public VersionDTO() {
-    }
+    public VersionDTO() {}
 
     public VersionDTO(Version version) {
         this.id = version.getPublicId();

@@ -7,17 +7,17 @@
 
 package no.ndla.taxonomy.repositories;
 
-import no.ndla.taxonomy.domain.ResourceResourceType;
-import org.springframework.data.jpa.repository.Query;
-
 import java.net.URI;
 import java.util.List;
+import no.ndla.taxonomy.domain.ResourceResourceType;
+import org.springframework.data.jpa.repository.Query;
 
 public interface ResourceResourceTypeRepository extends TaxonomyRepository<ResourceResourceType> {
     @Query("SELECT rrt FROM ResourceResourceType rrt JOIN FETCH rrt.node r JOIN FETCH rrt.resourceType")
     List<ResourceResourceType> findAllIncludingResourceAndResourceType();
 
-    @Query("""
+    @Query(
+            """
             SELECT rrt FROM ResourceResourceType rrt
             JOIN FETCH rrt.node
             JOIN FETCH rrt.resourceType rt

@@ -7,6 +7,11 @@
 
 package no.ndla.taxonomy.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.net.URI;
+import java.util.Set;
 import no.ndla.taxonomy.domain.Context;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
@@ -20,12 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.net.URI;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
@@ -95,9 +94,13 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
         service.updateContexts(topic1);
 
         {
-            var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:1")).get();
+            var node = nodeRepository
+                    .findFirstByPublicId(URI.create("urn:topic:1"))
+                    .get();
             assertEquals(2, node.getContexts().size());
-            assertTrue(node.getContexts().stream().map(Context::path).toList()
+            assertTrue(node.getContexts().stream()
+                    .map(Context::path)
+                    .toList()
                     .containsAll(Set.of("/topic:1", "/subject:1/topic:1")));
         }
 
@@ -105,7 +108,9 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
 
         service.updateContexts(topic1);
         {
-            var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:1")).get();
+            var node = nodeRepository
+                    .findFirstByPublicId(URI.create("urn:topic:1"))
+                    .get();
             assertEquals(1, node.getContexts().size());
             assertTrue(node.getContexts().stream().map(Context::path).toList().contains("/subject:1/topic:1"));
         }
@@ -118,7 +123,9 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
         service.updateContexts(topic1);
 
         {
-            var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:2")).get();
+            var node = nodeRepository
+                    .findFirstByPublicId(URI.create("urn:topic:2"))
+                    .get();
             assertEquals(0, node.getContexts().size());
         }
 
@@ -129,7 +136,9 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
         service.updateContexts(topic1);
 
         {
-            var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:2")).get();
+            var node = nodeRepository
+                    .findFirstByPublicId(URI.create("urn:topic:2"))
+                    .get();
             assertEquals(1, node.getContexts().size());
             assertTrue(node.getContexts().stream().map(Context::path).toList().contains("/subject:1/topic:1/topic:2"));
         }
@@ -139,9 +148,13 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
         service.updateContexts(topic1);
 
         {
-            var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:2")).get();
+            var node = nodeRepository
+                    .findFirstByPublicId(URI.create("urn:topic:2"))
+                    .get();
             assertEquals(2, node.getContexts().size());
-            assertTrue(node.getContexts().stream().map(Context::path).toList()
+            assertTrue(node.getContexts().stream()
+                    .map(Context::path)
+                    .toList()
                     .containsAll(Set.of("/subject:1/topic:1/topic:2", "/topic:1/topic:2")));
         }
 
@@ -152,7 +165,9 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
         service.updateContexts(resource1);
 
         {
-            var node = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1")).get();
+            var node = nodeRepository
+                    .findFirstByPublicId(URI.create("urn:resource:1"))
+                    .get();
             assertEquals(0, node.getContexts().size());
         }
 
@@ -163,9 +178,13 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
         service.updateContexts(resource1);
 
         {
-            var node = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1")).get();
+            var node = nodeRepository
+                    .findFirstByPublicId(URI.create("urn:resource:1"))
+                    .get();
             assertEquals(2, node.getContexts().size());
-            assertTrue(node.getContexts().stream().map(Context::path).toList()
+            assertTrue(node.getContexts().stream()
+                    .map(Context::path)
+                    .toList()
                     .containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1")));
         }
 
@@ -176,11 +195,18 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
         service.updateContexts(resource1);
 
         {
-            var node = nodeRepository.findFirstByPublicId(URI.create("urn:resource:1")).get();
+            var node = nodeRepository
+                    .findFirstByPublicId(URI.create("urn:resource:1"))
+                    .get();
             assertEquals(4, node.getContexts().size());
-            assertTrue(node.getContexts().stream().map(Context::path).toList()
-                    .containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1",
-                            "/subject:1/topic:1/topic:2/resource:1", "/topic:1/topic:2/resource:1")));
+            assertTrue(node.getContexts().stream()
+                    .map(Context::path)
+                    .toList()
+                    .containsAll(Set.of(
+                            "/subject:1/topic:1/resource:1",
+                            "/topic:1/resource:1",
+                            "/subject:1/topic:1/topic:2/resource:1",
+                            "/topic:1/topic:2/resource:1")));
         }
 
         nodeRepository.delete(resource1);

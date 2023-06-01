@@ -7,6 +7,16 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import static no.ndla.taxonomy.TestUtils.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
@@ -15,17 +25,6 @@ import no.ndla.taxonomy.rest.v1.dtos.TopicResourcePOST;
 import no.ndla.taxonomy.rest.v1.dtos.TopicResourcePUT;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import org.junit.jupiter.api.Test;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static no.ndla.taxonomy.TestUtils.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class TopicResourcesTest extends RestTest {
 
@@ -87,8 +86,8 @@ public class TopicResourcesTest extends RestTest {
 
         // After behavior change: Add the resource again to another topic with primary = false
         // should create a non-primary resource connection
-        final var resource2ConnectionPublicId = getId(
-                testUtils.createResource("/v1/topic-resources", new TopicResourcePOST() {
+        final var resource2ConnectionPublicId =
+                getId(testUtils.createResource("/v1/topic-resources", new TopicResourcePOST() {
                     {
                         topicid = topic2Id;
                         resourceId = integrationId;
@@ -96,7 +95,8 @@ public class TopicResourcesTest extends RestTest {
                     }
                 }));
 
-        final var resource2Connection = nodeConnectionRepository.findFirstByPublicId(resource2ConnectionPublicId)
+        final var resource2Connection = nodeConnectionRepository
+                .findFirstByPublicId(resource2ConnectionPublicId)
                 .orElse(null);
 
         assertNotNull(resource2Connection);
@@ -118,12 +118,15 @@ public class TopicResourcesTest extends RestTest {
         final var calculusId = calculus.getPublicId();
         final var integrationId = integration.getPublicId();
 
-        testUtils.createResource("/v1/topic-resources", new TopicResourcePOST() {
-            {
-                topicid = calculusId;
-                resourceId = integrationId;
-            }
-        }, status().isConflict());
+        testUtils.createResource(
+                "/v1/topic-resources",
+                new TopicResourcePOST() {
+                    {
+                        topicid = calculusId;
+                        resourceId = integrationId;
+                    }
+                },
+                status().isConflict());
     }
 
     @Test
@@ -150,11 +153,14 @@ public class TopicResourcesTest extends RestTest {
     public void cannot_unset_primary_topic() throws Exception {
         URI id = save(NodeConnection.create(newTopic(), newResource(), true)).getPublicId();
 
-        testUtils.updateResource("/v1/topic-resources/" + id, new TopicResourcePUT() {
-            {
-                primary = Optional.of(false);
-            }
-        }, status().is4xxClientError());
+        testUtils.updateResource(
+                "/v1/topic-resources/" + id,
+                new TopicResourcePUT() {
+                    {
+                        primary = Optional.of(false);
+                    }
+                },
+                status().is4xxClientError());
     }
 
     @Test
@@ -184,10 +190,14 @@ public class TopicResourcesTest extends RestTest {
         var topicResources = testUtils.getObject(TopicResourceDTO[].class, response);
 
         assertEquals(2, topicResources.length);
-        assertAnyTrue(topicResources, t -> electricity.getPublicId().equals(t.topicid)
-                && alternatingCurrent.getPublicId().equals(t.resourceId));
-        assertAnyTrue(topicResources,
-                t -> calculus.getPublicId().equals(t.topicid) && integration.getPublicId().equals(t.resourceId));
+        assertAnyTrue(
+                topicResources,
+                t -> electricity.getPublicId().equals(t.topicid)
+                        && alternatingCurrent.getPublicId().equals(t.resourceId));
+        assertAnyTrue(
+                topicResources,
+                t -> calculus.getPublicId().equals(t.topicid)
+                        && integration.getPublicId().equals(t.resourceId));
         assertAllTrue(topicResources, t -> isValidId(t.id));
     }
 
@@ -258,7 +268,8 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void resources_can_have_default_rank() throws Exception {
-        builder.node(NodeType.TOPIC,
+        builder.node(
+                NodeType.TOPIC,
                 t -> t.name("elementary maths").resource(r -> r.name("graphs")).resource(r -> r.name("sets")));
 
         var response = testUtils.getResource("/v1/topic-resources");
@@ -300,14 +311,14 @@ public class TopicResourcesTest extends RestTest {
     @Test
     public void update_child_resource_rank_modifies_other_contiguous_ranks() throws Exception {
         List<NodeConnection> topicResources = createTenContiguousRankedConnections(); // creates ranks 1, 2, 3, 4, 5, 6,
-                                                                                      // 7, 8, 9, 10
+        // 7, 8, 9, 10
         Map<String, Integer> mappedRanks = mapConnectionRanks(topicResources);
 
         // make the last object the first
         var updatedConnection = topicResources.get(topicResources.size() - 1);
         assertEquals(10, updatedConnection.getRank());
-        testUtils.updateResource("/v1/topic-resources/" + updatedConnection.getPublicId().toString(),
-                new TopicResourcePUT() {
+        testUtils.updateResource(
+                "/v1/topic-resources/" + updatedConnection.getPublicId().toString(), new TopicResourcePUT() {
                     {
                         primary = Optional.of(true);
                         rank = Optional.of(1);
@@ -317,7 +328,8 @@ public class TopicResourcesTest extends RestTest {
 
         // verify that the other connections have been updated
         for (NodeConnection topicResource : topicResources) {
-            var response = testUtils.getResource("/v1/topic-resources/" + topicResource.getPublicId().toString());
+            var response = testUtils.getResource(
+                    "/v1/topic-resources/" + topicResource.getPublicId().toString());
             var connectionFromDb = testUtils.getObject(TopicResourceDTO.class, response);
             // verify that the other connections have had their rank bumped up 1
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
@@ -331,14 +343,14 @@ public class TopicResourcesTest extends RestTest {
     public void update_child_resource_rank_does_not_alter_noncontiguous_ranks() throws Exception {
 
         List<NodeConnection> topicResources = createTenNonContiguousRankedConnections(); // creates ranks 1, 2, 3, 4, 5,
-                                                                                         // 60, 70, 80, 90, 100
+        // 60, 70, 80, 90, 100
         Map<String, Integer> mappedRanks = mapConnectionRanks(topicResources);
 
         // make the last object the first
         var updatedConnection = topicResources.get(topicResources.size() - 1);
         assertEquals(100, updatedConnection.getRank());
-        testUtils.updateResource("/v1/topic-resources/" + updatedConnection.getPublicId().toString(),
-                new TopicResourcePUT() {
+        testUtils.updateResource(
+                "/v1/topic-resources/" + updatedConnection.getPublicId().toString(), new TopicResourcePUT() {
                     {
                         primary = Optional.of(true);
                         rank = Optional.of(1);
@@ -348,7 +360,8 @@ public class TopicResourcesTest extends RestTest {
 
         // verify that the other connections have been updated
         for (NodeConnection topicResource : topicResources) {
-            var response = testUtils.getResource("/v1/topic-resources/" + topicResource.getPublicId().toString());
+            var response = testUtils.getResource(
+                    "/v1/topic-resources/" + topicResource.getPublicId().toString());
             var connectionFromDb = testUtils.getObject(TopicResourceDTO.class, response);
             // verify that only the contiguous connections are updated
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
@@ -370,8 +383,8 @@ public class TopicResourcesTest extends RestTest {
         // set rank for last object to higher than any existing
         var updatedConnection = topicResources.get(topicResources.size() - 1);
         assertEquals(10, updatedConnection.getRank());
-        testUtils.updateResource("/v1/topic-resources/" + topicResources.get(9).getPublicId().toString(),
-                new TopicResourcePUT() {
+        testUtils.updateResource(
+                "/v1/topic-resources/" + topicResources.get(9).getPublicId().toString(), new TopicResourcePUT() {
                     {
                         primary = Optional.of(true);
                         rank = Optional.of(99);
@@ -381,7 +394,8 @@ public class TopicResourcesTest extends RestTest {
 
         // verify that the other connections are unchanged
         for (NodeConnection topicResource : topicResources) {
-            var response = testUtils.getResource("/v1/topic-resources/" + topicResource.getPublicId().toString());
+            var response = testUtils.getResource(
+                    "/v1/topic-resources/" + topicResource.getPublicId().toString());
             var connection = testUtils.getObject(TopicResourceDTO.class, response);
             if (!connection.id.equals(updatedConnection.getPublicId())) {
                 assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);

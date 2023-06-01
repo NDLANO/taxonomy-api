@@ -7,12 +7,11 @@
 
 package no.ndla.taxonomy.domain;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import javax.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
+import javax.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 public class CustomField implements Serializable {
@@ -22,6 +21,7 @@ public class CustomField implements Serializable {
 
     @UpdateTimestamp
     private Instant updatedAt;
+
     @CreationTimestamp
     private Instant createdAt;
 
@@ -32,8 +32,7 @@ public class CustomField implements Serializable {
     public static final String REQUEST_PUBLISH = "requestPublish";
     public static final String IS_CHANGED = "isChanged";
 
-    public CustomField() {
-    }
+    public CustomField() {}
 
     public CustomField(String key) {
         this.key = key;

@@ -7,9 +7,9 @@
 
 package no.ndla.taxonomy.domain;
 
-import javax.persistence.*;
 import java.io.Serializable;
 import java.net.URI;
+import javax.persistence.*;
 
 @MappedSuperclass
 public class DomainEntity implements Serializable {
@@ -38,7 +38,7 @@ public class DomainEntity implements Serializable {
 
     /**
      * Defaults to class name, but can be overrided
-     * 
+     *
      * @return
      */
     public String getEntityName() {

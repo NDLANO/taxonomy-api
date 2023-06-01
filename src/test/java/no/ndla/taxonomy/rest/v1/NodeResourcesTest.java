@@ -7,6 +7,14 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import static no.ndla.taxonomy.TestUtils.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePOST;
@@ -15,15 +23,6 @@ import no.ndla.taxonomy.service.dtos.MetadataDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.junit.jupiter.api.Test;
-
-import java.net.URI;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static no.ndla.taxonomy.TestUtils.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class NodeResourcesTest extends RestTest {
 
@@ -85,8 +84,8 @@ public class NodeResourcesTest extends RestTest {
 
         // After behavior change: Add the resource again to another topic with primary = false
         // should create a non-primary resource connection
-        final var resource2ConnectionPublicId = getId(
-                testUtils.createResource("/v1/node-resources", new NodeResourcePOST() {
+        final var resource2ConnectionPublicId =
+                getId(testUtils.createResource("/v1/node-resources", new NodeResourcePOST() {
                     {
                         nodeId = node2Id;
                         resourceId = integrationId;
@@ -94,7 +93,8 @@ public class NodeResourcesTest extends RestTest {
                     }
                 }));
 
-        final var resource2Connection = nodeConnectionRepository.findFirstByPublicId(resource2ConnectionPublicId)
+        final var resource2Connection = nodeConnectionRepository
+                .findFirstByPublicId(resource2ConnectionPublicId)
                 .orElse(null);
 
         assertNotNull(resource2Connection);
@@ -116,12 +116,15 @@ public class NodeResourcesTest extends RestTest {
         final var calculusId = calculus.getPublicId();
         final var integrationId = integration.getPublicId();
 
-        testUtils.createResource("/v1/node-resources", new NodeResourcePOST() {
-            {
-                nodeId = calculusId;
-                resourceId = integrationId;
-            }
-        }, status().isConflict());
+        testUtils.createResource(
+                "/v1/node-resources",
+                new NodeResourcePOST() {
+                    {
+                        nodeId = calculusId;
+                        resourceId = integrationId;
+                    }
+                },
+                status().isConflict());
     }
 
     @Test
@@ -151,11 +154,14 @@ public class NodeResourcesTest extends RestTest {
     public void cannot_unset_primary_node() throws Exception {
         URI id = save(NodeConnection.create(newTopic(), newResource(), true)).getPublicId();
 
-        testUtils.updateResource("/v1/node-resources/" + id, new NodeResourcePUT() {
-            {
-                primary = Optional.of(false);
-            }
-        }, status().is4xxClientError());
+        testUtils.updateResource(
+                "/v1/node-resources/" + id,
+                new NodeResourcePUT() {
+                    {
+                        primary = Optional.of(false);
+                    }
+                },
+                status().is4xxClientError());
     }
 
     @Test
@@ -185,10 +191,14 @@ public class NodeResourcesTest extends RestTest {
         var topicResources = testUtils.getObject(NodeResourceDTO[].class, response);
 
         assertEquals(2, topicResources.length);
-        assertAnyTrue(topicResources, t -> electricity.getPublicId().equals(t.nodeId)
-                && alternatingCurrent.getPublicId().equals(t.resourceId));
-        assertAnyTrue(topicResources,
-                t -> calculus.getPublicId().equals(t.nodeId) && integration.getPublicId().equals(t.resourceId));
+        assertAnyTrue(
+                topicResources,
+                t -> electricity.getPublicId().equals(t.nodeId)
+                        && alternatingCurrent.getPublicId().equals(t.resourceId));
+        assertAnyTrue(
+                topicResources,
+                t -> calculus.getPublicId().equals(t.nodeId)
+                        && integration.getPublicId().equals(t.resourceId));
         assertAllTrue(topicResources, t -> isValidId(t.id));
     }
 
@@ -204,11 +214,17 @@ public class NodeResourcesTest extends RestTest {
         var page2 = testUtils.getObject(SearchResultDTO.class, response2);
         assertEquals(5, page2.getResults().size());
 
-        var result = Stream.concat(page1.getResults().stream(), page2.getResults().stream()).toList();
+        var result = Stream.concat(page1.getResults().stream(), page2.getResults().stream())
+                .toList();
 
         // noinspection SuspiciousMethodCalls
-        assertTrue(connections.stream().map(DomainEntity::getPublicId).map(Object::toString).toList()
-                .containsAll(result.stream().map(r -> ((LinkedHashMap<String, String>) r).get("id")).toList()));
+        assertTrue(connections.stream()
+                .map(DomainEntity::getPublicId)
+                .map(Object::toString)
+                .toList()
+                .containsAll(result.stream()
+                        .map(r -> ((LinkedHashMap<String, String>) r).get("id"))
+                        .toList()));
     }
 
     @Test
@@ -287,7 +303,8 @@ public class NodeResourcesTest extends RestTest {
 
     @Test
     public void resources_can_have_default_rank() throws Exception {
-        builder.node(NodeType.TOPIC,
+        builder.node(
+                NodeType.TOPIC,
                 t -> t.name("elementary maths").resource(r -> r.name("graphs")).resource(r -> r.name("sets")));
 
         var response = testUtils.getResource("/v1/node-resources");
@@ -329,14 +346,14 @@ public class NodeResourcesTest extends RestTest {
     @Test
     public void update_child_resource_rank_modifies_other_contiguous_ranks() throws Exception {
         List<NodeConnection> nodeResources = createTenContiguousRankedConnections(); // creates ranks 1, 2, 3, 4, 5, 6,
-                                                                                     // 7, 8, 9, 10
+        // 7, 8, 9, 10
         Map<String, Integer> mappedRanks = mapConnectionRanks(nodeResources);
 
         // make the last object the first
         var updatedConnection = nodeResources.get(nodeResources.size() - 1);
         assertEquals(10, updatedConnection.getRank());
-        testUtils.updateResource("/v1/node-resources/" + updatedConnection.getPublicId().toString(),
-                new NodeResourcePUT() {
+        testUtils.updateResource(
+                "/v1/node-resources/" + updatedConnection.getPublicId().toString(), new NodeResourcePUT() {
                     {
                         primary = Optional.of(true);
                         rank = Optional.of(1);
@@ -346,7 +363,8 @@ public class NodeResourcesTest extends RestTest {
 
         // verify that the other connections have been updated
         for (var nodeResource : nodeResources) {
-            var response = testUtils.getResource("/v1/node-resources/" + nodeResource.getPublicId().toString());
+            var response = testUtils.getResource(
+                    "/v1/node-resources/" + nodeResource.getPublicId().toString());
             var connectionFromDb = testUtils.getObject(NodeResourceDTO.class, response);
             // verify that the other connections have had their rank bumped up 1
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
@@ -360,14 +378,14 @@ public class NodeResourcesTest extends RestTest {
     public void update_child_resource_rank_does_not_alter_noncontiguous_ranks() throws Exception {
 
         var nodeResources = createTenNonContiguousRankedConnections(); // creates ranks 1, 2, 3, 4, 5,
-                                                                       // 60, 70, 80, 90, 100
+        // 60, 70, 80, 90, 100
         Map<String, Integer> mappedRanks = mapConnectionRanks(nodeResources);
 
         // make the last object the first
         var updatedConnection = nodeResources.get(nodeResources.size() - 1);
         assertEquals(100, updatedConnection.getRank());
-        testUtils.updateResource("/v1/node-resources/" + updatedConnection.getPublicId().toString(),
-                new NodeResourcePUT() {
+        testUtils.updateResource(
+                "/v1/node-resources/" + updatedConnection.getPublicId().toString(), new NodeResourcePUT() {
                     {
                         primary = Optional.of(true);
                         rank = Optional.of(1);
@@ -377,7 +395,8 @@ public class NodeResourcesTest extends RestTest {
 
         // verify that the other connections have been updated
         for (var nodeResource : nodeResources) {
-            var response = testUtils.getResource("/v1/node-resources/" + nodeResource.getPublicId().toString());
+            var response = testUtils.getResource(
+                    "/v1/node-resources/" + nodeResource.getPublicId().toString());
             var connectionFromDb = testUtils.getObject(NodeResourceDTO.class, response);
             // verify that only the contiguous connections are updated
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
@@ -399,8 +418,8 @@ public class NodeResourcesTest extends RestTest {
         // set rank for last object to higher than any existing
         var updatedConnection = nodeResources.get(nodeResources.size() - 1);
         assertEquals(10, updatedConnection.getRank());
-        testUtils.updateResource("/v1/node-resources/" + nodeResources.get(9).getPublicId().toString(),
-                new NodeResourcePUT() {
+        testUtils.updateResource(
+                "/v1/node-resources/" + nodeResources.get(9).getPublicId().toString(), new NodeResourcePUT() {
                     {
                         primary = Optional.of(true);
                         rank = Optional.of(99);
@@ -410,7 +429,8 @@ public class NodeResourcesTest extends RestTest {
 
         // verify that the other connections are unchanged
         for (var nodeResource : nodeResources) {
-            var response = testUtils.getResource("/v1/node-resources/" + nodeResource.getPublicId().toString());
+            var response = testUtils.getResource(
+                    "/v1/node-resources/" + nodeResource.getPublicId().toString());
             var connection = testUtils.getObject(NodeResourceDTO.class, response);
             if (!connection.id.equals(updatedConnection.getPublicId())) {
                 assertEquals(mappedRanks.get(connection.id.toString()).intValue(), connection.rank);
@@ -421,22 +441,25 @@ public class NodeResourcesTest extends RestTest {
     @Test
     public void update_metadata_for_connection() throws Exception {
         URI id = save(NodeConnection.create(newTopic(), newResource())).getPublicId();
-        testUtils.updateResource("/v1/node-resources/" + id + "/metadata", new MetadataDTO() {
-            {
-                visible = false;
-                grepCodes = Set.of("KM123");
-                customFields = Map.of("key", "value");
-            }
-        }, status().isOk());
+        testUtils.updateResource(
+                "/v1/node-resources/" + id + "/metadata",
+                new MetadataDTO() {
+                    {
+                        visible = false;
+                        grepCodes = Set.of("KM123");
+                        customFields = Map.of("key", "value");
+                    }
+                },
+                status().isOk());
         var connection = nodeConnectionRepository.getByPublicId(id);
         assertFalse(connection.getMetadata().isVisible());
-        Set<String> codes = connection.getMetadata().getGrepCodes().stream().map(JsonGrepCode::getCode)
+        Set<String> codes = connection.getMetadata().getGrepCodes().stream()
+                .map(JsonGrepCode::getCode)
                 .collect(Collectors.toSet());
         assertTrue(codes.contains("KM123"));
         var customFieldValues = connection.getCustomFields();
         assertTrue(customFieldValues.containsKey("key"));
         assertTrue(customFieldValues.containsValue("value"));
-
     }
 
     private Map<String, Integer> mapConnectionRanks(List<NodeConnection> nodeResources) {

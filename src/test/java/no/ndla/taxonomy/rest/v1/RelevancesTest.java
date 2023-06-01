@@ -7,18 +7,17 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.net.URI;
 import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.rest.v1.dtos.RelevanceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.RelevancePUT;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
-
-import java.net.URI;
-
-import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class RelevancesTest extends RestTest {
 

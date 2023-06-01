@@ -7,6 +7,9 @@
 
 package no.ndla.taxonomy.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Optional;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
@@ -16,10 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Will only be run in maven using '-P integration'

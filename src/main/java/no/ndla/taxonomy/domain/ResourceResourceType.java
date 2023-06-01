@@ -7,19 +7,19 @@
 
 package no.ndla.taxonomy.domain;
 
-import javax.persistence.*;
 import java.net.URI;
 import java.util.Objects;
 import java.util.UUID;
+import javax.persistence.*;
 
 @Entity
 public class ResourceResourceType extends DomainEntity implements Comparable<ResourceResourceType> {
 
-    @ManyToOne(cascade = { CascadeType.MERGE })
+    @ManyToOne(cascade = {CascadeType.MERGE})
     @JoinColumn(name = "resource_id")
     private Node node;
 
-    @ManyToOne(cascade = { CascadeType.MERGE })
+    @ManyToOne(cascade = {CascadeType.MERGE})
     @JoinColumn(name = "resource_type_id")
     private ResourceType resourceType;
 
@@ -81,10 +81,8 @@ public class ResourceResourceType extends DomainEntity implements Comparable<Res
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         ResourceResourceType that = (ResourceResourceType) o;
         return Objects.equals(node.getPublicId(), that.node.getPublicId())
                 && Objects.equals(resourceType.getPublicId(), that.resourceType.getPublicId());

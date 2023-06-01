@@ -7,12 +7,11 @@
 
 package no.ndla.taxonomy.repositories;
 
+import java.util.Optional;
 import no.ndla.taxonomy.domain.Changelog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-
-import java.util.Optional;
 
 public interface ChangelogRepository extends JpaRepository<Changelog, Integer> {
     Optional<Changelog> findFirstByDoneFalse();

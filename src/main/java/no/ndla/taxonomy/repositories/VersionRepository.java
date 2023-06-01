@@ -7,13 +7,12 @@
 
 package no.ndla.taxonomy.repositories;
 
-import no.ndla.taxonomy.domain.Version;
-import no.ndla.taxonomy.domain.VersionType;
-import org.springframework.data.jpa.repository.Query;
-
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import no.ndla.taxonomy.domain.Version;
+import no.ndla.taxonomy.domain.VersionType;
+import org.springframework.data.jpa.repository.Query;
 
 public interface VersionRepository extends TaxonomyRepository<Version> {
     @Query(value = "SELECT * from Version v where v.public_id = :#{#publicId.toString()}", nativeQuery = true)

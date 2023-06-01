@@ -7,10 +7,9 @@
 
 package no.ndla.taxonomy.service.task;
 
+import java.util.Optional;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.service.DomainEntityHelperService;
-
-import java.util.Optional;
 
 public class Updater extends Task<DomainEntity> {
     private DomainEntityHelperService domainEntityHelperService;
@@ -32,5 +31,4 @@ public class Updater extends Task<DomainEntity> {
     protected Optional<DomainEntity> execute() {
         return domainEntityHelperService.updateEntity(element, this.cleanUp);
     }
-
 }

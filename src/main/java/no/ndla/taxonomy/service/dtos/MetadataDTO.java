@@ -9,14 +9,13 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
-import no.ndla.taxonomy.domain.JsonGrepCode;
-import no.ndla.taxonomy.domain.Metadata;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import no.ndla.taxonomy.domain.JsonGrepCode;
+import no.ndla.taxonomy.domain.Metadata;
 
 @Schema(name = "Metadata")
 public class MetadataDTO {
@@ -32,12 +31,12 @@ public class MetadataDTO {
     @Schema
     public Map<String, String> customFields;
 
-    public MetadataDTO() {
-    }
+    public MetadataDTO() {}
 
     public MetadataDTO(Metadata metadata) {
         this.visible = metadata.isVisible();
-        this.grepCodes = metadata.getGrepCodes().stream().map(JsonGrepCode::code).collect(Collectors.toSet());
+        this.grepCodes =
+                metadata.getGrepCodes().stream().map(JsonGrepCode::code).collect(Collectors.toSet());
         this.customFields = metadata.getCustomFields();
     }
 
@@ -47,7 +46,9 @@ public class MetadataDTO {
 
         metadataApiEntity.getCompetenceAims().ifPresent(competenceAims -> {
             grepCodes = new HashSet<>();
-            competenceAims.stream().map(MetadataApiEntity.CompetenceAim::getCode).forEach(this::addGrepCode);
+            competenceAims.stream()
+                    .map(MetadataApiEntity.CompetenceAim::getCode)
+                    .forEach(this::addGrepCode);
         });
         customFields = metadataApiEntity.getCustomFields().map(HashMap::new).orElse(null);
     }

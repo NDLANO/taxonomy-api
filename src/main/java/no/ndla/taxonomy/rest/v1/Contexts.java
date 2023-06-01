@@ -10,6 +10,10 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -22,13 +26,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-
 @RestController
-@RequestMapping(path = { "/v1/contexts" })
+@RequestMapping(path = {"/v1/contexts"})
 @Transactional(readOnly = true)
 public class Contexts {
     private final NodeRepository nodeRepository;
@@ -42,12 +41,15 @@ public class Contexts {
     @GetMapping
     @Operation(summary = "Gets all contexts")
     public List<ContextDTO> getAllContexts(
-            @Parameter(description = "ISO-639-1 language code", example = "nb") @RequestParam(value = "language", required = false, defaultValue = "") String language) {
+            @Parameter(description = "ISO-639-1 language code", example = "nb")
+                    @RequestParam(value = "language", required = false, defaultValue = "")
+                    String language) {
 
         final var nodes = nodeRepository.findAllByContextIncludingCachedUrlsAndTranslations(true);
 
         final var contextDocuments = new ArrayList<>(nodes.stream()
-                .map(topic -> new ContextDTO(topic.getPublicId(),
+                .map(topic -> new ContextDTO(
+                        topic.getPublicId(),
                         topic.getTranslation(language).map(Translation::getName).orElse(topic.getName()),
                         topic.getPrimaryPath().orElse(null)))
                 .toList());
@@ -58,8 +60,11 @@ public class Contexts {
     }
 
     @PostMapping
-    @Operation(summary = "Adds a new context", description = "All subjects are already contexts and may not be added again. Only topics may be added as a context. The topic must exist already.", security = {
-            @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Adds a new context",
+            description =
+                    "All subjects are already contexts and may not be added again. Only topics may be added as a context. The topic must exist already.",
+            security = {@SecurityRequirement(name = "oauth")})
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
     public ResponseEntity<Void> createContext(
@@ -74,8 +79,10 @@ public class Contexts {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Removes a context", description = "Does not remove the underlying resource, only marks it as not being a context", security = {
-            @SecurityRequirement(name = "oauth") })
+    @Operation(
+            summary = "Removes a context",
+            description = "Does not remove the underlying resource, only marks it as not being a context",
+            security = {@SecurityRequirement(name = "oauth")})
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @Transactional
@@ -85,5 +92,4 @@ public class Contexts {
 
         cachedUrlUpdaterService.updateContexts(topic);
     }
-
 }

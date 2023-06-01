@@ -7,16 +7,15 @@
 
 package no.ndla.taxonomy.domain;
 
-import no.ndla.taxonomy.service.ContextUpdaterService;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityManager;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import javax.persistence.EntityManager;
+import no.ndla.taxonomy.service.ContextUpdaterService;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @Transactional(propagation = Propagation.MANDATORY)
@@ -53,8 +52,7 @@ public class Builder {
 
     public Version version(String key, Consumer<VersionBuilder> consumer) {
         VersionBuilder builder = getVersionBuilder(key);
-        if (null != consumer)
-            consumer.accept(builder);
+        if (null != consumer) consumer.accept(builder);
 
         entityManager.persist(builder.version);
 
@@ -71,8 +69,7 @@ public class Builder {
 
     public ResourceType resourceType(String key, Consumer<ResourceTypeBuilder> consumer) {
         ResourceTypeBuilder resourceType = getResourceTypeBuilder(key);
-        if (null != consumer)
-            consumer.accept(resourceType);
+        if (null != consumer) consumer.accept(resourceType);
         return resourceType.resourceType;
     }
 
@@ -86,8 +83,7 @@ public class Builder {
 
     public Relevance relevance(String key, Consumer<RelevanceBuilder> consumer) {
         RelevanceBuilder relevance = getRelevanceBuilder(key);
-        if (null != consumer)
-            consumer.accept(relevance);
+        if (null != consumer) consumer.accept(relevance);
         return relevance.relevance;
     }
 
@@ -152,8 +148,7 @@ public class Builder {
 
     public Node node(String key, NodeType nodeType, Consumer<NodeBuilder> consumer) {
         NodeBuilder node = getNodeBuilder(key, nodeType);
-        if (null != consumer)
-            consumer.accept(node);
+        if (null != consumer) consumer.accept(node);
 
         entityManager.persist(node.node);
 
@@ -176,7 +171,6 @@ public class Builder {
 
         public VersionBuilder() {
             this.version = new Version();
-
         }
 
         public VersionBuilder publicId(URI publicId) {
@@ -193,7 +187,6 @@ public class Builder {
             version.setLocked(locked);
             return this;
         }
-
     }
 
     public static class JsonTranslationBuilder {
@@ -287,8 +280,7 @@ public class Builder {
 
         public ResourceTypeBuilder subtype(String key, Consumer<ResourceTypeBuilder> consumer) {
             ResourceTypeBuilder resourceTypeBuilder = getResourceTypeBuilder(key);
-            if (null != consumer)
-                consumer.accept(resourceTypeBuilder);
+            if (null != consumer) consumer.accept(resourceTypeBuilder);
             subtype(resourceTypeBuilder.resourceType);
             return this;
         }
@@ -310,8 +302,7 @@ public class Builder {
 
     public UrlMapping urlMapping(String key, Consumer<UrlMappingBuilder> consumer) {
         UrlMappingBuilder urlMapping = getUrlMappingBuilder(key);
-        if (null != consumer)
-            consumer.accept(urlMapping);
+        if (null != consumer) consumer.accept(urlMapping);
         return urlMapping.urlMapping;
     }
 
@@ -346,8 +337,7 @@ public class Builder {
 
         public NodeBuilder resourceType(String resourceTypeKey, Consumer<ResourceTypeBuilder> consumer) {
             ResourceTypeBuilder resourceTypeBuilder = getResourceTypeBuilder(resourceTypeKey);
-            if (null != consumer)
-                consumer.accept(resourceTypeBuilder);
+            if (null != consumer) consumer.accept(resourceTypeBuilder);
             return resourceType(resourceTypeBuilder.resourceType);
         }
 
@@ -420,8 +410,7 @@ public class Builder {
 
         public NodeBuilder child(String key, NodeType nodeType, Consumer<NodeBuilder> consumer) {
             NodeBuilder nodeBuilder = getNodeBuilder(key, nodeType);
-            if (null != consumer)
-                consumer.accept(nodeBuilder);
+            if (null != consumer) consumer.accept(nodeBuilder);
             child(nodeBuilder.node);
             return this;
         }
@@ -456,8 +445,7 @@ public class Builder {
 
         public NodeBuilder resource(String resourceKey, boolean primary, Consumer<NodeBuilder> consumer) {
             var resource = getResourceBuilder(resourceKey);
-            if (null != consumer)
-                consumer.accept(resource);
+            if (null != consumer) consumer.accept(resource);
 
             return resource(resource.node, primary);
         }
@@ -491,7 +479,5 @@ public class Builder {
             entityManager.persist(node);
             return this;
         }
-
     }
-
 }

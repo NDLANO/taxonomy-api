@@ -10,19 +10,20 @@ package no.ndla.taxonomy.rest.v1.commands;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.net.URI;
+import java.util.Optional;
+import java.util.UUID;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.service.UpdatableDto;
 
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import java.net.URI;
-import java.util.Optional;
-import java.util.UUID;
-
 public class NodePostPut implements UpdatableDto<Node> {
     @JsonProperty
-    @Schema(description = "If specified, set the node_id to this value. If omitted, an uuid will be assigned automatically.")
+    @Schema(
+            description =
+                    "If specified, set the node_id to this value. If omitted, an uuid will be assigned automatically.")
     public Optional<String> nodeId = Optional.empty();
 
     @JsonProperty
@@ -31,7 +32,9 @@ public class NodePostPut implements UpdatableDto<Node> {
     public NodeType nodeType;
 
     @JsonProperty
-    @Schema(description = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.", example = "urn:article:1")
+    @Schema(
+            description = "ID of content introducing this node. Must be a valid URI, but preferably not a URL.",
+            example = "urn:article:1")
     public Optional<URI> contentUri = Optional.empty();
 
     @JsonProperty

@@ -8,5 +8,7 @@
 package no.ndla.taxonomy.domain;
 
 public enum VersionType {
-    BETA, PUBLISHED, ARCHIVED
+    BETA,
+    PUBLISHED,
+    ARCHIVED
 }

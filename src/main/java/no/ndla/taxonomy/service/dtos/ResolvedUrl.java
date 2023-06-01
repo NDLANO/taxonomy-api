@@ -9,7 +9,6 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.net.URI;
 import java.util.List;
 
@@ -18,17 +17,25 @@ public class ResolvedUrl {
     private URI id;
 
     @JsonProperty
-    @Schema(description = "The ID of this element in the system where the content is stored. This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier "
-            + "for the system, and <id> is the id of this content in that system.", example = "urn:article:1")
+    @Schema(
+            description =
+                    "The ID of this element in the system where the content is stored. This ID should be of the form 'urn:<system>:<id>', where <system> is a short identifier "
+                            + "for the system, and <id> is the id of this content in that system.",
+            example = "urn:article:1")
     private URI contentUri;
 
     @JsonProperty
-    @Schema(description = "Element name. For performance reasons, this "
-            + "name is for informational purposes only. To get a translated name, please fetch the resolved resource using its rest resource.", example = "Basic physics")
+    @Schema(
+            description =
+                    "Element name. For performance reasons, this "
+                            + "name is for informational purposes only. To get a translated name, please fetch the resolved resource using its rest resource.",
+            example = "Basic physics")
     private String name;
 
     @JsonProperty
-    @Schema(description = "Parent elements of the resolved element. The first element is the parent, the second is the grandparent, etc.")
+    @Schema(
+            description =
+                    "Parent elements of the resolved element. The first element is the parent, the second is the grandparent, etc.")
     private List<URI> parents;
 
     @JsonProperty

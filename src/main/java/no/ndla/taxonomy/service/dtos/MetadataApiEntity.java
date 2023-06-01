@@ -10,7 +10,6 @@ package no.ndla.taxonomy.service.dtos;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,8 +28,7 @@ public class MetadataApiEntity {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, String> customFields;
 
-    public MetadataApiEntity() {
-    }
+    public MetadataApiEntity() {}
 
     public MetadataApiEntity(MetadataDTO entityMetadataObject) {
         if (entityMetadataObject.getGrepCodes() != null) {
@@ -110,8 +108,7 @@ public class MetadataApiEntity {
     public static class CompetenceAim {
         private String code;
 
-        CompetenceAim() {
-        }
+        CompetenceAim() {}
 
         CompetenceAim(String code) {
             this.code = code;

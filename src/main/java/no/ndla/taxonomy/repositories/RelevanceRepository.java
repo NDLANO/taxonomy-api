@@ -7,12 +7,11 @@
 
 package no.ndla.taxonomy.repositories;
 
-import no.ndla.taxonomy.domain.Relevance;
-import org.springframework.data.jpa.repository.Query;
-
 import java.net.URI;
 import java.util.Optional;
 import java.util.Set;
+import no.ndla.taxonomy.domain.Relevance;
+import org.springframework.data.jpa.repository.Query;
 
 public interface RelevanceRepository extends TaxonomyRepository<Relevance> {
     @Query("SELECT r FROM Relevance r")

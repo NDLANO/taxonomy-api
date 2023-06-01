@@ -10,7 +10,6 @@ package no.ndla.taxonomy.rest.v1.dtos;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.net.URI;
 
 public class UrlMapping {
@@ -27,8 +26,7 @@ public class UrlMapping {
     public String subjectId;
 
     @JsonCreator
-    public UrlMapping() {
-    }
+    public UrlMapping() {}
 
     public UrlMapping(String url, URI nodeId, URI subjectId) {
         this.url = url;

@@ -7,6 +7,12 @@
 
 package no.ndla.taxonomy.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.net.URI;
+import java.util.stream.Collectors;
+import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.UrlMapping;
@@ -18,13 +24,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
-import java.net.URI;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
@@ -40,8 +39,10 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
     @Autowired
     private NodeRepository nodeRepository;
+
     @Autowired
     private UrlMappingRepository urlMappingRepository;
+
     @Autowired
     private OldUrlCanonifier oldUrlCanonifier;
 
@@ -62,10 +63,12 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     public void resolveOldUrl() {
         final String subjectId = "urn:subject:11";
         final String nodeId = "urn:topic:1:183926";
-        builder.node(NodeType.SUBJECT,
+        builder.node(
+                NodeType.SUBJECT,
                 s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         final String oldUrl = "ndla.no/node/183926?fag=127013";
-        UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
+        UrlMapping urlMapping =
+                builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
         entityManager.persist(urlMapping);
         entityManager.flush();
 
@@ -83,10 +86,11 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
         String otherTopicUrl = "ndla.no/node/54321";
 
         // create another topic and mapping that should NOT match the query for the url above
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId(otherSubjectId).child(NodeType.TOPIC,
-                t -> t.publicId("urn:topic:1:54321")));
-        entityManager.persist(
-                builder.urlMapping(c -> c.oldUrl(otherTopicUrl).public_id(otherTopicId).subject_id(otherSubjectId)));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
+                .publicId(otherSubjectId)
+                .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1:54321")));
+        entityManager.persist(builder.urlMapping(
+                c -> c.oldUrl(otherTopicUrl).public_id(otherTopicId).subject_id(otherSubjectId)));
         entityManager.flush();
 
         assertFalse(urlResolverService.resolveOldUrl(oldUrl).isPresent());
@@ -97,14 +101,18 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     public void resolveOldUrlWithLanguage() {
         final String subjectId = "urn:subject:11";
         final String nodeId = "urn:topic:1:183926";
-        builder.node(NodeType.SUBJECT,
+        builder.node(
+                NodeType.SUBJECT,
                 s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         final String oldUrl = "ndla.no/node/183926?fag=127013";
-        UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
+        UrlMapping urlMapping =
+                builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
         entityManager.persist(urlMapping);
         entityManager.flush();
 
-        String path = urlResolverService.resolveOldUrl("ndla.no/nb/node/183926?fag=127013").orElseThrow();
+        String path = urlResolverService
+                .resolveOldUrl("ndla.no/nb/node/183926?fag=127013")
+                .orElseThrow();
 
         assertEquals("/subject:11/topic:1:183926", path);
     }
@@ -113,7 +121,8 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     @Transactional
     public void resolveOldUrlWhenNoSubjectImportedToPrimaryPath() {
         String nodeId = "urn:topic:1:183926";
-        builder.node(NodeType.SUBJECT,
+        builder.node(
+                NodeType.SUBJECT,
                 s -> s.isContext(true).publicId("urn:subject:2").child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         String oldUrl = "ndla.no/node/183926?fag=127013";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId));
@@ -129,7 +138,8 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     @Transactional
     public void resolveOldUrlWhenNoSubjectImportedOrQueriedToPrimaryPath() {
         String nodeId = "urn:topic:1:183926";
-        builder.node(NodeType.SUBJECT,
+        builder.node(
+                NodeType.SUBJECT,
                 s -> s.isContext(true).publicId("urn:subject:2").child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         String oldUrl = "ndla.no/node/183926";
         UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId));
@@ -146,10 +156,12 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     public void resolveOldUrlWhenSubjectImportedButNotQueriedToPrimaryPath() {
         final String subjectId = "urn:subject:11";
         String nodeId = "urn:topic:1:183926";
-        builder.node(NodeType.SUBJECT,
+        builder.node(
+                NodeType.SUBJECT,
                 s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         String oldUrl = "ndla.no/node/183926?fag=127013";
-        UrlMapping urlMapping = builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
+        UrlMapping urlMapping =
+                builder.urlMapping(c -> c.oldUrl(oldUrl).public_id(nodeId).subject_id(subjectId));
         entityManager.persist(urlMapping);
         entityManager.flush();
 
@@ -161,11 +173,12 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     @Test
     @Transactional
     public void resolveOldUrlBadSubjectPrimaryPath() {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:2").child(NodeType.TOPIC,
-                t -> t.publicId("urn:topic:1:183926")));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
+                .publicId("urn:subject:2")
+                .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1:183926")));
         String oldUrl = "ndla.no/node/183926?fag=127013";
-        UrlMapping urlMapping = builder
-                .urlMapping(c -> c.oldUrl(oldUrl).public_id("urn:topic:1:183926").subject_id("urn:subject:11"));
+        UrlMapping urlMapping = builder.urlMapping(
+                c -> c.oldUrl(oldUrl).public_id("urn:topic:1:183926").subject_id("urn:subject:11"));
         entityManager.persist(urlMapping);
         entityManager.flush();
 
@@ -177,8 +190,10 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     @Test
     @Transactional
     public void putOldUrlForNonexistentResource() {
-        assertThrows(Exception.class, () -> urlResolverService.putUrlMapping("abc", URI.create("urn:topic:1:12"),
-                URI.create("urn:subject:12")));
+        assertThrows(
+                Exception.class,
+                () -> urlResolverService.putUrlMapping(
+                        "abc", URI.create("urn:topic:1:12"), URI.create("urn:subject:12")));
     }
 
     @Test
@@ -186,7 +201,8 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     public void putOldUrl() throws Exception {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
-        builder.node(NodeType.SUBJECT,
+        builder.node(
+                NodeType.SUBJECT,
                 s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         entityManager.flush();
 
@@ -203,7 +219,8 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     public void putOldUrlTwice() throws Exception {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
-        builder.node(NodeType.SUBJECT,
+        builder.node(
+                NodeType.SUBJECT,
                 s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         entityManager.flush();
 
@@ -221,7 +238,8 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     public void putOldUrlWithNoPaths() throws Exception {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
-        builder.node(NodeType.SUBJECT,
+        builder.node(
+                NodeType.SUBJECT,
                 s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         entityManager.flush();
 
@@ -239,7 +257,8 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     public void putOldUrlWithSubjectQueryWithoutSubject() throws Exception {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
-        builder.node(NodeType.SUBJECT,
+        builder.node(
+                NodeType.SUBJECT,
                 s -> s.isContext(true).publicId(subjectId).child(NodeType.TOPIC, t -> t.publicId(nodeId)));
         entityManager.flush();
 
@@ -255,20 +274,26 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     @Test
     @Transactional
     public void resolveEntitiesFromPath() {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC,
-                t -> t.publicId("urn:topic:1").resource("resource", resourceBuilder -> {
-                    resourceBuilder.publicId("urn:resource:1").name("Resource Name")
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
+                .publicId("urn:subject:1")
+                .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1").resource("resource", resourceBuilder -> {
+                    resourceBuilder
+                            .publicId("urn:resource:1")
+                            .name("Resource Name")
                             .contentUri(URI.create("urn:test:1"));
                 })));
 
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:2").child(NodeType.TOPIC,
-                t -> t.publicId("urn:topic:2").resource("resource")));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
+                .publicId("urn:subject:2")
+                .child(NodeType.TOPIC, t -> t.publicId("urn:topic:2").resource("resource")));
 
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true).publicId("urn:subject:3").child(NodeType.TOPIC, t -> {
-            t.publicId("urn:topic:3");
-            t.isContext(true);
-            t.resource("resource");
-        }));
+        builder.node(
+                NodeType.SUBJECT,
+                s -> s.isContext(true).publicId("urn:subject:3").child(NodeType.TOPIC, t -> {
+                    t.publicId("urn:topic:3");
+                    t.isContext(true);
+                    t.resource("resource");
+                }));
 
         // Four paths exists to the same resource:
         // /subject:1/topic:1/resource:1
@@ -277,10 +302,13 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
         // /topic:3/resource:2
 
         {
-            final var resolvedUrl = urlResolverService.resolveUrl("/subject:1/topic:1/resource:1").orElseThrow();
+            final var resolvedUrl = urlResolverService
+                    .resolveUrl("/subject:1/topic:1/resource:1")
+                    .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream()
+                    .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
@@ -293,10 +321,13 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
         }
 
         {
-            final var resolvedUrl = urlResolverService.resolveUrl("/subject:2/topic:2/resource:1").orElseThrow();
+            final var resolvedUrl = urlResolverService
+                    .resolveUrl("/subject:2/topic:2/resource:1")
+                    .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream()
+                    .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
@@ -309,10 +340,12 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
         }
 
         {
-            final var resolvedUrl = urlResolverService.resolveUrl("/subject:2/topic:2").orElseThrow();
+            final var resolvedUrl =
+                    urlResolverService.resolveUrl("/subject:2/topic:2").orElseThrow();
             assertEquals(1, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream()
+                    .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("topic:2", resolvedUrl.getId().getSchemeSpecificPart());
@@ -350,10 +383,12 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
         // Since topic3 is a context in itself, it would be valid to use it as root
         {
-            final var resolvedUrl = urlResolverService.resolveUrl("/topic:3/resource:1").orElseThrow();
+            final var resolvedUrl =
+                    urlResolverService.resolveUrl("/topic:3/resource:1").orElseThrow();
             assertEquals(1, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream()
+                    .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
@@ -366,10 +401,13 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
         // Going via subject:3 is also valid
         {
-            final var resolvedUrl = urlResolverService.resolveUrl("/subject:3/topic:3/resource:1").orElseThrow();
+            final var resolvedUrl = urlResolverService
+                    .resolveUrl("/subject:3/topic:3/resource:1")
+                    .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream()
+                    .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
@@ -383,11 +421,13 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
         // Additional slashes should make no difference
         {
-            final var resolvedUrl = urlResolverService.resolveUrl("////subject:3///topic:3//////resource:1///")
+            final var resolvedUrl = urlResolverService
+                    .resolveUrl("////subject:3///topic:3//////resource:1///")
                     .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream()
+                    .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
@@ -401,11 +441,13 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
         // No leading slash should make no difference
         {
-            final var resolvedUrl = urlResolverService.resolveUrl("subject:3///topic:3//////resource:1///")
+            final var resolvedUrl = urlResolverService
+                    .resolveUrl("subject:3///topic:3//////resource:1///")
                     .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
-            final var parentIdList = resolvedUrl.getParents().stream().map(URI::getSchemeSpecificPart)
+            final var parentIdList = resolvedUrl.getParents().stream()
+                    .map(URI::getSchemeSpecificPart)
                     .collect(Collectors.toList());
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
