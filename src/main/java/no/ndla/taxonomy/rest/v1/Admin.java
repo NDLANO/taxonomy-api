@@ -8,6 +8,7 @@
 package no.ndla.taxonomy.rest.v1;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.service.NodeService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +26,9 @@ public class Admin {
     }
 
     @GetMapping("/buildContexts")
-    @Operation(summary = "Updates contexts for all roots. Requires taxonomy:admin access.")
+    @Operation(
+            summary = "Updates contexts for all roots. Requires taxonomy:admin access.",
+            security = {@SecurityRequirement(name = "oauth")})
     @Transactional
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public void buildAllContexts() {
