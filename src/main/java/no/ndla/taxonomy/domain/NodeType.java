@@ -11,7 +11,8 @@ public enum NodeType {
     NODE("node"),
     SUBJECT("subject"),
     TOPIC("topic"),
-    RESOURCE("resource");
+    RESOURCE("resource"),
+    PROGRAMME("programme");
 
     private String name;
 

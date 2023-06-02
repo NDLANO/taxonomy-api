@@ -66,7 +66,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             return nodeType.get();
         }
         if (contentURI.isEmpty() && contextId.isEmpty() && isContext.isEmpty() && !metadataFilters.hasFilters()) {
-            return List.of(NodeType.TOPIC, NodeType.NODE, NodeType.SUBJECT);
+            return List.of(NodeType.TOPIC, NodeType.NODE, NodeType.SUBJECT, NodeType.PROGRAMME);
         }
         return List.of(NodeType.values());
     }
