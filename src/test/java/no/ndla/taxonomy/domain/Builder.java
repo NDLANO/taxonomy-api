@@ -368,13 +368,6 @@ public class Builder {
             return this;
         }
 
-        public NodeBuilder isRoot(boolean root) {
-            node.setRoot(root);
-
-            cachedUrlUpdaterService.updateContexts(node);
-            return this;
-        }
-
         public NodeBuilder isVisible(boolean visible) {
             node.getMetadata().setVisible(visible);
             return this;

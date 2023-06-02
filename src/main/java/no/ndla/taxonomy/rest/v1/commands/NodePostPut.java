@@ -42,8 +42,13 @@ public class NodePostPut implements UpdatableDto<Node> {
     public Optional<String> name = Optional.empty();
 
     @JsonProperty
+    @Deprecated
     @Schema(description = "The node is a root node. Default is false. Only used if present.")
     public Optional<Boolean> root = Optional.empty();
+
+    @JsonProperty
+    @Schema(description = "The node is the root in a context. Default is false. Only used if present.")
+    public Optional<Boolean> context = Optional.empty();
 
     public Optional<String> getNodeId() {
         return nodeId;
@@ -65,7 +70,8 @@ public class NodePostPut implements UpdatableDto<Node> {
         if (nodeType != null) {
             node.setNodeType(nodeType);
         }
-        root.ifPresent(node::setRoot);
+        root.ifPresent(node::setContext);
+        context.ifPresent(node::setContext);
         name.ifPresent(node::setName);
         contentUri.ifPresent(node::setContentUri);
     }

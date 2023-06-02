@@ -157,7 +157,6 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             existing.setName(node.getName());
             existing.setContentUri(node.getContentUri());
             existing.setNodeType(node.getNodeType());
-            existing.setRoot(node.isRoot());
             existing.setContext(node.isContext());
             existing.setTranslations(node.getTranslations());
             existing.setVisible(node.isVisible());

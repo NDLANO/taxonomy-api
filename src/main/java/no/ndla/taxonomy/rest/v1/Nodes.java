@@ -60,12 +60,12 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             Optional<List<NodeType>> nodeType,
             Optional<URI> contentURI,
             Optional<String> contextId,
-            Optional<Boolean> isRoot,
+            Optional<Boolean> isContext,
             MetadataFilters metadataFilters) {
         if (nodeType.isPresent() && nodeType.get().size() > 0) {
             return nodeType.get();
         }
-        if (contentURI.isEmpty() && contextId.isEmpty() && isRoot.isEmpty() && !metadataFilters.hasFilters()) {
+        if (contentURI.isEmpty() && contextId.isEmpty() && isContext.isEmpty() && !metadataFilters.hasFilters()) {
             return List.of(NodeType.TOPIC, NodeType.NODE, NodeType.SUBJECT);
         }
         return List.of(NodeType.values());
@@ -85,8 +85,11 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false)
                     Optional<URI> contentUri,
-            @Parameter(description = "Only root level") @RequestParam(value = "isRoot", required = false)
+            @Parameter(description = "Only root level", deprecated = true)
+                    @RequestParam(value = "isRoot", required = false)
                     Optional<Boolean> isRoot,
+            @Parameter(description = "Only contexts") @RequestParam(value = "isContext", required = false)
+                    Optional<Boolean> isContext,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false)
                     Optional<String> key,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "value", required = false)
@@ -98,13 +101,14 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false)
                     Optional<Boolean> includeContexts) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        var defaultNodeTypes = getDefaultNodeTypes(nodeType, contentUri, contextId, isRoot, metadataFilters);
+        var isRootOrContext = isRoot.isPresent() ? isRoot : isContext;
+        var defaultNodeTypes = getDefaultNodeTypes(nodeType, contentUri, contextId, isRootOrContext, metadataFilters);
         return nodeService.getNodesByType(
                 Optional.of(defaultNodeTypes),
                 language,
                 contentUri,
                 contextId,
-                isRoot,
+                isRootOrContext,
                 metadataFilters,
                 includeContexts);
     }

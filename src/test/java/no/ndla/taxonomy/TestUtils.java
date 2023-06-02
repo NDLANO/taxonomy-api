@@ -9,7 +9,7 @@ package no.ndla.taxonomy;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.util.AssertionErrors.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -69,7 +69,7 @@ public class TestUtils {
     public MockHttpServletResponse createResource(String path, Object command, ResultMatcher resultMatcher)
             throws Exception {
         entityManager.flush();
-        return mockMvc.perform(post(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
+        return mockMvc.perform(post(path).contentType(APPLICATION_JSON).content(json(command)))
                 .andExpect(resultMatcher)
                 .andReturn()
                 .getResponse();
@@ -77,7 +77,7 @@ public class TestUtils {
 
     public MockHttpServletResponse getResource(String path, ResultMatcher resultMatcher) throws Exception {
         entityManager.flush();
-        return mockMvc.perform(get(path).accept(APPLICATION_JSON_UTF8))
+        return mockMvc.perform(get(path).accept(APPLICATION_JSON))
                 .andExpect(resultMatcher)
                 .andReturn()
                 .getResponse();
@@ -111,12 +111,12 @@ public class TestUtils {
             throws Exception {
         entityManager.flush();
         if (command == null)
-            return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8))
+            return mockMvc.perform(put(path).contentType(APPLICATION_JSON))
                     .andExpect(resultMatcher)
                     .andReturn()
                     .getResponse();
         else
-            return mockMvc.perform(put(path).contentType(APPLICATION_JSON_UTF8).content(json(command)))
+            return mockMvc.perform(put(path).contentType(APPLICATION_JSON).content(json(command)))
                     .andExpect(resultMatcher)
                     .andReturn()
                     .getResponse();

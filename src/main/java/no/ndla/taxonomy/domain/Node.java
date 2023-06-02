@@ -55,9 +55,6 @@ public class Node extends DomainObject implements EntityWithMetadata {
     @Column
     private boolean context;
 
-    @Column
-    private boolean root;
-
     @OneToMany(mappedBy = "node", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ResourceResourceType> resourceResourceTypes = new TreeSet<>();
 
@@ -98,7 +95,6 @@ public class Node extends DomainObject implements EntityWithMetadata {
         this.nodeType = node.getNodeType();
         this.ident = node.getIdent();
         this.context = node.isContext();
-        this.root = node.isRoot();
 
         if (keepPublicId) {
             setPublicId(node.getPublicId());
@@ -383,20 +379,12 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public boolean isContext() {
-        return root || context;
+        return context;
     }
 
     @Override
     public String getEntityName() {
         return nodeType.getName();
-    }
-
-    public boolean isRoot() {
-        return root;
-    }
-
-    public void setRoot(boolean root) {
-        this.root = root;
     }
 
     @Override
@@ -482,7 +470,6 @@ public class Node extends DomainObject implements EntityWithMetadata {
         if (o == null || getClass() != o.getClass()) return false;
         Node that = (Node) o;
         return context == that.context
-                && root == that.root
                 && Objects.equals(contentUri, that.contentUri)
                 && nodeType == that.nodeType
                 && ident.equals(that.ident)

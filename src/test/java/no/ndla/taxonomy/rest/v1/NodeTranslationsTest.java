@@ -30,11 +30,11 @@ public class NodeTranslationsTest extends RestTest {
         builder.node(NodeType.NODE, t -> t.name("Integration").translation("nb", l -> l.name("Integrasjon")));
 
         var response = testUtils.getResource("/v1/nodes?language=nb");
-        final var topics = testUtils.getObject(NodeDTO[].class, response);
+        final var nodes = testUtils.getObject(NodeDTO[].class, response);
 
-        assertEquals(2, topics.length);
-        assertAnyTrue(topics, s -> s.getName().equals("Trigonometri"));
-        assertAnyTrue(topics, s -> s.getName().equals("Integrasjon"));
+        assertEquals(2, nodes.length);
+        assertAnyTrue(nodes, s -> s.getName().equals("Trigonometri"));
+        assertAnyTrue(nodes, s -> s.getName().equals("Integrasjon"));
     }
 
     @Test

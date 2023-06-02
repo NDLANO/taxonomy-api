@@ -1394,4 +1394,12 @@
         <dropColumn tableName="node" columnName="primary_paths"/>
     </changeSet>
 
+    <changeSet id="20230602 Drop root field" author="Gunnar Velle">
+        <sql>
+            UPDATE node n
+            SET context = root
+        </sql>
+        <dropColumn tableName="node" columnName="root"/>
+    </changeSet>
+
 </databaseChangeLog>

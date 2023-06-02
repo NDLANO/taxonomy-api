@@ -111,7 +111,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Optional<String> language,
             Optional<URI> contentUri,
             Optional<String> contextId,
-            Optional<Boolean> isRoot,
+            Optional<Boolean> isContext,
             MetadataFilters metadataFilters,
             Optional<Boolean> includeContexts) {
         final List<NodeDTO> listToReturn = new ArrayList<>();
@@ -122,7 +122,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 metadataFilters.getLikeQueryValue(),
                 contentUri,
                 contextId,
-                isRoot);
+                isContext);
         final var counter = new AtomicInteger();
         ids.stream()
                 .collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000))
@@ -329,14 +329,14 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
      *            Public ID of source schema. Default schema if not present
      * @param targetId
      *            Public ID of target schema. Mandatory
-     * @param isRoot
-     *            Used to save meta-field to track publishing
+     * @param isPublishRoot
+     *            Used to save meta-field to track which node is publishing
      * @param cleanUp
      *            Used to clean up metadata after publishing
      */
     @Async
     @Transactional
-    public void publishNode(URI nodeId, Optional<URI> sourceId, URI targetId, boolean isRoot, boolean cleanUp) {
+    public void publishNode(URI nodeId, Optional<URI> sourceId, URI targetId, boolean isPublishRoot, boolean cleanUp) {
         String source = sourceId.flatMap(
                         sid -> versionService.findVersionByPublicId(sid).map(Version::getHash))
                 .orElse(null);
@@ -351,7 +351,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             fetcher.setDomainEntityHelperService(domainEntityHelperService);
             fetcher.setVersion(versionService.schemaFromHash(source));
             fetcher.setPublicId(nodeId);
-            fetcher.setAddIsPublishing(isRoot);
+            fetcher.setAddIsPublishing(isPublishRoot);
             Future<DomainEntity> future = executor.submit(fetcher);
             node = (Node) future.get();
         } catch (Exception e) {
@@ -376,7 +376,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             // Once more, with cleaning
             publishNode(nodeId, sourceId, targetId, false, true);
         }
-        if (isRoot) {
+        if (isPublishRoot) {
             logger.info("Node " + nodeId + " added to changelog for publishing to " + target);
         }
     }

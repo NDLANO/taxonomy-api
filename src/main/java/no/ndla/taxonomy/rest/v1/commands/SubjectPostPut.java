@@ -44,7 +44,6 @@ public class SubjectPostPut implements UpdatableDto<Node> {
     public void apply(Node subject) {
         if (getId().isPresent()) subject.setPublicId(getId().get());
         subject.setContext(true);
-        subject.setRoot(true);
         subject.setName(name);
         contentUri.ifPresent(subject::setContentUri);
     }

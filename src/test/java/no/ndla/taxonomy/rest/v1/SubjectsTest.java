@@ -82,7 +82,7 @@ public class SubjectsTest extends RestTest {
         Node subject = nodeRepository.getByPublicId(id);
         assertEquals(createSubjectCommand.name, subject.getName());
         assertEquals(createSubjectCommand.contentUri.get(), subject.getContentUri());
-        assertTrue(subject.isRoot()); // all subjects are roots
+        assertTrue(subject.isContext()); // all subjects are contexts
     }
 
     @Test

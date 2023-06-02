@@ -13,7 +13,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.verify;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -69,7 +69,7 @@ public class UrlResolverMockTest extends AbstractIntegrationTest {
         String oldUrl = "no/such/path";
 
         given(this.urlResolverService.resolveOldUrl(oldUrl)).willReturn(Optional.empty());
-        ResultActions result = mvc.perform(get("/v1/url/mapping?url=" + oldUrl).accept(APPLICATION_JSON_UTF8));
+        ResultActions result = mvc.perform(get("/v1/url/mapping?url=" + oldUrl).accept(APPLICATION_JSON));
 
         result.andExpect(status().isNotFound());
     }
@@ -80,7 +80,7 @@ public class UrlResolverMockTest extends AbstractIntegrationTest {
         String newPath = "subject:11/topic:1:183926";
 
         given(this.urlResolverService.resolveOldUrl(oldUrl)).willReturn(Optional.of(newPath));
-        ResultActions result = mvc.perform(get("/v1/url/mapping?url=" + oldUrl).accept(APPLICATION_JSON_UTF8));
+        ResultActions result = mvc.perform(get("/v1/url/mapping?url=" + oldUrl).accept(APPLICATION_JSON));
 
         result.andExpect(status().isOk());
         ResolvedOldUrl resolvedOldUrl =
@@ -96,7 +96,7 @@ public class UrlResolverMockTest extends AbstractIntegrationTest {
 
         ResultActions result = mvc.perform(put("/v1/url/mapping")
                 .content(new ObjectMapper().writeValueAsString(new UrlMapping(oldUrl, nodeId, subjectId)))
-                .contentType(MediaType.APPLICATION_JSON_UTF8));
+                .contentType(MediaType.APPLICATION_JSON));
 
         result.andExpect(status().isNoContent());
         verify(this.urlResolverService, times(1)).putUrlMapping(oldUrl, nodeId, subjectId);
@@ -111,7 +111,7 @@ public class UrlResolverMockTest extends AbstractIntegrationTest {
 
         ResultActions result = mvc.perform(put("/v1/url/mapping")
                 .content(new ObjectMapper().writeValueAsString(urlMapping))
-                .contentType(MediaType.APPLICATION_JSON_UTF8));
+                .contentType(MediaType.APPLICATION_JSON));
 
         result.andExpect(status().isBadRequest());
     }
@@ -128,7 +128,7 @@ public class UrlResolverMockTest extends AbstractIntegrationTest {
 
         ResultActions result = mvc.perform(put("/v1/url/mapping")
                 .content(new ObjectMapper().writeValueAsString(new UrlMapping(oldUrl, nodeId, subjectId)))
-                .contentType(MediaType.APPLICATION_JSON_UTF8));
+                .contentType(MediaType.APPLICATION_JSON));
 
         result.andExpect(status().isNotFound());
     }

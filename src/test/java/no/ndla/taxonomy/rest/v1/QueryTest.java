@@ -151,7 +151,7 @@ public class QueryTest extends RestTest {
                 .translation("nb", t -> t.name("Ressurs")));
         builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
-        builder.node(NodeType.SUBJECT, s -> s.isRoot(true)
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")
                 .name("subject")
                 .translation("nb", tr -> tr.name("Fag"))
@@ -160,7 +160,7 @@ public class QueryTest extends RestTest {
                         .translation("nb", tr -> tr.name("Emne"))
                         .child(resource)));
 
-        builder.node(NodeType.SUBJECT, s -> s.isRoot(true)
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:2")
                 .name("subject 2")
                 .translation("nb", tr -> tr.name("Fag 2"))
@@ -169,7 +169,7 @@ public class QueryTest extends RestTest {
                         .translation("nb", tr -> tr.name("Emne 2"))
                         .child(resource)));
 
-        builder.node(NodeType.SUBJECT, s -> s.isRoot(true)
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .isVisible(false)
                 .publicId("urn:subject:3")
                 .name("subject 3")
@@ -216,7 +216,7 @@ public class QueryTest extends RestTest {
                 .translation("nb", t -> t.name("Ressurs")));
         builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
-        builder.node(NodeType.SUBJECT, s -> s.isRoot(true)
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")
                 .name("subject")
                 .translation("nb", tr -> tr.name("Fag"))
@@ -225,7 +225,7 @@ public class QueryTest extends RestTest {
                         .translation("nb", tr -> tr.name("Emne"))
                         .child(resource)));
 
-        builder.node(NodeType.SUBJECT, s -> s.isRoot(true)
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:2")
                 .name("subject 2")
                 .translation("nb", tr -> tr.name("Fag 2"))
@@ -234,7 +234,7 @@ public class QueryTest extends RestTest {
                         .translation("nb", tr -> tr.name("Emne 2"))
                         .child(resource)));
 
-        builder.node(NodeType.SUBJECT, s -> s.isRoot(true)
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .isVisible(false)
                 .publicId("urn:subject:3")
                 .name("subject 3")
@@ -292,7 +292,7 @@ public class QueryTest extends RestTest {
                 .translation("nb", t -> t.name("Ressurs")));
         builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
-        builder.node(NodeType.SUBJECT, s -> s.isRoot(true)
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")
                 .name("subject")
                 .translation("nb", tr -> tr.name("Fag"))
@@ -301,7 +301,7 @@ public class QueryTest extends RestTest {
                         .translation("nb", tr -> tr.name("Emne"))
                         .child(resource)));
 
-        builder.node(NodeType.SUBJECT, s -> s.isRoot(true)
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:2")
                 .name("subject 2")
                 .translation("nb", tr -> tr.name("Fag 2"))
@@ -329,7 +329,7 @@ public class QueryTest extends RestTest {
                 .translation("nb", t -> t.name("Ressurs")));
         builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
-        builder.node(NodeType.SUBJECT, s -> s.isRoot(true)
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")
                 .name("subject")
                 .translation("nb", tr -> tr.name("Fag"))
@@ -338,7 +338,7 @@ public class QueryTest extends RestTest {
                         .translation("nb", tr -> tr.name("Emne"))
                         .child(resource)));
 
-        builder.node(NodeType.SUBJECT, s -> s.isRoot(true)
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:2")
                 .name("subject 2")
                 .translation("nb", tr -> tr.name("Fag 2"))
