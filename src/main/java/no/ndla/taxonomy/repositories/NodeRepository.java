@@ -40,13 +40,15 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
     @Query(
             """
             SELECT n.id FROM Node n
+            LEFT JOIN n.parentConnections pc
             WHERE ((:nodeTypes) IS NULL OR n.nodeType in (:nodeTypes))
             AND (:isVisible IS NULL OR n.visible = :isVisible)
             AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, :metadataFilterKey) IS NOT NULL)
             AND (:metadataFilterValue IS NULL OR cast(jsonb_path_query_array(n.customfields, '$.*') as text) like :metadataFilterValue)
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
             AND (:contextId IS NULL OR jsonb_contains(n.contexts, jsonb_build_array(jsonb_build_object('contextId',:contextId))) = true)
-            AND (:isContext IS NULL OR n.context = true)
+            AND (:isContext IS NULL OR n.context = :isContext)
+            AND (:isRoot IS NULL OR (pc IS NULL AND n.context = true))
             """)
     List<Integer> findIdsFiltered(
             Optional<List<NodeType>> nodeTypes,
@@ -55,6 +57,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             Optional<String> metadataFilterValue,
             Optional<URI> contentUri,
             Optional<String> contextId,
+            Optional<Boolean> isRoot,
             Optional<Boolean> isContext);
 
     @Query(

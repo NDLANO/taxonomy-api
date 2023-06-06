@@ -258,12 +258,45 @@ public class NodesTest extends RestTest {
         builder.node(NodeType.SUBJECT, s -> s.name("Arts and crafts"));
         builder.node(
                 NodeType.NODE, n -> n.isContext(true).name("Random node").child(NodeType.NODE, c -> c.name("Subnode")));
-        // Both old and new params work
+
         {
             {
                 var response = testUtils.getResource("/v1/nodes?isRoot=true");
                 final var nodes = testUtils.getObject(NodeDTO[].class, response);
                 assertEquals(3, nodes.length);
+                assertAnyTrue(nodes, t -> "Basic science".equals(t.getName()));
+                assertAnyTrue(nodes, t -> "Maths".equals(t.getName()));
+                assertAnyTrue(nodes, t -> "Random node".equals(t.getName()));
+            }
+        }
+        {
+            {
+                var response = testUtils.getResource("/v1/nodes?isContext=true");
+                final var nodes = testUtils.getObject(NodeDTO[].class, response);
+                assertEquals(3, nodes.length);
+                assertAnyTrue(nodes, t -> "Basic science".equals(t.getName()));
+                assertAnyTrue(nodes, t -> "Maths".equals(t.getName()));
+                assertAnyTrue(nodes, t -> "Random node".equals(t.getName()));
+            }
+        }
+        {
+            {
+                var response = testUtils.getResource("/v1/nodes?isContext=false");
+                final var nodes = testUtils.getObject(NodeDTO[].class, response);
+                assertEquals(4, nodes.length);
+                assertAnyTrue(nodes, t -> "photo synthesis".equals(t.getName()));
+                assertAnyTrue(nodes, t -> "trigonometry".equals(t.getName()));
+                assertAnyTrue(nodes, t -> "Arts and crafts".equals(t.getName()));
+                assertAnyTrue(nodes, t -> "Subnode".equals(t.getName()));
+            }
+        }
+        {
+            {
+                var response = testUtils.getResource("/v1/nodes?isContext=true&nodeType=SUBJECT");
+                final var nodes = testUtils.getObject(NodeDTO[].class, response);
+                assertEquals(2, nodes.length);
+                assertAnyTrue(nodes, t -> "Basic science".equals(t.getName()));
+                assertAnyTrue(nodes, t -> "Maths".equals(t.getName()));
             }
         }
         {

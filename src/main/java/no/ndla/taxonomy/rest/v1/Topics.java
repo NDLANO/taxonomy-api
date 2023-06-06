@@ -68,6 +68,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
                 contentUri,
                 Optional.empty(),
                 Optional.empty(),
+                Optional.empty(),
                 metadataFilters,
                 Optional.of(false));
     }

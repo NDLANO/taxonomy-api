@@ -85,7 +85,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false)
                     Optional<URI> contentUri,
-            @Parameter(description = "Only root level", deprecated = true)
+            @Parameter(description = "Only root level contexts", deprecated = true)
                     @RequestParam(value = "isRoot", required = false)
                     Optional<Boolean> isRoot,
             @Parameter(description = "Only contexts") @RequestParam(value = "isContext", required = false)
@@ -108,7 +108,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                 language,
                 contentUri,
                 contextId,
-                isRootOrContext,
+                isRoot,
+                isContext,
                 metadataFilters,
                 includeContexts);
     }

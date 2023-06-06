@@ -111,6 +111,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Optional<String> language,
             Optional<URI> contentUri,
             Optional<String> contextId,
+            Optional<Boolean> isRoot,
             Optional<Boolean> isContext,
             MetadataFilters metadataFilters,
             Optional<Boolean> includeContexts) {
@@ -122,6 +123,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 metadataFilters.getLikeQueryValue(),
                 contentUri,
                 contextId,
+                isRoot,
                 isContext);
         final var counter = new AtomicInteger();
         ids.stream()
