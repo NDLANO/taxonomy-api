@@ -577,10 +577,10 @@ public class NodesTest extends RestTest {
         URI id = getId(response);
 
         Node node = nodeRepository.getByPublicId(id);
-        assertEquals(createNodeCommand.nodeType, node.getNodeType());
-        assertEquals(createNodeCommand.name.get(), node.getName());
-        assertEquals(createNodeCommand.contentUri.get(), node.getContentUri());
-        assertEquals(createNodeCommand.context.get(), node.isContext());
+        assertEquals(NodeType.NODE, node.getNodeType());
+        assertEquals("node", node.getName());
+        assertEquals(URI.create("urn:article:1"), node.getContentUri());
+        assertTrue(node.isContext());
     }
 
     @Test
@@ -590,7 +590,7 @@ public class NodesTest extends RestTest {
                 nodeType = NodeType.NODE;
                 name = Optional.of("node");
                 contentUri = Optional.of(URI.create("urn:article:1"));
-                root = Optional.of(Boolean.TRUE);
+                context = Optional.of(Boolean.TRUE);
                 visible = Optional.of(Boolean.FALSE);
             }
         };
@@ -599,11 +599,11 @@ public class NodesTest extends RestTest {
         URI id = getId(response);
 
         Node node = nodeRepository.getByPublicId(id);
-        assertEquals(createNodeCommand.nodeType, node.getNodeType());
-        assertEquals(createNodeCommand.name.get(), node.getName());
-        assertEquals(createNodeCommand.contentUri.get(), node.getContentUri());
-        assertEquals(createNodeCommand.root.get(), node.isRoot());
-        assertEquals(createNodeCommand.visible.get(), node.isVisible());
+        assertEquals(NodeType.NODE, node.getNodeType());
+        assertEquals("node", node.getName());
+        assertEquals(URI.create("urn:article:1"), node.getContentUri());
+        assertTrue(node.isContext());
+        assertFalse(node.isVisible());
     }
 
     @Test
@@ -620,9 +620,9 @@ public class NodesTest extends RestTest {
         URI id = getId(response);
 
         Node node = nodeRepository.getByPublicId(id);
-        assertEquals(createNodeCommand.nodeType, node.getNodeType());
-        assertEquals(createNodeCommand.name.get(), node.getName());
-        assertEquals(createNodeCommand.contentUri.get(), node.getContentUri());
+        assertEquals(NodeType.TOPIC, node.getNodeType());
+        assertEquals("trigonometry", node.getName());
+        assertEquals(URI.create("urn:article:1"), node.getContentUri());
     }
 
     @Test
@@ -639,9 +639,9 @@ public class NodesTest extends RestTest {
         URI id = getId(response);
 
         Node node = nodeRepository.getByPublicId(id);
-        assertEquals(createNodeCommand.nodeType, node.getNodeType());
-        assertEquals(createNodeCommand.name.get(), node.getName());
-        assertEquals(createNodeCommand.contentUri.get(), node.getContentUri());
+        assertEquals(NodeType.SUBJECT, node.getNodeType());
+        assertEquals("Maths", node.getName());
+        assertEquals(URI.create("urn:frontpage:1"), node.getContentUri());
     }
 
     @Test
@@ -657,7 +657,7 @@ public class NodesTest extends RestTest {
         testUtils.createResource("/v1/nodes", createNodeCommand);
 
         Node node = nodeRepository.getByPublicId(createNodeCommand.getPublicId());
-        assertEquals(createNodeCommand.name.get(), node.getName());
+        assertEquals("trigonometry", node.getName());
     }
 
     @Test
@@ -749,9 +749,9 @@ public class NodesTest extends RestTest {
         testUtils.updateResource("/v1/nodes/" + n.getPublicId(), command);
 
         Node node = nodeRepository.getByPublicId(n.getPublicId());
-        assertEquals(command.nodeType, node.getNodeType());
-        assertEquals(command.name.get(), node.getName());
-        assertEquals(command.contentUri.get(), node.getContentUri());
+        assertEquals(NodeType.TOPIC, node.getNodeType());
+        assertEquals("physics", node.getName());
+        assertEquals(URI.create("urn:article:1"), node.getContentUri());
 
         assertFalse(node.getMetadata().isVisible());
         assertTrue(node.getMetadata().getGrepCodes().stream()

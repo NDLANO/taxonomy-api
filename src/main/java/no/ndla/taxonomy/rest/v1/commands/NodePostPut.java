@@ -49,7 +49,7 @@ public class NodePostPut implements UpdatableDto<Node> {
     @JsonProperty
     @Schema(description = "The node is the root in a context. Default is false. Only used if present.")
     public Optional<Boolean> context = Optional.empty();
-    
+
     @Schema(description = "The node is visible. Default is true.")
     public Optional<Boolean> visible = Optional.empty();
 
