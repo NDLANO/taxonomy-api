@@ -142,6 +142,11 @@ public class NodeDTO {
                                 Optional.of(URI.create(ctx.relevanceId())),
                                 LanguageFieldDTO.fromLanguageField(finalRelevanceName),
                                 entity.getResourceTypes().stream()
+                                        .sorted((o1, o2) -> {
+                                            if (o1.getParent().isEmpty()) return -1;
+                                            if (o2.getParent().isEmpty()) return 1;
+                                            return 0;
+                                        })
                                         .map(SearchableTaxonomyResourceType::new)
                                         .toList(),
                                 ctx.parentIds().stream().map(URI::create).toList(),

@@ -584,6 +584,29 @@ public class NodesTest extends RestTest {
     }
 
     @Test
+    public void can_create_invisible_node() throws Exception {
+        final var createNodeCommand = new NodePostPut() {
+            {
+                nodeType = NodeType.NODE;
+                name = Optional.of("node");
+                contentUri = Optional.of(URI.create("urn:article:1"));
+                root = Optional.of(Boolean.TRUE);
+                visible = Optional.of(Boolean.FALSE);
+            }
+        };
+
+        var response = testUtils.createResource("/v1/nodes", createNodeCommand);
+        URI id = getId(response);
+
+        Node node = nodeRepository.getByPublicId(id);
+        assertEquals(createNodeCommand.nodeType, node.getNodeType());
+        assertEquals(createNodeCommand.name.get(), node.getName());
+        assertEquals(createNodeCommand.contentUri.get(), node.getContentUri());
+        assertEquals(createNodeCommand.root.get(), node.isRoot());
+        assertEquals(createNodeCommand.visible.get(), node.isVisible());
+    }
+
+    @Test
     public void can_create_topic() throws Exception {
         final var createNodeCommand = new NodePostPut() {
             {
