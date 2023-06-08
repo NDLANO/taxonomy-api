@@ -142,6 +142,10 @@ export interface NodePostPut {
      * The node is a root node. Default is false. Only used if present.
      */
     root?: boolean;
+    /**
+     * The node is visible. Default is true.
+     */
+    visible?: boolean;
 }
 
 export interface NodeResource {
