@@ -98,10 +98,6 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
             throw new InvalidArgumentServiceException("Cannot connect node to itself");
         }
 
-        if (child.isRoot()) {
-            throw new InvalidArgumentServiceException("Root node cannot be set as child");
-        }
-
         Node parentConnected = parent;
 
         var ttl = 100;
