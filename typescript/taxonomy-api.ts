@@ -130,6 +130,10 @@ export interface NodePostPut {
      */
     contentUri?: string;
     /**
+     * The node is the root in a context. Default is false. Only used if present.
+     */
+    context?: boolean;
+    /**
      * The name of the node. Required on create.
      */
     name?: string;
@@ -140,6 +144,7 @@ export interface NodePostPut {
     nodeType: NodeType;
     /**
      * The node is a root node. Default is false. Only used if present.
+     * @deprecated
      */
     root?: boolean;
     /**
@@ -734,6 +739,6 @@ export interface VersionPostPut {
 
 export type DateAsString = string;
 
-export type NodeType = "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE";
+export type NodeType = "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME";
 
 export type VersionType = "BETA" | "PUBLISHED" | "ARCHIVED";
