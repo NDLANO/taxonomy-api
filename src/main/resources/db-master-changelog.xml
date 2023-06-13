@@ -1398,6 +1398,7 @@
         <sql>
             UPDATE node n
             SET context = root
+            WHERE root = true
         </sql>
         <dropColumn tableName="node" columnName="root"/>
     </changeSet>
