@@ -1403,4 +1403,10 @@
         <dropColumn tableName="node" columnName="root"/>
     </changeSet>
 
+    <changeSet id="20230614 Add contentURI index" author="Gunnar Velle">
+        <createIndex tableName="node" indexName="node_content_uri">
+            <column name="content_uri" />
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>
