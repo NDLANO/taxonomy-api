@@ -185,10 +185,16 @@ public class NodeServiceTest extends AbstractIntegrationTest {
 
     @Test
     public void contentUriSearch() throws URISyntaxException {
-        builder.node(n -> n.nodeType(NodeType.TOPIC).name("Apekatt").publicId("urn:topic:1").contentUri("urn:article:1"));
-        builder.node(n -> n.nodeType(NodeType.TOPIC).name("Katt").publicId("urn:topic:2").contentUri("urn:article:2"));
-        builder.node(n -> n.nodeType(NodeType.TOPIC).name("Hund").publicId("urn:topic:3").contentUri("urn:article:3"));
-        builder.node(n -> n.nodeType(NodeType.TOPIC).name("Tiger").publicId("urn:topic:4").contentUri("urn:article:1"));
+        builder.node(n -> n.nodeType(NodeType.TOPIC)
+                .name("Apekatt")
+                .publicId("urn:topic:1")
+                .contentUri("urn:article:1"));
+        builder.node(n ->
+                n.nodeType(NodeType.TOPIC).name("Katt").publicId("urn:topic:2").contentUri("urn:article:2"));
+        builder.node(n ->
+                n.nodeType(NodeType.TOPIC).name("Hund").publicId("urn:topic:3").contentUri("urn:article:3"));
+        builder.node(n ->
+                n.nodeType(NodeType.TOPIC).name("Tiger").publicId("urn:topic:4").contentUri("urn:article:1"));
 
         var idList = new ArrayList<String>();
         idList.add("urn:article:1");
