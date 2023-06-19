@@ -129,12 +129,16 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<String> query,
             @Parameter(description = "Ids to fetch for query") @RequestParam(value = "ids", required = false)
                     Optional<List<String>> ids,
+            @Parameter(description = "ContentURIs to fetch for query")
+                    @RequestParam(value = "contentUris", required = false)
+                    Optional<List<String>> contentUris,
             @Parameter(description = "Filter by nodeType") @RequestParam(value = "nodeType", required = false)
                     Optional<NodeType> nodeType,
             @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false)
                     Optional<Boolean> includeContexts) {
 
-        return nodeService.searchByNodeType(query, ids, language, includeContexts, pageSize, page, nodeType);
+        return nodeService.searchByNodeType(
+                query, ids, contentUris, language, includeContexts, pageSize, page, nodeType);
     }
 
     @GetMapping("/page")
