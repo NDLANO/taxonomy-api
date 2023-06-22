@@ -291,13 +291,15 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     public SearchResultDTO<NodeDTO> searchByNodeType(
             Optional<String> query,
             Optional<List<String>> ids,
+            Optional<List<String>> contentUris,
             Optional<String> language,
             Optional<Boolean> includeContexts,
             int pageSize,
             int page,
             Optional<NodeType> nodeType) {
         Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
-        return SearchService.super.search(query, ids, language, includeContexts, pageSize, page, nodeSpecLambda);
+        return SearchService.super.search(
+                query, ids, contentUris, language, includeContexts, pageSize, page, nodeSpecLambda);
     }
 
     @Transactional

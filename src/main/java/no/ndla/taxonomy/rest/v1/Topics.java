@@ -88,9 +88,12 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Query to search names") @RequestParam(value = "query", required = false)
                     Optional<String> query,
             @Parameter(description = "Ids to fetch for query") @RequestParam(value = "ids", required = false)
-                    Optional<List<String>> ids) {
+                    Optional<List<String>> ids,
+            @Parameter(description = "ContentURIs to fetch for query")
+                    @RequestParam(value = "contentUris", required = false)
+                    Optional<List<String>> contentUris) {
         return nodeService.searchByNodeType(
-                query, ids, language, Optional.of(false), pageSize, page, Optional.of(NodeType.TOPIC));
+                query, ids, contentUris, language, Optional.of(false), pageSize, page, Optional.of(NodeType.TOPIC));
     }
 
     @Deprecated

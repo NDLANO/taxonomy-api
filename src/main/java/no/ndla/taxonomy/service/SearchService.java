@@ -42,19 +42,25 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
         return (root, query, criteriaBuilder) -> root.get("publicId").in(ids);
     }
 
-    default SearchResultDTO<DTO> search(
-            Optional<String> query,
-            Optional<List<String>> ids,
-            Optional<String> language,
-            Optional<Boolean> includeContext,
-            int pageSize,
-            int page) {
-        return search(query, ids, language, includeContext, pageSize, page, Optional.empty());
+    private Specification<DOMAIN> withContentUriIn(List<URI> contentUris) {
+        return (root, query, criteriaBuilder) -> root.get("contentUri").in(contentUris);
     }
 
     default SearchResultDTO<DTO> search(
             Optional<String> query,
             Optional<List<String>> ids,
+            Optional<List<String>> contentUris,
+            Optional<String> language,
+            Optional<Boolean> includeContext,
+            int pageSize,
+            int page) {
+        return search(query, ids, contentUris, language, includeContext, pageSize, page, Optional.empty());
+    }
+
+    default SearchResultDTO<DTO> search(
+            Optional<String> query,
+            Optional<List<String>> ids,
+            Optional<List<String>> contentUris,
             Optional<String> language,
             Optional<Boolean> includeContexts,
             int pageSize,
@@ -81,6 +87,20 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
                     .collect(Collectors.toList());
 
             if (!urisToPass.isEmpty()) spec = spec.and(withPublicIdsIn(urisToPass));
+        }
+
+        if (contentUris.isPresent()) {
+            List<URI> urisToPass = contentUris.get().stream()
+                    .flatMap(id -> {
+                        try {
+                            return Optional.of(new URI(id)).stream();
+                        } catch (URISyntaxException ignored) {
+                            /* ignore invalid urls sent by user */ }
+                        return Optional.<URI>empty().stream();
+                    })
+                    .collect(Collectors.toList());
+
+            if (!urisToPass.isEmpty()) spec = spec.and(withContentUriIn(urisToPass));
         }
 
         if (applySpecLambda.isPresent()) {
