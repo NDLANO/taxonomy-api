@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 // NOTE: This will need to match `SearchableTaxonomyContext` in `search-api`
@@ -30,6 +31,7 @@ public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "Whether the base connection is primary or not") boolean isPrimary,
         @JsonProperty @Schema(description = "Whether the base connection is marked as active subject") boolean isActive,
         @JsonProperty @Schema(description = "Whether the base connection is visible or not") boolean isVisible,
+        @JsonProperty @Schema(description = "Custom-fields from the parent connection") Optional<Map<String,String>> customFields,
         @JsonProperty @Schema(description = "Unique id of context based on root + connection") String contextId) {
 // spotless:on
     @JsonProperty

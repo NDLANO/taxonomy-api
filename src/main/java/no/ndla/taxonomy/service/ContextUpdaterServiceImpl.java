@@ -41,6 +41,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                     activeContext,
                     true,
                     "urn:relevance:core",
+                    Optional.empty(),
                     HashUtil.semiHash(node.getPublicId())));
         }
 
@@ -70,6 +71,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                                 .flatMap(relevance -> Optional.of(
                                                         relevance.getPublicId().toString()))
                                                 .orElse("urn:relevance:core"),
+                                        Optional.of(parentConnection.getCustomFields()),
                                         HashUtil.semiHash(parentContext.rootId() + parentConnection.getPublicId()));
                             })
                             .forEach(returnedContexts::add);

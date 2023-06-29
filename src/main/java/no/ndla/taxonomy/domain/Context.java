@@ -9,6 +9,7 @@ package no.ndla.taxonomy.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -50,4 +51,5 @@ public record Context(
         boolean isActive,
         boolean isPrimary,
         String relevanceId,
+        Optional<Map<String, String>> customFields,
         String contextId) {}

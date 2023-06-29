@@ -153,6 +153,7 @@ public class NodeDTO {
                                 ctx.isPrimary(),
                                 ctx.isActive(),
                                 ctx.isVisible(),
+                                ctx.customFields(),
                                 ctx.contextId());
                     })
                     .toList();

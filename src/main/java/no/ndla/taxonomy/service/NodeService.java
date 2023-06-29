@@ -441,6 +441,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                 context.isPrimary(),
                                 context.isActive(),
                                 context.isVisible(),
+                                context.customFields(),
                                 context.contextId());
                     });
                 })
