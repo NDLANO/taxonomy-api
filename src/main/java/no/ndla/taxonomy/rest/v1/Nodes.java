@@ -246,7 +246,12 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         final var node = nodeRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundException("Node", id));
 
         final List<URI> childrenIds;
-        final List<NodeType> nodeTypes = nodeType.orElse(List.of(NodeType.NODE, NodeType.TOPIC, NodeType.SUBJECT));
+        final List<NodeType> nodeTypes = getDefaultNodeTypes(
+                nodeType,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                new MetadataFilters(Optional.empty(), Optional.empty(), Optional.empty()));
         if (recursive) {
             childrenIds = recursiveNodeTreeService.getRecursiveNodes(node, nodeTypes).stream()
                     .map(RecursiveNodeTreeService.TreeElement::getId)
