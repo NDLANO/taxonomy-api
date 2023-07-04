@@ -453,11 +453,15 @@ export interface SubjectTopicPUT {
 
 export interface TaxonomyContext {
     /**
-     * A breadcrumb of the names of the context's path
+     * A breadcrumb of the names of the context's parents
      */
     breadcrumbs: Record<string, string[]>;
     /**
-     * Unique id of context based on root + connection
+     * The id of the parent connection object
+     */
+    connectionId: string;
+    /**
+     * Unique id of context based on root + parent connection
      */
     contextId: string;
     /**
@@ -469,11 +473,11 @@ export interface TaxonomyContext {
      */
     id?: string;
     /**
-     * Whether the base connection is marked as active subject
+     * Whether the parent connection is marked as active
      */
     isActive: boolean;
     /**
-     * Whether the base connection is primary or not
+     * Whether the parent connection is primary or not
      */
     isPrimary: boolean;
     /**
@@ -481,11 +485,11 @@ export interface TaxonomyContext {
      */
     isPrimaryConnection?: boolean;
     /**
-     * Whether the base connection is visible or not
+     * Whether the parent connection is visible or not
      */
     isVisible: boolean;
     /**
-     * List of all parent topic-ids
+     * List of all parent ids
      */
     parentIds: string[];
     /**
@@ -501,15 +505,19 @@ export interface TaxonomyContext {
      */
     publicId: string;
     /**
-     * Name of the relevance of the connection of the base
+     * The rank of the parent connection object
+     */
+    rank: number;
+    /**
+     * Name of the relevance of the parent connection
      */
     relevance: Record<string, string>;
     /**
-     * Id of the relevance of the connection of the base
+     * Id of the relevance of the parent connection
      */
     relevanceId?: string;
     /**
-     * Resource-types of the base
+     * Resource-types of the node
      */
     resourceTypes: SearchableTaxonomyResourceType[];
     /**
@@ -528,6 +536,10 @@ export interface TaxonomyContext {
      * @deprecated
      */
     subjectId?: string;
+    /**
+     * Pretty-url of this particular context
+     */
+    url?: string;
 }
 
 export interface TopicPostPut {
