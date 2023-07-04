@@ -94,17 +94,13 @@ public class NodeDTO {
                 entity.getParentConnections().stream().findFirst().flatMap(NodeConnection::getRelevance);
         this.relevanceId = relevance.map(Relevance::getPublicId);
 
-        var translations = entity.getTranslations();
-        this.translations =
-                translations.stream().map(TranslationDTO::new).collect(Collectors.toCollection(TreeSet::new));
+        this.translations = entity.getTranslations().stream()
+                .map(TranslationDTO::new)
+                .collect(Collectors.toCollection(TreeSet::new));
         this.supportedLanguages =
                 this.translations.stream().map(t -> t.language).collect(Collectors.toCollection(TreeSet::new));
 
-        this.name = translations.stream()
-                .filter(t -> Objects.equals(t.getLanguageCode(), languageCode))
-                .findFirst()
-                .map(Translation::getName)
-                .orElse(entity.getName());
+        this.name = entity.getTranslatedName(languageCode);
 
         this.metadata = new MetadataDTO(entity.getMetadata());
 
@@ -153,7 +149,10 @@ public class NodeDTO {
                                 ctx.isPrimary(),
                                 ctx.isActive(),
                                 ctx.isVisible(),
-                                ctx.contextId());
+                                ctx.contextId(),
+                                ctx.rank(),
+                                ctx.connectionId(),
+                                TitleUtil.createPrettyUrl(this.name, ctx.contextId()));
                     })
                     .toList();
         });

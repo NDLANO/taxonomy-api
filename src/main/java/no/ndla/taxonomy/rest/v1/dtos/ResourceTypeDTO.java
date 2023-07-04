@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import no.ndla.taxonomy.domain.JsonTranslation;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.service.dtos.TranslationDTO;
 
@@ -52,10 +51,7 @@ public class ResourceTypeDTO {
         this.supportedLanguages =
                 this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
 
-        this.name = resourceType
-                .getTranslation(language)
-                .map(JsonTranslation::getName)
-                .orElse(resourceType.getName());
+        this.name = resourceType.getTranslatedName(language);
 
         if (recursionLevels > 0) {
             this.subtypes = resourceType.getSubtypes().stream()

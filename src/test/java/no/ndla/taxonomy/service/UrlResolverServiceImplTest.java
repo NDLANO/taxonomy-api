@@ -10,7 +10,6 @@ package no.ndla.taxonomy.service;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.URI;
-import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import no.ndla.taxonomy.domain.Builder;
@@ -309,7 +308,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
             final var parentIdList = resolvedUrl.getParents().stream()
                     .map(URI::getSchemeSpecificPart)
-                    .collect(Collectors.toList());
+                    .toList();
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
             assertEquals("Resource Name", resolvedUrl.getName());
@@ -328,7 +327,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
             final var parentIdList = resolvedUrl.getParents().stream()
                     .map(URI::getSchemeSpecificPart)
-                    .collect(Collectors.toList());
+                    .toList();
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
             assertEquals("Resource Name", resolvedUrl.getName());
@@ -346,7 +345,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
             final var parentIdList = resolvedUrl.getParents().stream()
                     .map(URI::getSchemeSpecificPart)
-                    .collect(Collectors.toList());
+                    .toList();
 
             assertEquals("topic:2", resolvedUrl.getId().getSchemeSpecificPart());
             assertEquals("/subject:2/topic:2", resolvedUrl.getPath());
@@ -389,7 +388,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
             final var parentIdList = resolvedUrl.getParents().stream()
                     .map(URI::getSchemeSpecificPart)
-                    .collect(Collectors.toList());
+                    .toList();
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
             assertEquals("Resource Name", resolvedUrl.getName());
@@ -408,7 +407,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
             final var parentIdList = resolvedUrl.getParents().stream()
                     .map(URI::getSchemeSpecificPart)
-                    .collect(Collectors.toList());
+                    .toList();
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
             assertEquals("Resource Name", resolvedUrl.getName());
@@ -428,7 +427,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
             final var parentIdList = resolvedUrl.getParents().stream()
                     .map(URI::getSchemeSpecificPart)
-                    .collect(Collectors.toList());
+                    .toList();
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
             assertEquals("Resource Name", resolvedUrl.getName());
@@ -448,7 +447,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
             final var parentIdList = resolvedUrl.getParents().stream()
                     .map(URI::getSchemeSpecificPart)
-                    .collect(Collectors.toList());
+                    .toList();
 
             assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
             assertEquals("Resource Name", resolvedUrl.getName());

@@ -392,7 +392,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return nodeRepository.save(cloned);
     }
 
-    public List<TaxonomyContextDTO> getSearchableByContentUri(Optional<URI> contentURI, boolean filterVisibles) {
+    public List<TaxonomyContextDTO> getSearchableByContentUri(
+            Optional<URI> contentURI, boolean filterVisibles, String language) {
         var nodes = nodeRepository.findByNodeType(
                 Optional.empty(),
                 Optional.empty(),
@@ -401,14 +402,14 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 contentURI,
                 Optional.empty(),
                 Optional.empty());
-        var contextDtos = nodesToContexts(nodes, filterVisibles);
+        var contextDtos = nodesToContexts(nodes, filterVisibles, language);
 
         return contextDtos.stream()
                 .sorted(Comparator.comparing(TaxonomyContextDTO::path))
                 .toList();
     }
 
-    List<TaxonomyContextDTO> nodesToContexts(List<Node> nodes, boolean filterVisibles) {
+    List<TaxonomyContextDTO> nodesToContexts(List<Node> nodes, boolean filterVisibles, String language) {
         return nodes.stream()
                 .flatMap(node -> {
                     var contexts = filterVisibles
@@ -441,7 +442,10 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                 context.isPrimary(),
                                 context.isActive(),
                                 context.isVisible(),
-                                context.contextId());
+                                context.contextId(),
+                                context.rank(),
+                                context.connectionId(),
+                                TitleUtil.createPrettyUrl(node.getTranslatedName(language), context.contextId()));
                     });
                 })
                 .toList();
@@ -460,7 +464,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return rootNodes;
     }
 
-    public List<TaxonomyContextDTO> getContextByPath(Optional<String> path) {
+    public List<TaxonomyContextDTO> getContextByPath(Optional<String> path, String language) {
         if (path.isPresent()) {
             String contextId = TitleUtil.getHashFromPath(path.get());
             List<Node> nodes = nodeRepository.findByNodeType(
@@ -471,7 +475,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                     Optional.empty(),
                     Optional.of(contextId),
                     Optional.empty());
-            var contexts = nodesToContexts(nodes, false);
+            var contexts = nodesToContexts(nodes, false, language);
             return contexts.stream()
                     .filter(c -> c.contextId().equals(contextId))
                     .toList();

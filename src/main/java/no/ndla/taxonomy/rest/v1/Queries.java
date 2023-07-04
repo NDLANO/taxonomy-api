@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
@@ -36,10 +37,14 @@ public class Queries {
     @Transactional(readOnly = true)
     public List<TaxonomyContextDTO> queryFullNode(
             @PathVariable("contentURI") Optional<URI> contentURI,
+            @Parameter(description = "ISO-639-1 language code", example = "nb")
+                    @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
+                    Optional<String> language,
             @Parameter(description = "Whether to filter out contexts if a parent (or the node itself) is non-visible")
                     @RequestParam(value = "filterVisibles", required = false, defaultValue = "true")
                     boolean filterVisibles) {
-        return nodeService.getSearchableByContentUri(contentURI, filterVisibles);
+        return nodeService.getSearchableByContentUri(
+                contentURI, filterVisibles, language.orElse(Constants.DefaultLanguage));
     }
 
     @GetMapping("/path")
@@ -47,8 +52,12 @@ public class Queries {
             summary =
                     "Gets a list of contexts matching given pretty url with contextId, empty list if no matches are found.")
     @Transactional(readOnly = true)
-    public List<TaxonomyContextDTO> queryPath(@RequestParam("path") Optional<String> path) {
-        return nodeService.getContextByPath(path);
+    public List<TaxonomyContextDTO> queryPath(
+            @RequestParam("path") Optional<String> path,
+            @Parameter(description = "ISO-639-1 language code", example = "nb")
+                    @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
+                    Optional<String> language) {
+        return nodeService.getContextByPath(path, language.orElse(Constants.DefaultLanguage));
     }
 
     @GetMapping("/resources")
@@ -60,7 +69,7 @@ public class Queries {
     public List<NodeDTO> queryResources(
             @RequestParam("contentURI") Optional<URI> contentURI,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
-                    @RequestParam(value = "language", defaultValue = "", required = false)
+                    @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
                     Optional<String> language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false)
                     Optional<String> key,
@@ -80,7 +89,7 @@ public class Queries {
     public List<NodeDTO> queryTopics(
             @RequestParam("contentURI") URI contentURI,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
-                    @RequestParam(value = "language", defaultValue = "", required = false)
+                    @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
                     Optional<String> language,
             @Parameter(description = "Filter by key and value") @RequestParam(value = "key", required = false)
                     Optional<String> key,

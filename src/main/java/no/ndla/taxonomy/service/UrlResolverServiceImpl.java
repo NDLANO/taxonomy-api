@@ -204,11 +204,8 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
             // Generate a string path from the sorted list of parent nodes, a cleaned version of the
             // provided string path parameter
-            resolvedUrl.setPath("/"
-                    + resolvedPathComponents.stream()
-                            .map(Node::getPublicId)
-                            .map(URI::getSchemeSpecificPart)
-                            .collect(Collectors.joining("/")));
+            resolvedUrl.setPath(
+                    resolvedPathComponents.stream().map(Node::getPathPart).collect(Collectors.joining()));
 
             return Optional.of(resolvedUrl);
         } catch (NotFoundServiceException e) {
