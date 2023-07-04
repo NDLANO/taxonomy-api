@@ -35,7 +35,7 @@ public class LanguageField<V> extends HashMap<String, V> {
         langs.add(Constants.DefaultLanguage);
         for (var lang : langs) {
             var crumbs = new ArrayList<String>();
-            crumbs.add(node.getTranslation(lang).map(JsonTranslation::getName).orElse(node.getName()));
+            crumbs.add(node.getTranslatedName(lang));
             breadcrumbs.put(lang, crumbs);
         }
         return breadcrumbs;

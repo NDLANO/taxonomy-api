@@ -120,6 +120,10 @@ public class Node extends DomainObject implements EntityWithMetadata {
         setName(node.getName());
     }
 
+    public String getPathPart() {
+        return "/" + getPublicId().getSchemeSpecificPart();
+    }
+
     private void updatePublicID() {
         super.setPublicId(URI.create("urn:" + nodeType.getName() + ":" + getIdent()));
     }
@@ -156,12 +160,10 @@ public class Node extends DomainObject implements EntityWithMetadata {
             return maybeRoot;
         }
         return contexts.stream().min((context1, context2) -> {
-            final var inPath1 = context1.path()
-                    .contains(root.map(node -> node.getPublicId().getSchemeSpecificPart())
-                            .orElse("other"));
-            final var inPath2 = context2.path()
-                    .contains(root.map(node -> node.getPublicId().getSchemeSpecificPart())
-                            .orElse("other"));
+            final var inPath1 =
+                    context1.path().contains(root.map(Node::getPathPart).orElse("other"));
+            final var inPath2 =
+                    context2.path().contains(root.map(Node::getPathPart).orElse("other"));
 
             if (inPath1 && inPath2) {
                 if (context1.isPrimary() && context2.isPrimary()) {

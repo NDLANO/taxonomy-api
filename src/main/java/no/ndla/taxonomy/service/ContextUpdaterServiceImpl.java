@@ -33,7 +33,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
             returnedContexts.add(new Context(
                     node.getPublicId().toString(),
                     LanguageField.fromNode(node),
-                    "/" + node.getPublicId().getSchemeSpecificPart(),
+                    node.getPathPart(),
                     new LanguageField<List<String>>(),
                     node.getContextType(),
                     new ArrayList<>(),
@@ -41,7 +41,9 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                     activeContext,
                     true,
                     "urn:relevance:core",
-                    HashUtil.semiHash(node.getPublicId())));
+                    HashUtil.semiHash(node.getPublicId()),
+                    0,
+                    ""));
         }
 
         // Get all parent connections, append this entity publicId to the end of the actual path and add
@@ -57,8 +59,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                 return new Context(
                                         parentContext.rootId(),
                                         parentContext.rootName(),
-                                        parentContext.path() + "/"
-                                                + node.getPublicId().getSchemeSpecificPart(),
+                                        parentContext.path() + node.getPathPart(),
                                         breadcrumbs,
                                         node.getContextType(),
                                         parentIds,
@@ -70,7 +71,9 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                                 .flatMap(relevance -> Optional.of(
                                                         relevance.getPublicId().toString()))
                                                 .orElse("urn:relevance:core"),
-                                        HashUtil.semiHash(parentContext.rootId() + parentConnection.getPublicId()));
+                                        HashUtil.semiHash(parentContext.rootId() + parentConnection.getPublicId()),
+                                        parentConnection.getRank(),
+                                        parentConnection.getPublicId().toString());
                             })
                             .forEach(returnedContexts::add);
                 }));

@@ -14,7 +14,7 @@ public class TitleUtil {
 
     public static Optional<String> createPrettyUrl(String source, String hash) {
         if (source == null || hash == null) return Optional.empty();
-        var text = Jsoup.parse(source).text();
+        var text = Jsoup.parse(source).text().replaceAll("[.,!?\\-]", "");
         String[] words = text.split("\\s+");
         StringBuilder sb = new StringBuilder("/");
         for (int i = 0; i < words.length; i++) {

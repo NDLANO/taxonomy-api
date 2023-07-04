@@ -338,8 +338,12 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     }
 
     @GetMapping("{id}/full")
-    @Operation(summary = "Gets node including information about all parents, and resourceTypes for this resource")
+    @Operation(
+            summary = "Gets node including information about all parents, and resourceTypes for this resource. "
+                    + "Can be replaced with regular get-endpoint and traversing contexts",
+            deprecated = true)
     @Transactional(readOnly = true)
+    @Deprecated
     public NodeWithParents getNodeFull(
             @PathVariable("id") URI id,
             @Parameter(description = "ISO-639-1 language code", example = "nb")

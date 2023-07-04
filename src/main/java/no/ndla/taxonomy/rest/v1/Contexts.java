@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.dtos.ContextDTO;
 import no.ndla.taxonomy.rest.v1.dtos.ContextPOST;
@@ -50,7 +49,7 @@ public class Contexts {
         final var contextDocuments = new ArrayList<>(nodes.stream()
                 .map(topic -> new ContextDTO(
                         topic.getPublicId(),
-                        topic.getTranslation(language).map(Translation::getName).orElse(topic.getName()),
+                        topic.getTranslatedName(language),
                         topic.getPrimaryPath().orElse(null)))
                 .toList());
 

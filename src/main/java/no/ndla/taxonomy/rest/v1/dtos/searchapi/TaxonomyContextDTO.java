@@ -21,16 +21,19 @@ public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "The publicId of the root parent of the context") URI rootId,
         @JsonProperty @Schema(description = "The name of the root parent of the context") LanguageFieldDTO<String> root,
         @JsonProperty @Schema(description = "The context path") String path,
-        @JsonProperty @Schema(description = "A breadcrumb of the names of the context's path") LanguageFieldDTO<List<String>> breadcrumbs,
+        @JsonProperty @Schema(description = "A breadcrumb of the names of the context's parents") LanguageFieldDTO<List<String>> breadcrumbs,
         @JsonProperty @Schema(description = "Whether a 'standard'-article, 'topic-article'-article or a 'learningpath'") Optional<String> contextType,
-        @JsonProperty @Schema(description = "Id of the relevance of the connection of the base") Optional<URI> relevanceId,
-        @JsonProperty @Schema(description = "Name of the relevance of the connection of the base") LanguageFieldDTO<String> relevance,
-        @JsonProperty @Schema(description = "Resource-types of the base") List<SearchableTaxonomyResourceType> resourceTypes,
-        @JsonProperty @Schema(description = "List of all parent topic-ids") List<URI> parentIds,
-        @JsonProperty @Schema(description = "Whether the base connection is primary or not") boolean isPrimary,
-        @JsonProperty @Schema(description = "Whether the base connection is marked as active subject") boolean isActive,
-        @JsonProperty @Schema(description = "Whether the base connection is visible or not") boolean isVisible,
-        @JsonProperty @Schema(description = "Unique id of context based on root + connection") String contextId) {
+        @JsonProperty @Schema(description = "Id of the relevance of the parent connection") Optional<URI> relevanceId,
+        @JsonProperty @Schema(description = "Name of the relevance of the parent connection") LanguageFieldDTO<String> relevance,
+        @JsonProperty @Schema(description = "Resource-types of the node") List<SearchableTaxonomyResourceType> resourceTypes,
+        @JsonProperty @Schema(description = "List of all parent ids") List<URI> parentIds,
+        @JsonProperty @Schema(description = "Whether the parent connection is primary or not") boolean isPrimary,
+        @JsonProperty @Schema(description = "Whether the parent connection is marked as active") boolean isActive,
+        @JsonProperty @Schema(description = "Whether the parent connection is visible or not") boolean isVisible,
+        @JsonProperty @Schema(description = "Unique id of context based on root + parent connection") String contextId,
+        @JsonProperty @Schema(description = "The rank of the parent connection object") int rank,
+        @JsonProperty @Schema(description = "The id of the parent connection object") String connectionId,
+        @JsonProperty @Schema(description = "Pretty-url of this particular context") Optional<String> url) {
 // spotless:on
     @JsonProperty
     @Deprecated

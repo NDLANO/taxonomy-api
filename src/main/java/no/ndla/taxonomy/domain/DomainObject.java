@@ -19,6 +19,10 @@ public abstract class DomainObject extends DomainEntity implements Translatable 
         return name;
     }
 
+    public String getTranslatedName(String languageCode) {
+        return getTranslation(languageCode).map(JsonTranslation::getName).orElse(getName());
+    }
+
     public void setName(String name) {
         this.name = name;
     }
