@@ -406,10 +406,10 @@ public class TopicsTest extends RestTest {
                     case "parent-subject":
                         subjectCount++;
                         break;
-                    case "parent-topic":
+                    case "parent":
                         parentCount++;
                         break;
-                    case "subtopic":
+                    case "child":
                         childCount++;
                         break;
                     default:
