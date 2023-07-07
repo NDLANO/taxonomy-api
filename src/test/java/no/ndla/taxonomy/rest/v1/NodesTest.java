@@ -967,8 +967,8 @@ public class NodesTest extends RestTest {
             for (ConnectionDTO connection : connections) {
                 switch (connection.getType()) {
                     case "parent-subject" -> subjectCount++;
-                    case "parent-topic" -> parentCount++;
-                    case "subtopic" -> childCount++;
+                    case "parent" -> parentCount++;
+                    case "child" -> childCount++;
                     default -> fail("Unexpected connection type :" + connection.getType());
                 }
             }

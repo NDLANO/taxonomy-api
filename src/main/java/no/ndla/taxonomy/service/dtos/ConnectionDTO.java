@@ -56,9 +56,9 @@ public class ConnectionDTO {
         });
 
         if (isParentConnection) {
-            this.type = "parent-topic";
+            this.type = "parent";
         } else {
-            this.type = "subtopic";
+            this.type = "child";
         }
     }
 

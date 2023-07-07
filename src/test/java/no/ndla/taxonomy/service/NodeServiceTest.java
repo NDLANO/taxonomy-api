@@ -91,9 +91,9 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         assertEquals(2, returnedConnections.size());
         returnedConnections.forEach(connection -> {
             if (connection.getConnectionId().equals(URI.create("urn:subject-topic"))) {
-                assertEquals("parent-topic", connection.getType());
+                assertEquals("parent", connection.getType());
             } else if (connection.getConnectionId().equals(URI.create("urn:child-topic"))) {
-                assertEquals("subtopic", connection.getType());
+                assertEquals("child", connection.getType());
             } else {
                 fail();
             }
