@@ -21,7 +21,7 @@ public class NodeTest {
 
     @BeforeEach
     public void setUp() {
-        node = new Node();
+        node = new Node(NodeType.NODE);
     }
 
     @Test
@@ -310,5 +310,63 @@ public class NodeTest {
         parentConnections.forEach(nodeConnection -> verify(nodeConnection).disassociate());
         childConnections.forEach(nodeConnection -> verify(nodeConnection).disassociate());
         topicResources.forEach(nodeResource -> verify(nodeResource).disassociate());
+    }
+
+    @Test
+    void pickTheCorrectContext() {
+        Node parent = new Node(NodeType.NODE);
+        parent = parent.name("parent");
+        node = node.name("name");
+        var context1 = new Context(
+                node.getPublicId().toString(),
+                LanguageField.fromNode(node),
+                node.getPathPart(),
+                LanguageField.listFromNode(node),
+                Optional.empty(),
+                List.of(),
+                true,
+                true,
+                true,
+                "urn:relevance:core",
+                "1",
+                0,
+                "urn:connection1");
+        var context2 = new Context(
+                parent.getPublicId().toString(),
+                LanguageField.fromNode(parent),
+                parent.getPathPart() + node.getPathPart(),
+                LanguageField.listFromLists(LanguageField.listFromNode(parent), LanguageField.fromNode(node)),
+                Optional.empty(),
+                List.of(parent.getPublicId().toString()),
+                true,
+                true,
+                true,
+                "urn:relevance:core",
+                "2",
+                0,
+                "urn:connection2");
+
+        node.setContexts(Set.of(context2, context1));
+
+        {
+            Optional<Context> context = node.pickContext(Optional.of("1"), Optional.empty());
+            assertEquals(context.get().contextId(), context1.contextId());
+        }
+        {
+            Optional<Context> context = node.pickContext(Optional.of("2"), Optional.empty());
+            assertEquals(context.get().contextId(), context2.contextId());
+        }
+        {
+            Optional<Context> context = node.pickContext(Optional.empty(), Optional.of(node));
+            assertEquals(context.get().contextId(), context1.contextId());
+        }
+        {
+            Optional<Context> context = node.pickContext(Optional.empty(), Optional.of(parent));
+            assertEquals(context.get().contextId(), context2.contextId());
+        }
+        {
+            Optional<Context> context = node.pickContext(Optional.empty(), Optional.empty());
+            assertEquals(context.get().contextId(), context1.contextId());
+        }
     }
 }

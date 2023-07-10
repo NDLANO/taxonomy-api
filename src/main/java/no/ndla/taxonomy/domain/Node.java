@@ -188,7 +188,8 @@ public class Node extends DomainObject implements EntityWithMetadata {
             if (context2.isPrimary() && !context1.isPrimary()) {
                 return 1;
             }
-            return 0;
+            // contexts are of equal value, pick the shortest
+            return context1.parentIds().size() - context2.parentIds().size();
         });
     }
 
