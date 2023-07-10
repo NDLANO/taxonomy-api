@@ -113,6 +113,7 @@ public class NodeDTO {
         Optional<Context> context = entity.pickContext(contextId, root);
         context.ifPresent(ctx -> {
             this.path = ctx.path();
+            // TODO: this changes the content in context breadcrumbs
             this.breadcrumbs = LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity))
                     .get(languageCode);
             this.relevanceId = Optional.of(URI.create(ctx.relevanceId()));

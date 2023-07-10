@@ -54,7 +54,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Transactional(propagation = Propagation.MANDATORY)
     public DomainEntity getEntityByPublicId(URI publicId) {
         switch (publicId.getSchemeSpecificPart().split(":")[0]) {
-            case "subject", "topic", "node", "resource" -> {
+            case "subject", "topic", "node", "resource", "programme" -> {
                 return nodeRepository.findFirstByPublicId(publicId).orElse(null);
             }
             case "node-connection", "subject-topic", "topic-subtopic", "node-resource", "topic-resource" -> {
@@ -67,7 +67,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Override
     public TaxonomyRepository getRepository(URI publicId) {
         switch (publicId.getSchemeSpecificPart().split(":")[0]) {
-            case "subject", "topic", "node", "resource" -> {
+            case "subject", "topic", "node", "resource", "programme" -> {
                 return nodeRepository;
             }
             case "node-connection", "subject-topic", "topic-subtopic", "node-resource", "topic-resource" -> {
