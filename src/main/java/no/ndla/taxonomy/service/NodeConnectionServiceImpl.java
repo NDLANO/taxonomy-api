@@ -176,8 +176,13 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         // Updates all other nodes connected to this parent
         final var foundNewPrimary = new AtomicBoolean(false);
         connectable.getChild().ifPresent(node -> {
-            var theOthers = node.getParentConnections().stream().filter(c -> c != connectable).toList();
-            var hasPrimary = !theOthers.stream().filter(c -> c.isPrimary().orElse(false)).toList().isEmpty();
+            var theOthers = node.getParentConnections().stream()
+                    .filter(c -> c != connectable)
+                    .toList();
+            var hasPrimary = !theOthers.stream()
+                    .filter(c -> c.isPrimary().orElse(false))
+                    .toList()
+                    .isEmpty();
             foundNewPrimary.set(hasPrimary);
             theOthers.forEach(connectable1 -> {
                 if (!setPrimaryTo && !foundNewPrimary.get()) {
