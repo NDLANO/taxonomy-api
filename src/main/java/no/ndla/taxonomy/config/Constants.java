@@ -11,5 +11,6 @@ public final class Constants {
     public static final String DefaultLanguage = "nb";
     public static final String SubjectCategory = "subjectCategory";
     public static final String Active = "active";
+    public static final String Beta = "beta";
     public static final String OtherResources = "otherResources";
 }
