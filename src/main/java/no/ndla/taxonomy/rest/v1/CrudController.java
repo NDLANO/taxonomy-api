@@ -31,14 +31,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 public abstract class CrudController<T extends DomainEntity> {
     protected TaxonomyRepository<T> repository;
-    protected ContextUpdaterService cachedUrlUpdaterService;
+    protected ContextUpdaterService contextUpdaterService;
 
     private static final Map<Class<?>, String> locations = new HashMap<>();
     private final URNValidator validator = new URNValidator();
 
-    protected CrudController(TaxonomyRepository<T> repository, ContextUpdaterService cachedUrlUpdaterService) {
+    protected CrudController(TaxonomyRepository<T> repository, ContextUpdaterService contextUpdaterService) {
         this.repository = repository;
-        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.contextUpdaterService = contextUpdaterService;
     }
 
     protected CrudController(TaxonomyRepository<T> repository) {
@@ -67,8 +67,8 @@ public abstract class CrudController<T extends DomainEntity> {
         validator.validate(id, entity);
         command.apply(entity);
 
-        if (entity instanceof Node && cachedUrlUpdaterService != null) {
-            cachedUrlUpdaterService.updateContexts((Node) entity);
+        if (entity instanceof Node && contextUpdaterService != null) {
+            contextUpdaterService.updateContexts((Node) entity);
         }
 
         return entity;
@@ -90,8 +90,8 @@ public abstract class CrudController<T extends DomainEntity> {
             URI location = URI.create(getLocation() + "/" + entity.getPublicId());
             repository.saveAndFlush(entity);
 
-            if (entity instanceof Node && cachedUrlUpdaterService != null) {
-                cachedUrlUpdaterService.updateContexts((Node) entity);
+            if (entity instanceof Node && contextUpdaterService != null) {
+                contextUpdaterService.updateContexts((Node) entity);
             }
 
             return ResponseEntity.created(location).build();

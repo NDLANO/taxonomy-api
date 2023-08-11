@@ -27,15 +27,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class NodeConnectionServiceImpl implements NodeConnectionService {
     private final NodeConnectionRepository nodeConnectionRepository;
-    private final ContextUpdaterService cachedUrlUpdaterService;
+    private final ContextUpdaterService contextUpdaterService;
     private final NodeRepository nodeRepository;
 
     public NodeConnectionServiceImpl(
             NodeConnectionRepository nodeConnectionRepository,
-            ContextUpdaterService cachedUrlUpdaterService,
+            ContextUpdaterService contextUpdaterService,
             NodeRepository nodeRepository) {
         this.nodeConnectionRepository = nodeConnectionRepository;
-        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.contextUpdaterService = contextUpdaterService;
         this.nodeRepository = nodeRepository;
     }
 
@@ -65,7 +65,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         updateRank(connection, rank);
         updateRelevance(connection, relevance);
 
-        cachedUrlUpdaterService.updateContexts(child);
+        contextUpdaterService.updateContexts(child);
 
         return connection;
     }
@@ -154,11 +154,11 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
                             .ifPresent(nextConnection -> {
                                 nextConnection.setPrimary(true);
                                 nodeConnectionRepository.saveAndFlush(nextConnection);
-                                nextConnection.getResource().ifPresent(cachedUrlUpdaterService::updateContexts);
+                                nextConnection.getResource().ifPresent(contextUpdaterService::updateContexts);
                             });
                 }
             }
-            cachedUrlUpdaterService.updateContexts(childToDisconnect);
+            contextUpdaterService.updateContexts(childToDisconnect);
         });
 
         nodeConnectionRepository.flush();
@@ -202,7 +202,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         saveConnections(updatedConnectables);
 
         updatedConnectables.forEach(
-                updatedConnectable -> updatedConnectable.getChild().ifPresent(cachedUrlUpdaterService::updateContexts));
+                updatedConnectable -> updatedConnectable.getChild().ifPresent(contextUpdaterService::updateContexts));
 
         if (!setPrimaryTo && !foundNewPrimary.get()) {
             throw new InvalidArgumentServiceException(

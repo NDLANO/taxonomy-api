@@ -30,11 +30,11 @@ import org.springframework.web.bind.annotation.*;
 @Transactional(readOnly = true)
 public class Contexts {
     private final NodeRepository nodeRepository;
-    private final ContextUpdaterService cachedUrlUpdaterService;
+    private final ContextUpdaterService contextUpdaterService;
 
-    public Contexts(NodeRepository nodeRepository, ContextUpdaterService cachedUrlUpdaterService) {
+    public Contexts(NodeRepository nodeRepository, ContextUpdaterService contextUpdaterService) {
         this.nodeRepository = nodeRepository;
-        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.contextUpdaterService = contextUpdaterService;
     }
 
     @GetMapping
@@ -72,7 +72,7 @@ public class Contexts {
         topic.setContext(true);
         URI location = URI.create("/v1/contexts/" + topic.getPublicId());
 
-        cachedUrlUpdaterService.updateContexts(topic);
+        contextUpdaterService.updateContexts(topic);
 
         return ResponseEntity.created(location).build();
     }
@@ -89,6 +89,6 @@ public class Contexts {
         Node topic = nodeRepository.getByPublicId(id);
         topic.setContext(false);
 
-        cachedUrlUpdaterService.updateContexts(topic);
+        contextUpdaterService.updateContexts(topic);
     }
 }
