@@ -10,7 +10,6 @@ package no.ndla.taxonomy.service;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
@@ -28,15 +27,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class NodeConnectionServiceImpl implements NodeConnectionService {
     private final NodeConnectionRepository nodeConnectionRepository;
-    private final ContextUpdaterService cachedUrlUpdaterService;
+    private final ContextUpdaterService contextUpdaterService;
     private final NodeRepository nodeRepository;
 
     public NodeConnectionServiceImpl(
             NodeConnectionRepository nodeConnectionRepository,
-            ContextUpdaterService cachedUrlUpdaterService,
+            ContextUpdaterService contextUpdaterService,
             NodeRepository nodeRepository) {
         this.nodeConnectionRepository = nodeConnectionRepository;
-        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.contextUpdaterService = contextUpdaterService;
         this.nodeRepository = nodeRepository;
     }
 
@@ -66,7 +65,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         updateRank(connection, rank);
         updateRelevance(connection, relevance);
 
-        cachedUrlUpdaterService.updateContexts(child);
+        contextUpdaterService.updateContexts(child);
 
         return connection;
     }
@@ -105,8 +104,6 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
                 .findFirst()
                 .map(NodeConnection::getParent)
                 .isPresent()) {
-            Logger.getLogger(this.getClass().toString())
-                    .info(parentConnected.getPublicId().toString());
             parentConnected = parentConnected.getParentConnections().stream()
                     .findFirst()
                     .orElseThrow()
@@ -157,11 +154,11 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
                             .ifPresent(nextConnection -> {
                                 nextConnection.setPrimary(true);
                                 nodeConnectionRepository.saveAndFlush(nextConnection);
-                                nextConnection.getResource().ifPresent(cachedUrlUpdaterService::updateContexts);
+                                nextConnection.getResource().ifPresent(contextUpdaterService::updateContexts);
                             });
                 }
             }
-            cachedUrlUpdaterService.updateContexts(childToDisconnect);
+            contextUpdaterService.updateContexts(childToDisconnect);
         });
 
         nodeConnectionRepository.flush();
@@ -178,25 +175,34 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
 
         // Updates all other nodes connected to this parent
         final var foundNewPrimary = new AtomicBoolean(false);
-        connectable.getChild().ifPresent(node -> node.getParentConnections().stream()
-                .filter(connectable1 -> connectable1 != connectable)
-                .forEachOrdered(connectable1 -> {
-                    if (!setPrimaryTo && !foundNewPrimary.get()) {
-                        connectable1.setPrimary(true);
-                        foundNewPrimary.set(true);
-                        updatedConnectables.add(connectable1);
-                    } else if (setPrimaryTo) {
-                        connectable1.setPrimary(false);
-                        updatedConnectables.add(connectable1);
-                    }
-                }));
+        connectable.getChild().ifPresent(node -> {
+            var theOthers = node.getParentConnections().stream()
+                    .filter(c -> c != connectable)
+                    .toList();
+            var hasPrimary = !theOthers.stream()
+                    .filter(c -> c.isPrimary().orElse(false))
+                    .toList()
+                    .isEmpty();
+            foundNewPrimary.set(hasPrimary);
+            theOthers.forEach(connectable1 -> {
+                if (!setPrimaryTo && !foundNewPrimary.get()) {
+                    // Setting the first to primary since no of the others are primary
+                    connectable1.setPrimary(true);
+                    foundNewPrimary.set(true);
+                    updatedConnectables.add(connectable1);
+                } else if (setPrimaryTo) {
+                    connectable1.setPrimary(false);
+                    updatedConnectables.add(connectable1);
+                }
+            });
+        });
 
         connectable.setPrimary(setPrimaryTo);
 
         saveConnections(updatedConnectables);
 
         updatedConnectables.forEach(
-                updatedConnectable -> updatedConnectable.getChild().ifPresent(cachedUrlUpdaterService::updateContexts));
+                updatedConnectable -> updatedConnectable.getChild().ifPresent(contextUpdaterService::updateContexts));
 
         if (!setPrimaryTo && !foundNewPrimary.get()) {
             throw new InvalidArgumentServiceException(

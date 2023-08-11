@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(propagation = Propagation.MANDATORY)
 public class Builder {
     private final EntityManager entityManager;
-    private final ContextUpdaterService cachedUrlUpdaterService;
+    private final ContextUpdaterService contextUpdaterService;
     private final Map<String, VersionBuilder> versions = new HashMap<>();
     private final Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();
     private final Map<String, NodeBuilder> nodes = new HashMap<>();
@@ -29,9 +29,9 @@ public class Builder {
     private final Map<String, UrlMappingBuilder> cachedUrlOldRigBuilders = new HashMap<>();
     private int keyCounter = 0;
 
-    public Builder(EntityManager entityManager, ContextUpdaterService cachedUrlUpdaterService) {
+    public Builder(EntityManager entityManager, ContextUpdaterService contextUpdaterService) {
         this.entityManager = entityManager;
-        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.contextUpdaterService = contextUpdaterService;
     }
 
     private String createKey() {
@@ -152,7 +152,7 @@ public class Builder {
 
         entityManager.persist(node.node);
 
-        cachedUrlUpdaterService.updateContexts(node.node);
+        contextUpdaterService.updateContexts(node.node);
 
         return node.node;
     }
@@ -317,7 +317,7 @@ public class Builder {
 
         public NodeBuilder nodeType(NodeType nodeType) {
             node.setNodeType(nodeType);
-            cachedUrlUpdaterService.updateContexts(node);
+            contextUpdaterService.updateContexts(node);
             return this;
         }
 
@@ -357,14 +357,14 @@ public class Builder {
         public NodeBuilder publicId(String id) {
             node.setPublicId(URI.create(id));
 
-            cachedUrlUpdaterService.updateContexts(node);
+            contextUpdaterService.updateContexts(node);
             return this;
         }
 
         public NodeBuilder isContext(boolean b) {
             node.setContext(b);
 
-            cachedUrlUpdaterService.updateContexts(node);
+            contextUpdaterService.updateContexts(node);
             return this;
         }
 
@@ -411,7 +411,7 @@ public class Builder {
         public NodeBuilder child(Node child) {
             entityManager.persist(NodeConnection.create(node, child));
 
-            cachedUrlUpdaterService.updateContexts(child);
+            contextUpdaterService.updateContexts(child);
 
             return this;
         }
@@ -454,7 +454,7 @@ public class Builder {
         public NodeBuilder resource(Node resource, boolean primary) {
             entityManager.persist(NodeConnection.create(node, resource, primary));
 
-            cachedUrlUpdaterService.updateContexts(resource);
+            contextUpdaterService.updateContexts(resource);
 
             return this;
         }

@@ -27,7 +27,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
 
         boolean activeContext = node.getCustomFields()
                 .getOrDefault(Constants.SubjectCategory, Constants.Active)
-                .matches(String.format("%s|%s", Constants.Active, Constants.OtherResources));
+                .matches(String.format("%s|%s|%s", Constants.Active, Constants.Beta, Constants.OtherResources));
         // This entity can be root path
         if (node.isContext()) {
             returnedContexts.add(new Context(

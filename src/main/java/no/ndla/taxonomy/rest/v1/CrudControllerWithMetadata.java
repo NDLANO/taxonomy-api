@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.net.URI;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.EntityWithMetadata;
+import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.ContextUpdaterService;
@@ -26,8 +27,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends CrudController<T> {
     protected CrudControllerWithMetadata(
-            TaxonomyRepository<T> repository, ContextUpdaterService cachedUrlUpdaterService) {
-        super(repository, cachedUrlUpdaterService);
+            TaxonomyRepository<T> repository, ContextUpdaterService contextUpdaterService) {
+        super(repository, contextUpdaterService);
     }
 
     @GetMapping("/{id}/metadata")
@@ -51,6 +52,9 @@ public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends
         var entity = repository.findByPublicId(id);
         if (entity instanceof EntityWithMetadata em) {
             var result = em.getMetadata().mergeWith(entityToUpdate);
+            if (entity instanceof Node n && contextUpdaterService != null) {
+                contextUpdaterService.updateContexts(n);
+            }
             return new MetadataDTO(result);
         }
         throw new NotFoundException("Entity", id);

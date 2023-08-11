@@ -23,7 +23,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 public class ContextsTest extends RestTest {
     @Autowired
-    private ContextUpdaterService cachedUrlUpdaterService;
+    private ContextUpdaterService contextUpdaterService;
 
     @BeforeEach
     void cleanDatabase() {
@@ -124,7 +124,7 @@ public class ContextsTest extends RestTest {
         topic.setContext(true);
         nodeRepository.saveAndFlush(topic);
 
-        cachedUrlUpdaterService.updateContexts(topic);
+        contextUpdaterService.updateContexts(topic);
 
         MockHttpServletResponse response = testUtils.getResource("/v1/topics/urn:topic:1");
         final var topicIndexDocument = testUtils.getObject(NodeDTO.class, response);
