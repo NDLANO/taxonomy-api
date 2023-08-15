@@ -167,7 +167,8 @@ public class Node extends DomainObject implements EntityWithMetadata {
 
             if (inPath1 && inPath2) {
                 if (context1.isPrimary() && context2.isPrimary()) {
-                    return 0;
+                    // contexts are of equal value, pick the shortest
+                    return context1.parentIds().size() - context2.parentIds().size();
                 }
                 if (context1.isPrimary()) {
                     return -1;
