@@ -52,7 +52,7 @@ public class NodeDTO {
     private TreeSet<String> supportedLanguages;
 
     @Schema(description = "List of names in the path")
-    private List<String> breadcrumbs;
+    private List<String> breadcrumbs = new ArrayList<>();
 
     @JsonProperty
     @Schema(description = "Resource type(s)", example = "[{\"id\": \"urn:resourcetype:1\",\"name\":\"lecture\"}]")
