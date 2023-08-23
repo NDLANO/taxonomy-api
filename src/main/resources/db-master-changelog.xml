@@ -1409,4 +1409,17 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="20230823 Add constraint to avoid same content_uri for resources" author="Gunnar Velle">
+        <sql>CREATE EXTENSION IF NOT EXISTS "btree_gist"</sql>
+        <sql>
+            ALTER TABLE node
+            ADD CONSTRAINT unique_content_uri_for_resource
+            EXCLUDE USING GIST (
+                node_type WITH =,
+                content_uri WITH =
+            )
+            WHERE (node_type = 'RESOURCE');
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
