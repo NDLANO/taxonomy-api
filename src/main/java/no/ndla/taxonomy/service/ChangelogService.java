@@ -51,7 +51,7 @@ public class ChangelogService implements DisposableBean {
         changelogRepository.deleteByDoneTrue();
     }
 
-    @Scheduled(fixedRate = 2, timeUnit = TimeUnit.SECONDS)
+    @Scheduled(fixedRate = 1, timeUnit = TimeUnit.SECONDS)
     @Transactional
     public void processChanges() {
         try {
