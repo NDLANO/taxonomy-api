@@ -1409,6 +1409,10 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="20230823 Clean up duplicate resources" author="Gunnar Velle">
+        <customChange class="no.ndla.taxonomy.migration.CleanUpDuplicateResourcesSqlChange"/>
+    </changeSet>
+
     <changeSet id="20230823 Add constraint to avoid same content_uri for resources" author="Gunnar Velle">
         <sql>CREATE EXTENSION IF NOT EXISTS "btree_gist"</sql>
         <sql>
