@@ -82,7 +82,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     @Override
     public NodeConnection connectParentChild(
             Node parent, Node child, Relevance relevance, Integer rank, Optional<Boolean> isPrimary) {
-        if (child.getParentConnections().size() > 0) {
+        if (!child.getParentConnections().isEmpty()) {
             if (child.getNodeType() == NodeType.TOPIC) throw new DuplicateConnectionException();
 
             var alreadyConnectedResource = parent.getResourceChildren().stream()

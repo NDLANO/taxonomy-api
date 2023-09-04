@@ -116,7 +116,7 @@ public class NodesTest extends RestTest {
     }
 
     @Test
-    public void can_get_nodes_by_contextId() throws Exception {
+    public void can_get_nodes_by_contextId() {
         Node resource = builder.node(NodeType.RESOURCE, r -> r.name("Resource"));
         builder.node(
                 NodeType.SUBJECT, s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> {
@@ -218,7 +218,7 @@ public class NodesTest extends RestTest {
 
         assertAllTrue(nodes, t -> t.getMetadata() != null);
         assertAllTrue(nodes, t -> t.getMetadata().isVisible());
-        assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
+        assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().isEmpty());
     }
 
     @Test
@@ -312,7 +312,7 @@ public class NodesTest extends RestTest {
 
             assertAllTrue(nodes, t -> t.getMetadata() != null);
             assertAllTrue(nodes, t -> t.getMetadata().isVisible());
-            assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
+            assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().isEmpty());
         }
     }
 
@@ -340,7 +340,7 @@ public class NodesTest extends RestTest {
 
             assertAllTrue(nodes, t -> t.getMetadata() != null);
             assertAllTrue(nodes, t -> t.getMetadata().isVisible());
-            assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
+            assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().isEmpty());
         }
         {
             var response = testUtils.getResource(
@@ -358,7 +358,7 @@ public class NodesTest extends RestTest {
 
             assertAllTrue(nodes, t -> t.getMetadata() != null);
             assertAllTrue(nodes, t -> t.getMetadata().isVisible());
-            assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
+            assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().isEmpty());
         }
         {
             var response = testUtils.getResource(
@@ -374,7 +374,7 @@ public class NodesTest extends RestTest {
 
             assertAllTrue(nodes, t -> t.getMetadata() != null);
             assertAllTrue(nodes, t -> t.getMetadata().isVisible());
-            assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().size() == 0);
+            assertAllTrue(nodes, t -> t.getMetadata().getGrepCodes().isEmpty());
         }
     }
 
@@ -520,7 +520,7 @@ public class NodesTest extends RestTest {
         final var connections = testUtils.getObject(ConnectionDTO[].class, response);
 
         assertEquals(3, connections.length, "Correct number of connections");
-        assertAllTrue(connections, c -> c.getPaths().size() > 0); // all connections have at least one path
+        assertAllTrue(connections, c -> !c.getPaths().isEmpty()); // all connections have at least one path
 
         connectionsHaveCorrectTypes(connections);
     }
@@ -559,7 +559,7 @@ public class NodesTest extends RestTest {
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() != null);
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().isVisible());
         assertAllTrue(
-                subtopics, subtopic -> subtopic.getMetadata().getGrepCodes().size() == 0);
+                subtopics, subtopic -> subtopic.getMetadata().getGrepCodes().isEmpty());
     }
 
     @Test
@@ -658,6 +658,29 @@ public class NodesTest extends RestTest {
 
         Node node = nodeRepository.getByPublicId(createNodeCommand.getPublicId());
         assertEquals("trigonometry", node.getName());
+    }
+
+    @Test
+    void creating_node_with_content_uri_is_handled_correct() throws Exception {
+        final var createTopic = new NodePostPut() {
+            {
+                nodeType = NodeType.TOPIC;
+                name = Optional.of("topic");
+                contentUri = Optional.of(URI.create("urn:article:1"));
+            }
+        };
+        final var createResource = new NodePostPut() {
+            {
+                nodeType = NodeType.RESOURCE;
+                name = Optional.of("resource");
+                contentUri = Optional.of(URI.create("urn:article:2"));
+            }
+        };
+
+        testUtils.createResource("/v1/nodes", createTopic, status().isCreated());
+        testUtils.createResource("/v1/nodes", createTopic, status().isCreated());
+        testUtils.createResource("/v1/nodes", createResource, status().isCreated());
+        testUtils.createResource("/v1/nodes", createResource, status().isConflict());
     }
 
     @Test
