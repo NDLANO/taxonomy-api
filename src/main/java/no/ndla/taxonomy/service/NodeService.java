@@ -325,7 +325,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     /**
-     * Adds node and children to table to be processed later
+     * Adds node and children to table to be processed later.
+     * Wrapper async method to private inner method.
      *
      * @param nodeId
      *            Public ID of the node to publish
@@ -341,6 +342,12 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     @Async
     @Transactional
     public void publishNode(URI nodeId, Optional<URI> sourceId, URI targetId, boolean isPublishRoot, boolean cleanUp) {
+        publishNodeSync(nodeId, sourceId, targetId, isPublishRoot, cleanUp);
+    }
+
+    @Transactional
+    private void publishNodeSync(
+            URI nodeId, Optional<URI> sourceId, URI targetId, boolean isPublishRoot, boolean cleanUp) {
         String source = sourceId.flatMap(
                         sid -> versionService.findVersionByPublicId(sid).map(Version::getHash))
                 .orElse(null);
@@ -369,7 +376,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         for (NodeConnection connection : node.getChildConnections()) {
             if (connection.getChild().isPresent()) {
                 Node child = connection.getChild().get();
-                publishNode(child.getPublicId(), sourceId, targetId, false, cleanUp);
+                publishNodeSync(child.getPublicId(), sourceId, targetId, false, cleanUp);
             }
             changelogRepository.save(new Changelog(source, target, connection.getPublicId(), cleanUp));
         }
@@ -378,7 +385,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             changelogRepository.save(new Changelog(source, target, nodeId, true));
         } else {
             // Once more, with cleaning
-            publishNode(nodeId, sourceId, targetId, false, true);
+            publishNodeSync(nodeId, sourceId, targetId, false, true);
         }
         if (isPublishRoot) {
             logger.info("Node " + nodeId + " added to changelog for publishing to " + target);
