@@ -78,6 +78,7 @@ public class NodeDTO {
 
     public NodeDTO(
             Optional<Node> root,
+            Optional<Node> parent,
             Node entity,
             String languageCode,
             Optional<String> contextId,
@@ -111,7 +112,7 @@ public class NodeDTO {
 
         this.nodeType = entity.getNodeType();
 
-        Optional<Context> context = entity.pickContext(contextId, root);
+        Optional<Context> context = entity.pickContext(contextId, parent, root);
         context.ifPresent(ctx -> {
             this.path = ctx.path();
             // TODO: this changes the content in context breadcrumbs

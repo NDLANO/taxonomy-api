@@ -132,8 +132,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 .forEach(idChunk -> {
                     final var nodes = nodeRepository.findByIds(idChunk);
                     var dtos = nodes.stream()
-                            .map(node ->
-                                    new NodeDTO(Optional.empty(), node, language.get(), contextId, includeContexts))
+                            .map(node -> new NodeDTO(
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    node,
+                                    language.get(),
+                                    contextId,
+                                    includeContexts))
                             .toList();
                     listToReturn.addAll(dtos);
                 });
@@ -170,7 +175,12 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     public NodeDTO getNode(URI publicId, Optional<String> language, Optional<Boolean> includeContexts) {
         var node = getNode(publicId);
         return new NodeDTO(
-                Optional.empty(), node, language.orElse(Constants.DefaultLanguage), Optional.empty(), includeContexts);
+                Optional.empty(),
+                Optional.empty(),
+                node,
+                language.orElse(Constants.DefaultLanguage),
+                Optional.empty(),
+                includeContexts);
     }
 
     public Node getNode(URI publicId) {
@@ -285,7 +295,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     @Override
     public NodeDTO createDTO(Node node, String languageCode, Optional<Boolean> includeContexts) {
-        return new NodeDTO(Optional.empty(), node, languageCode, Optional.empty(), includeContexts);
+        return new NodeDTO(Optional.empty(), Optional.empty(), node, languageCode, Optional.empty(), includeContexts);
     }
 
     public SearchResultDTO<NodeDTO> searchByNodeType(
