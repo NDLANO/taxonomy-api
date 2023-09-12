@@ -28,8 +28,8 @@ hirerarchy with new types later.
 
 The taxonomy data model consists of *entities* and *connections* between entities. 
 
-The central entities in the taxonomy are Node (Subject, Topic, Resource) and Resource-type. The taxonomy stores metadata 
-for each entity, such as name and content URI. Translations of names can also be stored. 
+The central entities in the taxonomy are Node (Subject, Topic, Resource, Programme, Node) and Resource-type. The taxonomy 
+stores metadata for each entity, such as name and content URI. Translations of names can also be stored. 
 
 In addition to the entities, the taxonomy stores the connections you make between entities. Each connection also has 
 metadata attached to it, such as which entities are connected, and whether this connection is the primary connection 
@@ -84,7 +84,7 @@ flowchart TB
     resT3 --> pRes2
 ```
 
-### Subjects and topics
+### Nodes (Subjects, topics and resources)
 
 First, create a subject with the name Mathematics with a POST call to `/v1/nodes` and nodetype SUBJECT. When this call 
 returns you'll get a location. This location contains the path to this node within the nodes resource, e.g., 
@@ -200,7 +200,7 @@ When you get all resources for a subject or topic you can choose to get only res
 corresponding to the ID of Articles will give you a list of three entities; Sine and Cosine, What is probability, and Adding probability.
 
 ### Multiple parent connections
-Multiple parent connections for nodes are not allowed, except for resources! But as some topics such as Statistics may 
+Multiple parent connections for topics are not allowed, but other node-types may. But as some topics such as Statistics may 
 be relevant in several subjects, it is possible to have the same contentURI for several topics. This allows us to create 
 a structure where Statistics is a topic in Mathematics, but it is also a topic in Social Studies.
 
@@ -219,7 +219,7 @@ a structure where Statistics is a topic in Mathematics, but it is also a topic i
 ```
 
 In the figure above, primary connections are showed in bold while secondary connections are shown in normal width. Only
-resources can have primary connections, and have only *one* primary parent. If you set a different connection to 
+resources can have non-primary connections, and have only *one* primary parent. If you set a different connection to 
 be primary, another primary connection will become secondary.
 
 The figure above shows how Statistics is a topic in both Mathematics and Social Studies. If you list all the topics in 
@@ -313,9 +313,9 @@ sub topics and resources below Statistics:
 
  
 A topic can be marked as a root context by making a POST call to `/v1/contexts`, and removed by making a DELETE call to the same.
-(Additionally you could update the root-variable on the node by making POST to `/v1/nodes/{id}`)
+(Additionally you could update the context-variable on the node by making PUT to `/v1/nodes/{id}`)
 All subjects are defined as root contexts. Please note that POST and DELETE calls to `/v1/contexts` does not create or remove nodes, 
-it only marks those nodes as being a root context or not. 
+it only marks those nodes as being a context or not. 
 
 To list all root contexts, make a GET call to `/v1/contexts`. The contexts will be listed with their ID, (translated) name and path. 
  
@@ -378,3 +378,42 @@ The results will contain *Equations with one variable*, *Equations with two vari
 
 If a resource is used in several subjects, you can tag it as core or supplementary material in each of the subjects
 separately. 
+
+
+## Versioning of a complete api
+
+Since all nodes in the tree/graph are connected, data versioning is handled with multi-tenancy. This is implemented with
+schema-based multi-tenancy. The tenancy is connected to a Version-entity in the database, and all requests to `/v1/versions`
+is routed to the base schema, taxonomy_api. This makes all version handling consistent. 
+
+When a new version is created, a custom script is triggered and clones another schema, based on the parameters provided.
+This script is fetched from [pg-clone-schema](https://github.com/denishpatel/pg-clone-schema/blob/master/clone_schema.sql).
+Versions can be based on either the base schema or another version. A version can have one of three stauses: BETA, PUBLISED,
+or ARCHIVED. When a BETA schema is published, the current PUBLISHED is set as ARCHIVED. There are no practical limits to
+how many versions can be present in the application. Each version get a corresponding hash-value, and the schema name
+is based on this value, e.g. taxonomy_api_abcd.
+
+A HttpHeader VersionHash is used to address which schema to communicate with. If no header is provided, the code defaults
+to the published version if there is one. If no versions are created, the base schema is used. Values for the header can
+be found by fetching list of versions from the versions-endpoint.
+
+Mark that only GET-request uses published version when no header is provided. PUT and POST uses base schema. This is to
+support backwards compability for clients. Clients are advised to always use the header value `VersionHash: default` when
+interacting with the api, or specify correct version hash from the version-table.
+
+### Publishing changes
+
+When you have a published version and want to make the changes available to clients, you can either make a full or partial 
+publish of specified changes. A full publish is the easiest and fastest, and is simply done by making a new version based 
+on the base-schema, and then marking the version as published.
+
+A partial publish is more time consuming, but gives more control over what is being published. This is done by using the 
+`/v1/nodes/{id}/publish` endpoint. This endpoint takes, in addition to an id of a node in the path, two url-params: sourceId 
+and targetId. These params specifies the publicIds of the target and source versions where the node is to be published. If
+sourceId is omitted, the base schema is used.
+
+The endpoint goes recursively through the node and _all_ children and copies all data from source to target. This is done 
+by registering the publicId of all node-connections and nodes in the changelog-table. A scheduled task in ChangelogService
+checks this table every second and starts processing changes whenever any are available. This makes it possible to share
+the data-copying between several servers in a cluster. The further down a node-tree a node is published, the shorter the 
+time used for copying. 
