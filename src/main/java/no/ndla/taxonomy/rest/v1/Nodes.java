@@ -160,8 +160,13 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         var ids = nodeRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
         var results = nodeRepository.findByIds(ids.getContent());
         var contents = results.stream()
-                .map(node ->
-                        new NodeDTO(Optional.empty(), node, language.orElse("nb"), Optional.empty(), includeContexts))
+                .map(node -> new NodeDTO(
+                        Optional.empty(),
+                        Optional.empty(),
+                        node,
+                        language.orElse("nb"),
+                        Optional.empty(),
+                        includeContexts))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }

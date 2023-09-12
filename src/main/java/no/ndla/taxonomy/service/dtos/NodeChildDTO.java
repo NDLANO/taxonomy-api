@@ -45,6 +45,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
             Optional<Node> root, NodeConnection nodeConnection, String language, Optional<Boolean> includeContexts) {
         super(
                 root,
+                nodeConnection.getParent(),
                 nodeConnection.getChild().orElseThrow(() -> new NotFoundException("Child was not found")),
                 language,
                 Optional.empty(),
@@ -68,7 +69,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
      * Special constructor used to get parents for resource/full
      */
     public NodeChildDTO(Node parent, NodeConnection nodeConnection, String language) {
-        super(Optional.empty(), parent, language, Optional.empty(), Optional.of(false));
+        super(Optional.empty(), nodeConnection.getParent(), parent, language, Optional.empty(), Optional.of(false));
 
         this.rank = nodeConnection.getRank();
         this.connectionId = nodeConnection.getPublicId();

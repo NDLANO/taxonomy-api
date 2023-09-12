@@ -131,7 +131,12 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         var results = nodeRepository.findByIds(ids.getContent());
         var contents = results.stream()
                 .map(node -> new NodeDTO(
-                        Optional.empty(), node, language.orElse("nb"), Optional.empty(), Optional.of(false)))
+                        Optional.empty(),
+                        Optional.empty(),
+                        node,
+                        language.orElse("nb"),
+                        Optional.empty(),
+                        Optional.of(false)))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }

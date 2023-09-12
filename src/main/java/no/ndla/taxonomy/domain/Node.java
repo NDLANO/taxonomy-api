@@ -136,28 +136,30 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     /**
-     * Picks a context based on parameters. If no parameters or no root matching, pick by matching path and primary
+     * Picks a context based on parameters. If no parameters or no matches, pick by comparing path and primary
      *
-     * @param contextId
-     *            If this is present, return the context with corresponding id
-     * @param root
-     *            If this is present, return context with this publicId as root. Else pick context containing roots
-     *            publicId.
-     *
+     * @param contextId If this is present, return the context with corresponding id
+     * @param parent    If this is present, filter contexts where parent is in parentIds
+     * @param root      If this is present, return context with this publicId as root. Else pick context containing roots
+     *                  publicId.
      * @return Context
      */
-    public Optional<Context> pickContext(Optional<String> contextId, Optional<Node> root) {
+    public Optional<Context> pickContext(Optional<String> contextId, Optional<Node> parent, Optional<Node> root) {
         var contexts = getContexts();
         var maybeContext = contextId.flatMap(
                 id -> contexts.stream().filter(c -> c.contextId().equals(id)).findFirst());
         if (maybeContext.isPresent()) {
             return maybeContext;
         }
-        var maybeRoot = root.flatMap(node -> contexts.stream()
-                .filter(c -> c.rootId().equals(node.getPublicId().toString()))
+        var withParent = parent.map(p -> contexts.stream()
+                        .filter(c -> c.parentIds().contains(p.getPublicId().toString()))
+                        .collect(Collectors.toSet()))
+                .orElse(contexts);
+        var withRoot = root.flatMap(r -> withParent.stream()
+                .filter(c -> c.rootId().equals(r.getPublicId().toString()))
                 .findFirst());
-        if (maybeRoot.isPresent()) {
-            return maybeRoot;
+        if (withRoot.isPresent()) {
+            return withRoot;
         }
         return contexts.stream().min((context1, context2) -> {
             final var inPath1 =

@@ -314,8 +314,12 @@ public class NodeTest {
 
     @Test
     void pickTheCorrectContext() {
-        Node parent = new Node(NodeType.NODE);
-        parent = parent.name("parent");
+        Node root = new Node(NodeType.NODE);
+        root = root.name("root");
+        Node parent1 = new Node(NodeType.NODE);
+        parent1 = parent1.name("parent1");
+        Node parent2 = new Node(NodeType.NODE);
+        parent2 = parent2.name("parent2");
         node = node.name("name");
         var context1 = new Context(
                 node.getPublicId().toString(),
@@ -332,12 +336,14 @@ public class NodeTest {
                 0,
                 "urn:connection1");
         var context2 = new Context(
-                parent.getPublicId().toString(),
-                LanguageField.fromNode(parent),
-                parent.getPathPart() + node.getPathPart(),
-                LanguageField.listFromLists(LanguageField.listFromNode(parent), LanguageField.fromNode(node)),
+                root.getPublicId().toString(),
+                LanguageField.fromNode(root),
+                root.getPathPart() + parent1.getPathPart() + context1.path(),
+                LanguageField.listFromLists(
+                        LanguageField.listFromLists(LanguageField.listFromNode(root), LanguageField.fromNode(parent1)),
+                        LanguageField.fromNode(node)),
                 Optional.empty(),
-                List.of(parent.getPublicId().toString()),
+                List.of(root.getPublicId().toString(), parent1.getPublicId().toString()),
                 true,
                 true,
                 true,
@@ -345,28 +351,57 @@ public class NodeTest {
                 "2",
                 0,
                 "urn:connection2");
+        var context3 = new Context(
+                root.getPublicId().toString(),
+                LanguageField.fromNode(root),
+                root.getPathPart() + parent2.getPathPart() + context1.path(),
+                LanguageField.listFromLists(
+                        LanguageField.listFromLists(LanguageField.listFromNode(root), LanguageField.fromNode(parent2)),
+                        LanguageField.fromNode(node)),
+                Optional.empty(),
+                List.of(root.getPublicId().toString(), parent2.getPublicId().toString()),
+                true,
+                true,
+                true,
+                "urn:relevance:core",
+                "3",
+                0,
+                "urn:connection3");
 
-        node.setContexts(Set.of(context2, context1));
+        node.setContexts(Set.of(context3, context2, context1));
 
         {
-            Optional<Context> context = node.pickContext(Optional.of("1"), Optional.empty());
-            assertEquals(context.get().contextId(), context1.contextId());
+            Optional<Context> context = node.pickContext(Optional.of("1"), Optional.empty(), Optional.empty());
+            assertEquals(context1.contextId(), context.get().contextId());
         }
         {
-            Optional<Context> context = node.pickContext(Optional.of("2"), Optional.empty());
-            assertEquals(context.get().contextId(), context2.contextId());
+            Optional<Context> context = node.pickContext(Optional.of("2"), Optional.empty(), Optional.empty());
+            assertEquals(context2.contextId(), context.get().contextId());
         }
         {
-            Optional<Context> context = node.pickContext(Optional.empty(), Optional.of(node));
-            assertEquals(context.get().contextId(), context1.contextId());
+            Optional<Context> context = node.pickContext(Optional.of("3"), Optional.empty(), Optional.empty());
+            assertEquals(context3.contextId(), context.get().contextId());
         }
         {
-            Optional<Context> context = node.pickContext(Optional.empty(), Optional.of(parent));
-            assertEquals(context.get().contextId(), context2.contextId());
+            Optional<Context> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.of(node));
+            assertEquals(context1.contextId(), context.get().contextId());
         }
         {
-            Optional<Context> context = node.pickContext(Optional.empty(), Optional.empty());
-            assertEquals(context.get().contextId(), context1.contextId());
+            Optional<Context> context = node.pickContext(Optional.empty(), Optional.of(parent1), Optional.of(root));
+            assertEquals(context2.contextId(), context.get().contextId());
+        }
+        {
+            Optional<Context> context = node.pickContext(Optional.empty(), Optional.of(parent2), Optional.of(root));
+            assertEquals(context3.contextId(), context.get().contextId());
+        }
+        {
+            Optional<Context> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.of(root));
+            // could be either 2 or 3, either way root is root
+            assertEquals(root.getPublicId().toString(), context.get().rootId());
+        }
+        {
+            Optional<Context> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.empty());
+            assertEquals(context1.contextId(), context.get().contextId()); // Since context1 is shortest
         }
     }
 }
