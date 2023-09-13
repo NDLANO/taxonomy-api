@@ -232,7 +232,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             Node child = nodeRepository.findByPublicId(
                     nodeConnection.getChild().get().getPublicId());
             if (parent == null || child == null) {
-                throw new RuntimeException("Failed to find parent or child.");
+                return Optional.empty();
             }
             existing = nodeConnectionRepository.findByParentIdAndChildId(parent.getId(), child.getId());
             if (existing != null) {
