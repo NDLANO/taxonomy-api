@@ -231,6 +231,9 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
                     nodeConnection.getParent().get().getPublicId());
             Node child = nodeRepository.findByPublicId(
                     nodeConnection.getChild().get().getPublicId());
+            if (parent == null || child == null) {
+                throw new RuntimeException("Failed to find parent or child.");
+            }
             existing = nodeConnectionRepository.findByParentIdAndChildId(parent.getId(), child.getId());
             if (existing != null) {
                 existing.setPublicId(nodeConnection.getPublicId());
