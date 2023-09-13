@@ -98,7 +98,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false, false);
-        executor.getThreadPoolExecutor().awaitTermination(6, TimeUnit.SECONDS);
 
         while (!changelogRepository.findAll().isEmpty()) {
             executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
@@ -163,7 +162,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false, false);
-        executor.getThreadPoolExecutor().awaitTermination(6, TimeUnit.SECONDS);
 
         while (!changelogRepository.findAll().isEmpty()) {
             executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
@@ -226,7 +224,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false, false);
-        executor.getThreadPoolExecutor().awaitTermination(6, TimeUnit.SECONDS);
 
         while (!changelogRepository.findAll().isEmpty()) {
             executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
@@ -269,7 +266,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false, false);
-        executor.getThreadPoolExecutor().awaitTermination(6, TimeUnit.SECONDS);
 
         while (!changelogRepository.findAll().isEmpty()) {
             executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
@@ -329,7 +325,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false, false);
-        executor.getThreadPoolExecutor().awaitTermination(6, TimeUnit.SECONDS);
 
         while (!changelogRepository.findAll().isEmpty()) {
             executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
@@ -383,7 +378,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false, false);
-        executor.getThreadPoolExecutor().awaitTermination(6, TimeUnit.SECONDS);
 
         while (!changelogRepository.findAll().isEmpty()) {
             executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
@@ -431,9 +425,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false, false);
-        executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
         nodeService.publishNode(second.getPublicId(), Optional.empty(), target.getPublicId(), false, false);
-        executor.getThreadPoolExecutor().awaitTermination(6, TimeUnit.SECONDS);
 
         while (!changelogRepository.findAll().isEmpty()) {
             executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
@@ -494,7 +486,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false, false);
-        executor.getThreadPoolExecutor().awaitTermination(6, TimeUnit.SECONDS);
 
         while (!changelogRepository.findAll().isEmpty()) {
             executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
@@ -517,7 +508,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(second.getPublicId(), Optional.empty(), target.getPublicId(), false, false);
-        executor.getThreadPoolExecutor().awaitTermination(6, TimeUnit.SECONDS);
 
         while (!changelogRepository.findAll().isEmpty()) {
             executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
@@ -574,7 +564,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false, false);
-        executor.getThreadPoolExecutor().awaitTermination(6, TimeUnit.SECONDS);
 
         while (!changelogRepository.findAll().isEmpty()) {
             executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
@@ -595,7 +584,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), false, false);
-        executor.getThreadPoolExecutor().awaitTermination(6, TimeUnit.SECONDS);
 
         while (!changelogRepository.findAll().isEmpty()) {
             executor.getThreadPoolExecutor().awaitTermination(1, TimeUnit.SECONDS);
@@ -647,7 +635,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         TestTransaction.end();
 
         nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), true, false);
-        executor.getThreadPoolExecutor().awaitTermination(6, TimeUnit.SECONDS);
 
         while (!changelogRepository.findAll().isEmpty()) {
             executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
