@@ -82,7 +82,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                 Optional.empty(),
                 Optional.empty(),
                 metadataFilters,
-                Optional.of(false));
+                Optional.of(false),
+                false);
     }
 
     @Deprecated
@@ -106,7 +107,15 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                     Optional<List<String>> contentUris) {
 
         return nodeService.searchByNodeType(
-                query, ids, contentUris, language, Optional.of(false), pageSize, page, Optional.of(NodeType.SUBJECT));
+                query,
+                ids,
+                contentUris,
+                language,
+                Optional.of(false),
+                false,
+                pageSize,
+                page,
+                Optional.of(NodeType.SUBJECT));
     }
 
     @Deprecated
@@ -134,7 +143,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                         node,
                         language.orElse("nb"),
                         Optional.empty(),
-                        Optional.of(false)))
+                        Optional.of(false),
+                        false))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
@@ -240,7 +250,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                         Optional.of(subject),
                         nodeConnection,
                         language.orElse(Constants.DefaultLanguage),
-                        Optional.of(false)))
+                        Optional.of(false),
+                        false))
                 .forEach(returnList::add);
 
         var filtered = returnList.stream()

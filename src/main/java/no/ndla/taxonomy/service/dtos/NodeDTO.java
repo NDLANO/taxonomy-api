@@ -82,7 +82,8 @@ public class NodeDTO {
             Node entity,
             String languageCode,
             Optional<String> contextId,
-            Optional<Boolean> includeContexts) {
+            Optional<Boolean> includeContexts,
+            boolean filterProgrammes) {
         this.id = entity.getPublicId();
         this.contentUri = Optional.ofNullable(entity.getContentUri());
 
@@ -130,6 +131,7 @@ public class NodeDTO {
             }
             LanguageField<String> finalRelevanceName = relevanceName;
             this.contexts = entity.getContexts().stream()
+                    .filter(ctx -> !filterProgrammes || !ctx.rootId().contains(NodeType.PROGRAMME.name()))
                     .map(ctx -> {
                         return new TaxonomyContextDTO(
                                 entity.getPublicId(),

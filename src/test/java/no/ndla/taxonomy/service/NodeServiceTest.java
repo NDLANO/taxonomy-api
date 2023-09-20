@@ -114,6 +114,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
+                false,
                 10,
                 1,
                 Optional.of(NodeType.SUBJECT));
@@ -124,6 +125,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
+                false,
                 10,
                 1,
                 Optional.of(NodeType.TOPIC));
@@ -133,6 +135,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
+                false,
                 10,
                 1,
                 Optional.empty());

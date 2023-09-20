@@ -27,7 +27,7 @@ interface ExtraSpecification<T> {
 public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends TaxonomyRepository<DOMAIN>> {
     REPO getRepository();
 
-    DTO createDTO(DOMAIN domain, String languageCode, Optional<Boolean> includeContexts);
+    DTO createDTO(DOMAIN domain, String languageCode, Optional<Boolean> includeContexts, boolean filterProgrammes);
 
     private Specification<DOMAIN> base() {
         return (root, query, criteriaBuilder) -> criteriaBuilder.isNotNull(root.get("id"));
@@ -54,7 +54,7 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
             Optional<Boolean> includeContext,
             int pageSize,
             int page) {
-        return search(query, ids, contentUris, language, includeContext, pageSize, page, Optional.empty());
+        return search(query, ids, contentUris, language, includeContext, false, pageSize, page, Optional.empty());
     }
 
     default SearchResultDTO<DTO> search(
@@ -63,6 +63,7 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
             Optional<List<String>> contentUris,
             Optional<String> language,
             Optional<Boolean> includeContexts,
+            boolean filterProgrammes,
             int pageSize,
             int page,
             Optional<ExtraSpecification<DOMAIN>> applySpecLambda) {
@@ -111,7 +112,7 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
 
         var languageCode = language.orElse("");
         var dtos = fetched.stream()
-                .map(r -> createDTO(r, languageCode, includeContexts))
+                .map(r -> createDTO(r, languageCode, includeContexts, filterProgrammes))
                 .collect(Collectors.toList());
 
         return new SearchResultDTO<>(fetched.getTotalElements(), page, pageSize, dtos);
