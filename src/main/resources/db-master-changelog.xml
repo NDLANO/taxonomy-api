@@ -1426,4 +1426,10 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20230920 Add nodetype index" author="Gunnar Velle">
+        <createIndex tableName="node" indexName="node_node_type_index">
+            <column name="node_type" />
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>
