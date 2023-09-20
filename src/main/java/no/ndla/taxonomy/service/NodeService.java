@@ -114,7 +114,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Optional<Boolean> isRoot,
             Optional<Boolean> isContext,
             MetadataFilters metadataFilters,
-            Optional<Boolean> includeContexts) {
+            Optional<Boolean> includeContexts,
+            boolean filterProgrammes) {
         final List<NodeDTO> listToReturn = new ArrayList<>();
         var ids = nodeRepository.findIdsFiltered(
                 nodeType,
@@ -138,7 +139,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                     node,
                                     language.get(),
                                     contextId,
-                                    includeContexts))
+                                    includeContexts,
+                                    filterProgrammes))
                             .toList();
                     listToReturn.addAll(dtos);
                 });
@@ -166,7 +168,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
         final var wrappedList = childConnections.stream()
                 .map(nodeConnection ->
-                        new NodeChildDTO(Optional.of(node), nodeConnection, languageCode, Optional.of(false)))
+                        new NodeChildDTO(Optional.of(node), nodeConnection, languageCode, Optional.of(false), false))
                 .toList();
 
         return topicTreeSorter.sortList(wrappedList);
@@ -180,7 +182,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 node,
                 language.orElse(Constants.DefaultLanguage),
                 Optional.empty(),
-                includeContexts);
+                includeContexts,
+                false);
     }
 
     public Node getNode(URI publicId) {
@@ -283,7 +286,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                             Optional.of(root),
                             nodeConnection,
                             languageCode.orElse(Constants.DefaultLanguage),
-                            includeContexts);
+                            includeContexts,
+                            false);
                 })
                 .collect(toList());
     }
@@ -294,8 +298,16 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     @Override
-    public NodeDTO createDTO(Node node, String languageCode, Optional<Boolean> includeContexts) {
-        return new NodeDTO(Optional.empty(), Optional.empty(), node, languageCode, Optional.empty(), includeContexts);
+    public NodeDTO createDTO(
+            Node node, String languageCode, Optional<Boolean> includeContexts, boolean filterProgrammes) {
+        return new NodeDTO(
+                Optional.empty(),
+                Optional.empty(),
+                node,
+                languageCode,
+                Optional.empty(),
+                includeContexts,
+                filterProgrammes);
     }
 
     public SearchResultDTO<NodeDTO> searchByNodeType(
@@ -304,12 +316,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Optional<List<String>> contentUris,
             Optional<String> language,
             Optional<Boolean> includeContexts,
+            boolean filterProgrammes,
             int pageSize,
             int page,
             Optional<NodeType> nodeType) {
         Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
         return SearchService.super.search(
-                query, ids, contentUris, language, includeContexts, pageSize, page, nodeSpecLambda);
+                query, ids, contentUris, language, includeContexts, filterProgrammes, pageSize, page, nodeSpecLambda);
     }
 
     @Transactional

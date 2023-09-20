@@ -42,14 +42,19 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
     private Optional<URI> relevanceId;
 
     public NodeChildDTO(
-            Optional<Node> root, NodeConnection nodeConnection, String language, Optional<Boolean> includeContexts) {
+            Optional<Node> root,
+            NodeConnection nodeConnection,
+            String language,
+            Optional<Boolean> includeContexts,
+            boolean filterProgrammes) {
         super(
                 root,
                 nodeConnection.getParent(),
                 nodeConnection.getChild().orElseThrow(() -> new NotFoundException("Child was not found")),
                 language,
                 Optional.empty(),
-                includeContexts);
+                includeContexts,
+                filterProgrammes);
 
         // This must be enabled when ed is updated to update metadata for connections.
         // this.metadata = new MetadataDto(nodeConnection.getMetadata());
@@ -69,7 +74,14 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
      * Special constructor used to get parents for resource/full
      */
     public NodeChildDTO(Node parent, NodeConnection nodeConnection, String language) {
-        super(Optional.empty(), nodeConnection.getParent(), parent, language, Optional.empty(), Optional.of(false));
+        super(
+                Optional.empty(),
+                nodeConnection.getParent(),
+                parent,
+                language,
+                Optional.empty(),
+                Optional.of(false),
+                false);
 
         this.rank = nodeConnection.getRank();
         this.connectionId = nodeConnection.getPublicId();

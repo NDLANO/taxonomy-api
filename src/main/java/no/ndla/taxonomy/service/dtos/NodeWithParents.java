@@ -29,7 +29,7 @@ public class NodeWithParents extends NodeDTO {
     public NodeWithParents() {}
 
     public NodeWithParents(Node node, String languageCode, Optional<Boolean> includeContexts) {
-        super(Optional.empty(), Optional.empty(), node, languageCode, Optional.empty(), includeContexts);
+        super(Optional.empty(), Optional.empty(), node, languageCode, Optional.empty(), includeContexts, false);
 
         node.getParentConnections().stream()
                 .map(nodeResource -> {

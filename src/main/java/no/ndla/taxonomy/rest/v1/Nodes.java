@@ -99,7 +99,10 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by context id") @RequestParam(value = "contextId", required = false)
                     Optional<String> contextId,
             @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false)
-                    Optional<Boolean> includeContexts) {
+                    Optional<Boolean> includeContexts,
+            @Parameter(description = "Filter out programme contexts")
+                    @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
+                    boolean filterProgrammes) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         var isRootOrContext = isRoot.isPresent() ? isRoot : isContext;
         var defaultNodeTypes = getDefaultNodeTypes(nodeType, contentUri, contextId, isRootOrContext, metadataFilters);
@@ -111,7 +114,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                 isRoot,
                 isContext,
                 metadataFilters,
-                includeContexts);
+                includeContexts,
+                filterProgrammes);
     }
 
     @GetMapping("/search")
@@ -135,10 +139,13 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by nodeType") @RequestParam(value = "nodeType", required = false)
                     Optional<NodeType> nodeType,
             @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false)
-                    Optional<Boolean> includeContexts) {
+                    Optional<Boolean> includeContexts,
+            @Parameter(description = "Filter out programme contexts")
+                    @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
+                    boolean filterProgrammes) {
 
         return nodeService.searchByNodeType(
-                query, ids, contentUris, language, includeContexts, pageSize, page, nodeType);
+                query, ids, contentUris, language, includeContexts, filterProgrammes, pageSize, page, nodeType);
     }
 
     @GetMapping("/page")
@@ -151,7 +158,10 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize,
             @Parameter(name = "includeContexts", description = "Include all contexts")
-                    Optional<Boolean> includeContexts) {
+                    Optional<Boolean> includeContexts,
+            @Parameter(description = "Filter out programme contexts")
+                    @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
+                    boolean filterProgrammes) {
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
         }
@@ -166,7 +176,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                         node,
                         language.orElse("nb"),
                         Optional.empty(),
-                        includeContexts))
+                        includeContexts,
+                        filterProgrammes))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
@@ -247,7 +258,10 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language,
             @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false)
-                    Optional<Boolean> includeContexts) {
+                    Optional<Boolean> includeContexts,
+            @Parameter(description = "Filter out programme contexts")
+                    @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
+                    boolean filterProgrammes) {
         final var node = nodeRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundException("Node", id));
 
         final List<URI> childrenIds;
@@ -277,7 +291,11 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
 
         children.stream()
                 .map(nodeConnection -> new NodeChildDTO(
-                        Optional.of(node), nodeConnection, language.orElse(Constants.DefaultLanguage), includeContexts))
+                        Optional.of(node),
+                        nodeConnection,
+                        language.orElse(Constants.DefaultLanguage),
+                        includeContexts,
+                        filterProgrammes))
                 .forEach(returnList::add);
 
         var filtered = returnList.stream()
