@@ -7,9 +7,9 @@
 
 package no.ndla.taxonomy.domain;
 
-import com.google.common.collect.Sets;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import no.ndla.taxonomy.config.Constants;
 import org.apache.commons.lang3.SerializationUtils;
 
@@ -48,7 +48,8 @@ public class LanguageField<V> extends HashMap<String, V> {
     public static LanguageField<List<String>> listFromLists(
             LanguageField<List<String>> listLanguageField, LanguageField<String> languageField) {
         var breadcrumbs = SerializationUtils.clone(listLanguageField);
-        var languages = Sets.union(listLanguageField.keySet(), languageField.keySet());
+        var languages = Stream.concat(listLanguageField.keySet().stream(), languageField.keySet().stream())
+                .collect(Collectors.toSet());
         var defaultValue = languageField.get(Constants.DefaultLanguage);
         languages.forEach(lang -> {
             var crumbs = breadcrumbs.computeIfAbsent(
