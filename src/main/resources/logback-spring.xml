@@ -1,22 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
-
-    <springProfile name="prod,staging,dev,test">
-        <springProperty name="graylogHost" source="logging.graylog.host" defaultValue=""/>
-        <springProperty name="service" source="service" defaultValue=""/>
-
-        <appender name="GELF" class="de.siegmar.logbackgelf.GelfUdpAppender">
-            <graylogHost>${graylogHost}</graylogHost>
-            <graylogPort>12201</graylogPort>
-            <layout class="de.siegmar.logbackgelf.GelfLayout">
-                <staticField>service:${service}</staticField>
-            </layout>
-        </appender>
-
-        <root level="info">
-            <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="GELF"/>
-        </root>
-    </springProfile>
 </configuration>
