@@ -23,10 +23,6 @@ public class Updater extends Task<DomainEntity> {
         this.element = element;
     }
 
-    public void setCleanUp(boolean cleanUp) {
-        this.cleanUp = cleanUp;
-    }
-
     @Override
     protected Optional<DomainEntity> execute() {
         return domainEntityHelperService.updateEntity(element, this.cleanUp);
