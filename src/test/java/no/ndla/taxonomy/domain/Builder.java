@@ -7,11 +7,11 @@
 
 package no.ndla.taxonomy.domain;
 
+import jakarta.persistence.EntityManager;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
-import javax.persistence.EntityManager;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;

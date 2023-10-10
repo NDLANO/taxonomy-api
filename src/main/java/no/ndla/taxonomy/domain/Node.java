@@ -7,26 +7,19 @@
 
 package no.ndla.taxonomy.domain;
 
-import io.hypersistence.utils.hibernate.type.array.StringArrayType;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
-import io.hypersistence.utils.hibernate.type.json.JsonStringType;
+import jakarta.persistence.*;
 import java.net.URI;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
-import javax.persistence.*;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
 import no.ndla.taxonomy.domain.exceptions.ChildNotFoundException;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
-@TypeDefs({
-    @TypeDef(name = "json", typeClass = JsonStringType.class),
-    @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class),
-    @TypeDef(name = "string-array", typeClass = StringArrayType.class)
-})
 public class Node extends DomainObject implements EntityWithMetadata {
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<NodeConnection> parentConnections = new TreeSet<>();
@@ -61,19 +54,19 @@ public class Node extends DomainObject implements EntityWithMetadata {
     @Column
     private boolean visible = true;
 
-    @Type(type = "jsonb")
+    @Type(JsonBinaryType.class)
     @Column(name = "translations", columnDefinition = "jsonb")
     private List<JsonTranslation> translations = new ArrayList<>();
 
-    @Type(type = "jsonb")
+    @Type(JsonBinaryType.class)
     @Column(name = "grepcodes", columnDefinition = "jsonb")
     private Set<JsonGrepCode> grepcodes = new HashSet<>();
 
-    @Type(type = "jsonb")
+    @Type(JsonBinaryType.class)
     @Column(name = "customfields", columnDefinition = "jsonb")
     private Map<String, String> customfields = new HashMap<>();
 
-    @Type(type = "jsonb")
+    @Type(JsonBinaryType.class)
     @Column(name = "contexts", columnDefinition = "jsonb")
     private Set<Context> contexts = new HashSet<>();
 

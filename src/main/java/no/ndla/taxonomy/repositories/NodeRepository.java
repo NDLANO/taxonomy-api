@@ -41,7 +41,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             """
             SELECT n.id FROM Node n
             LEFT JOIN n.parentConnections pc
-            WHERE ((:nodeTypes) IS NULL OR n.nodeType in (:nodeTypes))
+            WHERE ((:#{#nodeTypes == null} = true) OR n.nodeType in (:nodeTypes))
             AND (:isVisible IS NULL OR n.visible = :isVisible)
             AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, :metadataFilterKey) IS NOT NULL)
             AND (:metadataFilterValue IS NULL OR cast(jsonb_path_query_array(n.customfields, '$.*') as text) like :metadataFilterValue)
@@ -72,7 +72,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             LEFT JOIN FETCH rrt.resourceType
             LEFT JOIN FETCH n.parentConnections pc
             LEFT JOIN FETCH pc.relevance
-            WHERE ((:nodeTypes) IS NULL OR n.nodeType in (:nodeTypes))
+            WHERE ((:#{#nodeTypes == null} = true) OR n.nodeType in (:nodeTypes))
             AND (:isVisible IS NULL OR n.visible = :isVisible)
             AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, :metadataFilterKey) IS NOT NULL)
             AND (:metadataFilterValue IS NULL OR cast(jsonb_path_query_array(n.customfields, '$.*') as text) like :metadataFilterValue)

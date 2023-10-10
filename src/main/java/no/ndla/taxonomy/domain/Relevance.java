@@ -8,25 +8,18 @@
 package no.ndla.taxonomy.domain;
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
-import io.hypersistence.utils.hibernate.type.json.JsonStringType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import javax.persistence.Column;
-import javax.persistence.Entity;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
 
 @Entity
-@TypeDefs({
-    @TypeDef(name = "json", typeClass = JsonStringType.class),
-    @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
-})
 public class Relevance extends DomainObject {
 
-    @Type(type = "jsonb")
+    @Type(JsonBinaryType.class)
     @Column(name = "translations", columnDefinition = "jsonb")
     protected List<JsonTranslation> translations = new ArrayList<>();
 

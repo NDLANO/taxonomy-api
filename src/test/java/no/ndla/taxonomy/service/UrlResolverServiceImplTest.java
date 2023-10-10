@@ -9,9 +9,9 @@ package no.ndla.taxonomy.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import java.net.URI;
-import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
 import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.domain.UrlMapping;

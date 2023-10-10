@@ -84,7 +84,7 @@ public class ResourceTypesTest extends RestTest {
             }
         };
 
-        testUtils.createResource("/v1/resource-types/", command);
+        testUtils.createResource("/v1/resource-types", command);
 
         ResourceType result = resourceTypeRepository.getByPublicId(command.id);
         assertEquals(command.name, result.getName());
@@ -98,8 +98,8 @@ public class ResourceTypesTest extends RestTest {
                 name = "name";
             }
         };
-        testUtils.createResource("/v1/resource-types/", command);
-        testUtils.createResource("/v1/resource-types/", command, status().isConflict());
+        testUtils.createResource("/v1/resource-types", command);
+        testUtils.createResource("/v1/resource-types", command, status().isConflict());
     }
 
     @Test
@@ -142,7 +142,7 @@ public class ResourceTypesTest extends RestTest {
     public void can_add_subresourcetype_to_resourcetype() throws Exception {
         ResourceType parent = builder.resourceType(rt -> rt.name("external"));
 
-        URI childId = getId(testUtils.createResource("/v1/resource-types/", new ResourceTypePUT() {
+        URI childId = getId(testUtils.createResource("/v1/resource-types", new ResourceTypePUT() {
             {
                 parentId = parent.getPublicId();
                 name = "youtube";

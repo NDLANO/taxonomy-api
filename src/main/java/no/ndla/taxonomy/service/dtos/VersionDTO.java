@@ -9,11 +9,11 @@ package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Optional;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 

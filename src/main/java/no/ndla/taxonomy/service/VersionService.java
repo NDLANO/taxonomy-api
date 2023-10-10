@@ -7,13 +7,13 @@
 
 package no.ndla.taxonomy.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;

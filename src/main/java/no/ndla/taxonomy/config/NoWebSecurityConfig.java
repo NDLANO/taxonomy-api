@@ -20,7 +20,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class NoWebSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable().authorizeRequests().antMatchers("/**").permitAll();
+        http.csrf().disable().authorizeHttpRequests().requestMatchers("/**").permitAll();
         http.headers().cacheControl().disable();
         return http.build();
     }

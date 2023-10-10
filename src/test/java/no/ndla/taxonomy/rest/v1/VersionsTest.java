@@ -64,14 +64,14 @@ public class VersionsTest extends RestTest {
     public void can_get_versions_from_hash() throws Exception {
         Version version = builder.version();
         {
-            MockHttpServletResponse response = testUtils.getResource("/v1/versions/?hash=" + version.getHash());
+            MockHttpServletResponse response = testUtils.getResource("/v1/versions?hash=" + version.getHash());
             VersionDTO[] versions = testUtils.getObject(VersionDTO[].class, response);
             assertEquals(1, versions.length);
             assertEquals(version.getHash(), versions[0].getHash());
         }
         {
             MockHttpServletResponse response =
-                    testUtils.getResource("/v1/versions/?hash=random", status().is4xxClientError());
+                    testUtils.getResource("/v1/versions?hash=random", status().is4xxClientError());
             assertEquals(404, response.getStatus());
             assertEquals("{\"error\":\"Version not found\"}", response.getContentAsString());
         }
@@ -80,14 +80,14 @@ public class VersionsTest extends RestTest {
     @Test
     public void can_get_versions_of_type() throws Exception {
         Version version = builder.version(); // BETA
-        MockHttpServletResponse response = testUtils.getResource("/v1/versions/?type=BETA");
+        MockHttpServletResponse response = testUtils.getResource("/v1/versions?type=BETA");
         VersionDTO[] versions = testUtils.getObject(VersionDTO[].class, response);
         assertEquals(1, versions.length);
         assertAllTrue(versions, v -> v.getVersionType() == VersionType.BETA);
         assertAllTrue(versions, v -> v.getId().equals(version.getPublicId()));
 
         Version version2 = builder.version(v -> v.type(VersionType.PUBLISHED));
-        MockHttpServletResponse response2 = testUtils.getResource("/v1/versions/?type=PUBLISHED");
+        MockHttpServletResponse response2 = testUtils.getResource("/v1/versions?type=PUBLISHED");
         VersionDTO[] versions2 = testUtils.getObject(VersionDTO[].class, response2);
         assertEquals(1, versions2.length);
         assertAllTrue(versions2, v -> v.getVersionType() == VersionType.PUBLISHED);
