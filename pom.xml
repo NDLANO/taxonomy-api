@@ -23,7 +23,6 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>17</java.version>
         <javamelody.version>2.0.1</javamelody.version>
-        <testcontainers.version>1.19.0</testcontainers.version>
         <spotless.version>2.40.0</spotless.version>
     </properties>
 

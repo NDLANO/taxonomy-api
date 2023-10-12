@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = {"/v1/resources/{id}/translations"})
+@RequestMapping(path = {"/v1/resources/{id}/translations", "/v1/resources/{id}/translations/"})
 public class ResourceTranslations {
 
     private final NodeRepository nodeRepository;

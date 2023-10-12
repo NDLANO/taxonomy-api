@@ -34,7 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = {"/v1/topic-subtopics"})
+@RequestMapping(path = {"/v1/topic-subtopics", "/v1/topic-subtopics/"})
 public class TopicSubtopics {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;

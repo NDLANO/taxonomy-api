@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = {"/v1/topic-resources"})
+@RequestMapping(path = {"/v1/topic-resources", "/v1/topic-resources/"})
 public class TopicResources {
 
     private final NodeRepository nodeRepository;
