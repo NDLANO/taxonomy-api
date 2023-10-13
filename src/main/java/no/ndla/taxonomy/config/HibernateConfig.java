@@ -41,7 +41,7 @@ public class HibernateConfig {
         Map<String, Object> properties = new HashMap<>(jpaProperties.getProperties());
         properties.put(
                 AvailableSettings.PHYSICAL_NAMING_STRATEGY,
-                "io.hypersistence.utils.hibernate.naming.CamelCaseToSnakeCaseNamingStrategy");
+                "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy");
         properties.put(
                 AvailableSettings.IMPLICIT_NAMING_STRATEGY,
                 "org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy");
