@@ -24,7 +24,7 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             JOIN FETCH nc.child c
             LEFT JOIN FETCH nc.relevance rel
             WHERE nc.parent.publicId IN :nodeId
-            AND ((:nodeTypes) IS NULL OR c.nodeType in :nodeTypes)
+            AND ((:#{#nodeTypes == null} = true) OR c.nodeType in :nodeTypes)
             """)
     List<NodeConnection> findAllByNodeIdInIncludingTopicAndSubtopic(Set<URI> nodeId, List<NodeType> nodeTypes);
 
@@ -37,7 +37,7 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             LEFT JOIN FETCH nc.relevance rel
             LEFT JOIN FETCH rrt.resourceType rt
             WHERE n.publicId IN :nodeIds
-            AND (:resourceTypePublicIds IS NULL OR rt.publicId IN :resourceTypePublicIds)
+            AND ((:#{#resourceTypePublicIds == null} = true) OR rt.publicId IN :resourceTypePublicIds)
             AND (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)
             AND child.nodeType = 'RESOURCE'
             """)
@@ -106,7 +106,7 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
     List<NodeConnection> doFindAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<URI> nodeId);
 
     default List<NodeConnection> findAllByChildIdIncludeTranslationsAndCachedUrlsAndFilters(Collection<URI> nodeId) {
-        if (nodeId.size() == 0) {
+        if (nodeId.isEmpty()) {
             return List.of();
         }
 

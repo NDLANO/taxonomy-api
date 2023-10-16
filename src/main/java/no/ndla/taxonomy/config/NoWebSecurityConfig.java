@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -20,8 +22,9 @@ import org.springframework.security.web.SecurityFilterChain;
 public class NoWebSecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable().authorizeRequests().antMatchers("/**").permitAll();
-        http.headers().cacheControl().disable();
+        http.csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(authReg -> authReg.requestMatchers("/**").permitAll());
+        http.headers((headers) -> headers.cacheControl(HeadersConfigurer.CacheControlConfig::disable));
         return http.build();
     }
 }

@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = {"/v1/subjects"})
+@RequestMapping(path = {"/v1/subjects", "/v1/subjects/"})
 public class Subjects extends CrudControllerWithMetadata<Node> {
     private final TreeSorter topicTreeSorter;
     private final RecursiveNodeTreeService recursiveNodeTreeService;

@@ -7,9 +7,9 @@
 
 package no.ndla.taxonomy.domain;
 
+import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
-import javax.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 

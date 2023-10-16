@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = {"/v1/nodes"})
+@RequestMapping(path = {"/v1/nodes", "/v1/nodes/"})
 public class Nodes extends CrudControllerWithMetadata<Node> {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
@@ -62,7 +62,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             Optional<String> contextId,
             Optional<Boolean> isContext,
             MetadataFilters metadataFilters) {
-        if (nodeType.isPresent() && nodeType.get().size() > 0) {
+        if (nodeType.isPresent() && !nodeType.get().isEmpty()) {
             return nodeType.get();
         }
         if (contentURI.isEmpty() && contextId.isEmpty() && isContext.isEmpty() && !metadataFilters.hasFilters()) {

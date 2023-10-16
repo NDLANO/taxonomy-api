@@ -7,9 +7,9 @@
 
 package no.ndla.taxonomy.config;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 import java.net.URI;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
 
 /*
  Auto converts URI data types used in domain objects to/from string type used in database

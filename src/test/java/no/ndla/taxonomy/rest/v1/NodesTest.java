@@ -11,6 +11,7 @@ import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import jakarta.persistence.EntityManager;
 import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,7 +19,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.persistence.EntityManager;
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.JsonGrepCode;

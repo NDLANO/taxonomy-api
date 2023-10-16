@@ -7,9 +7,9 @@
 
 package no.ndla.taxonomy.domain;
 
+import jakarta.persistence.*;
 import java.io.Serializable;
 import java.net.URI;
-import javax.persistence.*;
 
 @MappedSuperclass
 public class DomainEntity implements Serializable {

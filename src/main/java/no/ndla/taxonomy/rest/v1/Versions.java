@@ -29,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = {"/v1/versions"})
+@RequestMapping(path = {"/v1/versions", "/v1/versions/"})
 public class Versions extends CrudController<Version> {
     private final VersionRepository versionRepository;
     private final VersionService versionService;

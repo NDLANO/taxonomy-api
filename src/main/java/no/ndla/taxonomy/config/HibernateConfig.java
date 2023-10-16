@@ -12,7 +12,6 @@ import java.util.Map;
 import javax.sql.DataSource;
 import no.ndla.taxonomy.service.VersionConnectionProvider;
 import no.ndla.taxonomy.service.VersionIdentifierResolver;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,11 +41,10 @@ public class HibernateConfig {
         Map<String, Object> properties = new HashMap<>(jpaProperties.getProperties());
         properties.put(
                 AvailableSettings.PHYSICAL_NAMING_STRATEGY,
-                "org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy");
+                "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy");
         properties.put(
                 AvailableSettings.IMPLICIT_NAMING_STRATEGY,
                 "org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy");
-        properties.put(Environment.MULTI_TENANT, MultiTenancyStrategy.SCHEMA);
         properties.put(Environment.MULTI_TENANT_CONNECTION_PROVIDER, versionConnectionProvider);
         properties.put(Environment.MULTI_TENANT_IDENTIFIER_RESOLVER, versionIdentifierResolver);
 

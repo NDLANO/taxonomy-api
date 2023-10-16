@@ -7,10 +7,10 @@
 
 package no.ndla.taxonomy.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import java.net.URI;
 import java.sql.Timestamp;
-import javax.persistence.Column;
-import javax.persistence.Entity;
 
 @Entity
 public class Changelog extends DomainEntity {

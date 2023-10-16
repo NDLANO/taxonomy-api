@@ -7,9 +7,9 @@
 
 package no.ndla.taxonomy.rest.v1;
 
+import jakarta.persistence.EntityManager;
 import java.net.URI;
 import java.util.Set;
-import javax.persistence.EntityManager;
 import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;

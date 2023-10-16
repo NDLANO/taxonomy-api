@@ -8,19 +8,15 @@
 package no.ndla.taxonomy.domain;
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
-import io.hypersistence.utils.hibernate.type.json.JsonStringType;
+import jakarta.persistence.*;
 import java.net.URI;
 import java.time.Instant;
 import java.util.*;
-import javax.persistence.*;
-import javax.persistence.Entity;
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
-@TypeDefs({
-    @TypeDef(name = "json", typeClass = JsonStringType.class),
-    @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
-})
 public class NodeConnection extends DomainEntity
         implements EntityWithMetadata, Comparable<NodeConnection>, SortableResourceConnection {
     @ManyToOne
@@ -44,11 +40,11 @@ public class NodeConnection extends DomainEntity
     @Column
     private boolean visible = true;
 
-    @Type(type = "jsonb")
+    @Type(JsonBinaryType.class)
     @Column(name = "grepcodes", columnDefinition = "jsonb")
     private Set<JsonGrepCode> grepcodes = new HashSet<>();
 
-    @Type(type = "jsonb")
+    @Type(JsonBinaryType.class)
     @Column(name = "customfields", columnDefinition = "jsonb")
     private Map<String, String> customfields = new HashMap<>();
 

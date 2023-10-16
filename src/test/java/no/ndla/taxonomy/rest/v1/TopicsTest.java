@@ -11,10 +11,10 @@ import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import jakarta.persistence.EntityManager;
 import java.net.URI;
 import java.util.Optional;
 import java.util.Set;
-import javax.persistence.EntityManager;
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;

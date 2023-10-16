@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = {"/v1/node-resources"})
+@RequestMapping(path = {"/v1/node-resources", "/v1/node-resources/"})
 public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
 
     private final NodeRepository nodeRepository;

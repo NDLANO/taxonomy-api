@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = {"/v1/resource-types"})
+@RequestMapping(path = {"/v1/resource-types", "/v1/resource-types/"})
 public class ResourceTypes extends CrudController<ResourceType> {
 
     private final ResourceTypeRepository resourceTypeRepository;

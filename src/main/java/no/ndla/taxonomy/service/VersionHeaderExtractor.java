@@ -7,8 +7,8 @@
 
 package no.ndla.taxonomy.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;

@@ -14,7 +14,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.14</version>
+        <version>3.1.4</version>
         <relativePath/>
     </parent>
 
@@ -22,8 +22,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>17</java.version>
-        <javamelody.version>1.95.0</javamelody.version>
-        <testcontainers.version>1.19.0</testcontainers.version>
+        <javamelody.version>2.0.1</javamelody.version>
         <spotless.version>2.40.0</spotless.version>
     </properties>
 
@@ -68,8 +67,8 @@
 
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-webmvc-core</artifactId>
-            <version>1.7.0</version>
+            <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+            <version>2.2.0</version>
         </dependency>
 
         <dependency>
@@ -154,13 +153,7 @@
         <dependency>
             <groupId>net.lbruun.springboot</groupId>
             <artifactId>preliquibase-spring-boot-starter</artifactId>
-            <version>1.2.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
-            <scope>test</scope>
+            <version>1.4.0</version>
         </dependency>
 
         <dependency>
@@ -176,8 +169,13 @@
 
         <dependency>
             <groupId>io.hypersistence</groupId>
-            <artifactId>hypersistence-utils-hibernate-55</artifactId>
-            <version>3.5.1</version>
+            <artifactId>hypersistence-utils-hibernate-62</artifactId>
+            <version>3.5.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-jakarta-xmlbind-annotations</artifactId>
         </dependency>
 
         <dependency>

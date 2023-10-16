@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = {"/v1/contexts"})
+@RequestMapping(path = {"/v1/contexts", "/v1/contexts/"})
 @Transactional(readOnly = true)
 public class Contexts {
     private final NodeRepository nodeRepository;

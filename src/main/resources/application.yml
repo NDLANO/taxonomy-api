@@ -19,7 +19,10 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant-path-matcher
-logging.graylog.host: ""
+
+hibernate:
+  id:
+    db_structure_naming_strategy: legacy
 
 springdoc:
   writer-with-order-by-keys: true

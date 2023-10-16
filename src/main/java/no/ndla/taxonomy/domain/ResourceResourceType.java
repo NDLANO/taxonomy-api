@@ -7,10 +7,10 @@
 
 package no.ndla.taxonomy.domain;
 
+import jakarta.persistence.*;
 import java.net.URI;
 import java.util.Objects;
 import java.util.UUID;
-import javax.persistence.*;
 
 @Entity
 public class ResourceResourceType extends DomainEntity implements Comparable<ResourceResourceType> {

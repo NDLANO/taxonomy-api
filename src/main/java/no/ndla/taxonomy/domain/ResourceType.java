@@ -8,20 +8,13 @@
 package no.ndla.taxonomy.domain;
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
-import io.hypersistence.utils.hibernate.type.json.JsonStringType;
+import jakarta.persistence.*;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
-import javax.persistence.*;
 import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
 
 @Entity
-@TypeDefs({
-    @TypeDef(name = "json", typeClass = JsonStringType.class),
-    @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
-})
 public class ResourceType extends DomainObject implements Comparable<ResourceType> {
 
     public ResourceType() {
@@ -46,7 +39,7 @@ public class ResourceType extends DomainObject implements Comparable<ResourceTyp
             cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST})
     private Set<ResourceType> subtypes = new HashSet<>();
 
-    @Type(type = "jsonb")
+    @Type(JsonBinaryType.class)
     @Column(name = "translations", columnDefinition = "jsonb")
     private List<JsonTranslation> translations = new ArrayList<>();
 

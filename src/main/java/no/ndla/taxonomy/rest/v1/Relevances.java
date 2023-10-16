@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = {"/v1/relevances"})
+@RequestMapping(path = {"/v1/relevances", "/v1/relevances/"})
 public class Relevances extends CrudController<Relevance> {
 
     private final RelevanceRepository relevanceRepository;

@@ -250,18 +250,6 @@
         </sql>
     </changeSet>
 
-    <changeSet id="20190924 disable update triggers for cached_url before removing shared topics"
-               author="Jon-Eirik Pettersen">
-        <sql splitStatements="false" stripComments="false">
-            DROP TRIGGER refresh_paths ON subject;
-            DROP TRIGGER refresh_paths ON topic;
-            DROP TRIGGER refresh_paths ON resource;
-            DROP TRIGGER refresh_paths ON subject_topic;
-            DROP TRIGGER refresh_paths ON topic_subtopic;
-            DROP TRIGGER refresh_paths ON topic_resource;
-        </sql>
-    </changeSet>
-
     <changeSet id="20191114 re-add primary field to topic_resources" author="Jon-Eirik Pettersen">
         <addColumn tableName="topic_resource">
             <column name="is_primary" type="boolean" defaultValueBoolean="true">
@@ -1414,7 +1402,10 @@
     </changeSet>
 
     <changeSet id="20230823 Add constraint to avoid same content_uri for resources" author="Gunnar Velle">
-        <sql>CREATE EXTENSION IF NOT EXISTS "btree_gist"</sql>
+        <validCheckSum>8:4437aae86611f78da57268f45c3cd929</validCheckSum>
+        <!-- Need a separate extensions schema to make cloning schemas possible! -->
+        <sql>CREATE SCHEMA IF NOT EXISTS extensions</sql>
+        <sql>CREATE EXTENSION IF NOT EXISTS "btree_gist" schema extensions</sql>
         <sql>
             ALTER TABLE node
             ADD CONSTRAINT unique_content_uri_for_resource

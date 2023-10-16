@@ -10,10 +10,10 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.persistence.EntityManager;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.EntityManager;
 import no.ndla.taxonomy.domain.ResourceType;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.ResourceTypeRepository;
@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = {"/v1/resource-types/{id}/translations"})
+@RequestMapping(path = {"/v1/resource-types/{id}/translations", "/v1/resource-types/{id}/translations/"})
 public class ResourceTypeTranslations {
 
     private final ResourceTypeRepository resourceTypeRepository;
