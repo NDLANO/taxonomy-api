@@ -41,7 +41,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
 
     private NodeConnection doCreateConnection(
             Node parent, Node child, boolean requestedPrimary, Relevance relevance, int rank) {
-        if (child.getParentConnections().size() == 0) {
+        if (child.getParentConnections().isEmpty()) {
             // First connected is always primary regardless of request
             requestedPrimary = true;
         }
@@ -49,7 +49,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         NodeConnection connection;
 
         if (parent != null) {
-            connection = NodeConnection.create(parent, child);
+            connection = NodeConnection.create(parent, child, relevance);
         } else {
             throw new IllegalArgumentException("Unknown parent-child connection");
         }
@@ -63,7 +63,6 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         }
 
         updateRank(connection, rank);
-        updateRelevance(connection, relevance);
 
         contextUpdaterService.updateContexts(child);
 

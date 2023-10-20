@@ -37,6 +37,8 @@ public class ResourcesTest extends RestTest {
     void clearAllRepos() {
         nodeRepository.deleteAllAndFlush();
         nodeConnectionRepository.deleteAllAndFlush();
+
+        builder.core();
     }
 
     @Test
@@ -104,7 +106,7 @@ public class ResourcesTest extends RestTest {
 
         assertAllTrue(resources, r -> r.getMetadata() != null);
         assertAllTrue(resources, r -> r.getMetadata().isVisible());
-        assertAllTrue(resources, r -> r.getMetadata().getGrepCodes().size() == 0);
+        assertAllTrue(resources, r -> r.getMetadata().getGrepCodes().isEmpty());
     }
 
     @Test
@@ -491,7 +493,7 @@ public class ResourcesTest extends RestTest {
         assertAllTrue(result, connection -> connection.getMetadata() != null);
         assertAllTrue(result, connection -> connection.getMetadata().isVisible());
         assertAllTrue(
-                result, connection -> connection.getMetadata().getGrepCodes().size() == 0);
+                result, connection -> connection.getMetadata().getGrepCodes().isEmpty());
     }
 
     @Test
@@ -789,7 +791,7 @@ public class ResourcesTest extends RestTest {
 
         assertAllTrue(resources, r -> r.getMetadata() != null);
         assertAllTrue(resources, r -> r.getMetadata().isVisible());
-        assertAllTrue(resources, r -> r.getMetadata().getGrepCodes().size() == 0);
+        assertAllTrue(resources, r -> r.getMetadata().getGrepCodes().isEmpty());
     }
 
     @Test

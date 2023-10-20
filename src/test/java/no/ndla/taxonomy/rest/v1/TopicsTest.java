@@ -36,6 +36,7 @@ public class TopicsTest extends RestTest {
     @BeforeEach
     void clearAllRepos() {
         nodeRepository.deleteAllAndFlush();
+        builder.core();
     }
 
     @Test
@@ -56,7 +57,7 @@ public class TopicsTest extends RestTest {
 
         assertNotNull(topic.getMetadata());
         assertTrue(topic.getMetadata().isVisible());
-        assertTrue(topic.getMetadata().getGrepCodes().size() == 0);
+        assertTrue(topic.getMetadata().getGrepCodes().isEmpty());
     }
 
     @Test
@@ -163,7 +164,7 @@ public class TopicsTest extends RestTest {
 
         assertAllTrue(topics, t -> t.getMetadata() != null);
         assertAllTrue(topics, t -> t.getMetadata().isVisible());
-        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 0);
+        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().isEmpty());
     }
 
     /**
@@ -196,7 +197,7 @@ public class TopicsTest extends RestTest {
         var connections = testUtils.getObject(ConnectionDTO[].class, response);
 
         assertEquals(3, connections.length, "Correct number of connections");
-        assertAllTrue(connections, c -> c.getPaths().size() > 0); // all connections have at least one path
+        assertAllTrue(connections, c -> !c.getPaths().isEmpty()); // all connections have at least one path
 
         connectionsHaveCorrectTypes(connections);
     }
@@ -228,7 +229,7 @@ public class TopicsTest extends RestTest {
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata() != null);
         assertAllTrue(subtopics, subtopic -> subtopic.getMetadata().isVisible());
         assertAllTrue(
-                subtopics, subtopic -> subtopic.getMetadata().getGrepCodes().size() == 0);
+                subtopics, subtopic -> subtopic.getMetadata().getGrepCodes().isEmpty());
     }
 
     private void connectionsHaveCorrectTypes(ConnectionDTO[] connections) {

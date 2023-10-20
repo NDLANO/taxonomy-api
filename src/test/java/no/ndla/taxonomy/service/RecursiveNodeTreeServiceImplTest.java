@@ -29,20 +29,24 @@ import org.springframework.transaction.annotation.Transactional;
 class RecursiveNodeTreeServiceImplTest extends AbstractIntegrationTest {
     private NodeRepository nodeRepository;
     private NodeConnectionRepository nodeConnectionRepository;
+    private RelevanceRepository relevanceRepository;
 
     private RecursiveNodeTreeService service;
+    private Relevance core;
 
     @BeforeEach
     void setUp(
             @Autowired NodeConnectionRepository nodeConnectionRepository,
             @Autowired NodeRepository nodeRepository,
+            @Autowired RelevanceRepository relevanceRepository,
             @Autowired TestSeeder testSeeder) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
+        this.relevanceRepository = relevanceRepository;
 
         nodeRepository.deleteAllAndFlush();
 
-        testSeeder.recursiveNodesBySubjectNodeIdTestSetup();
+        core = testSeeder.recursiveNodesBySubjectNodeIdTestSetup();
 
         service = new RecursiveNodeTreeService(nodeConnectionRepository);
     }
@@ -307,10 +311,10 @@ class RecursiveNodeTreeServiceImplTest extends AbstractIntegrationTest {
         // ↑ topic 4 ← topic 3 ←
 
         nodeConnectionRepository.saveAll(Set.of(
-                NodeConnection.create(topic1, topic2),
-                NodeConnection.create(topic2, topic3),
-                NodeConnection.create(topic3, topic4),
-                NodeConnection.create(topic4, topic1)));
+                NodeConnection.create(topic1, topic2, core),
+                NodeConnection.create(topic2, topic3, core),
+                NodeConnection.create(topic3, topic4, core),
+                NodeConnection.create(topic4, topic1, core)));
 
         assertThrows(IllegalStateException.class, () -> service.getRecursiveNodes(topic1));
         assertThrows(IllegalStateException.class, () -> service.getRecursiveNodes(topic2));

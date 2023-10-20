@@ -19,10 +19,19 @@ import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.util.HashUtil;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 public class QueryTest extends RestTest {
+
+    @BeforeEach
+    public void add_core_relevance() {
+        nodeRepository.deleteAllAndFlush();
+        nodeConnectionRepository.deleteAllAndFlush();
+
+        builder.core();
+    }
 
     @Test
     public void can_get_resource_by_contentURI() throws Exception {
@@ -149,7 +158,6 @@ public class QueryTest extends RestTest {
         var resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1")
                 .contentUri("urn:article:1")
                 .translation("nb", t -> t.name("Ressurs")));
-        builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
         builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")
@@ -214,7 +222,6 @@ public class QueryTest extends RestTest {
         var resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1")
                 .contentUri("urn:article:1")
                 .translation("nb", t -> t.name("Ressurs")));
-        builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
         builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")
@@ -290,7 +297,6 @@ public class QueryTest extends RestTest {
         var resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1")
                 .contentUri("urn:article:1")
                 .translation("nb", t -> t.name("Ressurs")));
-        builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
         builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")
@@ -327,7 +333,6 @@ public class QueryTest extends RestTest {
         var resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1")
                 .contentUri("urn:article:1")
                 .translation("nb", t -> t.name("Ressurs")));
-        builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
         builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")

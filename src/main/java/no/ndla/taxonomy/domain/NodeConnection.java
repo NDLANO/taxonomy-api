@@ -77,19 +77,23 @@ public class NodeConnection extends DomainEntity
         this.rank = rank;
     }
 
-    public static NodeConnection create(Node parent, Node child) {
-        return NodeConnection.create(parent, child, true);
+    public static NodeConnection create(Node parent, Node child, Relevance relevance) {
+        return NodeConnection.create(parent, child, relevance, true);
     }
 
-    public static NodeConnection create(Node parent, Node child, boolean isPrimary) {
+    public static NodeConnection create(Node parent, Node child, Relevance relevance, boolean isPrimary) {
         if (child == null || parent == null) {
             throw new NullPointerException("Both parent and child must be present.");
+        }
+        if (relevance == null) {
+            throw new NullPointerException("Relevance must be present.");
         }
 
         final var nodeConnection = new NodeConnection();
         nodeConnection.parent = parent;
         nodeConnection.child = child;
         nodeConnection.isPrimary = isPrimary;
+        nodeConnection.relevance = relevance;
 
         parent.addChildConnection(nodeConnection);
         child.addParentConnection(nodeConnection);

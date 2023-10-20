@@ -24,9 +24,18 @@ import no.ndla.taxonomy.rest.v1.dtos.TopicResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.TopicResourcePOST;
 import no.ndla.taxonomy.rest.v1.dtos.TopicResourcePUT;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class TopicResourcesTest extends RestTest {
+
+    @BeforeEach
+    public void add_core_relevance() {
+        nodeRepository.deleteAllAndFlush();
+        nodeConnectionRepository.deleteAllAndFlush();
+
+        builder.core();
+    }
 
     @Test
     public void can_add_resource_to_topic() throws Exception {
@@ -113,7 +122,7 @@ public class TopicResourcesTest extends RestTest {
         final var calculus = newTopic().name("calculus");
         final var integration = newResource();
         integration.setName("Introduction to integration");
-        NodeConnection.create(calculus, integration);
+        NodeConnection.create(calculus, integration, builder.core());
 
         final var calculusId = calculus.getPublicId();
         final var integrationId = integration.getPublicId();
@@ -131,14 +140,16 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void can_delete_topic_resource() throws Exception {
-        URI id = save(NodeConnection.create(newTopic(), newResource())).getPublicId();
+        URI id = save(NodeConnection.create(newTopic(), newResource(), builder.core()))
+                .getPublicId();
         testUtils.deleteResource("/v1/topic-resources/" + id);
         assertNull(nodeRepository.findByPublicId(id));
     }
 
     @Test
     public void can_update_topic_resource() throws Exception {
-        URI id = save(NodeConnection.create(newTopic(), newResource())).getPublicId();
+        URI id = save(NodeConnection.create(newTopic(), newResource(), builder.core()))
+                .getPublicId();
 
         testUtils.updateResource("/v1/topic-resources/" + id, new TopicResourcePUT() {
             {
@@ -151,7 +162,8 @@ public class TopicResourcesTest extends RestTest {
 
     @Test
     public void cannot_unset_primary_topic() throws Exception {
-        URI id = save(NodeConnection.create(newTopic(), newResource(), true)).getPublicId();
+        URI id = save(NodeConnection.create(newTopic(), newResource(), builder.core(), true))
+                .getPublicId();
 
         testUtils.updateResource(
                 "/v1/topic-resources/" + id,
@@ -179,12 +191,12 @@ public class TopicResourcesTest extends RestTest {
         Node electricity = newTopic().name("electricity");
         var alternatingCurrent = newResource();
         alternatingCurrent.setName("How alternating current works");
-        save(NodeConnection.create(electricity, alternatingCurrent));
+        save(NodeConnection.create(electricity, alternatingCurrent, builder.core()));
 
         Node calculus = newTopic().name("calculus");
         var integration = newResource();
         integration.setName("Introduction to integration");
-        save(NodeConnection.create(calculus, integration));
+        save(NodeConnection.create(calculus, integration, builder.core()));
 
         var response = testUtils.getResource("/v1/topic-resources");
         var topicResources = testUtils.getObject(TopicResourceDTO[].class, response);
@@ -206,7 +218,7 @@ public class TopicResourcesTest extends RestTest {
         Node electricity = newTopic().name("electricity");
         var alternatingCurrent = newResource();
         alternatingCurrent.setName("How alternating current works");
-        var topicResource = save(NodeConnection.create(electricity, alternatingCurrent));
+        var topicResource = save(NodeConnection.create(electricity, alternatingCurrent, builder.core()));
 
         var resource = testUtils.getResource("/v1/topic-resources/" + topicResource.getPublicId());
         var topicResourceIndexDocument = testUtils.getObject(TopicResourceDTO.class, resource);
@@ -245,8 +257,10 @@ public class TopicResourcesTest extends RestTest {
         var squares = builder.node(NodeType.RESOURCE, r -> r.name("Squares").publicId("urn:resource:1"));
         var circles = builder.node(NodeType.RESOURCE, r -> r.name("Circles").publicId("urn:resource:2"));
 
-        URI geometrySquares = save(NodeConnection.create(geometry, squares)).getPublicId();
-        URI geometryCircles = save(NodeConnection.create(geometry, circles)).getPublicId();
+        URI geometrySquares =
+                save(NodeConnection.create(geometry, squares, builder.core())).getPublicId();
+        URI geometryCircles =
+                save(NodeConnection.create(geometry, circles, builder.core())).getPublicId();
         testUtils.updateResource("/v1/topic-resources/" + geometryCircles, new TopicResourcePUT() {
             {
                 primary = Optional.of(true);
@@ -416,7 +430,7 @@ public class TopicResourcesTest extends RestTest {
         Node parent = newTopic();
         for (int i = 1; i < 11; i++) {
             var sub = newResource();
-            var topicResource = NodeConnection.create(parent, sub);
+            var topicResource = NodeConnection.create(parent, sub, builder.core());
             topicResource.setRank(i);
             connections.add(topicResource);
             save(topicResource);
@@ -429,7 +443,7 @@ public class TopicResourcesTest extends RestTest {
         Node parent = newTopic();
         for (int i = 1; i < 11; i++) {
             var sub = newResource();
-            var topicSubtopic = NodeConnection.create(parent, sub);
+            var topicSubtopic = NodeConnection.create(parent, sub, builder.core());
             if (i <= 5) {
                 topicSubtopic.setRank(i);
             } else {

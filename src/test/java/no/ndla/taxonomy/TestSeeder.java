@@ -129,13 +129,9 @@ public class TestSeeder {
         return node;
     }
 
-    private NodeConnection createNodeConnection(String publicId, Node parent, Node child, Integer rank) {
-        return createNodeConnection(publicId, parent, child, rank, null);
-    }
-
     private NodeConnection createNodeConnection(
             String publicId, Node parent, Node child, Integer rank, Relevance relevance) {
-        final var nodeConnection = NodeConnection.create(parent, child);
+        final var nodeConnection = NodeConnection.create(parent, child, relevance);
 
         if (publicId != null) {
             nodeConnection.setPublicId(URI.create(publicId));
@@ -143,10 +139,6 @@ public class TestSeeder {
 
         if (rank != null) {
             nodeConnection.setRank(rank);
-        }
-
-        if (relevance != null) {
-            nodeConnection.setRelevance(relevance);
         }
 
         nodeConnectionRepository.saveAndFlush(nodeConnection);
@@ -157,13 +149,8 @@ public class TestSeeder {
     }
 
     private NodeConnection createNodeResource(
-            String publicId, Node node, Node resource, Boolean isPrimary, Integer rank) {
-        return createNodeResource(publicId, node, resource, isPrimary, rank, null);
-    }
-
-    private NodeConnection createNodeResource(
             String publicId, Node node, Node resource, Boolean isPrimary, Integer rank, Relevance relevance) {
-        final var nodeResource = NodeConnection.create(node, resource);
+        final var nodeResource = NodeConnection.create(node, resource, relevance);
 
         if (publicId != null) {
             nodeResource.setPublicId(URI.create(publicId));
@@ -176,8 +163,6 @@ public class TestSeeder {
         if (rank != null) {
             nodeResource.setRank(rank);
         }
-
-        nodeResource.setRelevance(relevance);
 
         nodeResource.getParent().ifPresent(cachedUrlUpdaterService::updateContexts);
 
@@ -233,7 +218,7 @@ public class TestSeeder {
         createNodeConnection("urn:topic-subtopic:5", topic5, topic8, 3, supp);
     }
 
-    public void recursiveNodesBySubjectNodeIdTestSetup() {
+    public Relevance recursiveNodesBySubjectNodeIdTestSetup() {
         // create a test structure with subjects, topics and subtopics as follows
         // (S=subject, ST = subject-topic, TST = topic-subtopic)
 
@@ -248,6 +233,7 @@ public class TestSeeder {
         // - TST:3-3
 
         clearAll();
+        final var core = createRelevance("urn:relevance:core", "Core");
         final var subject1 = createNode(NodeType.SUBJECT, "urn:subject:1", "S:1", null, true);
 
         final var topic1 = createNode(NodeType.TOPIC, "urn:topic:1", "ST:1", null, false);
@@ -259,19 +245,23 @@ public class TestSeeder {
         final var topic7 = createNode(NodeType.TOPIC, "urn:topic:7", "TST:3-2", null, false);
         final var topic8 = createNode(NodeType.TOPIC, "urn:topic:8", "TST:3-3", null, false);
 
-        createNodeConnection("urn:subject-topic:1", subject1, topic1, 1);
-        createNodeConnection("urn:subject-topic:2", subject1, topic3, 2);
-        createNodeConnection("urn:subject-topic-3", subject1, topic5, 3);
+        createNodeConnection("urn:subject-topic:1", subject1, topic1, 1, core);
+        createNodeConnection("urn:subject-topic:2", subject1, topic3, 2, core);
+        createNodeConnection("urn:subject-topic-3", subject1, topic5, 3, core);
 
-        createNodeConnection("urn:topic-subtopic:1", topic1, topic2, 1);
-        createNodeConnection("urn:topic-subtopic:2", topic3, topic4, 1);
-        createNodeConnection("urn:topic-subtopic:3", topic5, topic6, 1);
-        createNodeConnection("urn:topic-subtopic:4", topic5, topic7, 2);
-        createNodeConnection("urn:topic-subtopic:5", topic5, topic8, 3);
+        createNodeConnection("urn:topic-subtopic:1", topic1, topic2, 1, core);
+        createNodeConnection("urn:topic-subtopic:2", topic3, topic4, 1, core);
+        createNodeConnection("urn:topic-subtopic:3", topic5, topic6, 1, core);
+        createNodeConnection("urn:topic-subtopic:4", topic5, topic7, 2, core);
+        createNodeConnection("urn:topic-subtopic:5", topic5, topic8, 3, core);
+
+        return core;
     }
 
     public void resourceInDualSubjectsTestSetup() {
         clearAll();
+
+        final var core = createRelevance("urn:relevance:core", "Core");
 
         final var subject1 = createNode(NodeType.SUBJECT, "urn:subject:1", "S:1", null, true);
         final var subject2 = createNode(NodeType.SUBJECT, "urn:subject:2", "S:2", null, true);
@@ -279,13 +269,13 @@ public class TestSeeder {
         final var topic1 = createNode(NodeType.TOPIC, "urn:topic:1", "T:1", null, false);
         final var topic2 = createNode(NodeType.TOPIC, "urn:topic:2", "T:2", null, false);
 
-        createNodeConnection("urn:subject-topic:1", subject1, topic1, 1);
-        createNodeConnection("urn:subject-topic:2", subject2, topic2, 1);
+        createNodeConnection("urn:subject-topic:1", subject1, topic1, 1, core);
+        createNodeConnection("urn:subject-topic:2", subject2, topic2, 1, core);
 
         final var resource1 = createResource("urn:resource:1", "R:1", null);
 
-        createNodeResource("urn:topic-resource:1", topic1, resource1, true, 1);
-        createNodeResource("urn:topic-resource:2", topic2, resource1, false, 1);
+        createNodeResource("urn:topic-resource:1", topic1, resource1, true, 1, core);
+        createNodeResource("urn:topic-resource:2", topic2, resource1, false, 1, core);
     }
 
     public void resourceWithResourceTypeTestSetup() {
@@ -299,18 +289,20 @@ public class TestSeeder {
 
         clearAll();
 
+        final var core = createRelevance("urn:relevance:core", "Core");
+
         final var subject1 = createNode(NodeType.SUBJECT, "urn:subject:1", "S:1", null, true);
 
         final var topic1 = createNode(NodeType.NODE, "urn:topic:1", "ST:1", null, false);
-        createNodeConnection("urn:subject-topic:1", subject1, topic1, 1);
+        createNodeConnection("urn:subject-topic:1", subject1, topic1, 1, core);
 
         final var resource1 = createResource("urn:resource:1", "R:1", null);
         final var resource2 = createResource("urn:resource:2", "R:2", null);
         final var resource3 = createResource("urn:resource:3", "R:3", null);
 
-        createNodeResource("urn:topic-resource:1", topic1, resource1, true, 1);
-        createNodeResource("urn:topic-resource:2", topic1, resource2, true, 2);
-        createNodeResource("urn:topic-resource:3", topic1, resource3, true, 3);
+        createNodeResource("urn:topic-resource:1", topic1, resource1, true, 1, core);
+        createNodeResource("urn:topic-resource:2", topic1, resource2, true, 2, core);
+        createNodeResource("urn:topic-resource:3", topic1, resource3, true, 3, core);
 
         final var resourceType1 = createResourceType(null, "urn:resourcetype:video", "Video");
 
@@ -338,7 +330,7 @@ public class TestSeeder {
         clearAll();
 
         final var core = createRelevance("urn:relevance:core", "Core");
-        final var supp = createRelevance("urn:relevance:supplementary", "Supplementary");
+        final var supplementary = createRelevance("urn:relevance:supplementary", "Supplementary");
 
         final var subject1 = createNode(NodeType.SUBJECT, "urn:subject:1", "S:1", null, true);
 
@@ -366,7 +358,7 @@ public class TestSeeder {
         createNodeResource("urn:topic-resource:7", topic1, resource7, true, 7, core);
         createNodeResource("urn:topic-resource:8", topic1, resource8, true, 8, core);
         createNodeResource("urn:topic-resource:9", topic1, resource9, true, 9, core);
-        createNodeResource("urn:topic-resource:10", topic1, resource10, true, 10, supp);
+        createNodeResource("urn:topic-resource:10", topic1, resource10, true, 10, supplementary);
     }
 
     public void resourceWithRelevancesButWithoutFiltersTestSetup() {
@@ -383,13 +375,16 @@ public class TestSeeder {
 
         clearAll();
 
+        final var core = createRelevance("urn:relevance:core", "Core");
+        final var supplementary = createRelevance("urn:relevance:supplementary", "Supplementary");
+
         final var subject1 = createNode(NodeType.SUBJECT, "urn:subject:1", "Year 1", null, true);
         final var subject2 = createNode(NodeType.SUBJECT, "urn:subject:2", "Year 2", null, true);
 
         final var f1topic1 = createNode(NodeType.TOPIC, "urn:topic:1:1", "ST:1", null, false);
-        createNodeConnection("urn:subject-topic:1", subject1, f1topic1, 1, null);
+        createNodeConnection("urn:subject-topic:1", subject1, f1topic1, 1, core);
         final var f2topic1 = createNode(NodeType.TOPIC, "urn:topic:2:1", "ST:1", null, false);
-        createNodeConnection("urn:subject-topic:2", subject2, f2topic1, 1, null);
+        createNodeConnection("urn:subject-topic:2", subject2, f2topic1, 1, core);
 
         final var resource1 = createResource("urn:resource:1", "R:1", null);
         final var resource2 = createResource("urn:resource:2", "R:2", null);
@@ -402,24 +397,21 @@ public class TestSeeder {
         final var resource9 = createResource("urn:resource:9", "R:9", null);
         final var resource10 = createResource("urn:resource:10", "R:10", null);
 
-        final var relevance1 = createRelevance("urn:relevance:core", "Core");
-        final var relevance2 = createRelevance("urn:relevance:supplementary", "Supplementary");
-
-        createNodeResource("urn:topic-resource:1", f1topic1, resource1, true, 1, relevance1);
-        createNodeResource("urn:topic-resource:2", f1topic1, resource2, true, 2, relevance1);
-        createNodeResource("urn:topic-resource:3", f1topic1, resource3, true, 3, relevance1);
-        createNodeResource("urn:topic-resource:4", f1topic1, resource4, true, 4, relevance1);
-        createNodeResource("urn:topic-resource:5", f1topic1, resource5, true, 5, relevance1);
-        createNodeResource("urn:topic-resource:6", f2topic1, resource1, true, 1, relevance2);
-        createNodeResource("urn:topic-resource:7", f2topic1, resource2, true, 2, relevance2);
-        createNodeResource("urn:topic-resource:8", f2topic1, resource3, true, 3, relevance2);
-        createNodeResource("urn:topic-resource:9", f2topic1, resource4, true, 4, relevance2);
-        createNodeResource("urn:topic-resource:10", f2topic1, resource5, true, 5, relevance2);
-        createNodeResource("urn:topic-resource:11", f2topic1, resource6, true, 6, relevance1);
-        createNodeResource("urn:topic-resource:12", f2topic1, resource7, true, 7, relevance1);
-        createNodeResource("urn:topic-resource:13", f2topic1, resource8, true, 8, relevance1);
-        createNodeResource("urn:topic-resource:14", f2topic1, resource9, true, 9, relevance1);
-        createNodeResource("urn:topic-resource:15", f2topic1, resource10, true, 10, relevance1);
+        createNodeResource("urn:topic-resource:1", f1topic1, resource1, true, 1, core);
+        createNodeResource("urn:topic-resource:2", f1topic1, resource2, true, 2, core);
+        createNodeResource("urn:topic-resource:3", f1topic1, resource3, true, 3, core);
+        createNodeResource("urn:topic-resource:4", f1topic1, resource4, true, 4, core);
+        createNodeResource("urn:topic-resource:5", f1topic1, resource5, true, 5, core);
+        createNodeResource("urn:topic-resource:6", f2topic1, resource1, true, 1, supplementary);
+        createNodeResource("urn:topic-resource:7", f2topic1, resource2, true, 2, supplementary);
+        createNodeResource("urn:topic-resource:8", f2topic1, resource3, true, 3, supplementary);
+        createNodeResource("urn:topic-resource:9", f2topic1, resource4, true, 4, supplementary);
+        createNodeResource("urn:topic-resource:10", f2topic1, resource5, true, 5, supplementary);
+        createNodeResource("urn:topic-resource:11", f2topic1, resource6, true, 6, core);
+        createNodeResource("urn:topic-resource:12", f2topic1, resource7, true, 7, core);
+        createNodeResource("urn:topic-resource:13", f2topic1, resource8, true, 8, core);
+        createNodeResource("urn:topic-resource:14", f2topic1, resource9, true, 9, core);
+        createNodeResource("urn:topic-resource:15", f2topic1, resource10, true, 10, core);
     }
 
     public void resourceWithRelevancesAndOneNullRelevanceButWithoutFiltersTestSetup() {
@@ -436,13 +428,16 @@ public class TestSeeder {
 
         clearAll();
 
+        final var core = createRelevance("urn:relevance:core", "Core");
+        final var supplementary = createRelevance("urn:relevance:supplementary", "Supplementary");
+
         final var subject1 = createNode(NodeType.SUBJECT, "urn:subject:1", "Year 1", null, true);
         final var subject2 = createNode(NodeType.SUBJECT, "urn:subject:2", "Year 2", null, true);
 
         final var f1topic1 = createNode(NodeType.TOPIC, "urn:topic:1:1", "ST:1", null, false);
-        createNodeConnection("urn:subject-topic:1", subject1, f1topic1, 1, null);
+        createNodeConnection("urn:subject-topic:1", subject1, f1topic1, 1, core);
         final var f2topic1 = createNode(NodeType.TOPIC, "urn:topic:2:1", "ST:1", null, false);
-        createNodeConnection("urn:subject-topic:2", subject2, f2topic1, 1, null);
+        createNodeConnection("urn:subject-topic:2", subject2, f2topic1, 1, core);
 
         final var resource1 = createResource("urn:resource:1", "R:1", null);
         final var resource2 = createResource("urn:resource:2", "R:2", null);
@@ -455,24 +450,21 @@ public class TestSeeder {
         final var resource9 = createResource("urn:resource:9", "R:9", null);
         final var resource10 = createResource("urn:resource:10", "R:10", null);
 
-        final var relevance1 = createRelevance("urn:relevance:core", "Core");
-        final var relevance2 = createRelevance("urn:relevance:supplementary", "Supplementary");
-
-        createNodeResource("urn:topic-resource:1", f1topic1, resource1, true, 1, relevance1);
-        createNodeResource("urn:topic-resource:2", f1topic1, resource2, true, 2, relevance1);
-        createNodeResource("urn:topic-resource:3", f1topic1, resource3, true, 3, relevance1);
-        createNodeResource("urn:topic-resource:4", f1topic1, resource4, true, 4, relevance1);
-        createNodeResource("urn:topic-resource:5", f1topic1, resource5, true, 5, relevance1);
-        createNodeResource("urn:topic-resource:6", f2topic1, resource1, true, 1, relevance2);
-        createNodeResource("urn:topic-resource:7", f2topic1, resource2, true, 2, relevance2);
-        createNodeResource("urn:topic-resource:8", f2topic1, resource3, true, 3, relevance2);
-        createNodeResource("urn:topic-resource:9", f2topic1, resource4, true, 4, relevance2);
-        createNodeResource("urn:topic-resource:10", f2topic1, resource5, true, 5, relevance2);
-        createNodeResource("urn:topic-resource:11", f2topic1, resource6, true, 6, relevance1);
-        createNodeResource("urn:topic-resource:12", f2topic1, resource7, true, 7, relevance1);
-        createNodeResource("urn:topic-resource:13", f2topic1, resource8, true, 8, relevance1);
-        createNodeResource("urn:topic-resource:14", f2topic1, resource9, true, 9, relevance1);
-        createNodeResource("urn:topic-resource:15", f2topic1, resource10, true, 10, null);
+        createNodeResource("urn:topic-resource:1", f1topic1, resource1, true, 1, core);
+        createNodeResource("urn:topic-resource:2", f1topic1, resource2, true, 2, core);
+        createNodeResource("urn:topic-resource:3", f1topic1, resource3, true, 3, core);
+        createNodeResource("urn:topic-resource:4", f1topic1, resource4, true, 4, core);
+        createNodeResource("urn:topic-resource:5", f1topic1, resource5, true, 5, core);
+        createNodeResource("urn:topic-resource:6", f2topic1, resource1, true, 1, supplementary);
+        createNodeResource("urn:topic-resource:7", f2topic1, resource2, true, 2, supplementary);
+        createNodeResource("urn:topic-resource:8", f2topic1, resource3, true, 3, supplementary);
+        createNodeResource("urn:topic-resource:9", f2topic1, resource4, true, 4, supplementary);
+        createNodeResource("urn:topic-resource:10", f2topic1, resource5, true, 5, supplementary);
+        createNodeResource("urn:topic-resource:11", f2topic1, resource6, true, 6, core);
+        createNodeResource("urn:topic-resource:12", f2topic1, resource7, true, 7, core);
+        createNodeResource("urn:topic-resource:13", f2topic1, resource8, true, 8, core);
+        createNodeResource("urn:topic-resource:14", f2topic1, resource9, true, 9, core);
+        createNodeResource("urn:topic-resource:15", f2topic1, resource10, true, 10, core);
     }
 
     public void resourcesBySubjectIdTestSetup() {
@@ -503,6 +495,8 @@ public class TestSeeder {
 
         clearAll();
 
+        final var core = createRelevance("urn:relevance:core", "Core");
+
         final var subject1 = createNode(NodeType.SUBJECT, "urn:subject:1", "S:1", null, true);
 
         final var topic1 = createNode(NodeType.TOPIC, "urn:topic:1", "ST:1", null, false);
@@ -515,16 +509,16 @@ public class TestSeeder {
         final var topic8 = createNode(NodeType.TOPIC, "urn:topic:8", "TST:3-3", null, false);
         final var topic9 = createNode(NodeType.TOPIC, "urn:topic:9", "TST:2-1-1", null, false);
 
-        createNodeConnection("urn:subject-topic:1", subject1, topic1, 1);
-        createNodeConnection("urn:subject-topic:2", subject1, topic3, 2);
-        createNodeConnection("urn:subject-topic-3", subject1, topic5, 3);
+        createNodeConnection("urn:subject-topic:1", subject1, topic1, 1, core);
+        createNodeConnection("urn:subject-topic:2", subject1, topic3, 2, core);
+        createNodeConnection("urn:subject-topic-3", subject1, topic5, 3, core);
 
-        createNodeConnection("urn:topic-subtopic:1", topic1, topic2, 1);
-        createNodeConnection("urn:topic-subtopic:2", topic3, topic4, 1);
-        createNodeConnection("urn:topic-subtopic:3", topic5, topic6, 1);
-        createNodeConnection("urn:topic-subtopic:4", topic5, topic7, 2);
-        createNodeConnection("urn:topic-subtopic:5", topic5, topic8, 3);
-        createNodeConnection("urn:topic-subtopic:6", topic4, topic9, 1);
+        createNodeConnection("urn:topic-subtopic:1", topic1, topic2, 1, core);
+        createNodeConnection("urn:topic-subtopic:2", topic3, topic4, 1, core);
+        createNodeConnection("urn:topic-subtopic:3", topic5, topic6, 1, core);
+        createNodeConnection("urn:topic-subtopic:4", topic5, topic7, 2, core);
+        createNodeConnection("urn:topic-subtopic:5", topic5, topic8, 3, core);
+        createNodeConnection("urn:topic-subtopic:6", topic4, topic9, 1, core);
 
         final var resource1 = createResource("urn:resource:1", "R:1", null);
         final var resource2 = createResource("urn:resource:2", "R:2", null);
@@ -537,18 +531,16 @@ public class TestSeeder {
         final var resource9 = createResource("urn:resource:9", "R:9", null);
         final var resource10 = createResource("urn:resource:10", "R:10", null);
 
-        createNodeResource("urn:topic-resource:1", topic2, resource1, true, 1);
-        createNodeResource("urn:topic-resource:2", topic4, resource2, true, 1);
-        createNodeResource("urn:topic-resource:3", topic6, resource3, true, 1);
-        createNodeResource("urn:topic-resource:4", topic6, resource4, true, 3);
-        createNodeResource("urn:topic-resource:5", topic6, resource5, true, 2);
-        createNodeResource("urn:topic-resource:6", topic7, resource6, true, 1);
-        createNodeResource("urn:topic-resource:7", topic8, resource7, true, 1);
-        createNodeResource("urn:topic-resource:8", topic8, resource8, true, 2);
-        createNodeResource("urn:topic-resource:9", topic1, resource9, true, 1);
-        createNodeResource("urn:topic-resource:10", topic9, resource10, true, 1);
-
-        final var relevance1 = createRelevance("urn:relevance:core", "Core");
+        createNodeResource("urn:topic-resource:1", topic2, resource1, true, 1, core);
+        createNodeResource("urn:topic-resource:2", topic4, resource2, true, 1, core);
+        createNodeResource("urn:topic-resource:3", topic6, resource3, true, 1, core);
+        createNodeResource("urn:topic-resource:4", topic6, resource4, true, 3, core);
+        createNodeResource("urn:topic-resource:5", topic6, resource5, true, 2, core);
+        createNodeResource("urn:topic-resource:6", topic7, resource6, true, 1, core);
+        createNodeResource("urn:topic-resource:7", topic8, resource7, true, 1, core);
+        createNodeResource("urn:topic-resource:8", topic8, resource8, true, 2, core);
+        createNodeResource("urn:topic-resource:9", topic1, resource9, true, 1, core);
+        createNodeResource("urn:topic-resource:10", topic9, resource10, true, 1, core);
     }
 
     public void resourcesBySubjectNodeIdTestSetup() {
@@ -579,6 +571,8 @@ public class TestSeeder {
 
         clearAll();
 
+        final var core = createRelevance("urn:relevance:core", "Core");
+
         final var subject1 = createNode(NodeType.SUBJECT, "urn:subject:1", "S:1", null, true);
 
         final var topic1 = createNode(NodeType.TOPIC, "urn:topic:1", "ST:1", null, false);
@@ -591,16 +585,16 @@ public class TestSeeder {
         final var topic8 = createNode(NodeType.TOPIC, "urn:topic:8", "TST:3-3", null, false);
         final var topic9 = createNode(NodeType.TOPIC, "urn:topic:9", "TST:2-1-1", null, false);
 
-        createNodeConnection("urn:subject-topic:1", subject1, topic1, 1);
-        createNodeConnection("urn:subject-topic:2", subject1, topic3, 2);
-        createNodeConnection("urn:subject-topic-3", subject1, topic5, 3);
+        createNodeConnection("urn:subject-topic:1", subject1, topic1, 1, core);
+        createNodeConnection("urn:subject-topic:2", subject1, topic3, 2, core);
+        createNodeConnection("urn:subject-topic-3", subject1, topic5, 3, core);
 
-        createNodeConnection("urn:topic-subtopic:1", topic1, topic2, 1);
-        createNodeConnection("urn:topic-subtopic:2", topic3, topic4, 1);
-        createNodeConnection("urn:topic-subtopic:3", topic5, topic6, 1);
-        createNodeConnection("urn:topic-subtopic:4", topic5, topic7, 2);
-        createNodeConnection("urn:topic-subtopic:5", topic5, topic8, 3);
-        createNodeConnection("urn:topic-subtopic:6", topic4, topic9, 1);
+        createNodeConnection("urn:topic-subtopic:1", topic1, topic2, 1, core);
+        createNodeConnection("urn:topic-subtopic:2", topic3, topic4, 1, core);
+        createNodeConnection("urn:topic-subtopic:3", topic5, topic6, 1, core);
+        createNodeConnection("urn:topic-subtopic:4", topic5, topic7, 2, core);
+        createNodeConnection("urn:topic-subtopic:5", topic5, topic8, 3, core);
+        createNodeConnection("urn:topic-subtopic:6", topic4, topic9, 1, core);
 
         final var resource1 = createResource("urn:resource:1", "R:1", null);
         final var resource2 = createResource("urn:resource:2", "R:2", null);
@@ -613,18 +607,16 @@ public class TestSeeder {
         final var resource9 = createResource("urn:resource:9", "R:9", null);
         final var resource10 = createResource("urn:resource:10", "R:10", null);
 
-        createNodeResource("urn:topic-resource:1", topic2, resource1, true, 1);
-        createNodeResource("urn:topic-resource:2", topic4, resource2, true, 1);
-        createNodeResource("urn:topic-resource:3", topic6, resource3, true, 1);
-        createNodeResource("urn:topic-resource:4", topic6, resource4, true, 3);
-        createNodeResource("urn:topic-resource:5", topic6, resource5, true, 2);
-        createNodeResource("urn:topic-resource:6", topic7, resource6, true, 1);
-        createNodeResource("urn:topic-resource:7", topic8, resource7, true, 1);
-        createNodeResource("urn:topic-resource:8", topic8, resource8, true, 2);
-        createNodeResource("urn:topic-resource:9", topic1, resource9, true, 1);
-        createNodeResource("urn:topic-resource:10", topic9, resource10, true, 1);
-
-        final var relevance1 = createRelevance("urn:relevance:core", "Core");
+        createNodeResource("urn:topic-resource:1", topic2, resource1, true, 1, core);
+        createNodeResource("urn:topic-resource:2", topic4, resource2, true, 1, core);
+        createNodeResource("urn:topic-resource:3", topic6, resource3, true, 1, core);
+        createNodeResource("urn:topic-resource:4", topic6, resource4, true, 3, core);
+        createNodeResource("urn:topic-resource:5", topic6, resource5, true, 2, core);
+        createNodeResource("urn:topic-resource:6", topic7, resource6, true, 1, core);
+        createNodeResource("urn:topic-resource:7", topic8, resource7, true, 1, core);
+        createNodeResource("urn:topic-resource:8", topic8, resource8, true, 2, core);
+        createNodeResource("urn:topic-resource:9", topic1, resource9, true, 1, core);
+        createNodeResource("urn:topic-resource:10", topic9, resource10, true, 1, core);
     }
 
     public void subtopicsByNodeIdAndRelevanceTestSetup() {
@@ -679,6 +671,7 @@ public class TestSeeder {
         //
 
         clearAll();
+        final var core = createRelevance("urn:relevance:core", "Core");
 
         final var subject1 = createNode(NodeType.SUBJECT, "urn:subject:1000", "S:1", null, true);
 
@@ -687,10 +680,10 @@ public class TestSeeder {
         final var topic3 = createNode(NodeType.TOPIC, "urn:topic:3000", "T3", null, false);
         final var topic4 = createNode(NodeType.TOPIC, "urn:topic:4000", "T4", null, false);
 
-        createNodeConnection("urn:subject-topic:1000", subject1, topic1, 1, null);
+        createNodeConnection("urn:subject-topic:1000", subject1, topic1, 1, core);
 
-        createNodeConnection("urn:topic-subtopic:1000", topic1, topic2, 1, null);
-        createNodeConnection("urn:topic-subtopic:2000", topic2, topic3, 1, null);
-        createNodeConnection("urn:topic-subtopic:3000", topic2, topic4, 2, null);
+        createNodeConnection("urn:topic-subtopic:1000", topic1, topic2, 1, core);
+        createNodeConnection("urn:topic-subtopic:2000", topic2, topic3, 1, core);
+        createNodeConnection("urn:topic-subtopic:3000", topic2, topic4, 2, core);
     }
 }

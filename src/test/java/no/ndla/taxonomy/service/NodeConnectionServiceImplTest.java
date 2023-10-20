@@ -62,9 +62,9 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         final var topic8 = builder.node(NodeType.TOPIC);
         final var topic9 = builder.node(NodeType.TOPIC);
 
-        final var relevance = builder.relevance();
+        final var relevance = builder.core();
 
-        final var connection1 = service.connectParentChild(topic2, topic1, null, 1);
+        final var connection1 = service.connectParentChild(topic2, topic1, builder.core(), 1);
         assertNotNull(connection1);
         assertNotNull(connection1.getId());
         assertEquals(1, connection1.getRank());
@@ -74,10 +74,10 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         verify(cachedUrlUpdaterService, atLeastOnce()).updateContexts(topic1);
 
         // Test ranking
-        final var connection4 = service.connectParentChild(topic4, topic5, null, null);
+        final var connection4 = service.connectParentChild(topic4, topic5, relevance, null);
         assertEquals(1, connection4.getRank());
 
-        final var connection5 = service.connectParentChild(topic4, topic6, null, null);
+        final var connection5 = service.connectParentChild(topic4, topic6, relevance, null);
         assertEquals(1, connection4.getRank());
         assertEquals(2, connection5.getRank());
 
@@ -248,10 +248,11 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         final var subtopic1 = builder.node(NodeType.TOPIC);
         final var subtopic2 = builder.node(NodeType.TOPIC);
         final var subtopic3 = builder.node(NodeType.TOPIC);
+        final var relevance = builder.core();
 
-        final var topic1subtopic1 = NodeConnection.create(topic1, subtopic1);
-        final var topic1subtopic2 = NodeConnection.create(topic1, subtopic2);
-        final var topic1subtopic3 = NodeConnection.create(topic1, subtopic3);
+        final var topic1subtopic1 = NodeConnection.create(topic1, subtopic1, relevance);
+        final var topic1subtopic2 = NodeConnection.create(topic1, subtopic2, relevance);
+        final var topic1subtopic3 = NodeConnection.create(topic1, subtopic3, relevance);
 
         // Just verifies the pre-conditions of the created objects that is used for the test
         assertTrue(topic1.getChildConnections().containsAll(Set.of(topic1subtopic1, topic1subtopic2, topic1subtopic3)));
@@ -306,12 +307,14 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         final var resource2 = builder.node(NodeType.RESOURCE);
         final var resource3 = builder.node(NodeType.RESOURCE);
 
-        final var topic1resource1 = NodeConnection.create(topic1, resource1, true);
-        final var topic1resource2 = NodeConnection.create(topic1, resource2, true);
-        final var topic1resource3 = NodeConnection.create(topic1, resource3, true);
+        final var relevance = builder.relevance();
 
-        final var topic2resource1 = NodeConnection.create(topic2, resource1, false);
-        final var topic3resource1 = NodeConnection.create(topic3, resource1, false);
+        final var topic1resource1 = NodeConnection.create(topic1, resource1, relevance, true);
+        final var topic1resource2 = NodeConnection.create(topic1, resource2, relevance, true);
+        final var topic1resource3 = NodeConnection.create(topic1, resource3, relevance, true);
+
+        final var topic2resource1 = NodeConnection.create(topic2, resource1, relevance, false);
+        final var topic3resource1 = NodeConnection.create(topic3, resource1, relevance, false);
 
         assertTrue(topic1resource1.isPrimary().orElseThrow());
         assertTrue(topic1resource2.isPrimary().orElseThrow());
@@ -351,21 +354,12 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
     @Test
     public void updateTopicSubtopic() {
         final var rootTopic1 = builder.node(NodeType.TOPIC);
-        final var rootTopic3 = builder.node(NodeType.TOPIC);
 
         final var subTopic1 = builder.node(NodeType.TOPIC);
-        final var subTopic2 = builder.node(NodeType.TOPIC);
-        final var subTopic3 = builder.node(NodeType.TOPIC);
-
-        final var subject1 = builder.node(NodeType.SUBJECT);
 
         final var relevance = builder.relevance();
 
-        final var subjectTopic = NodeConnection.create(subject1, subTopic2);
-
-        final var connection1 = NodeConnection.create(rootTopic1, subTopic1);
-
-        final var connection5 = NodeConnection.create(rootTopic3, subTopic3);
+        final var connection1 = NodeConnection.create(rootTopic1, subTopic1, relevance);
 
         connection1.setRank(1);
 
@@ -384,13 +378,13 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         final var resource2 = builder.node(NodeType.RESOURCE);
         final var resource3 = builder.node(NodeType.RESOURCE);
 
-        final var topic1resource1 = NodeConnection.create(topic1, resource1, true);
-        final var topic1resource2 = NodeConnection.create(topic1, resource2, true);
-        final var topic1resource3 = NodeConnection.create(topic1, resource3, true);
-
-        final var topic2resource1 = NodeConnection.create(topic2, resource1, false);
-
         final var relevance = builder.relevance();
+
+        final var topic1resource1 = NodeConnection.create(topic1, resource1, relevance, true);
+        final var topic1resource2 = NodeConnection.create(topic1, resource2, relevance, true);
+        final var topic1resource3 = NodeConnection.create(topic1, resource3, relevance, true);
+
+        final var topic2resource1 = NodeConnection.create(topic2, resource1, relevance, false);
 
         topic1resource1.setRank(1);
         topic1resource2.setRank(2);
@@ -439,18 +433,18 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
     @Test
     public void replacePrimaryConnectionsFor() {
         final var subject1 = builder.node(NodeType.SUBJECT);
-        final var subject2 = builder.node(NodeType.SUBJECT);
 
         final var topic1 = builder.node(NodeType.TOPIC);
         final var topic2 = builder.node(NodeType.TOPIC);
 
         final var resource1 = builder.node(NodeType.RESOURCE);
 
-        NodeConnection.create(subject1, topic1);
+        final var relevance = builder.relevance();
 
-        final var topic1resource1 = NodeConnection.create(topic1, resource1, true);
-        final var topic2resource1 = NodeConnection.create(topic2, resource1, false);
-        // final var topic1topic2 = NodeConnection.create(topic1, topic2);
+        NodeConnection.create(subject1, topic1, relevance);
+
+        final var topic1resource1 = NodeConnection.create(topic1, resource1, relevance, true);
+        final var topic2resource1 = NodeConnection.create(topic2, resource1, relevance, false);
 
         assertTrue(topic1resource1.isPrimary().orElseThrow());
         assertFalse(topic2resource1.isPrimary().orElseThrow());
