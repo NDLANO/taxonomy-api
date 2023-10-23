@@ -140,7 +140,7 @@ public class NodeDTO {
                                 ctx.path(),
                                 LanguageFieldDTO.fromLanguageFieldList(ctx.breadcrumbs()),
                                 entity.getContextType(),
-                                Optional.of(URI.create(ctx.relevanceId())),
+                                URI.create(ctx.relevanceId()),
                                 LanguageFieldDTO.fromLanguageField(finalRelevanceName),
                                 entity.getResourceTypes().stream()
                                         .sorted((o1, o2) -> {
