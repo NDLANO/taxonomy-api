@@ -24,6 +24,7 @@ export interface Metadata {
 }
 
 export interface Node {
+    _name: string;
     breadcrumbs: string[];
     contentUri?: string;
     /**
@@ -32,6 +33,7 @@ export interface Node {
     contextId?: string;
     contexts: TaxonomyContext[];
     id: string;
+    language: string;
     metadata: Metadata;
     name: string;
     /**
