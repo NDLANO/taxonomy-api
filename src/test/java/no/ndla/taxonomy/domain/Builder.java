@@ -224,6 +224,20 @@ public class Builder {
             relevance.setPublicId(URI.create(id));
             return this;
         }
+
+        public RelevanceBuilder translation(String name, String languageCode) {
+            relevance.addTranslation(name, languageCode);
+            entityManager.persist(relevance);
+            return this;
+        }
+
+        public RelevanceBuilder translation(String languageCode, Consumer<JsonTranslationBuilder> consumer) {
+            var nodeTranslation = relevance.addTranslation("", languageCode);
+            var builder = new JsonTranslationBuilder(nodeTranslation);
+            consumer.accept(builder);
+            entityManager.persist(relevance);
+            return this;
+        }
     }
 
     @Transactional
