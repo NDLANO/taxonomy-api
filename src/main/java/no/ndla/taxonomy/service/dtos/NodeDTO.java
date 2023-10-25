@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
@@ -24,7 +25,10 @@ public class NodeDTO {
     @Schema(description = "Node id", example = "urn:topic:234")
     private URI id;
 
-    @Schema(description = "The name of the node", example = "Trigonometry")
+    @Schema(description = "The stored name of the node", example = "Trigonometry")
+    private String baseName;
+
+    @Schema(description = "The possibly translated name of the node", example = "Trigonometry")
     private String name;
 
     @Schema(
@@ -74,6 +78,9 @@ public class NodeDTO {
     @Schema(description = "A list of all contexts this node is part of")
     private List<TaxonomyContextDTO> contexts = new ArrayList<>();
 
+    @Schema(description = "The language code for which name is returned", example = "nb")
+    private String language;
+
     public NodeDTO() {}
 
     public NodeDTO(
@@ -102,13 +109,19 @@ public class NodeDTO {
         this.supportedLanguages =
                 this.translations.stream().map(t -> t.language).collect(Collectors.toCollection(TreeSet::new));
 
-        this.name = entity.getTranslatedName(languageCode);
+        this.language = supportedLanguages.contains(languageCode)
+                ? languageCode
+                : supportedLanguages.isEmpty() ? Constants.DefaultLanguage : supportedLanguages.first();
+
+        this.baseName = entity.getName();
+
+        this.name = entity.getTranslatedName(this.language);
 
         this.metadata = new MetadataDTO(entity.getMetadata());
 
         this.resourceTypes = entity.getResourceResourceTypes().stream()
                 .sorted()
-                .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, languageCode))
+                .map(resourceType -> new ResourceTypeWithConnectionDTO(resourceType, this.language))
                 .collect(Collectors.toCollection(TreeSet::new));
 
         this.nodeType = entity.getNodeType();
@@ -118,7 +131,7 @@ public class NodeDTO {
             this.path = ctx.path();
             // TODO: this changes the content in context breadcrumbs
             this.breadcrumbs = LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity))
-                    .get(languageCode);
+                    .get(this.language);
             this.relevanceId = Optional.of(URI.create(ctx.relevanceId()));
             this.contextId = Optional.of(ctx.contextId());
             this.url = TitleUtil.createPrettyUrl(this.name, ctx.contextId());
@@ -171,6 +184,10 @@ public class NodeDTO {
         return name;
     }
 
+    public String getBaseName() {
+        return baseName;
+    }
+
     public Optional<URI> getContentUri() {
         return contentUri;
     }
@@ -213,5 +230,9 @@ public class NodeDTO {
 
     public Optional<String> getUrl() {
         return url;
+    }
+
+    public String getLanguage() {
+        return language;
     }
 }

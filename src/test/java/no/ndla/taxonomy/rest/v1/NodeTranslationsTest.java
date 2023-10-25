@@ -35,6 +35,7 @@ public class NodeTranslationsTest extends RestTest {
         assertEquals(2, nodes.length);
         assertAnyTrue(nodes, s -> s.getName().equals("Trigonometri"));
         assertAnyTrue(nodes, s -> s.getName().equals("Integrasjon"));
+        assertAllTrue(nodes, s -> s.getLanguage().equals("nb"));
     }
 
     @Test
@@ -47,14 +48,25 @@ public class NodeTranslationsTest extends RestTest {
     }
 
     @Test
-    public void fallback_to_default_language() throws Exception {
+    public void fallback_to_default_language_if_no_translation() throws Exception {
         URI id = builder.node(NodeType.TOPIC, t -> t.name("Trigonometry")).getPublicId();
         final var topic = getNode(id, "XX");
         assertEquals("Trigonometry", topic.getName());
+        assertEquals("nb", topic.getLanguage());
     }
 
     @Test
-    public void can_get_default_language() throws Exception {
+    public void fallback_to_translated_name() throws Exception {
+        URI id = builder.node(NodeType.TOPIC, t -> t.name("Trignometri").translation("Trignometry", "en"))
+                .getPublicId();
+        final var topic = getNode(id, "nb");
+        assertEquals("Trignometry", topic.getName());
+        assertEquals("en", topic.getLanguage());
+        assertEquals("Trignometri", topic.getBaseName());
+    }
+
+    @Test
+    public void defaults_to_default_language() throws Exception {
         URI id = builder.node(
                         NodeType.TOPIC, t -> t.name("Trigonometry").translation("nb", l -> l.name("Trigonometri")))
                 .getPublicId();
@@ -166,7 +178,7 @@ public class NodeTranslationsTest extends RestTest {
     }
 
     @Test
-    public void can_get_resources_for_a_node_without_childrem_resources_with_translation() throws Exception {
+    public void can_get_resources_for_a_node_without_child_resources_with_translation() throws Exception {
         builder.resourceType("article", rt -> rt.name("Article").translation("nb", tr -> tr.name("Artikkel")));
 
         builder.node(NodeType.SUBJECT, s -> s.isContext(true).child(NodeType.TOPIC, t -> t.publicId("urn:topic:1")
