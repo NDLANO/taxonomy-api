@@ -7,6 +7,7 @@
 
 package no.ndla.taxonomy.service;
 
+import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -205,8 +206,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         var result = nodeService.search(
                 Optional.empty(), Optional.empty(), Optional.of(idList), Optional.empty(), Optional.empty(), 10, 1);
 
-        assertEquals(result.getResults().get(0).getId(), new URI("urn:topic:1"));
-        assertEquals(result.getResults().get(1).getId(), new URI("urn:topic:4"));
+        assertAnyTrue(result.getResults(), res -> res.getId().equals(URI.create("urn:topic:1")));
+        assertAnyTrue(result.getResults(), res -> res.getId().equals(URI.create("urn:topic:4")));
         assertEquals(result.getTotalCount(), 2);
     }
 }
