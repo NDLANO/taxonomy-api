@@ -24,7 +24,7 @@ export interface Metadata {
 }
 
 export interface Node {
-    _name: string;
+    baseName: string;
     breadcrumbs: string[];
     contentUri?: string;
     /**
