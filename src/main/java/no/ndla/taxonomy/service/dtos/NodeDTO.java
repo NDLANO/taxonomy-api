@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
-import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
@@ -109,9 +108,10 @@ public class NodeDTO {
         this.supportedLanguages =
                 this.translations.stream().map(t -> t.language).collect(Collectors.toCollection(TreeSet::new));
 
-        this.language = supportedLanguages.contains(languageCode)
-                ? languageCode
-                : supportedLanguages.isEmpty() ? Constants.DefaultLanguage : supportedLanguages.first();
+        this.language = languageCode; // TODO: Must handle programmes and subject better
+        // this.language = supportedLanguages.contains(languageCode)
+        //        ? languageCode
+        //        : supportedLanguages.isEmpty() ? Constants.DefaultLanguage : supportedLanguages.first();
 
         this.baseName = entity.getName();
 
