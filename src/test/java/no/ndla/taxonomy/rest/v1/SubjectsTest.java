@@ -21,12 +21,21 @@ import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.commands.SubjectPostPut;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class SubjectsTest extends RestTest {
     @Autowired
     private TestSeeder testSeeder;
+
+    @BeforeEach
+    void clearAllRepos() {
+        nodeRepository.deleteAllAndFlush();
+        nodeConnectionRepository.deleteAllAndFlush();
+
+        builder.core();
+    }
 
     @Test
     public void can_get_single_subject() throws Exception {
@@ -44,7 +53,7 @@ public class SubjectsTest extends RestTest {
 
         assertNotNull(subject.getMetadata());
         assertTrue(subject.getMetadata().isVisible());
-        assertTrue(subject.getMetadata().getGrepCodes().size() == 0);
+        assertTrue(subject.getMetadata().getGrepCodes().isEmpty());
     }
 
     @Test
@@ -64,7 +73,7 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(subjects, s -> s.getMetadata() != null);
 
         assertAllTrue(subjects, s -> s.getMetadata().isVisible());
-        assertAllTrue(subjects, s -> s.getMetadata().getGrepCodes().size() == 0);
+        assertAllTrue(subjects, s -> s.getMetadata().getGrepCodes().isEmpty());
     }
 
     @Test
@@ -223,7 +232,7 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(topics, t -> t.getMetadata() != null);
 
         assertAllTrue(topics, t -> t.getMetadata().isVisible());
-        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 0);
+        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().isEmpty());
     }
 
     @Test
@@ -254,7 +263,7 @@ public class SubjectsTest extends RestTest {
         assertAllTrue(topics, t -> t.getMetadata() != null);
 
         assertAllTrue(topics, t -> t.getMetadata().isVisible());
-        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().size() == 0);
+        assertAllTrue(topics, t -> t.getMetadata().getGrepCodes().isEmpty());
 
         Node subject = builder.node("subject");
         assertEquals(first(subject.getChildConnections()).getPublicId(), topics[0].getConnectionId());

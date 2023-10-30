@@ -12,12 +12,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
 import java.util.Set;
-import no.ndla.taxonomy.domain.Context;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.repositories.RelevanceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,11 +29,16 @@ import org.springframework.transaction.annotation.Transactional;
 class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
     private ContextUpdaterServiceImpl service;
 
+    private RelevanceRepository relevanceRepository;
     private NodeRepository nodeRepository;
     private NodeConnectionRepository nodeConnectionRepository;
 
     @BeforeEach
-    void setup(@Autowired NodeRepository nodeRepository, @Autowired NodeConnectionRepository nodeConnectionRepository) {
+    void setup(
+            @Autowired RelevanceRepository relevanceRepository,
+            @Autowired NodeRepository nodeRepository,
+            @Autowired NodeConnectionRepository nodeConnectionRepository) {
+        this.relevanceRepository = relevanceRepository;
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
 
@@ -45,6 +48,11 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
     @Test
     @Transactional
     void updateCachedUrls() {
+        final var core = new Relevance();
+        core.setName("core");
+        core.setPublicId(URI.create("uri:relevance:core"));
+        relevanceRepository.save(core);
+
         final var subject1 = new Node(NodeType.SUBJECT);
         subject1.setPublicId(URI.create("urn:subject:1"));
         subject1.setName("Subject1");
@@ -87,7 +95,7 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
             assertEquals(1, node.get().getContexts().size());
         }
 
-        var nc = NodeConnection.create(subject1, topic1);
+        var nc = NodeConnection.create(subject1, topic1, core);
         nodeConnectionRepository.save(nc);
         topic1.addParentConnection(nc);
 
@@ -129,7 +137,7 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
             assertEquals(0, node.getContexts().size());
         }
 
-        var nc2 = NodeConnection.create(topic1, topic2);
+        var nc2 = NodeConnection.create(topic1, topic2, core);
         topic1.addChildConnection(nc2);
         nodeConnectionRepository.save(nc2);
 
@@ -171,7 +179,7 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
             assertEquals(0, node.getContexts().size());
         }
 
-        var nc3 = NodeConnection.create(topic1, resource1);
+        var nc3 = NodeConnection.create(topic1, resource1, core);
         nodeConnectionRepository.save(nc3);
         topic1.addChildConnection(nc3);
 
@@ -188,7 +196,7 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
                     .containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1")));
         }
 
-        var nc4 = NodeConnection.create(topic2, resource1);
+        var nc4 = NodeConnection.create(topic2, resource1, core);
         nodeConnectionRepository.save(nc4);
         topic2.addChildConnection(nc4);
 

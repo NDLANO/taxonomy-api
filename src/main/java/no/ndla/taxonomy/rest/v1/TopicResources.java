@@ -104,8 +104,7 @@ public class TopicResources {
 
         Node topic = nodeRepository.getByPublicId(command.topicid);
         Node resource = nodeRepository.getByPublicId(command.resourceId);
-        var relevance =
-                command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var relevance = relevanceRepository.getByPublicId(command.relevanceId.orElse(URI.create("urn:relevance:core")));
 
         var rank = command.rank.orElse(null);
 
@@ -143,8 +142,7 @@ public class TopicResources {
             @Parameter(name = "connection", description = "Updated topic/resource connection") @RequestBody
                     TopicResourcePUT command) {
         var topicResource = nodeConnectionRepository.getByPublicId(id);
-        var relevance =
-                command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var relevance = relevanceRepository.getByPublicId(command.relevanceId.orElse(URI.create("urn:relevance:core")));
 
         if (topicResource.isPrimary().orElse(false) && !command.primary.orElse(false)) {
             throw new PrimaryParentRequiredException();

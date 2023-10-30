@@ -1423,4 +1423,13 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="20231020 Ensure all node-connections have relevance" author="Gunnar Velle">
+        <sql>
+            UPDATE node_connection
+            SET relevance_id = 1
+            WHERE relevance_id is null
+        </sql>
+        <addNotNullConstraint tableName="node_connection" columnName="relevance_id" />
+    </changeSet>
+
 </databaseChangeLog>

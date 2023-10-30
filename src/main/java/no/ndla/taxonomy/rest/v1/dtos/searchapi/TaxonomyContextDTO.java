@@ -23,7 +23,7 @@ public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "The context path") String path,
         @JsonProperty @Schema(description = "A breadcrumb of the names of the context's parents") LanguageFieldDTO<List<String>> breadcrumbs,
         @JsonProperty @Schema(description = "Whether a 'standard'-article, 'topic-article'-article or a 'learningpath'") Optional<String> contextType,
-        @JsonProperty @Schema(description = "Id of the relevance of the parent connection") Optional<URI> relevanceId,
+        @JsonProperty @Schema(description = "Id of the relevance of the parent connection") URI relevanceId,
         @JsonProperty @Schema(description = "Name of the relevance of the parent connection") LanguageFieldDTO<String> relevance,
         @JsonProperty @Schema(description = "Resource-types of the node") List<SearchableTaxonomyResourceType> resourceTypes,
         @JsonProperty @Schema(description = "List of all parent ids") List<URI> parentIds,

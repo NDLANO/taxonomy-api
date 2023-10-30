@@ -24,8 +24,9 @@ public class NodeResourceTest {
         when(node.getNodeType()).thenReturn(NodeType.TOPIC);
         resource = mock(Node.class);
         when(resource.getNodeType()).thenReturn(NodeType.RESOURCE);
+        Relevance core = mock(Relevance.class);
 
-        resourceConnection = NodeConnection.create(node, resource, false);
+        resourceConnection = NodeConnection.create(node, resource, core, false);
 
         verify(node).addChildConnection(resourceConnection);
         verify(resource).addParentConnection(resourceConnection);

@@ -12,17 +12,25 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.util.HashUtil;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 public class QueryTest extends RestTest {
+
+    @BeforeEach
+    public void add_core_relevance() {
+        nodeRepository.deleteAllAndFlush();
+        nodeConnectionRepository.deleteAllAndFlush();
+
+        builder.core();
+    }
 
     @Test
     public void can_get_resource_by_contentURI() throws Exception {
@@ -149,7 +157,6 @@ public class QueryTest extends RestTest {
         var resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1")
                 .contentUri("urn:article:1")
                 .translation("nb", t -> t.name("Ressurs")));
-        builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
         builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")
@@ -191,7 +198,7 @@ public class QueryTest extends RestTest {
                 firstResult.parentIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:1"), firstResult.rootId());
         assertEquals("/subject:1/topic:1/resource:1", firstResult.path());
-        assertEquals(Optional.of(URI.create("urn:relevance:core")), firstResult.relevanceId());
+        assertEquals(URI.create("urn:relevance:core"), firstResult.relevanceId());
         var breadcrumbs = new LanguageFieldDTO<List<String>>();
         breadcrumbs.put("nb", List.of("Fag", "Emne"));
         assertEquals(breadcrumbs, firstResult.breadcrumbs());
@@ -203,7 +210,7 @@ public class QueryTest extends RestTest {
                 secondResult.parentIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:2"), secondResult.rootId());
         assertEquals("/subject:2/topic:2/resource:1", secondResult.path());
-        assertEquals(Optional.of(URI.create("urn:relevance:core")), secondResult.relevanceId());
+        assertEquals(URI.create("urn:relevance:core"), secondResult.relevanceId());
         var breadcrumbs2 = new LanguageFieldDTO<List<String>>();
         breadcrumbs2.put("nb", List.of("Fag 2", "Emne 2"));
         assertEquals(breadcrumbs2, secondResult.breadcrumbs());
@@ -214,7 +221,6 @@ public class QueryTest extends RestTest {
         var resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1")
                 .contentUri("urn:article:1")
                 .translation("nb", t -> t.name("Ressurs")));
-        builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
         builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")
@@ -255,7 +261,7 @@ public class QueryTest extends RestTest {
                 firstResult.parentIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:1"), firstResult.rootId());
         assertEquals("/subject:1/topic:1/resource:1", firstResult.path());
-        assertEquals(Optional.of(URI.create("urn:relevance:core")), firstResult.relevanceId());
+        assertEquals(URI.create("urn:relevance:core"), firstResult.relevanceId());
         var breadcrumbs = new LanguageFieldDTO<List<String>>();
         breadcrumbs.put("nb", List.of("Fag", "Emne"));
         assertEquals(breadcrumbs, firstResult.breadcrumbs());
@@ -267,7 +273,7 @@ public class QueryTest extends RestTest {
                 secondResult.parentIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:2"), secondResult.rootId());
         assertEquals("/subject:2/topic:2/resource:1", secondResult.path());
-        assertEquals(Optional.of(URI.create("urn:relevance:core")), secondResult.relevanceId());
+        assertEquals(URI.create("urn:relevance:core"), secondResult.relevanceId());
         var breadcrumbs2 = new LanguageFieldDTO<List<String>>();
         breadcrumbs2.put("nb", List.of("Fag 2", "Emne 2"));
         assertEquals(breadcrumbs2, secondResult.breadcrumbs());
@@ -279,7 +285,7 @@ public class QueryTest extends RestTest {
                 thirdResult.parentIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:3"), thirdResult.rootId());
         assertEquals("/subject:3/topic:3/resource:1", thirdResult.path());
-        assertEquals(Optional.of(URI.create("urn:relevance:core")), thirdResult.relevanceId());
+        assertEquals(URI.create("urn:relevance:core"), thirdResult.relevanceId());
         var breadcrumbs3 = new LanguageFieldDTO<List<String>>();
         breadcrumbs3.put("nb", List.of("Fag 3", "Emne 3"));
         assertEquals(breadcrumbs3, thirdResult.breadcrumbs());
@@ -290,7 +296,6 @@ public class QueryTest extends RestTest {
         var resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1")
                 .contentUri("urn:article:1")
                 .translation("nb", t -> t.name("Ressurs")));
-        builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
         builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")
@@ -327,7 +332,6 @@ public class QueryTest extends RestTest {
         var resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1")
                 .contentUri("urn:article:1")
                 .translation("nb", t -> t.name("Ressurs")));
-        builder.relevance(r -> r.publicId("urn:relevance:core").name("Kjernestoff"));
 
         builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")
@@ -359,7 +363,7 @@ public class QueryTest extends RestTest {
                 firstResult.parentIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:1"), firstResult.rootId());
         assertEquals("/subject:1/topic:1/resource:1", firstResult.path());
-        assertEquals(Optional.of(URI.create("urn:relevance:core")), firstResult.relevanceId());
+        assertEquals(URI.create("urn:relevance:core"), firstResult.relevanceId());
         var breadcrumbs = new LanguageFieldDTO<List<String>>();
         breadcrumbs.put("nb", List.of("Fag", "Emne"));
         assertEquals(breadcrumbs, firstResult.breadcrumbs());
@@ -371,7 +375,7 @@ public class QueryTest extends RestTest {
                 secondResult.parentIds().stream().sorted().toList());
         assertEquals(URI.create("urn:subject:2"), secondResult.rootId());
         assertEquals("/subject:2/topic:2/resource:1", secondResult.path());
-        assertEquals(Optional.of(URI.create("urn:relevance:core")), secondResult.relevanceId());
+        assertEquals(URI.create("urn:relevance:core"), secondResult.relevanceId());
         var breadcrumbs2 = new LanguageFieldDTO<List<String>>();
         breadcrumbs2.put("nb", List.of("Fag 2", "Emne 2"));
         assertEquals(breadcrumbs2, secondResult.breadcrumbs());
@@ -383,7 +387,7 @@ public class QueryTest extends RestTest {
                 thirdResult.parentIds().stream().sorted().toList());
         assertEquals(URI.create("urn:topic:2"), thirdResult.rootId());
         assertEquals("/topic:2/resource:1", thirdResult.path());
-        assertEquals(Optional.of(URI.create("urn:relevance:core")), thirdResult.relevanceId());
+        assertEquals(URI.create("urn:relevance:core"), thirdResult.relevanceId());
         var breadcrumbs3 = new LanguageFieldDTO<List<String>>();
         breadcrumbs3.put("nb", List.of("Emne 2"));
         assertEquals(breadcrumbs3, thirdResult.breadcrumbs());

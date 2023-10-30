@@ -43,6 +43,8 @@ public class NodesTest extends RestTest {
         nodeConnectionRepository.deleteAllAndFlush();
         resourceTypeRepository.deleteAllAndFlush();
         resourceResourceTypeRepository.deleteAllAndFlush();
+
+        builder.core();
     }
 
     @Test

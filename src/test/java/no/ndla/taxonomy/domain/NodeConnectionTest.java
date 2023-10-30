@@ -24,8 +24,9 @@ public class NodeConnectionTest {
     public void setUp() {
         parent = mock(Node.class);
         child = mock(Node.class);
+        Relevance core = mock(Relevance.class);
 
-        connection = NodeConnection.create(parent, child);
+        connection = NodeConnection.create(parent, child, core);
         assertNotNull(connection.getPublicId());
     }
 

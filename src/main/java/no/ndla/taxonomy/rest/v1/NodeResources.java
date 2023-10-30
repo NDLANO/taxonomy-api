@@ -105,8 +105,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
                     NodeResourcePOST command) {
         var parent = nodeRepository.getByPublicId(command.nodeId);
         var child = nodeRepository.getByPublicId(command.resourceId);
-        var relevance =
-                command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var relevance = relevanceRepository.getByPublicId(command.relevanceId.orElse(URI.create("urn:relevance:core")));
         var rank = command.rank.orElse(null);
 
         final var nodeConnection =
@@ -141,8 +140,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
             @Parameter(name = "connection", description = "Updated node/resource connection") @RequestBody
                     NodeResourcePUT command) {
         final var nodeResource = nodeConnectionRepository.getByPublicId(id);
-        var relevance =
-                command.relevanceId.map(relevanceRepository::getByPublicId).orElse(null);
+        var relevance = relevanceRepository.getByPublicId(command.relevanceId.orElse(URI.create("urn:relevance:core")));
         if (nodeResource.isPrimary().orElse(false) && !command.primary.orElse(false)) {
             throw new PrimaryParentRequiredException();
         }

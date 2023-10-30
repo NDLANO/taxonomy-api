@@ -87,6 +87,10 @@ public class Builder {
         return relevance.relevance;
     }
 
+    public Relevance core() {
+        return relevance("core", f -> f.publicId("urn:relevance:core").name("Core"));
+    }
+
     private VersionBuilder getVersionBuilder(String key) {
         if (key == null) {
             key = createKey();
@@ -218,6 +222,20 @@ public class Builder {
 
         public RelevanceBuilder publicId(String id) {
             relevance.setPublicId(URI.create(id));
+            return this;
+        }
+
+        public RelevanceBuilder translation(String name, String languageCode) {
+            relevance.addTranslation(name, languageCode);
+            entityManager.persist(relevance);
+            return this;
+        }
+
+        public RelevanceBuilder translation(String languageCode, Consumer<JsonTranslationBuilder> consumer) {
+            var nodeTranslation = relevance.addTranslation("", languageCode);
+            var builder = new JsonTranslationBuilder(nodeTranslation);
+            consumer.accept(builder);
+            entityManager.persist(relevance);
             return this;
         }
     }
@@ -409,7 +427,7 @@ public class Builder {
         }
 
         public NodeBuilder child(Node child) {
-            entityManager.persist(NodeConnection.create(node, child));
+            entityManager.persist(NodeConnection.create(node, child, core()));
 
             contextUpdaterService.updateContexts(child);
 
@@ -452,7 +470,7 @@ public class Builder {
         }
 
         public NodeBuilder resource(Node resource, boolean primary) {
-            entityManager.persist(NodeConnection.create(node, resource, primary));
+            entityManager.persist(NodeConnection.create(node, resource, relevance(), primary));
 
             contextUpdaterService.updateContexts(resource);
 
