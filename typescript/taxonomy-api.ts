@@ -517,7 +517,7 @@ export interface TaxonomyContext {
     /**
      * Id of the relevance of the parent connection
      */
-    relevanceId?: string;
+    relevanceId: string;
     /**
      * Resource-types of the node
      */
