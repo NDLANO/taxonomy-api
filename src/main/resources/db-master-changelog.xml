@@ -1431,5 +1431,28 @@
         </sql>
         <addNotNullConstraint tableName="node_connection" columnName="relevance_id" />
     </changeSet>
+    
+    <changeSet id="20231030 Add default translation based on basename" author="Gunnar Velle">
+        <sql>
+            UPDATE relevance r SET translations=(
+                SELECT CASE WHEN EXISTS (
+                    SELECT 1 FROM jsonb_array_elements(r.translations) as element
+                    WHERE element ->> 'languageCode' = 'nb'
+                ) THEN r.translations
+                ELSE r.translations || jsonb_build_object('languageCode', 'nb', 'name', r.name)
+                END
+            );
+        </sql>
+        <sql>
+            UPDATE node n SET translations=(
+                SELECT CASE WHEN EXISTS (
+                    SELECT 1 FROM jsonb_array_elements(n.translations) as element
+                    WHERE element ->> 'languageCode' = 'nb'
+                ) THEN n.translations
+                ELSE n.translations || jsonb_build_object('languageCode', 'nb', 'name', n.name)
+                END
+            );
+        </sql>
+    </changeSet>
 
 </databaseChangeLog>
