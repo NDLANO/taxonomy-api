@@ -4,8 +4,7 @@ COPY ./ src/
 WORKDIR /src
 RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:20-alpine
-RUN apk add fontconfig && apk add ttf-dejavu
+FROM eclipse-temurin:20
 EXPOSE 5000
 COPY --from=0 /src/target/taxonomy-service.jar /app.jar
 COPY ./run-app.sh /run-app.sh
