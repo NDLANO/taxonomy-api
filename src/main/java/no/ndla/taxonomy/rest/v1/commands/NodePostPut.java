@@ -15,6 +15,7 @@ import jakarta.persistence.Enumerated;
 import java.net.URI;
 import java.util.Optional;
 import java.util.UUID;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.service.UpdatableDto;
@@ -53,6 +54,10 @@ public class NodePostPut implements UpdatableDto<Node> {
     @Schema(description = "The node is visible. Default is true.")
     public Optional<Boolean> visible = Optional.empty();
 
+    @JsonProperty
+    @Schema(description = "The language used at create time. Used to set default translation.", example = "nb")
+    public Optional<String> language = Optional.empty();
+
     public Optional<String> getNodeId() {
         return nodeId;
     }
@@ -78,5 +83,11 @@ public class NodePostPut implements UpdatableDto<Node> {
         name.ifPresent(node::setName);
         contentUri.ifPresent(node::setContentUri);
         visible.ifPresent(node::setVisible);
+        // Add translation only on post
+        name.ifPresent(name -> {
+            if (node.getId() == null) {
+                node.addTranslation(name, language.orElse(Constants.DefaultLanguage));
+            }
+        });
     }
 }
