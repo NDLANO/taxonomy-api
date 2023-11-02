@@ -136,6 +136,10 @@ export interface NodePostPut {
      */
     context?: boolean;
     /**
+     * The language used at create time. Used to set default translation.
+     */
+    language?: string;
+    /**
      * The name of the node. Required on create.
      */
     name?: string;
