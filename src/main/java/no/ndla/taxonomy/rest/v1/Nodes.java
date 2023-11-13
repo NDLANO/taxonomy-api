@@ -137,7 +137,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     @RequestParam(value = "contentUris", required = false)
                     Optional<List<String>> contentUris,
             @Parameter(description = "Filter by nodeType") @RequestParam(value = "nodeType", required = false)
-                    Optional<NodeType> nodeType,
+                    Optional<List<NodeType>> nodeType,
             @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false)
                     Optional<Boolean> includeContexts,
             @Parameter(description = "Filter out programme contexts")

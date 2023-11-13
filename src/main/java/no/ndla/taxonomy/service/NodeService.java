@@ -102,8 +102,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         nodeRepository.flush();
     }
 
-    public Specification<Node> nodeHasNodeType(NodeType nodeType) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("nodeType"), nodeType);
+    public Specification<Node> nodeHasOneOfNodeType(List<NodeType> nodeType) {
+        return (root, query, builder) -> root.get("nodeType").in(nodeType);
     }
 
     public List<NodeDTO> getNodesByType(
@@ -319,8 +319,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             boolean filterProgrammes,
             int pageSize,
             int page,
-            Optional<NodeType> nodeType) {
-        Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasNodeType(nt))));
+            Optional<List<NodeType>> nodeType) {
+        Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasOneOfNodeType(nt))));
         return SearchService.super.search(
                 query, ids, contentUris, language, includeContexts, filterProgrammes, pageSize, page, nodeSpecLambda);
     }
