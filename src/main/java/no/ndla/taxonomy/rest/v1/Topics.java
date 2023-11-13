@@ -102,7 +102,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
                 false,
                 pageSize,
                 page,
-                Optional.of(NodeType.TOPIC));
+                Optional.of(List.of(NodeType.TOPIC)));
     }
 
     @Deprecated

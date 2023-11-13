@@ -117,7 +117,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                 false,
                 pageSize,
                 page,
-                Optional.of(NodeType.RESOURCE));
+                Optional.of(List.of(NodeType.RESOURCE)));
     }
 
     @Deprecated

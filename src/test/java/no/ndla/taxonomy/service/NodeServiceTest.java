@@ -15,6 +15,7 @@ import static org.mockito.Mockito.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import no.ndla.taxonomy.domain.*;
@@ -118,7 +119,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 false,
                 10,
                 1,
-                Optional.of(NodeType.SUBJECT));
+                Optional.of(List.of(NodeType.SUBJECT)));
 
         var topics = nodeService.searchByNodeType(
                 Optional.empty(),
@@ -129,7 +130,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 false,
                 10,
                 1,
-                Optional.of(NodeType.TOPIC));
+                Optional.of(List.of(NodeType.TOPIC)));
         var all = nodeService.searchByNodeType(
                 Optional.empty(),
                 Optional.empty(),
