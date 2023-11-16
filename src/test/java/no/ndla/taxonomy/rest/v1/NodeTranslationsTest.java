@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.net.URI;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
@@ -96,6 +97,8 @@ public class NodeTranslationsTest extends RestTest {
 
         assertEquals("Trigonometri", trigonometry.getTranslation("nn").get().getName());
         assertEquals(2, trigonometry.getTranslations().size());
+        assertEquals(
+                Constants.True, trigonometry.getMetadata().getCustomFields().get(Constants.IsChanged));
     }
 
     @Test

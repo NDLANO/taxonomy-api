@@ -43,7 +43,7 @@ public class NodeConnectionDTO {
 
     @JsonProperty
     @Schema(description = "Metadata for entity. Read only.")
-    private MetadataDTO metadata;
+    public MetadataDTO metadata;
 
     NodeConnectionDTO() {}
 

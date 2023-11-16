@@ -12,7 +12,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.DomainEntity;
+import no.ndla.taxonomy.domain.EntityWithMetadata;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
@@ -67,8 +69,13 @@ public abstract class CrudController<T extends DomainEntity> {
         validator.validate(id, entity);
         command.apply(entity);
 
-        if (entity instanceof Node && contextUpdaterService != null) {
-            contextUpdaterService.updateContexts((Node) entity);
+        if (entity instanceof EntityWithMetadata entityWithMetadata) {
+            entityWithMetadata.setCustomField(Constants.IsChanged, Constants.True);
+            contextUpdaterService.markParentsChanged(entityWithMetadata);
+        }
+
+        if (entity instanceof Node node) {
+            contextUpdaterService.updateContexts(node);
         }
 
         return entity;
@@ -86,12 +93,17 @@ public abstract class CrudController<T extends DomainEntity> {
                 entity.setPublicId(id);
             });
 
+            if (entity instanceof EntityWithMetadata entityWithMetadata) {
+                entityWithMetadata.setCustomField(Constants.IsChanged, Constants.True);
+                contextUpdaterService.markParentsChanged(entityWithMetadata);
+            }
+
             command.apply(entity);
             URI location = URI.create(getLocation() + "/" + entity.getPublicId());
             repository.saveAndFlush(entity);
 
-            if (entity instanceof Node && contextUpdaterService != null) {
-                contextUpdaterService.updateContexts((Node) entity);
+            if (entity instanceof Node node) {
+                contextUpdaterService.updateContexts(node);
             }
 
             return ResponseEntity.created(location).build();

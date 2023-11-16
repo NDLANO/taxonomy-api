@@ -7,10 +7,13 @@
 
 package no.ndla.taxonomy.service;
 
+import no.ndla.taxonomy.domain.EntityWithMetadata;
 import no.ndla.taxonomy.domain.Node;
 
 public interface ContextUpdaterService {
     void updateContexts(Node entity);
 
     void clearContexts(Node entity);
+
+    void markParentsChanged(EntityWithMetadata entityWithMetadata);
 }

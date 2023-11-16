@@ -10,6 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.net.URI;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.EntityWithMetadata;
 import no.ndla.taxonomy.domain.Node;
@@ -17,7 +18,6 @@ import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
-import no.ndla.taxonomy.service.exceptions.InvalidDataException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,8 +35,8 @@ public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends
     @Operation(summary = "Gets metadata for entity")
     public MetadataDTO getMetadata(@PathVariable("id") URI id) {
         var entity = repository.findByPublicId(id);
-        if (entity instanceof EntityWithMetadata em) {
-            return new MetadataDTO(em.getMetadata());
+        if (entity instanceof EntityWithMetadata entityWithMetadata) {
+            return new MetadataDTO(entityWithMetadata.getMetadata());
         }
         throw new NotFoundException("Entity", id);
     }
@@ -47,13 +47,14 @@ public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends
             summary = "Updates metadata for entity",
             security = {@SecurityRequirement(name = "oauth")})
     @Transactional
-    public MetadataDTO putMetadata(@PathVariable("id") URI id, @RequestBody MetadataDTO entityToUpdate)
-            throws InvalidDataException {
+    public MetadataDTO putMetadata(@PathVariable("id") URI id, @RequestBody MetadataDTO entityToUpdate) {
         var entity = repository.findByPublicId(id);
-        if (entity instanceof EntityWithMetadata em) {
-            var result = em.getMetadata().mergeWith(entityToUpdate);
-            if (entity instanceof Node n && contextUpdaterService != null) {
-                contextUpdaterService.updateContexts(n);
+        if (entity instanceof EntityWithMetadata entityWithMetadata) {
+            entityToUpdate.setCustomField(Constants.IsChanged, Constants.True);
+            contextUpdaterService.markParentsChanged(entityWithMetadata);
+            var result = entityWithMetadata.getMetadata().mergeWith(entityToUpdate);
+            if (entity instanceof Node node) {
+                contextUpdaterService.updateContexts(node);
             }
             return new MetadataDTO(result);
         }

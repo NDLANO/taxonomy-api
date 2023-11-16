@@ -10,6 +10,7 @@ package no.ndla.taxonomy.service;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -81,15 +82,15 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
     @Transactional
     public void buildPathsForEntity(URI publicId) {
         DomainEntity domainEntity = getEntityByPublicId(publicId);
-        if (domainEntity instanceof Node) {
-            cachedUrlUpdaterService.updateContexts((Node) domainEntity);
+        if (domainEntity instanceof Node node) {
+            cachedUrlUpdaterService.updateContexts(node);
         }
     }
 
     @Override
     @Transactional
     public void deleteEntityByPublicId(URI publicId) {
-        TaxonomyRepository repository = getRepository(publicId);
+        var repository = getRepository(publicId);
         repository.deleteByPublicId(publicId);
     }
 
@@ -102,43 +103,44 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
         }
         if (entity instanceof EntityWithMetadata entityWithMetadata) {
             if (addIsPublishing && !cleanUp) {
-                entityWithMetadata.setCustomField(CustomField.IS_PUBLISHING, "true");
+                entityWithMetadata.setCustomField(Constants.IsPublishing, "true");
                 return Optional.of(entity);
             }
             if (cleanUp) {
-                entityWithMetadata.unsetCustomField(CustomField.IS_PUBLISHING);
-                entityWithMetadata.unsetCustomField(CustomField.REQUEST_PUBLISH);
-                entityWithMetadata.unsetCustomField(CustomField.IS_CHANGED);
+                entityWithMetadata.unsetCustomField(Constants.IsPublishing);
+                entityWithMetadata.unsetCustomField(Constants.RequestPublish);
+                entityWithMetadata.unsetCustomField(Constants.IsChanged);
+                entityWithMetadata.unsetCustomField(Constants.ChildChanged);
             }
         }
         return Optional.ofNullable(entity);
     }
 
     private void initializeFields(DomainEntity domainEntity) {
-        if (domainEntity instanceof Node) {
-            ((Node) domainEntity).getTranslations().forEach(JsonTranslation::getName);
-            ((Node) domainEntity).getChildConnections();
-            ((Node) domainEntity).getParentConnections();
-            ((Node) domainEntity).getResourceResourceTypes();
-            ((Node) domainEntity).getResourceResourceTypes().forEach(ResourceResourceType::getResourceType);
-            ((Node) domainEntity).getResourceTypes().forEach(this::initializeFields);
-        } else if (domainEntity instanceof NodeConnection) {
-            ((NodeConnection) domainEntity).getParent().ifPresent(this::initializeFields);
-            ((NodeConnection) domainEntity).getChild().ifPresent(this::initializeFields);
-        } else if (domainEntity instanceof ResourceType) {
-            ((ResourceType) domainEntity).getParent().ifPresent(this::initializeFields);
-            ((ResourceType) domainEntity).getTranslations().forEach(JsonTranslation::getName);
+        if (domainEntity instanceof Node node) {
+            node.getTranslations().forEach(JsonTranslation::getName);
+            node.getChildConnections();
+            node.getParentConnections();
+            node.getResourceResourceTypes();
+            node.getResourceResourceTypes().forEach(ResourceResourceType::getResourceType);
+            node.getResourceTypes().forEach(this::initializeFields);
+        } else if (domainEntity instanceof NodeConnection nodeConnection) {
+            nodeConnection.getParent().ifPresent(this::initializeFields);
+            nodeConnection.getChild().ifPresent(this::initializeFields);
+        } else if (domainEntity instanceof ResourceType resourceType) {
+            resourceType.getParent().ifPresent(this::initializeFields);
+            resourceType.getTranslations().forEach(JsonTranslation::getName);
         }
     }
 
     @Override
     @Transactional
     public Optional<DomainEntity> updateEntity(DomainEntity domainEntity, boolean cleanUp) {
-        if (domainEntity instanceof Node) {
-            return updateNode((Node) domainEntity, cleanUp);
+        if (domainEntity instanceof Node node) {
+            return updateNode(node, cleanUp);
         }
-        if (domainEntity instanceof NodeConnection) {
-            return updateNodeConnection((NodeConnection) domainEntity, cleanUp);
+        if (domainEntity instanceof NodeConnection nodeConnection) {
+            return updateNodeConnection(nodeConnection, cleanUp);
         }
         throw new IllegalArgumentException("Wrong type of element to update: " + domainEntity.getEntityName());
     }
@@ -248,7 +250,7 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             if (existing.equals(nodeConnection)) {
                 return Optional.of(existing);
             }
-            logger.debug("Updating nodeconnection " + nodeConnection.getPublicId());
+            logger.debug("Updating node-connection " + nodeConnection.getPublicId());
             existing.setParent(nodeRepository.findByPublicId(
                     nodeConnection.getParent().get().getPublicId()));
             existing.setChild(nodeRepository.findByPublicId(

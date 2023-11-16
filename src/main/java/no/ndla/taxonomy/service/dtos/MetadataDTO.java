@@ -29,7 +29,7 @@ public class MetadataDTO {
     public Boolean visible;
 
     @Schema
-    public Map<String, String> customFields;
+    public Map<String, String> customFields = new HashMap<>();
 
     public MetadataDTO() {}
 
@@ -104,5 +104,9 @@ public class MetadataDTO {
 
     public void setCustomFields(Map<String, String> customFields) {
         this.customFields = customFields;
+    }
+
+    public void setCustomField(String key, String value) {
+        this.customFields.put(key, value);
     }
 }

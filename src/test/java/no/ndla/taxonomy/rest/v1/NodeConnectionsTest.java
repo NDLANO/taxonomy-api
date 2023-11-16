@@ -15,6 +15,7 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionDTO;
 import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPOST;
@@ -263,6 +264,9 @@ public class NodeConnectionsTest extends RestTest {
             if (!connectionFromDb.id.equals(updatedConnection.getPublicId())) {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
                 assertEquals(oldRank + 1, connectionFromDb.rank);
+                assertEquals(
+                        Constants.True,
+                        connectionFromDb.metadata.getCustomFields().get(Constants.IsChanged));
             }
         }
     }
@@ -296,6 +300,9 @@ public class NodeConnectionsTest extends RestTest {
                 int oldRank = mappedRanks.get(connectionFromDb.id.toString());
                 if (oldRank <= 5) {
                     assertEquals(oldRank + 1, connectionFromDb.rank);
+                    assertEquals(
+                            Constants.True,
+                            connectionFromDb.metadata.getCustomFields().get(Constants.IsChanged));
                 } else {
                     assertEquals(oldRank, connectionFromDb.rank);
                 }
@@ -354,6 +361,8 @@ public class NodeConnectionsTest extends RestTest {
         var customFieldValues = connection.getCustomFields();
         assertTrue(customFieldValues.containsKey("key"));
         assertTrue(customFieldValues.containsValue("value"));
+        assertTrue(customFieldValues.containsKey(Constants.IsChanged));
+        assertTrue(customFieldValues.containsValue(Constants.True));
     }
 
     private Map<String, Integer> mapConnectionRanks(List<NodeConnection> nodeConnections) {

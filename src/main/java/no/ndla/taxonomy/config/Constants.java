@@ -13,4 +13,10 @@ public final class Constants {
     public static final String Active = "active";
     public static final String Beta = "beta";
     public static final String OtherResources = "otherResources";
+
+    public static final String True = "true";
+    public static final String IsPublishing = "isPublishing";
+    public static final String RequestPublish = "requestPublish";
+    public static final String IsChanged = "isChanged";
+    public static final String ChildChanged = "childChanged";
 }

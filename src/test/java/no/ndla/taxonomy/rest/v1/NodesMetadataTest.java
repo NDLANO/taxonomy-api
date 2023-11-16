@@ -14,6 +14,7 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
@@ -91,6 +92,6 @@ public class NodesMetadataTest extends RestTest {
         assertNotNull(node.getMetadata());
         assertTrue(node.getMetadata().isVisible());
         assertTrue(node.getMetadata().getGrepCodes().isEmpty());
-        assertTrue(node.getCustomFields().isEmpty());
+        assertEquals(Constants.True, node.getCustomFields().get(Constants.IsChanged));
     }
 }

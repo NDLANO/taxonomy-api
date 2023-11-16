@@ -14,6 +14,7 @@ import jakarta.persistence.EntityManager;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -78,6 +79,7 @@ public class NodeTranslations {
                     TranslationPUT command) {
         Node node = nodeRepository.getByPublicId(id);
         node.addTranslation(command.name, language);
+        node.setCustomField(Constants.IsChanged, Constants.True);
         entityManager.persist(node);
     }
 
@@ -94,6 +96,7 @@ public class NodeTranslations {
                     @PathVariable("language")
                     String language) {
         Node node = nodeRepository.getByPublicId(id);
+        node.setCustomField(Constants.IsChanged, Constants.True);
         node.getTranslation(language).ifPresent(translation -> {
             node.removeTranslation(language);
             entityManager.persist(node);

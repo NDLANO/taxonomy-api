@@ -9,9 +9,7 @@ package no.ndla.taxonomy.service;
 
 import java.util.*;
 import no.ndla.taxonomy.config.Constants;
-import no.ndla.taxonomy.domain.Context;
-import no.ndla.taxonomy.domain.LanguageField;
-import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.util.HashUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -99,5 +97,24 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
     @Transactional(propagation = Propagation.MANDATORY)
     public void clearContexts(Node entity) {
         entity.setContexts(new HashSet<>());
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void markParentsChanged(EntityWithMetadata entityWithMetadata) {
+
+        if (entityWithMetadata instanceof Node node) {
+            node.getParentNodes().forEach(parent -> {
+                parent.setCustomField(Constants.ChildChanged, Constants.True);
+                markParentsChanged(parent);
+            });
+        }
+
+        if (entityWithMetadata instanceof NodeConnection nodeConnection) {
+            nodeConnection.getParent().ifPresent(parent -> {
+                parent.setCustomField(Constants.ChildChanged, Constants.True);
+                markParentsChanged(parent);
+            });
+        }
     }
 }

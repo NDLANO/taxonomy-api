@@ -10,6 +10,7 @@ package no.ndla.taxonomy.service;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
@@ -54,6 +55,8 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
             throw new IllegalArgumentException("Unknown parent-child connection");
         }
 
+        connection.setCustomField(Constants.IsChanged, Constants.True);
+
         try {
             updatePrimaryConnection(connection, requestedPrimary);
         } catch (InvalidArgumentServiceException e) {
@@ -95,6 +98,8 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
         if (parent == child) {
             throw new InvalidArgumentServiceException("Cannot connect node to itself");
         }
+
+        parent.setCustomField(Constants.ChildChanged, Constants.True);
 
         Node parentConnected = parent;
 
@@ -139,6 +144,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     @Override
     public void disconnectParentChildConnection(NodeConnection nodeConnection) {
         final var child = nodeConnection.getChild();
+        final var parent = nodeConnection.getParent();
 
         nodeConnection.disassociate();
         nodeConnectionRepository.delete(nodeConnection);
@@ -160,11 +166,17 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
             contextUpdaterService.updateContexts(childToDisconnect);
         });
 
+        parent.ifPresent(p -> p.setCustomField(Constants.ChildChanged, Constants.True));
+
         nodeConnectionRepository.flush();
     }
 
     private void saveConnections(Collection<NodeConnection> connections) {
-        connections.forEach(nodeConnectionRepository::save);
+        connections.forEach(nodeConnection -> {
+            nodeConnection.setCustomField(Constants.IsChanged, Constants.True);
+            contextUpdaterService.markParentsChanged(nodeConnection);
+            nodeConnectionRepository.save(nodeConnection);
+        });
         nodeConnectionRepository.flush();
     }
 

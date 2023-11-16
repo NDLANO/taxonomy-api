@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import no.ndla.taxonomy.TestSeeder;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.JsonGrepCode;
 import no.ndla.taxonomy.domain.Node;
@@ -86,6 +87,7 @@ public class NodesTest extends RestTest {
         final var node = testUtils.getObject(NodeDTO.class, response);
 
         assertEquals("/node:1", node.getPath());
+        assertNull(node.getMetadata().getCustomFields().get(Constants.IsChanged));
     }
 
     @Test
@@ -583,6 +585,7 @@ public class NodesTest extends RestTest {
         assertEquals("node", node.getName());
         assertEquals(URI.create("urn:article:1"), node.getContentUri());
         assertTrue(node.isContext());
+        assertEquals(Constants.True, node.getMetadata().getCustomFields().get(Constants.IsChanged));
     }
 
     @Test
@@ -715,6 +718,7 @@ public class NodesTest extends RestTest {
         Node node = nodeRepository.getByPublicId(n.getPublicId());
         assertEquals("trigonometry", node.getName());
         assertEquals("urn:article:1", node.getContentUri().toString());
+        assertEquals(Constants.True, node.getMetadata().getCustomFields().get(Constants.IsChanged));
     }
 
     @Test

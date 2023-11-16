@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.ChangelogRepository;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
@@ -626,7 +627,7 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
                 .isContext(true)
                 .translation("nn", tr -> tr.name("NN Node"))
                 .translation("nb", tr -> tr.name("NB Node"))
-                .customField(CustomField.IS_CHANGED, "true")
+                .customField(Constants.IsChanged, "true")
                 .customField("to be kept", "true")
                 .child(c -> c.publicId("urn:node:2"))
                 .resource(r -> r.publicId("urn:resource:1")));
