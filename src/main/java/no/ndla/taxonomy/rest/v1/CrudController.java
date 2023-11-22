@@ -71,7 +71,7 @@ public abstract class CrudController<T extends DomainEntity> {
 
         if (entity instanceof EntityWithMetadata entityWithMetadata) {
             entityWithMetadata.setCustomField(Constants.IsChanged, Constants.True);
-            contextUpdaterService.markParentsChanged(entityWithMetadata);
+            contextUpdaterService.setCustomFieldOnParents(entityWithMetadata, Constants.ChildChanged, Constants.True);
         }
 
         if (entity instanceof Node node) {
@@ -95,7 +95,8 @@ public abstract class CrudController<T extends DomainEntity> {
 
             if (entity instanceof EntityWithMetadata entityWithMetadata) {
                 entityWithMetadata.setCustomField(Constants.IsChanged, Constants.True);
-                contextUpdaterService.markParentsChanged(entityWithMetadata);
+                contextUpdaterService.setCustomFieldOnParents(
+                        entityWithMetadata, Constants.ChildChanged, Constants.True);
             }
 
             command.apply(entity);

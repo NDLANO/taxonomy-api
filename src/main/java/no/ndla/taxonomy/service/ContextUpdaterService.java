@@ -15,5 +15,5 @@ public interface ContextUpdaterService {
 
     void clearContexts(Node entity);
 
-    void markParentsChanged(EntityWithMetadata entityWithMetadata);
+    void setCustomFieldOnParents(EntityWithMetadata entityWithMetadata, String customField, String customValue);
 }

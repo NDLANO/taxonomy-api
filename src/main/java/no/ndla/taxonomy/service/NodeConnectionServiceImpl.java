@@ -99,7 +99,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
             throw new InvalidArgumentServiceException("Cannot connect node to itself");
         }
 
-        parent.setCustomField(Constants.ChildChanged, Constants.True);
+        parent.setCustomField(Constants.IsChanged, Constants.True);
 
         Node parentConnected = parent;
 
@@ -174,7 +174,7 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     private void saveConnections(Collection<NodeConnection> connections) {
         connections.forEach(nodeConnection -> {
             nodeConnection.setCustomField(Constants.IsChanged, Constants.True);
-            contextUpdaterService.markParentsChanged(nodeConnection);
+            contextUpdaterService.setCustomFieldOnParents(nodeConnection, Constants.ChildChanged, Constants.True);
             nodeConnectionRepository.save(nodeConnection);
         });
         nodeConnectionRepository.flush();

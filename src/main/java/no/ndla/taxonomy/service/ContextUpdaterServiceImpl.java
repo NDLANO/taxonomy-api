@@ -99,21 +99,23 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
         entity.setContexts(new HashSet<>());
     }
 
-    @Override
+    /*
+     * Method recursively sets given custom field and value on parents of given entityWithMetadata
+     */
     @Transactional(propagation = Propagation.MANDATORY)
-    public void markParentsChanged(EntityWithMetadata entityWithMetadata) {
+    public void setCustomFieldOnParents(EntityWithMetadata entityWithMetadata, String customField, String customValue) {
 
         if (entityWithMetadata instanceof Node node) {
             node.getParentNodes().forEach(parent -> {
-                parent.setCustomField(Constants.ChildChanged, Constants.True);
-                markParentsChanged(parent);
+                parent.setCustomField(customField, customValue);
+                setCustomFieldOnParents(parent, customField, customValue);
             });
         }
 
         if (entityWithMetadata instanceof NodeConnection nodeConnection) {
             nodeConnection.getParent().ifPresent(parent -> {
-                parent.setCustomField(Constants.ChildChanged, Constants.True);
-                markParentsChanged(parent);
+                parent.setCustomField(customField, customValue);
+                this.setCustomFieldOnParents(parent, customField, customValue);
             });
         }
     }

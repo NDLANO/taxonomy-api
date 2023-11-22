@@ -51,7 +51,7 @@ public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends
         var entity = repository.findByPublicId(id);
         if (entity instanceof EntityWithMetadata entityWithMetadata) {
             entityToUpdate.setCustomField(Constants.IsChanged, Constants.True);
-            contextUpdaterService.markParentsChanged(entityWithMetadata);
+            contextUpdaterService.setCustomFieldOnParents(entityWithMetadata, Constants.ChildChanged, Constants.True);
             var result = entityWithMetadata.getMetadata().mergeWith(entityToUpdate);
             if (entity instanceof Node node) {
                 contextUpdaterService.updateContexts(node);
