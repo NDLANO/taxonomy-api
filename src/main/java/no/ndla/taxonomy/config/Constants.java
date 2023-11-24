@@ -17,6 +17,7 @@ public final class Constants {
     public static final String True = "true";
     public static final String IsPublishing = "isPublishing";
     public static final String RequestPublish = "requestPublish";
+    public static final String ChildRequested = "childRequested";
     public static final String IsChanged = "isChanged";
     public static final String ChildChanged = "childChanged";
 }

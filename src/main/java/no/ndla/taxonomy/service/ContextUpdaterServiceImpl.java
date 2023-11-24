@@ -106,6 +106,10 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
     public void setCustomFieldOnParents(EntityWithMetadata entityWithMetadata, String customField, String customValue) {
 
         if (entityWithMetadata instanceof Node node) {
+            if (node.getNodeType() == NodeType.SUBJECT) {
+                // No need to traverse higher than subject
+                return;
+            }
             node.getParentNodes().forEach(parent -> {
                 parent.setCustomField(customField, customValue);
                 setCustomFieldOnParents(parent, customField, customValue);
