@@ -335,6 +335,6 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
 
         return nodeService.getResourcesByNodeId(
-                subjectId, resourceTypeIdSet, relevanceArgument, language, true, Optional.of(false));
+                subjectId, resourceTypeIdSet, relevanceArgument, language, true, Optional.of(false), false);
     }
 }

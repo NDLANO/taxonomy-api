@@ -198,7 +198,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             URI relevancePublicId,
             Optional<String> languageCode,
             boolean recursive,
-            Optional<Boolean> includeContexts) {
+            Optional<Boolean> includeContexts,
+            boolean filterProgrammes) {
         final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
 
         final Set<URI> topicIdsToSearchFor;
@@ -234,7 +235,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 relevancePublicId,
                 resourcesToSort,
                 languageCode,
-                includeContexts);
+                includeContexts,
+                filterProgrammes);
     }
 
     private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(
@@ -244,10 +246,11 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             URI relevance,
             Set<ResourceTreeSortable> sortableListToAddTo,
             Optional<String> languageCode,
-            Optional<Boolean> includeContexts) {
+            Optional<Boolean> includeContexts,
+            boolean filterProgrammes) {
         final List<NodeConnection> nodeResources;
 
-        if (resourceTypeIds.size() > 0) {
+        if (!resourceTypeIds.isEmpty()) {
             nodeResources = nodeConnectionRepository.getResourceBy(nodeIds, resourceTypeIds, relevance);
         } else {
             var nodeResourcesStream = nodeConnectionRepository.getByResourceIds(nodeIds).stream();
@@ -287,7 +290,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                             nodeConnection,
                             languageCode.orElse(Constants.DefaultLanguage),
                             includeContexts,
-                            false);
+                            filterProgrammes);
                 })
                 .collect(toList());
     }

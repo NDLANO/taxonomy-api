@@ -246,7 +246,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         }
 
         return nodeService.getResourcesByNodeId(
-                topicId, resourceTypeIdSet, relevance, language, recursive, Optional.of(false));
+                topicId, resourceTypeIdSet, relevance, language, recursive, Optional.of(false), false);
     }
 
     @Deprecated

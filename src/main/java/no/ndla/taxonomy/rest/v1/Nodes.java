@@ -336,6 +336,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<String> language,
             @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false)
                     Optional<Boolean> includeContexts,
+            @Parameter(description = "Filter out programme contexts")
+                    @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
+                    boolean filterProgrammes,
             @Parameter(description = "If true, resources from children are fetched recursively")
                     @RequestParam(value = "recursive", required = false, defaultValue = "false")
                     boolean recursive,
@@ -357,7 +360,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         }
 
         return nodeService.getResourcesByNodeId(
-                nodeId, resourceTypeIdSet, relevance, language, recursive, includeContexts);
+                nodeId, resourceTypeIdSet, relevance, language, recursive, includeContexts, filterProgrammes);
     }
 
     @GetMapping("{id}/full")
