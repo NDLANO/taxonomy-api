@@ -37,8 +37,6 @@ public class ResourcesTest extends RestTest {
     void clearAllRepos() {
         nodeRepository.deleteAllAndFlush();
         nodeConnectionRepository.deleteAllAndFlush();
-
-        builder.core();
     }
 
     @Test

@@ -36,7 +36,6 @@ public class TopicsTest extends RestTest {
     @BeforeEach
     void clearAllRepos() {
         nodeRepository.deleteAllAndFlush();
-        builder.core();
     }
 
     @Test

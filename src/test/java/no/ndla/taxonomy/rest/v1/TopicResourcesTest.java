@@ -33,8 +33,6 @@ public class TopicResourcesTest extends RestTest {
     public void add_core_relevance() {
         nodeRepository.deleteAllAndFlush();
         nodeConnectionRepository.deleteAllAndFlush();
-
-        builder.core();
     }
 
     @Test

@@ -34,13 +34,12 @@ public class RelevancesTest extends RestTest {
     @Test
     public void can_get_all_relevances() throws Exception {
         builder.relevance(f -> f.publicId("urn:relevance:1").name("Core material"));
-
         builder.relevance(f -> f.publicId("urn:relevance:2").name("Supplementary material"));
 
         MockHttpServletResponse response = testUtils.getResource("/v1/relevances");
         RelevanceDTO[] relevances = testUtils.getObject(RelevanceDTO[].class, response);
 
-        assertEquals(2, relevances.length);
+        assertEquals(4, relevances.length);
         assertAnyTrue(relevances, f -> f.name.equals("Core material"));
         assertAnyTrue(relevances, f -> f.name.equals("Supplementary material"));
     }

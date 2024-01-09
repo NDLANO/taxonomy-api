@@ -227,11 +227,17 @@
     </changeSet>
 
     <changeSet id="20190605 v14 resource_filter" author="Migrated From Flyway">
+        <validCheckSum>8:8443ad1a262444b09395879a5c673232</validCheckSum>
         <createTable tableName="relevance">
             <column name="id" type="serial"><constraints primaryKey="true" /></column>
             <column name="public_id" type="varchar(255)"><constraints nullable="false" unique="true" uniqueConstraintName="relevance_public_id" /></column>
             <column name="name" type="varchar(255)" />
         </createTable>
+        <sql>
+            INSERT INTO relevance (id, public_id, name) VALUES (1, 'urn:relevance:core', 'Kjernestoff');
+            INSERT INTO relevance (id, public_id, name) VALUES (2, 'urn:relevance:supplementary', 'Tilleggstoff');
+            ALTER SEQUENCE relevance_id_seq RESTART WITH 3;
+        </sql>
 
         <createTable tableName="relevance_translation">
             <column name="id" type="serial"><constraints primaryKey="true" /></column>
@@ -240,6 +246,16 @@
             <column name="name" type="varchar(255)" />
         </createTable>
         <addUniqueConstraint tableName="relevance_translation" columnNames="relevance_id,language_code" constraintName="relevance_language_unique" />
+        <sql>
+            INSERT INTO relevance_translation (relevance_id, language_code, name) VALUES (1, 'nb', 'Kjernestoff');
+            INSERT INTO relevance_translation (relevance_id, language_code, name) VALUES (1, 'nn', 'Kjernestoff');
+            INSERT INTO relevance_translation (relevance_id, language_code, name) VALUES (1, 'en', 'Core content');
+            INSERT INTO relevance_translation (relevance_id, language_code, name) VALUES (1, 'se', 'Guovddášávnnas');
+            INSERT INTO relevance_translation (relevance_id, language_code, name) VALUES (2, 'nb', 'Tilleggsstoff');
+            INSERT INTO relevance_translation (relevance_id, language_code, name) VALUES (2, 'nn', 'Tilleggsstoff');
+            INSERT INTO relevance_translation (relevance_id, language_code, name) VALUES (2, 'en', 'Supplementary content');
+            INSERT INTO relevance_translation (relevance_id, language_code, name) VALUES (2, 'se', 'Lassiávnnas');
+        </sql>
 
         <createTable tableName="resource_filter">
             <column name="id" type="serial"><constraints primaryKey="true" /></column>
