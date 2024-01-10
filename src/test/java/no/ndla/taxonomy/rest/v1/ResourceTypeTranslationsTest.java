@@ -9,8 +9,7 @@ package no.ndla.taxonomy.rest.v1;
 
 import static no.ndla.taxonomy.TestUtils.assertAnyTrue;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.net.URI;
 import no.ndla.taxonomy.domain.ResourceType;
@@ -30,7 +29,7 @@ public class ResourceTypeTranslationsTest extends RestTest {
         MockHttpServletResponse response = testUtils.getResource("/v1/resource-types?language=nb");
         ResourceTypeDTO[] resourceTypes = testUtils.getObject(ResourceTypeDTO[].class, response);
 
-        assertEquals(2, resourceTypes.length);
+        assertTrue(resourceTypes.length >= 2);
         assertAnyTrue(resourceTypes, s -> s.name.equals("Artikkel"));
         assertAnyTrue(resourceTypes, s -> s.name.equals("Forelesning"));
     }

@@ -89,6 +89,7 @@
                                  referencedColumnNames="id"/>
     </changeSet>
     <changeSet id="20190605 v7 create resource_type table" author="Migrated From Flyway">
+        <validCheckSum>8:d30608305a6da4c8bb4741a570417e33</validCheckSum>
         <createTable tableName="resource_type">
             <column name="id" type="serial">
                 <constraints primaryKey="true"/>
@@ -102,6 +103,35 @@
             </column>
             <column name="name" type="varchar(255)"/>
         </createTable>
+        <sql>
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (1, null, 'urn:resourcetype:learningPath', 'Læringssti');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (2, null, 'urn:resourcetype:subjectMaterial', 'Fagstoff');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (3, 2, 'urn:resourcetype:academicArticle', 'Fagartikkel');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (4, 2, 'urn:resourcetype:guidance', 'Veiledning');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (5, null, 'urn:resourcetype:tasksAndActivities', 'Oppgaver og aktiviteter');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (6, 5, 'urn:resourcetype:task', 'Oppgave');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (7, 2, 'urn:resourcetype:movieAndClip', 'Film og filmklipp');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (8, 2, 'urn:resourcetype:lectureAndPresentation', 'Forelesning og presentasjon');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (9, 2, 'urn:resourcetype:simulation', 'Simulering');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (10, 5, 'urn:resourcetype:exercise', 'Øvelse');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (11, null, 'urn:resourcetype:reviewResource', 'Vurderingsressurs');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (12, 11, 'urn:resourcetype:selfEvaluation', 'Egenvurdering');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (14, 5, 'urn:resourcetype:game', 'Spill');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (15, 5, 'urn:resourcetype:workAssignment', 'Arbeidsoppdrag');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (16, 2, 'urn:resourcetype:dictionary', 'Oppslagsverk og ordliste');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (17, 2, 'urn:resourcetype:toolAndTemplate', 'Verktøy og mal');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (18, null, 'urn:resourcetype:SourceMaterial', 'Kildemateriale');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (19, 18, 'urn:resourcetype:featureFilm', 'Spillefilm');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (20, 18, 'urn:resourcetype:shortFilm', 'Kortfilm');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (24, 18, 'urn:resourcetype:historicalMaterial', 'Historisk materiale');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (25, 18, 'urn:resourcetype:literaryText', 'Litterære tekster');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (27, 18, 'urn:resourcetype:soundRecording', 'Lydopptak');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (28, 2, 'urn:resourcetype:experiment', 'Forsøk');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (32, 18, 'urn:resourcetype:filmClip', 'Filmklipp');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (33, 18, 'urn:resourcetype:series', 'Serier');
+            INSERT INTO resource_type (id, parent_id, public_id, name) VALUES (34, 18, 'urn:resourcetype:documentary', 'Dokumentarfilm');
+            ALTER SEQUENCE resource_type_id_seq RESTART WITH 35;
+        </sql>
     </changeSet>
     <changeSet id="20190605 v8 create resource_resource_type table" author="Migrated From Flyway">
         <createTable tableName="resource_resource_type">
@@ -124,6 +154,7 @@
         </addColumn>
     </changeSet>
     <changeSet id="20190605 v10 language" author="Migrated From Flyway">
+        <validCheckSum>8:bfa1be1fac786e4a73e2b21b075bdb43</validCheckSum>
         <createTable tableName="subject_translation">
             <column name="id" type="serial"><constraints primaryKey="true" /></column>
             <column name="subject_id" type="integer"><constraints nullable="false" referencedTableName="subject" referencedColumnNames="id" foreignKeyName="subject_translation_subject_id_fkey" /></column>
@@ -155,6 +186,112 @@
             <column name="name" type="varchar(255)" />
         </createTable>
         <addUniqueConstraint tableName="resource_type_translation" columnNames="resource_type_id,language_code" constraintName="resource_type_language_unique" />
+        <sql>
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (1, 'nb', 'Læringssti');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (1, 'nn', 'Læringssti');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (1, 'en', 'Learning path');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (1, 'se', 'Oahppanbálggis');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (2, 'nb', 'Fagstoff');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (2, 'nn', 'Fagstoff');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (2, 'en', 'Subject Material');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (2, 'se', 'Fágaávnnas');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (3, 'nb', 'Fagartikkel');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (3, 'nn', 'Fagartikkel');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (3, 'en', 'Article');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (3, 'se', 'Fágaartihkal');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (4, 'nb', 'Veiledning');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (4, 'nn', 'Rettleiing');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (4, 'en', 'Guidance');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (4, 'se', 'Bagadus');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (5, 'nb', 'Oppgaver og aktiviteter');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (5, 'nn', 'Oppgåver og aktivitetar');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (5, 'en', 'Tasks and Activites');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (5, 'se', 'Bargobihtát ja doaimmat');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (6, 'nb', 'Oppgave');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (6, 'nn', 'Oppgåve');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (6, 'en', 'Task');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (6, 'se', 'Bargobihttá');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (7, 'nb', 'Film og filmklipp');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (7, 'nn', 'Film og filmklipp');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (7, 'en', 'Films and Film clips');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (7, 'se', 'Filmmat ja filbmaoasážat');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (8, 'nb', 'Forelesing og presentasjon');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (8, 'nn', 'Førelesing og presentasjon');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (8, 'en', 'Lectures and Presentations');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (8, 'se', 'Logaldallan ja ovdanbuktin');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (9, 'nb', 'Simulering');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (9, 'nn', 'Simulering');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (9, 'en', 'Simulations');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (9, 'se', 'Simuleren');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (10, 'nb', 'Øvelse');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (10, 'nn', 'Øving');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (10, 'en', 'Exercise');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (10, 'se', 'Hárjehus');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (11, 'nb', 'Vurderingsressurs');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (11, 'nn', 'Vurderingsressurs');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (11, 'en', 'Assessment Resources');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (11, 'se', 'Árvvoštallanresursa');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (12, 'nb', 'Egenvurdering');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (12, 'nn', 'Eigenvurdering');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (12, 'en', 'Self Evaluation');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (12, 'se', 'Iežas árvvoštallan');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (14, 'nb', 'Spill');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (14, 'nn', 'Spel');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (14, 'en', 'Game');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (14, 'se', 'Speallu');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (15, 'nb', 'Arbeidsoppdrag');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (15, 'nn', 'Arbeidsoppdrag');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (15, 'en', 'Work Assignment');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (15, 'se', 'Bargodoaibma');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (16, 'nb', 'Oppslagsverk og ordliste');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (16, 'nn', 'Oppslagsverk og ordliste');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (16, 'en', 'Dictionary');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (16, 'se', 'Diehtogirjjit ja sátnegirji');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (17, 'nb', 'Verktøy og mal');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (17, 'nn', 'Verktøy og mal');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (17, 'en', 'Tools and Templates');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (17, 'se', 'Reaiddut ja málle');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (18, 'nb', 'Kildemateriell');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (18, 'nn', 'Kjeldemateriale');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (18, 'en', 'External resources');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (18, 'se', 'Gáldomateriála');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (19, 'nb', 'Spillefilm');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (19, 'nn', 'Spelefilm');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (19, 'en', 'Feature Film');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (19, 'se', 'Guoimmuhanfilbma');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (20, 'nb', 'Kortfilm');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (20, 'nn', 'Kortfilm');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (20, 'en', 'Short Film');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (20, 'se', 'Oanehisfilbma');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (24, 'nb', 'Historisk materiale');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (24, 'nn', 'Historiske kjelder');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (24, 'en', 'Historical Sources');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (24, 'se', 'Historjjálaš materiála');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (25, 'nb', 'Litterære tekster');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (25, 'nn', 'Litterære tekstar');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (25, 'en', 'Literary Text');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (25, 'se', 'Girjjálašvuođa teavsttat');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (27, 'nb', 'Lydopptak');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (27, 'nn', 'Lydopptak');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (27, 'en', 'Sound Recordings');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (27, 'se', 'Jietnabádden');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (28, 'nb', 'Forsøk');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (28, 'nn', 'Forsøk');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (28, 'en', 'Experiment');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (28, 'se', 'Geahččaladdan');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (32, 'nb', 'Filmklipp');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (32, 'nn', 'Filmklipp');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (32, 'en', 'Film Clip');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (32, 'se', 'Filbmaoasáš');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (33, 'nb', 'Serier');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (33, 'nn', 'Seriar');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (33, 'en', 'Series');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (33, 'se', 'Ráiddut');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (34, 'nb', 'Dokumentarfilm');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (34, 'nn', 'Dokumentarfilm');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (34, 'en', 'Documentary');
+            INSERT INTO resource_type_translation (resource_type_id, language_code, name) VALUES (34, 'se', 'Dokumentára filbma');
+        </sql>
     </changeSet>
 
     <changeSet id="20190605 v11 set primary" author="Migrated From Flyway">
