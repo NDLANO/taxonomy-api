@@ -33,8 +33,6 @@ public class SubjectsTest extends RestTest {
     void clearAllRepos() {
         nodeRepository.deleteAllAndFlush();
         nodeConnectionRepository.deleteAllAndFlush();
-
-        builder.core();
     }
 
     @Test
