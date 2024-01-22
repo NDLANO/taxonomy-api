@@ -322,10 +322,20 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             boolean filterProgrammes,
             int pageSize,
             int page,
-            Optional<List<NodeType>> nodeType) {
+            Optional<List<NodeType>> nodeType,
+            Optional<Map<String, String>> customfieldsFilter) {
         Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasOneOfNodeType(nt))));
         return SearchService.super.search(
-                query, ids, contentUris, language, includeContexts, filterProgrammes, pageSize, page, nodeSpecLambda);
+                query,
+                ids,
+                contentUris,
+                language,
+                includeContexts,
+                filterProgrammes,
+                pageSize,
+                page,
+                nodeSpecLambda,
+                customfieldsFilter);
     }
 
     @Transactional

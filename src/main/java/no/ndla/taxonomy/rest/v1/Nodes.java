@@ -22,6 +22,7 @@ import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
+import no.ndla.taxonomy.rest.v1.commands.NodeSearchBody;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.data.domain.PageRequest;
@@ -142,10 +143,37 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<Boolean> includeContexts,
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
-                    boolean filterProgrammes) {
-
+                    boolean filterProgrammes
+            ) {
         return nodeService.searchByNodeType(
-                query, ids, contentUris, language, includeContexts, filterProgrammes, pageSize, page, nodeType);
+                query,
+                ids,
+                contentUris,
+                language,
+                includeContexts,
+                filterProgrammes,
+                pageSize,
+                page,
+                nodeType,
+                Optional.empty());
+    }
+
+    @PostMapping("/search")
+    @Operation(summary = "Search all nodes")
+    @Transactional(readOnly = true)
+    public SearchResultDTO<NodeDTO> searchNodes(@RequestBody NodeSearchBody searchBodyParams) {
+        return nodeService.searchByNodeType(
+                searchBodyParams.query,
+                searchBodyParams.ids,
+                searchBodyParams.contentUris,
+                searchBodyParams.language,
+                searchBodyParams.includeContexts,
+                searchBodyParams.filterProgrammes,
+                searchBodyParams.pageSize,
+                searchBodyParams.page,
+                searchBodyParams.nodeType,
+                searchBodyParams.customFields
+        );
     }
 
     @GetMapping("/page")
