@@ -115,7 +115,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                 false,
                 pageSize,
                 page,
-                Optional.of(List.of(NodeType.SUBJECT)));
+                Optional.of(List.of(NodeType.SUBJECT)),
+                Optional.empty());
     }
 
     @Deprecated
