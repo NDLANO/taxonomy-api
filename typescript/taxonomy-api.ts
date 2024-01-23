@@ -228,6 +228,46 @@ export interface NodeResourcePUT {
     relevanceId?: string;
 }
 
+export interface NodeSearchBody {
+    /**
+     * ContentURIs to fetch for query
+     */
+    contentUris?: string[];
+    customFields?: Record<string, string>;
+    /**
+     * Filter out programme contexts
+     */
+    filterProgrammes: boolean;
+    /**
+     * Ids to fetch for query
+     */
+    ids?: string[];
+    /**
+     * Include all contexts
+     */
+    includeContexts?: boolean;
+    /**
+     * ISO-639-1 language code
+     */
+    language?: string;
+    /**
+     * Filter by nodeType
+     */
+    nodeType?: NodeType[];
+    /**
+     * Which page to fetch
+     */
+    page: number;
+    /**
+     * How many results to return per page
+     */
+    pageSize: number;
+    /**
+     * Query to search names
+     */
+    query?: string;
+}
+
 export interface NodeWithParents extends Node {
     parents: NodeChild[];
 }
