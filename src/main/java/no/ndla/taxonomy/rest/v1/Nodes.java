@@ -143,8 +143,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<Boolean> includeContexts,
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
-                    boolean filterProgrammes
-            ) {
+                    boolean filterProgrammes) {
         return nodeService.searchByNodeType(
                 query,
                 ids,
@@ -172,8 +171,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                 searchBodyParams.pageSize,
                 searchBodyParams.page,
                 searchBodyParams.nodeType,
-                searchBodyParams.customFields
-        );
+                searchBodyParams.customFields);
     }
 
     @GetMapping("/page")
