@@ -9,12 +9,11 @@ package no.ndla.taxonomy.rest.v1.commands;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import no.ndla.taxonomy.config.Constants;
-import no.ndla.taxonomy.domain.NodeType;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import no.ndla.taxonomy.config.Constants;
+import no.ndla.taxonomy.domain.NodeType;
 
 public class NodeSearchBody {
     @JsonProperty
@@ -23,11 +22,9 @@ public class NodeSearchBody {
                     "If specified, the search result will be filtered by whether they include the key,value combination provided. If more than one provided only one will be required (OR)")
     public Optional<Map<String, String>> customFields = Optional.empty();
 
-
     @Schema(description = "ISO-639-1 language code", example = "nb")
     @JsonProperty
     public Optional<String> language = Optional.of(Constants.DefaultLanguage);
-
 
     @Schema(description = "How many results to return per page")
     @JsonProperty
@@ -64,5 +61,4 @@ public class NodeSearchBody {
     public Optional<Map<String, String>> getCustomFields() {
         return customFields;
     }
-
 }
