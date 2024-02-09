@@ -205,18 +205,17 @@ public class DomainEntityHelperServiceImpl implements DomainEntityHelperService 
             }
 
             result = nodeRepository.save(existing);
-
-            // delete orphans
-            List<URI> childIds = node.getChildConnections().stream()
-                    .map(DomainEntity::getPublicId)
-                    .toList();
-            result.getChildConnections().forEach(nodeConnection -> {
-                if (!childIds.contains(nodeConnection.getPublicId())) {
-                    // Connection deleted
-                    deleteEntityByPublicId(nodeConnection.getPublicId());
-                }
-            });
         }
+        // delete any orphans
+        List<URI> childIds = node.getChildConnections().stream()
+                .map(DomainEntity::getPublicId)
+                .toList();
+        result.getChildConnections().forEach(nodeConnection -> {
+            if (!childIds.contains(nodeConnection.getPublicId())) {
+                // Connection deleted
+                deleteEntityByPublicId(nodeConnection.getPublicId());
+            }
+        });
         if (cleanUp) {
             buildPathsForEntity(result.getPublicId());
         }

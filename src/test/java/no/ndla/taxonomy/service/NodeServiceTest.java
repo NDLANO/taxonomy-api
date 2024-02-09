@@ -119,7 +119,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 false,
                 10,
                 1,
-                Optional.of(List.of(NodeType.SUBJECT)));
+                Optional.of(List.of(NodeType.SUBJECT)),
+                Optional.empty());
 
         var topics = nodeService.searchByNodeType(
                 Optional.empty(),
@@ -130,7 +131,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 false,
                 10,
                 1,
-                Optional.of(List.of(NodeType.TOPIC)));
+                Optional.of(List.of(NodeType.TOPIC)),
+                Optional.empty());
         var all = nodeService.searchByNodeType(
                 Optional.empty(),
                 Optional.empty(),
@@ -140,6 +142,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 false,
                 10,
                 1,
+                Optional.empty(),
                 Optional.empty());
 
         assertEquals(subjects.getResults().get(0).getId(), subject.getPublicId());

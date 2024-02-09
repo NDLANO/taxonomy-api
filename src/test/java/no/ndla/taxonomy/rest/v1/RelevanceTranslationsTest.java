@@ -24,9 +24,6 @@ public class RelevanceTranslationsTest extends RestTest {
 
     @Test
     public void can_get_all_relevances() throws Exception {
-        builder.relevance(r -> r.name("Core").translation("Kjernestoff", "nb"));
-        builder.relevance(r -> r.name("Supplementary").translation("Tilleggstoff", "nb"));
-
         MockHttpServletResponse response = testUtils.getResource("/v1/relevances?language=nb");
         RelevanceDTO[] relevances = testUtils.getObject(RelevanceDTO[].class, response);
 

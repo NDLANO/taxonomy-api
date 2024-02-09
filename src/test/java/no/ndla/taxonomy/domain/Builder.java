@@ -88,7 +88,10 @@ public class Builder {
     }
 
     public Relevance core() {
-        return relevance("core", f -> f.publicId("urn:relevance:core").name("Core"));
+        return entityManager
+                .createQuery("select r from Relevance r where r.publicId = :publicId", Relevance.class)
+                .setParameter("publicId", URI.create("urn:relevance:core"))
+                .getSingleResult();
     }
 
     private VersionBuilder getVersionBuilder(String key) {
@@ -470,7 +473,7 @@ public class Builder {
         }
 
         public NodeBuilder resource(Node resource, boolean primary) {
-            entityManager.persist(NodeConnection.create(node, resource, relevance(), primary));
+            entityManager.persist(NodeConnection.create(node, resource, core(), primary));
 
             contextUpdaterService.updateContexts(resource);
 

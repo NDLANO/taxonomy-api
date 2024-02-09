@@ -50,6 +50,9 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
     NodeService nodeService;
 
     @Autowired
+    NodeConnectionService nodeConnectionService;
+
+    @Autowired
     VersionService versionService;
 
     @Autowired
@@ -655,5 +658,64 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         var customfields = new ArrayList<>(published.getCustomFields().keySet());
         assertEquals(1, customfields.size());
         assertAnyTrue(customfields, customfield -> customfield.equals("to be kept"));
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    void can_publish_node_tree_with_moved_resource_to_schema() throws Exception {
+        final var command = new VersionPostPut() {
+            {
+                name = "Beta";
+            }
+        };
+        Version target = versionService.createNewVersion(Optional.empty(), command);
+        assertTrue(checkSchemaExists(versionService.schemaFromHash(target.getHash())));
+        executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
+
+        // a node to make sure testnode is not the first
+        builder.node(n -> n.publicId("urn:node:first").resource(r -> r.publicId("urn:resource:first")));
+        Node resource = builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:1"));
+        Node topic1 =
+                builder.node(NodeType.TOPIC, t -> t.publicId("urn:topic:1").resource(resource));
+        Node topic2 = builder.node(NodeType.TOPIC, t -> t.publicId("urn:topic:2"));
+        Node node = builder.node(
+                NodeType.SUBJECT,
+                s -> s.isContext(true).publicId("urn:subject:1").child(topic1).child(topic2));
+
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), true, false);
+
+        while (!changelogRepository.findAll().isEmpty()) {
+            executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
+        }
+
+        TestTransaction.start();
+        TestTransaction.flagForCommit();
+        // Move resource to another node
+        nodeConnectionService.disconnectParentChild(topic1, resource);
+        nodeConnectionService.connectParentChild(topic2, resource, builder.core(), null, Optional.empty());
+        TestTransaction.end();
+
+        nodeService.publishNode(node.getPublicId(), Optional.empty(), target.getPublicId(), true, false);
+
+        while (!changelogRepository.findAll().isEmpty()) {
+            executor.getThreadPoolExecutor().awaitTermination(2, TimeUnit.SECONDS);
+        }
+
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(target.getHash()));
+        Node updated = (Node) domainEntityHelperService
+                .getProcessedEntityByPublicId(URI.create("urn:resource:1"), false, false)
+                .get();
+        VersionContext.setCurrentVersion(versionService.schemaFromHash(null));
+
+        assertNotNull(updated);
+        assertNotNull(updated.getContexts());
+        assertEquals(1, updated.getParentConnections().size());
+        assertAnyTrue(
+                updated.getParentConnections(),
+                nodeResource -> nodeResource.getParent().get().getPublicId().equals(URI.create("urn:topic:2")));
+        assertAnyTrue(updated.getAllPaths(), path -> path.equals("/subject:1/topic:2/resource:1"));
     }
 }

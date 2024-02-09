@@ -1186,10 +1186,20 @@
     </changeSet>
 
     <changeSet id="20230208 Move translations to separate column for relevances" author="Jonas Natten">
+        <validCheckSum>8:895d7f163967dd6d6f3f65fb2547addc</validCheckSum>
         <addColumn tableName="relevance">
             <column name="translations" type="jsonb" />
         </addColumn>
-        <!-- There are no translations in the database for now, so lets not bother with a migration that does nothing -->
+        <sql>
+            UPDATE relevance r
+            SET translations=(
+                SELECT json_agg(trans) FROM (
+                    SELECT ((js->'f1')::jsonb-'id'-'relevance_id'-'language_code'|| jsonb_build_object('languageCode', js->'f1'->'language_code')) trans FROM (SELECT row_to_json(row(rt)) AS js FROM relevance tr
+                    INNER JOIN relevance_translation rt ON rt.relevance_id = tr.id
+                    WHERE rt.id = r.id) AS _
+                ) AS _
+            )
+        </sql>
         <sql>
             UPDATE relevance
             SET translations='[]'

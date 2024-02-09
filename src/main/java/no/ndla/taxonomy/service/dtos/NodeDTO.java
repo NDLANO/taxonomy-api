@@ -144,7 +144,7 @@ public class NodeDTO {
             }
             LanguageField<String> finalRelevanceName = relevanceName;
             this.contexts = entity.getContexts().stream()
-                    .filter(ctx -> !filterProgrammes || !ctx.rootId().contains(NodeType.PROGRAMME.name()))
+                    .filter(ctx -> !filterProgrammes || !ctx.rootId().contains(NodeType.PROGRAMME.getName()))
                     .map(ctx -> {
                         return new TaxonomyContextDTO(
                                 entity.getPublicId(),
