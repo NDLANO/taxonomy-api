@@ -134,7 +134,8 @@ public class NodeDTO {
                     .get(this.language);
             this.relevanceId = Optional.of(URI.create(ctx.relevanceId()));
             this.contextId = Optional.of(ctx.contextId());
-            this.url = TitleUtil.createPrettyUrl(this.name, ctx.contextId());
+            this.url = TitleUtil.createPrettyUrl(
+                    this.name, ctx.contextId(), Optional.ofNullable(ctx.rootName().fromLanguage(languageCode)));
         });
 
         includeContexts.filter(Boolean::booleanValue).ifPresent(includeCtx -> {
@@ -170,7 +171,8 @@ public class NodeDTO {
                                 ctx.contextId(),
                                 ctx.rank(),
                                 ctx.connectionId(),
-                                TitleUtil.createPrettyUrl(this.name, ctx.contextId()));
+                                TitleUtil.createPrettyUrl(
+                                        this.name, ctx.contextId(), Optional.ofNullable(ctx.rootName().fromLanguage(languageCode))));
                     })
                     .toList();
         });

@@ -402,7 +402,7 @@ public class QueryTest extends RestTest {
                                 .contentUri("urn:article:1")
                                 .publicId("urn:resource:1"))));
         Node resource = nodeRepository.getByPublicId(URI.create("urn:resource:1"));
-        String hash = HashUtil.semiHash(root.getPublicId().toString()
+        String hash = HashUtil.mediumHash(root.getPublicId().toString()
                 + resource.getParentConnections().stream()
                         .findFirst()
                         .get()

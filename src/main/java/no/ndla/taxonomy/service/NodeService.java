@@ -488,7 +488,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                 context.contextId(),
                                 context.rank(),
                                 context.connectionId(),
-                                TitleUtil.createPrettyUrl(node.getTranslatedName(language), context.contextId()));
+                                TitleUtil.createPrettyUrl(
+                                        node.getTranslatedName(language), context.contextId(), Optional.empty()));
                     });
                 })
                 .toList();
