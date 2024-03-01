@@ -43,10 +43,10 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             LEFT JOIN n.parentConnections pc
             WHERE ((:#{#nodeTypes == null} = true) OR n.nodeType in (:nodeTypes))
             AND (:isVisible IS NULL OR n.visible = :isVisible)
-            AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, str(:metadataFilterKey)) IS NOT NULL)
+            AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, cast(:metadataFilterKey as text)) IS NOT NULL)
             AND (:metadataFilterValue IS NULL OR cast(jsonb_path_query_array(n.customfields, '$.*') as text) like :metadataFilterValue)
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
-            AND (:contextId IS NULL OR jsonb_contains(n.contexts, jsonb_build_array(jsonb_build_object('contextId',:contextId))) = true)
+            AND (:contextId IS NULL OR cast(jsonb_contains(n.contexts, jsonb_build_array(jsonb_build_object('contextId',:contextId))) as boolean) = true)
             AND (:isContext IS NULL OR n.context = :isContext)
             AND (:isRoot IS NULL OR (pc IS NULL AND n.context = true))
             """)
@@ -74,10 +74,10 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             LEFT JOIN FETCH pc.relevance
             WHERE ((:#{#nodeTypes == null} = true) OR n.nodeType in (:nodeTypes))
             AND (:isVisible IS NULL OR n.visible = :isVisible)
-            AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, str(:metadataFilterKey)) IS NOT NULL)
+            AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, cast(:metadataFilterKey as text)) IS NOT NULL)
             AND (:metadataFilterValue IS NULL OR cast(jsonb_path_query_array(n.customfields, '$.*') as text) like :metadataFilterValue)
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
-            AND (:contextId IS NULL OR jsonb_contains(n.contexts, jsonb_build_array(jsonb_build_object('contextId',:contextId))) = true)
+            AND (:contextId IS NULL OR cast(jsonb_contains(n.contexts, jsonb_build_array(jsonb_build_object('contextId',:contextId))) as boolean) = true)
             AND (:isContext IS NULL OR n.context = true)
             """)
     List<Node> findByNodeType(

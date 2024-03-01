@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
  * Updates the Connection object with the correct schema, based on the tenant identifier
  */
 @Component
-public class VersionConnectionProvider extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl {
+public class VersionConnectionProvider extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl<String> {
     private final DataSource dataSource;
 
     @Value("${spring.datasource.hikari.schema:taxonomy_api}")
