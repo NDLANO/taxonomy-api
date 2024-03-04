@@ -9,7 +9,7 @@ package no.ndla.taxonomy.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.task.TaskSchedulerCustomizer;
+import org.springframework.boot.task.ThreadPoolTaskSchedulerCustomizer;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -18,7 +18,7 @@ import org.springframework.util.ErrorHandler;
 
 @Configuration
 @EnableScheduling
-public class SchedulingConfig implements TaskSchedulerCustomizer {
+public class SchedulingConfig implements ThreadPoolTaskSchedulerCustomizer {
     @Override
     public void customize(ThreadPoolTaskScheduler taskScheduler) {
         taskScheduler.setErrorHandler(new CustomErrorHandler());
