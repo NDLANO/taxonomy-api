@@ -1465,4 +1465,12 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20240304 Add new concept resourcetype" author="Gunnar Velle">
+        <sql>
+            INSERT INTO resource_type (id, parent_id, public_id, name, translations) VALUES (35, null, 'urn:resourcetype:concept', 'Forklaring', '[{"name":"Forklaring","languageCode":"nb"},{"name":"Forklaring","languageCode":"nn"},{"name":"Concept","languageCode":"en"},{"name":"Čilgehusat","languageCode":"se"}]');
+            INSERT INTO resource_type (id, parent_id, public_id, name, translations) VALUES (36, 35, 'urn:resourcetype:conceptArticle', 'Forklaringsartikkel', '[{"name":"Forklaringsartikkel","languageCode":"nb"},{"name":"Forklaringsartikkel","languageCode":"nn"},{"name":"Concept article","languageCode":"en"},{"name":"Čielggadanartihkkal","languageCode":"se"}]');
+            ALTER SEQUENCE resource_type_id_seq RESTART WITH 37;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
