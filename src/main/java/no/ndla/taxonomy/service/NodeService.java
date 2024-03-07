@@ -117,15 +117,19 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Optional<Boolean> includeContexts,
             boolean filterProgrammes) {
         final List<NodeDTO> listToReturn = new ArrayList<>();
-        var ids = nodeRepository.findIdsFiltered(
-                nodeType,
-                metadataFilters.getVisible(),
-                metadataFilters.getKey(),
-                metadataFilters.getLikeQueryValue(),
-                contentUri,
-                contextId,
-                isRoot,
-                isContext);
+        List<Integer> ids;
+        if (contextId.isPresent()) {
+            ids = nodeRepository.findIdsByContextId(contextId);
+        } else {
+            ids = nodeRepository.findIdsFiltered(
+                    nodeType,
+                    metadataFilters.getVisible(),
+                    metadataFilters.getKey(),
+                    metadataFilters.getLikeQueryValue(),
+                    contentUri,
+                    isRoot,
+                    isContext);
+        }
         final var counter = new AtomicInteger();
         ids.stream()
                 .collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000))
@@ -510,14 +514,12 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     public List<TaxonomyContextDTO> getContextByPath(Optional<String> path, String language) {
         if (path.isPresent()) {
             String contextId = TitleUtil.getHashFromPath(path.get());
-            List<Node> nodes = nodeRepository.findByNodeType(
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.of(contextId),
-                    Optional.empty());
+            List<Integer> ids = nodeRepository.findIdsByContextId(Optional.of(contextId));
+            var nodes = ids.stream()
+                    .map(nodeRepository::findById)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .toList();
             var contexts = nodesToContexts(nodes, false, language);
             return contexts.stream()
                     .filter(c -> c.contextId().equals(contextId))
