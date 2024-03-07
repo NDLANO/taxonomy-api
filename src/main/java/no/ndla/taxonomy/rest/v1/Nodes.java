@@ -97,7 +97,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false)
                     Optional<Boolean> isVisible,
-            @Parameter(description = "Filter by context id. Handled separately from other parameters") @RequestParam(value = "contextId", required = false)
+            @Parameter(description = "Filter by context id. Beware: handled separately from other parameters!")
+                    @RequestParam(value = "contextId", required = false)
                     Optional<String> contextId,
             @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false)
                     Optional<Boolean> includeContexts,
