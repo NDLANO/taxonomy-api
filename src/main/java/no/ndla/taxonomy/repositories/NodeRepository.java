@@ -46,7 +46,6 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             AND (:metadataFilterKey IS NULL OR jsonb_extract_path_text(n.customfields, cast(:metadataFilterKey as text)) IS NOT NULL)
             AND (:metadataFilterValue IS NULL OR cast(jsonb_path_query_array(n.customfields, '$.*') as text) like :metadataFilterValue)
             AND (:contentUri IS NULL OR n.contentUri = :contentUri)
-            AND (:contextId IS NULL OR cast(jsonb_contains(n.contexts, jsonb_build_array(jsonb_build_object('contextId',:contextId))) as boolean) = true)
             AND (:isContext IS NULL OR n.context = :isContext)
             AND (:isRoot IS NULL OR (pc IS NULL AND n.context = true))
             """)
@@ -56,9 +55,17 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             Optional<String> metadataFilterKey,
             Optional<String> metadataFilterValue,
             Optional<URI> contentUri,
-            Optional<String> contextId,
             Optional<Boolean> isRoot,
             Optional<Boolean> isContext);
+
+    @Query(
+            value =
+                    """
+            SELECT n.id FROM Node n
+            WHERE (:contextId IS NULL OR n.contexts @> jsonb_build_array(jsonb_build_object('contextId',:contextId)))
+            """,
+            nativeQuery = true)
+    List<Integer> findIdsByContextId(Optional<String> contextId);
 
     @Query(
             value = "SELECT n.id FROM Node n where n.nodeType = :nodeType ORDER BY n.id",

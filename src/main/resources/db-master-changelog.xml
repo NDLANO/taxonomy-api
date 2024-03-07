@@ -1473,4 +1473,10 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20240307 Add index on node contexts" author="Gunnar Velle">
+        <sql>
+            CREATE INDEX IF NOT EXISTS node_contexts_index ON node USING GIN (contexts);
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
