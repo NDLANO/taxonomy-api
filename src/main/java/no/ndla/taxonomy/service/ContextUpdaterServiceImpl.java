@@ -30,6 +30,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                 .matches(String.format("%s|%s|%s", Constants.Active, Constants.Beta, Constants.OtherResources));
         // This entity can be root path
         if (node.isContext()) {
+            var hash = new HashUtil(node.getPublicId(), "");
             returnedContexts.add(new Context(
                     node.getPublicId().toString(),
                     LanguageField.fromNode(node),
@@ -41,7 +42,8 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                     activeContext,
                     true,
                     "urn:relevance:core",
-                    HashUtil.semiHash(node.getPublicId()),
+                    hash.fullHash(),
+                    hash.semiHash(),
                     0,
                     ""));
         }
@@ -56,6 +58,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                         parentContext.breadcrumbs(), LanguageField.fromNode(parent));
                                 List<String> parentIds = parentContext.parentIds();
                                 parentIds.add(parent.getPublicId().toString());
+                                var hash = new HashUtil(parentContext.contextId(), parentConnection.getPublicId());
                                 return new Context(
                                         parentContext.rootId(),
                                         parentContext.rootName(),
@@ -71,7 +74,8 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                                 .flatMap(relevance -> Optional.of(
                                                         relevance.getPublicId().toString()))
                                                 .orElse("urn:relevance:core"),
-                                        HashUtil.semiHash(parentContext.rootId() + parentConnection.getPublicId()),
+                                        hash.fullHash(),
+                                        hash.semiHash(),
                                         parentConnection.getRank(),
                                         parentConnection.getPublicId().toString());
                             })

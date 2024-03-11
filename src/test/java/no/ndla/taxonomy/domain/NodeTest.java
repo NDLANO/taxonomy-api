@@ -333,6 +333,7 @@ public class NodeTest {
                 true,
                 "urn:relevance:core",
                 "1",
+                "1",
                 0,
                 "urn:connection1");
         var context2 = new Context(
@@ -349,6 +350,7 @@ public class NodeTest {
                 true,
                 "urn:relevance:core",
                 "2",
+                "2",
                 0,
                 "urn:connection2");
         var context3 = new Context(
@@ -364,6 +366,7 @@ public class NodeTest {
                 true,
                 true,
                 "urn:relevance:core",
+                "3",
                 "3",
                 0,
                 "urn:connection3");

@@ -220,6 +220,7 @@ public class NodeDTO {
         return resourceTypes;
     }
 
+    @JsonProperty
     public Set<String> getSupportedLanguages() {
         return supportedLanguages;
     }

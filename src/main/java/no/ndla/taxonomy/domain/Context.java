@@ -25,7 +25,8 @@ import java.util.Optional;
  * @param isActive     Metadata from node. True if subjectCategory is active or otherResources.
  * @param isPrimary    Is this context marked as primary. From nodeConnection.
  * @param relevanceId  ID of relevance. From nodeConnection.
- * @param contextId    Hash of root publicId + nodeConnection publicId. Unique for this context.
+ * @param hash         Hash of parent contextId + nodeConnection publicId. Unique for this context.
+ * @param contextId    Short form of hash.
  * @param rank         The rank of the context. From nodeConnection.
  * @param connectionId The id of the connection. From nodeConnection.
  */
@@ -41,6 +42,7 @@ public record Context(
         boolean isActive,
         boolean isPrimary,
         String relevanceId,
+        String hash,
         String contextId,
         int rank,
         String connectionId) {}

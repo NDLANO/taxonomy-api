@@ -15,11 +15,11 @@ public class HashUtilTest {
 
     @Test
     public void get_different_length_hashes() {
-        String shortHash = HashUtil.shortHash("original");
-        String mediumHash = HashUtil.mediumHash("original");
-        String semiHash = HashUtil.semiHash("original");
-        String longHash = HashUtil.longHash("original");
-        String fullHash = HashUtil.fullHash("original");
+        String shortHash = new HashUtil("original", "").shortHash();
+        String mediumHash = new HashUtil("original", "").mediumHash();
+        String semiHash = new HashUtil("original", "").semiHash();
+        String longHash = new HashUtil("original", "").longHash();
+        String fullHash = new HashUtil("original", "").fullHash();
 
         assertEquals(4, shortHash.length());
         assertEquals(8, mediumHash.length());
@@ -30,9 +30,9 @@ public class HashUtilTest {
 
     @Test
     public void same_string_gives_same_hashes() {
-        String hash1 = HashUtil.mediumHash("original");
-        String hash2 = HashUtil.mediumHash("original");
-        String hash3 = HashUtil.longHash("original");
+        String hash1 = new HashUtil("original", "").mediumHash();
+        String hash2 = new HashUtil("original", "").mediumHash();
+        String hash3 = new HashUtil("original", "").longHash();
         assertEquals(hash1, hash2);
         assertTrue(hash3.startsWith(hash2));
     }

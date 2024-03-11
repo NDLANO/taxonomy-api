@@ -41,7 +41,7 @@ public class Version extends DomainEntity {
 
     public Version() {
         setPublicId(URI.create("urn:version:" + UUID.randomUUID()));
-        this.hash = HashUtil.shortHash(getPublicId());
+        this.hash = new HashUtil(getPublicId(), "").shortHash();
         this.created = Instant.now();
     }
 

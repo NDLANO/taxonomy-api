@@ -13,29 +13,38 @@ import org.apache.commons.codec.digest.DigestUtils;
  * Util for generating hashes in different lengths
  */
 public class HashUtil {
-    private static String generateHash(Object original, int length) {
-        String hash = new DigestUtils("SHA3-256").digestAsHex(original.toString());
-        if (length > 0) return hash.substring(0, length);
+
+    private final String hash;
+
+    public HashUtil(Object parentId, Object connectionId) {
+        this.hash = generateHash(parentId, connectionId);
+    }
+
+    public HashUtil(String hash) {
+        this.hash = hash;
+    }
+
+    public String shortHash() {
+        return hash.substring(0, 4);
+    }
+
+    public String mediumHash() {
+        return hash.substring(0, 8);
+    }
+
+    public String semiHash() {
+        return hash.substring(0, 12);
+    }
+
+    public String longHash() {
+        return hash.substring(0, 16);
+    }
+
+    public String fullHash() {
         return hash;
     }
 
-    public static String shortHash(Object original) {
-        return generateHash(original, 4);
-    }
-
-    public static String mediumHash(Object original) {
-        return generateHash(original, 8);
-    }
-
-    public static String semiHash(Object original) {
-        return generateHash(original, 12);
-    }
-
-    public static String longHash(Object original) {
-        return generateHash(original, 16);
-    }
-
-    public static String fullHash(Object original) {
-        return generateHash(original, 0);
+    private String generateHash(Object part1, Object part2) {
+        return new DigestUtils("SHA3-256").digestAsHex(part1.toString() + part2.toString());
     }
 }
