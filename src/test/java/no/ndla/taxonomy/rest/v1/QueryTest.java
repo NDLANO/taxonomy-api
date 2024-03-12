@@ -402,14 +402,10 @@ public class QueryTest extends RestTest {
                                 .contentUri("urn:article:1")
                                 .publicId("urn:resource:1"))));
         Node resource = nodeRepository.getByPublicId(URI.create("urn:resource:1"));
-        String hash = HashUtil.semiHash(root.getPublicId().toString()
-                + resource.getParentConnections().stream()
-                        .findFirst()
-                        .get()
-                        .getPublicId()
-                        .toString());
-
-        var response = testUtils.getResource("/v1/queries/path?path=" + String.format("/one-fine-resource__%s", hash));
+        var response = testUtils.getResource("/v1/queries/path?path="
+                + String.format(
+                "/one-fine-resource__%s",
+                resource.getContexts().stream().findFirst().get().contextId()));
         var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
 
         assertEquals(1, result.length);

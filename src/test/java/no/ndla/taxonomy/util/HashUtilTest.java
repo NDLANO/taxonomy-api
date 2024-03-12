@@ -22,7 +22,7 @@ public class HashUtilTest {
         String fullHash = HashUtil.fullHash("original");
 
         assertEquals(4, shortHash.length());
-        assertEquals(8, mediumHash.length());
+        assertEquals(10, mediumHash.length());
         assertEquals(12, semiHash.length());
         assertEquals(16, longHash.length());
         assertTrue(fullHash.length() > 16);
