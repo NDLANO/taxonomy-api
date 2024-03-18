@@ -17,7 +17,6 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
-import no.ndla.taxonomy.util.TitleUtil;
 
 @Schema(name = "Node")
 public class NodeDTO {
@@ -134,10 +133,7 @@ public class NodeDTO {
                     .get(this.language);
             this.relevanceId = Optional.of(URI.create(ctx.relevanceId()));
             this.contextId = Optional.of(ctx.contextId());
-            this.url = TitleUtil.createPrettyUrl(
-                    this.name,
-                    ctx.contextId(),
-                    Optional.ofNullable(ctx.rootName().fromLanguage(languageCode)));
+            this.url = ctx.url();
         });
 
         includeContexts.filter(Boolean::booleanValue).ifPresent(includeCtx -> {
@@ -173,10 +169,7 @@ public class NodeDTO {
                                 ctx.contextId(),
                                 ctx.rank(),
                                 ctx.connectionId(),
-                                TitleUtil.createPrettyUrl(
-                                        this.name,
-                                        ctx.contextId(),
-                                        Optional.ofNullable(ctx.rootName().fromLanguage(languageCode))));
+                                ctx.url());
                     })
                     .toList();
         });

@@ -33,7 +33,7 @@ import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.service.task.Fetcher;
-import no.ndla.taxonomy.util.TitleUtil;
+import no.ndla.taxonomy.util.PrettyUrlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -492,8 +492,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                 context.contextId(),
                                 context.rank(),
                                 context.connectionId(),
-                                TitleUtil.createPrettyUrl(
-                                        node.getTranslatedName(language), context.contextId(), Optional.empty()));
+                                context.url());
                     });
                 })
                 .toList();
@@ -514,7 +513,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     public List<TaxonomyContextDTO> getContextByPath(Optional<String> path, String language) {
         if (path.isPresent()) {
-            String contextId = TitleUtil.getHashFromPath(path.get());
+            String contextId = PrettyUrlUtil.getHashFromPath(path.get());
             List<Integer> ids = nodeRepository.findIdsByContextId(Optional.of(contextId));
             var nodes = nodeRepository.findByIds(ids);
             var contexts = nodesToContexts(nodes, false, language);

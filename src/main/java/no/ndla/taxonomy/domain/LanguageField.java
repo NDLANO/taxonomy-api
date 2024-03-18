@@ -18,7 +18,8 @@ public class LanguageField<V> extends HashMap<String, V> {
 
     public static LanguageField<String> fromNode(DomainObject node) {
         var languageField = new LanguageField<String>();
-        languageField.put("nb", node.getName());
+        var defaultName = Optional.ofNullable(node.getName()).orElse("");
+        languageField.put(Constants.DefaultLanguage, defaultName);
 
         node.getTranslations().forEach(nt -> {
             languageField.put(nt.getLanguageCode(), nt.getName());

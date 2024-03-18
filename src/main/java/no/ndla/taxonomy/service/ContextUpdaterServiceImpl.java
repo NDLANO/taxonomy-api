@@ -13,12 +13,17 @@ import no.ndla.taxonomy.domain.Context;
 import no.ndla.taxonomy.domain.LanguageField;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.util.HashUtil;
+import no.ndla.taxonomy.util.PrettyUrlUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ContextUpdaterServiceImpl implements ContextUpdaterService {
+
+    @Value(value = "${new.url.separator:false}")
+    private boolean newUrlSeparator;
 
     public ContextUpdaterServiceImpl() {}
 
@@ -30,6 +35,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                 .matches(String.format("%s|%s|%s", Constants.Active, Constants.Beta, Constants.OtherResources));
         // This entity can be root path
         if (node.isContext()) {
+            var contextId = HashUtil.semiHash(node.getPublicId());
             returnedContexts.add(new Context(
                     node.getPublicId().toString(),
                     LanguageField.fromNode(node),
@@ -41,8 +47,10 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                     activeContext,
                     true,
                     "urn:relevance:core",
-                    HashUtil.semiHash(node.getPublicId()),
+                    contextId,
                     0,
+                    PrettyUrlUtil.createPrettyUrl(
+                            Optional.empty(), node.getName(), contextId, node.getNodeType(), newUrlSeparator),
                     ""));
         }
 
@@ -56,6 +64,8 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                         parentContext.breadcrumbs(), LanguageField.fromNode(parent));
                                 List<String> parentIds = parentContext.parentIds();
                                 parentIds.add(parent.getPublicId().toString());
+                                var contextId =
+                                        HashUtil.mediumHash(parentContext.contextId() + parentConnection.getPublicId());
                                 return new Context(
                                         parentContext.rootId(),
                                         parentContext.rootName(),
@@ -71,8 +81,16 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                                 .flatMap(relevance -> Optional.of(
                                                         relevance.getPublicId().toString()))
                                                 .orElse("urn:relevance:core"),
-                                        HashUtil.mediumHash(parentContext.contextId() + parentConnection.getPublicId()),
+                                        contextId,
                                         parentConnection.getRank(),
+                                        PrettyUrlUtil.createPrettyUrl(
+                                                Optional.of(parentContext
+                                                        .rootName()
+                                                        .fromLanguage(Constants.DefaultLanguage)),
+                                                node.getName(),
+                                                contextId,
+                                                node.getNodeType(),
+                                                newUrlSeparator),
                                         parentConnection.getPublicId().toString());
                             })
                             .forEach(returnedContexts::add);

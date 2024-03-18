@@ -27,6 +27,7 @@ import java.util.Optional;
  * @param relevanceId  ID of relevance. From nodeConnection.
  * @param contextId    Hash of root publicId + nodeConnection publicId. Unique for this context.
  * @param rank         The rank of the context. From nodeConnection.
+ * @param url          A pretty url based on node name and contextId for this context.
  * @param connectionId The id of the connection. From nodeConnection.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -43,4 +44,5 @@ public record Context(
         String relevanceId,
         String contextId,
         int rank,
+        Optional<String> url,
         String connectionId) {}

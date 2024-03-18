@@ -29,6 +29,7 @@ import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 public class NodesTest extends RestTest {
     @Autowired
@@ -36,6 +37,9 @@ public class NodesTest extends RestTest {
 
     @Autowired
     private TestSeeder testSeeder;
+
+    @Value(value = "${new.url.separator:false}")
+    private boolean newUrlSeparator;
 
     @BeforeEach
     void clearAllRepos() {
@@ -140,7 +144,11 @@ public class NodesTest extends RestTest {
                 final var nodes = testUtils.getObject(NodeDTO[].class, response);
                 assertEquals(1, nodes.length);
                 assertEquals("Resource", nodes[0].getName());
-                assertTrue(nodes[0].getUrl().get().endsWith(String.format("/resource__%s", context.contextId())));
+                if (newUrlSeparator) {
+                    assertTrue(nodes[0].getUrl().get().endsWith(String.format("/resource/r/%s", context.contextId())));
+                } else {
+                    assertTrue(nodes[0].getUrl().get().endsWith(String.format("/resource__%s", context.contextId())));
+                }
                 assertEquals(context.path(), nodes[0].getPath());
                 assertTrue(nodes[0].getBreadcrumbs()
                         .containsAll(context.breadcrumbs().get("nb")));
