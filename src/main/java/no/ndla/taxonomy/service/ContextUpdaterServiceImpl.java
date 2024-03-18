@@ -71,7 +71,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                                 .flatMap(relevance -> Optional.of(
                                                         relevance.getPublicId().toString()))
                                                 .orElse("urn:relevance:core"),
-                                        HashUtil.mediumHash(parentContext.rootId() + parentConnection.getPublicId()),
+                                        HashUtil.mediumHash(parentContext.contextId() + parentConnection.getPublicId()),
                                         parentConnection.getRank(),
                                         parentConnection.getPublicId().toString());
                             })

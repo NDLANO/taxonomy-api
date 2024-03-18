@@ -17,7 +17,6 @@ import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
-import no.ndla.taxonomy.util.HashUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -402,14 +401,10 @@ public class QueryTest extends RestTest {
                                 .contentUri("urn:article:1")
                                 .publicId("urn:resource:1"))));
         Node resource = nodeRepository.getByPublicId(URI.create("urn:resource:1"));
-        String hash = HashUtil.mediumHash(root.getPublicId().toString()
-                + resource.getParentConnections().stream()
-                        .findFirst()
-                        .get()
-                        .getPublicId()
-                        .toString());
-
-        var response = testUtils.getResource("/v1/queries/path?path=" + String.format("/one-fine-resource__%s", hash));
+        var response = testUtils.getResource("/v1/queries/path?path="
+                + String.format(
+                        "/one-fine-resource__%s",
+                        resource.getContexts().stream().findFirst().get().contextId()));
         var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
 
         assertEquals(1, result.length);
