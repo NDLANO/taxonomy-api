@@ -24,7 +24,7 @@ public class HashUtil {
     }
 
     public static String mediumHash(Object original) {
-        return generateHash(original, 8);
+        return generateHash(original, 10);
     }
 
     public static String semiHash(Object original) {

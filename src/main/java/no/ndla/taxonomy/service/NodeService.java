@@ -515,11 +515,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         if (path.isPresent()) {
             String contextId = TitleUtil.getHashFromPath(path.get());
             List<Integer> ids = nodeRepository.findIdsByContextId(Optional.of(contextId));
-            var nodes = ids.stream()
-                    .map(nodeRepository::findById)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .toList();
+            var nodes = nodeRepository.findByIds(ids);
             var contexts = nodesToContexts(nodes, false, language);
             return contexts.stream()
                     .filter(c -> c.contextId().equals(contextId))
