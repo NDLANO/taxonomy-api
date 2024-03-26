@@ -321,12 +321,13 @@ public class NodeTest {
         Node parent2 = new Node(NodeType.NODE);
         parent2 = parent2.name("parent2");
         node = node.name("name");
-        var context1 = new Context(
+        var context1 = new TaxonomyContext(
                 node.getPublicId().toString(),
                 LanguageField.fromNode(node),
                 node.getPathPart(),
                 LanguageField.listFromNode(node),
                 Optional.empty(),
+                List.of(),
                 List.of(),
                 true,
                 true,
@@ -335,7 +336,7 @@ public class NodeTest {
                 "1",
                 0,
                 "urn:connection1");
-        var context2 = new Context(
+        var context2 = new TaxonomyContext(
                 root.getPublicId().toString(),
                 LanguageField.fromNode(root),
                 root.getPathPart() + parent1.getPathPart() + context1.path(),
@@ -344,6 +345,7 @@ public class NodeTest {
                         LanguageField.fromNode(node)),
                 Optional.empty(),
                 List.of(root.getPublicId().toString(), parent1.getPublicId().toString()),
+                List.of(context1.contextId()),
                 true,
                 true,
                 true,
@@ -351,7 +353,7 @@ public class NodeTest {
                 "2",
                 0,
                 "urn:connection2");
-        var context3 = new Context(
+        var context3 = new TaxonomyContext(
                 root.getPublicId().toString(),
                 LanguageField.fromNode(root),
                 root.getPathPart() + parent2.getPathPart() + context1.path(),
@@ -360,6 +362,7 @@ public class NodeTest {
                         LanguageField.fromNode(node)),
                 Optional.empty(),
                 List.of(root.getPublicId().toString(), parent2.getPublicId().toString()),
+                List.of(context1.contextId(), context2.contextId()),
                 true,
                 true,
                 true,
@@ -371,36 +374,38 @@ public class NodeTest {
         node.setContexts(Set.of(context3, context2, context1));
 
         {
-            Optional<Context> context = node.pickContext(Optional.of("1"), Optional.empty(), Optional.empty());
+            Optional<TaxonomyContext> context = node.pickContext(Optional.of("1"), Optional.empty(), Optional.empty());
             assertEquals(context1.contextId(), context.get().contextId());
         }
         {
-            Optional<Context> context = node.pickContext(Optional.of("2"), Optional.empty(), Optional.empty());
+            Optional<TaxonomyContext> context = node.pickContext(Optional.of("2"), Optional.empty(), Optional.empty());
             assertEquals(context2.contextId(), context.get().contextId());
         }
         {
-            Optional<Context> context = node.pickContext(Optional.of("3"), Optional.empty(), Optional.empty());
+            Optional<TaxonomyContext> context = node.pickContext(Optional.of("3"), Optional.empty(), Optional.empty());
             assertEquals(context3.contextId(), context.get().contextId());
         }
         {
-            Optional<Context> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.of(node));
+            Optional<TaxonomyContext> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.of(node));
             assertEquals(context1.contextId(), context.get().contextId());
         }
         {
-            Optional<Context> context = node.pickContext(Optional.empty(), Optional.of(parent1), Optional.of(root));
+            Optional<TaxonomyContext> context =
+                    node.pickContext(Optional.empty(), Optional.of(parent1), Optional.of(root));
             assertEquals(context2.contextId(), context.get().contextId());
         }
         {
-            Optional<Context> context = node.pickContext(Optional.empty(), Optional.of(parent2), Optional.of(root));
+            Optional<TaxonomyContext> context =
+                    node.pickContext(Optional.empty(), Optional.of(parent2), Optional.of(root));
             assertEquals(context3.contextId(), context.get().contextId());
         }
         {
-            Optional<Context> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.of(root));
+            Optional<TaxonomyContext> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.of(root));
             // could be either 2 or 3, either way root is root
             assertEquals(root.getPublicId().toString(), context.get().rootId());
         }
         {
-            Optional<Context> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.empty());
+            Optional<TaxonomyContext> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.empty());
             assertEquals(context1.contextId(), context.get().contextId()); // Since context1 is shortest
         }
     }
