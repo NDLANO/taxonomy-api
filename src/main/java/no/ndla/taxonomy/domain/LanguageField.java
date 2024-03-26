@@ -58,4 +58,8 @@ public class LanguageField<V> extends HashMap<String, V> {
         });
         return breadcrumbs;
     }
+
+    public V fromLanguage(String language) {
+        return this.getOrDefault(language, this.get(Constants.DefaultLanguage));
+    }
 }
