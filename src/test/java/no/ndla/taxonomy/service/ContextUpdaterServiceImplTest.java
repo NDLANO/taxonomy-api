@@ -107,7 +107,7 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
                     .get();
             assertEquals(2, node.getContexts().size());
             assertTrue(node.getContexts().stream()
-                    .map(Context::path)
+                    .map(TaxonomyContext::path)
                     .toList()
                     .containsAll(Set.of("/topic:1", "/subject:1/topic:1")));
         }
@@ -120,7 +120,10 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
                     .findFirstByPublicId(URI.create("urn:topic:1"))
                     .get();
             assertEquals(1, node.getContexts().size());
-            assertTrue(node.getContexts().stream().map(Context::path).toList().contains("/subject:1/topic:1"));
+            assertTrue(node.getContexts().stream()
+                    .map(TaxonomyContext::path)
+                    .toList()
+                    .contains("/subject:1/topic:1"));
         }
 
         final var topic2 = new Node(NodeType.TOPIC);
@@ -148,7 +151,10 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
                     .findFirstByPublicId(URI.create("urn:topic:2"))
                     .get();
             assertEquals(1, node.getContexts().size());
-            assertTrue(node.getContexts().stream().map(Context::path).toList().contains("/subject:1/topic:1/topic:2"));
+            assertTrue(node.getContexts().stream()
+                    .map(TaxonomyContext::path)
+                    .toList()
+                    .contains("/subject:1/topic:1/topic:2"));
         }
 
         topic1.setContext(true);
@@ -161,7 +167,7 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
                     .get();
             assertEquals(2, node.getContexts().size());
             assertTrue(node.getContexts().stream()
-                    .map(Context::path)
+                    .map(TaxonomyContext::path)
                     .toList()
                     .containsAll(Set.of("/subject:1/topic:1/topic:2", "/topic:1/topic:2")));
         }
@@ -191,7 +197,7 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
                     .get();
             assertEquals(2, node.getContexts().size());
             assertTrue(node.getContexts().stream()
-                    .map(Context::path)
+                    .map(TaxonomyContext::path)
                     .toList()
                     .containsAll(Set.of("/subject:1/topic:1/resource:1", "/topic:1/resource:1")));
         }
@@ -208,7 +214,7 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
                     .get();
             assertEquals(4, node.getContexts().size());
             assertTrue(node.getContexts().stream()
-                    .map(Context::path)
+                    .map(TaxonomyContext::path)
                     .toList()
                     .containsAll(Set.of(
                             "/subject:1/topic:1/resource:1",
