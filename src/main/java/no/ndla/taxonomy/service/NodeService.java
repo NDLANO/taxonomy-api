@@ -109,6 +109,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     public List<NodeDTO> getNodesByType(
             Optional<List<NodeType>> nodeType,
             Optional<String> language,
+            Optional<List<URI>> publicIds,
             Optional<URI> contentUri,
             Optional<String> contextId,
             Optional<Boolean> isRoot,
@@ -123,6 +124,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         } else {
             ids = nodeRepository.findIdsFiltered(
                     nodeType,
+                    publicIds,
                     metadataFilters.getVisible(),
                     metadataFilters.getKey(),
                     metadataFilters.getLikeQueryValue(),

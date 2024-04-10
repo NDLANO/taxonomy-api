@@ -414,6 +414,31 @@ public class NodesTest extends RestTest {
     }
 
     @Test
+    public void can_filter_nodes_on_ids() throws Exception {
+        var node1 = builder.node(NodeType.SUBJECT, s -> s.isContext(true)
+                .name("Basic science")
+                .publicId("urn:subject:1")
+                .child(NodeType.TOPIC, t -> t.name("photo synthesis")));
+        var node2 = builder.node(NodeType.SUBJECT, s -> s.isContext(true)
+                .name("Maths")
+                .isVisible(false)
+                .child(NodeType.TOPIC, t -> t.name("trigonometry")));
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Arts and crafts"));
+        builder.node(
+                NodeType.NODE, n -> n.isContext(true).name("Random node").child(NodeType.NODE, c -> c.name("Subnode")
+                        .contentUri("urn:article:1")
+                        .isVisible(false)));
+
+        {
+            var response = testUtils.getResource("/v1/nodes?ids=" + node1.getPublicId() + "," + node2.getPublicId());
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(2, nodes.length);
+            assertAnyTrue(nodes, t -> "Basic science".equals(t.getName()));
+            assertAnyTrue(nodes, t -> "Maths".equals(t.getName()));
+        }
+    }
+
+    @Test
     void fetching_subnodes_uses_correct_context() throws Exception {
         Node resource = builder.node(NodeType.RESOURCE, r -> r.name("Leaf").publicId("urn:resource:1"));
         builder.node(NodeType.SUBJECT, s1 -> s1.isContext(true)

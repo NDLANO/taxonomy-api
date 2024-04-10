@@ -80,6 +80,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         return nodeService.getNodesByType(
                 Optional.of(List.of(NodeType.RESOURCE)),
                 language,
+                Optional.empty(),
                 contentUri,
                 Optional.empty(),
                 Optional.empty(),
