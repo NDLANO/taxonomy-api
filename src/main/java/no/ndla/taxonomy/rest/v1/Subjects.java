@@ -81,6 +81,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
+                Optional.empty(),
                 metadataFilters,
                 Optional.of(false),
                 false);

@@ -65,6 +65,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         return nodeService.getNodesByType(
                 Optional.of(List.of(NodeType.TOPIC)),
                 language,
+                Optional.empty(),
                 contentUri,
                 Optional.empty(),
                 Optional.empty(),

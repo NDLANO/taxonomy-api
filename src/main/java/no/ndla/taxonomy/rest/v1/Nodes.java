@@ -86,6 +86,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false)
                     Optional<URI> contentUri,
+            @Parameter(description = "Ids to filter by") @RequestParam(value = "ids", required = false)
+                    Optional<List<URI>> publicIds,
             @Parameter(description = "Only root level contexts", deprecated = true)
                     @RequestParam(value = "isRoot", required = false)
                     Optional<Boolean> isRoot,
@@ -111,6 +113,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         return nodeService.getNodesByType(
                 Optional.of(defaultNodeTypes),
                 language,
+                publicIds,
                 contentUri,
                 contextId,
                 isRoot,
