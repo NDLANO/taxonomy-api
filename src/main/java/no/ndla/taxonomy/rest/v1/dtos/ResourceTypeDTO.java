@@ -11,8 +11,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.ResourceType;
@@ -31,7 +31,7 @@ public class ResourceTypeDTO {
     @JsonProperty
     @Schema(description = "Sub resource types")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public List<ResourceTypeDTO> subtypes = new ArrayList<>();
+    public Optional<List<ResourceTypeDTO>> subtypes = Optional.empty();
 
     @JsonProperty
     @Schema(description = "All translations of this resource type")
@@ -53,10 +53,10 @@ public class ResourceTypeDTO {
 
         this.name = resourceType.getTranslatedName(language);
 
-        if (recursionLevels > 0) {
-            this.subtypes = resourceType.getSubtypes().stream()
+        if (recursionLevels > 0 && !resourceType.getSubtypes().isEmpty()) {
+            this.subtypes = Optional.of(resourceType.getSubtypes().stream()
                     .map(resourceType1 -> new ResourceTypeDTO(resourceType1, language, recursionLevels - 1))
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()));
         }
     }
 }
