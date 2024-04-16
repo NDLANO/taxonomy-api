@@ -235,20 +235,13 @@ public class Topics extends CrudControllerWithMetadata<Node> {
                                     "Select by resource type id(s). If not specified, resources of all types will be returned."
                                             + "Multiple ids may be separated with comma or the parameter may be repeated for each id.")
                     @RequestParam(value = "type", required = false)
-                    URI[] resourceTypeIds,
+                    Optional<List<URI>> resourceTypeIds,
             @Parameter(description = "Select by relevance. If not specified, all resources will be returned.")
                     @RequestParam(value = "relevance", required = false)
-                    URI relevance) {
-        final Set<URI> resourceTypeIdSet;
-
-        if (resourceTypeIds == null) {
-            resourceTypeIdSet = Set.of();
-        } else {
-            resourceTypeIdSet = new HashSet<>(Arrays.asList(resourceTypeIds));
-        }
+                    Optional<URI> relevance) {
 
         return nodeService.getResourcesByNodeId(
-                topicId, resourceTypeIdSet, relevance, language, recursive, Optional.of(false), false);
+                topicId, resourceTypeIds, relevance, language, recursive, Optional.of(false), false);
     }
 
     @Deprecated

@@ -200,8 +200,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     public List<NodeChildDTO> getResourcesByNodeId(
             URI nodePublicId,
-            Set<URI> resourceTypeIds,
-            URI relevancePublicId,
+            Optional<List<URI>> resourceTypeIds,
+            Optional<URI> relevanceId,
             Optional<String> languageCode,
             boolean recursive,
             Optional<Boolean> includeContexts,
@@ -238,7 +238,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 node,
                 topicIdsToSearchFor,
                 resourceTypeIds,
-                relevancePublicId,
+                relevanceId,
                 resourcesToSort,
                 languageCode,
                 includeContexts,
@@ -248,35 +248,32 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(
             Node root,
             Set<URI> nodeIds,
-            Set<URI> resourceTypeIds,
-            URI relevance,
+            Optional<List<URI>> resourceTypeIds,
+            Optional<URI> relevanceId,
             Set<ResourceTreeSortable> sortableListToAddTo,
             Optional<String> languageCode,
             Optional<Boolean> includeContexts,
             boolean filterProgrammes) {
         final List<NodeConnection> nodeResources;
 
-        if (!resourceTypeIds.isEmpty()) {
-            nodeResources = nodeConnectionRepository.getResourceBy(nodeIds, resourceTypeIds, relevance);
-        } else {
-            var nodeResourcesStream = nodeConnectionRepository.getByResourceIds(nodeIds).stream();
-            if (relevance != null) {
-                final var isRequestingCore = "urn:relevance:core".equals(relevance.toString());
-                nodeResourcesStream = nodeResourcesStream.filter(nodeResource -> {
-                    final var resource = nodeResource.getChild().orElse(null);
-                    if (resource == null) {
-                        return false;
-                    }
-                    final var rel = nodeResource.getRelevance().orElse(null);
-                    if (rel != null) {
-                        return rel.getPublicId().equals(relevance);
-                    } else {
-                        return isRequestingCore;
-                    }
-                });
-            }
-            nodeResources = nodeResourcesStream.collect(toList());
+        var nodeResourcesStream =
+                nodeConnectionRepository.getResourceBy(nodeIds, resourceTypeIds, relevanceId).stream();
+        if (relevanceId.isPresent()) {
+            final var isRequestingCore = "urn:relevance:core".equals(relevanceId.toString());
+            nodeResourcesStream = nodeResourcesStream.filter(nodeResource -> {
+                final var resource = nodeResource.getChild().orElse(null);
+                if (resource == null) {
+                    return false;
+                }
+                final var rel = nodeResource.getRelevance().orElse(null);
+                if (rel != null) {
+                    return rel.getPublicId().equals(relevanceId.get());
+                } else {
+                    return isRequestingCore;
+                }
+            });
         }
+        nodeResources = nodeResourcesStream.toList();
 
         nodeResources.forEach(nodeResource -> sortableListToAddTo.add(new ResourceTreeSortable(nodeResource)));
 

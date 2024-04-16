@@ -326,17 +326,13 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                             description =
                                     "Filter by resource type id(s). If not specified, resources of all types will be returned."
                                             + "Multiple ids may be separated with comma or the parameter may be repeated for each id.")
-                    @RequestParam(value = "type", required = false, defaultValue = "")
-                    URI[] resourceTypeIds,
+                    @RequestParam(value = "type", required = false)
+                    Optional<List<URI>> resourceTypeIds,
             @Parameter(description = "Select by relevance. If not specified, all resources will be returned.")
-                    @RequestParam(value = "relevance", required = false, defaultValue = "")
-                    URI relevance) {
-        final Set<URI> resourceTypeIdSet = resourceTypeIds != null ? Set.of(resourceTypeIds) : Set.of();
-
-        // If null is sent to query it will be ignored, otherwise it will filter by relevance
-        final var relevanceArgument = relevance == null || relevance.toString().equals("") ? null : relevance;
+                    @RequestParam(value = "relevance", required = false)
+                    Optional<URI> relevance) {
 
         return nodeService.getResourcesByNodeId(
-                subjectId, resourceTypeIdSet, relevanceArgument, language, true, Optional.of(false), false);
+                subjectId, resourceTypeIds, relevance, language, true, Optional.of(false), false);
     }
 }
