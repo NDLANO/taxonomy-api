@@ -367,7 +367,7 @@ export interface ResourceType {
     /**
      * Sub resource types
      */
-    subtypes: ResourceType[];
+    subtypes?: ResourceType[];
     /**
      * List of language codes supported by translations
      */

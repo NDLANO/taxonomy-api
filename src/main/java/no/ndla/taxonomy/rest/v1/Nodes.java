@@ -86,6 +86,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<String> language,
             @Parameter(description = "Filter by contentUri") @RequestParam(value = "contentURI", required = false)
                     Optional<URI> contentUri,
+            @Parameter(description = "Ids to filter by") @RequestParam(value = "ids", required = false)
+                    Optional<List<URI>> publicIds,
             @Parameter(description = "Only root level contexts", deprecated = true)
                     @RequestParam(value = "isRoot", required = false)
                     Optional<Boolean> isRoot,
@@ -111,6 +113,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         return nodeService.getNodesByType(
                 Optional.of(defaultNodeTypes),
                 language,
+                publicIds,
                 contentUri,
                 contextId,
                 isRoot,
@@ -374,20 +377,13 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                                     "Select by resource type id(s). If not specified, resources of all types will be returned. "
                                             + "Multiple ids may be separated with comma or the parameter may be repeated for each id.")
                     @RequestParam(value = "type", required = false)
-                    URI[] resourceTypeIds,
+                    Optional<List<URI>> resourceTypeIds,
             @Parameter(description = "Select by relevance. If not specified, all resources will be returned.")
                     @RequestParam(value = "relevance", required = false)
-                    URI relevance) {
-        final Set<URI> resourceTypeIdSet;
-
-        if (resourceTypeIds == null) {
-            resourceTypeIdSet = Set.of();
-        } else {
-            resourceTypeIdSet = new HashSet<>(Arrays.asList(resourceTypeIds));
-        }
+                    Optional<URI> relevance) {
 
         return nodeService.getResourcesByNodeId(
-                nodeId, resourceTypeIdSet, relevance, language, recursive, includeContexts, filterProgrammes);
+                nodeId, resourceTypeIds, relevance, language, recursive, includeContexts, filterProgrammes);
     }
 
     @GetMapping("{id}/full")

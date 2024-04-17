@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
@@ -129,8 +130,11 @@ public class NodeDTO {
         context.ifPresent(ctx -> {
             this.path = ctx.path();
             // TODO: this changes the content in context breadcrumbs
-            this.breadcrumbs = LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity))
-                    .get(this.language);
+            LanguageField<List<String>> breadcrumbList =
+                    LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity));
+            this.breadcrumbs = breadcrumbList.containsKey(this.language)
+                    ? breadcrumbList.get(this.language)
+                    : breadcrumbList.get(Constants.DefaultLanguage);
             this.relevanceId = Optional.of(URI.create(ctx.relevanceId()));
             this.contextId = Optional.of(ctx.contextId());
             this.url = ctx.url();

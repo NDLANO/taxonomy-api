@@ -31,7 +31,7 @@ public class ResourceTypesTest extends RestTest {
         assertTrue(resourceTypes.length >= 2);
         assertAnyTrue(
                 resourceTypes,
-                s -> "video".equals(s.name) && s.subtypes.get(0).name.equals("lecture"));
+                s -> "video".equals(s.name) && s.subtypes.get().get(0).name.equals("lecture"));
         assertAnyTrue(resourceTypes, s -> "audio".equals(s.name));
         assertAllTrue(resourceTypes, s -> isValidId(s.id));
     }
@@ -43,7 +43,7 @@ public class ResourceTypesTest extends RestTest {
         MockHttpServletResponse response = testUtils.getResource("/v1/resource-types/" + id.toString());
         ResourceTypeDTO resourceType = testUtils.getObject(ResourceTypeDTO.class, response);
         assertEquals(id, resourceType.id);
-        assertEquals(0, resourceType.subtypes.size());
+        assertTrue(resourceType.subtypes.isEmpty());
     }
 
     @Test
@@ -218,6 +218,6 @@ public class ResourceTypesTest extends RestTest {
 
         assertEquals(1, subResourceTypes.length);
         assertEquals("video", subResourceTypes[0].name);
-        assertEquals("youtube", subResourceTypes[0].subtypes.get(0).name);
+        assertEquals("youtube", subResourceTypes[0].subtypes.get().get(0).name);
     }
 }

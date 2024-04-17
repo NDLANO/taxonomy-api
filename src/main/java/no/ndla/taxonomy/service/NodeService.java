@@ -7,8 +7,6 @@
 
 package no.ndla.taxonomy.service;
 
-import static java.util.stream.Collectors.toList;
-
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -109,6 +107,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     public List<NodeDTO> getNodesByType(
             Optional<List<NodeType>> nodeType,
             Optional<String> language,
+            Optional<List<URI>> publicIds,
             Optional<URI> contentUri,
             Optional<String> contextId,
             Optional<Boolean> isRoot,
@@ -123,6 +122,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         } else {
             ids = nodeRepository.findIdsFiltered(
                     nodeType,
+                    publicIds,
                     metadataFilters.getVisible(),
                     metadataFilters.getKey(),
                     metadataFilters.getLikeQueryValue(),
@@ -198,8 +198,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     public List<NodeChildDTO> getResourcesByNodeId(
             URI nodePublicId,
-            Set<URI> resourceTypeIds,
-            URI relevancePublicId,
+            Optional<List<URI>> resourceTypeIds,
+            Optional<URI> relevanceId,
             Optional<String> languageCode,
             boolean recursive,
             Optional<Boolean> includeContexts,
@@ -236,7 +236,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 node,
                 topicIdsToSearchFor,
                 resourceTypeIds,
-                relevancePublicId,
+                relevanceId,
                 resourcesToSort,
                 languageCode,
                 includeContexts,
@@ -246,35 +246,32 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(
             Node root,
             Set<URI> nodeIds,
-            Set<URI> resourceTypeIds,
-            URI relevance,
+            Optional<List<URI>> resourceTypeIds,
+            Optional<URI> relevanceId,
             Set<ResourceTreeSortable> sortableListToAddTo,
             Optional<String> languageCode,
             Optional<Boolean> includeContexts,
             boolean filterProgrammes) {
         final List<NodeConnection> nodeResources;
 
-        if (!resourceTypeIds.isEmpty()) {
-            nodeResources = nodeConnectionRepository.getResourceBy(nodeIds, resourceTypeIds, relevance);
-        } else {
-            var nodeResourcesStream = nodeConnectionRepository.getByResourceIds(nodeIds).stream();
-            if (relevance != null) {
-                final var isRequestingCore = "urn:relevance:core".equals(relevance.toString());
-                nodeResourcesStream = nodeResourcesStream.filter(nodeResource -> {
-                    final var resource = nodeResource.getChild().orElse(null);
-                    if (resource == null) {
-                        return false;
-                    }
-                    final var rel = nodeResource.getRelevance().orElse(null);
-                    if (rel != null) {
-                        return rel.getPublicId().equals(relevance);
-                    } else {
-                        return isRequestingCore;
-                    }
-                });
-            }
-            nodeResources = nodeResourcesStream.collect(toList());
+        var nodeResourcesStream =
+                nodeConnectionRepository.getResourceBy(nodeIds, resourceTypeIds, relevanceId).stream();
+        if (relevanceId.isPresent()) {
+            final var isRequestingCore = "urn:relevance:core".equals(relevanceId.toString());
+            nodeResourcesStream = nodeResourcesStream.filter(nodeResource -> {
+                final var resource = nodeResource.getChild().orElse(null);
+                if (resource == null) {
+                    return false;
+                }
+                final var rel = nodeResource.getRelevance().orElse(null);
+                if (rel != null) {
+                    return rel.getPublicId().equals(relevanceId.get());
+                } else {
+                    return isRequestingCore;
+                }
+            });
         }
+        nodeResources = nodeResourcesStream.toList();
 
         nodeResources.forEach(nodeResource -> sortableListToAddTo.add(new ResourceTreeSortable(nodeResource)));
 
@@ -296,7 +293,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                             includeContexts,
                             filterProgrammes);
                 })
-                .collect(toList());
+                .toList();
     }
 
     @Override
