@@ -172,7 +172,6 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
-            <version>1.12.5</version>
         </dependency>
 
         <dependency>
