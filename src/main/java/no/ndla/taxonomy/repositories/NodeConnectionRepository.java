@@ -31,33 +31,18 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
     @Query(
             """
             SELECT DISTINCT nc FROM NodeConnection nc
-            LEFT JOIN FETCH nc.child child
-            LEFT JOIN FETCH nc.parent n
-            LEFT JOIN FETCH child.resourceResourceTypes rrt
-            LEFT JOIN FETCH nc.relevance rel
-            LEFT JOIN FETCH rrt.resourceType rt
-            WHERE n.publicId IN :nodeIds
-            AND ((:#{#resourceTypePublicIds == null} = true) OR rt.publicId IN :resourceTypePublicIds)
-            AND (:relevancePublicId IS NULL OR rel.publicId = :relevancePublicId)
-            AND child.nodeType = 'RESOURCE'
+            LEFT JOIN nc.child c
+            LEFT JOIN nc.parent p
+            LEFT JOIN c.resourceResourceTypes rrt
+            LEFT JOIN nc.relevance rel
+            LEFT JOIN rrt.resourceType rt
+            WHERE p.publicId IN :nodeIds
+            AND ((:#{#resourceTypeIds == null} = true) OR rt.publicId IN :resourceTypeIds)
+            AND (:relevanceId IS NULL OR rel.publicId = :relevanceId)
+            AND c.nodeType = 'RESOURCE'
             """)
-    List<NodeConnection> getResourceBy(Set<URI> nodeIds, Set<URI> resourceTypePublicIds, URI relevancePublicId);
-
-    @Query(
-            """
-            SELECT DISTINCT nc FROM NodeConnection nc
-            JOIN FETCH nc.child r
-            LEFT JOIN FETCH nc.parent n
-            LEFT JOIN FETCH r.resourceResourceTypes rrt
-            LEFT JOIN FETCH nc.relevance rel
-            LEFT JOIN FETCH rrt.resourceType rt
-            WHERE n.publicId IN :nodeIds
-            AND r.nodeType = 'RESOURCE'
-            """)
-    List<NodeConnection> getByResourceIds(Collection<URI> nodeIds);
-
-    @Query("SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child")
-    List<NodeConnection> findAllIncludingParentAndChild();
+    List<NodeConnection> getResourceBy(
+            Set<URI> nodeIds, Optional<List<URI>> resourceTypeIds, Optional<URI> relevanceId);
 
     @Query(
             "SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child c WHERE c.nodeType = :childNodeType")
