@@ -31,11 +31,11 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
     @Query(
             """
             SELECT DISTINCT nc FROM NodeConnection nc
-            LEFT JOIN FETCH nc.child c
-            LEFT JOIN FETCH nc.parent p
-            LEFT JOIN FETCH c.resourceResourceTypes rrt
-            LEFT JOIN FETCH nc.relevance rel
-            LEFT JOIN FETCH rrt.resourceType rt
+            LEFT JOIN nc.child c
+            LEFT JOIN nc.parent p
+            LEFT JOIN c.resourceResourceTypes rrt
+            LEFT JOIN nc.relevance rel
+            LEFT JOIN rrt.resourceType rt
             WHERE p.publicId IN :nodeIds
             AND ((:#{#resourceTypeIds == null} = true) OR rt.publicId IN :resourceTypeIds)
             AND (:relevanceId IS NULL OR rel.publicId = :relevanceId)

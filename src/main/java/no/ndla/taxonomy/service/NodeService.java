@@ -7,8 +7,6 @@
 
 package no.ndla.taxonomy.service;
 
-import static java.util.stream.Collectors.toList;
-
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -295,7 +293,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                             includeContexts,
                             filterProgrammes);
                 })
-                .collect(toList());
+                .toList();
     }
 
     @Override
