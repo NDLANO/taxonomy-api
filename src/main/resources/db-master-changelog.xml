@@ -1486,7 +1486,7 @@
         <sql>
             UPDATE node n
             SET contexts = (
-            SELECT jsonb_agg(jsonb_set(obj, '{url}', to_jsonb('/' || replace(lower(n.name),' ','_') || '__' || (obj->>'contextId')), true))
+            SELECT jsonb_agg(jsonb_set(obj, '{url}', to_jsonb('/' || replace(lower(n.name),' ','-') || '__' || (obj->>'contextId')), true))
             FROM jsonb_array_elements(contexts) AS obj
             )
         </sql>
