@@ -39,6 +39,7 @@ management:
         include: health,metrics,prometheus
   server:
     port: ${TAXONOMY_MANAGEMENT_PORT:5001}
+  endpoint.health.probes.enabled: true
 
 ---
 
