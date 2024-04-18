@@ -13,7 +13,7 @@ import java.util.Optional;
 import no.ndla.taxonomy.domain.NodeType;
 import org.junit.jupiter.api.Test;
 
-public class TitleUtilTest {
+public class PrettyUrlUtilTest {
 
     @Test
     void test_create_pretty_url() {
@@ -39,6 +39,11 @@ public class TitleUtilTest {
                 PrettyUrlUtil.createPrettyUrl(
                                 Optional.empty(), "This is a title, seriously", "hash", NodeType.RESOURCE, true)
                         .get());
+        assertEquals(
+                "/this-is-a-title-and-a-12/r/hash",
+                PrettyUrlUtil.createPrettyUrl(
+                                Optional.empty(), "This is a title and a 1/2", "hash", NodeType.RESOURCE, true)
+                        .get());
     }
 
     @Test
@@ -56,6 +61,11 @@ public class TitleUtilTest {
                 "/nar-kommer-hosten-tror-du-arlig-talt/e/hash",
                 PrettyUrlUtil.createPrettyUrl(
                                 Optional.empty(), "Når kommer høsten tror du ærlig talt?", "hash", NodeType.TOPIC, true)
+                        .get());
+        assertEquals(
+                "/utgatt-historie/a-hoppe-etter-wirkola/e/hash",
+                PrettyUrlUtil.createPrettyUrl(
+                                Optional.of("Utgått historie"), "Å hoppe etter wirkola", "hash", NodeType.TOPIC, true)
                         .get());
     }
 

@@ -49,14 +49,15 @@ public class PrettyUrlUtil {
             if (i > 0) {
                 builder.append("-");
             }
-            builder.append(words[i].toLowerCase());
+            builder.append(words[i]);
         }
     }
 
     private static String cleanString(String name) {
         return Jsoup.parse(name)
                 .text()
-                .replaceAll("[.,!?\\-()]", "")
+                .toLowerCase()
+                .replaceAll("[.,!?\\-()/]", "")
                 .replaceAll("æ", "a")
                 .replaceAll("ø", "o")
                 .replaceAll("å", "a")

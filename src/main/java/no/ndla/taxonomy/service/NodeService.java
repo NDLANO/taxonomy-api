@@ -495,7 +495,16 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 .toList();
     }
 
-    public List<Node> buildAllContexts() {
+    @Async
+    @Transactional
+    public void buildContextsAsync() {
+        buildAllContexts();
+    }
+
+    @Transactional
+    private List<Node> buildAllContexts() {
+        logger.info("Building contexts for all roots in schema");
+        var startTime = System.currentTimeMillis();
         List<Node> rootNodes = nodeRepository.findByNodeType(
                 Optional.empty(),
                 Optional.empty(),
@@ -505,6 +514,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 Optional.empty(),
                 Optional.of(Boolean.TRUE));
         rootNodes.forEach(cachedUrlUpdaterService::updateContexts);
+        logger.info("Building contexts for all roots. took {} ms", System.currentTimeMillis() - startTime);
         return rootNodes;
     }
 
