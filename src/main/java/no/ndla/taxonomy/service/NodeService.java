@@ -458,7 +458,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 .flatMap(node -> {
                     var contexts = filterVisibles
                             ? node.getContexts().stream()
-                                    .filter(Context::isVisible)
+                                    .filter(TaxonomyContext::isVisible)
                                     .collect(Collectors.toSet())
                             : node.getContexts();
                     return contexts.stream().map(context -> {

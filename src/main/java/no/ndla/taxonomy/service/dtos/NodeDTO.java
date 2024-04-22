@@ -126,7 +126,7 @@ public class NodeDTO {
 
         this.nodeType = entity.getNodeType();
 
-        Optional<Context> context = entity.pickContext(contextId, parent, root);
+        Optional<TaxonomyContext> context = entity.pickContext(contextId, parent, root);
         context.ifPresent(ctx -> {
             this.path = ctx.path();
             // TODO: this changes the content in context breadcrumbs
@@ -148,33 +148,31 @@ public class NodeDTO {
             LanguageField<String> finalRelevanceName = relevanceName;
             this.contexts = entity.getContexts().stream()
                     .filter(ctx -> !filterProgrammes || !ctx.rootId().contains(NodeType.PROGRAMME.getName()))
-                    .map(ctx -> {
-                        return new TaxonomyContextDTO(
-                                entity.getPublicId(),
-                                URI.create(ctx.rootId()),
-                                LanguageFieldDTO.fromLanguageField(ctx.rootName()),
-                                ctx.path(),
-                                LanguageFieldDTO.fromLanguageFieldList(ctx.breadcrumbs()),
-                                entity.getContextType(),
-                                URI.create(ctx.relevanceId()),
-                                LanguageFieldDTO.fromLanguageField(finalRelevanceName),
-                                entity.getResourceTypes().stream()
-                                        .sorted((o1, o2) -> {
-                                            if (o1.getParent().isEmpty()) return -1;
-                                            if (o2.getParent().isEmpty()) return 1;
-                                            return 0;
-                                        })
-                                        .map(SearchableTaxonomyResourceType::new)
-                                        .toList(),
-                                ctx.parentIds().stream().map(URI::create).toList(),
-                                ctx.isPrimary(),
-                                ctx.isActive(),
-                                ctx.isVisible(),
-                                ctx.contextId(),
-                                ctx.rank(),
-                                ctx.connectionId(),
-                                ctx.url());
-                    })
+                    .map(ctx -> new TaxonomyContextDTO(
+                            entity.getPublicId(),
+                            URI.create(ctx.rootId()),
+                            LanguageFieldDTO.fromLanguageField(ctx.rootName()),
+                            ctx.path(),
+                            LanguageFieldDTO.fromLanguageFieldList(ctx.breadcrumbs()),
+                            entity.getContextType(),
+                            URI.create(ctx.relevanceId()),
+                            LanguageFieldDTO.fromLanguageField(finalRelevanceName),
+                            entity.getResourceTypes().stream()
+                                    .sorted((o1, o2) -> {
+                                        if (o1.getParent().isEmpty()) return -1;
+                                        if (o2.getParent().isEmpty()) return 1;
+                                        return 0;
+                                    })
+                                    .map(SearchableTaxonomyResourceType::new)
+                                    .toList(),
+                            ctx.parentIds().stream().map(URI::create).toList(),
+                            ctx.isPrimary(),
+                            ctx.isActive(),
+                            ctx.isVisible(),
+                            ctx.contextId(),
+                            ctx.rank(),
+                            ctx.connectionId(),
+                            ctx.url()))
                     .toList();
         });
     }

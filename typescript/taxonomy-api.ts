@@ -515,10 +515,6 @@ export interface TaxonomyContext {
      */
     contextType?: string;
     /**
-     * @deprecated
-     */
-    id?: string;
-    /**
      * Whether the parent connection is marked as active
      */
     isActive: boolean;
@@ -527,10 +523,6 @@ export interface TaxonomyContext {
      */
     isPrimary: boolean;
     /**
-     * @deprecated
-     */
-    isPrimaryConnection?: boolean;
-    /**
      * Whether the parent connection is visible or not
      */
     isVisible: boolean;
@@ -538,10 +530,6 @@ export interface TaxonomyContext {
      * List of all parent ids
      */
     parentIds: string[];
-    /**
-     * @deprecated
-     */
-    parentTopicIds?: string[];
     /**
      * The context path
      */
@@ -574,14 +562,6 @@ export interface TaxonomyContext {
      * The publicId of the root parent of the context
      */
     rootId: string;
-    /**
-     * @deprecated
-     */
-    subject?: Record<string, string>;
-    /**
-     * @deprecated
-     */
-    subjectId?: string;
     /**
      * Pretty-url of this particular context
      */
