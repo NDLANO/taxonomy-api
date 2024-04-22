@@ -1482,4 +1482,14 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20240322 Add parent context ids to context" author="Gunnar Velle">
+        <sql>
+            UPDATE node
+            SET contexts = (
+            SELECT jsonb_agg(jsonb_set(obj, '{parentContextIds}', '[]'::jsonb, true))
+            FROM jsonb_array_elements(contexts) AS obj
+            )
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

@@ -35,33 +35,4 @@ public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "The id of the parent connection object") String connectionId,
         @JsonProperty @Schema(description = "Pretty-url of this particular context") Optional<String> url) {
 // spotless:on
-    @JsonProperty
-    @Deprecated
-    public Optional<URI> id() {
-        return Optional.of(publicId());
-    }
-
-    @JsonProperty
-    @Deprecated
-    public Optional<URI> subjectId() {
-        return Optional.of(rootId());
-    }
-
-    @JsonProperty
-    @Deprecated
-    public Optional<LanguageFieldDTO<String>> subject() {
-        return Optional.of(root());
-    }
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    @Deprecated
-    public Optional<List<URI>> parentTopicIds() {
-        return Optional.of(parentIds());
-    }
-
-    @JsonProperty("isPrimaryConnection")
-    @Deprecated
-    public Optional<Boolean> isPrimaryConnection() {
-        return Optional.of(isPrimary());
-    }
 }

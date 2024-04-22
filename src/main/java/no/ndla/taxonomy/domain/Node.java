@@ -68,7 +68,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
 
     @Type(JsonBinaryType.class)
     @Column(name = "contexts", columnDefinition = "jsonb")
-    private Set<Context> contexts = new HashSet<>();
+    private Set<TaxonomyContext> contexts = new HashSet<>();
 
     // Needed for hibernate
     public Node() {}
@@ -123,8 +123,8 @@ public class Node extends DomainObject implements EntityWithMetadata {
 
     public Optional<String> getPrimaryPath() {
         return getContexts().stream()
-                .filter(Context::isPrimary)
-                .map(Context::path)
+                .filter(TaxonomyContext::isPrimary)
+                .map(TaxonomyContext::path)
                 .findFirst();
     }
 
@@ -137,7 +137,8 @@ public class Node extends DomainObject implements EntityWithMetadata {
      *                  publicId.
      * @return Context
      */
-    public Optional<Context> pickContext(Optional<String> contextId, Optional<Node> parent, Optional<Node> root) {
+    public Optional<TaxonomyContext> pickContext(
+            Optional<String> contextId, Optional<Node> parent, Optional<Node> root) {
         var contexts = getContexts();
         var maybeContext = contextId.flatMap(
                 id -> contexts.stream().filter(c -> c.contextId().equals(id)).findFirst());
@@ -190,7 +191,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public TreeSet<String> getAllPaths() {
-        return getContexts().stream().map(Context::path).collect(Collectors.toCollection(TreeSet::new));
+        return getContexts().stream().map(TaxonomyContext::path).collect(Collectors.toCollection(TreeSet::new));
     }
 
     /*
@@ -489,11 +490,11 @@ public class Node extends DomainObject implements EntityWithMetadata {
         return this.customfields;
     }
 
-    public void setContexts(Set<Context> contexts) {
+    public void setContexts(Set<TaxonomyContext> contexts) {
         this.contexts = contexts;
     }
 
-    public Set<Context> getContexts() {
+    public Set<TaxonomyContext> getContexts() {
         return this.contexts;
     }
 

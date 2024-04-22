@@ -9,9 +9,9 @@ package no.ndla.taxonomy.service;
 
 import java.util.*;
 import no.ndla.taxonomy.config.Constants;
-import no.ndla.taxonomy.domain.Context;
 import no.ndla.taxonomy.domain.LanguageField;
 import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.TaxonomyContext;
 import no.ndla.taxonomy.util.HashUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -22,20 +22,21 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
 
     public ContextUpdaterServiceImpl() {}
 
-    private Set<Context> createContexts(Node node) {
-        final var returnedContexts = new HashSet<Context>();
+    private Set<TaxonomyContext> createContexts(Node node) {
+        final var returnedContexts = new HashSet<TaxonomyContext>();
 
         boolean activeContext = node.getCustomFields()
                 .getOrDefault(Constants.SubjectCategory, Constants.Active)
                 .matches(String.format("%s|%s|%s", Constants.Active, Constants.Beta, Constants.OtherResources));
         // This entity can be root path
         if (node.isContext()) {
-            returnedContexts.add(new Context(
+            returnedContexts.add(new TaxonomyContext(
                     node.getPublicId().toString(),
                     LanguageField.fromNode(node),
                     node.getPathPart(),
                     new LanguageField<List<String>>(),
                     node.getContextType(),
+                    new ArrayList<>(),
                     new ArrayList<>(),
                     node.isVisible(),
                     activeContext,
@@ -56,13 +57,16 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                         parentContext.breadcrumbs(), LanguageField.fromNode(parent));
                                 List<String> parentIds = parentContext.parentIds();
                                 parentIds.add(parent.getPublicId().toString());
-                                return new Context(
+                                List<String> parentContextIds = parentContext.parentContextIds();
+                                parentContextIds.add(parentContext.contextId());
+                                return new TaxonomyContext(
                                         parentContext.rootId(),
                                         parentContext.rootName(),
                                         parentContext.path() + node.getPathPart(),
                                         breadcrumbs,
                                         node.getContextType(),
                                         parentIds,
+                                        parentContextIds,
                                         parentContext.isVisible() && node.isVisible(),
                                         parentContext.isActive() && activeContext,
                                         parentConnection.isPrimary().orElse(false),
