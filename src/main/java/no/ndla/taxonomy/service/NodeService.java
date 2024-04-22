@@ -497,7 +497,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     @Async
     @Transactional
-    public void buildContextsAsync() {
+    public void buildAllContextsAsync() {
         buildAllContexts();
     }
 

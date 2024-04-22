@@ -31,10 +31,10 @@ public class Admin {
     @Operation(
             summary = "Updates contexts for all roots. Requires taxonomy:admin access.",
             security = {@SecurityRequirement(name = "oauth")})
-    @ResponseStatus(HttpStatus.ACCEPTED)
     @Transactional
+    @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public void buildAllContexts() {
-        nodeService.buildContextsAsync();
+        nodeService.buildAllContextsAsync();
     }
 }
