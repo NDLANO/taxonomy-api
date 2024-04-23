@@ -453,7 +453,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 .toList();
     }
 
-    List<TaxonomyContextDTO> nodesToContexts(List<Node> nodes, boolean filterVisibles, String language) {
+    public List<TaxonomyContextDTO> nodesToContexts(List<Node> nodes, boolean filterVisibles, String language) {
         return nodes.stream()
                 .flatMap(node -> {
                     var contexts = filterVisibles
@@ -519,15 +519,19 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public List<TaxonomyContextDTO> getContextByPath(Optional<String> path, String language) {
-        if (path.isPresent()) {
-            String contextId = TitleUtil.getHashFromPath(path.get());
-            List<Integer> ids = nodeRepository.findIdsByContextId(Optional.of(contextId));
-            var nodes = nodeRepository.findByIds(ids);
-            var contexts = nodesToContexts(nodes, false, language);
-            return contexts.stream()
-                    .filter(c -> c.contextId().equals(contextId))
-                    .toList();
+        return path.map(p -> getContextByContextId(Optional.of(TitleUtil.getHashFromPath(p)), language))
+                .orElse(List.of());
+    }
+
+    public List<TaxonomyContextDTO> getContextByContextId(Optional<String> contextId, String language) {
+        if (contextId.isEmpty()) {
+            return List.of();
         }
-        return List.of();
+        List<Integer> ids = nodeRepository.findIdsByContextId(contextId);
+        var nodes = nodeRepository.findByIds(ids);
+        var contexts = nodesToContexts(nodes, false, language);
+        return contexts.stream()
+                .filter(c -> c.contextId().equals(contextId.get()))
+                .toList();
     }
 }
