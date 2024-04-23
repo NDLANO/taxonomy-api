@@ -1492,6 +1492,14 @@
         </sql>
     </changeSet>
     
+    <changeSet id="20240423 Fix previous migration" author="Gunnar Velle">
+        <sql>
+            UPDATE node n
+            SET contexts='[]'
+            WHERE contexts is null
+        </sql>
+    </changeSet>
+
     <changeSet id="20240318 Add pretty url to context with path as default" author="Gunnar Velle">
         <sql>
             UPDATE node n
@@ -1501,5 +1509,6 @@
             )
         </sql>
     </changeSet>
+
 
 </databaseChangeLog>
