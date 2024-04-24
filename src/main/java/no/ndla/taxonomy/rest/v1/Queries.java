@@ -35,7 +35,7 @@ public class Queries {
     @GetMapping("/{contentURI}")
     @Operation(summary = "Gets a list of contexts matching given contentURI, empty list if no matches are found.")
     @Transactional(readOnly = true)
-    public List<TaxonomyContextDTO> queryFullNode(
+    public List<TaxonomyContextDTO> contextByContentURI(
             @PathVariable("contentURI") Optional<URI> contentURI,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
@@ -45,6 +45,17 @@ public class Queries {
                     boolean filterVisibles) {
         return nodeService.getSearchableByContentUri(
                 contentURI, filterVisibles, language.orElse(Constants.DefaultLanguage));
+    }
+
+    @GetMapping("/contextId")
+    @Operation(summary = "Gets a list of contexts matching given contextId, empty list if no matches are found.")
+    @Transactional(readOnly = true)
+    public List<TaxonomyContextDTO> contextByContextId(
+            @RequestParam("contextId") Optional<String> contextId,
+            @Parameter(description = "ISO-639-1 language code", example = "nb")
+                    @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
+                    Optional<String> language) {
+        return nodeService.getContextByContextId(contextId, language.orElse(Constants.DefaultLanguage));
     }
 
     @GetMapping("/path")
