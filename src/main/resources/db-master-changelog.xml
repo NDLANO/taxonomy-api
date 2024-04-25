@@ -3,7 +3,7 @@
 <databaseChangeLog
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
         logicalFilePath="classpath:db-master-changelog.xml">
 
     <preConditions>
@@ -976,7 +976,7 @@
                                  referencedTableName="metadata" referencedColumnNames="id"
                                  onDelete="RESTRICT" onUpdate="RESTRICT"/>
     </changeSet>
-    <changeSet id="20220920 populate connections with metadata" author="Gunnar Velle" onValidationFail="MARK_RAN">
+    <changeSet id="20220920 populate connections with metadata" author="Gunnar Velle" ignore="true">
         <customChange class="no.ndla.taxonomy.migration.CreateMetadataForConnectionsSqlChange">
             <param name="schema" value="${schema}"/>
         </customChange>
