@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
  * Gets the database schema name from the version context to be used in the multi tenancy provider.
  */
 @Component
-public class VersionIdentifierResolver implements CurrentTenantIdentifierResolver {
+public class VersionIdentifierResolver implements CurrentTenantIdentifierResolver<String> {
 
     @Value("${spring.datasource.hikari.schema:taxonomy_api}")
     private String defaultSchema;

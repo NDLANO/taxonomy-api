@@ -31,7 +31,7 @@ import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.service.task.Fetcher;
-import no.ndla.taxonomy.util.TitleUtil;
+import no.ndla.taxonomy.util.PrettyUrlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -489,7 +489,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                 context.contextId(),
                                 context.rank(),
                                 context.connectionId(),
-                                TitleUtil.createPrettyUrl(node.getTranslatedName(language), context.contextId()));
+                                context.url());
                     });
                 })
                 .toList();
@@ -519,7 +519,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     public List<TaxonomyContextDTO> getContextByPath(Optional<String> path, String language) {
-        return path.map(p -> getContextByContextId(Optional.of(TitleUtil.getHashFromPath(p)), language))
+        return path.map(p -> getContextByContextId(Optional.of(PrettyUrlUtil.getHashFromPath(p)), language))
                 .orElse(List.of());
     }
 

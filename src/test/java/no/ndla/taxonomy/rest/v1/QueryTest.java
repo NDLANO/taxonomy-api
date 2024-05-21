@@ -392,7 +392,7 @@ public class QueryTest extends RestTest {
 
     @Test
     public void that_contexts_can_be_found_by_path() throws Exception {
-        Node root = builder.node(
+        builder.node(
                 NodeType.SUBJECT,
                 s -> s.isContext(true).publicId("urn:subject:1").name("Subject").child(NodeType.TOPIC, t -> t.name(
                                 "Topic")
@@ -401,13 +401,26 @@ public class QueryTest extends RestTest {
                                 .contentUri("urn:article:1")
                                 .publicId("urn:resource:1"))));
         Node resource = nodeRepository.getByPublicId(URI.create("urn:resource:1"));
-        var response = testUtils.getResource("/v1/queries/path?path="
-                + String.format(
-                        "/one-fine-resource__%s",
-                        resource.getContexts().stream().findFirst().get().contextId()));
-        var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
+        {
+            var response = testUtils.getResource("/v1/queries/path?path="
+                    + String.format(
+                            "/one-fine-resource/r/%s",
+                            resource.getContexts().stream().findFirst().get().contextId()));
+            var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
 
-        assertEquals(1, result.length);
-        assertEquals(List.of("Subject", "Topic"), result[0].breadcrumbs().get("nb"));
+            assertEquals(1, result.length);
+            assertEquals(List.of("Subject", "Topic"), result[0].breadcrumbs().get("nb"));
+        }
+        {
+            // Old format used used for programmes
+            var response = testUtils.getResource("/v1/queries/path?path="
+                    + String.format(
+                            "/one-fine-resource__%s",
+                            resource.getContexts().stream().findFirst().get().contextId()));
+            var result = testUtils.getObject(TaxonomyContextDTO[].class, response);
+
+            assertEquals(1, result.length);
+            assertEquals(List.of("Subject", "Topic"), result[0].breadcrumbs().get("nb"));
+        }
     }
 }
