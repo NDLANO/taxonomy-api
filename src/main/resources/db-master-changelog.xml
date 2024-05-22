@@ -1407,11 +1407,15 @@
         <customChange class="no.ndla.taxonomy.migration.CleanUpDuplicateResourcesSqlChange"/>
     </changeSet>
 
-    <changeSet id="20230823 Add constraint to avoid same content_uri for resources" author="Gunnar Velle">
-        <validCheckSum>8:4437aae86611f78da57268f45c3cd929</validCheckSum>
+    <changeSet id="20230823 Add schema and extension" author="Gunnar Velle" runAlways="true" >
         <!-- Need a separate extensions schema to make cloning schemas possible! -->
         <sql>CREATE SCHEMA IF NOT EXISTS extensions</sql>
         <sql>CREATE EXTENSION IF NOT EXISTS "btree_gist" schema extensions</sql>
+    </changeSet>
+
+    <changeSet id="20230823 Add constraint to avoid same content_uri for resources" author="Gunnar Velle">
+        <validCheckSum>8:4437aae86611f78da57268f45c3cd929</validCheckSum>
+        <validCheckSum>9:6e04afdd84254e39c95fd6cbfd119cac</validCheckSum>
         <sql>
             ALTER TABLE node
             ADD CONSTRAINT unique_content_uri_for_resource
