@@ -41,6 +41,9 @@ management:
     port: ${taxonomy.management.port:5001}
   endpoint.health.probes.enabled: true
 
+# Custom properties
+new.url.separator: ${NEW_URL_SEPARATOR:false}
+
 ---
 
 spring:
