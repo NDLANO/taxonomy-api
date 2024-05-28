@@ -506,7 +506,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         logger.info("Building contexts for all roots in schema");
         var startTime = System.currentTimeMillis();
         List<Node> rootNodes = nodeRepository.findByNodeType(
-                Optional.empty(),
+                Optional.of(List.of(NodeType.PROGRAMME)),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
