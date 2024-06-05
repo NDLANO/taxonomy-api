@@ -27,6 +27,7 @@ public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "Name of the relevance of the parent connection") LanguageFieldDTO<String> relevance,
         @JsonProperty @Schema(description = "Resource-types of the node") List<SearchableTaxonomyResourceType> resourceTypes,
         @JsonProperty @Schema(description = "List of all parent ids") List<URI> parentIds,
+        @JsonProperty @Schema(description = "List of all parent contextIds") List<String> parentContextIds,
         @JsonProperty @Schema(description = "Whether the parent connection is primary or not") boolean isPrimary,
         @JsonProperty @Schema(description = "Whether the parent connection is marked as active") boolean isActive,
         @JsonProperty @Schema(description = "Whether the parent connection is visible or not") boolean isVisible,

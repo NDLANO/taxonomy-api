@@ -166,6 +166,7 @@ public class NodeDTO {
                                     .map(SearchableTaxonomyResourceType::new)
                                     .toList(),
                             ctx.parentIds().stream().map(URI::create).toList(),
+                            ctx.parentContextIds(),
                             ctx.isPrimary(),
                             ctx.isActive(),
                             ctx.isVisible(),
