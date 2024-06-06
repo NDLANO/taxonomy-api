@@ -335,7 +335,6 @@ public class NodeTest {
                 "urn:relevance:core",
                 "1",
                 0,
-                Optional.of("/root/f/1"),
                 "urn:connection1");
         var context2 = new TaxonomyContext(
                 root.getPublicId().toString(),
@@ -353,7 +352,6 @@ public class NodeTest {
                 "urn:relevance:core",
                 "2",
                 0,
-                Optional.of("/root/parent1/e/2"),
                 "urn:connection2");
         var context3 = new TaxonomyContext(
                 root.getPublicId().toString(),
@@ -371,7 +369,6 @@ public class NodeTest {
                 "urn:relevance:core",
                 "3",
                 0,
-                Optional.of("/root/parent2/e/3"),
                 "urn:connection3");
 
         node.setContexts(Set.of(context3, context2, context1));

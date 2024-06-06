@@ -27,6 +27,7 @@ import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +43,9 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     private final NodeService nodeService;
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
+
+    @Value(value = "${new.url.separator:false}")
+    private boolean newUrlSeparator;
 
     public Subjects(
             TreeSorter treeSorter,
@@ -146,7 +150,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                         language.orElse("nb"),
                         Optional.empty(),
                         Optional.of(false),
-                        false))
+                        false,
+                        newUrlSeparator))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
@@ -253,7 +258,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                         nodeConnection,
                         language.orElse(Constants.DefaultLanguage),
                         Optional.of(false),
-                        false))
+                        false,
+                        newUrlSeparator))
                 .forEach(returnList::add);
 
         var filtered = returnList.stream()

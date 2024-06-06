@@ -28,6 +28,7 @@ import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.NodeWithParents;
 import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +42,9 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final NodeService nodeService;
     private final NodeRepository nodeRepository;
+
+    @Value(value = "${new.url.separator:false}")
+    private boolean newUrlSeparator;
 
     public Resources(
             NodeRepository nodeRepository,
@@ -148,7 +152,8 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                         language.orElse("nb"),
                         Optional.empty(),
                         Optional.of(false),
-                        false))
+                        false,
+                        newUrlSeparator))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
@@ -243,7 +248,8 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language) {
         var node = nodeService.getNode(id);
-        return new NodeWithParents(node, language.orElse(Constants.DefaultLanguage), Optional.of(false));
+        return new NodeWithParents(
+                node, language.orElse(Constants.DefaultLanguage), Optional.of(false), newUrlSeparator);
     }
 
     @Deprecated
