@@ -1508,5 +1508,16 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20240606 Remove default url from context again" author="Gunnar Velle">
+        <sql>
+            UPDATE node n
+            SET contexts = (
+            SELECT jsonb_agg(obj - 'url')
+            FROM jsonb_array_elements(contexts) AS obj
+            )
+            WHERE contexts != '[]'
+        </sql>
+    </changeSet>
+
 
 </databaseChangeLog>
