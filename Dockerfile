@@ -1,5 +1,5 @@
 FROM ubuntu:22.04
-RUN apt-get update && apt-get -y install maven openjdk-17-jdk-headless
+RUN apt-get update && apt-get -y install maven openjdk-21-jdk-headless
 COPY ./ src/
 WORKDIR /src
 RUN mvn clean package -DskipTests
