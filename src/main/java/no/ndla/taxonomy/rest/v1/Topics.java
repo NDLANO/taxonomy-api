@@ -42,7 +42,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
 
     public Topics(
             NodeRepository nodeRepository, NodeService nodeService, ContextUpdaterService cachedUrlUpdaterService) {
-        super(nodeRepository, cachedUrlUpdaterService);
+        super(nodeRepository, cachedUrlUpdaterService, nodeService);
 
         this.nodeRepository = nodeRepository;
         this.nodeService = nodeService;

@@ -196,10 +196,12 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 newUrlSeparator);
     }
 
+    public Optional<Node> getMaybeNode(URI publicId) {
+        return nodeRepository.findFirstByPublicId(publicId);
+    }
+
     public Node getNode(URI publicId) {
-        return nodeRepository
-                .findFirstByPublicId(publicId)
-                .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
+        return getMaybeNode(publicId).orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
     }
 
     public List<NodeChildDTO> getResourcesByNodeId(
@@ -517,7 +519,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     @Transactional
-    private List<Node> buildAllContexts() {
+    protected List<Node> buildAllContexts() {
         logger.info("Building contexts for all roots in schema");
         var startTime = System.currentTimeMillis();
         List<Node> rootNodes = nodeRepository.findByNodeType(
@@ -531,6 +533,21 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         rootNodes.forEach(cachedUrlUpdaterService::updateContexts);
         logger.info("Building contexts for all roots. took {} ms", System.currentTimeMillis() - startTime);
         return rootNodes;
+    }
+
+    @Transactional
+    public void updateQualityEvaluationOfParents(Node node) {
+        updateQualityEvaluationOf(node.getParentNodes());
+    }
+
+    @Transactional
+    public void updateQualityEvaluationOf(List<Node> parents) {
+        parents.forEach(p -> {
+            p.updateChildQualityEvaluationAverage();
+            nodeRepository.save(p);
+            var parentsParents = p.getParentNodes();
+            updateQualityEvaluationOf(parentsParents);
+        });
     }
 
     public List<TaxonomyContextDTO> getContextByPath(Optional<String> path, String language) {

@@ -19,6 +19,7 @@ import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.service.UpdatableDto;
+import no.ndla.taxonomy.service.dtos.QualityEvaluationDTO;
 
 public class NodePostPut implements UpdatableDto<Node> {
     @JsonProperty
@@ -58,6 +59,10 @@ public class NodePostPut implements UpdatableDto<Node> {
     @Schema(description = "The language used at create time. Used to set default translation.", example = "nb")
     public Optional<String> language = Optional.empty();
 
+    @JsonProperty
+    @Schema(description = "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment.")
+    public Optional<QualityEvaluationDTO> qualityEvaluation = Optional.empty();
+
     public Optional<String> getNodeId() {
         return nodeId;
     }
@@ -78,6 +83,11 @@ public class NodePostPut implements UpdatableDto<Node> {
         if (nodeType != null) {
             node.setNodeType(nodeType);
         }
+        this.qualityEvaluation.ifPresent(qe -> {
+            node.setQualityEvaluation(qe.getGrade());
+            node.setQualityEvaluationComment(qe.getNote());
+        });
+
         root.ifPresent(node::setContext);
         context.ifPresent(node::setContext);
         name.ifPresent(node::setName);

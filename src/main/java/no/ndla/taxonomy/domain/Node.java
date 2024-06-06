@@ -70,6 +70,19 @@ public class Node extends DomainObject implements EntityWithMetadata {
     @Column(name = "contexts", columnDefinition = "jsonb")
     private Set<TaxonomyContext> contexts = new HashSet<>();
 
+    @Column(name = "quality_evaluation")
+    @Convert(converter = GradeConverter.class)
+    private Grade qualityEvaluation;
+
+    @Column(name = "quality_evaluation_comment")
+    private String qualityEvaluationComment;
+
+    @Column(name = "child_quality_evaluation_average")
+    private Double childQualityEvaluationAverage;
+
+    @Column(name = "child_quality_evaluation_count")
+    private int childQualityEvaluationCount;
+
     // Needed for hibernate
     public Node() {}
 
@@ -88,6 +101,8 @@ public class Node extends DomainObject implements EntityWithMetadata {
         this.nodeType = node.getNodeType();
         this.ident = node.getIdent();
         this.context = node.isContext();
+        this.qualityEvaluation = node.getQualityEvaluationGrade().orElse(null);
+        this.qualityEvaluationComment = node.getQualityEvaluationComment().orElse(null);
 
         if (keepPublicId) {
             setPublicId(node.getPublicId());
@@ -111,6 +126,53 @@ public class Node extends DomainObject implements EntityWithMetadata {
         this.resourceResourceTypes = rrts;
         setMetadata(new Metadata(node.getMetadata()));
         setName(node.getName());
+    }
+
+    public Optional<Grade> getQualityEvaluationGrade() {
+        return Optional.ofNullable(qualityEvaluation);
+    }
+
+    public Optional<String> getQualityEvaluationComment() {
+        return Optional.ofNullable(qualityEvaluationComment);
+    }
+
+    public Optional<String> getQualityEvaluationNote() {
+        return Optional.ofNullable(qualityEvaluationComment);
+    }
+
+    public Optional<GradeAverage> getChildQualityEvaluationAverage() {
+        return Optional.ofNullable(this.childQualityEvaluationAverage)
+                .map(avg -> new GradeAverage(avg, this.childQualityEvaluationCount));
+    }
+
+    public void updateChildQualityEvaluationAverage() {
+        var allChildGrades = getChildGradesRecursively();
+        var gradeAverage = GradeAverage.fromGrades(allChildGrades);
+
+        if (gradeAverage.count > 0) {
+            this.childQualityEvaluationAverage = gradeAverage.averageValue;
+            this.childQualityEvaluationCount = gradeAverage.count;
+        }
+    }
+
+    public List<Optional<Grade>> getChildGradesRecursively() {
+        var children = getChildNodes();
+        return children.stream()
+                .flatMap(c -> {
+                    var x = c.getChildGradesRecursively();
+                    var l = new ArrayList<>(x);
+                    l.add(c.getQualityEvaluationGrade());
+                    return l.stream();
+                })
+                .toList();
+    }
+
+    public void setQualityEvaluation(Grade qualityEvaluation) {
+        this.qualityEvaluation = qualityEvaluation;
+    }
+
+    public void setQualityEvaluationComment(Optional<String> qualityEvaluationComment) {
+        this.qualityEvaluationComment = qualityEvaluationComment.orElse(null);
     }
 
     public String getPathPart() {
@@ -323,7 +385,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
                 .toList();
     }
 
-    public Collection<Node> getParentNodes() {
+    public List<Node> getParentNodes() {
         return parentConnections.stream()
                 .map(NodeConnection::getParent)
                 .filter(Optional::isPresent)

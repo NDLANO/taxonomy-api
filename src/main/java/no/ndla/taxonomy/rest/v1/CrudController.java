@@ -11,12 +11,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.ContextUpdaterService;
+import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.URNValidator;
 import no.ndla.taxonomy.service.UpdatableDto;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -32,13 +34,16 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public abstract class CrudController<T extends DomainEntity> {
     protected TaxonomyRepository<T> repository;
     protected ContextUpdaterService contextUpdaterService;
+    protected NodeService nodeService;
 
     private static final Map<Class<?>, String> locations = new HashMap<>();
     private final URNValidator validator = new URNValidator();
 
-    protected CrudController(TaxonomyRepository<T> repository, ContextUpdaterService contextUpdaterService) {
+    protected CrudController(
+            TaxonomyRepository<T> repository, ContextUpdaterService contextUpdaterService, NodeService nodeService) {
         this.repository = repository;
         this.contextUpdaterService = contextUpdaterService;
+        this.nodeService = nodeService;
     }
 
     protected CrudController(TaxonomyRepository<T> repository) {
@@ -53,8 +58,13 @@ public abstract class CrudController<T extends DomainEntity> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
     public void deleteEntity(@PathVariable("id") URI id) {
+        var existingNode = nodeService.getMaybeNode(id);
+        var parents = existingNode.map(Node::getParentNodes).orElse(List.of());
+
         repository.delete(repository.getByPublicId(id));
         repository.flush();
+
+        nodeService.updateQualityEvaluationOf(parents);
     }
 
     @Operation(
@@ -67,8 +77,9 @@ public abstract class CrudController<T extends DomainEntity> {
         validator.validate(id, entity);
         command.apply(entity);
 
-        if (entity instanceof Node && contextUpdaterService != null) {
-            contextUpdaterService.updateContexts((Node) entity);
+        if (entity instanceof Node node) {
+            if (contextUpdaterService != null) contextUpdaterService.updateContexts(node);
+            if (nodeService != null) nodeService.updateQualityEvaluationOfParents(node);
         }
 
         return entity;
@@ -90,8 +101,9 @@ public abstract class CrudController<T extends DomainEntity> {
             URI location = URI.create(getLocation() + "/" + entity.getPublicId());
             repository.saveAndFlush(entity);
 
-            if (entity instanceof Node && contextUpdaterService != null) {
-                contextUpdaterService.updateContexts((Node) entity);
+            if (entity instanceof Node node) {
+                if (contextUpdaterService != null) contextUpdaterService.updateContexts(node);
+                if (nodeService != null) nodeService.updateQualityEvaluationOfParents(node);
             }
 
             return ResponseEntity.created(location).build();

@@ -1441,7 +1441,7 @@
         </sql>
         <addNotNullConstraint tableName="node_connection" columnName="relevance_id" />
     </changeSet>
-    
+
     <changeSet id="20231030 Add default translation based on basename" author="Gunnar Velle">
         <sql>
             UPDATE relevance r SET translations=(
@@ -1488,7 +1488,7 @@
             )
         </sql>
     </changeSet>
-    
+
     <changeSet id="20240423 Fix previous migration" author="Gunnar Velle">
         <sql>
             UPDATE node n
@@ -1517,6 +1517,21 @@
             )
             WHERE contexts != '[]'
         </sql>
+    </changeSet>
+
+    <changeSet id="20240606 Add quality evaluation fields to nodes" author="Jonas Natten">
+        <addColumn tableName="node">
+            <column name="quality_evaluation" type="int2"/>
+        </addColumn>
+        <addColumn tableName="node">
+            <column name="quality_evaluation_comment" type="text"/>
+        </addColumn>
+        <addColumn tableName="node">
+            <column name="child_quality_evaluation_average" type="double" />
+        </addColumn>
+        <addColumn tableName="node">
+            <column name="child_quality_evaluation_count" type="int" defaultValueNumeric="0" />
+        </addColumn>
     </changeSet>
 
 
