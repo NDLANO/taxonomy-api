@@ -527,6 +527,10 @@ export interface TaxonomyContext {
      */
     isVisible: boolean;
     /**
+     * List of all parent contextIds
+     */
+    parentContextIds: string[];
+    /**
      * List of all parent ids
      */
     parentIds: string[];
