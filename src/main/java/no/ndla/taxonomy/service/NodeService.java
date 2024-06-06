@@ -9,15 +9,11 @@ package no.ndla.taxonomy.service;
 
 import java.net.URI;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.repositories.ChangelogRepository;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
@@ -30,11 +26,9 @@ import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
-import no.ndla.taxonomy.service.task.Fetcher;
 import no.ndla.taxonomy.util.PrettyUrlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
@@ -43,32 +37,22 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Transactional(readOnly = true)
 @Service
-public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>, DisposableBean {
+public class NodeService implements SearchService<NodeDTO, Node, NodeRepository> {
     Logger logger = LoggerFactory.getLogger(getClass().getName());
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final NodeConnectionService connectionService;
-    private final VersionService versionService;
     private final TreeSorter topicTreeSorter;
-    private final ChangelogRepository changelogRepository;
     private final DomainEntityHelperService domainEntityHelperService;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
     private final ContextUpdaterService cachedUrlUpdaterService;
     private final RelevanceRepository relevanceRepository;
 
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
-
     @Value(value = "${new.url.separator:false}")
     private boolean newUrlSeparator;
 
-    @Override
-    public void destroy() throws Exception {
-        executor.shutdown();
-    }
-
     public NodeService(
-            ChangelogRepository changelogRepository,
             DomainEntityHelperService domainEntityHelperService,
             NodeConnectionService connectionService,
             NodeConnectionRepository nodeConnectionRepository,
@@ -76,15 +60,12 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter topicTreeSorter,
             TreeSorter treeSorter,
-            VersionService versionService,
             ContextUpdaterService cachedUrlUpdaterService,
             RelevanceRepository relevanceRepository) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
-        this.versionService = versionService;
         this.topicTreeSorter = topicTreeSorter;
-        this.changelogRepository = changelogRepository;
         this.domainEntityHelperService = domainEntityHelperService;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.treeSorter = treeSorter;
@@ -367,74 +348,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
         return node.getResourceChildren().stream()
                 .allMatch(resourceConnection -> resourceConnection.isPrimary().orElse(false));
-    }
-
-    /**
-     * Adds node and children to table to be processed later.
-     * Wrapper async method to private inner method.
-     *
-     * @param nodeId
-     *            Public ID of the node to publish
-     * @param sourceId
-     *            Public ID of source schema. Default schema if not present
-     * @param targetId
-     *            Public ID of target schema. Mandatory
-     * @param isPublishRoot
-     *            Used to save meta-field to track which node is publishing
-     * @param cleanUp
-     *            Used to clean up metadata after publishing
-     */
-    @Async
-    @Transactional
-    public void publishNode(URI nodeId, Optional<URI> sourceId, URI targetId, boolean isPublishRoot, boolean cleanUp) {
-        publishNodeSync(nodeId, sourceId, targetId, isPublishRoot, cleanUp);
-    }
-
-    @Transactional
-    private void publishNodeSync(
-            URI nodeId, Optional<URI> sourceId, URI targetId, boolean isPublishRoot, boolean cleanUp) {
-        String source = sourceId.flatMap(
-                        sid -> versionService.findVersionByPublicId(sid).map(Version::getHash))
-                .orElse(null);
-        String target = versionService
-                .findVersionByPublicId(targetId)
-                .map(Version::getHash)
-                .orElseThrow(() -> new NotFoundServiceException("Target version not found! Aborting"));
-
-        Node node;
-        try {
-            Fetcher fetcher = new Fetcher();
-            fetcher.setDomainEntityHelperService(domainEntityHelperService);
-            fetcher.setVersion(versionService.schemaFromHash(source));
-            fetcher.setPublicId(nodeId);
-            fetcher.setAddIsPublishing(isPublishRoot);
-            Future<DomainEntity> future = executor.submit(fetcher);
-            node = (Node) future.get();
-        } catch (Exception e) {
-            logger.info(e.getMessage(), e);
-            throw new NotFoundServiceException("Failed to fetch node from source schema", e);
-        }
-        // At first run, makes sure node exists in db for node-connection to be saved.
-        if (!cleanUp) {
-            changelogRepository.save(new Changelog(source, target, nodeId, false));
-        }
-        for (NodeConnection connection : node.getChildConnections()) {
-            if (connection.getChild().isPresent()) {
-                Node child = connection.getChild().get();
-                publishNodeSync(child.getPublicId(), sourceId, targetId, false, cleanUp);
-            }
-            changelogRepository.save(new Changelog(source, target, connection.getPublicId(), cleanUp));
-        }
-        // When cleaning, node can be cleaned last to end with publish request to be stripped
-        if (cleanUp) {
-            changelogRepository.save(new Changelog(source, target, nodeId, true));
-        } else {
-            // Once more, with cleaning
-            publishNodeSync(nodeId, sourceId, targetId, false, true);
-        }
-        if (isPublishRoot) {
-            logger.info("Node " + nodeId + " added to changelog for publishing to " + target);
-        }
     }
 
     public Node cloneNode(URI publicId, Optional<URI> contentUri) {

@@ -263,6 +263,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     @Transactional
+    @Deprecated
     public void publishNode(
             @PathVariable("id") URI id,
             @Parameter(
@@ -272,9 +273,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<URI> sourceId,
             @Parameter(description = "Version id to publish to.", example = "urn:version:2")
                     @RequestParam(value = "targetId")
-                    URI targetId) {
-        nodeService.publishNode(id, sourceId, targetId, true, false);
-    }
+                    URI targetId) {}
 
     @GetMapping("/{id}/nodes")
     @Operation(summary = "Gets all children for this node")
