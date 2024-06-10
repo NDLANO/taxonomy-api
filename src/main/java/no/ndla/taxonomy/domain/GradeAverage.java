@@ -31,23 +31,6 @@ public class GradeAverage implements Serializable {
         return new GradeAverage(avg, count);
     }
 
-    public static GradeAverage fromNodes(Collection<Node> nodes) {
-        var avg = nodes.stream()
-                .map(Node::getQualityEvaluationGrade)
-                .flatMap(Optional::stream)
-                .mapToInt(Grade::toInt)
-                .average()
-                .orElse(0.0);
-        var count = nodes.size();
-        return new GradeAverage(avg, count);
-    }
-
-    public GradeAverage add(GradeAverage other) {
-        var newValue = (averageValue * count + other.averageValue * other.count) / (count + other.count);
-        var newCount = this.count + other.count;
-        return new GradeAverage(newValue, newCount);
-    }
-
     public double getAverageValue() {
         return averageValue;
     }
