@@ -47,4 +47,12 @@ public class GradeAverage implements Serializable {
         var newCount = this.count + other.count;
         return new GradeAverage(newValue, newCount);
     }
+
+    public double getAverageValue() {
+        return averageValue;
+    }
+
+    public int getCount() {
+        return count;
+    }
 }

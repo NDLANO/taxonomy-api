@@ -10,17 +10,34 @@ package no.ndla.taxonomy.domain;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import jakarta.transaction.Transactional;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
+import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.service.AbstractIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-public class NodeTest {
+@SpringBootTest
+@ExtendWith(SpringExtension.class)
+@Transactional
+public class NodeTest extends AbstractIntegrationTest {
+    @Autowired
+    private NodeRepository nodeRepository;
+
+    @Autowired
+    private Builder builder;
+
     private Node node;
 
     @BeforeEach
     public void setUp() {
+        nodeRepository.deleteAllAndFlush();
         node = new Node(NodeType.NODE);
     }
 
@@ -408,5 +425,80 @@ public class NodeTest {
             Optional<TaxonomyContext> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.empty());
             assertEquals(context1.contextId(), context.get().contextId()); // Since context1 is shortest
         }
+    }
+
+    @Test
+    public void qualityEvaluationAverageForDirectChildrenWorks() {
+        var x = builder.node(n -> {
+            n.nodeType(NodeType.SUBJECT)
+                    .name("S1")
+                    .publicId("urn:subject:1")
+                    .qualityEvaluation(Grade.Five)
+                    .child(
+                            NodeType.TOPIC,
+                            t -> t.nodeType(NodeType.TOPIC).name("T1").qualityEvaluation(Grade.Four))
+                    .child(
+                            NodeType.TOPIC,
+                            t -> t.nodeType(NodeType.TOPIC).name("T2").qualityEvaluation(Grade.Three))
+                    .child(
+                            NodeType.TOPIC,
+                            t -> t.nodeType(NodeType.TOPIC).name("T3").qualityEvaluation(Grade.Five))
+                    .child(
+                            NodeType.TOPIC,
+                            t -> t.nodeType(NodeType.TOPIC).name("T4").qualityEvaluation(Grade.Three));
+        });
+
+        x.updateChildQualityEvaluationAverage();
+
+        assertTrue(x.getChildQualityEvaluationAverage().isPresent());
+        var avg = x.getChildQualityEvaluationAverage().get();
+        assertEquals(3.75, avg.getAverageValue());
+        assertEquals(4, avg.getCount());
+    }
+
+    @Test
+    public void qualityEvaluationAverageForNestedChildrenWorks() {
+        var parentNode = builder.node(n -> {
+            n.nodeType(NodeType.SUBJECT)
+                    .name("S1")
+                    .qualityEvaluation(Grade.Five)
+                    .child(NodeType.TOPIC, t -> t.nodeType(NodeType.TOPIC)
+                            .name("T1")
+                            .qualityEvaluation(Grade.Four)
+                            .child(NodeType.RESOURCE, r -> r.nodeType(NodeType.RESOURCE)
+                                    .name("R5")
+                                    .qualityEvaluation(Grade.Two))
+                            .child(NodeType.RESOURCE, r -> r.nodeType(NodeType.RESOURCE)
+                                    .name("R1")
+                                    .qualityEvaluation(Grade.Five)))
+                    .child(NodeType.TOPIC, t -> t.nodeType(NodeType.TOPIC)
+                            .name("T2")
+                            .qualityEvaluation(Grade.Three)
+                            .child(NodeType.RESOURCE, r -> r.nodeType(NodeType.RESOURCE)
+                                    .name("R2")
+                                    .qualityEvaluation(Grade.Three)))
+                    .child(NodeType.TOPIC, t -> t.nodeType(NodeType.TOPIC)
+                            .name("T3")
+                            .qualityEvaluation(Grade.Five)
+                            .child(NodeType.RESOURCE, r -> r.nodeType(NodeType.RESOURCE)
+                                    .name("R3")
+                                    .qualityEvaluation(Grade.One)))
+                    .child(NodeType.TOPIC, t -> t.nodeType(NodeType.TOPIC)
+                            .name("T4")
+                            .qualityEvaluation(Grade.Three)
+                            .child(NodeType.RESOURCE, r -> r.nodeType(NodeType.RESOURCE)
+                                    .name("R4")
+                                    .qualityEvaluation(Grade.Two)));
+        });
+        var unrelatedNodes = builder.node(
+                NodeType.SUBJECT, n -> n.name("S2").qualityEvaluation(Grade.One).child(NodeType.TOPIC, t -> t.name("T5")
+                        .qualityEvaluation(Grade.Five)
+                        .child(NodeType.RESOURCE, r -> r.name("R6").qualityEvaluation(Grade.Four))));
+        unrelatedNodes.updateChildQualityEvaluationAverage();
+        parentNode.updateChildQualityEvaluationAverage();
+        assertTrue(parentNode.getChildQualityEvaluationAverage().isPresent());
+        var avg = parentNode.getChildQualityEvaluationAverage().get();
+        assertEquals(3.111111111111111, avg.getAverageValue());
+        assertEquals(9, avg.getCount());
     }
 }

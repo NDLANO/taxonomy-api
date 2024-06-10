@@ -13,6 +13,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
@@ -58,13 +59,15 @@ public abstract class CrudController<T extends DomainEntity> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
     public void deleteEntity(@PathVariable("id") URI id) {
-        var existingNode = nodeService.getMaybeNode(id);
-        var parents = existingNode.map(Node::getParentNodes).orElse(List.of());
+        var parents = Optional.ofNullable(nodeService).map(service -> {
+            var existingNode = nodeService.getMaybeNode(id);
+            return existingNode.map(Node::getParentNodes).orElse(List.of());
+        });
 
         repository.delete(repository.getByPublicId(id));
         repository.flush();
 
-        nodeService.updateQualityEvaluationOf(parents);
+        parents.ifPresent(p -> nodeService.updateQualityEvaluationOf(p));
     }
 
     @Operation(
