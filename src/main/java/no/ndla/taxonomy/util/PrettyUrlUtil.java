@@ -8,10 +8,26 @@
 package no.ndla.taxonomy.util;
 
 import java.util.Optional;
+import no.ndla.taxonomy.domain.LanguageField;
 import no.ndla.taxonomy.domain.NodeType;
 import org.jsoup.Jsoup;
 
 public class PrettyUrlUtil {
+
+    public static Optional<String> createPrettyUrl(
+            Optional<LanguageField<String>> rootName,
+            LanguageField<String> name,
+            String language,
+            String hash,
+            NodeType nodeType,
+            boolean newUrlSeparator) {
+        return createPrettyUrl(
+                rootName.map(lf -> lf.fromLanguage(language)),
+                name.fromLanguage(language),
+                hash,
+                nodeType,
+                newUrlSeparator);
+    }
 
     public static Optional<String> createPrettyUrl(
             Optional<String> rootName, String name, String hash, NodeType nodeType, boolean newUrlSeparator) {

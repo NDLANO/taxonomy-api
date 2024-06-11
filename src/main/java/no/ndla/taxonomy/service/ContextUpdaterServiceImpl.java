@@ -13,17 +13,12 @@ import no.ndla.taxonomy.domain.LanguageField;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.TaxonomyContext;
 import no.ndla.taxonomy.util.HashUtil;
-import no.ndla.taxonomy.util.PrettyUrlUtil;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ContextUpdaterServiceImpl implements ContextUpdaterService {
-
-    @Value(value = "${new.url.separator:false}")
-    private boolean newUrlSeparator;
 
     public ContextUpdaterServiceImpl() {}
 
@@ -50,8 +45,6 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                     "urn:relevance:core",
                     contextId,
                     0,
-                    PrettyUrlUtil.createPrettyUrl(
-                            Optional.empty(), node.getName(), contextId, node.getNodeType(), newUrlSeparator),
                     ""));
         }
 
@@ -87,14 +80,6 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                                 .orElse("urn:relevance:core"),
                                         contextId,
                                         parentConnection.getRank(),
-                                        PrettyUrlUtil.createPrettyUrl(
-                                                Optional.of(parentContext
-                                                        .rootName()
-                                                        .fromLanguage(Constants.DefaultLanguage)),
-                                                node.getName(),
-                                                contextId,
-                                                node.getNodeType(),
-                                                newUrlSeparator),
                                         parentConnection.getPublicId().toString());
                             })
                             .forEach(returnedContexts::add);

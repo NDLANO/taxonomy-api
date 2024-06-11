@@ -35,6 +35,7 @@ import no.ndla.taxonomy.util.PrettyUrlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -57,6 +58,9 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final RelevanceRepository relevanceRepository;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    @Value(value = "${new.url.separator:false}")
+    private boolean newUrlSeparator;
 
     @Override
     public void destroy() throws Exception {
@@ -144,7 +148,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                     language.get(),
                                     contextId,
                                     includeContexts,
-                                    filterProgrammes))
+                                    filterProgrammes,
+                                    newUrlSeparator))
                             .toList();
                     listToReturn.addAll(dtos);
                 });
@@ -171,8 +176,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 nodeConnectionRepository.findAllByParentPublicIdIncludingChildAndChildTranslations(nodePublicId);
 
         final var wrappedList = childConnections.stream()
-                .map(nodeConnection ->
-                        new NodeChildDTO(Optional.of(node), nodeConnection, languageCode, Optional.of(false), false))
+                .map(nodeConnection -> new NodeChildDTO(
+                        Optional.of(node), nodeConnection, languageCode, Optional.of(false), false, newUrlSeparator))
                 .toList();
 
         return topicTreeSorter.sortList(wrappedList);
@@ -187,7 +192,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 language.orElse(Constants.DefaultLanguage),
                 Optional.empty(),
                 includeContexts,
-                false);
+                false,
+                newUrlSeparator);
     }
 
     public Node getNode(URI publicId) {
@@ -291,7 +297,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                             nodeConnection,
                             languageCode.orElse(Constants.DefaultLanguage),
                             includeContexts,
-                            filterProgrammes);
+                            filterProgrammes,
+                            newUrlSeparator);
                 })
                 .toList();
     }
@@ -311,7 +318,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 languageCode,
                 Optional.empty(),
                 includeContexts,
-                filterProgrammes);
+                filterProgrammes,
+                newUrlSeparator);
     }
 
     public SearchResultDTO<NodeDTO> searchByNodeType(
@@ -490,7 +498,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                 context.contextId(),
                                 context.rank(),
                                 context.connectionId(),
-                                context.url());
+                                PrettyUrlUtil.createPrettyUrl(
+                                        Optional.of(context.rootName()),
+                                        LanguageField.fromNode(node),
+                                        language,
+                                        context.contextId(),
+                                        node.getNodeType(),
+                                        newUrlSeparator));
                     });
                 })
                 .toList();

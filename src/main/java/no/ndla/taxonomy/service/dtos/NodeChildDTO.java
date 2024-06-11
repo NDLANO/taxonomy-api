@@ -46,7 +46,8 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
             NodeConnection nodeConnection,
             String language,
             Optional<Boolean> includeContexts,
-            boolean filterProgrammes) {
+            boolean filterProgrammes,
+            boolean newUrlSeparator) {
         super(
                 root,
                 nodeConnection.getParent(),
@@ -54,7 +55,8 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
                 language,
                 Optional.empty(),
                 includeContexts,
-                filterProgrammes);
+                filterProgrammes,
+                newUrlSeparator);
 
         // This must be enabled when ed is updated to update metadata for connections.
         // this.metadata = new MetadataDto(nodeConnection.getMetadata());
@@ -73,7 +75,7 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
     /*
      * Special constructor used to get parents for resource/full
      */
-    public NodeChildDTO(Node parent, NodeConnection nodeConnection, String language) {
+    public NodeChildDTO(Node parent, NodeConnection nodeConnection, String language, boolean newUrlSeparator) {
         super(
                 Optional.empty(),
                 nodeConnection.getParent(),
@@ -81,7 +83,8 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
                 language,
                 Optional.empty(),
                 Optional.of(false),
-                false);
+                false,
+                newUrlSeparator);
 
         this.rank = nodeConnection.getRank();
         this.connectionId = nodeConnection.getPublicId();

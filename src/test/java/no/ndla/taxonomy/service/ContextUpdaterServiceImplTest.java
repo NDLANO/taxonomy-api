@@ -20,7 +20,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,9 +45,6 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
         service = new ContextUpdaterServiceImpl();
     }
 
-    @Value(value = "${new.url.separator:false}")
-    private boolean newUrlSeparator;
-
     @Test
     @Transactional
     void updateCachedUrls() {
@@ -73,11 +69,6 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
             assertEquals("urn:subject:1", context.rootId());
             assertEquals(0, context.breadcrumbs().size());
             assertTrue(context.isPrimary());
-            if (newUrlSeparator) {
-                assertTrue(context.url().isPresent() && context.url().get().startsWith("/subject1/f/"));
-            } else {
-                assertTrue(context.url().isPresent() && context.url().get().startsWith("/subject1__"));
-            }
 
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:subject:1"));
             assertEquals(1, node.get().getContexts().size());
@@ -99,11 +90,6 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
             assertEquals("urn:topic:1", context.rootId().toString());
             assertEquals(0, context.breadcrumbs().size());
             assertTrue(context.isPrimary());
-            if (newUrlSeparator) {
-                assertTrue(context.url().isPresent() && context.url().get().startsWith("/topic1/e/"));
-            } else {
-                assertTrue(context.url().isPresent() && context.url().get().startsWith("/topic1__"));
-            }
 
             var node = nodeRepository.findFirstByPublicId(URI.create("urn:topic:1"));
             assertEquals(1, node.get().getContexts().size());

@@ -23,6 +23,7 @@ import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.MetadataFilters;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,9 @@ import org.springframework.web.bind.annotation.*;
 public class Topics extends CrudControllerWithMetadata<Node> {
     private final NodeRepository nodeRepository;
     private final NodeService nodeService;
+
+    @Value(value = "${new.url.separator:false}")
+    private boolean newUrlSeparator;
 
     public Topics(
             NodeRepository nodeRepository, NodeService nodeService, ContextUpdaterService cachedUrlUpdaterService) {
@@ -132,7 +136,8 @@ public class Topics extends CrudControllerWithMetadata<Node> {
                         language.orElse("nb"),
                         Optional.empty(),
                         Optional.of(false),
-                        false))
+                        false,
+                        newUrlSeparator))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }

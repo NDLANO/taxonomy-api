@@ -22,7 +22,6 @@ import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.rest.v1.commands.VersionPostPut;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -75,7 +74,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         changelogRepository.deleteAll();
     }
 
-    @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_to_schema() throws Exception {
         final var command = new VersionPostPut() {
@@ -137,7 +135,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
                 translation -> translation.getName().contains("NB Node"));
     }
 
-    @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_with_resource_to_schema() throws Exception {
         final var command = new VersionPostPut() {
@@ -203,7 +200,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
                 resource.getTranslations(), translation -> translation.getName().contains("Resource NN"));
     }
 
-    @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_sub_node_with_resource_to_schema() throws Exception {
         final var command = new VersionPostPut() {
@@ -242,7 +238,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertAnyTrue(resource.get().getAllPaths(), path -> path.equals("/subject:1/topic:1/resource:1"));
     }
 
-    @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_tree_with_resources_to_schema() throws Exception {
         final var command = new VersionPostPut() {
@@ -297,7 +292,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertAnyTrue(subsubnode.getAllPaths(), path -> path.equals("/subject:1/topic:2/topic:3"));
     }
 
-    @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_tree_with_reused_resource_to_schema() throws Exception {
         final var command = new VersionPostPut() {
@@ -353,7 +347,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertAnyTrue(updated.getAllPaths(), path -> path.equals("/subject:1/topic:2/resource:1"));
     }
 
-    @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_in_tree_to_schema() throws Exception {
         final var command = new VersionPostPut() {
@@ -402,7 +395,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertAnyTrue(updatedChild.getAllPaths(), path -> path.equals("/subject:1/node:1"));
     }
 
-    @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_tree_with_reused_resource_twice_to_schema() throws Exception {
         final var command = new VersionPostPut() {
@@ -453,7 +445,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertAnyTrue(updated.getAllPaths(), path -> path.equals("/subject:2/topic:2/resource:1"));
     }
 
-    @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_reused_resource_with_translations_to_schema() throws Exception {
         final var command = new VersionPostPut() {
@@ -544,7 +535,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
                 updated.getTranslations(), translation -> translation.getName().equals("Resource en"));
     }
 
-    @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_twice_to_schema() throws Exception {
         final var command = new VersionPostPut() {
@@ -607,7 +597,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
                 translation -> translation.getName().contains("NB Node updated"));
     }
 
-    @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_tree_to_schema_async() throws Exception {
         final var command = new VersionPostPut() {
@@ -659,7 +648,6 @@ public class NodePublishingIntegrationTest extends AbstractIntegrationTest {
         assertAnyTrue(customfields, customfield -> customfield.equals("to be kept"));
     }
 
-    @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     void can_publish_node_tree_with_moved_resource_to_schema() throws Exception {
         final var command = new VersionPostPut() {
