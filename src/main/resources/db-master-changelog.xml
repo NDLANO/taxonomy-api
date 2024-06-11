@@ -1519,5 +1519,8 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20240611 Drop changelog table" author="Gunnar Velle">
+        <dropTable tableName="changelog"/>
+    </changeSet>
 
 </databaseChangeLog>
