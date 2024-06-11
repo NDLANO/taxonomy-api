@@ -273,7 +273,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<URI> sourceId,
             @Parameter(description = "Version id to publish to.", example = "urn:version:2")
                     @RequestParam(value = "targetId")
-                    URI targetId) {}
+                    URI targetId) {
+        throw new UnsupportedOperationException("This endpoint is deprecated");
+    }
 
     @GetMapping("/{id}/nodes")
     @Operation(summary = "Gets all children for this node")
