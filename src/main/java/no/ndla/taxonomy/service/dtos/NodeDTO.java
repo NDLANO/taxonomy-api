@@ -87,7 +87,7 @@ public class NodeDTO {
 
     @JsonProperty
     @Schema(description = "A number representing the average grade of all children nodes recursively.")
-    private Optional<GradeAverage> gradeAverage = Optional.empty();
+    private Optional<GradeAverageDTO> gradeAverage = Optional.empty();
 
     public NodeDTO() {}
 
@@ -101,7 +101,7 @@ public class NodeDTO {
             boolean filterProgrammes,
             boolean newUrlSeparator) {
         this.qualityEvaluation = QualityEvaluationDTO.fromNode(entity);
-        this.gradeAverage = entity.getChildQualityEvaluationAverage();
+        this.gradeAverage = GradeAverageDTO.fromNode(entity);
         this.id = entity.getPublicId();
         this.contentUri = Optional.ofNullable(entity.getContentUri());
 
