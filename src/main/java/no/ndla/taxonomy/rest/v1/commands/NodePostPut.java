@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1.commands;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -18,6 +19,8 @@ import java.util.UUID;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.NullOrUndefined;
+import no.ndla.taxonomy.domain.QualityEvaluationDTODeserializer;
 import no.ndla.taxonomy.service.UpdatableDto;
 import no.ndla.taxonomy.service.dtos.QualityEvaluationDTO;
 
@@ -61,7 +64,9 @@ public class NodePostPut implements UpdatableDto<Node> {
 
     @JsonProperty
     @Schema(description = "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment.")
-    public Optional<QualityEvaluationDTO> qualityEvaluation = Optional.empty();
+    @JsonDeserialize(using = QualityEvaluationDTODeserializer.class)
+    @NullOrUndefined
+    public Optional<QualityEvaluationDTO> qualityEvaluation;
 
     public Optional<String> getNodeId() {
         return nodeId;
@@ -83,10 +88,16 @@ public class NodePostPut implements UpdatableDto<Node> {
         if (nodeType != null) {
             node.setNodeType(nodeType);
         }
-        this.qualityEvaluation.ifPresent(qe -> {
-            node.setQualityEvaluation(qe.getGrade());
-            node.setQualityEvaluationComment(qe.getNote());
-        });
+
+        if (this.qualityEvaluation == null) {
+            node.setQualityEvaluation(null);
+            node.setQualityEvaluationComment(Optional.empty());
+        } else {
+            this.qualityEvaluation.ifPresent(qe -> {
+                node.setQualityEvaluation(qe.getGrade());
+                node.setQualityEvaluationComment(qe.getNote());
+            });
+        }
 
         root.ifPresent(node::setContext);
         context.ifPresent(node::setContext);

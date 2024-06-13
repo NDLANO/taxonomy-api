@@ -22,7 +22,7 @@ public class QualityEvaluationDTO {
     @Schema(description = "Note explaining the score")
     private Optional<String> note;
 
-    private QualityEvaluationDTO(Grade grade, Optional<String> note) {
+    public QualityEvaluationDTO(Grade grade, Optional<String> note) {
         this.grade = grade;
         this.note = note;
     }
