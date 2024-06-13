@@ -448,7 +448,7 @@ public class NodeTest extends AbstractIntegrationTest {
                             t -> t.nodeType(NodeType.TOPIC).name("T4").qualityEvaluation(Grade.Three));
         });
 
-        x.updateChildQualityEvaluationAverage();
+        x.updateEntireAverageTree();
 
         assertTrue(x.getChildQualityEvaluationAverage().isPresent());
         var avg = x.getChildQualityEvaluationAverage().get();
@@ -494,11 +494,37 @@ public class NodeTest extends AbstractIntegrationTest {
                 NodeType.SUBJECT, n -> n.name("S2").qualityEvaluation(Grade.One).child(NodeType.TOPIC, t -> t.name("T5")
                         .qualityEvaluation(Grade.Five)
                         .child(NodeType.RESOURCE, r -> r.name("R6").qualityEvaluation(Grade.Four))));
-        unrelatedNodes.updateChildQualityEvaluationAverage();
-        parentNode.updateChildQualityEvaluationAverage();
+        unrelatedNodes.updateEntireAverageTree();
+        parentNode.updateEntireAverageTree();
         assertTrue(parentNode.getChildQualityEvaluationAverage().isPresent());
         var avg = parentNode.getChildQualityEvaluationAverage().get();
         assertEquals(3.111111111111111, avg.getAverageValue());
         assertEquals(9, avg.getCount());
+    }
+
+    public void testAverageAndCount(Node node, double expectedAverage, int expectedCount) {
+        assertTrue(node.getChildQualityEvaluationAverage().isPresent());
+        var avg = node.getChildQualityEvaluationAverage().get();
+        assertEquals(expectedAverage, avg.getAverageValue());
+        assertEquals(expectedCount, avg.getCount());
+    }
+
+    @Test
+    public void qualityEvaluationPartialCalulationWorksAsExpected() {
+        var parent = builder.node(n -> n.nodeType(NodeType.SUBJECT));
+        parent.updateChildQualityEvaluationAverage(Optional.empty(), Optional.of(Grade.Five));
+        testAverageAndCount(parent, 5, 1);
+
+        parent.updateChildQualityEvaluationAverage(Optional.empty(), Optional.of(Grade.Five));
+        testAverageAndCount(parent, 5, 2);
+
+        parent.updateChildQualityEvaluationAverage(Optional.empty(), Optional.of(Grade.Three));
+        testAverageAndCount(parent, 4.333333333333333, 3);
+
+        parent.updateChildQualityEvaluationAverage(Optional.of(Grade.Three), Optional.of(Grade.Four));
+        testAverageAndCount(parent, 4.666666666666667, 3);
+
+        parent.updateChildQualityEvaluationAverage(Optional.of(Grade.Four), Optional.empty());
+        testAverageAndCount(parent, 5, 2);
     }
 }

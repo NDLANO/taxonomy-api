@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import no.ndla.taxonomy.domain.DomainEntity;
+import no.ndla.taxonomy.domain.Grade;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
@@ -59,15 +60,29 @@ public abstract class CrudController<T extends DomainEntity> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
     public void deleteEntity(@PathVariable("id") URI id) {
-        var parents = Optional.ofNullable(nodeService).map(service -> {
+        Optional<Grade> oldGrade = Optional.empty();
+        Optional<List<Node>> parents = Optional.empty();
+
+        if (nodeService != null) {
             var existingNode = nodeService.getMaybeNode(id);
-            return existingNode.map(Node::getParentNodes).orElse(List.of());
-        });
+            oldGrade = existingNode.flatMap(Node::getQualityEvaluationGrade);
+            parents = Optional.of(existingNode.map(Node::getParentNodes).orElse(List.of()));
+        }
 
         repository.delete(repository.getByPublicId(id));
         repository.flush();
 
-        parents.ifPresent(p -> nodeService.updateQualityEvaluationOf(p));
+        if (parents.isPresent()) {
+            var p = parents.get();
+            nodeService.updateQualityEvaluationOf(p, oldGrade, Optional.empty());
+        }
+    }
+
+    protected Optional<Grade> getOldGrade(T entity) {
+        if (entity instanceof Node node) {
+            return node.getQualityEvaluationGrade();
+        }
+        return Optional.empty();
     }
 
     @Operation(
@@ -78,11 +93,14 @@ public abstract class CrudController<T extends DomainEntity> {
     protected T updateEntity(URI id, UpdatableDto<T> command) {
         T entity = repository.getByPublicId(id);
         validator.validate(id, entity);
+        var oldGrade = getOldGrade(entity);
+
         command.apply(entity);
 
         if (entity instanceof Node node) {
             if (contextUpdaterService != null) contextUpdaterService.updateContexts(node);
-            if (nodeService != null) nodeService.updateQualityEvaluationOfParents(node);
+            if (nodeService != null)
+                nodeService.updateQualityEvaluationOfParents(node.getPublicId(), oldGrade, command);
         }
 
         return entity;
@@ -99,6 +117,7 @@ public abstract class CrudController<T extends DomainEntity> {
                 validator.validate(id, entity);
                 entity.setPublicId(id);
             });
+            var oldGrade = getOldGrade(entity);
 
             command.apply(entity);
             URI location = URI.create(getLocation() + "/" + entity.getPublicId());
@@ -106,7 +125,8 @@ public abstract class CrudController<T extends DomainEntity> {
 
             if (entity instanceof Node node) {
                 if (contextUpdaterService != null) contextUpdaterService.updateContexts(node);
-                if (nodeService != null) nodeService.updateQualityEvaluationOfParents(node);
+                if (nodeService != null)
+                    nodeService.updateQualityEvaluationOfParents(node.getPublicId(), oldGrade, command);
             }
 
             return ResponseEntity.created(location).build();
