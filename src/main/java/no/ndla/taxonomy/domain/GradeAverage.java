@@ -8,11 +8,10 @@
 package no.ndla.taxonomy.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Optional;
 
-public class GradeAverage implements Serializable {
+public class GradeAverage {
     public GradeAverage(double averageValue, int count) {
         this.averageValue = averageValue;
         this.count = count;

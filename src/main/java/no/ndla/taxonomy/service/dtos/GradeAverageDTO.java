@@ -8,11 +8,10 @@
 package no.ndla.taxonomy.service.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.io.Serializable;
 import java.util.Optional;
 import no.ndla.taxonomy.domain.Node;
 
-public class GradeAverageDTO implements Serializable {
+public class GradeAverageDTO {
     public GradeAverageDTO(double averageValue, int count) {
         this.averageValue = averageValue;
         this.count = count;

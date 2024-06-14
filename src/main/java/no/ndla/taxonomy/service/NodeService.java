@@ -530,9 +530,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     @Transactional
     public void updateQualityEvaluationOfParents(URI nodeId, Optional<Grade> oldGrade, UpdatableDto<?> command) {
-        logger.info("Starting async update of quality evaluation of parents for node " + nodeId);
-        var startTime = System.nanoTime();
-
         if (!(command instanceof NodePostPut nodeCommand)) {
             return;
         }
@@ -548,10 +545,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 .findFirstByPublicId(nodeId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
         updateQualityEvaluationOf(node.getParentNodes(), oldGrade, newGrade);
-        var endTime = System.nanoTime();
-        var msTime = (endTime - startTime) / 1000000;
-        logger.info(
-                "Done with async update of quality evaluation of parents for node " + nodeId + " in " + msTime + " ms");
     }
 
     @Transactional
@@ -563,17 +556,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     @Transactional
     protected void updateQualityEvaluationOfRecursive(
             List<URI> parentIds, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
-        parentIds.forEach(pid -> {
-            logger.info("Updating quality evaluation of node {}", pid);
-            nodeRepository.findFirstByPublicId(pid).ifPresent(p -> {
-                p.updateChildQualityEvaluationAverage(oldGrade, newGrade);
-                nodeRepository.save(p);
-                var parentsParents =
-                        p.getParentNodes().stream().map(Node::getPublicId).toList();
-                updateQualityEvaluationOfRecursive(parentsParents, oldGrade, newGrade);
-            });
-            logger.info("Done with updating quality evaluation of node {}", pid);
-        });
+        parentIds.forEach(pid -> nodeRepository.findFirstByPublicId(pid).ifPresent(p -> {
+            p.updateChildQualityEvaluationAverage(oldGrade, newGrade);
+            nodeRepository.save(p);
+            var parentsParents =
+                    p.getParentNodes().stream().map(Node::getPublicId).toList();
+            updateQualityEvaluationOfRecursive(parentsParents, oldGrade, newGrade);
+        }));
     }
 
     public List<TaxonomyContextDTO> getContextByPath(Optional<String> path, String language) {

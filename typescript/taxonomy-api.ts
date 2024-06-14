@@ -17,7 +17,7 @@ export interface ContextPOST {
     id: string;
 }
 
-export interface GradeAverage extends Serializable {
+export interface GradeAverage {
     averageValue: number;
     count: number;
 }
@@ -437,9 +437,6 @@ export interface SearchResult<T> {
 export interface SearchableTaxonomyResourceType {
     id: string;
     name: Record<string, string>;
-}
-
-export interface Serializable {
 }
 
 export interface SubjectPostPut {
