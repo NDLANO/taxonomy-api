@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.domain;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -17,10 +16,7 @@ public class GradeAverage {
         this.count = count;
     }
 
-    @JsonProperty
     double averageValue;
-
-    @JsonProperty
     int count;
 
     public static GradeAverage fromGrades(Collection<Optional<Grade>> grades) {
