@@ -8,11 +8,9 @@
 package no.ndla.taxonomy.domain;
 
 import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.*;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -37,6 +35,34 @@ public class UpdateOrDelete<T> {
 
     public Optional<T> getValue() {
         return value;
+    }
+
+    public abstract static class Serializer<T> extends JsonSerializer<UpdateOrDelete<T>> {
+        protected abstract void serializeInner(
+                T value, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException;
+
+        @Override
+        public boolean isEmpty(SerializerProvider provider, UpdateOrDelete<T> value) {
+            if (value == null || value.getValue().isEmpty()) {
+                return true;
+            }
+
+            return false;
+        }
+
+        @Override
+        public void serialize(
+                UpdateOrDelete<T> tUpdateOrDelete, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
+                throws IOException {
+            if (tUpdateOrDelete.isDelete()) {
+                jsonGenerator.writeNull();
+            } else {
+                var value = tUpdateOrDelete.getValue();
+                if (value.isPresent()) {
+                    serializeInner(value.get(), jsonGenerator, serializerProvider);
+                }
+            }
+        }
     }
 
     public abstract static class Deserializer<T> extends JsonDeserializer<UpdateOrDelete<T>> {

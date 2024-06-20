@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1.commands;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -61,6 +62,8 @@ public class NodePostPut implements UpdatableDto<Node> {
     @JsonProperty
     @Schema(description = "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment.")
     @JsonDeserialize(using = QualityEvaluationDTODeserializer.class)
+    @JsonSerialize(using = QualityEvaluationDTOSerializer.class)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @NullOrUndefined
     public UpdateOrDelete<QualityEvaluationDTO> qualityEvaluation = UpdateOrDelete.Default();
 
