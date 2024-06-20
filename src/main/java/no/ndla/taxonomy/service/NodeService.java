@@ -535,7 +535,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         }
 
         Optional<QualityEvaluationDTO> qe =
-                nodeCommand.qualityEvaluation == null ? Optional.empty() : nodeCommand.qualityEvaluation;
+                nodeCommand.qualityEvaluation.isDelete() ? Optional.empty() : nodeCommand.qualityEvaluation.getValue();
         var newGrade = qe.map(QualityEvaluationDTO::getGrade);
         if (oldGrade.isEmpty() && newGrade.isEmpty()) {
             return;

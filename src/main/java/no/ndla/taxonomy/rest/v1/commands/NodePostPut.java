@@ -7,8 +7,7 @@
 
 package no.ndla.taxonomy.rest.v1.commands;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.EnumType;
@@ -17,10 +16,7 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.UUID;
 import no.ndla.taxonomy.config.Constants;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.NullOrUndefined;
-import no.ndla.taxonomy.domain.QualityEvaluationDTODeserializer;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.service.UpdatableDto;
 import no.ndla.taxonomy.service.dtos.QualityEvaluationDTO;
 
@@ -66,7 +62,7 @@ public class NodePostPut implements UpdatableDto<Node> {
     @Schema(description = "The quality evaluation of the node. Consist of a score from 1 to 5 and a comment.")
     @JsonDeserialize(using = QualityEvaluationDTODeserializer.class)
     @NullOrUndefined
-    public Optional<QualityEvaluationDTO> qualityEvaluation;
+    public UpdateOrDelete<QualityEvaluationDTO> qualityEvaluation = UpdateOrDelete.Default();
 
     public Optional<String> getNodeId() {
         return nodeId;
@@ -89,11 +85,11 @@ public class NodePostPut implements UpdatableDto<Node> {
             node.setNodeType(nodeType);
         }
 
-        if (this.qualityEvaluation == null) {
+        if (this.qualityEvaluation.isDelete()) {
             node.setQualityEvaluation(null);
             node.setQualityEvaluationComment(Optional.empty());
         } else {
-            this.qualityEvaluation.ifPresent(qe -> {
+            this.qualityEvaluation.getValue().ifPresent(qe -> {
                 node.setQualityEvaluation(qe.getGrade());
                 node.setQualityEvaluationComment(qe.getNote());
             });

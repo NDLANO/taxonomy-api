@@ -7,16 +7,11 @@
 
 package no.ndla.taxonomy.domain;
 
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.io.IOException;
 import java.util.Optional;
 import no.ndla.taxonomy.service.dtos.QualityEvaluationDTO;
 
-public class QualityEvaluationDTODeserializer extends JsonDeserializer<Optional<QualityEvaluationDTO>> {
+public class QualityEvaluationDTODeserializer extends UpdateOrDelete.Deserializer<QualityEvaluationDTO> {
     private Optional<String> getNote(JsonNode node) {
         var hasNote = node.has("note");
         var noteNode = node.get("note");
@@ -27,21 +22,10 @@ public class QualityEvaluationDTODeserializer extends JsonDeserializer<Optional<
     }
 
     @Override
-    public Optional<QualityEvaluationDTO> deserialize(
-            JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException {
-        JsonNode node = jsonParser.getCodec().readTree(jsonParser);
-
-        if (node.isNull()) {
-            return Optional.of(null);
-        }
-        if (node.isMissingNode()) {
-            return Optional.empty();
-        }
-
+    protected QualityEvaluationDTO deserializeInner(JsonNode node) {
         var gradeInt = node.get("grade").asInt();
         var grade = Grade.fromInt(gradeInt);
         var note = getNote(node);
-
-        return Optional.of(new QualityEvaluationDTO(grade, note));
+        return new QualityEvaluationDTO(grade, note);
     }
 }
