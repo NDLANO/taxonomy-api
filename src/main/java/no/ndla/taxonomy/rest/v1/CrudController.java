@@ -10,10 +10,7 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Grade;
 import no.ndla.taxonomy.domain.Node;
@@ -61,7 +58,7 @@ public abstract class CrudController<T extends DomainEntity> {
     @Transactional
     public void deleteEntity(@PathVariable("id") URI id) {
         Optional<Grade> oldGrade = Optional.empty();
-        Optional<List<Node>> parents = Optional.empty();
+        Optional<Collection<Node>> parents = Optional.empty();
 
         if (nodeService != null) {
             var existingNode = nodeService.getMaybeNode(id);

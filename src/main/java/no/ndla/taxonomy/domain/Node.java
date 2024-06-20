@@ -421,7 +421,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
                 .toList();
     }
 
-    public List<Node> getParentNodes() {
+    public Collection<Node> getParentNodes() {
         return parentConnections.stream()
                 .map(NodeConnection::getParent)
                 .filter(Optional::isPresent)

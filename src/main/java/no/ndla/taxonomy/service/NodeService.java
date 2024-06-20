@@ -548,7 +548,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     @Transactional
-    public void updateQualityEvaluationOf(List<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
+    public void updateQualityEvaluationOf(
+            Collection<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
         var parentIds = parents.stream().map(DomainEntity::getPublicId).toList();
         updateQualityEvaluationOfRecursive(parentIds, oldGrade, newGrade);
     }
