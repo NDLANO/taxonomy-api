@@ -111,7 +111,8 @@ public class TestUtils {
         return updateResourceRawInput(path, rawInput, status().isNoContent());
     }
 
-    public MockHttpServletResponse updateResourceRawInput(String path, String rawInput, ResultMatcher resultMatcher) throws Exception {
+    public MockHttpServletResponse updateResourceRawInput(String path, String rawInput, ResultMatcher resultMatcher)
+            throws Exception {
         return mockMvc.perform(put(path).contentType(APPLICATION_JSON).content(rawInput))
                 .andExpect(resultMatcher)
                 .andReturn()

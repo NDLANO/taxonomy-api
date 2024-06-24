@@ -146,7 +146,6 @@ public class Node extends DomainObject implements EntityWithMetadata {
                 .map(avg -> new GradeAverage(avg, this.childQualityEvaluationCount));
     }
 
-    @Transactional
     public void updateChildQualityEvaluationAverage(Optional<Grade> previousGrade, Optional<Grade> newGrade) {
         var childAvg = getChildQualityEvaluationAverage();
         if (childAvg.isEmpty()) {

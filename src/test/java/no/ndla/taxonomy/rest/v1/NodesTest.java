@@ -996,15 +996,21 @@ public class NodesTest extends RestTest {
         var node = builder.node(NodeType.TOPIC);
         var publicId = node.getPublicId();
 
-        testUtils.updateResourceRawInput("/v1/nodes/" + publicId, "{\"nodeType\":\"TOPIC\",\"name\":\"some-name\",\"contentUri\":\"urn:article:1\",\"qualityEvaluation\": {\"grade\": 5}}");
+        testUtils.updateResourceRawInput(
+                "/v1/nodes/" + publicId,
+                "{\"nodeType\":\"TOPIC\",\"name\":\"some-name\",\"contentUri\":\"urn:article:1\",\"qualityEvaluation\": {\"grade\": 5}}");
         var found = nodeRepository.getByPublicId(publicId);
         assertEquals(found.getQualityEvaluationGrade(), Optional.of(Grade.Five));
 
-        testUtils.updateResourceRawInput("/v1/nodes/" + publicId, "{\"nodeType\":\"TOPIC\",\"name\":\"some-name\",\"contentUri\":\"urn:article:1\"}");
+        testUtils.updateResourceRawInput(
+                "/v1/nodes/" + publicId,
+                "{\"nodeType\":\"TOPIC\",\"name\":\"some-name\",\"contentUri\":\"urn:article:1\"}");
         var found2 = nodeRepository.getByPublicId(publicId);
         assertEquals(found2.getQualityEvaluationGrade(), Optional.of(Grade.Five));
 
-        testUtils.updateResourceRawInput("/v1/nodes/" + publicId, "{\"nodeType\":\"TOPIC\",\"name\":\"some-name\",\"contentUri\":\"urn:article:1\",\"qualityEvaluation\": null}");
+        testUtils.updateResourceRawInput(
+                "/v1/nodes/" + publicId,
+                "{\"nodeType\":\"TOPIC\",\"name\":\"some-name\",\"contentUri\":\"urn:article:1\",\"qualityEvaluation\": null}");
         var found3 = nodeRepository.getByPublicId(publicId);
         assertEquals(found3.getQualityEvaluationGrade(), Optional.empty());
     }
