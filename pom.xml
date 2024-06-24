@@ -272,7 +272,12 @@
                     </excludeClasses>
                     <customTypeMappings>
                         <mapping>java.net.URI:string</mapping>
+                        <mapping>no.ndla.taxonomy.domain.UpdateOrDelete[T]:T</mapping>
                     </customTypeMappings>
+                    <nullabilityDefinition>nullAndUndefinedInlineUnion</nullabilityDefinition>
+                    <nullableAnnotations>
+                        <annotation>no.ndla.taxonomy.domain.NullOrUndefined</annotation>
+                    </nullableAnnotations>
                     <mapDate>asString</mapDate>
                     <mapMap>asRecord</mapMap>
                     <noEslintDisable>true</noEslintDisable>

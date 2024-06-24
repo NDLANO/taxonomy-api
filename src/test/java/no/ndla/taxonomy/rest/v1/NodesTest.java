@@ -20,10 +20,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import no.ndla.taxonomy.TestSeeder;
-import no.ndla.taxonomy.domain.DomainEntity;
-import no.ndla.taxonomy.domain.JsonGrepCode;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
 import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -992,6 +989,30 @@ public class NodesTest extends RestTest {
         assertNotNull(id2);
         var resWithoutContentUri = nodeRepository.findByPublicId(id2);
         assertNull(resWithoutContentUri.getContentUri());
+    }
+
+    @Test
+    public void can_update_delete_and_leave_quality_evaluation() throws Exception {
+        var node = builder.node(NodeType.TOPIC);
+        var publicId = node.getPublicId();
+
+        testUtils.updateResourceRawInput(
+                "/v1/nodes/" + publicId,
+                "{\"nodeType\":\"TOPIC\",\"name\":\"some-name\",\"contentUri\":\"urn:article:1\",\"qualityEvaluation\": {\"grade\": 5}}");
+        var found = nodeRepository.getByPublicId(publicId);
+        assertEquals(found.getQualityEvaluationGrade(), Optional.of(Grade.Five));
+
+        testUtils.updateResourceRawInput(
+                "/v1/nodes/" + publicId,
+                "{\"nodeType\":\"TOPIC\",\"name\":\"some-name\",\"contentUri\":\"urn:article:1\"}");
+        var found2 = nodeRepository.getByPublicId(publicId);
+        assertEquals(found2.getQualityEvaluationGrade(), Optional.of(Grade.Five));
+
+        testUtils.updateResourceRawInput(
+                "/v1/nodes/" + publicId,
+                "{\"nodeType\":\"TOPIC\",\"name\":\"some-name\",\"contentUri\":\"urn:article:1\",\"qualityEvaluation\": null}");
+        var found3 = nodeRepository.getByPublicId(publicId);
+        assertEquals(found3.getQualityEvaluationGrade(), Optional.empty());
     }
 
     private static class ConnectionTypeCounter {
