@@ -1,4 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <springProfile name="docker">
+        <appender name="DOCKER" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+                    <appendLineSeparator>true</appendLineSeparator>
+                    <timestampFormat>yyyy-MM-dd'T'HH:mm:ss.SSS'Z'</timestampFormat>
+                    <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
+                        <prettyPrint>false</prettyPrint>
+                    </jsonFormatter>
+                </layout>
+            </encoder>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="DOCKER"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="!docker">
+        <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
 </configuration>
