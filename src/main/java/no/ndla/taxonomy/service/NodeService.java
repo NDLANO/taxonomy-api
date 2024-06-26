@@ -18,13 +18,11 @@ import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
+import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
-import no.ndla.taxonomy.service.dtos.ConnectionDTO;
-import no.ndla.taxonomy.service.dtos.NodeChildDTO;
-import no.ndla.taxonomy.service.dtos.NodeDTO;
-import no.ndla.taxonomy.service.dtos.SearchResultDTO;
+import no.ndla.taxonomy.service.dtos.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.util.PrettyUrlUtil;
 import org.slf4j.Logger;
@@ -177,10 +175,12 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 newUrlSeparator);
     }
 
+    public Optional<Node> getMaybeNode(URI publicId) {
+        return nodeRepository.findFirstByPublicId(publicId);
+    }
+
     public Node getNode(URI publicId) {
-        return nodeRepository
-                .findFirstByPublicId(publicId)
-                .orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
+        return getMaybeNode(publicId).orElseThrow(() -> new NotFoundHttpResponseException("Node was not found"));
     }
 
     public List<NodeChildDTO> getResourcesByNodeId(
@@ -430,7 +430,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     @Transactional
-    private List<Node> buildAllContexts() {
+    protected List<Node> buildAllContexts() {
         logger.info("Building contexts for all roots in schema");
         var startTime = System.currentTimeMillis();
         List<Node> rootNodes = nodeRepository.findByNodeType(
@@ -444,6 +444,44 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         rootNodes.forEach(cachedUrlUpdaterService::updateContexts);
         logger.info("Building contexts for all roots. took {} ms", System.currentTimeMillis() - startTime);
         return rootNodes;
+    }
+
+    @Transactional
+    public void updateQualityEvaluationOfParents(URI nodeId, Optional<Grade> oldGrade, UpdatableDto<?> command) {
+        if (!(command instanceof NodePostPut nodeCommand)) {
+            return;
+        }
+
+        Optional<QualityEvaluationDTO> qe =
+                nodeCommand.qualityEvaluation.isDelete() ? Optional.empty() : nodeCommand.qualityEvaluation.getValue();
+        var newGrade = qe.map(QualityEvaluationDTO::getGrade);
+        if (oldGrade.isEmpty() && newGrade.isEmpty()) {
+            return;
+        }
+
+        var node = nodeRepository
+                .findFirstByPublicId(nodeId)
+                .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
+        updateQualityEvaluationOf(node.getParentNodes(), oldGrade, newGrade);
+    }
+
+    @Transactional
+    public void updateQualityEvaluationOf(
+            Collection<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
+        var parentIds = parents.stream().map(DomainEntity::getPublicId).toList();
+        updateQualityEvaluationOfRecursive(parentIds, oldGrade, newGrade);
+    }
+
+    @Transactional
+    protected void updateQualityEvaluationOfRecursive(
+            List<URI> parentIds, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
+        parentIds.forEach(pid -> nodeRepository.findFirstByPublicId(pid).ifPresent(p -> {
+            p.updateChildQualityEvaluationAverage(oldGrade, newGrade);
+            nodeRepository.save(p);
+            var parentsParents =
+                    p.getParentNodes().stream().map(Node::getPublicId).toList();
+            updateQualityEvaluationOfRecursive(parentsParents, oldGrade, newGrade);
+        }));
     }
 
     public List<TaxonomyContextDTO> getContextByPath(Optional<String> path, String language) {

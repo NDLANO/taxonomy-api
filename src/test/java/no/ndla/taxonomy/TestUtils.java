@@ -107,6 +107,18 @@ public class TestUtils {
         return updateResource(path, command, status().isNoContent());
     }
 
+    public MockHttpServletResponse updateResourceRawInput(String path, String rawInput) throws Exception {
+        return updateResourceRawInput(path, rawInput, status().isNoContent());
+    }
+
+    public MockHttpServletResponse updateResourceRawInput(String path, String rawInput, ResultMatcher resultMatcher)
+            throws Exception {
+        return mockMvc.perform(put(path).contentType(APPLICATION_JSON).content(rawInput))
+                .andExpect(resultMatcher)
+                .andReturn()
+                .getResponse();
+    }
+
     public MockHttpServletResponse updateResource(String path, Object command, ResultMatcher resultMatcher)
             throws Exception {
         entityManager.flush();

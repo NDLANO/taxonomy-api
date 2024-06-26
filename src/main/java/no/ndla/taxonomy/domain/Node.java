@@ -18,6 +18,7 @@ import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.transaction.annotation.Transactional;
 
 @Entity
 public class Node extends DomainObject implements EntityWithMetadata {
@@ -70,6 +71,19 @@ public class Node extends DomainObject implements EntityWithMetadata {
     @Column(name = "contexts", columnDefinition = "jsonb")
     private Set<TaxonomyContext> contexts = new HashSet<>();
 
+    @Column(name = "quality_evaluation")
+    @Convert(converter = GradeConverter.class)
+    private Grade qualityEvaluation;
+
+    @Column(name = "quality_evaluation_comment")
+    private String qualityEvaluationComment;
+
+    @Column(name = "child_quality_evaluation_average")
+    private Double childQualityEvaluationAverage;
+
+    @Column(name = "child_quality_evaluation_count")
+    private int childQualityEvaluationCount;
+
     // Needed for hibernate
     public Node() {}
 
@@ -88,6 +102,8 @@ public class Node extends DomainObject implements EntityWithMetadata {
         this.nodeType = node.getNodeType();
         this.ident = node.getIdent();
         this.context = node.isContext();
+        this.qualityEvaluation = node.getQualityEvaluationGrade().orElse(null);
+        this.qualityEvaluationComment = node.getQualityEvaluationComment().orElse(null);
 
         if (keepPublicId) {
             setPublicId(node.getPublicId());
@@ -111,6 +127,87 @@ public class Node extends DomainObject implements EntityWithMetadata {
         this.resourceResourceTypes = rrts;
         setMetadata(new Metadata(node.getMetadata()));
         setName(node.getName());
+    }
+
+    public Optional<Grade> getQualityEvaluationGrade() {
+        return Optional.ofNullable(qualityEvaluation);
+    }
+
+    public Optional<String> getQualityEvaluationComment() {
+        return Optional.ofNullable(qualityEvaluationComment);
+    }
+
+    public Optional<String> getQualityEvaluationNote() {
+        return Optional.ofNullable(qualityEvaluationComment);
+    }
+
+    public Optional<GradeAverage> getChildQualityEvaluationAverage() {
+        return Optional.ofNullable(this.childQualityEvaluationAverage)
+                .map(avg -> new GradeAverage(avg, this.childQualityEvaluationCount));
+    }
+
+    public void updateChildQualityEvaluationAverage(Optional<Grade> previousGrade, Optional<Grade> newGrade) {
+        var childAvg = getChildQualityEvaluationAverage();
+        if (childAvg.isEmpty()) {
+            newGrade.ifPresent(ng -> {
+                this.childQualityEvaluationAverage = (double) ng.toInt();
+                this.childQualityEvaluationCount = 1;
+            });
+            return;
+        }
+
+        var avg = childAvg.get();
+        if (previousGrade.isEmpty() && newGrade.isEmpty()) return;
+        else if (previousGrade.isEmpty()) { // New grade is present
+            var newCount = avg.getCount() + 1;
+            var newSum = ((avg.averageValue * avg.getCount()) + newGrade.get().toInt());
+            var newAverage = newSum / newCount;
+            this.childQualityEvaluationCount = newCount;
+            this.childQualityEvaluationAverage = newAverage;
+        } else if (newGrade.isEmpty()) { // Previous grade is present
+            var newCount = avg.getCount() - 1;
+            var oldSum = (avg.averageValue * avg.getCount());
+            var newSum = oldSum - previousGrade.get().toInt();
+            var newAverage = newSum / newCount;
+            this.childQualityEvaluationCount = newCount;
+            this.childQualityEvaluationAverage = newAverage;
+        } else { // Both grades are present
+            var oldSum = avg.averageValue * avg.getCount();
+            var newSum = oldSum - previousGrade.get().toInt() + newGrade.get().toInt();
+            var newAverage = newSum / avg.getCount();
+            this.childQualityEvaluationCount = avg.getCount();
+            this.childQualityEvaluationAverage = newAverage;
+        }
+    }
+
+    @Transactional
+    public void updateEntireAverageTree() {
+        var allChildGrades = getChildGradesRecursively();
+        var gradeAverage = GradeAverage.fromGrades(allChildGrades);
+
+        if (gradeAverage.count > 0) {
+            this.childQualityEvaluationAverage = gradeAverage.averageValue;
+            this.childQualityEvaluationCount = gradeAverage.count;
+        }
+    }
+
+    public List<Optional<Grade>> getChildGradesRecursively() {
+        var children = getChildNodes();
+        return children.stream()
+                .flatMap(child -> {
+                    ArrayList<Optional<Grade>> childGrades = new ArrayList<>(child.getChildGradesRecursively());
+                    childGrades.add(child.getQualityEvaluationGrade());
+                    return childGrades.stream();
+                })
+                .toList();
+    }
+
+    public void setQualityEvaluation(Grade qualityEvaluation) {
+        this.qualityEvaluation = qualityEvaluation;
+    }
+
+    public void setQualityEvaluationComment(Optional<String> qualityEvaluationComment) {
+        this.qualityEvaluationComment = qualityEvaluationComment.orElse(null);
     }
 
     public String getPathPart() {

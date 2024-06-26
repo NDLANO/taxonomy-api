@@ -17,6 +17,11 @@ export interface ContextPOST {
     id: string;
 }
 
+export interface GradeAverage {
+    averageValue: number;
+    count: number;
+}
+
 export interface Metadata {
     customFields: Record<string, string>;
     grepCodes: string[];
@@ -32,6 +37,10 @@ export interface Node {
      */
     contextId?: string;
     contexts: TaxonomyContext[];
+    /**
+     * A number representing the average grade of all children nodes recursively.
+     */
+    gradeAverage?: GradeAverage;
     id: string;
     language: string;
     metadata: Metadata;
@@ -42,6 +51,10 @@ export interface Node {
     nodeType: NodeType;
     path: string;
     paths: string[];
+    /**
+     * Quality evaluation of the article
+     */
+    qualityEvaluation?: QualityEvaluation;
     relevanceId?: string;
     resourceTypes: ResourceTypeWithConnection[];
     supportedLanguages: string[];
@@ -148,6 +161,10 @@ export interface NodePostPut {
      * Type of node.
      */
     nodeType: NodeType;
+    /**
+     * The quality evaluation of the node. Consist of a score from 1 to 5 and a comment.
+     */
+    qualityEvaluation?: QualityEvaluation | null;
     /**
      * The node is a root node. Default is false. Only used if present.
      * @deprecated
@@ -270,6 +287,11 @@ export interface NodeSearchBody {
 
 export interface NodeWithParents extends Node {
     parents: NodeChild[];
+}
+
+export interface QualityEvaluation {
+    grade: Grade;
+    note?: string;
 }
 
 export interface Relevance {
@@ -780,6 +802,8 @@ export interface VersionPostPut {
 }
 
 export type DateAsString = string;
+
+export type Grade = 1 | 2 | 3 | 4 | 5;
 
 export type NodeType = "NODE" | "SUBJECT" | "TOPIC" | "RESOURCE" | "PROGRAMME";
 

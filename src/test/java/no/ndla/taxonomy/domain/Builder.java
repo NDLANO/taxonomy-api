@@ -347,6 +347,11 @@ public class Builder {
             return this;
         }
 
+        public NodeBuilder qualityEvaluation(Grade grade) {
+            node.setQualityEvaluation(grade);
+            return this;
+        }
+
         public NodeBuilder resourceType(ResourceType resourceType) {
             entityManager.persist(node.addResourceType(resourceType));
             return this;

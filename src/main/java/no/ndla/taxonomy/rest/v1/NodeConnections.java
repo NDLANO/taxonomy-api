@@ -27,6 +27,7 @@ import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPOST;
 import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPUT;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeConnectionService;
+import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -42,18 +43,21 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     private final NodeConnectionRepository nodeConnectionRepository;
     private final NodeConnectionService connectionService;
     private final RelevanceRepository relevanceRepository;
+    private final NodeService nodeService;
 
     public NodeConnections(
             NodeRepository nodeRepository,
             NodeConnectionRepository nodeConnectionRepository,
             NodeConnectionService connectionService,
             RelevanceRepository relevanceRepository,
-            ContextUpdaterService contextUpdaterService) {
-        super(nodeConnectionRepository, contextUpdaterService);
+            ContextUpdaterService contextUpdaterService,
+            NodeService nodeService) {
+        super(nodeConnectionRepository, contextUpdaterService, nodeService);
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
         this.relevanceRepository = relevanceRepository;
+        this.nodeService = nodeService;
     }
 
     @GetMapping

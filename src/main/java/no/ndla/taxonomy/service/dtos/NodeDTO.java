@@ -81,6 +81,14 @@ public class NodeDTO {
     @Schema(description = "The language code for which name is returned", example = "nb")
     private String language;
 
+    @JsonProperty
+    @Schema(description = "Quality evaluation of the article")
+    private Optional<QualityEvaluationDTO> qualityEvaluation = Optional.empty();
+
+    @JsonProperty
+    @Schema(description = "A number representing the average grade of all children nodes recursively.")
+    private Optional<GradeAverageDTO> gradeAverage = Optional.empty();
+
     public NodeDTO() {}
 
     public NodeDTO(
@@ -92,6 +100,8 @@ public class NodeDTO {
             Optional<Boolean> includeContexts,
             boolean filterProgrammes,
             boolean newUrlSeparator) {
+        this.qualityEvaluation = QualityEvaluationDTO.fromNode(entity);
+        this.gradeAverage = GradeAverageDTO.fromNode(entity);
         this.id = entity.getPublicId();
         this.contentUri = Optional.ofNullable(entity.getContentUri());
 

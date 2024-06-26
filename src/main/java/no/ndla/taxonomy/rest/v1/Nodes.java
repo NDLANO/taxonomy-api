@@ -52,7 +52,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             ContextUpdaterService cachedUrlUpdaterService,
             RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter treeSorter) {
-        super(nodeRepository, cachedUrlUpdaterService);
+        super(nodeRepository, cachedUrlUpdaterService, nodeService);
 
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
