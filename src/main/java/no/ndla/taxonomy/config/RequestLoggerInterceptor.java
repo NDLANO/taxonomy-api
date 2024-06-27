@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.AsyncHandlerInterceptor;
 
@@ -20,10 +21,15 @@ public class RequestLoggerInterceptor implements AsyncHandlerInterceptor {
     Logger logger = LoggerFactory.getLogger(getClass().getName());
     static final String START_TIME = "startTime";
 
+    public String getCorrelationId(HttpServletRequest request) {
+        return Optional.ofNullable(request.getHeader("X-Correlation-ID")).orElse("");
+    }
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
         request.setAttribute(START_TIME, System.currentTimeMillis());
+        MDC.put("Correlation-ID", getCorrelationId(request));
         return true;
     }
 
