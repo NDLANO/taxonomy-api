@@ -33,4 +33,17 @@ public class GradeAverage {
     public int getCount() {
         return count;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+
+        GradeAverage that = (GradeAverage) obj;
+        return Double.compare(that.averageValue, averageValue) == 0 && count == that.count;
+    }
 }

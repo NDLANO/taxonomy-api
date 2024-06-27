@@ -1015,6 +1015,32 @@ public class NodesTest extends RestTest {
         assertEquals(found3.getQualityEvaluationGrade(), Optional.empty());
     }
 
+    @Test
+    public void update_and_deletion_of_quality_evaluation_does_not_break_calculation() throws Exception {
+        var subjectId = "urn:subject:1";
+        var topicId = "urn:topic:1";
+        builder.node(NodeType.SUBJECT, n -> n.name("S1").publicId(subjectId).child(NodeType.TOPIC, c -> c.name("T1")
+                .publicId(topicId)));
+
+        { // Set quality evaluation on topic and check that average on subject is updated
+            testUtils.updateResourceRawInput("/v1/nodes/" + topicId, "{\"qualityEvaluation\": {\"grade\": 5}}");
+            var dbTopic = nodeRepository.getByPublicId(URI.create(topicId));
+            var dbSuject = nodeRepository.getByPublicId(URI.create(subjectId));
+            assertEquals(dbTopic.getQualityEvaluationGrade(), Optional.of(Grade.Five));
+            var expectedFive = Optional.of(new GradeAverage(5.0, 1));
+            assertEquals(dbSuject.getChildQualityEvaluationAverage(), expectedFive);
+        }
+
+        { // Remove quality evaluation on topic and check that average on subject is removed
+            testUtils.updateResourceRawInput("/v1/nodes/" + topicId, "{\"qualityEvaluation\": null}");
+            var dbTopic = nodeRepository.getByPublicId(URI.create(topicId));
+            var dbSuject = nodeRepository.getByPublicId(URI.create(subjectId));
+            assertEquals(dbTopic.getQualityEvaluationGrade(), Optional.empty());
+            var actual = dbSuject.getChildQualityEvaluationAverage();
+            assertEquals(actual, Optional.empty());
+        }
+    }
+
     private static class ConnectionTypeCounter {
         private final ConnectionDTO[] connections;
         private int subjectCount;

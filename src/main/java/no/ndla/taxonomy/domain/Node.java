@@ -178,7 +178,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
             var newCount = avg.getCount() - 1;
             var oldSum = (avg.averageValue * avg.getCount());
             var newSum = oldSum - previousGrade.get().toInt();
-            var newAverage = newSum / newCount;
+            var newAverage = newCount > 0 ? newSum / newCount : null;
             this.childQualityEvaluationCount = newCount;
             this.childQualityEvaluationAverage = newAverage;
         } else { // Both grades are present
@@ -190,12 +190,14 @@ public class Node extends DomainObject implements EntityWithMetadata {
         }
     }
 
-    @Transactional
     public void updateEntireAverageTree() {
         var allChildGrades = getChildGradesRecursively();
         var gradeAverage = GradeAverage.fromGrades(allChildGrades);
 
-        if (gradeAverage.count > 0) {
+        if (gradeAverage.count == 0) {
+            this.childQualityEvaluationAverage = null;
+            this.childQualityEvaluationCount = 0;
+        } else if (gradeAverage.count > 0) {
             this.childQualityEvaluationAverage = gradeAverage.averageValue;
             this.childQualityEvaluationCount = gradeAverage.count;
         }
