@@ -18,10 +18,11 @@ import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.transaction.annotation.Transactional;
 
 @Entity
 public class Node extends DomainObject implements EntityWithMetadata {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Node.class);
+
     @OneToMany(mappedBy = "child", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<NodeConnection> parentConnections = new TreeSet<>();
 
@@ -157,6 +158,15 @@ public class Node extends DomainObject implements EntityWithMetadata {
         }
 
         var avg = childAvg.get();
+
+        if (Double.isNaN(avg.averageValue)) {
+            logger.warn(
+                    "Child quality evaluation average of node '{}' is NaN. Recalculating entire tree.",
+                    this.getPublicId());
+            updateEntireAverageTree();
+            return;
+        }
+
         if (previousGrade.isEmpty() && newGrade.isEmpty()) return;
         else if (previousGrade.isEmpty()) { // New grade is present
             var newCount = avg.getCount() + 1;
@@ -168,7 +178,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
             var newCount = avg.getCount() - 1;
             var oldSum = (avg.averageValue * avg.getCount());
             var newSum = oldSum - previousGrade.get().toInt();
-            var newAverage = newSum / newCount;
+            var newAverage = newCount > 0 ? newSum / newCount : null;
             this.childQualityEvaluationCount = newCount;
             this.childQualityEvaluationAverage = newAverage;
         } else { // Both grades are present
@@ -180,12 +190,14 @@ public class Node extends DomainObject implements EntityWithMetadata {
         }
     }
 
-    @Transactional
     public void updateEntireAverageTree() {
         var allChildGrades = getChildGradesRecursively();
         var gradeAverage = GradeAverage.fromGrades(allChildGrades);
 
-        if (gradeAverage.count > 0) {
+        if (gradeAverage.count == 0) {
+            this.childQualityEvaluationAverage = null;
+            this.childQualityEvaluationCount = 0;
+        } else if (gradeAverage.count > 0) {
             this.childQualityEvaluationAverage = gradeAverage.averageValue;
             this.childQualityEvaluationCount = gradeAverage.count;
         }
