@@ -66,6 +66,11 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler({UnsupportedOperationException.class})
+    protected ResponseEntity<String> handleUnsupportedExceptions(RuntimeException exception) {
+        return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.GONE);
+    }
+
     @ExceptionHandler({
         IdFormatException.class,
         InvalidArgumentServiceException.class,

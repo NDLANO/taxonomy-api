@@ -16,7 +16,6 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.repositories.ResourceTypeRepository;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,13 +41,8 @@ class DomainEntityHelperServiceImplTest extends AbstractIntegrationTest {
     private DomainEntityHelperServiceImpl service;
 
     @BeforeEach
-    void setUp(
-            @Autowired NodeRepository nodeRepository,
-            @Autowired NodeConnectionRepository nodeConnectionRepository,
-            @Autowired ResourceTypeRepository resourceTypeRepository,
-            @Autowired ContextUpdaterService cachedUrlUpdaterService) {
-        service = new DomainEntityHelperServiceImpl(
-                nodeRepository, nodeConnectionRepository, resourceTypeRepository, cachedUrlUpdaterService);
+    void setUp(@Autowired NodeRepository nodeRepository, @Autowired NodeConnectionRepository nodeConnectionRepository) {
+        service = new DomainEntityHelperServiceImpl(nodeRepository, nodeConnectionRepository);
 
         topic1 = new Node(NodeType.TOPIC);
         topic1.setPublicId(URI.create("urn:topic:test:1"));
