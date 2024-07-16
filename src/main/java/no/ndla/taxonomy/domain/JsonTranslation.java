@@ -71,4 +71,9 @@ public class JsonTranslation implements Serializable, Translation {
         return Objects.equals(this.getLanguageCode(), that.getLanguageCode())
                 && Objects.equals(this.getName(), that.getName());
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getName(), this.getLanguageCode());
+    }
 }
