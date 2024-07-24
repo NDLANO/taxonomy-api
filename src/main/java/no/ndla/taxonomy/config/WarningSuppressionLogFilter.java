@@ -15,6 +15,7 @@ import ch.qos.logback.core.spi.FilterReply;
 public class WarningSuppressionLogFilter extends Filter<ILoggingEvent> {
 
     final String[] warningsToSuppress = {
+            // https://github.com/javamelody/javamelody/issues/1222
             "Bean 'net.bull.javamelody.JavaMelodyAutoConfiguration' of type [net.bull.javamelody.JavaMelodyAutoConfiguration$$SpringCGLIB$$0] is not eligible for getting processed by all BeanPostProcessors",
             "Bean 'monitoringSpringAdvisor' of type [net.bull.javamelody.MonitoringSpringAdvisor] is not eligible for getting processed by all BeanPostProcessors",
             "Bean 'monitoringSpringServiceAdvisor' of type [net.bull.javamelody.MonitoringSpringAdvisor] is not eligible for getting processed by all BeanPostProcessors",
@@ -22,6 +23,7 @@ public class WarningSuppressionLogFilter extends Filter<ILoggingEvent> {
             "Bean 'monitoringSpringRestControllerAdvisor' of type [net.bull.javamelody.MonitoringSpringAdvisor] is not eligible for getting processed by all BeanPostProcessors",
             "Bean 'monitoringSpringAsyncAdvisor' of type [net.bull.javamelody.MonitoringSpringAdvisor] is not eligible for getting processed by all BeanPostProcessors",
             "Bean 'monitoringSpringScheduledAdvisor' of type [net.bull.javamelody.MonitoringSpringAdvisor] is not eligible for getting processed by all BeanPostProcessors",
+            // NOTE: These are logged because we use `runAlways=true` in the liquibase configuration
             "schema \"extensions\" already exists, skipping",
             "extension \"btree_gist\" already exists, skipping",
     };
