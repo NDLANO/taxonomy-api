@@ -10,6 +10,6 @@ EXPOSE 5000
 COPY --from=0 /src/target/taxonomy-service.jar /app.jar
 COPY ./run-app.sh /run-app.sh
 
-ENV RUNNING_IN_DOCKER true
+ENV RUNNING_IN_DOCKER=true
 
 ENTRYPOINT [ "/run-app.sh" ]

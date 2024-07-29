@@ -12,6 +12,7 @@ spring:
     properties:
       hibernate:
         globally_quoted_identifiers: true
+    open-in-view: false
   liquibase:
     change-log: classpath:db-master-changelog.xml
     parameters:
