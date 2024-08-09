@@ -83,7 +83,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         return nodeService.getNodesByType(
                 Optional.of(List.of(NodeType.RESOURCE)),
-                language,
+                language.orElse(Constants.DefaultLanguage),
                 Optional.empty(),
                 contentUri,
                 Optional.empty(),
@@ -91,7 +91,9 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                 Optional.empty(),
                 metadataFilters,
                 Optional.of(false),
-                false);
+                false,
+                Optional.empty(),
+                Optional.empty());
     }
 
     @Deprecated
@@ -167,7 +169,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language) {
-        return nodeService.getNode(id, language, Optional.of(false));
+        return nodeService.getNode(id, language, Optional.of(false), Optional.empty(), Optional.empty());
     }
 
     @Deprecated

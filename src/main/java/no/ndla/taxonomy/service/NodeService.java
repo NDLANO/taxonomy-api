@@ -89,7 +89,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     public List<NodeDTO> getNodesByType(
             Optional<List<NodeType>> nodeType,
-            Optional<String> language,
+            String language,
             Optional<List<URI>> publicIds,
             Optional<URI> contentUri,
             Optional<String> contextId,
@@ -97,7 +97,9 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Optional<Boolean> isContext,
             MetadataFilters metadataFilters,
             Optional<Boolean> includeContexts,
-            boolean filterProgrammes) {
+            boolean filterProgrammes,
+            Optional<URI> rootId,
+            Optional<URI> parentId) {
         final List<NodeDTO> listToReturn = new ArrayList<>();
         List<Integer> ids;
         if (contextId.isPresent()) {
@@ -114,6 +116,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                     isContext);
         }
         final var counter = new AtomicInteger();
+        var root = rootId.map(this::getNode);
+        var parent = parentId.map(this::getNode);
         ids.stream()
                 .collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000))
                 .values()
@@ -121,10 +125,10 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                     final var nodes = nodeRepository.findByIds(idChunk);
                     var dtos = nodes.stream()
                             .map(node -> new NodeDTO(
-                                    Optional.empty(),
-                                    Optional.empty(),
+                                    root,
+                                    parent,
                                     node,
-                                    language.get(),
+                                    language,
                                     contextId,
                                     includeContexts,
                                     filterProgrammes,
@@ -162,11 +166,18 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         return topicTreeSorter.sortList(wrappedList);
     }
 
-    public NodeDTO getNode(URI publicId, Optional<String> language, Optional<Boolean> includeContexts) {
+    public NodeDTO getNode(
+            URI publicId,
+            Optional<String> language,
+            Optional<Boolean> includeContexts,
+            Optional<URI> rootId,
+            Optional<URI> parentId) {
         var node = getNode(publicId);
+        var root = rootId.map(this::getNode);
+        var parent = parentId.map(this::getNode);
         return new NodeDTO(
-                Optional.empty(),
-                Optional.empty(),
+                root,
+                parent,
                 node,
                 language.orElse(Constants.DefaultLanguage),
                 Optional.empty(),
