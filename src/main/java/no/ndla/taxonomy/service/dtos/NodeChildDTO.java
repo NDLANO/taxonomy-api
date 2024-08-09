@@ -106,11 +106,6 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
 
     public NodeChildDTO() {}
 
-    @Deprecated
-    public URI getParent() {
-        return parentId;
-    }
-
     public URI getParentId() {
         return parentId;
     }
@@ -129,11 +124,6 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
 
     @JsonProperty("isPrimary")
     public boolean isPrimary() {
-        return isPrimary;
-    }
-
-    @Deprecated
-    public boolean getPrimary() {
         return isPrimary;
     }
 

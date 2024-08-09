@@ -254,17 +254,15 @@ public class Node extends DomainObject implements EntityWithMetadata {
         if (maybeContext.isPresent()) {
             return maybeContext;
         }
-        var withParent = parent.map(p -> contexts.stream()
+        var containsParent = parent.map(p -> contexts.stream()
                         .filter(c -> c.parentIds().contains(p.getPublicId().toString()))
                         .collect(Collectors.toSet()))
                 .orElse(contexts);
-        var withRoot = root.flatMap(r -> withParent.stream()
-                .filter(c -> c.rootId().equals(r.getPublicId().toString()))
-                .findFirst());
-        if (withRoot.isPresent()) {
-            return withRoot;
-        }
-        return contexts.stream().min((context1, context2) -> {
+        var containsRoot = root.map(p -> containsParent.stream()
+                        .filter(c -> c.parentIds().contains(p.getPublicId().toString()))
+                        .collect(Collectors.toSet()))
+                .orElse(containsParent);
+        return containsRoot.stream().min((context1, context2) -> {
             final var inPath1 =
                     context1.path().contains(root.map(Node::getPathPart).orElse("other"));
             final var inPath2 =

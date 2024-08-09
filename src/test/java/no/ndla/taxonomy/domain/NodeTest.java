@@ -403,7 +403,7 @@ public class NodeTest extends AbstractIntegrationTest {
             assertEquals(context3.contextId(), context.get().contextId());
         }
         {
-            Optional<TaxonomyContext> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.of(node));
+            Optional<TaxonomyContext> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.empty());
             assertEquals(context1.contextId(), context.get().contextId());
         }
         {

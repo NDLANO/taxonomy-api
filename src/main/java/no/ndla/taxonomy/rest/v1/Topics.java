@@ -68,7 +68,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         return nodeService.getNodesByType(
                 Optional.of(List.of(NodeType.TOPIC)),
-                language,
+                language.orElse(Constants.DefaultLanguage),
                 Optional.empty(),
                 contentUri,
                 Optional.empty(),
@@ -76,7 +76,9 @@ public class Topics extends CrudControllerWithMetadata<Node> {
                 Optional.empty(),
                 metadataFilters,
                 Optional.of(false),
-                false);
+                false,
+                Optional.empty(),
+                Optional.empty());
     }
 
     @Deprecated
@@ -151,7 +153,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language) {
-        return nodeService.getNode(id, language, Optional.of(false));
+        return nodeService.getNode(id, language, Optional.empty(), Optional.empty(), Optional.of(false), false);
     }
 
     @Deprecated

@@ -68,6 +68,66 @@ public class NodesTest extends RestTest {
     }
 
     @Test
+    void can_get_single_node_with_wanted_context() throws Exception {
+        Node resource = builder.node(NodeType.RESOURCE, r -> r.name("Resource").publicId("urn:resource:1"));
+        builder.node(NodeType.SUBJECT, s1 -> s1.isContext(true)
+                .name("Subject1")
+                .publicId("urn:subject:1")
+                .child(
+                        NodeType.TOPIC,
+                        t1 -> t1.name("Topic1").publicId("urn:topic:1").resource(resource)));
+        builder.node(NodeType.SUBJECT, s2 -> s2.isContext(true)
+                .name("Subject2")
+                .publicId("urn:subject:2")
+                .child(NodeType.TOPIC, t2 -> t2.name("Topic2")
+                        .publicId("urn:topic:2")
+                        .isContext(true)
+                        .child(resource)
+                        .child(
+                                NodeType.TOPIC,
+                                t3 -> t3.name("Topic3").publicId("urn:topic:3").resource(resource))));
+
+        // Specifying rootId and/or parentId picks wanted path
+        {
+            var response = testUtils.getResource("/v1/nodes/urn:resource:1?rootId=urn:subject:1");
+            final var node = testUtils.getObject(NodeDTO.class, response);
+            assertEquals("Resource", node.getName());
+            assertEquals(5, node.getContexts().size());
+            assertEquals("/subject:1/topic:1/resource:1", node.getPath());
+        }
+        {
+            var response = testUtils.getResource("/v1/nodes/urn:resource:1?parentId=urn:topic:1");
+            final var node = testUtils.getObject(NodeDTO.class, response);
+            assertEquals("Resource", node.getName());
+            assertEquals("/subject:1/topic:1/resource:1", node.getPath());
+        }
+        {
+            var response = testUtils.getResource("/v1/nodes/urn:resource:1?rootId=urn:subject:2");
+            final var node = testUtils.getObject(NodeDTO.class, response);
+            assertEquals("Resource", node.getName());
+            assertEquals("/subject:2/topic:2/resource:1", node.getPath());
+        }
+        {
+            var response = testUtils.getResource("/v1/nodes/urn:resource:1?rootId=urn:topic:2");
+            final var node = testUtils.getObject(NodeDTO.class, response);
+            assertEquals("Resource", node.getName());
+            assertEquals("/topic:2/resource:1", node.getPath());
+        }
+        {
+            var response = testUtils.getResource("/v1/nodes/urn:resource:1?rootId=urn:topic:2&parentId=urn:topic:3");
+            final var node = testUtils.getObject(NodeDTO.class, response);
+            assertEquals("Resource", node.getName());
+            assertEquals("/topic:2/topic:3/resource:1", node.getPath());
+        }
+        {
+            var response = testUtils.getResource("/v1/nodes/urn:resource:1?rootId=urn:subject:2&parentId=urn:topic:3");
+            final var node = testUtils.getObject(NodeDTO.class, response);
+            assertEquals("Resource", node.getName());
+            assertEquals("/subject:2/topic:2/topic:3/resource:1", node.getPath());
+        }
+    }
+
+    @Test
     public void single_node_has_no_url() throws Exception {
         builder.node(NodeType.NODE, t -> t.publicId("urn:node:1"));
 
@@ -470,7 +530,7 @@ public class NodesTest extends RestTest {
             assertAllTrue(nodes, t -> t.getPath().contains("/subject:1/topic:1"));
         }
         {
-            var response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes?nodeType=RESOURCE");
+            var response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes?nodeType=RESOURCE&includeContexts=true");
             final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(1, nodes.length);
             assertEquals("Leaf", nodes[0].getName());
