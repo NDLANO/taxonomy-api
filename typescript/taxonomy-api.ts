@@ -33,6 +33,10 @@ export interface Node {
     breadcrumbs: string[];
     contentUri?: string;
     /**
+     * The context object selected when fetching node
+     */
+    context?: TaxonomyContext;
+    /**
      * An id unique for this context.
      */
     contextId?: string;
@@ -65,10 +69,6 @@ export interface Node {
 export interface NodeChild extends Node {
     connectionId: string;
     isPrimary: boolean;
-    /**
-     * @deprecated
-     */
-    parent: string;
     parentId: string;
     rank: number;
 }

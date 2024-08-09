@@ -232,10 +232,16 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<URI> rootId,
             @Parameter(description = "Id to parent id in context.") @RequestParam(value = "parentId", required = false)
                     Optional<URI> parentId,
+            @Parameter(name = "includeContexts", description = "Include all contexts")
+                    @RequestParam(value = "includeContexts", required = false, defaultValue = "true")
+                    Optional<Boolean> includeContexts,
+            @Parameter(description = "Filter out programme contexts")
+                    @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
+                    boolean filterProgrammes,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language) {
-        return nodeService.getNode(id, language, Optional.of(true), rootId, parentId);
+        return nodeService.getNode(id, language, rootId, parentId, includeContexts, filterProgrammes);
     }
 
     @PostMapping

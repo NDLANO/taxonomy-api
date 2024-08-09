@@ -169,7 +169,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language) {
-        return nodeService.getNode(id, language, Optional.of(false), Optional.empty(), Optional.empty());
+        return nodeService.getNode(id, language, Optional.empty(), Optional.empty(), Optional.of(false), false);
     }
 
     @Deprecated

@@ -169,9 +169,10 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     public NodeDTO getNode(
             URI publicId,
             Optional<String> language,
-            Optional<Boolean> includeContexts,
             Optional<URI> rootId,
-            Optional<URI> parentId) {
+            Optional<URI> parentId,
+            Optional<Boolean> includeContexts,
+            boolean filterProgrammes) {
         var node = getNode(publicId);
         var root = rootId.map(this::getNode);
         var parent = parentId.map(this::getNode);
@@ -182,7 +183,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 language.orElse(Constants.DefaultLanguage),
                 Optional.empty(),
                 includeContexts,
-                false,
+                filterProgrammes,
                 newUrlSeparator);
     }
 
