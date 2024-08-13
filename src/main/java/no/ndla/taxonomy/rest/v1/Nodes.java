@@ -110,13 +110,17 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<Boolean> includeContexts,
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
-                    boolean filterProgrammes) {
+                    boolean filterProgrammes,
+            @Parameter(description = "Id to root id in context.") @RequestParam(value = "rootId", required = false)
+                    Optional<URI> rootId,
+            @Parameter(description = "Id to parent id in context.") @RequestParam(value = "parentId", required = false)
+                    Optional<URI> parentId) {
         MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
         var isRootOrContext = isRoot.isPresent() ? isRoot : isContext;
         var defaultNodeTypes = getDefaultNodeTypes(nodeType, contentUri, contextId, isRootOrContext, metadataFilters);
         return nodeService.getNodesByType(
                 Optional.of(defaultNodeTypes),
-                language,
+                language.orElse(Constants.DefaultLanguage),
                 publicIds,
                 contentUri,
                 contextId,
@@ -124,7 +128,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                 isContext,
                 metadataFilters,
                 includeContexts,
-                filterProgrammes);
+                filterProgrammes,
+                rootId,
+                parentId);
     }
 
     @GetMapping("/search")
@@ -222,10 +228,20 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     @Transactional(readOnly = true)
     public NodeDTO getNode(
             @PathVariable("id") URI id,
+            @Parameter(description = "Id to root id in context.") @RequestParam(value = "rootId", required = false)
+                    Optional<URI> rootId,
+            @Parameter(description = "Id to parent id in context.") @RequestParam(value = "parentId", required = false)
+                    Optional<URI> parentId,
+            @Parameter(name = "includeContexts", description = "Include all contexts")
+                    @RequestParam(value = "includeContexts", required = false, defaultValue = "true")
+                    Optional<Boolean> includeContexts,
+            @Parameter(description = "Filter out programme contexts")
+                    @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
+                    boolean filterProgrammes,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language) {
-        return nodeService.getNode(id, language, Optional.of(true));
+        return nodeService.getNode(id, language, rootId, parentId, includeContexts, filterProgrammes);
     }
 
     @PostMapping
