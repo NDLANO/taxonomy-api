@@ -371,14 +371,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     public List<TaxonomyContextDTO> getSearchableByContentUri(
             Optional<URI> contentURI, boolean filterVisibles, String language) {
-        var nodes = nodeRepository.findByNodeType(
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                contentURI,
-                Optional.empty(),
-                Optional.empty());
+        var nodes = nodeRepository.findByContentUri(contentURI);
         var contextDtos = nodesToContexts(nodes, filterVisibles, language);
 
         return contextDtos.stream()
@@ -445,14 +438,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     protected List<Node> buildAllContexts() {
         logger.info("Building contexts for all roots in schema");
         var startTime = System.currentTimeMillis();
-        List<Node> rootNodes = nodeRepository.findByNodeType(
-                Optional.of(List.of(NodeType.PROGRAMME)),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.of(Boolean.TRUE));
+        List<Node> rootNodes = nodeRepository.findProgrammes();
         rootNodes.forEach(cachedUrlUpdaterService::updateContexts);
         logger.info("Building contexts for all roots. took {} ms", System.currentTimeMillis() - startTime);
         return rootNodes;
