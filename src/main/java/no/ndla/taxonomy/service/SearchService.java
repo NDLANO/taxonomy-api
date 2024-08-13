@@ -62,27 +62,6 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
             Optional<List<String>> ids,
             Optional<List<String>> contentUris,
             Optional<String> language,
-            Optional<Boolean> includeContext,
-            int pageSize,
-            int page) {
-        return search(
-                query,
-                ids,
-                contentUris,
-                language,
-                includeContext,
-                false,
-                pageSize,
-                page,
-                Optional.empty(),
-                Optional.empty());
-    }
-
-    default SearchResultDTO<DTO> search(
-            Optional<String> query,
-            Optional<List<String>> ids,
-            Optional<List<String>> contentUris,
-            Optional<String> language,
             Optional<Boolean> includeContexts,
             boolean filterProgrammes,
             int pageSize,
