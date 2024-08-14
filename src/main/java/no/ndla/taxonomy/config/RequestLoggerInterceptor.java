@@ -30,6 +30,11 @@ public class RequestLoggerInterceptor implements AsyncHandlerInterceptor {
             throws Exception {
         request.setAttribute(START_TIME, System.currentTimeMillis());
         MDC.put("Correlation-ID", getCorrelationId(request));
+        var requestPath = request.getRequestURI();
+        var queryString = Optional.ofNullable(request.getQueryString()).orElse("");
+        var pathAndQuery = requestPath + (queryString.isEmpty() ? "" : "?" + queryString);
+        MDC.put("requestPath", pathAndQuery);
+        MDC.put("method", request.getMethod());
         return true;
     }
 
@@ -38,6 +43,7 @@ public class RequestLoggerInterceptor implements AsyncHandlerInterceptor {
             throws Exception {
         long startTime = (Long) request.getAttribute(START_TIME);
         long latency = System.currentTimeMillis() - startTime;
+        MDC.put("reqLatencyMs", Long.toString(latency));
         logger.info(String.format(
                 "(%s) %s %s?%s (%s) executed in %sms with code %s",
                 Optional.ofNullable(request.getHeader("X-Correlation-ID")).orElse(""),
