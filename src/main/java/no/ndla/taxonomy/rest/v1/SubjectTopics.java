@@ -17,9 +17,9 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.RelevanceStore;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.v1.dtos.SubjectTopicDTO;
 import no.ndla.taxonomy.rest.v1.dtos.SubjectTopicPOST;
 import no.ndla.taxonomy.rest.v1.dtos.SubjectTopicPUT;
@@ -36,19 +36,16 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(path = {"/v1/subject-topics", "/v1/subject-topics/"})
 public class SubjectTopics {
     private final NodeConnectionService connectionService;
-    private final RelevanceRepository relevanceRepository;
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
 
     public SubjectTopics(
             NodeRepository nodeRepository,
             NodeConnectionRepository nodeConnectionRepository,
-            NodeConnectionService connectionService,
-            RelevanceRepository relevanceRepository) {
+            NodeConnectionService connectionService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
-        this.relevanceRepository = relevanceRepository;
     }
 
     @Deprecated
@@ -110,10 +107,10 @@ public class SubjectTopics {
                     SubjectTopicPOST command) {
         var subject = nodeRepository.getByPublicId(command.subjectid);
         var topic = nodeRepository.getByPublicId(command.topicid);
-        var relevance = relevanceRepository.getByPublicId(command.relevanceId.orElse(URI.create("urn:relevance:core")));
+        var relevance = RelevanceStore.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")));
         var rank = command.rank.orElse(null);
-        final var nodeConnection =
-                connectionService.connectParentChild(subject, topic, relevance, rank, Optional.empty());
+        final var nodeConnection = connectionService.connectParentChild(
+                subject, topic, relevance.getRelevanceEnumValue(), rank, Optional.empty());
         var location = URI.create("/subject-topics/" + nodeConnection.getPublicId());
         return ResponseEntity.created(location).build();
     }
@@ -144,7 +141,8 @@ public class SubjectTopics {
             @Parameter(name = "connection", description = "updated subject/topic connection") @RequestBody
                     SubjectTopicPUT command) {
         var nodeConnection = nodeConnectionRepository.getByPublicId(id);
-        var relevance = relevanceRepository.getByPublicId(command.relevanceId.orElse(URI.create("urn:relevance:core")));
+        var relevance = RelevanceStore.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")))
+                .getRelevanceEnumValue();
 
         connectionService.updateParentChild(nodeConnection, relevance, command.rank, Optional.empty());
     }

@@ -28,7 +28,7 @@ public class RankableConnectionUpdaterTest {
 
     @Test
     public void rank() throws URISyntaxException {
-        final var relevance = new Relevance();
+        final var relevance = Relevance.CORE;
 
         final var rankable1 = new NodeConnection("urn:1", relevance, 0);
         final var rankable2 = new NodeConnection("urn:2", relevance, 1);
@@ -111,7 +111,7 @@ public class RankableConnectionUpdaterTest {
 
     @Test
     public void rank_cascading() throws URISyntaxException {
-        final var relevance = new Relevance();
+        final var relevance = Relevance.CORE;
 
         final var rankable1 = new NodeConnection("urn:1", relevance, 0);
         final var rankable2 = new NodeConnection("urn:2", relevance, 1);

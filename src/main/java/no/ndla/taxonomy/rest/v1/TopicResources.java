@@ -18,7 +18,6 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.v1.dtos.TopicResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.TopicResourcePOST;
 import no.ndla.taxonomy.rest.v1.dtos.TopicResourcePUT;
@@ -38,17 +37,14 @@ public class TopicResources {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final NodeConnectionService connectionService;
-    private final RelevanceRepository relevanceRepository;
 
     public TopicResources(
             NodeRepository nodeRepository,
             NodeConnectionRepository nodeConnectionRepository,
-            NodeConnectionService connectionService,
-            RelevanceRepository relevanceRepository) {
+            NodeConnectionService connectionService) {
         this.nodeRepository = nodeRepository;
         this.connectionService = connectionService;
         this.nodeConnectionRepository = nodeConnectionRepository;
-        this.relevanceRepository = relevanceRepository;
     }
 
     @Deprecated
@@ -104,7 +100,8 @@ public class TopicResources {
 
         Node topic = nodeRepository.getByPublicId(command.topicid);
         Node resource = nodeRepository.getByPublicId(command.resourceId);
-        var relevance = relevanceRepository.getByPublicId(command.relevanceId.orElse(URI.create("urn:relevance:core")));
+        var relevance = RelevanceStore.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")))
+                .getRelevanceEnumValue();
 
         var rank = command.rank.orElse(null);
 
@@ -142,7 +139,8 @@ public class TopicResources {
             @Parameter(name = "connection", description = "Updated topic/resource connection") @RequestBody
                     TopicResourcePUT command) {
         var topicResource = nodeConnectionRepository.getByPublicId(id);
-        var relevance = relevanceRepository.getByPublicId(command.relevanceId.orElse(URI.create("urn:relevance:core")));
+        var relevance = RelevanceStore.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")))
+                .getRelevanceEnumValue();
 
         if (topicResource.isPrimary().orElse(false) && !command.primary.orElse(false)) {
             throw new PrimaryParentRequiredException();

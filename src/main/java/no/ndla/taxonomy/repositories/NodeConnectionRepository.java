@@ -11,6 +11,7 @@ import java.net.URI;
 import java.util.*;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.Relevance;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -22,7 +23,6 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             FROM NodeConnection nc
             JOIN FETCH nc.parent p
             JOIN FETCH nc.child c
-            LEFT JOIN FETCH nc.relevance rel
             WHERE nc.parent.publicId IN :nodeId
             AND ((:#{#nodeTypes == null} = true) OR c.nodeType in :nodeTypes)
             """)
@@ -34,15 +34,14 @@ public interface NodeConnectionRepository extends TaxonomyRepository<NodeConnect
             LEFT JOIN nc.child c
             LEFT JOIN nc.parent p
             LEFT JOIN c.resourceResourceTypes rrt
-            LEFT JOIN nc.relevance rel
             LEFT JOIN rrt.resourceType rt
             WHERE p.publicId IN :nodeIds
             AND ((:#{#resourceTypeIds == null} = true) OR rt.publicId IN :resourceTypeIds)
-            AND (:relevanceId IS NULL OR rel.publicId = :relevanceId)
+            AND (:relevance IS NULL OR nc.relevance = :relevance)
             AND c.nodeType = 'RESOURCE'
             """)
     List<NodeConnection> getResourceBy(
-            Set<URI> nodeIds, Optional<List<URI>> resourceTypeIds, Optional<URI> relevanceId);
+            Set<URI> nodeIds, Optional<List<URI>> resourceTypeIds, Optional<Relevance> relevance);
 
     @Query(
             "SELECT nc FROM NodeConnection nc JOIN FETCH nc.parent JOIN FETCH nc.child c WHERE c.nodeType = :childNodeType")

@@ -15,6 +15,11 @@ import no.ndla.taxonomy.domain.Translation;
 public class TranslationDTO implements Comparable<TranslationDTO> {
     public TranslationDTO() {}
 
+    public TranslationDTO(String language, String name) {
+        this.language = language;
+        this.name = name;
+    }
+
     public TranslationDTO(Translation translation) {
         name = translation.getName();
         language = translation.getLanguageCode();
