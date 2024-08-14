@@ -18,9 +18,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.RelevanceStore;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicDTO;
 import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicPOST;
 import no.ndla.taxonomy.rest.v1.dtos.TopicSubtopicPUT;
@@ -39,17 +39,14 @@ public class TopicSubtopics {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final NodeConnectionService connectionService;
-    private final RelevanceRepository relevanceRepository;
 
     public TopicSubtopics(
             NodeRepository nodeRepository,
             NodeConnectionRepository nodeConnectionRepository,
-            NodeConnectionService connectionService,
-            RelevanceRepository relevanceRepository) {
+            NodeConnectionService connectionService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
-        this.relevanceRepository = relevanceRepository;
     }
 
     @Deprecated
@@ -111,7 +108,8 @@ public class TopicSubtopics {
                     TopicSubtopicPOST command) {
         Node topic = nodeRepository.getByPublicId(command.topicid);
         Node subtopic = nodeRepository.getByPublicId(command.subtopicid);
-        var relevance = relevanceRepository.getByPublicId(command.relevanceId.orElse(URI.create("urn:relevance:core")));
+        var relevance = RelevanceStore.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")))
+                .getRelevanceEnumValue();
         var rank = command.rank.orElse(null);
 
         final var topicSubtopic =
@@ -147,8 +145,8 @@ public class TopicSubtopics {
             @Parameter(name = "connection", description = "The updated connection") @RequestBody
                     TopicSubtopicPUT command) {
         final var topicSubtopic = nodeConnectionRepository.getByPublicId(id);
-        var relevance = relevanceRepository.getByPublicId(command.relevanceId.orElse(URI.create("urn:relevance:core")));
-
+        var relevance = RelevanceStore.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")))
+                .getRelevanceEnumValue();
         connectionService.updateParentChild(topicSubtopic, relevance, command.rank, Optional.empty());
     }
 }

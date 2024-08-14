@@ -11,8 +11,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.util.Optional;
-import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.NodeConnection;
+import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
 
 @Schema(name = "NodeResource")
@@ -54,7 +54,7 @@ public class NodeResourceDTO {
         nodeResource.getResource().ifPresent(resource -> resourceId = resource.getPublicId());
         primary = nodeResource.isPrimary().orElse(false);
         rank = nodeResource.getRank();
-        relevanceId = nodeResource.getRelevance().map(DomainEntity::getPublicId);
+        relevanceId = nodeResource.getRelevance().map(Relevance::getPublicId);
         metadata = new MetadataDTO(nodeResource.getMetadata());
     }
 }

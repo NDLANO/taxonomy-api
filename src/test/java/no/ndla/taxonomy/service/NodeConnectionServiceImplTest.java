@@ -15,6 +15,7 @@ import java.util.Set;
 import no.ndla.taxonomy.domain.Builder;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
@@ -62,9 +63,9 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         final var topic8 = builder.node(NodeType.TOPIC);
         final var topic9 = builder.node(NodeType.TOPIC);
 
-        final var relevance = builder.core();
+        final var relevance = Relevance.CORE;
 
-        final var connection1 = service.connectParentChild(topic2, topic1, builder.core(), 1);
+        final var connection1 = service.connectParentChild(topic2, topic1, relevance, 1);
         assertNotNull(connection1);
         assertNotNull(connection1.getId());
         assertEquals(1, connection1.getRank());
@@ -164,7 +165,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         final var resource6 = builder.node(NodeType.RESOURCE);
         final var resource7 = builder.node(NodeType.RESOURCE);
 
-        final var relevance = builder.relevance();
+        final var relevance = Relevance.CORE;
 
         final var connection1 = service.connectParentChild(topic1, resource1, relevance, null, Optional.of(true));
         assertNotNull(connection1);
@@ -248,7 +249,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         final var subtopic1 = builder.node(NodeType.TOPIC);
         final var subtopic2 = builder.node(NodeType.TOPIC);
         final var subtopic3 = builder.node(NodeType.TOPIC);
-        final var relevance = builder.core();
+        final var relevance = Relevance.CORE;
 
         final var topic1subtopic1 = NodeConnection.create(topic1, subtopic1, relevance);
         final var topic1subtopic2 = NodeConnection.create(topic1, subtopic2, relevance);
@@ -307,7 +308,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         final var resource2 = builder.node(NodeType.RESOURCE);
         final var resource3 = builder.node(NodeType.RESOURCE);
 
-        final var relevance = builder.relevance();
+        final var relevance = Relevance.CORE;
 
         final var topic1resource1 = NodeConnection.create(topic1, resource1, relevance, true);
         final var topic1resource2 = NodeConnection.create(topic1, resource2, relevance, true);
@@ -357,7 +358,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
 
         final var subTopic1 = builder.node(NodeType.TOPIC);
 
-        final var relevance = builder.relevance();
+        final var relevance = Relevance.CORE;
 
         final var connection1 = NodeConnection.create(rootTopic1, subTopic1, relevance);
 
@@ -378,7 +379,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         final var resource2 = builder.node(NodeType.RESOURCE);
         final var resource3 = builder.node(NodeType.RESOURCE);
 
-        final var relevance = builder.relevance();
+        final var relevance = Relevance.CORE;
 
         final var topic1resource1 = NodeConnection.create(topic1, resource1, relevance, true);
         final var topic1resource2 = NodeConnection.create(topic1, resource2, relevance, true);
@@ -439,7 +440,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
 
         final var resource1 = builder.node(NodeType.RESOURCE);
 
-        final var relevance = builder.relevance();
+        final var relevance = Relevance.CORE;
 
         NodeConnection.create(subject1, topic1, relevance);
 

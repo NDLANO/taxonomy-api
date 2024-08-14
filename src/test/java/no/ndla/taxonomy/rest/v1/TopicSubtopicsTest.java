@@ -71,7 +71,7 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void can_delete_topic_subtopic() throws Exception {
-        URI id = save(NodeConnection.create(newTopic(), newTopic(), builder.core()))
+        URI id = save(NodeConnection.create(newTopic(), newTopic(), Relevance.CORE))
                 .getPublicId();
         testUtils.deleteResource("/v1/topic-subtopics/" + id);
         assertNull(nodeRepository.findByPublicId(id));
@@ -104,7 +104,7 @@ public class TopicSubtopicsTest extends RestTest {
         URI topicid, subtopicid, id;
         Node electricity = newTopic().name("electricity");
         Node alternatingCurrent = newTopic().name("alternating current");
-        NodeConnection topicSubtopic = save(NodeConnection.create(electricity, alternatingCurrent, builder.core()));
+        NodeConnection topicSubtopic = save(NodeConnection.create(electricity, alternatingCurrent, Relevance.CORE));
 
         topicid = electricity.getPublicId();
         subtopicid = alternatingCurrent.getPublicId();
@@ -135,7 +135,7 @@ public class TopicSubtopicsTest extends RestTest {
                 NodeType.SUBJECT, s -> s.isContext(true).name("Subject").publicId("urn:subject:1"));
         Node electricity =
                 builder.node(NodeType.TOPIC, s -> s.name("Electricity").publicId("urn:topic:1"));
-        save(NodeConnection.create(subject, electricity, builder.core()));
+        save(NodeConnection.create(subject, electricity, Relevance.CORE));
         Node alternatingCurrents =
                 builder.node(NodeType.TOPIC, t -> t.name("Alternating currents").publicId("urn:topic:11"));
         Node wiring = builder.node(NodeType.TOPIC, t -> t.name("Wiring").publicId("urn:topic:12"));
@@ -167,7 +167,7 @@ public class TopicSubtopicsTest extends RestTest {
 
     @Test
     public void can_update_subtopic_rank() throws Exception {
-        URI id = save(NodeConnection.create(newTopic(), newTopic(), builder.core()))
+        URI id = save(NodeConnection.create(newTopic(), newTopic(), Relevance.CORE))
                 .getPublicId();
 
         testUtils.updateResource("/v1/topic-subtopics/" + id, new TopicSubtopicPUT() {
@@ -288,7 +288,7 @@ public class TopicSubtopicsTest extends RestTest {
         Node parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Node sub = newTopic();
-            NodeConnection topicSubtopic = NodeConnection.create(parent, sub, builder.core());
+            NodeConnection topicSubtopic = NodeConnection.create(parent, sub, Relevance.CORE);
             topicSubtopic.setRank(i);
             connections.add(topicSubtopic);
             save(topicSubtopic);
@@ -301,7 +301,7 @@ public class TopicSubtopicsTest extends RestTest {
         Node parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Node sub = newTopic();
-            NodeConnection topicSubtopic = NodeConnection.create(parent, sub, builder.core());
+            NodeConnection topicSubtopic = NodeConnection.create(parent, sub, Relevance.CORE);
             if (i <= 5) {
                 topicSubtopic.setRank(i);
             } else {

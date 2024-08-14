@@ -16,9 +16,9 @@ import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
+import no.ndla.taxonomy.rest.v1.dtos.RelevanceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
@@ -45,7 +45,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
     private final ContextUpdaterService cachedUrlUpdaterService;
-    private final RelevanceRepository relevanceRepository;
 
     @Value(value = "${new.url.separator:false}")
     private boolean newUrlSeparator;
@@ -58,8 +57,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter topicTreeSorter,
             TreeSorter treeSorter,
-            ContextUpdaterService cachedUrlUpdaterService,
-            RelevanceRepository relevanceRepository) {
+            ContextUpdaterService cachedUrlUpdaterService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -68,7 +66,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.treeSorter = treeSorter;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
-        this.relevanceRepository = relevanceRepository;
     }
 
     @Transactional
@@ -253,8 +250,9 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             boolean filterProgrammes) {
         final List<NodeConnection> nodeResources;
 
+        var relevanceEnum = relevanceId.flatMap(RelevanceStore::getRelevance).map(RelevanceDTO::getRelevanceEnumValue);
         var nodeResourcesStream =
-                nodeConnectionRepository.getResourceBy(nodeIds, resourceTypeIds, relevanceId).stream();
+                nodeConnectionRepository.getResourceBy(nodeIds, resourceTypeIds, relevanceEnum).stream();
         if (relevanceId.isPresent()) {
             final var isRequestingCore = "urn:relevance:core".equals(relevanceId.toString());
             nodeResourcesStream = nodeResourcesStream.filter(nodeResource -> {
@@ -388,11 +386,11 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                     .collect(Collectors.toSet())
                             : node.getContexts();
                     return contexts.stream().map(context -> {
-                        Optional<Relevance> relevance = relevanceRepository.findFirstByPublicIdIncludingTranslations(
-                                URI.create(context.relevanceId()));
+                        Optional<RelevanceDTO> relevance =
+                                RelevanceStore.getRelevance(URI.create(context.relevanceId()));
                         var relevanceName = new LanguageField<String>();
                         if (relevance.isPresent()) {
-                            relevanceName = LanguageField.fromNode(relevance.get());
+                            relevanceName = LanguageField.fromRelevance(relevance.get());
                         }
                         var resourceTypes = node.getResourceTypes().stream()
                                 .map(SearchableTaxonomyResourceType::new)

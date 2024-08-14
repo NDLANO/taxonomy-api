@@ -44,9 +44,6 @@ public abstract class RestTest extends AbstractIntegrationTest {
     ResourceTypeRepository resourceTypeRepository;
 
     @Autowired
-    RelevanceRepository relevanceRepository;
-
-    @Autowired
     NodeRepository nodeRepository;
 
     @Autowired

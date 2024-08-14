@@ -32,7 +32,6 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType rt
             LEFT JOIN FETCH n.parentConnections pc
-            LEFT JOIN FETCH pc.relevance
             WHERE n.id in :ids
             """)
     List<Node> findByIds(Collection<Integer> ids);
@@ -80,7 +79,6 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType
             LEFT JOIN FETCH n.parentConnections pc
-            LEFT JOIN FETCH pc.relevance
             WHERE n.nodeType = "PROGRAMME"
             AND n.context = true
             """)
@@ -92,7 +90,6 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType
             LEFT JOIN FETCH n.parentConnections pc
-            LEFT JOIN FETCH pc.relevance
             WHERE n.contentUri = :contentUri
             """)
     List<Node> findByContentUri(Optional<URI> contentUri);
