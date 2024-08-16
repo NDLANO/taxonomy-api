@@ -11,7 +11,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import java.net.URI;
 import java.util.List;
-import no.ndla.taxonomy.domain.RelevanceStore;
+import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.rest.v1.dtos.RelevanceDTO;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +29,10 @@ public class Relevances {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = "")
                     String language) {
-        return RelevanceStore.getAllRelevances(language);
+        return Relevance.getRelevances().stream()
+                .map(RelevanceDTO::new)
+                .map(dto -> dto.getTranslated(language))
+                .toList();
     }
 
     @GetMapping("/{id}")
@@ -41,6 +45,9 @@ public class Relevances {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = "")
                     String language) {
-        return RelevanceStore.unsafeGetRelevance(id, language);
+        return Relevance.getRelevance(id)
+                .map(RelevanceDTO::new)
+                .map(dto -> dto.getTranslated(language))
+                .orElseThrow(() -> new NotFoundException("Relevance", id));
     }
 }

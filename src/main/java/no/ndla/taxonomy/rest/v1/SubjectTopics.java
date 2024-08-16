@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.RelevanceStore;
+import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.dtos.SubjectTopicDTO;
@@ -107,10 +107,10 @@ public class SubjectTopics {
                     SubjectTopicPOST command) {
         var subject = nodeRepository.getByPublicId(command.subjectid);
         var topic = nodeRepository.getByPublicId(command.topicid);
-        var relevance = RelevanceStore.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")));
+        var relevance = Relevance.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")));
         var rank = command.rank.orElse(null);
-        final var nodeConnection = connectionService.connectParentChild(
-                subject, topic, relevance.getRelevanceEnumValue(), rank, Optional.empty());
+        final var nodeConnection =
+                connectionService.connectParentChild(subject, topic, relevance, rank, Optional.empty());
         var location = URI.create("/subject-topics/" + nodeConnection.getPublicId());
         return ResponseEntity.created(location).build();
     }
@@ -141,8 +141,7 @@ public class SubjectTopics {
             @Parameter(name = "connection", description = "updated subject/topic connection") @RequestBody
                     SubjectTopicPUT command) {
         var nodeConnection = nodeConnectionRepository.getByPublicId(id);
-        var relevance = RelevanceStore.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")))
-                .getRelevanceEnumValue();
+        var relevance = Relevance.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")));
 
         connectionService.updateParentChild(nodeConnection, relevance, command.rank, Optional.empty());
     }

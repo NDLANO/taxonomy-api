@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.RelevanceStore;
+import no.ndla.taxonomy.domain.Relevance;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -112,8 +112,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
                     NodeConnectionPOST command) {
         Node parent = nodeRepository.getByPublicId(command.parentId);
         Node child = nodeRepository.getByPublicId(command.childId);
-        var relevance = RelevanceStore.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")))
-                .getRelevanceEnumValue();
+        var relevance = Relevance.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")));
         var rank = command.rank.orElse(null);
         final var nodeConnection =
                 connectionService.connectParentChild(parent, child, relevance, rank, command.primary);
@@ -147,8 +146,7 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
             @Parameter(name = "connection", description = "The updated connection") @RequestBody
                     NodeConnectionPUT command) {
         final var connection = nodeConnectionRepository.getByPublicId(id);
-        var relevance = RelevanceStore.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")))
-                .getRelevanceEnumValue();
+        var relevance = Relevance.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")));
         if (connection.isPrimary().orElse(false) && !command.primary.orElse(false)) {
             throw new PrimaryParentRequiredException();
         }

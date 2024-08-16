@@ -100,8 +100,7 @@ public class TopicResources {
 
         Node topic = nodeRepository.getByPublicId(command.topicid);
         Node resource = nodeRepository.getByPublicId(command.resourceId);
-        var relevance = RelevanceStore.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")))
-                .getRelevanceEnumValue();
+        var relevance = Relevance.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")));
 
         var rank = command.rank.orElse(null);
 
@@ -139,8 +138,7 @@ public class TopicResources {
             @Parameter(name = "connection", description = "Updated topic/resource connection") @RequestBody
                     TopicResourcePUT command) {
         var topicResource = nodeConnectionRepository.getByPublicId(id);
-        var relevance = RelevanceStore.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")))
-                .getRelevanceEnumValue();
+        var relevance = Relevance.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")));
 
         if (topicResource.isPrimary().orElse(false) && !command.primary.orElse(false)) {
             throw new PrimaryParentRequiredException();

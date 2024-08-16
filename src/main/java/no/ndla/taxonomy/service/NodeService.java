@@ -250,7 +250,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             boolean filterProgrammes) {
         final List<NodeConnection> nodeResources;
 
-        var relevanceEnum = relevanceId.flatMap(RelevanceStore::getRelevance).map(RelevanceDTO::getRelevanceEnumValue);
+        var relevanceEnum = relevanceId.flatMap(Relevance::getRelevance);
         var nodeResourcesStream =
                 nodeConnectionRepository.getResourceBy(nodeIds, resourceTypeIds, relevanceEnum).stream();
         if (relevanceId.isPresent()) {
@@ -386,11 +386,10 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                     .collect(Collectors.toSet())
                             : node.getContexts();
                     return contexts.stream().map(context -> {
-                        Optional<RelevanceDTO> relevance =
-                                RelevanceStore.getRelevance(URI.create(context.relevanceId()));
+                        Optional<Relevance> relevance = Relevance.getRelevance(URI.create(context.relevanceId()));
                         var relevanceName = new LanguageField<String>();
                         if (relevance.isPresent()) {
-                            relevanceName = LanguageField.fromRelevance(relevance.get());
+                            relevanceName = LanguageField.fromRelevance(new RelevanceDTO(relevance.get()));
                         }
                         var resourceTypes = node.getResourceTypes().stream()
                                 .map(SearchableTaxonomyResourceType::new)

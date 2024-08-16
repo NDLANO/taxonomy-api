@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.rest.v1.dtos;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
@@ -16,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.Translation;
 import no.ndla.taxonomy.service.dtos.TranslationDTO;
 
 @Schema(name = "Relevance")
@@ -36,20 +36,25 @@ public class RelevanceDTO {
     @Schema(description = "List of language codes supported by translations")
     private Set<String> supportedLanguages;
 
-    @JsonIgnore
-    private final Relevance relevanceEnumValue;
-
-    public Relevance getRelevanceEnumValue() {
-        return relevanceEnumValue;
+    public RelevanceDTO(Relevance relevance) {
+        this.id = relevance.getPublicId();
+        this.name = relevance.getTranslations().stream()
+                .filter(t -> Objects.equals(t.getLanguageCode(), "nb"))
+                .findFirst()
+                .map(Translation::getName)
+                .orElseThrow();
+        this.translations =
+                relevance.getTranslations().stream().map(TranslationDTO::new).collect(Collectors.toSet());
+        this.supportedLanguages =
+                this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
     }
 
-    public RelevanceDTO(URI publicId, String name, Set<TranslationDTO> translations, Relevance relevance) {
+    public RelevanceDTO(URI publicId, String name, Set<TranslationDTO> translations) {
         this.id = publicId;
         this.name = name;
         this.translations = translations;
         this.supportedLanguages =
                 this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
-        this.relevanceEnumValue = relevance;
     }
 
     public RelevanceDTO getTranslated(String language) {
@@ -59,7 +64,7 @@ public class RelevanceDTO {
                 .map(t -> t.name)
                 .orElse(this.name);
 
-        return new RelevanceDTO(this.id, translatedName, this.translations, this.relevanceEnumValue);
+        return new RelevanceDTO(this.id, translatedName, this.translations);
     }
 
     public Set<TranslationDTO> getTranslations() {
