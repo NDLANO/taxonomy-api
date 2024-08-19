@@ -307,21 +307,7 @@ export interface Relevance {
      * List of language codes supported by translations
      */
     supportedLanguages: string[];
-    /**
-     * All translations of this relevance
-     */
     translations: Translation[];
-}
-
-export interface RelevancePUT {
-    /**
-     * If specified, set the id to this value. Must start with urn:relevance: and be a valid URI. If ommitted, an id will be assigned automatically. Ignored on update
-     */
-    id: string;
-    /**
-     * The name of the relevance
-     */
-    name: string;
 }
 
 export interface ResolvedOldUrl {
