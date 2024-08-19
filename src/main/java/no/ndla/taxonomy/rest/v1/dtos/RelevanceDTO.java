@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.URI;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.Relevance;
@@ -35,20 +36,44 @@ public class RelevanceDTO {
     @Schema(description = "List of language codes supported by translations")
     private Set<String> supportedLanguages;
 
-    public RelevanceDTO() {}
-
-    public RelevanceDTO(Relevance relevance, String language) {
+    public RelevanceDTO(Relevance relevance) {
         this.id = relevance.getPublicId();
-
-        var translations = relevance.getTranslations();
-        this.translations = translations.stream().map(TranslationDTO::new).collect(Collectors.toSet());
-        this.supportedLanguages =
-                this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
-
-        this.name = translations.stream()
-                .filter(t -> Objects.equals(t.getLanguageCode(), language))
+        this.name = relevance.getTranslations().stream()
+                .filter(t -> Objects.equals(t.getLanguageCode(), "nb"))
                 .findFirst()
                 .map(Translation::getName)
-                .orElse(relevance.getName());
+                .orElseThrow();
+        this.translations =
+                relevance.getTranslations().stream().map(TranslationDTO::new).collect(Collectors.toSet());
+        this.supportedLanguages =
+                this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
+    }
+
+    public RelevanceDTO(URI publicId, String name, Set<TranslationDTO> translations) {
+        this.id = publicId;
+        this.name = name;
+        this.translations = translations;
+        this.supportedLanguages =
+                this.translations.stream().map(t -> t.language).collect(Collectors.toSet());
+    }
+
+    public RelevanceDTO getTranslated(String language) {
+        var translatedName = translations.stream()
+                .filter(t -> Objects.equals(t.language, language))
+                .findFirst()
+                .map(t -> t.name)
+                .orElse(this.name);
+
+        return new RelevanceDTO(this.id, translatedName, this.translations);
+    }
+
+    public Set<TranslationDTO> getTranslations() {
+        return translations;
+    }
+
+    public Optional<TranslationDTO> getTranslation(String language) {
+        return translations.stream()
+                .filter(t -> Objects.equals(t.language, language))
+                .findFirst();
     }
 }

@@ -93,7 +93,7 @@ public class NodeConnectionsTest extends RestTest {
 
     @Test
     public void can_delete_parent_child() throws Exception {
-        URI id = save(NodeConnection.create(newTopic(), newTopic(), builder.core()))
+        URI id = save(NodeConnection.create(newTopic(), newTopic(), Relevance.CORE))
                 .getPublicId();
         testUtils.deleteResource("/v1/node-connections/" + id);
         assertNull(nodeRepository.findByPublicId(id));
@@ -161,7 +161,7 @@ public class NodeConnectionsTest extends RestTest {
         URI topicid, subtopicid, id;
         Node electricity = newTopic().name("electricity");
         Node alternatingCurrent = newTopic().name("alternating current");
-        NodeConnection topicSubtopic = save(NodeConnection.create(electricity, alternatingCurrent, builder.core()));
+        NodeConnection topicSubtopic = save(NodeConnection.create(electricity, alternatingCurrent, Relevance.CORE));
 
         topicid = electricity.getPublicId();
         subtopicid = alternatingCurrent.getPublicId();
@@ -191,7 +191,7 @@ public class NodeConnectionsTest extends RestTest {
                 NodeType.SUBJECT, s -> s.isContext(true).name("Subject").publicId("urn:subject:1"));
         Node electricity =
                 builder.node(NodeType.TOPIC, s -> s.name("Electricity").publicId("urn:topic:1"));
-        save(NodeConnection.create(subject, electricity, builder.core()));
+        save(NodeConnection.create(subject, electricity, Relevance.CORE));
         Node alternatingCurrents =
                 builder.node(NodeType.TOPIC, t -> t.name("Alternating currents").publicId("urn:topic:11"));
         Node wiring = builder.node(NodeType.TOPIC, t -> t.name("Wiring").publicId("urn:topic:12"));
@@ -223,7 +223,7 @@ public class NodeConnectionsTest extends RestTest {
 
     @Test
     public void can_update_child_rank() throws Exception {
-        URI id = save(NodeConnection.create(newTopic(), newTopic(), builder.core()))
+        URI id = save(NodeConnection.create(newTopic(), newTopic(), Relevance.CORE))
                 .getPublicId();
         testUtils.updateResource("/v1/node-connections/" + id, new NodeConnectionPUT() {
             {
@@ -331,7 +331,7 @@ public class NodeConnectionsTest extends RestTest {
 
     @Test
     public void update_metadata_for_connection() throws Exception {
-        URI id = save(NodeConnection.create(newTopic(), newTopic(), builder.core()))
+        URI id = save(NodeConnection.create(newTopic(), newTopic(), Relevance.CORE))
                 .getPublicId();
         testUtils.updateResource(
                 "/v1/node-connections/" + id + "/metadata",
@@ -367,7 +367,7 @@ public class NodeConnectionsTest extends RestTest {
         Node parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Node sub = newTopic();
-            NodeConnection nodeConnection = NodeConnection.create(parent, sub, builder.core());
+            NodeConnection nodeConnection = NodeConnection.create(parent, sub, Relevance.CORE);
             nodeConnection.setRank(i);
             connections.add(nodeConnection);
             save(nodeConnection);
@@ -380,7 +380,7 @@ public class NodeConnectionsTest extends RestTest {
         Node parent = newTopic();
         for (int i = 1; i < 11; i++) {
             Node sub = newTopic();
-            NodeConnection nodeConnection = NodeConnection.create(parent, sub, builder.core());
+            NodeConnection nodeConnection = NodeConnection.create(parent, sub, Relevance.CORE);
             if (i <= 5) {
                 nodeConnection.setRank(i);
             } else {

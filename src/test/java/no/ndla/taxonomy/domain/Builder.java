@@ -25,7 +25,6 @@ public class Builder {
     private final Map<String, VersionBuilder> versions = new HashMap<>();
     private final Map<String, ResourceTypeBuilder> resourceTypes = new HashMap<>();
     private final Map<String, NodeBuilder> nodes = new HashMap<>();
-    private final Map<String, RelevanceBuilder> relevances = new HashMap<>();
     private final Map<String, UrlMappingBuilder> cachedUrlOldRigBuilders = new HashMap<>();
     private int keyCounter = 0;
 
@@ -73,41 +72,12 @@ public class Builder {
         return resourceType.resourceType;
     }
 
-    public Relevance relevance(Consumer<RelevanceBuilder> consumer) {
-        return relevance(null, consumer);
-    }
-
-    public Relevance relevance() {
-        return relevance(null, null);
-    }
-
-    public Relevance relevance(String key, Consumer<RelevanceBuilder> consumer) {
-        RelevanceBuilder relevance = getRelevanceBuilder(key);
-        if (null != consumer) consumer.accept(relevance);
-        return relevance.relevance;
-    }
-
-    public Relevance core() {
-        return entityManager
-                .createQuery("select r from Relevance r where r.publicId = :publicId", Relevance.class)
-                .setParameter("publicId", URI.create("urn:relevance:core"))
-                .getSingleResult();
-    }
-
     private VersionBuilder getVersionBuilder(String key) {
         if (key == null) {
             key = createKey();
         }
         versions.putIfAbsent(key, new VersionBuilder());
         return versions.get(key);
-    }
-
-    private RelevanceBuilder getRelevanceBuilder(String key) {
-        if (key == null) {
-            key = createKey();
-        }
-        relevances.putIfAbsent(key, new RelevanceBuilder());
-        return relevances.get(key);
     }
 
     private NodeBuilder getNodeBuilder(String key, NodeType nodeType) {
@@ -205,40 +175,6 @@ public class Builder {
 
         public JsonTranslationBuilder name(String name) {
             translation.setName(name);
-            return this;
-        }
-    }
-
-    @Transactional
-    public class RelevanceBuilder {
-        private final Relevance relevance;
-
-        public RelevanceBuilder() {
-            relevance = new Relevance();
-            entityManager.persist(relevance);
-        }
-
-        public RelevanceBuilder name(String name) {
-            relevance.setName(name);
-            return this;
-        }
-
-        public RelevanceBuilder publicId(String id) {
-            relevance.setPublicId(URI.create(id));
-            return this;
-        }
-
-        public RelevanceBuilder translation(String name, String languageCode) {
-            relevance.addTranslation(name, languageCode);
-            entityManager.persist(relevance);
-            return this;
-        }
-
-        public RelevanceBuilder translation(String languageCode, Consumer<JsonTranslationBuilder> consumer) {
-            var nodeTranslation = relevance.addTranslation("", languageCode);
-            var builder = new JsonTranslationBuilder(nodeTranslation);
-            consumer.accept(builder);
-            entityManager.persist(relevance);
             return this;
         }
     }
@@ -435,7 +371,7 @@ public class Builder {
         }
 
         public NodeBuilder child(Node child) {
-            entityManager.persist(NodeConnection.create(node, child, core()));
+            entityManager.persist(NodeConnection.create(node, child, Relevance.CORE));
 
             contextUpdaterService.updateContexts(child);
 
@@ -478,7 +414,7 @@ public class Builder {
         }
 
         public NodeBuilder resource(Node resource, boolean primary) {
-            entityManager.persist(NodeConnection.create(node, resource, core(), primary));
+            entityManager.persist(NodeConnection.create(node, resource, Relevance.CORE, primary));
 
             contextUpdaterService.updateContexts(resource);
 

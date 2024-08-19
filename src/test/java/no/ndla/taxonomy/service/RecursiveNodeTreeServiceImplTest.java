@@ -29,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 class RecursiveNodeTreeServiceImplTest extends AbstractIntegrationTest {
     private NodeRepository nodeRepository;
     private NodeConnectionRepository nodeConnectionRepository;
-    private RelevanceRepository relevanceRepository;
 
     private RecursiveNodeTreeService service;
     private Relevance core;
@@ -38,11 +37,9 @@ class RecursiveNodeTreeServiceImplTest extends AbstractIntegrationTest {
     void setUp(
             @Autowired NodeConnectionRepository nodeConnectionRepository,
             @Autowired NodeRepository nodeRepository,
-            @Autowired RelevanceRepository relevanceRepository,
             @Autowired TestSeeder testSeeder) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
-        this.relevanceRepository = relevanceRepository;
 
         nodeRepository.deleteAllAndFlush();
 

@@ -28,6 +28,22 @@ public class LanguageField<V> extends HashMap<String, V> {
         return languageField;
     }
 
+    public static LanguageField<String> fromRelevance(Relevance relevance) {
+        var languageField = new LanguageField<String>();
+        var defaultName = relevance.getTranslations().stream()
+                .filter(t -> Objects.equals(t.getLanguageCode(), "nb"))
+                .findFirst()
+                .map(Translation::getName)
+                .orElse("");
+        languageField.put(Constants.DefaultLanguage, defaultName);
+
+        relevance.getTranslations().forEach(nt -> {
+            languageField.put(nt.getLanguageCode(), nt.getName());
+        });
+
+        return languageField;
+    }
+
     public static LanguageField<List<String>> listFromNode(DomainObject node) {
         var breadcrumbs = new LanguageField<List<String>>();
         var langs = node.getTranslations().stream()

@@ -1407,7 +1407,7 @@
         <customChange class="no.ndla.taxonomy.migration.CleanUpDuplicateResourcesSqlChange"/>
     </changeSet>
 
-    <changeSet id="20230823 Add schema and extension" author="Gunnar Velle" runAlways="true" >
+    <changeSet id="20230823 Add schema and extension" author="Gunnar Velle" runAlways="true">
         <!-- Need a separate extensions schema to make cloning schemas possible! -->
         <sql>CREATE SCHEMA IF NOT EXISTS extensions</sql>
         <sql>CREATE EXTENSION IF NOT EXISTS "btree_gist" schema extensions</sql>
@@ -1538,4 +1538,24 @@
         <dropTable tableName="changelog"/>
     </changeSet>
 
+    <changeSet id="20240814 Move relevances to column" author="Jonas Natten">
+        <addColumn tableName="node_connection">
+            <column name="relevance" type="text" />
+        </addColumn>
+        <sql>
+            UPDATE node_connection n
+            SET relevance='CORE'
+            WHERE n.relevance_id = 1;
+
+            UPDATE node_connection n
+            SET relevance='SUPPLEMENTARY'
+            WHERE n.relevance_id = 2;
+        </sql>
+        <createIndex tableName="node_connection" indexName="node_connection_relevance">
+            <column name="relevance"/>
+        </createIndex>
+        <dropColumn tableName="node_connection">
+            <column name="relevance_id" />
+        </dropColumn>
+    </changeSet>
 </databaseChangeLog>

@@ -14,13 +14,10 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import no.ndla.taxonomy.domain.DomainEntity;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.domain.exceptions.PrimaryParentRequiredException;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePOST;
 import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePUT;
@@ -42,20 +39,17 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final NodeConnectionService connectionService;
-    private final RelevanceRepository relevanceRepository;
 
     public NodeResources(
             NodeRepository nodeRepository,
             NodeConnectionService connectionService,
             NodeConnectionRepository nodeConnectionRepository,
-            RelevanceRepository relevanceRepository,
             ContextUpdaterService cachedUrlUpdaterService,
             NodeService nodeService) {
         super(nodeConnectionRepository, cachedUrlUpdaterService, nodeService);
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.nodeRepository = nodeRepository;
         this.connectionService = connectionService;
-        this.relevanceRepository = relevanceRepository;
     }
 
     @GetMapping
@@ -107,7 +101,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
                     NodeResourcePOST command) {
         var parent = nodeRepository.getByPublicId(command.nodeId);
         var child = nodeRepository.getByPublicId(command.resourceId);
-        var relevance = relevanceRepository.getByPublicId(command.relevanceId.orElse(URI.create("urn:relevance:core")));
+        var relevance = Relevance.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")));
         var rank = command.rank.orElse(null);
 
         final var nodeConnection =
@@ -142,7 +136,7 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
             @Parameter(name = "connection", description = "Updated node/resource connection") @RequestBody
                     NodeResourcePUT command) {
         final var nodeResource = nodeConnectionRepository.getByPublicId(id);
-        var relevance = relevanceRepository.getByPublicId(command.relevanceId.orElse(URI.create("urn:relevance:core")));
+        var relevance = Relevance.unsafeGetRelevance(command.relevanceId.orElse(URI.create("urn:relevance:core")));
         if (nodeResource.isPrimary().orElse(false) && !command.primary.orElse(false)) {
             throw new PrimaryParentRequiredException();
         }

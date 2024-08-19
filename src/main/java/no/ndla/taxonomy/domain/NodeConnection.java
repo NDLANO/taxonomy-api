@@ -33,8 +33,8 @@ public class NodeConnection extends DomainEntity
     @Column(name = "is_primary")
     private boolean isPrimary;
 
-    @ManyToOne
-    @JoinColumn(name = "relevance_id")
+    @Enumerated(EnumType.STRING)
+    @Column
     private Relevance relevance;
 
     @Column
@@ -56,7 +56,7 @@ public class NodeConnection extends DomainEntity
     @UpdateTimestamp
     private Instant updated_at;
 
-    private NodeConnection() {
+    public NodeConnection() {
         setPublicId(URI.create("urn:node-connection:" + UUID.randomUUID()));
     }
 

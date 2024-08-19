@@ -160,7 +160,16 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         var tiger = builder.node(n -> n.nodeType(NodeType.TOPIC).name("Tiger"));
 
         var result = nodeService.search(
-                Optional.of("tiger"), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), 10, 1);
+                Optional.of("tiger"),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                false,
+                10,
+                1,
+                Optional.empty(),
+                Optional.empty());
 
         assertEquals(result.getResults().get(0).getId(), tiger.getPublicId());
         assertEquals(result.getTotalCount(), 1);
@@ -178,14 +187,32 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         idList.add("urn:topic:2");
 
         var result = nodeService.search(
-                Optional.empty(), Optional.of(idList), Optional.empty(), Optional.empty(), Optional.empty(), 10, 1);
+                Optional.empty(),
+                Optional.of(idList),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                false,
+                10,
+                1,
+                Optional.empty(),
+                Optional.empty());
 
         assertEquals(result.getResults().get(0).getId(), new URI("urn:topic:1"));
         assertEquals(result.getResults().get(1).getId(), new URI("urn:topic:2"));
         assertEquals(result.getTotalCount(), 2);
 
         var result2 = nodeService.search(
-                Optional.of("Ape"), Optional.of(idList), Optional.empty(), Optional.empty(), Optional.empty(), 10, 1);
+                Optional.of("Ape"),
+                Optional.of(idList),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                false,
+                10,
+                1,
+                Optional.empty(),
+                Optional.empty());
 
         assertEquals(result2.getResults().get(0).getId(), new URI("urn:topic:1"));
         assertEquals(result2.getTotalCount(), 1);
@@ -208,7 +235,16 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         idList.add("urn:article:1");
 
         var result = nodeService.search(
-                Optional.empty(), Optional.empty(), Optional.of(idList), Optional.empty(), Optional.empty(), 10, 1);
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(idList),
+                Optional.empty(),
+                Optional.empty(),
+                false,
+                10,
+                1,
+                Optional.empty(),
+                Optional.empty());
 
         assertAnyTrue(result.getResults(), res -> res.getId().equals(URI.create("urn:topic:1")));
         assertAnyTrue(result.getResults(), res -> res.getId().equals(URI.create("urn:topic:4")));

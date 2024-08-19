@@ -16,7 +16,6 @@ import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
-import no.ndla.taxonomy.repositories.RelevanceRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
@@ -45,7 +44,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
     private final ContextUpdaterService cachedUrlUpdaterService;
-    private final RelevanceRepository relevanceRepository;
 
     @Value(value = "${new.url.separator:false}")
     private boolean newUrlSeparator;
@@ -58,8 +56,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter topicTreeSorter,
             TreeSorter treeSorter,
-            ContextUpdaterService cachedUrlUpdaterService,
-            RelevanceRepository relevanceRepository) {
+            ContextUpdaterService cachedUrlUpdaterService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -68,7 +65,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.treeSorter = treeSorter;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
-        this.relevanceRepository = relevanceRepository;
     }
 
     @Transactional
@@ -253,8 +249,9 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             boolean filterProgrammes) {
         final List<NodeConnection> nodeResources;
 
+        var relevanceEnum = relevanceId.flatMap(Relevance::getRelevance);
         var nodeResourcesStream =
-                nodeConnectionRepository.getResourceBy(nodeIds, resourceTypeIds, relevanceId).stream();
+                nodeConnectionRepository.getResourceBy(nodeIds, resourceTypeIds, relevanceEnum).stream();
         if (relevanceId.isPresent()) {
             final var isRequestingCore = "urn:relevance:core".equals(relevanceId.toString());
             nodeResourcesStream = nodeResourcesStream.filter(nodeResource -> {
@@ -371,14 +368,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     public List<TaxonomyContextDTO> getSearchableByContentUri(
             Optional<URI> contentURI, boolean filterVisibles, String language) {
-        var nodes = nodeRepository.findByNodeType(
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                contentURI,
-                Optional.empty(),
-                Optional.empty());
+        var nodes = nodeRepository.findByContentUri(contentURI);
         var contextDtos = nodesToContexts(nodes, filterVisibles, language);
 
         return contextDtos.stream()
@@ -395,11 +385,10 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                     .collect(Collectors.toSet())
                             : node.getContexts();
                     return contexts.stream().map(context -> {
-                        Optional<Relevance> relevance = relevanceRepository.findFirstByPublicIdIncludingTranslations(
-                                URI.create(context.relevanceId()));
+                        Optional<Relevance> relevance = Relevance.getRelevance(URI.create(context.relevanceId()));
                         var relevanceName = new LanguageField<String>();
                         if (relevance.isPresent()) {
-                            relevanceName = LanguageField.fromNode(relevance.get());
+                            relevanceName = LanguageField.fromRelevance(relevance.get());
                         }
                         var resourceTypes = node.getResourceTypes().stream()
                                 .map(SearchableTaxonomyResourceType::new)
@@ -445,14 +434,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     protected List<Node> buildAllContexts() {
         logger.info("Building contexts for all roots in schema");
         var startTime = System.currentTimeMillis();
-        List<Node> rootNodes = nodeRepository.findByNodeType(
-                Optional.of(List.of(NodeType.PROGRAMME)),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.of(Boolean.TRUE));
+        List<Node> rootNodes = nodeRepository.findProgrammes();
         rootNodes.forEach(cachedUrlUpdaterService::updateContexts);
         logger.info("Building contexts for all roots. took {} ms", System.currentTimeMillis() - startTime);
         return rootNodes;

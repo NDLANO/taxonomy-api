@@ -116,7 +116,7 @@ public class NodeDTO {
 
         Optional<Relevance> relevance =
                 entity.getParentConnections().stream().findFirst().flatMap(NodeConnection::getRelevance);
-        var relevanceName = relevance.map(LanguageField::fromNode).orElse(new LanguageField<String>());
+        var relevanceName = relevance.map(LanguageField::fromRelevance).orElse(new LanguageField<>());
         this.relevanceId = relevance.map(Relevance::getPublicId);
 
         this.translations = entity.getTranslations().stream()

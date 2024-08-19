@@ -1,48 +1,63 @@
 /*
  * Part of NDLA taxonomy-api
- * Copyright (C) 2021 NDLA
+ * Copyright (C) 2024 NDLA
  *
  * See LICENSE
  */
 
 package no.ndla.taxonomy.domain;
 
-import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
 import java.net.URI;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
-import org.hibernate.annotations.Type;
+import java.util.Optional;
+import java.util.Set;
+import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 
-@Entity
-public class Relevance extends DomainObject {
+public enum Relevance {
+    CORE(
+            "urn:relevance:core",
+            Set.of(
+                    new JsonTranslation("Kjernestoff", "nb"),
+                    new JsonTranslation("Kjernestoff", "nn"),
+                    new JsonTranslation("Core content", "en"),
+                    new JsonTranslation("Guovddášávnnas", "se"))),
+    SUPPLEMENTARY(
+            "urn:relevance:supplementary",
+            Set.of(
+                    new JsonTranslation("Tilleggsstoff", "nb"),
+                    new JsonTranslation("Tilleggstoff", "nn"),
+                    new JsonTranslation("Supplementary content", "en"),
+                    new JsonTranslation("Lassiávnnas", "se")));
 
-    @Type(JsonBinaryType.class)
-    @Column(name = "translations", columnDefinition = "jsonb")
-    protected List<JsonTranslation> translations = new ArrayList<>();
+    final URI id;
+    final Set<Translation> translations;
 
-    public Relevance() {
-        setPublicId(URI.create("urn:relevance:" + UUID.randomUUID()));
+    public URI getPublicId() {
+        return id;
     }
 
-    public JsonTranslation addTranslation(String languageCode) {
-        var relevanceTranslation = getTranslation(languageCode).orElse(null);
-        if (relevanceTranslation != null) return relevanceTranslation;
-
-        relevanceTranslation = new JsonTranslation(languageCode);
-        translations.add(relevanceTranslation);
-        return relevanceTranslation;
+    public Set<Translation> getTranslations() {
+        return translations;
     }
 
-    @Override
-    public List<JsonTranslation> getTranslations() {
-        return this.translations;
-    }
-
-    @Override
-    public void setTranslations(List<JsonTranslation> translations) {
+    Relevance(String uri, Set<Translation> translations) {
+        this.id = URI.create(uri);
         this.translations = translations;
+    }
+
+    public static Optional<Relevance> getRelevance(URI id) {
+        var relevances = Relevance.values();
+        return Arrays.stream(relevances)
+                .filter(relevance -> relevance.id.equals(id))
+                .findFirst();
+    }
+
+    public static Relevance unsafeGetRelevance(URI id) {
+        return getRelevance(id).orElseThrow(() -> new NotFoundException("Relevance", id));
+    }
+
+    public static List<Relevance> getRelevances() {
+        return Arrays.asList(Relevance.values());
     }
 }
