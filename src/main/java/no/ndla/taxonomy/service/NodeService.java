@@ -18,7 +18,6 @@ import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
-import no.ndla.taxonomy.rest.v1.dtos.RelevanceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
@@ -389,7 +388,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                         Optional<Relevance> relevance = Relevance.getRelevance(URI.create(context.relevanceId()));
                         var relevanceName = new LanguageField<String>();
                         if (relevance.isPresent()) {
-                            relevanceName = LanguageField.fromRelevance(new RelevanceDTO(relevance.get()));
+                            relevanceName = LanguageField.fromRelevance(relevance.get());
                         }
                         var resourceTypes = node.getResourceTypes().stream()
                                 .map(SearchableTaxonomyResourceType::new)

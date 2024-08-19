@@ -15,7 +15,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.*;
-import no.ndla.taxonomy.rest.v1.dtos.RelevanceDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
@@ -117,9 +116,8 @@ public class NodeDTO {
 
         Optional<Relevance> relevance =
                 entity.getParentConnections().stream().findFirst().flatMap(NodeConnection::getRelevance);
-        var relevanceDTO = relevance.map(RelevanceDTO::new);
-        var relevanceName = relevanceDTO.map(LanguageField::fromRelevance).orElse(new LanguageField<String>());
-        this.relevanceId = relevanceDTO.map(r -> r.id);
+        var relevanceName = relevance.map(LanguageField::fromRelevance).orElse(new LanguageField<>());
+        this.relevanceId = relevance.map(Relevance::getPublicId);
 
         this.translations = entity.getTranslations().stream()
                 .map(TranslationDTO::new)

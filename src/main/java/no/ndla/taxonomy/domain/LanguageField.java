@@ -11,7 +11,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import no.ndla.taxonomy.config.Constants;
-import no.ndla.taxonomy.rest.v1.dtos.RelevanceDTO;
 import org.apache.commons.lang3.SerializationUtils;
 
 public class LanguageField<V> extends HashMap<String, V> {
@@ -29,13 +28,17 @@ public class LanguageField<V> extends HashMap<String, V> {
         return languageField;
     }
 
-    public static LanguageField<String> fromRelevance(RelevanceDTO relevance) {
+    public static LanguageField<String> fromRelevance(Relevance relevance) {
         var languageField = new LanguageField<String>();
-        var defaultName = Optional.ofNullable(relevance.name).orElse("");
+        var defaultName = relevance.getTranslations().stream()
+                .filter(t -> Objects.equals(t.getLanguageCode(), "nb"))
+                .findFirst()
+                .map(Translation::getName)
+                .orElse("");
         languageField.put(Constants.DefaultLanguage, defaultName);
 
         relevance.getTranslations().forEach(nt -> {
-            languageField.put(nt.language, nt.name);
+            languageField.put(nt.getLanguageCode(), nt.getName());
         });
 
         return languageField;
