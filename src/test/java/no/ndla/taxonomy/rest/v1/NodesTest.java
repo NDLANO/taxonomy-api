@@ -1079,25 +1079,32 @@ public class NodesTest extends RestTest {
     public void update_and_deletion_of_quality_evaluation_does_not_break_calculation() throws Exception {
         var subjectId = "urn:subject:1";
         var topicId = "urn:topic:1";
+        var resourceId = "urn:resource:1";
         builder.node(NodeType.SUBJECT, n -> n.name("S1").publicId(subjectId).child(NodeType.TOPIC, c -> c.name("T1")
-                .publicId(topicId)));
+                .publicId(topicId)
+                .child(NodeType.RESOURCE, rc -> rc.name("R1").publicId(resourceId))));
 
-        { // Set quality evaluation on topic and check that average on subject is updated
-            testUtils.updateResourceRawInput("/v1/nodes/" + topicId, "{\"qualityEvaluation\": {\"grade\": 5}}");
+        { // Set quality evaluation on resource and check that average on subject & topic is updated
+            testUtils.updateResourceRawInput("/v1/nodes/" + resourceId, "{\"qualityEvaluation\": {\"grade\": 5}}");
+            var dbResource = nodeRepository.getByPublicId(URI.create(resourceId));
             var dbTopic = nodeRepository.getByPublicId(URI.create(topicId));
             var dbSuject = nodeRepository.getByPublicId(URI.create(subjectId));
-            assertEquals(dbTopic.getQualityEvaluationGrade(), Optional.of(Grade.Five));
+            assertEquals(dbResource.getQualityEvaluationGrade(), Optional.of(Grade.Five));
             var expectedFive = Optional.of(new GradeAverage(5.0, 1));
             assertEquals(dbSuject.getChildQualityEvaluationAverage(), expectedFive);
+            assertEquals(dbTopic.getChildQualityEvaluationAverage(), expectedFive);
         }
 
-        { // Remove quality evaluation on topic and check that average on subject is removed
-            testUtils.updateResourceRawInput("/v1/nodes/" + topicId, "{\"qualityEvaluation\": null}");
+        { // Remove quality evaluation on resource and check that average on subject & topic is removed
+            testUtils.updateResourceRawInput("/v1/nodes/" + resourceId, "{\"qualityEvaluation\": null}");
+            var dbResource = nodeRepository.getByPublicId(URI.create(resourceId));
             var dbTopic = nodeRepository.getByPublicId(URI.create(topicId));
             var dbSuject = nodeRepository.getByPublicId(URI.create(subjectId));
-            assertEquals(dbTopic.getQualityEvaluationGrade(), Optional.empty());
-            var actual = dbSuject.getChildQualityEvaluationAverage();
-            assertEquals(actual, Optional.empty());
+            assertEquals(dbResource.getQualityEvaluationGrade(), Optional.empty());
+            var actualSubject = dbSuject.getChildQualityEvaluationAverage();
+            assertEquals(actualSubject, Optional.empty());
+            var actualTopic = dbTopic.getChildQualityEvaluationAverage();
+            assertEquals(actualTopic, Optional.empty());
         }
     }
 
