@@ -208,7 +208,9 @@ public class Node extends DomainObject implements EntityWithMetadata {
         return children.stream()
                 .flatMap(child -> {
                     ArrayList<Optional<Grade>> childGrades = new ArrayList<>(child.getChildGradesRecursively());
-                    childGrades.add(child.getQualityEvaluationGrade());
+                    if (child.nodeType == NodeType.RESOURCE) {
+                        childGrades.add(child.getQualityEvaluationGrade());
+                    }
                     return childGrades.stream();
                 })
                 .toList();

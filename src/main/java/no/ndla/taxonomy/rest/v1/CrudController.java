@@ -97,7 +97,7 @@ public abstract class CrudController<T extends DomainEntity> {
         if (entity instanceof Node node) {
             if (contextUpdaterService != null) contextUpdaterService.updateContexts(node);
             if (nodeService != null)
-                nodeService.updateQualityEvaluationOfParents(node.getPublicId(), oldGrade, command);
+                nodeService.updateQualityEvaluationOfParents(node.getPublicId(), node.getNodeType(), oldGrade, command);
         }
 
         return entity;
@@ -123,7 +123,8 @@ public abstract class CrudController<T extends DomainEntity> {
             if (entity instanceof Node node) {
                 if (contextUpdaterService != null) contextUpdaterService.updateContexts(node);
                 if (nodeService != null)
-                    nodeService.updateQualityEvaluationOfParents(node.getPublicId(), oldGrade, command);
+                    nodeService.updateQualityEvaluationOfParents(
+                            node.getPublicId(), node.getNodeType(), oldGrade, command);
             }
 
             return ResponseEntity.created(location).build();

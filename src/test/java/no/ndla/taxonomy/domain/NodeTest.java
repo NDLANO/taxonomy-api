@@ -435,17 +435,17 @@ public class NodeTest extends AbstractIntegrationTest {
                     .publicId("urn:subject:1")
                     .qualityEvaluation(Grade.Five)
                     .child(
-                            NodeType.TOPIC,
-                            t -> t.nodeType(NodeType.TOPIC).name("T1").qualityEvaluation(Grade.Four))
+                            NodeType.RESOURCE,
+                            t -> t.nodeType(NodeType.RESOURCE).name("R1").qualityEvaluation(Grade.Four))
                     .child(
-                            NodeType.TOPIC,
-                            t -> t.nodeType(NodeType.TOPIC).name("T2").qualityEvaluation(Grade.Three))
+                            NodeType.RESOURCE,
+                            t -> t.nodeType(NodeType.RESOURCE).name("R2").qualityEvaluation(Grade.Three))
                     .child(
-                            NodeType.TOPIC,
-                            t -> t.nodeType(NodeType.TOPIC).name("T3").qualityEvaluation(Grade.Five))
+                            NodeType.RESOURCE,
+                            t -> t.nodeType(NodeType.RESOURCE).name("R3").qualityEvaluation(Grade.Five))
                     .child(
-                            NodeType.TOPIC,
-                            t -> t.nodeType(NodeType.TOPIC).name("T4").qualityEvaluation(Grade.Three));
+                            NodeType.RESOURCE,
+                            t -> t.nodeType(NodeType.RESOURCE).name("R4").qualityEvaluation(Grade.Three));
         });
 
         x.updateEntireAverageTree();
@@ -498,8 +498,8 @@ public class NodeTest extends AbstractIntegrationTest {
         parentNode.updateEntireAverageTree();
         assertTrue(parentNode.getChildQualityEvaluationAverage().isPresent());
         var avg = parentNode.getChildQualityEvaluationAverage().get();
-        assertEquals(3.111111111111111, avg.getAverageValue());
-        assertEquals(9, avg.getCount());
+        assertEquals(2.6, avg.getAverageValue());
+        assertEquals(5, avg.getCount());
     }
 
     public void testAverageAndCount(Node node, double expectedAverage, int expectedCount) {

@@ -441,7 +441,12 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     @Transactional
-    public void updateQualityEvaluationOfParents(URI nodeId, Optional<Grade> oldGrade, UpdatableDto<?> command) {
+    public void updateQualityEvaluationOfParents(
+            URI nodeId, NodeType nodeType, Optional<Grade> oldGrade, UpdatableDto<?> command) {
+        if (nodeType != NodeType.RESOURCE) {
+            return;
+        }
+
         if (!(command instanceof NodePostPut nodeCommand)) {
             return;
         }
