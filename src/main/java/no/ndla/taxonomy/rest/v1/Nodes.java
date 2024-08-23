@@ -106,7 +106,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter by context id. Beware: handled separately from other parameters!")
                     @RequestParam(value = "contextId", required = false)
                     Optional<String> contextId,
-            @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false)
+            @Parameter(description = "Include all contexts")
+                    @RequestParam(value = "includeContexts", required = false, defaultValue = "true")
                     Optional<Boolean> includeContexts,
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
@@ -153,7 +154,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<List<String>> contentUris,
             @Parameter(description = "Filter by nodeType") @RequestParam(value = "nodeType", required = false)
                     Optional<List<NodeType>> nodeType,
-            @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false)
+            @Parameter(description = "Include all contexts")
+                    @RequestParam(value = "includeContexts", required = false, defaultValue = "true")
                     Optional<Boolean> includeContexts,
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
@@ -198,6 +200,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize,
             @Parameter(name = "includeContexts", description = "Include all contexts")
+                    @RequestParam(value = "includeContexts", required = false, defaultValue = "true")
                     Optional<Boolean> includeContexts,
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
@@ -309,7 +312,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language,
-            @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false)
+            @Parameter(description = "Include all contexts")
+                    @RequestParam(value = "includeContexts", required = false, defaultValue = "true")
                     Optional<Boolean> includeContexts,
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
@@ -387,7 +391,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language,
-            @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false)
+            @Parameter(description = "Include all contexts")
+                    @RequestParam(value = "includeContexts", required = false, defaultValue = "true")
                     Optional<Boolean> includeContexts,
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")

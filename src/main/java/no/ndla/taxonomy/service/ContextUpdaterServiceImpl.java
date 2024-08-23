@@ -9,9 +9,7 @@ package no.ndla.taxonomy.service;
 
 import java.util.*;
 import no.ndla.taxonomy.config.Constants;
-import no.ndla.taxonomy.domain.LanguageField;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.TaxonomyContext;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.util.HashUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -32,6 +30,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
         if (node.isContext()) {
             var contextId = HashUtil.semiHash(node.getPublicId());
             returnedContexts.add(new TaxonomyContext(
+                    LanguageField.fromNode(node),
                     node.getPublicId().toString(),
                     LanguageField.fromNode(node),
                     node.getPathPart(),
@@ -42,10 +41,11 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                     node.isVisible(),
                     activeContext,
                     true,
-                    "urn:relevance:core",
+                    Relevance.CORE.getPublicId().toString(),
                     contextId,
                     0,
-                    ""));
+                    "",
+                    new ArrayList<>()));
         }
 
         // Get all parent connections, append this entity publicId to the end of the actual path and add
@@ -62,7 +62,15 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                 parentContextIds.add(parentContext.contextId());
                                 var contextId =
                                         HashUtil.mediumHash(parentContext.contextId() + parentConnection.getPublicId());
+                                var parents = parentContext.parents();
+                                parents.add(new TaxonomyCrumb(
+                                        parent.getPublicId().toString(),
+                                        parent.getNodeType(),
+                                        parentContext.contextId(),
+                                        parentContext.name(),
+                                        parentContext.path()));
                                 return new TaxonomyContext(
+                                        LanguageField.fromNode(node),
                                         parentContext.rootId(),
                                         parentContext.rootName(),
                                         parentContext.path() + node.getPathPart(),
@@ -77,10 +85,13 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                                 .getRelevance()
                                                 .flatMap(relevance -> Optional.of(
                                                         relevance.getPublicId().toString()))
-                                                .orElse("urn:relevance:core"),
+                                                .orElse(Relevance.CORE
+                                                        .getPublicId()
+                                                        .toString()),
                                         contextId,
                                         parentConnection.getRank(),
-                                        parentConnection.getPublicId().toString());
+                                        parentConnection.getPublicId().toString(),
+                                        parents);
                             })
                             .forEach(returnedContexts::add);
                 }));

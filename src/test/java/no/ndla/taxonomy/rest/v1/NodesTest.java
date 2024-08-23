@@ -93,24 +93,28 @@ public class NodesTest extends RestTest {
             final var node = testUtils.getObject(NodeDTO.class, response);
             assertEquals("Resource", node.getName());
             assertEquals(5, node.getContexts().size());
+            assertEquals(2, node.getContext().get().parents().size());
             assertEquals("/subject:1/topic:1/resource:1", node.getPath());
         }
         {
             var response = testUtils.getResource("/v1/nodes/urn:resource:1?parentId=urn:topic:1");
             final var node = testUtils.getObject(NodeDTO.class, response);
             assertEquals("Resource", node.getName());
+            assertEquals(2, node.getContext().get().parents().size());
             assertEquals("/subject:1/topic:1/resource:1", node.getPath());
         }
         {
             var response = testUtils.getResource("/v1/nodes/urn:resource:1?rootId=urn:subject:2");
             final var node = testUtils.getObject(NodeDTO.class, response);
             assertEquals("Resource", node.getName());
+            assertEquals(2, node.getContext().get().parents().size());
             assertEquals("/subject:2/topic:2/resource:1", node.getPath());
         }
         {
             var response = testUtils.getResource("/v1/nodes/urn:resource:1?rootId=urn:topic:2");
             final var node = testUtils.getObject(NodeDTO.class, response);
             assertEquals("Resource", node.getName());
+            assertEquals(1, node.getContext().get().parents().size());
             assertEquals("/topic:2/resource:1", node.getPath());
         }
         {
@@ -123,6 +127,7 @@ public class NodesTest extends RestTest {
             var response = testUtils.getResource("/v1/nodes/urn:resource:1?rootId=urn:subject:2&parentId=urn:topic:3");
             final var node = testUtils.getObject(NodeDTO.class, response);
             assertEquals("Resource", node.getName());
+            assertEquals(3, node.getContext().get().parents().size());
             assertEquals("/subject:2/topic:2/topic:3/resource:1", node.getPath());
         }
     }
@@ -530,7 +535,7 @@ public class NodesTest extends RestTest {
             assertAllTrue(nodes, t -> t.getPath().contains("/subject:1/topic:1"));
         }
         {
-            var response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes?nodeType=RESOURCE&includeContexts=true");
+            var response = testUtils.getResource("/v1/nodes/urn:topic:1/nodes?nodeType=RESOURCE");
             final var nodes = testUtils.getObject(NodeChildDTO[].class, response);
             assertEquals(1, nodes.length);
             assertEquals("Leaf", nodes[0].getName());

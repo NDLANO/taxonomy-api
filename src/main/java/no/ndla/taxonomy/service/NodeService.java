@@ -21,6 +21,7 @@ import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
+import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyCrumbDTO;
 import no.ndla.taxonomy.service.dtos.*;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.util.PrettyUrlUtil;
@@ -30,6 +31,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional(readOnly = true)
@@ -394,6 +396,23 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                 .map(SearchableTaxonomyResourceType::new)
                                 .toList();
                         var breadcrumbs = context.breadcrumbs();
+                        var parents = context.parents().stream()
+                                .map(parent -> {
+                                    var url = PrettyUrlUtil.createPrettyUrl(
+                                            Optional.ofNullable(context.rootName()),
+                                            parent.name(),
+                                            language,
+                                            parent.contextId(),
+                                            parent.nodeType(),
+                                            newUrlSeparator);
+                                    return new TaxonomyCrumbDTO(
+                                            URI.create(parent.id()),
+                                            parent.contextId(),
+                                            LanguageFieldDTO.fromLanguageField(parent.name()),
+                                            parent.path(),
+                                            url.orElse(parent.path()));
+                                })
+                                .toList();
                         return new TaxonomyContextDTO(
                                 node.getPublicId(),
                                 URI.create(context.rootId()),
@@ -418,7 +437,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                         language,
                                         context.contextId(),
                                         node.getNodeType(),
-                                        newUrlSeparator));
+                                        newUrlSeparator),
+                                parents);
                     });
                 })
                 .toList();
@@ -435,9 +455,14 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         logger.info("Building contexts for all roots in schema");
         var startTime = System.currentTimeMillis();
         List<Node> rootNodes = nodeRepository.findProgrammes();
-        rootNodes.forEach(cachedUrlUpdaterService::updateContexts);
+        rootNodes.forEach(this::buildContexts);
         logger.info("Building contexts for all roots. took {} ms", System.currentTimeMillis() - startTime);
         return rootNodes;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    private void buildContexts(Node entity) {
+        cachedUrlUpdaterService.updateContexts(entity);
     }
 
     @Transactional
