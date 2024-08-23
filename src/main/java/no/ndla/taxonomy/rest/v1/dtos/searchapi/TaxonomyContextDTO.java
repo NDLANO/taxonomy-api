@@ -17,7 +17,8 @@ import java.util.Optional;
 // spotless:off
 @Schema(name = "TaxonomyContext")
 public record TaxonomyContextDTO(
-        @JsonProperty @Schema(description = "The publicId of the node connected via content-uri") URI publicId,
+        @JsonProperty @Schema(description = "The publicId of the node connected via content-uri") URI id,
+        @JsonProperty @Schema(description = "The publicId of the node connected via content-uri", deprecated = true) URI publicId,
         @JsonProperty @Schema(description = "The publicId of the root parent of the context") URI rootId,
         @JsonProperty @Schema(description = "The name of the root parent of the context") LanguageFieldDTO<String> root,
         @JsonProperty @Schema(description = "The context path") String path,

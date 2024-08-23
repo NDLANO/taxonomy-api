@@ -32,9 +32,6 @@ export interface Node {
     baseName: string;
     breadcrumbs: string[];
     contentUri?: string;
-    /**
-     * The context object selected when fetching node
-     */
     context?: TaxonomyContext;
     /**
      * An id unique for this context.
@@ -523,6 +520,10 @@ export interface TaxonomyContext {
      */
     contextType?: string;
     /**
+     * The publicId of the node connected via content-uri
+     */
+    id: string;
+    /**
      * Whether the parent connection is marked as active
      */
     isActive: boolean;
@@ -542,6 +543,10 @@ export interface TaxonomyContext {
      * List of all parent ids
      */
     parentIds: string[];
+    /**
+     * List of all parents to this context
+     */
+    parents: TaxonomyCrumb[];
     /**
      * The context path
      */
@@ -578,6 +583,29 @@ export interface TaxonomyContext {
      * Pretty-url of this particular context
      */
     url?: string;
+}
+
+export interface TaxonomyCrumb {
+    /**
+     * Unique id of context based on root + parent connection
+     */
+    contextId: string;
+    /**
+     * The publicId of the node
+     */
+    id: string;
+    /**
+     * The name of the node
+     */
+    name: Record<string, string>;
+    /**
+     * The context path
+     */
+    path: string;
+    /**
+     * The context url
+     */
+    url: string;
 }
 
 export interface TopicPostPut {

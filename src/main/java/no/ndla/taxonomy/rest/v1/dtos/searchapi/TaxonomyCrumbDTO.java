@@ -13,7 +13,7 @@ import java.net.URI;
 
 @Schema(name = "TaxonomyCrumb")
 public record TaxonomyCrumbDTO(
-        @JsonProperty @Schema(description = "The publicId of the node") URI publicId,
+        @JsonProperty @Schema(description = "The publicId of the node") URI id,
         @JsonProperty @Schema(description = "Unique id of context based on root + parent connection") String contextId,
         @JsonProperty @Schema(description = "The name of the node") LanguageFieldDTO<String> name,
         @JsonProperty @Schema(description = "The context path") String path,

@@ -195,6 +195,7 @@ public class NodeDTO {
                 .toList();
         return new TaxonomyContextDTO(
                 entity.getPublicId(),
+                entity.getPublicId(),
                 URI.create(ctx.rootId()),
                 LanguageFieldDTO.fromLanguageField(ctx.rootName()),
                 ctx.path(),

@@ -415,6 +415,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                 .toList();
                         return new TaxonomyContextDTO(
                                 node.getPublicId(),
+                                node.getPublicId(),
                                 URI.create(context.rootId()),
                                 LanguageFieldDTO.fromLanguageField(context.rootName()),
                                 context.path(),
