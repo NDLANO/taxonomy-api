@@ -79,10 +79,10 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType
             LEFT JOIN FETCH n.childConnections cc
-            WHERE n.nodeType = "PROGRAMME"
+            WHERE n.nodeType = "SUBJECT"
             AND n.context = true
             """)
-    List<Node> findProgrammes();
+    List<Node> findSubjectRoots();
 
     @Query(
             """

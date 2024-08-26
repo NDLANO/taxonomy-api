@@ -48,8 +48,7 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                     new ArrayList<>()));
         }
 
-        // Get all parent connections, append this entity publicId to the end of the actual path and add
-        // all to the list to return
+        // Get all parent connections, append all contexts from the parent to the list and return.
         node.getParentConnections()
                 .forEach(parentConnection -> parentConnection.getParent().ifPresent(parent -> {
                     createContexts(parent).stream()

@@ -7,6 +7,7 @@
 
 package no.ndla.taxonomy.service;
 
+import jakarta.persistence.EntityManager;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,6 +47,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
     private final ContextUpdaterService cachedUrlUpdaterService;
+    private final EntityManager entityManager;
 
     @Value(value = "${new.url.separator:false}")
     private boolean newUrlSeparator;
@@ -58,7 +60,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter topicTreeSorter,
             TreeSorter treeSorter,
-            ContextUpdaterService cachedUrlUpdaterService) {
+            ContextUpdaterService cachedUrlUpdaterService,
+            EntityManager entityManager) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -67,6 +70,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.treeSorter = treeSorter;
         this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.entityManager = entityManager;
     }
 
     @Transactional
@@ -451,11 +455,11 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         buildAllContexts();
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.MANDATORY)
     protected List<Node> buildAllContexts() {
         logger.info("Building contexts for all roots in schema");
         var startTime = System.currentTimeMillis();
-        List<Node> rootNodes = nodeRepository.findProgrammes();
+        List<Node> rootNodes = nodeRepository.findSubjectRoots();
         rootNodes.forEach(this::buildContexts);
         logger.info("Building contexts for all roots. took {} ms", System.currentTimeMillis() - startTime);
         return rootNodes;
@@ -463,7 +467,9 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     private void buildContexts(Node entity) {
+        logger.debug("Building contexts for node {}", entity.getName());
         cachedUrlUpdaterService.updateContexts(entity);
+        entityManager.flush();
     }
 
     @Transactional
