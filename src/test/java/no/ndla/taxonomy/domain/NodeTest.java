@@ -339,6 +339,7 @@ public class NodeTest extends AbstractIntegrationTest {
         parent2 = parent2.name("parent2");
         node = node.name("name");
         var context1 = new TaxonomyContext(
+                LanguageField.fromNode(node),
                 node.getPublicId().toString(),
                 LanguageField.fromNode(node),
                 node.getPathPart(),
@@ -352,8 +353,10 @@ public class NodeTest extends AbstractIntegrationTest {
                 "urn:relevance:core",
                 "1",
                 0,
-                "urn:connection1");
+                "urn:connection1",
+                List.of());
         var context2 = new TaxonomyContext(
+                LanguageField.fromNode(node),
                 root.getPublicId().toString(),
                 LanguageField.fromNode(root),
                 root.getPathPart() + parent1.getPathPart() + context1.path(),
@@ -369,8 +372,10 @@ public class NodeTest extends AbstractIntegrationTest {
                 "urn:relevance:core",
                 "2",
                 0,
-                "urn:connection2");
+                "urn:connection2",
+                List.of());
         var context3 = new TaxonomyContext(
+                LanguageField.fromNode(node),
                 root.getPublicId().toString(),
                 LanguageField.fromNode(root),
                 root.getPathPart() + parent2.getPathPart() + context1.path(),
@@ -386,7 +391,8 @@ public class NodeTest extends AbstractIntegrationTest {
                 "urn:relevance:core",
                 "3",
                 0,
-                "urn:connection3");
+                "urn:connection3",
+                List.of());
 
         node.setContexts(Set.of(context3, context2, context1));
 

@@ -80,4 +80,11 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<String> handleInvalidArgumentExceptions(RuntimeException exception) {
         return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler({
+        NullPointerException.class,
+    })
+    protected ResponseEntity<String> handleRestOfExceptions(RuntimeException exception) {
+        return new ResponseEntity<>(createErrorBody(exception), createHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }

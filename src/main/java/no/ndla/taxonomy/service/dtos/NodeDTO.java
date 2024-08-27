@@ -18,6 +18,7 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
+import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyCrumbDTO;
 import no.ndla.taxonomy.util.PrettyUrlUtil;
 
 @Schema(name = "Node")
@@ -175,7 +176,25 @@ public class NodeDTO {
 
     private TaxonomyContextDTO getTaxonomyContextDTO(
             Node entity, boolean newUrlSeparator, TaxonomyContext ctx, LanguageField<String> finalRelevanceName) {
+        var parents = ctx.parents().stream()
+                .map(parent -> {
+                    var url = PrettyUrlUtil.createPrettyUrl(
+                            Optional.ofNullable(ctx.rootName()),
+                            parent.name(),
+                            this.language,
+                            parent.contextId(),
+                            parent.nodeType(),
+                            newUrlSeparator);
+                    return new TaxonomyCrumbDTO(
+                            URI.create(parent.id()),
+                            parent.contextId(),
+                            LanguageFieldDTO.fromLanguageField(parent.name()),
+                            parent.path(),
+                            url.orElse(parent.path()));
+                })
+                .toList();
         return new TaxonomyContextDTO(
+                entity.getPublicId(),
                 entity.getPublicId(),
                 URI.create(ctx.rootId()),
                 LanguageFieldDTO.fromLanguageField(ctx.rootName()),
@@ -206,7 +225,8 @@ public class NodeDTO {
                         this.language,
                         ctx.contextId(),
                         entity.getNodeType(),
-                        newUrlSeparator));
+                        newUrlSeparator),
+                parents);
     }
 
     public URI getId() {
@@ -255,6 +275,10 @@ public class NodeDTO {
 
     public Set<String> getSupportedLanguages() {
         return supportedLanguages;
+    }
+
+    public Optional<TaxonomyContextDTO> getContext() {
+        return context;
     }
 
     public List<TaxonomyContextDTO> getContexts() {

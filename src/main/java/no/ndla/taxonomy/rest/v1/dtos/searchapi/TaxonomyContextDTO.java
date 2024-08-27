@@ -17,7 +17,8 @@ import java.util.Optional;
 // spotless:off
 @Schema(name = "TaxonomyContext")
 public record TaxonomyContextDTO(
-        @JsonProperty @Schema(description = "The publicId of the node connected via content-uri") URI publicId,
+        @JsonProperty @Schema(description = "The publicId of the node connected via content-uri") URI id,
+        @JsonProperty @Schema(description = "The publicId of the node connected via content-uri", deprecated = true) URI publicId,
         @JsonProperty @Schema(description = "The publicId of the root parent of the context") URI rootId,
         @JsonProperty @Schema(description = "The name of the root parent of the context") LanguageFieldDTO<String> root,
         @JsonProperty @Schema(description = "The context path") String path,
@@ -34,6 +35,7 @@ public record TaxonomyContextDTO(
         @JsonProperty @Schema(description = "Unique id of context based on root + parent connection") String contextId,
         @JsonProperty @Schema(description = "The rank of the parent connection object") int rank,
         @JsonProperty @Schema(description = "The id of the parent connection object") String connectionId,
-        @JsonProperty @Schema(description = "Pretty-url of this particular context") Optional<String> url) {
+        @JsonProperty @Schema(description = "Pretty-url of this particular context") Optional<String> url,
+        @JsonProperty @Schema(description = "List of all parents to this context") List<TaxonomyCrumbDTO> parents) {
 // spotless:on
 }
