@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 import no.ndla.taxonomy.TestSeeder;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
+import no.ndla.taxonomy.rest.v1.dtos.NodeResourcePOST;
 import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -1111,6 +1112,66 @@ public class NodesTest extends RestTest {
             var actualTopic = dbTopic.getChildQualityEvaluationAverage();
             assertEquals(actualTopic, Optional.empty());
         }
+    }
+
+    @Test
+    public void update_and_clone_topic_resource_and_quality_evaluation_matches() throws Exception {
+        { // Create structure with resources and quality evaluation
+            builder.node(NodeType.SUBJECT, s1 -> s1.name("S1")
+                    .publicId("urn:subject:1")
+                    .child(NodeType.TOPIC, t1 -> t1.name("T1")
+                            .publicId("urn:topic:1")
+                            .child(NodeType.RESOURCE, r1 -> r1.name("R1")
+                                    .publicId("urn:resource:1")
+                                    .qualityEvaluation(Grade.Five))
+                            .child(NodeType.RESOURCE, r2 -> r2.name("R2")
+                                    .publicId("urn:resource:2")
+                                    .qualityEvaluation(Grade.Four))
+                            .child(NodeType.RESOURCE, r3 -> r3.name("R3")
+                                    .publicId("urn:resource:3")
+                                    .qualityEvaluation(Grade.One)))
+                    .child(NodeType.TOPIC, t2 -> t2.name("T2").publicId("urn:topic:2")));
+        }
+
+        // Clone resources
+        var cloned1Id = getId(testUtils.createResource("/v1/nodes/urn:resource:1/clone", new NodePostPut()));
+        var cloned2Id = getId(testUtils.createResource("/v1/nodes/urn:resource:2/clone", new NodePostPut()));
+        var cloned3Id = getId(testUtils.createResource("/v1/nodes/urn:resource:3/clone", new NodePostPut()));
+
+        // Check that resources have cloned quality evaluation
+        var cloned1 = nodeRepository.getByPublicId(cloned1Id);
+        var cloned2 = nodeRepository.getByPublicId(cloned2Id);
+        var cloned3 = nodeRepository.getByPublicId(cloned3Id);
+        assertEquals(Optional.of(Grade.Five), cloned1.getQualityEvaluationGrade());
+        assertEquals(Optional.of(Grade.Four), cloned2.getQualityEvaluationGrade());
+        assertEquals(Optional.of(Grade.One), cloned3.getQualityEvaluationGrade());
+
+        { // Connect cloned resources to urn:topic:2
+            var connectBody1 = new NodeResourcePOST();
+            connectBody1.nodeId = URI.create("urn:topic:2");
+            connectBody1.resourceId = cloned1Id;
+
+            var connectBody2 = new NodeResourcePOST();
+            connectBody2.nodeId = URI.create("urn:topic:2");
+            connectBody2.resourceId = cloned2Id;
+
+            var connectBody3 = new NodeResourcePOST();
+            connectBody3.nodeId = URI.create("urn:topic:2");
+            connectBody3.resourceId = cloned3Id;
+
+            testUtils.createResource("/v1/node-resources/", connectBody1);
+            testUtils.createResource("/v1/node-resources/", connectBody2);
+            testUtils.createResource("/v1/node-resources/", connectBody3);
+        }
+
+        var topic2 = nodeRepository.getByPublicId(URI.create("urn:topic:2"));
+        assertEquals(3, topic2.getChildNodes().size());
+        assertTrue(topic2.getChildQualityEvaluationAverage().isPresent());
+        assertEquals(new GradeAverage(3.3, 3), topic2.getChildQualityEvaluationAverage().get());
+
+        var subject1 = nodeRepository.getByPublicId(URI.create("urn:subject:1"));
+        assertTrue(subject1.getChildQualityEvaluationAverage().isPresent());
+        assertEquals(new GradeAverage(3.3, 6), subject1.getChildQualityEvaluationAverage().get());
     }
 
     private static class ConnectionTypeCounter {
