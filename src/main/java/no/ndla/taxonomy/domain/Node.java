@@ -147,6 +147,48 @@ public class Node extends DomainObject implements EntityWithMetadata {
                 .map(avg -> new GradeAverage(avg, this.childQualityEvaluationCount));
     }
 
+    public void addGradeAverageTreeToAverageCalculation(GradeAverage newGradeAverage) {
+        var childAvg = getChildQualityEvaluationAverage();
+        if (childAvg.isEmpty()) {
+            this.childQualityEvaluationAverage = newGradeAverage.getAverageValue();
+            this.childQualityEvaluationCount = newGradeAverage.getCount();
+            return;
+        }
+
+        var oldSum = childAvg.get().getAverageValue() * childAvg.get().getCount();
+        var sumToAdd = newGradeAverage.getAverageValue() * newGradeAverage.getCount();
+        var newSum = oldSum + sumToAdd;
+        var newCount = childAvg.get().getCount() + newGradeAverage.getCount();
+
+        this.childQualityEvaluationAverage = newSum / newCount;
+        this.childQualityEvaluationCount = newCount;
+    }
+
+    public void removeGradeAverageTreeFromAverageCalculation(GradeAverage previousGradeAverage) {
+        var childAvg = getChildQualityEvaluationAverage();
+        if (childAvg.isEmpty()) {
+            logger.error(
+                    "Tried to remove {} from node '{}' but child average is missing. This seems like a bug or data inconsistency.",
+                    previousGradeAverage,
+                    this.getPublicId());
+            return;
+        }
+
+        var totalSum = childAvg.get().getAverageValue() * childAvg.get().getCount();
+        var sumToRemove = previousGradeAverage.getAverageValue() * previousGradeAverage.getCount();
+
+        var newSum = totalSum - sumToRemove;
+        var newCount = childAvg.get().getCount() - previousGradeAverage.getCount();
+
+        if (newCount == 0) {
+            this.childQualityEvaluationAverage = null;
+            this.childQualityEvaluationCount = 0;
+        } else {
+            this.childQualityEvaluationAverage = newSum / newCount;
+            this.childQualityEvaluationCount = newCount;
+        }
+    }
+
     public void updateChildQualityEvaluationAverage(Optional<Grade> previousGrade, Optional<Grade> newGrade) {
         var childAvg = getChildQualityEvaluationAverage();
         if (childAvg.isEmpty()) {

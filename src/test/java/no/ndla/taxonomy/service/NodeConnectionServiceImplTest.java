@@ -43,13 +43,17 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
     private NodeConnectionServiceImpl service;
 
     @Autowired
+    private QualityEvaluationService qualityEvaluationService;
+
+    @Autowired
     private Builder builder;
 
     @BeforeEach
     public void setUp() throws Exception {
         cachedUrlUpdaterService = mock(ContextUpdaterService.class);
 
-        service = new NodeConnectionServiceImpl(nodeConnectionRepository, cachedUrlUpdaterService, nodeRepository);
+        service = new NodeConnectionServiceImpl(
+                nodeConnectionRepository, cachedUrlUpdaterService, nodeRepository, qualityEvaluationService);
     }
 
     @Test

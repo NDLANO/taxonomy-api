@@ -22,6 +22,7 @@ import no.ndla.taxonomy.rest.v1.commands.TopicPostPut;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.MetadataFilters;
 import no.ndla.taxonomy.service.NodeService;
+import no.ndla.taxonomy.service.QualityEvaluationService;
 import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -41,8 +42,11 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     private boolean newUrlSeparator;
 
     public Topics(
-            NodeRepository nodeRepository, NodeService nodeService, ContextUpdaterService cachedUrlUpdaterService) {
-        super(nodeRepository, cachedUrlUpdaterService, nodeService);
+            NodeRepository nodeRepository,
+            NodeService nodeService,
+            ContextUpdaterService cachedUrlUpdaterService,
+            QualityEvaluationService qualityEvaluationService) {
+        super(nodeRepository, cachedUrlUpdaterService, nodeService, qualityEvaluationService);
 
         this.nodeRepository = nodeRepository;
         this.nodeService = nodeService;

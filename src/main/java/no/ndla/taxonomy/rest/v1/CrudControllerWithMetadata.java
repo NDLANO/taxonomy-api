@@ -17,6 +17,7 @@ import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
 import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeService;
+import no.ndla.taxonomy.service.QualityEvaluationService;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
 import no.ndla.taxonomy.service.exceptions.InvalidDataException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,8 +29,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends CrudController<T> {
     protected CrudControllerWithMetadata(
-            TaxonomyRepository<T> repository, ContextUpdaterService contextUpdaterService, NodeService nodeService) {
-        super(repository, contextUpdaterService, nodeService);
+            TaxonomyRepository<T> repository,
+            ContextUpdaterService contextUpdaterService,
+            NodeService nodeService,
+            QualityEvaluationService qualityEvaluationService) {
+        super(repository, contextUpdaterService, nodeService, qualityEvaluationService);
     }
 
     @GetMapping("/{id}/metadata")
