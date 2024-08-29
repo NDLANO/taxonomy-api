@@ -18,7 +18,6 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
@@ -466,53 +465,10 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    private void buildContexts(Node entity) {
+    protected void buildContexts(Node entity) {
         logger.debug("Building contexts for node {}", entity.getName());
         cachedUrlUpdaterService.updateContexts(entity);
         entityManager.flush();
-    }
-
-    @Transactional
-    public void updateQualityEvaluationOfParents(
-            URI nodeId, NodeType nodeType, Optional<Grade> oldGrade, UpdatableDto<?> command) {
-        if (nodeType != NodeType.RESOURCE) {
-            return;
-        }
-
-        if (!(command instanceof NodePostPut nodeCommand)) {
-            return;
-        }
-
-        Optional<QualityEvaluationDTO> qe =
-                nodeCommand.qualityEvaluation.isDelete() ? Optional.empty() : nodeCommand.qualityEvaluation.getValue();
-        var newGrade = qe.map(QualityEvaluationDTO::getGrade);
-        if (oldGrade.isEmpty() && newGrade.isEmpty()) {
-            return;
-        }
-
-        var node = nodeRepository
-                .findFirstByPublicId(nodeId)
-                .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
-        updateQualityEvaluationOf(node.getParentNodes(), oldGrade, newGrade);
-    }
-
-    @Transactional
-    public void updateQualityEvaluationOf(
-            Collection<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
-        var parentIds = parents.stream().map(DomainEntity::getPublicId).toList();
-        updateQualityEvaluationOfRecursive(parentIds, oldGrade, newGrade);
-    }
-
-    @Transactional
-    protected void updateQualityEvaluationOfRecursive(
-            List<URI> parentIds, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
-        parentIds.forEach(pid -> nodeRepository.findFirstByPublicId(pid).ifPresent(p -> {
-            p.updateChildQualityEvaluationAverage(oldGrade, newGrade);
-            nodeRepository.save(p);
-            var parentsParents =
-                    p.getParentNodes().stream().map(Node::getPublicId).toList();
-            updateQualityEvaluationOfRecursive(parentsParents, oldGrade, newGrade);
-        }));
     }
 
     public List<TaxonomyContextDTO> getContextByPath(Optional<String> path, String language) {
