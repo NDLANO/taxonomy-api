@@ -1206,58 +1206,51 @@ public class NodesTest extends RestTest {
         assertEquals(3, topic1.getChildNodes().size());
         topic1.updateEntireAverageTree();
 
-        {
-            assertTrue(topic1.getChildQualityEvaluationAverage().isPresent());
-            assertEquals(3, topic1.getChildQualityEvaluationAverage().get().getCount());
-            assertEquals(
-                    3.3333333333333335,
-                    topic1.getChildQualityEvaluationAverage().get().getAverageValue());
+        assertTrue(topic1.getChildQualityEvaluationAverage().isPresent());
+        assertEquals(3, topic1.getChildQualityEvaluationAverage().get().getCount());
+        assertEquals(
+                3.3333333333333335,
+                topic1.getChildQualityEvaluationAverage().get().getAverageValue());
 
-            var subject1 = nodeRepository.getByPublicId(URI.create("urn:subject:1"));
-            assertTrue(subject1.getChildQualityEvaluationAverage().isPresent());
-            assertEquals(3, subject1.getChildQualityEvaluationAverage().get().getCount());
-            assertEquals(
-                    3.3333333333333335,
-                    subject1.getChildQualityEvaluationAverage().get().getAverageValue());
+        var subject1 = nodeRepository.getByPublicId(URI.create("urn:subject:1"));
+        assertTrue(subject1.getChildQualityEvaluationAverage().isPresent());
+        assertEquals(3, subject1.getChildQualityEvaluationAverage().get().getCount());
+        assertEquals(
+                3.3333333333333335,
+                subject1.getChildQualityEvaluationAverage().get().getAverageValue());
 
-            var subject2 = nodeRepository.getByPublicId(URI.create("urn:subject:2"));
-            assertFalse(subject2.getChildQualityEvaluationAverage().isPresent());
-        }
+        var subject2 = nodeRepository.getByPublicId(URI.create("urn:subject:2"));
+        assertFalse(subject2.getChildQualityEvaluationAverage().isPresent());
 
-        { // Move urn:topic:1 to urn:subject:2
-            var topic = nodeRepository.getByPublicId(URI.create("urn:topic:1"));
-            assertEquals(1, topic.getParentConnections().size());
-            assertTrue(topic.getParentConnections().stream().findFirst().isPresent());
-            var connectionId =
-                    topic.getParentConnections().stream().findFirst().get().getPublicId();
+        var topic = nodeRepository.getByPublicId(URI.create("urn:topic:1"));
+        assertEquals(1, topic.getParentConnections().size());
+        assertTrue(topic.getParentConnections().stream().findFirst().isPresent());
+        var connectionId =
+                topic.getParentConnections().stream().findFirst().get().getPublicId();
 
-            testUtils.deleteResource("/v1/node-connections/" + connectionId);
+        testUtils.deleteResource("/v1/node-connections/" + connectionId);
 
-            var connectBody = new NodeConnectionPOST();
-            connectBody.parentId = URI.create("urn:subject:2");
-            connectBody.childId = URI.create("urn:topic:1");
+        var connectBody = new NodeConnectionPOST();
+        connectBody.parentId = URI.create("urn:subject:2");
+        connectBody.childId = URI.create("urn:topic:1");
 
-            testUtils.createResource("/v1/node-connections/", connectBody);
-        }
+        testUtils.createResource("/v1/node-connections/", connectBody);
 
-        {
-            assertEquals(3, topic1.getChildNodes().size());
-            assertTrue(topic1.getChildQualityEvaluationAverage().isPresent());
-            assertEquals(3, topic1.getChildQualityEvaluationAverage().get().getCount());
-            assertEquals(
-                    3.3333333333333335,
-                    topic1.getChildQualityEvaluationAverage().get().getAverageValue());
+        assertEquals(3, topic1.getChildNodes().size());
+        assertTrue(topic1.getChildQualityEvaluationAverage().isPresent());
+        assertEquals(3, topic1.getChildQualityEvaluationAverage().get().getCount());
+        assertEquals(
+                3.3333333333333335,
+                topic1.getChildQualityEvaluationAverage().get().getAverageValue());
 
-            var subject1 = nodeRepository.getByPublicId(URI.create("urn:subject:1"));
-            assertFalse(subject1.getChildQualityEvaluationAverage().isPresent());
+        var s1 = nodeRepository.getByPublicId(URI.create("urn:subject:1"));
+        assertFalse(s1.getChildQualityEvaluationAverage().isPresent());
 
-            var subject2 = nodeRepository.getByPublicId(URI.create("urn:subject:2"));
-            assertTrue(subject2.getChildQualityEvaluationAverage().isPresent());
-            assertEquals(3, subject2.getChildQualityEvaluationAverage().get().getCount());
-            assertEquals(
-                    3.3333333333333335,
-                    subject2.getChildQualityEvaluationAverage().get().getAverageValue());
-        }
+        var s2 = nodeRepository.getByPublicId(URI.create("urn:subject:2"));
+        assertTrue(s2.getChildQualityEvaluationAverage().isPresent());
+        assertEquals(3, s2.getChildQualityEvaluationAverage().get().getCount());
+        assertEquals(
+                3.3333333333333335, s2.getChildQualityEvaluationAverage().get().getAverageValue());
     }
 
     private static class ConnectionTypeCounter {
