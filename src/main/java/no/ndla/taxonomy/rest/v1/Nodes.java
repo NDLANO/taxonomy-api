@@ -51,8 +51,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             NodeService nodeService,
             ContextUpdaterService contextUpdaterService,
             RecursiveNodeTreeService recursiveNodeTreeService,
-            TreeSorter treeSorter) {
-        super(nodeRepository, contextUpdaterService, nodeService);
+            TreeSorter treeSorter,
+            QualityEvaluationService qualityEvaluationService) {
+        super(nodeRepository, contextUpdaterService, nodeService, qualityEvaluationService);
 
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
@@ -331,6 +332,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         final var node = nodeRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundException("Node", id));
 
         final List<URI> childrenIds;
+
         final List<NodeType> nodeTypes = getDefaultNodeTypes(
                 nodeType,
                 Optional.empty(),

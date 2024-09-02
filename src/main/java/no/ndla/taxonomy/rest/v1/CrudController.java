@@ -16,10 +16,7 @@ import no.ndla.taxonomy.domain.Grade;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.exceptions.DuplicateIdException;
 import no.ndla.taxonomy.repositories.TaxonomyRepository;
-import no.ndla.taxonomy.service.ContextUpdaterService;
-import no.ndla.taxonomy.service.NodeService;
-import no.ndla.taxonomy.service.URNValidator;
-import no.ndla.taxonomy.service.UpdatableDto;
+import no.ndla.taxonomy.service.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,15 +31,20 @@ public abstract class CrudController<T extends DomainEntity> {
     protected TaxonomyRepository<T> repository;
     protected ContextUpdaterService contextUpdaterService;
     protected NodeService nodeService;
+    protected QualityEvaluationService qualityEvaluationService;
 
     private static final Map<Class<?>, String> locations = new HashMap<>();
     private final URNValidator validator = new URNValidator();
 
     protected CrudController(
-            TaxonomyRepository<T> repository, ContextUpdaterService contextUpdaterService, NodeService nodeService) {
+            TaxonomyRepository<T> repository,
+            ContextUpdaterService contextUpdaterService,
+            NodeService nodeService,
+            QualityEvaluationService qualityEvaluationService) {
         this.repository = repository;
         this.contextUpdaterService = contextUpdaterService;
         this.nodeService = nodeService;
+        this.qualityEvaluationService = qualityEvaluationService;
     }
 
     protected CrudController(TaxonomyRepository<T> repository) {
@@ -71,7 +73,7 @@ public abstract class CrudController<T extends DomainEntity> {
 
         if (parents.isPresent()) {
             var p = parents.get();
-            nodeService.updateQualityEvaluationOf(p, oldGrade, Optional.empty());
+            qualityEvaluationService.updateQualityEvaluationOf(p, oldGrade, Optional.empty());
         }
     }
 
@@ -96,8 +98,9 @@ public abstract class CrudController<T extends DomainEntity> {
 
         if (entity instanceof Node node) {
             if (contextUpdaterService != null) contextUpdaterService.updateContexts(node);
-            if (nodeService != null)
-                nodeService.updateQualityEvaluationOfParents(node.getPublicId(), node.getNodeType(), oldGrade, command);
+            if (qualityEvaluationService != null)
+                qualityEvaluationService.updateQualityEvaluationOfParents(
+                        node.getPublicId(), node.getNodeType(), oldGrade, command);
         }
 
         return entity;
@@ -122,8 +125,8 @@ public abstract class CrudController<T extends DomainEntity> {
 
             if (entity instanceof Node node) {
                 if (contextUpdaterService != null) contextUpdaterService.updateContexts(node);
-                if (nodeService != null)
-                    nodeService.updateQualityEvaluationOfParents(
+                if (qualityEvaluationService != null)
+                    qualityEvaluationService.updateQualityEvaluationOfParents(
                             node.getPublicId(), node.getNodeType(), oldGrade, command);
             }
 

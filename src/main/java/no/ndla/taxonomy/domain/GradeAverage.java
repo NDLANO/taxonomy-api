@@ -46,4 +46,9 @@ public class GradeAverage {
         GradeAverage that = (GradeAverage) obj;
         return Double.compare(that.averageValue, averageValue) == 0 && count == that.count;
     }
+
+    @Override
+    public String toString() {
+        return "GradeAverage{averageValue=" + averageValue + ", count=" + count + '}';
+    }
 }

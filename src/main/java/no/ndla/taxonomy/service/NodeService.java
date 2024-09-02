@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.service;
 
-import jakarta.persistence.EntityManager;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,12 +17,14 @@ import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
-import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.LanguageFieldDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.SearchableTaxonomyResourceType;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyContextDTO;
 import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyCrumbDTO;
-import no.ndla.taxonomy.service.dtos.*;
+import no.ndla.taxonomy.service.dtos.ConnectionDTO;
+import no.ndla.taxonomy.service.dtos.NodeChildDTO;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
+import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.util.PrettyUrlUtil;
 import org.slf4j.Logger;
@@ -46,7 +47,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
     private final ContextUpdaterService contextUpdaterService;
-    private final EntityManager entityManager;
 
     @Value(value = "${new.url.separator:false}")
     private boolean newUrlSeparator;
@@ -59,8 +59,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter topicTreeSorter,
             TreeSorter treeSorter,
-            ContextUpdaterService contextUpdaterService,
-            EntityManager entityManager) {
+            ContextUpdaterService contextUpdaterService) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
@@ -69,7 +68,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.treeSorter = treeSorter;
         this.contextUpdaterService = contextUpdaterService;
-        this.entityManager = entityManager;
     }
 
     @Transactional
@@ -476,49 +474,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         rootNodes.forEach(contextUpdaterService::updateContexts);
         logger.info("Building contexts for all roots. took {} ms", System.currentTimeMillis() - startTime);
         return rootNodes;
-    }
-
-    @Transactional
-    public void updateQualityEvaluationOfParents(
-            URI nodeId, NodeType nodeType, Optional<Grade> oldGrade, UpdatableDto<?> command) {
-        if (nodeType != NodeType.RESOURCE) {
-            return;
-        }
-
-        if (!(command instanceof NodePostPut nodeCommand)) {
-            return;
-        }
-
-        Optional<QualityEvaluationDTO> qe =
-                nodeCommand.qualityEvaluation.isDelete() ? Optional.empty() : nodeCommand.qualityEvaluation.getValue();
-        var newGrade = qe.map(QualityEvaluationDTO::getGrade);
-        if (oldGrade.isEmpty() && newGrade.isEmpty()) {
-            return;
-        }
-
-        var node = nodeRepository
-                .findFirstByPublicId(nodeId)
-                .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
-        updateQualityEvaluationOf(node.getParentNodes(), oldGrade, newGrade);
-    }
-
-    @Transactional
-    public void updateQualityEvaluationOf(
-            Collection<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
-        var parentIds = parents.stream().map(DomainEntity::getPublicId).toList();
-        updateQualityEvaluationOfRecursive(parentIds, oldGrade, newGrade);
-    }
-
-    @Transactional
-    protected void updateQualityEvaluationOfRecursive(
-            List<URI> parentIds, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
-        parentIds.forEach(pid -> nodeRepository.findFirstByPublicId(pid).ifPresent(p -> {
-            p.updateChildQualityEvaluationAverage(oldGrade, newGrade);
-            nodeRepository.save(p);
-            var parentsParents =
-                    p.getParentNodes().stream().map(Node::getPublicId).toList();
-            updateQualityEvaluationOfRecursive(parentsParents, oldGrade, newGrade);
-        }));
     }
 
     public List<TaxonomyContextDTO> getContextByPath(Optional<String> path, String language) {

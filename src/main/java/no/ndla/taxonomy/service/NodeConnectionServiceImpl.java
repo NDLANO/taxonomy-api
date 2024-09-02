@@ -29,14 +29,17 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     private final NodeConnectionRepository nodeConnectionRepository;
     private final ContextUpdaterService contextUpdaterService;
     private final NodeRepository nodeRepository;
+    private final QualityEvaluationService qualityEvaluationService;
 
     public NodeConnectionServiceImpl(
             NodeConnectionRepository nodeConnectionRepository,
             ContextUpdaterService contextUpdaterService,
-            NodeRepository nodeRepository) {
+            NodeRepository nodeRepository,
+            QualityEvaluationService qualityEvaluationService) {
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.contextUpdaterService = contextUpdaterService;
         this.nodeRepository = nodeRepository;
+        this.qualityEvaluationService = qualityEvaluationService;
     }
 
     private NodeConnection doCreateConnection(
@@ -125,7 +128,9 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
                     + 1;
         }
 
-        return nodeConnectionRepository.saveAndFlush(createConnection(parent, child, relevance, rank, isPrimary));
+        var newConnection = createConnection(parent, child, relevance, rank, isPrimary);
+        qualityEvaluationService.updateQualityEvaluationOfNewConnection(parent, child);
+        return nodeConnectionRepository.saveAndFlush(newConnection);
     }
 
     @Override
@@ -139,6 +144,8 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     @Override
     public void disconnectParentChildConnection(NodeConnection nodeConnection) {
         final var child = nodeConnection.getChild();
+
+        qualityEvaluationService.removeQualityEvaluationOfDeletedConnection(nodeConnection);
 
         nodeConnection.disassociate();
         nodeConnectionRepository.delete(nodeConnection);

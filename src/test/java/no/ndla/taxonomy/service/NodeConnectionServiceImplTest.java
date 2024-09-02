@@ -38,18 +38,22 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
     @Autowired
     private NodeRepository nodeRepository;
 
-    private ContextUpdaterService cachedUrlUpdaterService;
+    private ContextUpdaterService contextUpdaterService;
 
     private NodeConnectionServiceImpl service;
+
+    @Autowired
+    private QualityEvaluationService qualityEvaluationService;
 
     @Autowired
     private Builder builder;
 
     @BeforeEach
     public void setUp() throws Exception {
-        cachedUrlUpdaterService = mock(ContextUpdaterService.class);
+        contextUpdaterService = mock(ContextUpdaterService.class);
 
-        service = new NodeConnectionServiceImpl(nodeConnectionRepository, cachedUrlUpdaterService, nodeRepository);
+        service = new NodeConnectionServiceImpl(
+                nodeConnectionRepository, contextUpdaterService, nodeRepository, qualityEvaluationService);
     }
 
     @Test
@@ -72,7 +76,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         assertSame(topic2, connection1.getParent().orElse(null));
         assertSame(topic1, connection1.getChild().orElse(null));
 
-        verify(cachedUrlUpdaterService, atLeastOnce()).updateContexts(topic1);
+        verify(contextUpdaterService, atLeastOnce()).updateContexts(topic1);
 
         // Test ranking
         final var connection4 = service.connectParentChild(topic4, topic5, relevance, null);
@@ -174,7 +178,7 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         assertTrue(connection1.isPrimary().orElseThrow());
         assertEquals(1, connection1.getRank());
 
-        verify(cachedUrlUpdaterService, atLeastOnce()).updateContexts(resource1);
+        verify(contextUpdaterService, atLeastOnce()).updateContexts(resource1);
 
         final var connection2 = service.connectParentChild(topic1, resource2, relevance, null, Optional.of(true));
         assertNotNull(connection2);
@@ -268,11 +272,11 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
                 subtopic3.getParentConnections().stream().findFirst().orElseThrow());
         assertEquals(3, topic1.getChildConnections().size());
 
-        reset(cachedUrlUpdaterService);
+        reset(contextUpdaterService);
 
         service.disconnectParentChildConnection(topic1subtopic1);
 
-        verify(cachedUrlUpdaterService).updateContexts(subtopic1);
+        verify(contextUpdaterService).updateContexts(subtopic1);
 
         assertFalse(topic1subtopic1.getParent().isPresent());
         assertFalse(topic1subtopic1.getChild().isPresent());
@@ -326,11 +330,11 @@ public class NodeConnectionServiceImplTest extends AbstractIntegrationTest {
         assertTrue(topic1.getResourceChildren().contains(topic1resource1));
         assertTrue(resource1.getParentConnections().contains(topic1resource1));
 
-        reset(cachedUrlUpdaterService);
+        reset(contextUpdaterService);
 
         service.disconnectParentChild(topic1, resource1);
 
-        verify(cachedUrlUpdaterService, atLeastOnce()).updateContexts(resource1);
+        verify(contextUpdaterService, atLeastOnce()).updateContexts(resource1);
 
         assertTrue(topic2resource1.isPrimary().orElseThrow()
                 ^ topic3resource1.isPrimary().orElseThrow());
