@@ -55,9 +55,9 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                             .map(parentContext -> {
                                 var breadcrumbs = LanguageField.listFromLists(
                                         parentContext.breadcrumbs(), LanguageField.fromNode(parent));
-                                List<String> parentIds = parentContext.parentIds();
+                                var parentIds = parentContext.parentIds();
                                 parentIds.add(parent.getPublicId().toString());
-                                List<String> parentContextIds = parentContext.parentContextIds();
+                                var parentContextIds = parentContext.parentContextIds();
                                 parentContextIds.add(parentContext.contextId());
                                 var contextId =
                                         HashUtil.mediumHash(parentContext.contextId() + parentConnection.getPublicId());

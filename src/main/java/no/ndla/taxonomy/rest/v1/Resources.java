@@ -49,9 +49,9 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     public Resources(
             NodeRepository nodeRepository,
             ResourceResourceTypeRepository resourceResourceTypeRepository,
-            ContextUpdaterService cachedUrlUpdaterService,
+            ContextUpdaterService contextUpdaterService,
             NodeService nodeService) {
-        super(nodeRepository, cachedUrlUpdaterService, nodeService);
+        super(nodeRepository, contextUpdaterService, nodeService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.repository = nodeRepository;
@@ -155,6 +155,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                         Optional.empty(),
                         Optional.of(false),
                         false,
+                        false,
                         newUrlSeparator))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
@@ -169,7 +170,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language) {
-        return nodeService.getNode(id, language, Optional.empty(), Optional.empty(), Optional.of(false), false);
+        return nodeService.getNode(id, language, Optional.empty(), Optional.empty(), Optional.of(false), false, true);
     }
 
     @Deprecated

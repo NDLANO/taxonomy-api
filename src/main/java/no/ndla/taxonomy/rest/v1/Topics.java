@@ -40,9 +40,8 @@ public class Topics extends CrudControllerWithMetadata<Node> {
     @Value(value = "${new.url.separator:false}")
     private boolean newUrlSeparator;
 
-    public Topics(
-            NodeRepository nodeRepository, NodeService nodeService, ContextUpdaterService cachedUrlUpdaterService) {
-        super(nodeRepository, cachedUrlUpdaterService, nodeService);
+    public Topics(NodeRepository nodeRepository, NodeService nodeService, ContextUpdaterService contextUpdaterService) {
+        super(nodeRepository, contextUpdaterService, nodeService);
 
         this.nodeRepository = nodeRepository;
         this.nodeService = nodeService;
@@ -139,6 +138,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
                         Optional.empty(),
                         Optional.of(false),
                         false,
+                        false,
                         newUrlSeparator))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
@@ -153,7 +153,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language) {
-        return nodeService.getNode(id, language, Optional.empty(), Optional.empty(), Optional.of(false), false);
+        return nodeService.getNode(id, language, Optional.empty(), Optional.empty(), Optional.of(false), false, true);
     }
 
     @Deprecated
@@ -248,7 +248,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
                     Optional<URI> relevance) {
 
         return nodeService.getResourcesByNodeId(
-                topicId, resourceTypeIds, relevance, language, recursive, Optional.of(false), false);
+                topicId, resourceTypeIds, relevance, language, recursive, Optional.of(false), false, true);
     }
 
     @Deprecated

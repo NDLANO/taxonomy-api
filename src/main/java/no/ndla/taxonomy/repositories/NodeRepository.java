@@ -78,11 +78,12 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             SELECT DISTINCT n FROM Node n
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType
+            LEFT JOIN FETCH n.parentConnections pc
             LEFT JOIN FETCH n.childConnections cc
-            WHERE n.nodeType = "SUBJECT"
+            WHERE n.nodeType = "PROGRAMME"
             AND n.context = true
             """)
-    List<Node> findSubjectRoots();
+    List<Node> findProgrammes();
 
     @Query(
             """

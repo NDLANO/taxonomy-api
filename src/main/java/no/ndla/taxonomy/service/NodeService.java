@@ -32,7 +32,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional(readOnly = true)
@@ -46,7 +45,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     private final DomainEntityHelperService domainEntityHelperService;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
-    private final ContextUpdaterService cachedUrlUpdaterService;
+    private final ContextUpdaterService contextUpdaterService;
     private final EntityManager entityManager;
 
     @Value(value = "${new.url.separator:false}")
@@ -60,7 +59,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter topicTreeSorter,
             TreeSorter treeSorter,
-            ContextUpdaterService cachedUrlUpdaterService,
+            ContextUpdaterService contextUpdaterService,
             EntityManager entityManager) {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
@@ -69,7 +68,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         this.domainEntityHelperService = domainEntityHelperService;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.treeSorter = treeSorter;
-        this.cachedUrlUpdaterService = cachedUrlUpdaterService;
+        this.contextUpdaterService = contextUpdaterService;
         this.entityManager = entityManager;
     }
 
@@ -134,6 +133,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                     contextId,
                                     includeContexts,
                                     filterProgrammes,
+                                    metadataFilters.getVisible().orElse(false),
                                     newUrlSeparator))
                             .toList();
                     listToReturn.addAll(dtos);
@@ -162,7 +162,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
         final var wrappedList = childConnections.stream()
                 .map(nodeConnection -> new NodeChildDTO(
-                        Optional.of(node), nodeConnection, languageCode, Optional.of(false), false, newUrlSeparator))
+                        Optional.of(node),
+                        nodeConnection,
+                        languageCode,
+                        Optional.of(false),
+                        false,
+                        true,
+                        newUrlSeparator))
                 .toList();
 
         return topicTreeSorter.sortList(wrappedList);
@@ -174,7 +180,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Optional<URI> rootId,
             Optional<URI> parentId,
             Optional<Boolean> includeContexts,
-            boolean filterProgrammes) {
+            boolean filterProgrammes,
+            boolean isVisible) {
         var node = getNode(publicId);
         var root = rootId.map(this::getNode);
         var parent = parentId.map(this::getNode);
@@ -186,6 +193,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 Optional.empty(),
                 includeContexts,
                 filterProgrammes,
+                isVisible,
                 newUrlSeparator);
     }
 
@@ -204,7 +212,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Optional<String> languageCode,
             boolean recursive,
             Optional<Boolean> includeContexts,
-            boolean filterProgrammes) {
+            boolean filterProgrammes,
+            boolean isVisible) {
         final var node = domainEntityHelperService.getNodeByPublicId(nodePublicId);
 
         final Set<URI> topicIdsToSearchFor;
@@ -241,7 +250,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 resourcesToSort,
                 languageCode,
                 includeContexts,
-                filterProgrammes);
+                filterProgrammes,
+                isVisible);
     }
 
     private List<NodeChildDTO> filterNodeResourcesByIdsAndReturn(
@@ -252,7 +262,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             Set<ResourceTreeSortable> sortableListToAddTo,
             Optional<String> languageCode,
             Optional<Boolean> includeContexts,
-            boolean filterProgrammes) {
+            boolean filterProgrammes,
+            boolean isVisible) {
         final List<NodeConnection> nodeResources;
 
         var relevanceEnum = relevanceId.flatMap(Relevance::getRelevance);
@@ -294,6 +305,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                             languageCode.orElse(Constants.DefaultLanguage),
                             includeContexts,
                             filterProgrammes,
+                            isVisible,
                             newUrlSeparator);
                 })
                 .toList();
@@ -315,6 +327,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 Optional.empty(),
                 includeContexts,
                 filterProgrammes,
+                false,
                 newUrlSeparator);
     }
 
@@ -429,7 +442,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                 LanguageFieldDTO.fromLanguageField(relevanceName),
                                 resourceTypes,
                                 context.parentIds().stream().map(URI::create).toList(),
-                                context.parentContextIds(),
+                                context.parentContextIds().stream().toList(),
                                 context.isPrimary(),
                                 context.isActive(),
                                 context.isVisible(),
@@ -455,21 +468,14 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
         buildAllContexts();
     }
 
-    @Transactional(propagation = Propagation.MANDATORY)
-    protected List<Node> buildAllContexts() {
+    @Transactional
+    private List<Node> buildAllContexts() {
         logger.info("Building contexts for all roots in schema");
         var startTime = System.currentTimeMillis();
-        List<Node> rootNodes = nodeRepository.findSubjectRoots();
-        rootNodes.forEach(this::buildContexts);
+        List<Node> rootNodes = nodeRepository.findProgrammes();
+        rootNodes.forEach(contextUpdaterService::updateContexts);
         logger.info("Building contexts for all roots. took {} ms", System.currentTimeMillis() - startTime);
         return rootNodes;
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    private void buildContexts(Node entity) {
-        logger.debug("Building contexts for node {}", entity.getName());
-        cachedUrlUpdaterService.updateContexts(entity);
-        entityManager.flush();
     }
 
     @Transactional
