@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import no.ndla.taxonomy.service.NodeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -31,7 +30,6 @@ public class Admin {
     @Operation(
             summary = "Updates contexts for all roots. Requires taxonomy:admin access.",
             security = {@SecurityRequirement(name = "oauth")})
-    @Transactional
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public void buildAllContexts() {

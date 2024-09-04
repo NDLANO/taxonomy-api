@@ -32,11 +32,9 @@ public class ContextsTest extends RestTest {
 
     @Test
     public void all_subjects_are_contexts() throws Exception {
-        nodeRepository.flush();
-
         builder.node(s -> s.nodeType(NodeType.SUBJECT)
-                .isContext(true)
                 .publicId("urn:subject:1")
+                .isContext(true)
                 .name("Subject 1"));
 
         var response = testUtils.getResource("/v1/contexts");

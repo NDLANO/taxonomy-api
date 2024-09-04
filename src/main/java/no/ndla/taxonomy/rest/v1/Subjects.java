@@ -49,13 +49,13 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
 
     public Subjects(
             TreeSorter treeSorter,
-            ContextUpdaterService cachedUrlUpdaterService,
+            ContextUpdaterService contextUpdaterService,
             RecursiveNodeTreeService recursiveNodeTreeService,
             NodeService nodeService,
             NodeRepository nodeRepository,
             NodeConnectionRepository nodeConnectionRepository,
             QualityEvaluationService qualityEvaluationService) {
-        super(nodeRepository, cachedUrlUpdaterService, nodeService, qualityEvaluationService);
+        super(nodeRepository, contextUpdaterService, nodeService, qualityEvaluationService);
 
         this.topicTreeSorter = treeSorter;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
@@ -154,6 +154,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                         Optional.empty(),
                         Optional.of(false),
                         false,
+                        false,
                         newUrlSeparator))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
@@ -170,7 +171,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language) {
-        return nodeService.getNode(id, language, Optional.empty(), Optional.empty(), Optional.of(false), false);
+        return nodeService.getNode(id, language, Optional.empty(), Optional.empty(), Optional.of(false), false, true);
     }
 
     @Deprecated
@@ -262,6 +263,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                         language.orElse(Constants.DefaultLanguage),
                         Optional.of(false),
                         false,
+                        true,
                         newUrlSeparator))
                 .forEach(returnList::add);
 
@@ -342,6 +344,6 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                     Optional<URI> relevance) {
 
         return nodeService.getResourcesByNodeId(
-                subjectId, resourceTypeIds, relevance, language, true, Optional.of(false), false);
+                subjectId, resourceTypeIds, relevance, language, true, Optional.of(false), false, true);
     }
 }

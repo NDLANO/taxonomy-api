@@ -56,7 +56,7 @@ public abstract class RestTest extends AbstractIntegrationTest {
     protected TestUtils testUtils;
 
     @Autowired
-    protected ContextUpdaterService cachedUrlUpdaterService;
+    protected ContextUpdaterService contextUpdaterService;
 
     protected Builder builder;
 
@@ -76,7 +76,7 @@ public abstract class RestTest extends AbstractIntegrationTest {
     @SuppressWarnings("unchecked")
     @BeforeEach
     public void restTestSetUp() {
-        builder = new Builder(entityManager, cachedUrlUpdaterService);
+        builder = new Builder(entityManager, contextUpdaterService);
         nodeRepository.deleteAllAndFlush();
         nodeConnectionRepository.deleteAllAndFlush();
     }

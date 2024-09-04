@@ -147,9 +147,11 @@ public class TestSeeder {
             nodeResource.setRank(rank);
         }
 
+        nodeConnectionRepository.saveAndFlush(nodeResource);
+
         nodeResource.getParent().ifPresent(cachedUrlUpdaterService::updateContexts);
 
-        return nodeConnectionRepository.saveAndFlush(nodeResource);
+        return nodeResource;
     }
 
     private void clearAll() {

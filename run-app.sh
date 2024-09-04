@@ -10,4 +10,4 @@ if [[ "$RUNNING_IN_DOCKER" = "true" ]]; then
   fi
 fi
 
-java -Xmx${HEAPSPACE_MAX:-"1000m"} --add-exports java.desktop/sun.font=ALL-UNNAMED -jar /app.jar
+java -Xmx${HEAPSPACE_MAX:-"2G"} -Xms${HEAPSPACE_MAX:-"2G"} --add-exports java.desktop/sun.font=ALL-UNNAMED -jar /app.jar

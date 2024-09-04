@@ -45,10 +45,10 @@ public class NodeResources extends CrudControllerWithMetadata<NodeConnection> {
             NodeRepository nodeRepository,
             NodeConnectionService connectionService,
             NodeConnectionRepository nodeConnectionRepository,
-            ContextUpdaterService cachedUrlUpdaterService,
+            ContextUpdaterService contextUpdaterService,
             NodeService nodeService,
             QualityEvaluationService qualityEvaluationService) {
-        super(nodeConnectionRepository, cachedUrlUpdaterService, nodeService, qualityEvaluationService);
+        super(nodeConnectionRepository, contextUpdaterService, nodeService, qualityEvaluationService);
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.nodeRepository = nodeRepository;
         this.connectionService = connectionService;

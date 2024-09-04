@@ -49,11 +49,11 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             NodeRepository nodeRepository,
             NodeConnectionRepository nodeConnectionRepository,
             NodeService nodeService,
-            ContextUpdaterService cachedUrlUpdaterService,
+            ContextUpdaterService contextUpdaterService,
             RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter treeSorter,
             QualityEvaluationService qualityEvaluationService) {
-        super(nodeRepository, cachedUrlUpdaterService, nodeService, qualityEvaluationService);
+        super(nodeRepository, contextUpdaterService, nodeService, qualityEvaluationService);
 
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
@@ -205,7 +205,10 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<Boolean> includeContexts,
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
-                    boolean filterProgrammes) {
+                    boolean filterProgrammes,
+            @Parameter(description = "Only visible contexts")
+                    @RequestParam(value = "isVisible", required = false, defaultValue = "true")
+                    boolean isVisible) {
         if (page.isEmpty() || pageSize.isEmpty()) {
             throw new IllegalArgumentException("Need both page and pageSize to return data");
         }
@@ -222,6 +225,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                         Optional.empty(),
                         includeContexts,
                         filterProgrammes,
+                        isVisible,
                         newUrlSeparator))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
@@ -240,12 +244,15 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     @RequestParam(value = "includeContexts", required = false, defaultValue = "true")
                     Optional<Boolean> includeContexts,
             @Parameter(description = "Filter out programme contexts")
-                    @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
+                    @RequestParam(value = "filterProgrammes", required = false, defaultValue = "true")
                     boolean filterProgrammes,
+            @Parameter(description = "Only visible contexts")
+                    @RequestParam(value = "isVisible", required = false, defaultValue = "true")
+                    boolean isVisible,
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language) {
-        return nodeService.getNode(id, language, rootId, parentId, includeContexts, filterProgrammes);
+        return nodeService.getNode(id, language, rootId, parentId, includeContexts, filterProgrammes, isVisible);
     }
 
     @PostMapping
@@ -318,7 +325,10 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<Boolean> includeContexts,
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
-                    boolean filterProgrammes) {
+                    boolean filterProgrammes,
+            @Parameter(description = "Only visible contexts")
+                    @RequestParam(value = "isVisible", required = false, defaultValue = "true")
+                    boolean isVisible) {
         final var node = nodeRepository.findFirstByPublicId(id).orElseThrow(() -> new NotFoundException("Node", id));
 
         final List<URI> childrenIds;
@@ -354,6 +364,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                         language.orElse(Constants.DefaultLanguage),
                         includeContexts,
                         filterProgrammes,
+                        isVisible,
                         newUrlSeparator))
                 .forEach(returnList::add);
 
@@ -399,6 +410,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
                     boolean filterProgrammes,
+            @Parameter(description = "Only visible contexts")
+                    @RequestParam(value = "isVisible", required = false, defaultValue = "true")
+                    boolean isVisible,
             @Parameter(description = "If true, resources from children are fetched recursively")
                     @RequestParam(value = "recursive", required = false, defaultValue = "false")
                     boolean recursive,
@@ -413,7 +427,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<URI> relevance) {
 
         return nodeService.getResourcesByNodeId(
-                nodeId, resourceTypeIds, relevance, language, recursive, includeContexts, filterProgrammes);
+                nodeId, resourceTypeIds, relevance, language, recursive, includeContexts, filterProgrammes, isVisible);
     }
 
     @GetMapping("{id}/full")

@@ -104,13 +104,23 @@ public class NodeDTO {
             Optional<String> contextId,
             Optional<Boolean> includeContexts,
             boolean filterProgrammes,
+            boolean isVisible,
             boolean newUrlSeparator) {
+
+        var contexts = entity.getContexts();
+        var visibleContexts =
+                isVisible ? contexts.stream().filter(TaxonomyContext::isVisible).collect(Collectors.toSet()) : contexts;
+        var filteredContexts = visibleContexts.stream()
+                .filter(ctx -> !filterProgrammes || !ctx.rootId().contains(NodeType.PROGRAMME.getName()))
+                .toList();
+
         this.qualityEvaluation = QualityEvaluationDTO.fromNode(entity);
         this.gradeAverage = GradeAverageDTO.fromNode(entity);
         this.id = entity.getPublicId();
         this.contentUri = Optional.ofNullable(entity.getContentUri());
 
-        this.paths = entity.getAllPaths();
+        this.paths =
+                filteredContexts.stream().map(TaxonomyContext::path).collect(Collectors.toCollection(TreeSet::new));
 
         this.path =
                 entity.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
@@ -146,29 +156,24 @@ public class NodeDTO {
 
         Optional<TaxonomyContext> selected = entity.pickContext(contextId, parent, root);
         selected.ifPresent(ctx -> {
-            this.path = ctx.path();
+            var contextDto = getTaxonomyContextDTO(entity, newUrlSeparator, ctx, relevanceName);
+
             // TODO: this changes the content in context breadcrumbs
             LanguageField<List<String>> breadcrumbList =
                     LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity));
             this.breadcrumbs = breadcrumbList.containsKey(this.language)
                     ? breadcrumbList.get(this.language)
                     : breadcrumbList.get(Constants.DefaultLanguage);
-            this.relevanceId = Optional.of(URI.create(ctx.relevanceId()));
-            this.contextId = Optional.of(ctx.contextId());
-            this.url = PrettyUrlUtil.createPrettyUrl(
-                    Optional.of(ctx.rootName()),
-                    LanguageField.fromNode(entity),
-                    this.language,
-                    ctx.contextId(),
-                    entity.getNodeType(),
-                    newUrlSeparator);
 
-            this.context = Optional.of(getTaxonomyContextDTO(entity, newUrlSeparator, ctx, relevanceName));
+            this.path = contextDto.path();
+            this.relevanceId = Optional.of(contextDto.relevanceId());
+            this.contextId = Optional.of(contextDto.contextId());
+            this.url = contextDto.url();
+            this.context = Optional.of(contextDto);
         });
 
         includeContexts.filter(Boolean::booleanValue).ifPresent(includeCtx -> {
-            this.contexts = entity.getContexts().stream()
-                    .filter(ctx -> !filterProgrammes || !ctx.rootId().contains(NodeType.PROGRAMME.getName()))
+            this.contexts = filteredContexts.stream()
                     .map(ctx -> getTaxonomyContextDTO(entity, newUrlSeparator, ctx, relevanceName))
                     .toList();
         });
@@ -212,7 +217,7 @@ public class NodeDTO {
                         .map(SearchableTaxonomyResourceType::new)
                         .toList(),
                 ctx.parentIds().stream().map(URI::create).toList(),
-                ctx.parentContextIds(),
+                ctx.parentContextIds().stream().toList(),
                 ctx.isPrimary(),
                 ctx.isActive(),
                 ctx.isVisible(),
