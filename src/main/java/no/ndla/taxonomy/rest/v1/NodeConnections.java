@@ -43,7 +43,6 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
     private final NodeConnectionService connectionService;
-    private final NodeService nodeService;
 
     public NodeConnections(
             NodeRepository nodeRepository,
@@ -56,7 +55,6 @@ public class NodeConnections extends CrudControllerWithMetadata<NodeConnection> 
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
         this.connectionService = connectionService;
-        this.nodeService = nodeService;
     }
 
     @GetMapping

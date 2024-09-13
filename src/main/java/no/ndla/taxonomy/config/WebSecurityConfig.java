@@ -10,6 +10,7 @@ package no.ndla.taxonomy.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,10 +19,15 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+/*
+ * TODO: Change to EnableMethodSecurity from EnableGlobalMethodSecurity when spring security 6.4.0 is released
+ * PreAuthorize in CrudController triggers a bug in spring security 6.2.6 when using EnableMethodSecurity
+ * https://github.com/spring-projects/spring-security/issues/15097
+ */
 @Profile("auth")
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(securedEnabled = true)
+@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 public class WebSecurityConfig {
 
     @Bean

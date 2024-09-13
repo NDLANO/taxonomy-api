@@ -51,6 +51,9 @@ public abstract class CrudController<T extends DomainEntity> {
         this.repository = repository;
     }
 
+    /*
+     * Looks like this method is only used by ResourceTypes.java. All other subclasses define their own deleteEntity method.
+     */
     @DeleteMapping("/{id}")
     @Operation(
             summary = "Deletes a single entity by id",
@@ -58,7 +61,7 @@ public abstract class CrudController<T extends DomainEntity> {
     @PreAuthorize("hasAuthority('TAXONOMY_WRITE')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
-    public void deleteEntity(@PathVariable("id") URI id) {
+    protected void deleteEntity(@PathVariable("id") URI id) {
         Optional<Grade> oldGrade = Optional.empty();
         Optional<Collection<Node>> parents = Optional.empty();
 
