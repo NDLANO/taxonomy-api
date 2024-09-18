@@ -113,4 +113,13 @@ public class QualityEvaluationService {
             updateQualityEvaluationOfRecursive(parentsParents, oldGrade, newGrade);
         }));
     }
+
+
+    @Transactional
+    public void updateEntireAverageTreeForNode(URI publicId) {
+        var node = nodeRepository.findFirstByPublicId(publicId)
+                .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
+        node.updateEntireAverageTree();
+        nodeRepository.save(node);
+    }
 }
