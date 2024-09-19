@@ -55,7 +55,22 @@ public class QualityEvaluationService {
         updateQualityEvaluationOfParents(
                 child.getPublicId(), child.getNodeType(), Optional.empty(), child.getQualityEvaluationGrade());
 
-        child.getChildQualityEvaluationAverage().ifPresent(parent::addGradeAverageTreeToAverageCalculation);
+        child.getChildQualityEvaluationAverage()
+                .ifPresent(childAverage -> addGradeAverageTreeToParents(parent, childAverage));
+    }
+
+    protected void addGradeAverageTreeToParents(Node node, GradeAverage averageToAdd) {
+        node.addGradeAverageTreeToAverageCalculation(averageToAdd);
+        node.getParentNodes().forEach(parent -> {
+            addGradeAverageTreeToParents(parent, averageToAdd);
+        });
+    }
+
+    protected void removeGradeAverageTreeFromParents(Node node, GradeAverage averageToRemove) {
+        node.removeGradeAverageTreeFromAverageCalculation(averageToRemove);
+        node.getParentNodes().forEach(parent -> {
+            removeGradeAverageTreeFromParents(parent, averageToRemove);
+        });
     }
 
     public void removeQualityEvaluationOfDeletedConnection(NodeConnection connectionToDelete) {
@@ -75,7 +90,7 @@ public class QualityEvaluationService {
         var childAverage = child.getChildQualityEvaluationAverage().get();
 
         var parent = connectionToDelete.getParent().get();
-        parent.removeGradeAverageTreeFromAverageCalculation(childAverage);
+        removeGradeAverageTreeFromParents(parent, childAverage);
     }
 
     @Transactional
@@ -114,10 +129,10 @@ public class QualityEvaluationService {
         }));
     }
 
-
     @Transactional
     public void updateEntireAverageTreeForNode(URI publicId) {
-        var node = nodeRepository.findFirstByPublicId(publicId)
+        var node = nodeRepository
+                .findFirstByPublicId(publicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
         node.updateEntireAverageTree();
         nodeRepository.save(node);

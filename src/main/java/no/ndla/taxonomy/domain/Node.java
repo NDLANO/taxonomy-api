@@ -251,7 +251,10 @@ public class Node extends DomainObject implements EntityWithMetadata {
                 .flatMap(child -> {
                     ArrayList<Optional<Grade>> childGrades = new ArrayList<>(child.getChildGradesRecursively());
                     if (child.nodeType == NodeType.RESOURCE) {
-                        childGrades.add(child.getQualityEvaluationGrade());
+                        var grade = child.getQualityEvaluationGrade();
+                        grade.ifPresent(
+                                value -> logger.info("Found grade {} for resource {}", value, child.getPublicId()));
+                        childGrades.add(grade);
                     }
                     return childGrades.stream();
                 })
