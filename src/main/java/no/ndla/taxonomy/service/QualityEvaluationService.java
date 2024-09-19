@@ -11,6 +11,8 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
@@ -136,5 +138,19 @@ public class QualityEvaluationService {
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
         node.updateEntireAverageTree();
         nodeRepository.save(node);
+    }
+
+    public void updateQualityEvaluationOfAllNodes() {
+        var ids = nodeRepository.findIdsWithChildren();
+        final var counter = new AtomicInteger();
+        ids.stream()
+                .collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000))
+                .values()
+                .forEach(idChunk -> {
+                    var toSave = nodeRepository.findByIds(idChunk).stream()
+                            .peek(Node::updateEntireAverageTree)
+                            .toList();
+                    nodeRepository.saveAll(toSave);
+                });
     }
 }

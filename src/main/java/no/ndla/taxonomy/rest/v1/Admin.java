@@ -39,10 +39,19 @@ public class Admin {
 
     @PostMapping("/buildAverageTree/{id}")
     @Operation(
-            summary = "Updates average tree for all nodes. Requires taxonomy:admin access.",
+            summary = "Updates average tree for the provided node. Requires taxonomy:admin access.",
             security = {@SecurityRequirement(name = "oauth")})
     @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
     public void buildAverageTree(@PathVariable("id") URI id) {
         qualityEvaluationService.updateEntireAverageTreeForNode(id);
+    }
+
+    @PostMapping("/buildAverageTree")
+    @Operation(
+            summary = "Updates average tree for all nodes. Requires taxonomy:admin access.",
+            security = {@SecurityRequirement(name = "oauth")})
+    @PreAuthorize("hasAuthority('TAXONOMY_ADMIN')")
+    public void buildAverageTree() {
+        qualityEvaluationService.updateQualityEvaluationOfAllNodes();
     }
 }

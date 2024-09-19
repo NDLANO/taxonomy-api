@@ -235,6 +235,11 @@ public class Node extends DomainObject implements EntityWithMetadata {
     public void updateEntireAverageTree() {
         var allChildGrades = getChildGradesRecursively();
         var gradeAverage = GradeAverage.fromGrades(allChildGrades);
+        logger.info(
+                "Found average grades for {} children of node '{}' -> {}",
+                allChildGrades.size(),
+                this.getPublicId(),
+                gradeAverage);
 
         if (gradeAverage.count == 0) {
             this.childQualityEvaluationAverage = null;
@@ -251,10 +256,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
                 .flatMap(child -> {
                     ArrayList<Optional<Grade>> childGrades = new ArrayList<>(child.getChildGradesRecursively());
                     if (child.nodeType == NodeType.RESOURCE) {
-                        var grade = child.getQualityEvaluationGrade();
-                        grade.ifPresent(
-                                value -> logger.info("Found grade {} for resource {}", value, child.getPublicId()));
-                        childGrades.add(grade);
+                        childGrades.add(child.getQualityEvaluationGrade());
                     }
                     return childGrades.stream();
                 })

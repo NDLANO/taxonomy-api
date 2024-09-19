@@ -38,6 +38,15 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
 
     @Query(
             """
+            SELECT n.id
+            FROM Node n
+            LEFT JOIN n.childConnections cc
+            WHERE cc IS NOT NULL
+            """)
+    List<Integer> findIdsWithChildren();
+
+    @Query(
+            """
             SELECT n.id FROM Node n
             LEFT JOIN n.parentConnections pc
             WHERE ((:#{#nodeTypes == null} = true) OR n.nodeType in (:nodeTypes))
