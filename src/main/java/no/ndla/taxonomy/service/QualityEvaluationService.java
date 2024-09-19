@@ -61,18 +61,14 @@ public class QualityEvaluationService {
                 .ifPresent(childAverage -> addGradeAverageTreeToParents(parent, childAverage));
     }
 
-    protected void addGradeAverageTreeToParents(Node node, GradeAverage averageToAdd) {
+    private void addGradeAverageTreeToParents(Node node, GradeAverage averageToAdd) {
         node.addGradeAverageTreeToAverageCalculation(averageToAdd);
-        node.getParentNodes().forEach(parent -> {
-            addGradeAverageTreeToParents(parent, averageToAdd);
-        });
+        node.getParentNodes().forEach(parent -> addGradeAverageTreeToParents(parent, averageToAdd));
     }
 
-    protected void removeGradeAverageTreeFromParents(Node node, GradeAverage averageToRemove) {
+    private void removeGradeAverageTreeFromParents(Node node, GradeAverage averageToRemove) {
         node.removeGradeAverageTreeFromAverageCalculation(averageToRemove);
-        node.getParentNodes().forEach(parent -> {
-            removeGradeAverageTreeFromParents(parent, averageToRemove);
-        });
+        node.getParentNodes().forEach(parent -> removeGradeAverageTreeFromParents(parent, averageToRemove));
     }
 
     public void removeQualityEvaluationOfDeletedConnection(NodeConnection connectionToDelete) {
