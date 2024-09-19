@@ -11,6 +11,8 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
@@ -55,7 +57,18 @@ public class QualityEvaluationService {
         updateQualityEvaluationOfParents(
                 child.getPublicId(), child.getNodeType(), Optional.empty(), child.getQualityEvaluationGrade());
 
-        child.getChildQualityEvaluationAverage().ifPresent(parent::addGradeAverageTreeToAverageCalculation);
+        child.getChildQualityEvaluationAverage()
+                .ifPresent(childAverage -> addGradeAverageTreeToParents(parent, childAverage));
+    }
+
+    private void addGradeAverageTreeToParents(Node node, GradeAverage averageToAdd) {
+        node.addGradeAverageTreeToAverageCalculation(averageToAdd);
+        node.getParentNodes().forEach(parent -> addGradeAverageTreeToParents(parent, averageToAdd));
+    }
+
+    private void removeGradeAverageTreeFromParents(Node node, GradeAverage averageToRemove) {
+        node.removeGradeAverageTreeFromAverageCalculation(averageToRemove);
+        node.getParentNodes().forEach(parent -> removeGradeAverageTreeFromParents(parent, averageToRemove));
     }
 
     public void removeQualityEvaluationOfDeletedConnection(NodeConnection connectionToDelete) {
@@ -75,7 +88,7 @@ public class QualityEvaluationService {
         var childAverage = child.getChildQualityEvaluationAverage().get();
 
         var parent = connectionToDelete.getParent().get();
-        parent.removeGradeAverageTreeFromAverageCalculation(childAverage);
+        removeGradeAverageTreeFromParents(parent, childAverage);
     }
 
     @Transactional
@@ -112,5 +125,28 @@ public class QualityEvaluationService {
                     p.getParentNodes().stream().map(Node::getPublicId).toList();
             updateQualityEvaluationOfRecursive(parentsParents, oldGrade, newGrade);
         }));
+    }
+
+    @Transactional
+    public void updateEntireAverageTreeForNode(URI publicId) {
+        var node = nodeRepository
+                .findFirstByPublicId(publicId)
+                .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
+        node.updateEntireAverageTree();
+        nodeRepository.save(node);
+    }
+
+    public void updateQualityEvaluationOfAllNodes() {
+        var ids = nodeRepository.findIdsWithChildren();
+        final var counter = new AtomicInteger();
+        ids.stream()
+                .collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000))
+                .values()
+                .forEach(idChunk -> {
+                    var toSave = nodeRepository.findByIds(idChunk).stream()
+                            .peek(Node::updateEntireAverageTree)
+                            .toList();
+                    nodeRepository.saveAll(toSave);
+                });
     }
 }

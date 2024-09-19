@@ -235,6 +235,11 @@ public class Node extends DomainObject implements EntityWithMetadata {
     public void updateEntireAverageTree() {
         var allChildGrades = getChildGradesRecursively();
         var gradeAverage = GradeAverage.fromGrades(allChildGrades);
+        logger.info(
+                "Found average grades for {} children of node '{}' -> {}",
+                allChildGrades.size(),
+                this.getPublicId(),
+                gradeAverage);
 
         if (gradeAverage.count == 0) {
             this.childQualityEvaluationAverage = null;
