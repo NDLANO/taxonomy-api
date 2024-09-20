@@ -1322,17 +1322,54 @@ public class NodesTest extends RestTest {
         connect(t1, t4);
 
         {
-            var subject = nodeRepository.findFirstByPublicId(URI.create("urn:subject:1"));
-            var qe = subject.get().getChildQualityEvaluationAverage().get();
+            // S1
+            var node = nodeRepository.findFirstByPublicId(s1.getPublicId());
+            var qe = node.get().getChildQualityEvaluationAverage().get();
             assertEquals(16, qe.getCount());
             assertEquals(3.75, qe.getAverageValue());
+        }
+        {
+            // T1
+            var node = nodeRepository.findFirstByPublicId(t1.getPublicId());
+            var qe = node.get().getChildQualityEvaluationAverage().get();
+            assertEquals(16, qe.getCount());
+            assertEquals(3.75, qe.getAverageValue());
+        }
+        {
+            // T2
+            var node = nodeRepository.findFirstByPublicId(t2.getPublicId());
+            var qe = node.get().getChildQualityEvaluationAverage().get();
+            assertEquals(8, qe.getCount());
+            assertEquals(3.625, qe.getAverageValue());
+        }
+        {
+            // T3
+            var node = nodeRepository.findFirstByPublicId(t3.getPublicId());
+            var qe = node.get().getChildQualityEvaluationAverage().get();
+            assertEquals(4, qe.getCount());
+            assertEquals(3.5, qe.getAverageValue());
+        }
+        {
+            // T4
+            var node = nodeRepository.findFirstByPublicId(t4.getPublicId());
+            var qe = node.get().getChildQualityEvaluationAverage().get();
+            assertEquals(4, qe.getCount());
+            assertEquals(3.5, qe.getAverageValue());
         }
 
         disconnect(t1, t4);
 
         {
-            var subject = nodeRepository.findFirstByPublicId(URI.create("urn:subject:1"));
-            var qe = subject.get().getChildQualityEvaluationAverage().get();
+            // S1
+            var node = nodeRepository.findFirstByPublicId(s1.getPublicId());
+            var qe = node.get().getChildQualityEvaluationAverage().get();
+            assertEquals(12, qe.getCount());
+            assertEquals(3.8333333333333335, qe.getAverageValue());
+        }
+        {
+            // T1
+            var node = nodeRepository.findFirstByPublicId(t1.getPublicId());
+            var qe = node.get().getChildQualityEvaluationAverage().get();
             assertEquals(12, qe.getCount());
             assertEquals(3.8333333333333335, qe.getAverageValue());
         }
