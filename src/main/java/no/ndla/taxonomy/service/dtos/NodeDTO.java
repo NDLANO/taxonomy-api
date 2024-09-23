@@ -181,21 +181,30 @@ public class NodeDTO {
 
     private TaxonomyContextDTO getTaxonomyContextDTO(
             Node entity, boolean newUrlSeparator, TaxonomyContext ctx, LanguageField<String> finalRelevanceName) {
-        var parents = ctx.parents().stream()
-                .map(parent -> {
-                    var url = PrettyUrlUtil.createPrettyUrl(
-                            Optional.ofNullable(ctx.rootName()),
-                            parent.name(),
-                            this.language,
-                            parent.contextId(),
-                            parent.nodeType(),
-                            newUrlSeparator);
-                    return new TaxonomyCrumbDTO(
-                            URI.create(parent.id()),
-                            parent.contextId(),
-                            LanguageFieldDTO.fromLanguageField(parent.name()),
-                            parent.path(),
-                            url.orElse(parent.path()));
+        var parentContexts = entity.getAllParentContexts();
+        var parents = ctx.parentContextIds().stream()
+                .map(parentCtxId -> {
+                    var parent = parentContexts.stream()
+                            .filter(c -> c.contextId().equals(parentCtxId))
+                            .findFirst();
+                    if (parent.isPresent()) {
+                        var p = parent.get();
+                        var url = PrettyUrlUtil.createPrettyUrl(
+                                Optional.ofNullable(ctx.rootName()),
+                                p.name(),
+                                this.language,
+                                parentCtxId,
+                                p.nodeType(),
+                                newUrlSeparator);
+                        return new TaxonomyCrumbDTO(
+                                URI.create(p.publicId()),
+                                parentCtxId,
+                                LanguageFieldDTO.fromLanguageField(p.name()),
+                                p.path(),
+                                url.orElse(p.path()));
+                    } else {
+                        return null;
+                    }
                 })
                 .toList();
         return new TaxonomyContextDTO(
