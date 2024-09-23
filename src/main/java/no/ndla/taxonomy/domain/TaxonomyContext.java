@@ -32,6 +32,7 @@ import java.util.Optional;
  * @param contextId        Hash of root publicId + nodeConnection publicId. Unique for this context.
  * @param rank             The rank of the context. From nodeConnection.
  * @param connectionId     The id of the connection. From nodeConnection.
+ * @param parents
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TaxonomyContext(
@@ -51,4 +52,5 @@ public record TaxonomyContext(
         String relevanceId,
         String contextId,
         int rank,
-        String connectionId) {}
+        String connectionId,
+        List<TaxonomyCrumb> parents) {}

@@ -1573,10 +1573,12 @@
     </changeSet>
 
     <changeSet id="20240923 Add values from node, and drop parents" author="Gunnar Velle">
+        <validCheckSum>9:e9c3fe94bf888d0a08b4adff213240d0</validCheckSum>
+        <validCheckSum>9:8bbdd8646e8dc993689d57fa917efb91</validCheckSum>
         <sql>
             UPDATE node n
             SET contexts = (
-            SELECT jsonb_agg(jsonb_set(jsonb_set(obj, '{publicId}', to_jsonb(n.public_id), true), '{nodeType}', to_jsonb(n.node_type), true) - 'parents')
+            SELECT jsonb_agg(jsonb_set(jsonb_set(obj, '{publicId}', to_jsonb(n.public_id), true), '{nodeType}', to_jsonb(n.node_type), true))
             FROM jsonb_array_elements(contexts) AS obj
             )
             WHERE contexts != '[]'

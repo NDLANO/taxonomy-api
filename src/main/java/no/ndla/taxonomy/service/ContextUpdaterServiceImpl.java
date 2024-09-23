@@ -49,7 +49,8 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                     Relevance.CORE.getPublicId().toString(),
                     contextId,
                     0,
-                    ""));
+                    "",
+                    new ArrayList<>()));
         }
 
         // Get all parent connections, append all contexts from the parent to the list and return.
@@ -88,7 +89,8 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
                                                         .toString()),
                                         contextId,
                                         parentConnection.getRank(),
-                                        parentConnection.getPublicId().toString());
+                                        parentConnection.getPublicId().toString(),
+                                        new ArrayList<>());
                             })
                             .forEach(returnedContexts::add);
                 }));
