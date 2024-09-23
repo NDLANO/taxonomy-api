@@ -484,7 +484,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
                 .map(NodeConnection::getParent)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Collection<Node> getResources() {
