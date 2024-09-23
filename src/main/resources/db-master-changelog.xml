@@ -1571,4 +1571,16 @@
             WHERE contexts != '[]'
         </sql>
     </changeSet>
+
+    <changeSet id="20240923 Add values from node, and drop parents" author="Gunnar Velle">
+        <sql>
+            UPDATE node n
+            SET contexts = (
+            SELECT jsonb_agg(jsonb_set(jsonb_set(obj, '{publicId}', to_jsonb(n.public_id), true), '{nodeType}', to_jsonb(n.node_type), true) - 'parents')
+            FROM jsonb_array_elements(contexts) AS obj
+            )
+            WHERE contexts != '[]'
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

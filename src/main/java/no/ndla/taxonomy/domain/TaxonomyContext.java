@@ -15,7 +15,9 @@ import java.util.Optional;
  * Identifies a unique context for any node. A context is a position for a node in the structure, identified by root
  * node and parent-connection
  *
+ * @param publicId         The publicId of the node.
  * @param name             The name of the node.
+ * @param nodeType         The type of the node.
  * @param rootId           The publicId of the node at the root of the context.
  * @param rootName         The name of the root.
  * @param path             The path for this connection.
@@ -30,11 +32,12 @@ import java.util.Optional;
  * @param contextId        Hash of root publicId + nodeConnection publicId. Unique for this context.
  * @param rank             The rank of the context. From nodeConnection.
  * @param connectionId     The id of the connection. From nodeConnection.
- * @param parents          The parents of the context.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TaxonomyContext(
+        String publicId,
         LanguageField<String> name,
+        NodeType nodeType,
         String rootId,
         LanguageField<String> rootName,
         String path,
@@ -48,5 +51,4 @@ public record TaxonomyContext(
         String relevanceId,
         String contextId,
         int rank,
-        String connectionId,
-        List<TaxonomyCrumb> parents) {}
+        String connectionId) {}

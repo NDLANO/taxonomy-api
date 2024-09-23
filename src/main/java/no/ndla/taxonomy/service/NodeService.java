@@ -411,21 +411,30 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                 .map(SearchableTaxonomyResourceType::new)
                                 .toList();
                         var breadcrumbs = context.breadcrumbs();
-                        var parents = context.parents().stream()
-                                .map(parent -> {
-                                    var url = PrettyUrlUtil.createPrettyUrl(
-                                            Optional.ofNullable(context.rootName()),
-                                            parent.name(),
-                                            language,
-                                            parent.contextId(),
-                                            parent.nodeType(),
-                                            newUrlSeparator);
-                                    return new TaxonomyCrumbDTO(
-                                            URI.create(parent.id()),
-                                            parent.contextId(),
-                                            LanguageFieldDTO.fromLanguageField(parent.name()),
-                                            parent.path(),
-                                            url.orElse(parent.path()));
+                        var parentContexts = node.getAllParentContexts();
+                        var parents = context.parentContextIds().stream()
+                                .map(parentCtxId -> {
+                                    var parent = parentContexts.stream()
+                                            .filter(c -> c.contextId().equals(parentCtxId))
+                                            .findFirst();
+                                    if (parent.isPresent()) {
+                                        var p = parent.get();
+                                        var url = PrettyUrlUtil.createPrettyUrl(
+                                                Optional.ofNullable(context.rootName()),
+                                                p.name(),
+                                                language,
+                                                parentCtxId,
+                                                p.nodeType(),
+                                                newUrlSeparator);
+                                        return new TaxonomyCrumbDTO(
+                                                URI.create(p.publicId()),
+                                                parentCtxId,
+                                                LanguageFieldDTO.fromLanguageField(p.name()),
+                                                p.path(),
+                                                url.orElse(p.path()));
+                                    } else {
+                                        return null;
+                                    }
                                 })
                                 .toList();
                         return new TaxonomyContextDTO(

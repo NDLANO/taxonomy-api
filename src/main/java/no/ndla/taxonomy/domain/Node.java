@@ -496,6 +496,20 @@ public class Node extends DomainObject implements EntityWithMetadata {
                 .toList();
     }
 
+    private Collection<Node> getAllParentsRecursive() {
+        var parents = getParentNodes();
+        ArrayList<Node> all = new ArrayList<>(parents);
+        parents.forEach(parent -> all.addAll(parent.getAllParentsRecursive()));
+        return all;
+    }
+
+    public Collection<TaxonomyContext> getAllParentContexts() {
+        return getAllParentsRecursive().stream()
+                .map(Node::getContexts)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+    }
+
     public void setIdent(String ident) {
         this.ident = ident;
         updatePublicID();
