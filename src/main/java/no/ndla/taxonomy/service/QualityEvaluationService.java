@@ -10,8 +10,6 @@ package no.ndla.taxonomy.service;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
@@ -140,16 +138,9 @@ public class QualityEvaluationService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateQualityEvaluationOfAllNodes() {
-        var ids = nodeRepository.findIdsWithChildren();
-        final var counter = new AtomicInteger();
-        ids.stream()
-                .collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000))
-                .values()
-                .forEach(idChunk -> {
-                    var toSave = nodeRepository.findByIds(idChunk).stream()
-                            .peek(Node::updateEntireAverageTree)
-                            .toList();
-                    nodeRepository.saveAll(toSave);
-                });
+        nodeRepository.wipeQualityEvaluationAverages();
+        var nodeStream = nodeRepository.findNodesWithQualityEvaluation();
+        nodeStream.forEach(
+                node -> updateQualityEvaluationOfParents(node, Optional.empty(), node.getQualityEvaluationGrade()));
     }
 }

@@ -1414,7 +1414,6 @@ public class NodesTest extends RestTest {
         assertEquals(expectedAverage, qe.getAverageValue());
     }
 
-
     private static class ConnectionTypeCounter {
         private final ConnectionDTO[] connections;
         private int subjectCount;
