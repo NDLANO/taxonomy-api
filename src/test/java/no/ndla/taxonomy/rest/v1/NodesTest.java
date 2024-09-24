@@ -1321,58 +1321,16 @@ public class NodesTest extends RestTest {
 
         connect(t1, t4);
 
-        {
-            // S1
-            var node = nodeRepository.findFirstByPublicId(s1.getPublicId());
-            var qe = node.get().getChildQualityEvaluationAverage().get();
-            assertEquals(16, qe.getCount());
-            assertEquals(3.75, qe.getAverageValue());
-        }
-        {
-            // T1
-            var node = nodeRepository.findFirstByPublicId(t1.getPublicId());
-            var qe = node.get().getChildQualityEvaluationAverage().get();
-            assertEquals(16, qe.getCount());
-            assertEquals(3.75, qe.getAverageValue());
-        }
-        {
-            // T2
-            var node = nodeRepository.findFirstByPublicId(t2.getPublicId());
-            var qe = node.get().getChildQualityEvaluationAverage().get();
-            assertEquals(8, qe.getCount());
-            assertEquals(3.625, qe.getAverageValue());
-        }
-        {
-            // T3
-            var node = nodeRepository.findFirstByPublicId(t3.getPublicId());
-            var qe = node.get().getChildQualityEvaluationAverage().get();
-            assertEquals(4, qe.getCount());
-            assertEquals(3.5, qe.getAverageValue());
-        }
-        {
-            // T4
-            var node = nodeRepository.findFirstByPublicId(t4.getPublicId());
-            var qe = node.get().getChildQualityEvaluationAverage().get();
-            assertEquals(4, qe.getCount());
-            assertEquals(3.5, qe.getAverageValue());
-        }
+        testQualityEvaluationAverage(s1, 16, 3.75);
+        testQualityEvaluationAverage(t1, 16, 3.75);
+        testQualityEvaluationAverage(t2, 8, 3.625);
+        testQualityEvaluationAverage(t3, 4, 3.5);
+        testQualityEvaluationAverage(t4, 4, 3.5);
 
         disconnect(t1, t4);
 
-        {
-            // S1
-            var node = nodeRepository.findFirstByPublicId(s1.getPublicId());
-            var qe = node.get().getChildQualityEvaluationAverage().get();
-            assertEquals(12, qe.getCount());
-            assertEquals(3.8333333333333335, qe.getAverageValue());
-        }
-        {
-            // T1
-            var node = nodeRepository.findFirstByPublicId(t1.getPublicId());
-            var qe = node.get().getChildQualityEvaluationAverage().get();
-            assertEquals(12, qe.getCount());
-            assertEquals(3.8333333333333335, qe.getAverageValue());
-        }
+        testQualityEvaluationAverage(s1, 12, 3.8333333333333335);
+        testQualityEvaluationAverage(t1, 12, 3.8333333333333335);
     }
 
     @Test
@@ -1400,12 +1358,7 @@ public class NodesTest extends RestTest {
         connect(t1, r3);
         connect(t1, r4);
 
-        {
-            var node = nodeRepository.findFirstByPublicId(t1.getPublicId());
-            var qe = node.get().getChildQualityEvaluationAverage().get();
-            assertEquals(4, qe.getCount());
-            assertEquals(4.25, qe.getAverageValue());
-        }
+        testQualityEvaluationAverage(t1, 4, 4.25);
 
         disconnect(t1, t2);
 
@@ -1420,39 +1373,47 @@ public class NodesTest extends RestTest {
         connect(t2, r7);
         connect(t2, r8);
 
-        {
-            var node = nodeRepository.findFirstByPublicId(t2.getPublicId());
-            var qe = node.get().getChildQualityEvaluationAverage().get();
-            assertEquals(4, qe.getCount());
-            assertEquals(3.75, qe.getAverageValue());
-        }
-
-        {
-            var node = nodeRepository.findFirstByPublicId(t1.getPublicId());
-            var qe = node.get().getChildQualityEvaluationAverage().get();
-            assertEquals(4, qe.getCount());
-            assertEquals(4.25, qe.getAverageValue());
-        }
+        testQualityEvaluationAverage(t2, 4, 3.75);
+        testQualityEvaluationAverage(t1, 4, 4.25);
 
         disconnect(s1, t1);
         connect(t1, t2);
 
-        {
-            var node = nodeRepository.findFirstByPublicId(t1.getPublicId());
-            var qe = node.get().getChildQualityEvaluationAverage().get();
-            assertEquals(8, qe.getCount());
-            assertEquals(4.0, qe.getAverageValue());
-        }
+        testQualityEvaluationAverage(t1, 8, 4.0);
 
         connect(s1, t1);
 
-        {
-            var node = nodeRepository.findFirstByPublicId(s1.getPublicId());
-            var qe = node.get().getChildQualityEvaluationAverage().get();
-            assertEquals(8, qe.getCount());
-            assertEquals(4.0, qe.getAverageValue());
-        }
+        testQualityEvaluationAverage(s1, 8, 4.0);
     }
+
+    @Test
+    public void that_updating_after_quality_evaluation_works_as_expected() throws Exception {
+        var s1 = builder.node(NodeType.SUBJECT, s -> s.name("S1").publicId("urn:subject:1"));
+        var t1 = builder.node(
+                NodeType.TOPIC, n -> n.name("T1").publicId("urn:topic:1").qualityEvaluation(Grade.Four));
+        var r1 = builder.node(NodeType.RESOURCE, n -> n.name("R1").qualityEvaluation(Grade.Three));
+
+        connect(s1, t1);
+        connect(t1, r1);
+
+        testQualityEvaluationAverage(s1, 1, 3.0);
+        testQualityEvaluationAverage(t1, 1, 3.0);
+
+        var updateBody = new NodePostPut();
+        updateBody.name = Optional.of("Resource 1");
+        testUtils.updateResource("/v1/nodes/" + r1.getPublicId(), updateBody);
+
+        testQualityEvaluationAverage(s1, 1, 3.0);
+        testQualityEvaluationAverage(t1, 1, 3.0);
+    }
+
+    public void testQualityEvaluationAverage(Node inputNode, int expectedCount, double expectedAverage) {
+        var node = nodeRepository.findFirstByPublicId(inputNode.getPublicId()).orElseThrow();
+        var qe = node.getChildQualityEvaluationAverage().orElseThrow();
+        assertEquals(expectedCount, qe.getCount());
+        assertEquals(expectedAverage, qe.getAverageValue());
+    }
+
 
     private static class ConnectionTypeCounter {
         private final ConnectionDTO[] connections;
