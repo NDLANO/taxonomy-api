@@ -66,6 +66,11 @@ public class TestUtils {
         return createResource(path, command, status().isCreated());
     }
 
+    public MockHttpServletResponse createResource(String path) throws Exception {
+        entityManager.flush();
+        return mockMvc.perform(post(path)).andReturn().getResponse();
+    }
+
     public MockHttpServletResponse createResource(String path, Object command, ResultMatcher resultMatcher)
             throws Exception {
         entityManager.flush();

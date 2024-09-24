@@ -9,10 +9,7 @@ package no.ndla.taxonomy.service;
 
 import java.net.URI;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
@@ -39,23 +36,23 @@ public class QualityEvaluationService {
     }
 
     @Transactional
-    public void updateQualityEvaluationOfParents(
-            URI nodeId, NodeType nodeType, Optional<Grade> oldGrade, UpdatableDto<?> command) {
+    public void updateQualityEvaluationOfParents(Node node, Optional<Grade> oldGrade, UpdatableDto<?> command) {
         if (!(command instanceof NodePostPut nodeCommand)) {
             return;
         }
 
-        Optional<QualityEvaluationDTO> qe =
-                nodeCommand.qualityEvaluation.isDelete() ? Optional.empty() : nodeCommand.qualityEvaluation.getValue();
-        var newGrade = qe.map(QualityEvaluationDTO::getGrade);
+        if (!nodeCommand.qualityEvaluation.isChanged()) {
+            return;
+        }
 
-        updateQualityEvaluationOfParents(nodeId, nodeType, oldGrade, newGrade);
+        var newGrade = nodeCommand.qualityEvaluation.getValue().map(QualityEvaluationDTO::getGrade);
+
+        updateQualityEvaluationOfParents(node, oldGrade, newGrade);
     }
 
     public void updateQualityEvaluationOfNewConnection(Node parent, Node child) {
         // Update parents quality evaluation average with the newly linked one.
-        updateQualityEvaluationOfParents(
-                child.getPublicId(), child.getNodeType(), Optional.empty(), child.getQualityEvaluationGrade());
+        updateQualityEvaluationOfParents(child, Optional.empty(), child.getQualityEvaluationGrade());
 
         child.getChildQualityEvaluationAverage()
                 .ifPresent(childAverage -> addGradeAverageTreeToParents(parent, childAverage));
@@ -79,8 +76,7 @@ public class QualityEvaluationService {
         var child = connectionToDelete.getChild().get();
 
         if (shouldBeIncludedInQualityEvaluationAverage(child.getNodeType())) {
-            updateQualityEvaluationOfParents(
-                    child.getPublicId(), child.getNodeType(), child.getQualityEvaluationGrade(), Optional.empty());
+            updateQualityEvaluationOfParents(child, child.getQualityEvaluationGrade(), Optional.empty());
             return;
         }
 
@@ -92,18 +88,13 @@ public class QualityEvaluationService {
     }
 
     @Transactional
-    public void updateQualityEvaluationOfParents(
-            URI nodeId, NodeType nodeType, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
-        if (!shouldBeIncludedInQualityEvaluationAverage(nodeType)) {
+    protected void updateQualityEvaluationOfParents(Node node, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
+        if (!shouldBeIncludedInQualityEvaluationAverage(node.getNodeType())) {
             return;
         }
         if (oldGrade.isEmpty() && newGrade.isEmpty() || oldGrade.equals(newGrade)) {
             return;
         }
-
-        var node = nodeRepository
-                .findFirstByPublicId(nodeId)
-                .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
 
         updateQualityEvaluationOf(node.getParentNodes(), oldGrade, newGrade);
     }
@@ -111,20 +102,21 @@ public class QualityEvaluationService {
     @Transactional
     public void updateQualityEvaluationOf(
             Collection<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
-        var parentIds = parents.stream().map(DomainEntity::getPublicId).toList();
-        updateQualityEvaluationOfRecursive(parentIds, oldGrade, newGrade);
+        updateQualityEvaluationOfRecursive(parents, oldGrade, newGrade);
     }
 
     @Transactional
     protected void updateQualityEvaluationOfRecursive(
-            List<URI> parentIds, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
-        parentIds.forEach(pid -> nodeRepository.findFirstByPublicId(pid).ifPresent(p -> {
-            p.updateChildQualityEvaluationAverage(oldGrade, newGrade);
-            nodeRepository.save(p);
-            var parentsParents =
-                    p.getParentNodes().stream().map(Node::getPublicId).toList();
-            updateQualityEvaluationOfRecursive(parentsParents, oldGrade, newGrade);
-        }));
+            Collection<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
+        var updatedParents = parents.stream()
+                .peek(p -> {
+                    p.updateChildQualityEvaluationAverage(oldGrade, newGrade);
+                    var parentsParents = p.getParentNodes();
+                    updateQualityEvaluationOfRecursive(parentsParents, oldGrade, newGrade);
+                })
+                .toList();
+
+        nodeRepository.saveAll(updatedParents);
     }
 
     @Transactional
@@ -136,17 +128,11 @@ public class QualityEvaluationService {
         nodeRepository.save(node);
     }
 
+    @Transactional
     public void updateQualityEvaluationOfAllNodes() {
-        var ids = nodeRepository.findIdsWithChildren();
-        final var counter = new AtomicInteger();
-        ids.stream()
-                .collect(Collectors.groupingBy(i -> counter.getAndIncrement() / 1000))
-                .values()
-                .forEach(idChunk -> {
-                    var toSave = nodeRepository.findByIds(idChunk).stream()
-                            .peek(Node::updateEntireAverageTree)
-                            .toList();
-                    nodeRepository.saveAll(toSave);
-                });
+        nodeRepository.wipeQualityEvaluationAverages();
+        var nodeStream = nodeRepository.findNodesWithQualityEvaluation();
+        nodeStream.forEach(
+                node -> updateQualityEvaluationOfParents(node, Optional.empty(), node.getQualityEvaluationGrade()));
     }
 }

@@ -33,6 +33,10 @@ public class UpdateOrDelete<T> {
         return delete;
     }
 
+    public boolean isChanged() {
+        return delete || value.isPresent();
+    }
+
     public Optional<T> getValue() {
         return value;
     }

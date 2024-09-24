@@ -36,6 +36,9 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
 
+        this.nodeRepository.deleteAllAndFlush();
+        this.nodeConnectionRepository.deleteAllAndFlush();
+
         service = new ContextUpdaterServiceImpl();
     }
 

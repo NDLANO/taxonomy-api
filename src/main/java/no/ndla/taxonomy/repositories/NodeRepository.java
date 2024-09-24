@@ -11,10 +11,12 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface NodeRepository extends TaxonomyRepository<Node> {
@@ -38,12 +40,21 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
 
     @Query(
             """
-            SELECT n.id
+            SELECT n
             FROM Node n
-            LEFT JOIN n.childConnections cc
-            WHERE cc IS NOT NULL
+            LEFT JOIN FETCH n.parentConnections pc
+            WHERE n.qualityEvaluation IS NOT NULL
             """)
-    List<Integer> findIdsWithChildren();
+    Stream<Node> findNodesWithQualityEvaluation();
+
+    @Modifying
+    @Query(
+            """
+            UPDATE Node n
+            SET n.childQualityEvaluationAverage = NULL,
+                n.childQualityEvaluationCount = 0
+            """)
+    void wipeQualityEvaluationAverages();
 
     @Query(
             """
