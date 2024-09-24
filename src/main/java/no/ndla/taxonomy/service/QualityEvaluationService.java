@@ -9,7 +9,6 @@ package no.ndla.taxonomy.service;
 
 import java.net.URI;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -40,15 +39,16 @@ public class QualityEvaluationService {
     }
 
     @Transactional
-    public void updateQualityEvaluationOfParents(
-            Node node, Optional<Grade> oldGrade, UpdatableDto<?> command) {
+    public void updateQualityEvaluationOfParents(Node node, Optional<Grade> oldGrade, UpdatableDto<?> command) {
         if (!(command instanceof NodePostPut nodeCommand)) {
             return;
         }
 
-        Optional<QualityEvaluationDTO> qe =
-                nodeCommand.qualityEvaluation.isDelete() ? Optional.empty() : nodeCommand.qualityEvaluation.getValue();
-        var newGrade = qe.map(QualityEvaluationDTO::getGrade);
+        if (!nodeCommand.qualityEvaluation.isChanged()) {
+            return;
+        }
+
+        var newGrade = nodeCommand.qualityEvaluation.getValue().map(QualityEvaluationDTO::getGrade);
 
         updateQualityEvaluationOfParents(node, oldGrade, newGrade);
     }
@@ -99,7 +99,12 @@ public class QualityEvaluationService {
             return;
         }
 
-        logger.info("Updating quality evaluation of parents for node: {} with parents: {}, Grade: {} -> {}", node.getPublicId(), node.getParentNodes(), oldGrade, newGrade);
+        logger.info(
+                "Updating quality evaluation of parents for node: {} with parents: {}, Grade: {} -> {}",
+                node.getPublicId(),
+                node.getParentNodes(),
+                oldGrade,
+                newGrade);
 
         updateQualityEvaluationOf(node.getParentNodes(), oldGrade, newGrade);
     }
@@ -113,11 +118,13 @@ public class QualityEvaluationService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     protected void updateQualityEvaluationOfRecursive(
             Collection<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
-        var updatedParents = parents.stream().peek(p -> {
-            p.updateChildQualityEvaluationAverage(oldGrade, newGrade);
-            var parentsParents = p.getParentNodes();
-            updateQualityEvaluationOfRecursive(parentsParents, oldGrade, newGrade);
-        }).toList();
+        var updatedParents = parents.stream()
+                .peek(p -> {
+                    p.updateChildQualityEvaluationAverage(oldGrade, newGrade);
+                    var parentsParents = p.getParentNodes();
+                    updateQualityEvaluationOfRecursive(parentsParents, oldGrade, newGrade);
+                })
+                .toList();
 
         nodeRepository.saveAll(updatedParents);
     }

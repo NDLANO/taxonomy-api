@@ -1452,7 +1452,6 @@ public class NodesTest extends RestTest {
             assertEquals(8, qe.getCount());
             assertEquals(4.0, qe.getAverageValue());
         }
-
     }
 
     private static class ConnectionTypeCounter {
