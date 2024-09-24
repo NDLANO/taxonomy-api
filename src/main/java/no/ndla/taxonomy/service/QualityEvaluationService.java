@@ -97,13 +97,6 @@ public class QualityEvaluationService {
             return;
         }
 
-        logger.info(
-                "Updating quality evaluation of parents for node: {} with parents: {}, Grade: {} -> {}",
-                node.getPublicId(),
-                node.getParentNodes(),
-                oldGrade,
-                newGrade);
-
         updateQualityEvaluationOf(node.getParentNodes(), oldGrade, newGrade);
     }
 
