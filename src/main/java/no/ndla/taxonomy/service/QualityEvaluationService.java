@@ -18,7 +18,6 @@ import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional(readOnly = true)
@@ -106,7 +105,7 @@ public class QualityEvaluationService {
         updateQualityEvaluationOfRecursive(parents, oldGrade, newGrade);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     protected void updateQualityEvaluationOfRecursive(
             Collection<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
         var updatedParents = parents.stream()
@@ -129,7 +128,7 @@ public class QualityEvaluationService {
         nodeRepository.save(node);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void updateQualityEvaluationOfAllNodes() {
         nodeRepository.wipeQualityEvaluationAverages();
         var nodeStream = nodeRepository.findNodesWithQualityEvaluation();
