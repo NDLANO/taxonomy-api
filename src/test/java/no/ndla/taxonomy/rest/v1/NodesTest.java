@@ -1375,6 +1375,86 @@ public class NodesTest extends RestTest {
         }
     }
 
+    @Test
+    public void that_deleting_a_bunch_of_quality_evaluation_works_as_expected() throws Exception {
+        var s1 = builder.node(NodeType.SUBJECT, s -> s.name("S1").publicId("urn:subject:1"));
+
+        var t1 = builder.node(
+                NodeType.TOPIC, n -> n.name("T1").publicId("urn:topic:1").qualityEvaluation(Grade.Four));
+        var t2 = builder.node(NodeType.TOPIC, n -> n.name("T2").qualityEvaluation(Grade.One));
+
+        var r1 = builder.node(NodeType.RESOURCE, n -> n.name("R1").qualityEvaluation(Grade.Five));
+        var r2 = builder.node(NodeType.RESOURCE, n -> n.name("R2").qualityEvaluation(Grade.Five));
+        var r3 = builder.node(NodeType.RESOURCE, n -> n.name("R3").qualityEvaluation(Grade.Three));
+        var r4 = builder.node(NodeType.RESOURCE, n -> n.name("R4").qualityEvaluation(Grade.Four));
+        var r5 = builder.node(NodeType.RESOURCE, n -> n.name("R5").qualityEvaluation(Grade.One));
+        var r6 = builder.node(NodeType.RESOURCE, n -> n.name("R6").qualityEvaluation(Grade.Five));
+        var r7 = builder.node(NodeType.RESOURCE, n -> n.name("R7").qualityEvaluation(Grade.Five));
+        var r8 = builder.node(NodeType.RESOURCE, n -> n.name("R8").qualityEvaluation(Grade.Four));
+
+        connect(s1, t1);
+        connect(t1, t2);
+
+        connect(t1, r1);
+        connect(t1, r2);
+        connect(t1, r3);
+        connect(t1, r4);
+
+        {
+            var node = nodeRepository.findFirstByPublicId(t1.getPublicId());
+            var qe = node.get().getChildQualityEvaluationAverage().get();
+            assertEquals(4, qe.getCount());
+            assertEquals(4.25, qe.getAverageValue());
+        }
+
+        disconnect(t1, t2);
+
+        {
+            var node = nodeRepository.findFirstByPublicId(t2.getPublicId());
+            var qe = node.get().getChildQualityEvaluationAverage();
+            assertEquals(false, qe.isPresent());
+        }
+
+        connect(t2, r5);
+        connect(t2, r6);
+        connect(t2, r7);
+        connect(t2, r8);
+
+        {
+            var node = nodeRepository.findFirstByPublicId(t2.getPublicId());
+            var qe = node.get().getChildQualityEvaluationAverage().get();
+            assertEquals(4, qe.getCount());
+            assertEquals(3.75, qe.getAverageValue());
+        }
+
+        {
+            var node = nodeRepository.findFirstByPublicId(t1.getPublicId());
+            var qe = node.get().getChildQualityEvaluationAverage().get();
+            assertEquals(4, qe.getCount());
+            assertEquals(4.25, qe.getAverageValue());
+        }
+
+        disconnect(s1, t1);
+        connect(t1, t2);
+
+        {
+            var node = nodeRepository.findFirstByPublicId(t1.getPublicId());
+            var qe = node.get().getChildQualityEvaluationAverage().get();
+            assertEquals(8, qe.getCount());
+            assertEquals(4.0, qe.getAverageValue());
+        }
+
+        connect(s1, t1);
+
+        {
+            var node = nodeRepository.findFirstByPublicId(s1.getPublicId());
+            var qe = node.get().getChildQualityEvaluationAverage().get();
+            assertEquals(8, qe.getCount());
+            assertEquals(4.0, qe.getAverageValue());
+        }
+
+    }
+
     private static class ConnectionTypeCounter {
         private final ConnectionDTO[] connections;
         private int subjectCount;
