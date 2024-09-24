@@ -78,7 +78,7 @@ public class NodeTranslations {
                     TranslationPUT command) {
         Node node = nodeRepository.getByPublicId(id);
         node.addTranslation(command.name, language);
-        entityManager.persist(node);
+        nodeRepository.save(node);
     }
 
     @DeleteMapping("/{language}")
@@ -96,7 +96,7 @@ public class NodeTranslations {
         Node node = nodeRepository.getByPublicId(id);
         node.getTranslation(language).ifPresent(translation -> {
             node.removeTranslation(language);
-            entityManager.persist(node);
+            nodeRepository.save(node);
         });
     }
 }
