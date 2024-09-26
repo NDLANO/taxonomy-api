@@ -60,7 +60,7 @@ export interface Node {
     resourceTypes: ResourceTypeWithConnection[];
     supportedLanguages: string[];
     translations: Translation[];
-    url?: string;
+    url: string;
 }
 
 export interface NodeChild extends Node {

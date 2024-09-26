@@ -37,7 +37,7 @@ public class NodeDTO {
             example = "urn:article:1")
     private Optional<URI> contentUri = Optional.empty();
 
-    @Schema(description = "The primary path for this node", example = "/subject:1/topic:1")
+    @Schema(description = "The primary path for this node. Can be empty if no context", example = "/subject:1/topic:1")
     private String path;
 
     @Schema(description = "List of all paths to this node")
@@ -73,7 +73,7 @@ public class NodeDTO {
 
     @JsonProperty
     @Schema(description = "A pretty url based on name and context. Empty if no context.")
-    private Optional<String> url = Optional.empty();
+    private String url;
 
     @JsonProperty
     @Schema(description = "A list of all contexts this node is part of")
@@ -168,7 +168,7 @@ public class NodeDTO {
             this.path = contextDto.path();
             this.relevanceId = Optional.of(contextDto.relevanceId());
             this.contextId = Optional.of(contextDto.contextId());
-            this.url = contextDto.url();
+            this.url = contextDto.url().orElse(path);
             this.context = Optional.of(contextDto);
         });
 
@@ -299,7 +299,7 @@ public class NodeDTO {
         return contexts;
     }
 
-    public Optional<String> getUrl() {
+    public String getUrl() {
         return url;
     }
 

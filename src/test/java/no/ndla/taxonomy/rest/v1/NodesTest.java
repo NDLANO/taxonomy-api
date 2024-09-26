@@ -209,9 +209,9 @@ public class NodesTest extends RestTest {
                 assertEquals(1, nodes.length);
                 assertEquals("Resource", nodes[0].getName());
                 if (newUrlSeparator) {
-                    assertTrue(nodes[0].getUrl().get().endsWith(String.format("/resource/r/%s", context.contextId())));
+                    assertTrue(nodes[0].getUrl().endsWith(String.format("/resource/r/%s", context.contextId())));
                 } else {
-                    assertTrue(nodes[0].getUrl().get().endsWith(String.format("/resource__%s", context.contextId())));
+                    assertTrue(nodes[0].getUrl().endsWith(String.format("/resource__%s", context.contextId())));
                 }
                 assertEquals(context.path(), nodes[0].getPath());
                 assertTrue(nodes[0].getBreadcrumbs()
