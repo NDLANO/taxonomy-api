@@ -38,10 +38,10 @@ public class NodeDTO {
     private Optional<URI> contentUri = Optional.empty();
 
     @Schema(description = "The primary path for this node. Can be empty if no context", example = "/subject:1/topic:1")
-    private String path;
+    private Optional<String> path = Optional.empty();
 
     @Schema(description = "List of all paths to this node")
-    private TreeSet<String> paths;
+    private List<String> paths;
 
     @Schema(description = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -73,7 +73,7 @@ public class NodeDTO {
 
     @JsonProperty
     @Schema(description = "A pretty url based on name and context. Empty if no context.")
-    private String url;
+    private Optional<String> url = Optional.empty();
 
     @JsonProperty
     @Schema(description = "A list of all contexts this node is part of")
@@ -119,11 +119,8 @@ public class NodeDTO {
         this.id = entity.getPublicId();
         this.contentUri = Optional.ofNullable(entity.getContentUri());
 
-        this.paths =
-                filteredContexts.stream().map(TaxonomyContext::path).collect(Collectors.toCollection(TreeSet::new));
-
-        this.path =
-                entity.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
+        this.paths = filteredContexts.stream().map(TaxonomyContext::path).collect(Collectors.toList());
+        this.path = entity.getPrimaryPath().or(() -> paths.stream().findFirst());
 
         Optional<Relevance> relevance =
                 entity.getParentConnections().stream().findFirst().flatMap(NodeConnection::getRelevance);
@@ -165,10 +162,10 @@ public class NodeDTO {
                     ? breadcrumbList.get(this.language)
                     : breadcrumbList.get(Constants.DefaultLanguage);
 
-            this.path = contextDto.path();
+            this.path = Optional.of(contextDto.path());
             this.relevanceId = Optional.of(contextDto.relevanceId());
             this.contextId = Optional.of(contextDto.contextId());
-            this.url = contextDto.url().orElse(path);
+            this.url = contextDto.url().or(() -> path);
             this.context = Optional.of(contextDto);
         });
 
@@ -259,11 +256,11 @@ public class NodeDTO {
         return contentUri;
     }
 
-    public String getPath() {
+    public Optional<String> getPath() {
         return path;
     }
 
-    public Set<String> getPaths() {
+    public List<String> getPaths() {
         return paths;
     }
 
@@ -299,7 +296,7 @@ public class NodeDTO {
         return contexts;
     }
 
-    public String getUrl() {
+    public Optional<String> getUrl() {
         return url;
     }
 

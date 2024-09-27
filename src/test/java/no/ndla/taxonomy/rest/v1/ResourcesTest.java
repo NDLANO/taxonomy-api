@@ -54,7 +54,7 @@ public class ResourcesTest extends RestTest {
 
         assertEquals("introduction to trigonometry", resource.getName());
         assertEquals("Optional[urn:article:1]", resource.getContentUri().toString());
-        assertEquals("/subject:1/topic:1/resource:1", resource.getPath());
+        assertEquals("/subject:1/topic:1/resource:1", resource.getPath().get());
 
         assertTrue(resource.getMetadata().isVisible());
         assertEquals(0, resource.getMetadata().getGrepCodes().size());
@@ -73,7 +73,7 @@ public class ResourcesTest extends RestTest {
         var response = testUtils.getResource("/v1/resources/urn:resource:1");
         final var resource = testUtils.getObject(NodeDTO.class, response);
 
-        assertEquals("/subject:2/topic:2/resource:1", resource.getPath());
+        assertEquals("/subject:2/topic:2/resource:1", resource.getPath().get());
     }
 
     @Test
@@ -83,7 +83,7 @@ public class ResourcesTest extends RestTest {
         var response = testUtils.getResource("/v1/resources/urn:resource:1");
         final var resource = testUtils.getObject(NodeDTO.class, response);
 
-        assertEquals("", resource.getPath());
+        assertTrue(resource.getPath().isEmpty());
     }
 
     @Test
@@ -627,10 +627,14 @@ public class ResourcesTest extends RestTest {
         final var result = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(4, result.length);
-        assertAnyTrue(result, r -> "/subject:1/topic:a/resource:a".equals(r.getPath()));
-        assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/resource:aa".equals(r.getPath()));
-        assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aaa/resource:aaa".equals(r.getPath()));
-        assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aab/resource:aab".equals(r.getPath()));
+        assertAnyTrue(
+                result, r -> "/subject:1/topic:a/resource:a".equals(r.getPath().get()));
+        assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/resource:aa"
+                .equals(r.getPath().get()));
+        assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aaa/resource:aaa"
+                .equals(r.getPath().get()));
+        assertAnyTrue(result, r -> "/subject:1/topic:a/topic:aa/topic:aab/resource:aab"
+                .equals(r.getPath().get()));
         assertAllTrue(result, NodeChildDTO::isPrimary);
     }
 
@@ -815,8 +819,8 @@ public class ResourcesTest extends RestTest {
         final var resources = testUtils.getObject(NodeChildDTO[].class, response);
 
         assertEquals(3, resources.length);
-        assertAnyTrue(resources, r -> r.getPath().equals("/subject:1/topic:1/resource:1"));
-        assertAnyTrue(resources, r -> r.getPath().equals("/subject:1/topic:2/resource:2"));
-        assertAnyTrue(resources, r -> r.getPath().equals("/subject:1/topic:2/topic:3/resource:3"));
+        assertAnyTrue(resources, r -> r.getPath().get().equals("/subject:1/topic:1/resource:1"));
+        assertAnyTrue(resources, r -> r.getPath().get().equals("/subject:1/topic:2/resource:2"));
+        assertAnyTrue(resources, r -> r.getPath().get().equals("/subject:1/topic:2/topic:3/resource:3"));
     }
 }

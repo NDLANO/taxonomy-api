@@ -52,7 +52,7 @@ public class TopicsTest extends RestTest {
 
         assertEquals("trigonometry", topic.getName());
         assertEquals("Optional[urn:article:1]", topic.getContentUri().toString());
-        assertEquals("/subject:1/topic:1", topic.getPath());
+        assertEquals("/subject:1/topic:1", topic.getPath().get());
 
         assertNotNull(topic.getMetadata());
         assertTrue(topic.getMetadata().isVisible());
@@ -66,7 +66,7 @@ public class TopicsTest extends RestTest {
         var response = testUtils.getResource("/v1/topics/urn:topic:1");
         final var topic = testUtils.getObject(NodeDTO.class, response);
 
-        assertEquals("", topic.getPath());
+        assertTrue(topic.getPath().isEmpty());
     }
 
     @Test
@@ -159,7 +159,8 @@ public class TopicsTest extends RestTest {
         assertAnyTrue(topics, t -> "trigonometry".equals(t.getName()));
         assertAllTrue(topics, t -> isValidId(t.getId()));
         assertAllTrue(
-                topics, t -> t.getPath().contains("subject") && t.getPath().contains("topic"));
+                topics,
+                t -> t.getPath().get().contains("subject") && t.getPath().get().contains("topic"));
 
         assertAllTrue(topics, t -> t.getMetadata() != null);
         assertAllTrue(topics, t -> t.getMetadata().isVisible());
