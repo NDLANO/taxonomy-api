@@ -50,7 +50,7 @@ export interface Node {
      * The type of node
      */
     nodeType: NodeType;
-    path: string;
+    path?: string;
     paths: string[];
     /**
      * Quality evaluation of the article
@@ -582,7 +582,7 @@ export interface TaxonomyContext {
     /**
      * Pretty-url of this particular context
      */
-    url?: string;
+    url: string;
 }
 
 export interface TaxonomyCrumb {

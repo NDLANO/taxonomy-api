@@ -47,7 +47,7 @@ public class SubjectsTest extends RestTest {
 
         assertEquals("english", subject.getName());
         assertEquals("Optional[urn:article:1]", subject.getContentUri().toString());
-        assertEquals("/subject:1", subject.getPath());
+        assertEquals("/subject:1", subject.getPath().get());
 
         assertNotNull(subject.getMetadata());
         assertTrue(subject.getMetadata().isVisible());
@@ -221,10 +221,10 @@ public class SubjectsTest extends RestTest {
                 topics,
                 t -> "optics".equals(t.getName())
                         && "Optional[urn:article:3]".equals(t.getContentUri().toString()));
-        assertAnyTrue(topics, t -> t.isPrimary());
+        assertAnyTrue(topics, NodeChildDTO::isPrimary);
         assertAllTrue(topics, t -> isValidId(t.getId()));
         assertAllTrue(topics, t -> isValidId(t.getConnectionId()));
-        assertAllTrue(topics, t -> !t.getPath().isEmpty());
+        assertAllTrue(topics, t -> t.getPath().isPresent());
         assertAllTrue(topics, t -> t.getParentId().equals(subject.getPublicId()));
 
         assertAllTrue(topics, t -> t.getMetadata() != null);
@@ -252,11 +252,12 @@ public class SubjectsTest extends RestTest {
 
         assertEquals(3, topics.length);
         assertEquals("parent topic", topics[0].getName());
-        assertEquals("/subject:1/topic:a", topics[0].getPath());
+        assertEquals("/subject:1/topic:a", topics[0].getPath().get());
         assertEquals("child topic", topics[1].getName());
-        assertEquals("/subject:1/topic:a/topic:aa", topics[1].getPath());
+        assertEquals("/subject:1/topic:a/topic:aa", topics[1].getPath().get());
         assertEquals("grandchild topic", topics[2].getName());
-        assertEquals("/subject:1/topic:a/topic:aa/topic:aaa", topics[2].getPath());
+        assertEquals(
+                "/subject:1/topic:a/topic:aa/topic:aaa", topics[2].getPath().get());
 
         assertAllTrue(topics, t -> t.getMetadata() != null);
 

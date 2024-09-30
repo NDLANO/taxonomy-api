@@ -37,11 +37,11 @@ public class NodeDTO {
             example = "urn:article:1")
     private Optional<URI> contentUri = Optional.empty();
 
-    @Schema(description = "The primary path for this node", example = "/subject:1/topic:1")
-    private String path;
+    @Schema(description = "The primary path for this node. Can be empty if no context", example = "/subject:1/topic:1")
+    private Optional<String> path = Optional.empty();
 
     @Schema(description = "List of all paths to this node")
-    private TreeSet<String> paths;
+    private List<String> paths;
 
     @Schema(description = "Metadata for entity. Read only.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -119,11 +119,8 @@ public class NodeDTO {
         this.id = entity.getPublicId();
         this.contentUri = Optional.ofNullable(entity.getContentUri());
 
-        this.paths =
-                filteredContexts.stream().map(TaxonomyContext::path).collect(Collectors.toCollection(TreeSet::new));
-
-        this.path =
-                entity.getPrimaryPath().orElse(this.paths.stream().findFirst().orElse(""));
+        this.paths = filteredContexts.stream().map(TaxonomyContext::path).collect(Collectors.toList());
+        this.path = entity.getPrimaryPath().or(() -> paths.stream().findFirst());
 
         Optional<Relevance> relevance =
                 entity.getParentConnections().stream().findFirst().flatMap(NodeConnection::getRelevance);
@@ -165,10 +162,10 @@ public class NodeDTO {
                     ? breadcrumbList.get(this.language)
                     : breadcrumbList.get(Constants.DefaultLanguage);
 
-            this.path = contextDto.path();
+            this.path = Optional.of(contextDto.path());
             this.relevanceId = Optional.of(contextDto.relevanceId());
             this.contextId = Optional.of(contextDto.contextId());
-            this.url = contextDto.url();
+            this.url = Optional.of(contextDto.url());
             this.context = Optional.of(contextDto);
         });
 
@@ -234,12 +231,13 @@ public class NodeDTO {
                 ctx.rank(),
                 ctx.connectionId(),
                 PrettyUrlUtil.createPrettyUrl(
-                        Optional.of(ctx.rootName()),
-                        LanguageField.fromNode(entity),
-                        this.language,
-                        ctx.contextId(),
-                        entity.getNodeType(),
-                        newUrlSeparator),
+                                Optional.of(ctx.rootName()),
+                                LanguageField.fromNode(entity),
+                                this.language,
+                                ctx.contextId(),
+                                entity.getNodeType(),
+                                newUrlSeparator)
+                        .orElse(ctx.path()),
                 parents);
     }
 
@@ -259,11 +257,11 @@ public class NodeDTO {
         return contentUri;
     }
 
-    public String getPath() {
+    public Optional<String> getPath() {
         return path;
     }
 
-    public Set<String> getPaths() {
+    public List<String> getPaths() {
         return paths;
     }
 

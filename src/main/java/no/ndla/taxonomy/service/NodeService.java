@@ -457,12 +457,13 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                                 context.rank(),
                                 context.connectionId(),
                                 PrettyUrlUtil.createPrettyUrl(
-                                        Optional.of(context.rootName()),
-                                        LanguageField.fromNode(node),
-                                        language,
-                                        context.contextId(),
-                                        node.getNodeType(),
-                                        newUrlSeparator),
+                                                Optional.of(context.rootName()),
+                                                LanguageField.fromNode(node),
+                                                language,
+                                                context.contextId(),
+                                                node.getNodeType(),
+                                                newUrlSeparator)
+                                        .orElse(context.path()),
                                 parents);
                     });
                 })
