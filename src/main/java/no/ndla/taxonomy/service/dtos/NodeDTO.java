@@ -165,7 +165,7 @@ public class NodeDTO {
             this.path = Optional.of(contextDto.path());
             this.relevanceId = Optional.of(contextDto.relevanceId());
             this.contextId = Optional.of(contextDto.contextId());
-            this.url = contextDto.url().or(() -> path);
+            this.url = Optional.of(contextDto.url());
             this.context = Optional.of(contextDto);
         });
 
@@ -231,12 +231,13 @@ public class NodeDTO {
                 ctx.rank(),
                 ctx.connectionId(),
                 PrettyUrlUtil.createPrettyUrl(
-                        Optional.of(ctx.rootName()),
-                        LanguageField.fromNode(entity),
-                        this.language,
-                        ctx.contextId(),
-                        entity.getNodeType(),
-                        newUrlSeparator),
+                                Optional.of(ctx.rootName()),
+                                LanguageField.fromNode(entity),
+                                this.language,
+                                ctx.contextId(),
+                                entity.getNodeType(),
+                                newUrlSeparator)
+                        .orElse(ctx.path()),
                 parents);
     }
 

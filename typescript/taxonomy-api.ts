@@ -582,7 +582,7 @@ export interface TaxonomyContext {
     /**
      * Pretty-url of this particular context
      */
-    url?: string;
+    url: string;
 }
 
 export interface TaxonomyCrumb {
