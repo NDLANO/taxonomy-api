@@ -181,8 +181,8 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
             boolean filterProgrammes,
             boolean isVisible) {
         var node = getNode(publicId);
-        var root = rootId.map(this::getNode);
-        var parent = parentId.map(this::getNode);
+        var root = rootId.flatMap(this::getMaybeNode);
+        var parent = parentId.flatMap(this::getMaybeNode);
         return new NodeDTO(
                 root,
                 parent,
