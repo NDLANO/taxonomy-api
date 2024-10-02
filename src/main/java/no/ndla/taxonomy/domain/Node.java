@@ -280,10 +280,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public Optional<String> getPrimaryPath() {
-        return getContexts().stream()
-                .filter(TaxonomyContext::isPrimary)
-                .map(TaxonomyContext::path)
-                .findFirst();
+        return pickContext(Optional.empty(), Optional.empty(), Optional.empty()).map(TaxonomyContext::path);
     }
 
     /**
