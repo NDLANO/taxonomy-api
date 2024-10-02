@@ -112,7 +112,7 @@ public class NodeDTO {
                 isVisible ? contexts.stream().filter(TaxonomyContext::isVisible).collect(Collectors.toSet()) : contexts;
         var filteredContexts = visibleContexts.stream()
                 .filter(ctx -> !filterProgrammes || !ctx.rootId().contains(NodeType.PROGRAMME.getName()))
-                .toList();
+                .collect(Collectors.toSet());
 
         this.qualityEvaluation = QualityEvaluationDTO.fromNode(entity);
         this.gradeAverage = GradeAverageDTO.fromNode(entity);
@@ -151,7 +151,7 @@ public class NodeDTO {
 
         this.nodeType = entity.getNodeType();
 
-        Optional<TaxonomyContext> selected = entity.pickContext(contextId, parent, root);
+        Optional<TaxonomyContext> selected = entity.pickContext(contextId, parent, root, filteredContexts);
         selected.ifPresent(ctx -> {
             var contextDto = getTaxonomyContextDTO(entity, newUrlSeparator, ctx, relevanceName);
 

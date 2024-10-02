@@ -280,24 +280,23 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public Optional<String> getPrimaryPath() {
-        return getContexts().stream()
-                .filter(TaxonomyContext::isPrimary)
-                .map(TaxonomyContext::path)
-                .findFirst();
+        return pickContext(Optional.empty(), Optional.empty(), Optional.empty(), Set.of())
+                .map(TaxonomyContext::path);
     }
 
     /**
      * Picks a context based on parameters. If no parameters or no matches, pick by comparing path and primary
      *
-     * @param contextId If this is present, return the context with corresponding id
-     * @param parent    If this is present, filter contexts where parent is in parentIds
-     * @param root      If this is present, return context with this publicId as root. Else pick context containing roots
-     *                  publicId.
+     * @param contextId  If this is present, return the context with corresponding id
+     * @param parent     If this is present, filter contexts where parent is in parentIds
+     * @param root       If this is present, return context with this publicId as root. Else pick context containing roots
+     *                   publicId.
+     * @param contextSet Possibly filtered set of contexts to choose from
      * @return Context
      */
     public Optional<TaxonomyContext> pickContext(
-            Optional<String> contextId, Optional<Node> parent, Optional<Node> root) {
-        var contexts = getContexts();
+            Optional<String> contextId, Optional<Node> parent, Optional<Node> root, Set<TaxonomyContext> contextSet) {
+        var contexts = !contextSet.isEmpty() ? contextSet : getContexts();
         var maybeContext = contextId.flatMap(
                 id -> contexts.stream().filter(c -> c.contextId().equals(id)).findFirst());
         if (maybeContext.isPresent()) {
