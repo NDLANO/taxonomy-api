@@ -109,10 +109,10 @@ public class NodeDTO {
 
         var contexts = entity.getContexts();
         var visibleContexts =
-                isVisible ? contexts.stream().filter(TaxonomyContext::isVisible).toList() : contexts;
+                isVisible ? contexts.stream().filter(TaxonomyContext::isVisible).collect(Collectors.toSet()) : contexts;
         var filteredContexts = visibleContexts.stream()
                 .filter(ctx -> !filterProgrammes || !ctx.rootId().contains(NodeType.PROGRAMME.getName()))
-                .toList();
+                .collect(Collectors.toSet());
 
         this.qualityEvaluation = QualityEvaluationDTO.fromNode(entity);
         this.gradeAverage = GradeAverageDTO.fromNode(entity);
@@ -151,15 +151,22 @@ public class NodeDTO {
 
         this.nodeType = entity.getNodeType();
 
-        Optional<TaxonomyContext> selected = entity.pickContext(contextId, parent, root);
-        // Uses provided params to pick context, or defaults to first filtered context, or first context altogether
-        selected.ifPresentOrElse(ctx -> contextToDto(entity, newUrlSeparator, ctx, relevanceName), () -> {
-            if (!filteredContexts.isEmpty())
-                contextToDto(entity, newUrlSeparator, filteredContexts.getFirst(), relevanceName);
-            else {
-                entity.pickContext(Optional.empty(), Optional.empty(), Optional.empty())
-                        .ifPresent(ctx -> contextToDto(entity, newUrlSeparator, ctx, relevanceName));
-            }
+        Optional<TaxonomyContext> selected = entity.pickContext(contextId, parent, root, filteredContexts);
+        selected.ifPresent(ctx -> {
+            var contextDto = getTaxonomyContextDTO(entity, newUrlSeparator, ctx, relevanceName);
+
+            // TODO: this changes the content in context breadcrumbs
+            LanguageField<List<String>> breadcrumbList =
+                    LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity));
+            this.breadcrumbs = breadcrumbList.containsKey(this.language)
+                    ? breadcrumbList.get(this.language)
+                    : breadcrumbList.get(Constants.DefaultLanguage);
+
+            this.path = Optional.of(contextDto.path());
+            this.relevanceId = Optional.of(contextDto.relevanceId());
+            this.contextId = Optional.of(contextDto.contextId());
+            this.url = Optional.of(contextDto.url());
+            this.context = Optional.of(contextDto);
         });
 
         includeContexts.filter(Boolean::booleanValue).ifPresent(includeCtx -> {
@@ -167,24 +174,6 @@ public class NodeDTO {
                     .map(ctx -> getTaxonomyContextDTO(entity, newUrlSeparator, ctx, relevanceName))
                     .toList();
         });
-    }
-
-    private void contextToDto(
-            Node entity, boolean newUrlSeparator, TaxonomyContext ctx, LanguageField<String> relevanceName) {
-        var contextDto = getTaxonomyContextDTO(entity, newUrlSeparator, ctx, relevanceName);
-
-        // TODO: this changes the content in context breadcrumbs
-        LanguageField<List<String>> breadcrumbList =
-                LanguageField.listFromLists(ctx.breadcrumbs(), LanguageField.fromNode(entity));
-        this.breadcrumbs = breadcrumbList.containsKey(this.language)
-                ? breadcrumbList.get(this.language)
-                : breadcrumbList.get(Constants.DefaultLanguage);
-
-        this.path = Optional.of(contextDto.path());
-        this.relevanceId = Optional.of(contextDto.relevanceId());
-        this.contextId = Optional.of(contextDto.contextId());
-        this.url = Optional.of(contextDto.url());
-        this.context = Optional.of(contextDto);
     }
 
     private TaxonomyContextDTO getTaxonomyContextDTO(

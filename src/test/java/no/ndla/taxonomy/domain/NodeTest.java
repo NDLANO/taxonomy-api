@@ -403,38 +403,44 @@ public class NodeTest extends AbstractIntegrationTest {
         node.setContexts(Set.of(context3, context2, context1));
 
         {
-            Optional<TaxonomyContext> context = node.pickContext(Optional.of("1"), Optional.empty(), Optional.empty());
-            assertEquals(context1.contextId(), context.get().contextId());
-        }
-        {
-            Optional<TaxonomyContext> context = node.pickContext(Optional.of("2"), Optional.empty(), Optional.empty());
-            assertEquals(context2.contextId(), context.get().contextId());
-        }
-        {
-            Optional<TaxonomyContext> context = node.pickContext(Optional.of("3"), Optional.empty(), Optional.empty());
-            assertEquals(context3.contextId(), context.get().contextId());
-        }
-        {
-            Optional<TaxonomyContext> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.empty());
+            Optional<TaxonomyContext> context =
+                    node.pickContext(Optional.of("1"), Optional.empty(), Optional.empty(), Set.of());
             assertEquals(context1.contextId(), context.get().contextId());
         }
         {
             Optional<TaxonomyContext> context =
-                    node.pickContext(Optional.empty(), Optional.of(parent1), Optional.of(root));
+                    node.pickContext(Optional.of("2"), Optional.empty(), Optional.empty(), Set.of());
             assertEquals(context2.contextId(), context.get().contextId());
         }
         {
             Optional<TaxonomyContext> context =
-                    node.pickContext(Optional.empty(), Optional.of(parent2), Optional.of(root));
+                    node.pickContext(Optional.of("3"), Optional.empty(), Optional.empty(), Set.of());
             assertEquals(context3.contextId(), context.get().contextId());
         }
         {
-            Optional<TaxonomyContext> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.of(root));
+            Optional<TaxonomyContext> context =
+                    node.pickContext(Optional.empty(), Optional.empty(), Optional.empty(), Set.of());
+            assertEquals(context1.contextId(), context.get().contextId());
+        }
+        {
+            Optional<TaxonomyContext> context =
+                    node.pickContext(Optional.empty(), Optional.of(parent1), Optional.of(root), Set.of());
+            assertEquals(context2.contextId(), context.get().contextId());
+        }
+        {
+            Optional<TaxonomyContext> context =
+                    node.pickContext(Optional.empty(), Optional.of(parent2), Optional.of(root), Set.of());
+            assertEquals(context3.contextId(), context.get().contextId());
+        }
+        {
+            Optional<TaxonomyContext> context =
+                    node.pickContext(Optional.empty(), Optional.empty(), Optional.of(root), Set.of());
             // could be either 2 or 3, either way root is root
             assertEquals(root.getPublicId().toString(), context.get().rootId());
         }
         {
-            Optional<TaxonomyContext> context = node.pickContext(Optional.empty(), Optional.empty(), Optional.empty());
+            Optional<TaxonomyContext> context =
+                    node.pickContext(Optional.empty(), Optional.empty(), Optional.empty(), Set.of());
             assertEquals(context1.contextId(), context.get().contextId()); // Since context1 is shortest
         }
     }
