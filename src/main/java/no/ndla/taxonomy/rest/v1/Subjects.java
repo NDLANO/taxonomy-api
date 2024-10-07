@@ -43,6 +43,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
     private final NodeService nodeService;
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
+    private final SearchService searchService;
 
     @Value(value = "${new.url.separator:false}")
     private boolean newUrlSeparator;
@@ -54,7 +55,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
             NodeService nodeService,
             NodeRepository nodeRepository,
             NodeConnectionRepository nodeConnectionRepository,
-            QualityEvaluationService qualityEvaluationService) {
+            QualityEvaluationService qualityEvaluationService,
+            SearchService searchService) {
         super(nodeRepository, contextUpdaterService, nodeService, qualityEvaluationService);
 
         this.topicTreeSorter = treeSorter;
@@ -62,6 +64,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         this.nodeService = nodeService;
         this.nodeRepository = nodeRepository;
         this.nodeConnectionRepository = nodeConnectionRepository;
+        this.searchService = searchService;
     }
 
     @Deprecated
@@ -114,7 +117,7 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                     @RequestParam(value = "contentUris", required = false)
                     Optional<List<String>> contentUris) {
 
-        return nodeService.searchByNodeType(
+        return searchService.searchByNodeType(
                 query,
                 ids,
                 contentUris,
@@ -124,6 +127,8 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
                 pageSize,
                 page,
                 Optional.of(List.of(NodeType.SUBJECT)),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty());
     }
 

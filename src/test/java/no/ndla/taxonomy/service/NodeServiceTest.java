@@ -45,6 +45,9 @@ public class NodeServiceTest extends AbstractIntegrationTest {
     @Autowired
     private NodeService nodeService;
 
+    @Autowired
+    private SearchService searchService;
+
     @BeforeEach
     void clearAllRepos() {
         nodeRepository.deleteAllAndFlush();
@@ -110,7 +113,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         builder.node(n -> n.nodeType(NodeType.TOPIC));
         var subject = builder.node(n -> n.nodeType(NodeType.SUBJECT));
 
-        var subjects = nodeService.searchByNodeType(
+        var subjects = searchService.searchByNodeType(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -120,9 +123,11 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 10,
                 1,
                 Optional.of(List.of(NodeType.SUBJECT)),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty());
 
-        var topics = nodeService.searchByNodeType(
+        var topics = searchService.searchByNodeType(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -132,8 +137,10 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 10,
                 1,
                 Optional.of(List.of(NodeType.TOPIC)),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty());
-        var all = nodeService.searchByNodeType(
+        var all = searchService.searchByNodeType(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
@@ -142,6 +149,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 false,
                 10,
                 1,
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty());
 
@@ -159,7 +168,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         builder.node(n -> n.nodeType(NodeType.TOPIC).name("Hund"));
         var tiger = builder.node(n -> n.nodeType(NodeType.TOPIC).name("Tiger"));
 
-        var result = nodeService.search(
+        var result = searchService.search(
                 Optional.of("tiger"),
                 Optional.empty(),
                 Optional.empty(),
@@ -168,6 +177,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 false,
                 10,
                 1,
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty());
 
@@ -186,7 +197,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         idList.add("urn:topic:1");
         idList.add("urn:topic:2");
 
-        var result = nodeService.search(
+        var result = searchService.search(
                 Optional.empty(),
                 Optional.of(idList),
                 Optional.empty(),
@@ -196,13 +207,15 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 10,
                 1,
                 Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty());
 
         assertEquals(result.getResults().get(0).getId(), new URI("urn:topic:1"));
         assertEquals(result.getResults().get(1).getId(), new URI("urn:topic:2"));
         assertEquals(result.getTotalCount(), 2);
 
-        var result2 = nodeService.search(
+        var result2 = searchService.search(
                 Optional.of("Ape"),
                 Optional.of(idList),
                 Optional.empty(),
@@ -211,6 +224,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 false,
                 10,
                 1,
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty());
 
@@ -234,7 +249,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
         var idList = new ArrayList<String>();
         idList.add("urn:article:1");
 
-        var result = nodeService.search(
+        var result = searchService.search(
                 Optional.empty(),
                 Optional.empty(),
                 Optional.of(idList),
@@ -243,6 +258,8 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 false,
                 10,
                 1,
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty());
 

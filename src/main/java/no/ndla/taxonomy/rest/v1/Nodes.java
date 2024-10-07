@@ -41,6 +41,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     private final NodeService nodeService;
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
+    private final SearchService searchService;
 
     @Value(value = "${new.url.separator:false}")
     private boolean newUrlSeparator;
@@ -52,7 +53,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             ContextUpdaterService contextUpdaterService,
             RecursiveNodeTreeService recursiveNodeTreeService,
             TreeSorter treeSorter,
-            QualityEvaluationService qualityEvaluationService) {
+            QualityEvaluationService qualityEvaluationService,
+            SearchService searchService) {
         super(nodeRepository, contextUpdaterService, nodeService, qualityEvaluationService);
 
         this.nodeRepository = nodeRepository;
@@ -60,6 +62,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         this.nodeService = nodeService;
         this.recursiveNodeTreeService = recursiveNodeTreeService;
         this.treeSorter = treeSorter;
+        this.searchService = searchService;
     }
 
     private List<NodeType> getDefaultNodeTypes(
@@ -160,8 +163,14 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<Boolean> includeContexts,
             @Parameter(description = "Filter out programme contexts")
                     @RequestParam(value = "filterProgrammes", required = false, defaultValue = "false")
-                    boolean filterProgrammes) {
-        return nodeService.searchByNodeType(
+                    boolean filterProgrammes,
+            @Parameter(description = "Id to root id in context to select. Does not affect search results")
+                    @RequestParam(value = "rootId", required = false)
+                    Optional<URI> rootId,
+            @Parameter(description = "Id to parent id in context to select. Does not affect search results")
+                    @RequestParam(value = "parentId", required = false)
+                    Optional<URI> parentId) {
+        return searchService.searchByNodeType(
                 query,
                 ids,
                 contentUris,
@@ -171,14 +180,16 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                 pageSize,
                 page,
                 nodeType,
-                Optional.empty());
+                Optional.empty(),
+                rootId,
+                parentId);
     }
 
     @PostMapping("/search")
     @Operation(summary = "Search all nodes")
     @Transactional(readOnly = true)
     public SearchResultDTO<NodeDTO> searchNodes(@RequestBody NodeSearchBody searchBodyParams) {
-        return nodeService.searchByNodeType(
+        return searchService.searchByNodeType(
                 searchBodyParams.query,
                 searchBodyParams.ids,
                 searchBodyParams.contentUris,
@@ -188,7 +199,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                 searchBodyParams.pageSize,
                 searchBodyParams.page,
                 searchBodyParams.nodeType,
-                searchBodyParams.customFields);
+                searchBodyParams.customFields,
+                searchBodyParams.rootId,
+                searchBodyParams.parentId);
     }
 
     @GetMapping("/page")
