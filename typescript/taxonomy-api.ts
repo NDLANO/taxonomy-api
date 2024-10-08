@@ -277,9 +277,17 @@ export interface NodeSearchBody {
      */
     pageSize: number;
     /**
+     * Id to parent id in context.
+     */
+    parentId?: string;
+    /**
      * Query to search names
      */
     query?: string;
+    /**
+     * Id to root id in context.
+     */
+    rootId?: string;
 }
 
 export interface NodeWithParents extends Node {
