@@ -21,10 +21,7 @@ import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.ResourcePostPut;
-import no.ndla.taxonomy.service.ContextUpdaterService;
-import no.ndla.taxonomy.service.MetadataFilters;
-import no.ndla.taxonomy.service.NodeService;
-import no.ndla.taxonomy.service.QualityEvaluationService;
+import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.NodeWithParents;
 import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
@@ -43,6 +40,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final NodeService nodeService;
     private final NodeRepository nodeRepository;
+    private final SearchService searchService;
 
     @Value(value = "${new.url.separator:false}")
     private boolean newUrlSeparator;
@@ -52,13 +50,15 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             ResourceResourceTypeRepository resourceResourceTypeRepository,
             ContextUpdaterService contextUpdaterService,
             NodeService nodeService,
-            QualityEvaluationService qualityEvaluationService) {
+            QualityEvaluationService qualityEvaluationService,
+            SearchService searchService) {
         super(nodeRepository, contextUpdaterService, nodeService, qualityEvaluationService);
 
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.repository = nodeRepository;
         this.nodeRepository = nodeRepository;
         this.nodeService = nodeService;
+        this.searchService = searchService;
     }
 
     @Override
@@ -117,7 +117,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ContentURIs to fetch for query")
                     @RequestParam(value = "contentUris", required = false)
                     Optional<List<String>> contentUris) {
-        return nodeService.searchByNodeType(
+        return searchService.searchByNodeType(
                 query,
                 ids,
                 contentUris,
@@ -127,6 +127,8 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                 pageSize,
                 page,
                 Optional.of(List.of(NodeType.RESOURCE)),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty());
     }
 

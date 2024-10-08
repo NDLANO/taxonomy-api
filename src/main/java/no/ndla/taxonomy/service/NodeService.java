@@ -24,20 +24,18 @@ import no.ndla.taxonomy.rest.v1.dtos.searchapi.TaxonomyCrumbDTO;
 import no.ndla.taxonomy.service.dtos.ConnectionDTO;
 import no.ndla.taxonomy.service.dtos.NodeChildDTO;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
-import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.util.PrettyUrlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional(readOnly = true)
 @Service
-public class NodeService implements SearchService<NodeDTO, Node, NodeRepository> {
+public class NodeService {
     Logger logger = LoggerFactory.getLogger(getClass().getName());
     private final NodeRepository nodeRepository;
     private final NodeConnectionRepository nodeConnectionRepository;
@@ -80,10 +78,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
 
         nodeRepository.delete(nodeToDelete);
         nodeRepository.flush();
-    }
-
-    public Specification<Node> nodeHasOneOfNodeType(List<NodeType> nodeType) {
-        return (root, query, builder) -> root.get("nodeType").in(nodeType);
     }
 
     public List<NodeDTO> getNodesByType(
@@ -309,51 +303,6 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
                 .toList();
     }
 
-    @Override
-    public NodeRepository getRepository() {
-        return nodeRepository;
-    }
-
-    @Override
-    public NodeDTO createDTO(
-            Node node, String languageCode, Optional<Boolean> includeContexts, boolean filterProgrammes) {
-        return new NodeDTO(
-                Optional.empty(),
-                Optional.empty(),
-                node,
-                languageCode,
-                Optional.empty(),
-                includeContexts,
-                filterProgrammes,
-                false,
-                newUrlSeparator);
-    }
-
-    public SearchResultDTO<NodeDTO> searchByNodeType(
-            Optional<String> query,
-            Optional<List<String>> ids,
-            Optional<List<String>> contentUris,
-            Optional<String> language,
-            Optional<Boolean> includeContexts,
-            boolean filterProgrammes,
-            int pageSize,
-            int page,
-            Optional<List<NodeType>> nodeType,
-            Optional<Map<String, String>> customfieldsFilter) {
-        Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasOneOfNodeType(nt))));
-        return SearchService.super.search(
-                query,
-                ids,
-                contentUris,
-                language,
-                includeContexts,
-                filterProgrammes,
-                pageSize,
-                page,
-                nodeSpecLambda,
-                customfieldsFilter);
-    }
-
     @Transactional
     public boolean makeAllResourcesPrimary(URI nodePublicId, boolean recursive) {
         final var node = nodeRepository
@@ -477,7 +426,7 @@ public class NodeService implements SearchService<NodeDTO, Node, NodeRepository>
     }
 
     @Transactional
-    private List<Node> buildAllContexts() {
+    protected List<Node> buildAllContexts() {
         logger.info("Building contexts for all roots in schema");
         var startTime = System.currentTimeMillis();
         List<Node> rootNodes = nodeRepository.findProgrammes();

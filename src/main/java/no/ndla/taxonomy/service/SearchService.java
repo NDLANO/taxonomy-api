@@ -15,39 +15,86 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import no.ndla.taxonomy.domain.DomainEntity;
-import no.ndla.taxonomy.repositories.TaxonomyRepository;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeType;
+import no.ndla.taxonomy.repositories.NodeRepository;
+import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
 
 interface ExtraSpecification<T> {
     Specification<T> applySpecification(Specification<T> spec);
 }
 
-public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends TaxonomyRepository<DOMAIN>> {
-    REPO getRepository();
+@Service
+public class SearchService {
 
-    DTO createDTO(DOMAIN domain, String languageCode, Optional<Boolean> includeContexts, boolean filterProgrammes);
+    Logger logger = LoggerFactory.getLogger(getClass().getName());
+    private final NodeRepository nodeRepository;
 
-    private Specification<DOMAIN> base() {
+    public SearchService(NodeRepository nodeRepository) {
+        this.nodeRepository = nodeRepository;
+    }
+
+    public Specification<Node> nodeHasOneOfNodeType(List<NodeType> nodeType) {
+        return (root, query, builder) -> root.get("nodeType").in(nodeType);
+    }
+
+    public SearchResultDTO<NodeDTO> searchByNodeType(
+            Optional<String> query,
+            Optional<List<String>> ids,
+            Optional<List<String>> contentUris,
+            Optional<String> language,
+            Optional<Boolean> includeContexts,
+            boolean filterProgrammes,
+            int pageSize,
+            int page,
+            Optional<List<NodeType>> nodeType,
+            Optional<Map<String, String>> customfieldsFilter,
+            Optional<URI> rootId,
+            Optional<URI> parentId) {
+        Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasOneOfNodeType(nt))));
+        return this.search(
+                query,
+                ids,
+                contentUris,
+                language,
+                includeContexts,
+                filterProgrammes,
+                pageSize,
+                page,
+                nodeSpecLambda,
+                customfieldsFilter,
+                rootId,
+                parentId);
+    }
+
+    @Value(value = "${new.url.separator:false}")
+    private boolean newUrlSeparator;
+
+    private Specification<Node> base() {
         return (root, query, criteriaBuilder) -> criteriaBuilder.isNotNull(root.get("id"));
     }
 
-    private Specification<DOMAIN> withNameLike(String name) {
+    private Specification<Node> withNameLike(String name) {
         return (root, query, criteriaBuilder) ->
                 criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%");
     }
 
-    private Specification<DOMAIN> withPublicIdsIn(List<URI> ids) {
+    private Specification<Node> withPublicIdsIn(List<URI> ids) {
         return (root, query, criteriaBuilder) -> root.get("publicId").in(ids);
     }
 
-    private Specification<DOMAIN> withContentUriIn(List<URI> contentUris) {
+    private Specification<Node> withContentUriIn(List<URI> contentUris) {
         return (root, query, criteriaBuilder) -> root.get("contentUri").in(contentUris);
     }
 
-    private Specification<DOMAIN> withKeyAndValue(String key, String value) {
+    private Specification<Node> withKeyAndValue(String key, String value) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(
                 criteriaBuilder.function(
                         "jsonb_extract_path_text",
@@ -57,7 +104,7 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
                 value);
     }
 
-    default SearchResultDTO<DTO> search(
+    public SearchResultDTO<NodeDTO> search(
             Optional<String> query,
             Optional<List<String>> ids,
             Optional<List<String>> contentUris,
@@ -66,12 +113,15 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
             boolean filterProgrammes,
             int pageSize,
             int page,
-            Optional<ExtraSpecification<DOMAIN>> applySpecLambda,
-            Optional<Map<String, String>> customFieldFilters) {
+            Optional<ExtraSpecification<Node>> applySpecLambda,
+            Optional<Map<String, String>> customFieldFilters,
+            Optional<URI> rootId,
+            Optional<URI> parentId) {
+
         if (page < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
 
         var pageRequest = PageRequest.of(page - 1, pageSize);
-        Specification<DOMAIN> spec = where(base());
+        Specification<Node> spec = where(base());
 
         if (query.isPresent()) {
             spec = spec.and(withNameLike(query.get()));
@@ -86,18 +136,29 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
 
         spec = applyCustomFieldsFilters(spec, customFieldFilters);
 
-        var fetched = getRepository().findAll(spec, pageRequest);
+        var fetched = nodeRepository.findAll(spec, pageRequest);
+
+        var rootNode = rootId.flatMap(nodeRepository::findFirstByPublicId);
+        var parentNode = parentId.flatMap(nodeRepository::findFirstByPublicId);
 
         var languageCode = language.orElse("");
         var dtos = fetched.stream()
-                .map(r -> createDTO(r, languageCode, includeContexts, filterProgrammes))
+                .map(r -> new NodeDTO(
+                        rootNode,
+                        parentNode,
+                        r,
+                        languageCode,
+                        Optional.empty(),
+                        includeContexts,
+                        filterProgrammes,
+                        false,
+                        newUrlSeparator))
                 .collect(Collectors.toList());
 
         return new SearchResultDTO<>(fetched.getTotalElements(), page, pageSize, dtos);
     }
 
-    private Specification<DOMAIN> applyContentUriFilters(
-            Optional<List<String>> contentUris, Specification<DOMAIN> spec) {
+    private Specification<Node> applyContentUriFilters(Optional<List<String>> contentUris, Specification<Node> spec) {
         if (contentUris.isPresent()) {
             List<URI> urisToPass = contentUris.get().stream()
                     .flatMap(id -> {
@@ -115,7 +176,7 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
         return spec;
     }
 
-    private Specification<DOMAIN> applyIdFilters(Optional<List<String>> ids, Specification<DOMAIN> spec) {
+    private Specification<Node> applyIdFilters(Optional<List<String>> ids, Specification<Node> spec) {
         if (ids.isPresent()) {
             List<URI> urisToPass = ids.get().stream()
                     .flatMap(id -> {
@@ -133,10 +194,10 @@ public interface SearchService<DTO, DOMAIN extends DomainEntity, REPO extends Ta
         return spec;
     }
 
-    private Specification<DOMAIN> applyCustomFieldsFilters(
-            Specification<DOMAIN> spec, Optional<Map<String, String>> metadataFilters) {
+    private Specification<Node> applyCustomFieldsFilters(
+            Specification<Node> spec, Optional<Map<String, String>> metadataFilters) {
         if (metadataFilters.isPresent()) {
-            Specification<DOMAIN> filterSpec = null;
+            Specification<Node> filterSpec = null;
             for (var entry : metadataFilters.get().entrySet()) {
                 if (filterSpec != null) {
                     filterSpec = filterSpec.or(withKeyAndValue(entry.getKey(), entry.getValue()));

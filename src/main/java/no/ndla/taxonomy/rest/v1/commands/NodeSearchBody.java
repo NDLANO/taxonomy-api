@@ -9,6 +9,7 @@ package no.ndla.taxonomy.rest.v1.commands;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,6 +58,14 @@ public class NodeSearchBody {
     @Schema(description = "Filter out programme contexts")
     @JsonProperty
     public boolean filterProgrammes;
+
+    @Schema(description = "Id to root id in context.")
+    @JsonProperty
+    public Optional<URI> rootId = Optional.empty();
+
+    @Schema(description = "Id to parent id in context.")
+    @JsonProperty
+    public Optional<URI> parentId = Optional.empty();
 
     public Optional<Map<String, String>> getCustomFields() {
         return customFields;

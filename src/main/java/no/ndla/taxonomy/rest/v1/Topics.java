@@ -19,10 +19,7 @@ import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.commands.TopicPostPut;
-import no.ndla.taxonomy.service.ContextUpdaterService;
-import no.ndla.taxonomy.service.MetadataFilters;
-import no.ndla.taxonomy.service.NodeService;
-import no.ndla.taxonomy.service.QualityEvaluationService;
+import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 public class Topics extends CrudControllerWithMetadata<Node> {
     private final NodeRepository nodeRepository;
     private final NodeService nodeService;
+    private final SearchService searchService;
 
     @Value(value = "${new.url.separator:false}")
     private boolean newUrlSeparator;
@@ -45,11 +43,13 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             NodeRepository nodeRepository,
             NodeService nodeService,
             ContextUpdaterService contextUpdaterService,
-            QualityEvaluationService qualityEvaluationService) {
+            QualityEvaluationService qualityEvaluationService,
+            SearchService searchService) {
         super(nodeRepository, contextUpdaterService, nodeService, qualityEvaluationService);
 
         this.nodeRepository = nodeRepository;
         this.nodeService = nodeService;
+        this.searchService = searchService;
     }
 
     @Deprecated
@@ -104,7 +104,7 @@ public class Topics extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ContentURIs to fetch for query")
                     @RequestParam(value = "contentUris", required = false)
                     Optional<List<String>> contentUris) {
-        return nodeService.searchByNodeType(
+        return searchService.searchByNodeType(
                 query,
                 ids,
                 contentUris,
@@ -114,6 +114,8 @@ public class Topics extends CrudControllerWithMetadata<Node> {
                 pageSize,
                 page,
                 Optional.of(List.of(NodeType.TOPIC)),
+                Optional.empty(),
+                Optional.empty(),
                 Optional.empty());
     }
 
