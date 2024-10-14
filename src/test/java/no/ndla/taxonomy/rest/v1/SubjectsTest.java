@@ -102,7 +102,7 @@ public class SubjectsTest extends RestTest {
         };
 
         var response = testUtils.createResource("/v1/subjects", command);
-        assertEquals("/v1/subjects/urn:subject:1", response.getHeader("Location"));
+        assertEquals("/v1/nodes/urn:subject:1", response.getHeader("Location"));
 
         assertNotNull(nodeRepository.getByPublicId(command.getId().get()));
     }
@@ -304,6 +304,6 @@ public class SubjectsTest extends RestTest {
         var response2 = testUtils.getResource(
                 "/v1/subjects/urn:subject:1/topics?recursive=true&relevance=urn:relevance:supplementary");
         var topics2 = testUtils.getObject(NodeChildDTO[].class, response2);
-        assertEquals(4, topics2.length);
+        assertEquals(3, topics2.length);
     }
 }
