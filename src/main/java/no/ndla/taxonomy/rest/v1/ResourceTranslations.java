@@ -10,12 +10,8 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.persistence.EntityManager;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
-import no.ndla.taxonomy.domain.exceptions.NotFoundException;
-import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
 import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.springframework.http.HttpStatus;
@@ -27,13 +23,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(path = {"/v1/resources/{id}/translations", "/v1/resources/{id}/translations/"})
 public class ResourceTranslations {
 
-    private final NodeRepository nodeRepository;
+    private final NodeTranslations nodeTranslations;
 
-    private final EntityManager entityManager;
-
-    public ResourceTranslations(NodeRepository resourceRepository, EntityManager entityManager) {
-        this.nodeRepository = resourceRepository;
-        this.entityManager = entityManager;
+    public ResourceTranslations(NodeTranslations nodeTranslations) {
+        this.nodeTranslations = nodeTranslations;
     }
 
     @Deprecated
@@ -41,16 +34,7 @@ public class ResourceTranslations {
     @Operation(summary = "Gets all relevanceTranslations for a single resource")
     @Transactional(readOnly = true)
     public List<TranslationDTO> getAllResourceTranslations(@PathVariable("id") URI id) {
-        var resource = nodeRepository.getByPublicId(id);
-        List<TranslationDTO> result = new ArrayList<>();
-        resource.getTranslations()
-                .forEach(t -> result.add(new TranslationDTO() {
-                    {
-                        name = t.getName();
-                        language = t.getLanguageCode();
-                    }
-                }));
-        return result;
+        return nodeTranslations.getAllNodeTranslations(id);
     }
 
     @Deprecated
@@ -62,16 +46,7 @@ public class ResourceTranslations {
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true)
                     @PathVariable("language")
                     String language) {
-        var resource = nodeRepository.getByPublicId(id);
-        var translation = resource.getTranslation(language)
-                .orElseThrow(() ->
-                        new NotFoundException("translation with language code " + language + " for resource", id));
-        return new TranslationDTO() {
-            {
-                name = translation.getName();
-                language = translation.getLanguageCode();
-            }
-        };
+        return nodeTranslations.getNodeTranslation(id, language);
     }
 
     @Deprecated
@@ -89,9 +64,7 @@ public class ResourceTranslations {
                     String language,
             @Parameter(name = "resource", description = "The new or updated translation") @RequestBody
                     TranslationPUT command) {
-        var resource = nodeRepository.getByPublicId(id);
-        resource.addTranslation(command.name, language);
-        entityManager.persist(resource);
+        nodeTranslations.createUpdateNodeTranslation(id, language, command);
     }
 
     @Deprecated
@@ -107,10 +80,6 @@ public class ResourceTranslations {
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true)
                     @PathVariable("language")
                     String language) {
-        final var resource = nodeRepository.getByPublicId(id);
-        resource.getTranslation(language).ifPresent((translation) -> {
-            resource.removeTranslation(language);
-            nodeRepository.save(resource);
-        });
+        nodeTranslations.deleteNodeTranslation(id, language);
     }
 }
