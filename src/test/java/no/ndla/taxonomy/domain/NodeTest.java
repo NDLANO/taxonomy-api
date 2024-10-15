@@ -447,24 +447,22 @@ public class NodeTest extends AbstractIntegrationTest {
 
     @Test
     public void qualityEvaluationAverageForDirectChildrenWorks() {
-        var x = builder.node(n -> {
-            n.nodeType(NodeType.SUBJECT)
-                    .name("S1")
-                    .publicId("urn:subject:1")
-                    .qualityEvaluation(Grade.Five)
-                    .child(
-                            NodeType.RESOURCE,
-                            t -> t.nodeType(NodeType.RESOURCE).name("R1").qualityEvaluation(Grade.Four))
-                    .child(
-                            NodeType.RESOURCE,
-                            t -> t.nodeType(NodeType.RESOURCE).name("R2").qualityEvaluation(Grade.Three))
-                    .child(
-                            NodeType.RESOURCE,
-                            t -> t.nodeType(NodeType.RESOURCE).name("R3").qualityEvaluation(Grade.Five))
-                    .child(
-                            NodeType.RESOURCE,
-                            t -> t.nodeType(NodeType.RESOURCE).name("R4").qualityEvaluation(Grade.Three));
-        });
+        var x = builder.node(n -> n.nodeType(NodeType.SUBJECT)
+                .name("S1")
+                .publicId("urn:subject:1")
+                .qualityEvaluation(Grade.Five)
+                .child(
+                        NodeType.RESOURCE,
+                        t -> t.nodeType(NodeType.RESOURCE).name("R1").qualityEvaluation(Grade.Four))
+                .child(
+                        NodeType.RESOURCE,
+                        t -> t.nodeType(NodeType.RESOURCE).name("R2").qualityEvaluation(Grade.Three))
+                .child(
+                        NodeType.RESOURCE,
+                        t -> t.nodeType(NodeType.RESOURCE).name("R3").qualityEvaluation(Grade.Five))
+                .child(
+                        NodeType.RESOURCE,
+                        t -> t.nodeType(NodeType.RESOURCE).name("R4").qualityEvaluation(Grade.Three)));
 
         x.updateEntireAverageTree();
 
@@ -476,38 +474,36 @@ public class NodeTest extends AbstractIntegrationTest {
 
     @Test
     public void qualityEvaluationAverageForNestedChildrenWorks() {
-        var parentNode = builder.node(n -> {
-            n.nodeType(NodeType.SUBJECT)
-                    .name("S1")
-                    .qualityEvaluation(Grade.Five)
-                    .child(NodeType.TOPIC, t -> t.nodeType(NodeType.TOPIC)
-                            .name("T1")
-                            .qualityEvaluation(Grade.Four)
-                            .child(NodeType.RESOURCE, r -> r.nodeType(NodeType.RESOURCE)
-                                    .name("R5")
-                                    .qualityEvaluation(Grade.Two))
-                            .child(NodeType.RESOURCE, r -> r.nodeType(NodeType.RESOURCE)
-                                    .name("R1")
-                                    .qualityEvaluation(Grade.Five)))
-                    .child(NodeType.TOPIC, t -> t.nodeType(NodeType.TOPIC)
-                            .name("T2")
-                            .qualityEvaluation(Grade.Three)
-                            .child(NodeType.RESOURCE, r -> r.nodeType(NodeType.RESOURCE)
-                                    .name("R2")
-                                    .qualityEvaluation(Grade.Three)))
-                    .child(NodeType.TOPIC, t -> t.nodeType(NodeType.TOPIC)
-                            .name("T3")
-                            .qualityEvaluation(Grade.Five)
-                            .child(NodeType.RESOURCE, r -> r.nodeType(NodeType.RESOURCE)
-                                    .name("R3")
-                                    .qualityEvaluation(Grade.One)))
-                    .child(NodeType.TOPIC, t -> t.nodeType(NodeType.TOPIC)
-                            .name("T4")
-                            .qualityEvaluation(Grade.Three)
-                            .child(NodeType.RESOURCE, r -> r.nodeType(NodeType.RESOURCE)
-                                    .name("R4")
-                                    .qualityEvaluation(Grade.Two)));
-        });
+        var parentNode = builder.node(n -> n.nodeType(NodeType.SUBJECT)
+                .name("S1")
+                .qualityEvaluation(Grade.Five)
+                .child(NodeType.TOPIC, t -> t.nodeType(NodeType.TOPIC)
+                        .name("T1")
+                        .qualityEvaluation(Grade.Four)
+                        .child(
+                                NodeType.RESOURCE,
+                                r -> r.nodeType(NodeType.RESOURCE).name("R5").qualityEvaluation(Grade.Two))
+                        .child(
+                                NodeType.RESOURCE,
+                                r -> r.nodeType(NodeType.RESOURCE).name("R1").qualityEvaluation(Grade.Five)))
+                .child(NodeType.TOPIC, t -> t.nodeType(NodeType.TOPIC)
+                        .name("T2")
+                        .qualityEvaluation(Grade.Three)
+                        .child(
+                                NodeType.RESOURCE,
+                                r -> r.nodeType(NodeType.RESOURCE).name("R2").qualityEvaluation(Grade.Three)))
+                .child(NodeType.TOPIC, t -> t.nodeType(NodeType.TOPIC)
+                        .name("T3")
+                        .qualityEvaluation(Grade.Five)
+                        .child(
+                                NodeType.RESOURCE,
+                                r -> r.nodeType(NodeType.RESOURCE).name("R3").qualityEvaluation(Grade.One)))
+                .child(NodeType.TOPIC, t -> t.nodeType(NodeType.TOPIC)
+                        .name("T4")
+                        .qualityEvaluation(Grade.Three)
+                        .child(
+                                NodeType.RESOURCE,
+                                r -> r.nodeType(NodeType.RESOURCE).name("R4").qualityEvaluation(Grade.Two))));
         var unrelatedNodes = builder.node(
                 NodeType.SUBJECT, n -> n.name("S2").qualityEvaluation(Grade.One).child(NodeType.TOPIC, t -> t.name("T5")
                         .qualityEvaluation(Grade.Five)

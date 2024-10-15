@@ -50,16 +50,7 @@ public class TreeSorterTest {
         assertEquals("urn:l1d", sortedList.get(9).getSortableId().toString());
     }
 
-    private static class TestSortable implements TreeSorter.Sortable {
-        private final URI parentId;
-        private final URI id;
-        private final int rank;
-
-        private TestSortable(URI parentId, URI id, int rank) {
-            this.parentId = parentId;
-            this.id = id;
-            this.rank = rank;
-        }
+    private record TestSortable(URI parentId, URI id, int rank) implements TreeSorter.Sortable {
 
         @Override
         public int getSortableRank() {

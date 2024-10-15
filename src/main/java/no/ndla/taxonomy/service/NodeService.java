@@ -296,17 +296,14 @@ public class NodeService {
                 .findFirstByPublicId(nodePublicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
         if (recursive) {
-            node.getChildConnections().forEach(nc -> {
-                nc.getChild()
-                        .filter(n -> n.getNodeType() != NodeType.RESOURCE)
-                        .map(n -> makeAllResourcesPrimary(n.getPublicId(), true));
-            });
+            node.getChildConnections().forEach(nc -> nc.getChild()
+                    .filter(n -> n.getNodeType() != NodeType.RESOURCE)
+                    .map(n -> makeAllResourcesPrimary(n.getPublicId(), true)));
         }
 
-        node.getResourceChildren().forEach(cc -> {
-            connectionService.updateParentChild(
-                    cc, cc.getRelevance().orElse(null), Optional.of(cc.getRank()), Optional.of(true));
-        });
+        node.getResourceChildren()
+                .forEach(cc -> connectionService.updateParentChild(
+                        cc, cc.getRelevance().orElse(null), Optional.of(cc.getRank()), Optional.of(true)));
 
         return node.getResourceChildren().stream()
                 .allMatch(resourceConnection -> resourceConnection.isPrimary().orElse(false));

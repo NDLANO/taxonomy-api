@@ -54,46 +54,43 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
         }
 
         // Get all parent connections, append all contexts from the parent to the list and return.
-        node.getParentConnections()
-                .forEach(parentConnection -> parentConnection.getParent().ifPresent(parent -> {
-                    createContexts(parent).stream()
-                            .map(parentContext -> {
-                                var breadcrumbs = LanguageField.listFromLists(
-                                        parentContext.breadcrumbs(), LanguageField.fromNode(parent));
-                                var parentIds = parentContext.parentIds();
-                                parentIds.add(parent.getPublicId().toString());
-                                var parentContextIds = parentContext.parentContextIds();
-                                parentContextIds.add(parentContext.contextId());
-                                var contextId =
-                                        HashUtil.mediumHash(parentContext.contextId() + parentConnection.getPublicId());
-                                return new TaxonomyContext(
-                                        node.getPublicId().toString(),
-                                        LanguageField.fromNode(node),
-                                        node.getNodeType(),
-                                        parentContext.rootId(),
-                                        parentContext.rootName(),
-                                        parentContext.path() + node.getPathPart(),
-                                        breadcrumbs,
-                                        node.getContextType(),
-                                        parentIds,
-                                        parentContextIds,
-                                        parentContext.isVisible() && node.isVisible(),
-                                        parentContext.isActive() && activeContext,
-                                        parentConnection.isPrimary().orElse(false),
-                                        parentConnection
-                                                .getRelevance()
-                                                .flatMap(relevance -> Optional.of(
-                                                        relevance.getPublicId().toString()))
-                                                .orElse(Relevance.CORE
-                                                        .getPublicId()
-                                                        .toString()),
-                                        contextId,
-                                        parentConnection.getRank(),
-                                        parentConnection.getPublicId().toString(),
-                                        new ArrayList<>());
-                            })
-                            .forEach(returnedContexts::add);
-                }));
+        node.getParentConnections().forEach(parentConnection -> parentConnection
+                .getParent()
+                .ifPresent(parent -> createContexts(parent).stream()
+                        .map(parentContext -> {
+                            var breadcrumbs = LanguageField.listFromLists(
+                                    parentContext.breadcrumbs(), LanguageField.fromNode(parent));
+                            var parentIds = parentContext.parentIds();
+                            parentIds.add(parent.getPublicId().toString());
+                            var parentContextIds = parentContext.parentContextIds();
+                            parentContextIds.add(parentContext.contextId());
+                            var contextId =
+                                    HashUtil.mediumHash(parentContext.contextId() + parentConnection.getPublicId());
+                            return new TaxonomyContext(
+                                    node.getPublicId().toString(),
+                                    LanguageField.fromNode(node),
+                                    node.getNodeType(),
+                                    parentContext.rootId(),
+                                    parentContext.rootName(),
+                                    parentContext.path() + node.getPathPart(),
+                                    breadcrumbs,
+                                    node.getContextType(),
+                                    parentIds,
+                                    parentContextIds,
+                                    parentContext.isVisible() && node.isVisible(),
+                                    parentContext.isActive() && activeContext,
+                                    parentConnection.isPrimary().orElse(false),
+                                    parentConnection
+                                            .getRelevance()
+                                            .flatMap(relevance -> Optional.of(
+                                                    relevance.getPublicId().toString()))
+                                            .orElse(Relevance.CORE.getPublicId().toString()),
+                                    contextId,
+                                    parentConnection.getRank(),
+                                    parentConnection.getPublicId().toString(),
+                                    new ArrayList<>());
+                        })
+                        .forEach(returnedContexts::add)));
 
         return returnedContexts;
     }

@@ -1357,7 +1357,7 @@ public class NodesTest extends RestTest {
         {
             var node = nodeRepository.findFirstByPublicId(t2.getPublicId());
             var qe = node.get().getChildQualityEvaluationAverage();
-            assertEquals(false, qe.isPresent());
+            assertFalse(qe.isPresent());
         }
 
         connect(t2, r5);

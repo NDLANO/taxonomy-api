@@ -7,8 +7,7 @@
 
 package no.ndla.taxonomy.domain;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,7 @@ public class VersionTest {
 
     @Test
     public void has_public_id() {
-        assertTrue(version.getPublicId() != null);
+        assertNotNull(version.getPublicId());
         assertTrue(version.getPublicId().toString().startsWith("urn:version:"));
     }
 

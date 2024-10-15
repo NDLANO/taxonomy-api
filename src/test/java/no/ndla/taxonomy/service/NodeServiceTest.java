@@ -154,7 +154,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty(),
                 Optional.empty());
 
-        assertEquals(subjects.getResults().get(0).getId(), subject.getPublicId());
+        assertEquals(subjects.getResults().getFirst().getId(), subject.getPublicId());
 
         assertEquals(subjects.getTotalCount(), 1);
         assertEquals(topics.getTotalCount(), 4);
@@ -182,7 +182,7 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty(),
                 Optional.empty());
 
-        assertEquals(result.getResults().get(0).getId(), tiger.getPublicId());
+        assertEquals(result.getResults().getFirst().getId(), tiger.getPublicId());
         assertEquals(result.getTotalCount(), 1);
     }
 
@@ -229,12 +229,12 @@ public class NodeServiceTest extends AbstractIntegrationTest {
                 Optional.empty(),
                 Optional.empty());
 
-        assertEquals(result2.getResults().get(0).getId(), new URI("urn:topic:1"));
+        assertEquals(result2.getResults().getFirst().getId(), new URI("urn:topic:1"));
         assertEquals(result2.getTotalCount(), 1);
     }
 
     @Test
-    public void contentUriSearch() throws URISyntaxException {
+    public void contentUriSearch() {
         builder.node(n -> n.nodeType(NodeType.TOPIC)
                 .name("Apekatt")
                 .publicId("urn:topic:1")

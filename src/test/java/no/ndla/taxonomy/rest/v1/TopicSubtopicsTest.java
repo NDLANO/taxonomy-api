@@ -187,7 +187,7 @@ public class TopicSubtopicsTest extends RestTest {
         Map<String, Integer> mappedRanks = mapConnectionRanks(topicSubtopics);
 
         // make the last object the first
-        NodeConnection updatedConnection = topicSubtopics.get(topicSubtopics.size() - 1);
+        NodeConnection updatedConnection = topicSubtopics.getLast();
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource(
                 "/v1/topic-subtopics/" + updatedConnection.getPublicId().toString(), new TopicSubtopicPUT() {
@@ -219,7 +219,7 @@ public class TopicSubtopicsTest extends RestTest {
         Map<String, Integer> mappedRanks = mapConnectionRanks(topicSubtopics);
 
         // make the last object the first
-        NodeConnection updatedConnection = topicSubtopics.get(topicSubtopics.size() - 1);
+        NodeConnection updatedConnection = topicSubtopics.getLast();
         assertEquals(100, updatedConnection.getRank());
         testUtils.updateResource(
                 "/v1/topic-subtopics/" + updatedConnection.getPublicId().toString(), new SubjectTopicPUT() {
@@ -253,7 +253,7 @@ public class TopicSubtopicsTest extends RestTest {
         Map<String, Integer> mappedRanks = mapConnectionRanks(topicSubtopics);
 
         // set rank for last object to higher than any existing
-        NodeConnection updatedConnection = topicSubtopics.get(topicSubtopics.size() - 1);
+        NodeConnection updatedConnection = topicSubtopics.getLast();
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource(
                 "/v1/topic-subtopics/" + topicSubtopics.get(9).getPublicId().toString(), new SubjectTopicPUT() {

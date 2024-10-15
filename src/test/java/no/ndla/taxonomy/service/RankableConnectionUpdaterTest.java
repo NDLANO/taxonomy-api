@@ -9,7 +9,6 @@ package no.ndla.taxonomy.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import no.ndla.taxonomy.domain.NodeConnection;
@@ -27,7 +26,7 @@ public class RankableConnectionUpdaterTest {
     }
 
     @Test
-    public void rank() throws URISyntaxException {
+    public void rank() {
         final var relevance = Relevance.CORE;
 
         final var rankable1 = new NodeConnection("urn:1", relevance, 0);
@@ -110,7 +109,7 @@ public class RankableConnectionUpdaterTest {
     }
 
     @Test
-    public void rank_cascading() throws URISyntaxException {
+    public void rank_cascading() {
         final var relevance = Relevance.CORE;
 
         final var rankable1 = new NodeConnection("urn:1", relevance, 0);

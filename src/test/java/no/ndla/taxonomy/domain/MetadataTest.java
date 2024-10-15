@@ -17,11 +17,10 @@ import org.junit.jupiter.api.Test;
 
 class MetadataTest {
     private Metadata metadata;
-    private Node parent;
 
     @BeforeEach
     void setUp() {
-        parent = new Node(NodeType.RESOURCE);
+        Node parent = new Node(NodeType.RESOURCE);
         metadata = new Metadata(parent);
     }
 

@@ -45,7 +45,7 @@ public class UrlResolverServiceImpl implements UrlResolverService {
     public Optional<String> resolveOldUrl(String oldUrl) {
         final var results = getCachedUrlOldRig(oldUrl);
         if (!results.isEmpty()) {
-            final var result = results.get(0);
+            final var result = results.getFirst();
             final var allPaths = getAllPaths(result.getPublic_id());
 
             if (result.getSubject_id() != null) {
@@ -187,7 +187,7 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
             validateEntityPath(resolvedPathComponents);
 
-            final var leafElement = resolvedPathComponents.get(resolvedPathComponents.size() - 1);
+            final var leafElement = resolvedPathComponents.getLast();
 
             final var resolvedUrl = new ResolvedUrl();
             resolvedUrl.setContentUri(leafElement.getContentUri());
@@ -219,7 +219,7 @@ public class UrlResolverServiceImpl implements UrlResolverService {
         for (String pathPart : pathParts) {
             // Ignore empty parts of the path, including when having leading and/or trailing slashes
             // and multiple slashes
-            if (pathPart.equals("")) {
+            if (pathPart.isEmpty()) {
                 continue;
             }
 

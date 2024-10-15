@@ -114,7 +114,7 @@ public class ContextsTest extends RestTest {
     public void root_context_is_more_important_than_primary_parent() throws Exception {
         Node topic = builder.node(t -> t.nodeType(NodeType.TOPIC).publicId("urn:topic:1"));
 
-        Node subject = builder.node(s -> s.nodeType(NodeType.SUBJECT)
+        builder.node(s -> s.nodeType(NodeType.SUBJECT)
                 .isContext(true)
                 .publicId("urn:subject:1")
                 .child(topic));

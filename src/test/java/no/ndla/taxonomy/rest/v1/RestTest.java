@@ -73,7 +73,6 @@ public abstract class RestTest extends AbstractIntegrationTest {
         return metadata;
     }
 
-    @SuppressWarnings("unchecked")
     @BeforeEach
     public void restTestSetUp() {
         builder = new Builder(entityManager, contextUpdaterService);

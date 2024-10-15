@@ -8,7 +8,6 @@
 package no.ndla.taxonomy.domain;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;

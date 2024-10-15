@@ -66,7 +66,7 @@ public class SubjectsTest extends RestTest {
         assertAnyTrue(subjects, s -> "english".equals(s.getName()));
         assertAnyTrue(subjects, s -> "mathematics".equals(s.getName()));
         assertAllTrue(subjects, s -> isValidId(s.getId()));
-        assertAllTrue(subjects, s -> !s.getPath().isEmpty());
+        assertAllTrue(subjects, s -> s.getPath().isPresent());
 
         assertAllTrue(subjects, s -> s.getMetadata() != null);
 

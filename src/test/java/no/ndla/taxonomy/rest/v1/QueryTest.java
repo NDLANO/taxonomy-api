@@ -412,7 +412,7 @@ public class QueryTest extends RestTest {
             assertEquals(List.of("Subject", "Topic"), result[0].breadcrumbs().get("nb"));
         }
         {
-            // Old format used used for programmes
+            // Old format used for programmes
             var response = testUtils.getResource("/v1/queries/path?path="
                     + String.format(
                             "/one-fine-resource__%s",

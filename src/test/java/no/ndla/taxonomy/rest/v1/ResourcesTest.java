@@ -100,7 +100,7 @@ public class ResourcesTest extends RestTest {
         assertAnyTrue(resources, s -> "The inner planets".equals(s.getName()));
         assertAnyTrue(resources, s -> "Gas giants".equals(s.getName()));
         assertAllTrue(resources, s -> isValidId(s.getId()));
-        assertAllTrue(resources, r -> !r.getPath().isEmpty());
+        assertAllTrue(resources, r -> r.getPath().isPresent());
 
         assertAllTrue(resources, r -> r.getMetadata() != null);
         assertAllTrue(resources, r -> r.getMetadata().isVisible());

@@ -144,7 +144,7 @@ public class Builder {
 
     @Transactional
     public static class VersionBuilder {
-        private Version version;
+        private final Version version;
 
         public VersionBuilder() {
             this.version = new Version();
@@ -167,7 +167,7 @@ public class Builder {
     }
 
     public static class JsonTranslationBuilder {
-        private JsonTranslation translation;
+        private final JsonTranslation translation;
 
         public JsonTranslationBuilder(JsonTranslation nodeTranslation) {
             this.translation = nodeTranslation;
@@ -181,7 +181,7 @@ public class Builder {
 
     @Transactional
     public static class UrlMappingBuilder {
-        private UrlMapping urlMapping;
+        private final UrlMapping urlMapping;
 
         public UrlMappingBuilder() {
             urlMapping = new UrlMapping();

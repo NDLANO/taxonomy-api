@@ -59,8 +59,10 @@ public class SwaggerConfiguration {
                 .info(new Info()
                         .title("NDLA Taxonomy API")
                         .description(
-                                "Rest service and graph database for organizing content.\n\n"
-                                        + "When you remove an entity, its associations are also deleted. E.g., if you remove a subject, its associations to any topics are removed. The topics themselves are not affected.")
+                                """
+                                        Rest service and graph database for organizing content.
+
+                                        When you remove an entity, its associations are also deleted. E.g., if you remove a subject, its associations to any topics are removed. The topics themselves are not affected.""")
                         .version("v1")
                         .contact(new Contact()
                                 .name(contactName)
@@ -71,21 +73,13 @@ public class SwaggerConfiguration {
     }
 
     private List<Server> servers() {
-        String url;
-        switch (environment) {
-            case "local":
-                url = "http://api-gateway.ndla-local/taxonomy";
-                break;
-            case "prod":
-                url = "https://api.ndla.no/taxonomy";
-                break;
-            case "test":
-            case "staging":
-                url = String.format("https://api.%s.ndla.no/taxonomy", environment);
-                break;
-            default:
-                url = String.format("http://localhost:%s", port);
-        }
+        String url =
+                switch (environment) {
+                    case "local" -> "http://api-gateway.ndla-local/taxonomy";
+                    case "prod" -> "https://api.ndla.no/taxonomy";
+                    case "test", "staging" -> String.format("https://api.%s.ndla.no/taxonomy", environment);
+                    default -> String.format("http://localhost:%s", port);
+                };
         return List.of(new Server().url(url));
     }
 
