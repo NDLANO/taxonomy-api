@@ -14,20 +14,20 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.ResourceResourceTypeRepository;
 import no.ndla.taxonomy.rest.v1.commands.ResourcePostPut;
-import no.ndla.taxonomy.service.*;
+import no.ndla.taxonomy.service.ContextUpdaterService;
+import no.ndla.taxonomy.service.NodeService;
+import no.ndla.taxonomy.service.QualityEvaluationService;
 import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.NodeWithParents;
 import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,28 +37,26 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(path = {"/v1/resources", "/v1/resources/"})
 public class Resources extends CrudControllerWithMetadata<Node> {
+    private final Nodes nodes;
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final NodeService nodeService;
-    private final NodeRepository nodeRepository;
-    private final SearchService searchService;
 
     @Value(value = "${new.url.separator:false}")
     private boolean newUrlSeparator;
 
     public Resources(
+            Nodes nodes,
             NodeRepository nodeRepository,
             ResourceResourceTypeRepository resourceResourceTypeRepository,
             ContextUpdaterService contextUpdaterService,
             NodeService nodeService,
-            QualityEvaluationService qualityEvaluationService,
-            SearchService searchService) {
+            QualityEvaluationService qualityEvaluationService) {
         super(nodeRepository, contextUpdaterService, nodeService, qualityEvaluationService);
 
+        this.nodes = nodes;
         this.resourceResourceTypeRepository = resourceResourceTypeRepository;
         this.repository = nodeRepository;
-        this.nodeRepository = nodeRepository;
         this.nodeService = nodeService;
-        this.searchService = searchService;
     }
 
     @Override
@@ -82,18 +80,19 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                     Optional<String> value,
             @Parameter(description = "Filter by visible") @RequestParam(value = "isVisible", required = false)
                     Optional<Boolean> isVisible) {
-        MetadataFilters metadataFilters = new MetadataFilters(key, value, isVisible);
-        return nodeService.getNodesByType(
+        return nodes.getAllNodes(
                 Optional.of(List.of(NodeType.RESOURCE)),
-                language.orElse(Constants.DefaultLanguage),
-                Optional.empty(),
+                language,
                 contentUri,
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
-                metadataFilters,
-                Optional.of(false),
-                false,
+                key,
+                value,
+                isVisible,
+                Optional.empty(),
+                Optional.of(true),
+                true,
                 Optional.empty(),
                 Optional.empty());
     }
@@ -117,17 +116,16 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ContentURIs to fetch for query")
                     @RequestParam(value = "contentUris", required = false)
                     Optional<List<String>> contentUris) {
-        return searchService.searchByNodeType(
+        return nodes.searchNodes(
+                language,
+                pageSize,
+                page,
                 query,
                 ids,
                 contentUris,
-                language,
-                Optional.of(false),
-                false,
-                pageSize,
-                page,
                 Optional.of(List.of(NodeType.RESOURCE)),
-                Optional.empty(),
+                Optional.of(true),
+                true,
                 Optional.empty(),
                 Optional.empty());
     }
@@ -142,27 +140,8 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                     Optional<String> language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize) {
-        if (page.isEmpty() || pageSize.isEmpty()) {
-            throw new IllegalArgumentException("Need both page and pageSize to return data");
-        }
-        if (page.get() < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
-
-        var pageRequest = PageRequest.of(page.get() - 1, pageSize.get());
-        var ids = nodeRepository.findIdsByTypePaginated(pageRequest, NodeType.RESOURCE);
-        var results = nodeRepository.findByIds(ids.getContent());
-        var contents = results.stream()
-                .map(node -> new NodeDTO(
-                        Optional.empty(),
-                        Optional.empty(),
-                        node,
-                        language.orElse("nb"),
-                        Optional.empty(),
-                        Optional.of(false),
-                        false,
-                        false,
-                        newUrlSeparator))
-                .collect(Collectors.toList());
-        return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
+        return nodes.getNodePage(
+                language, page, pageSize, Optional.of(NodeType.RESOURCE), Optional.of(true), true, true);
     }
 
     @Deprecated
@@ -174,7 +153,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language) {
-        return nodeService.getNode(id, language, Optional.empty(), Optional.empty(), Optional.of(false), false, true);
+        return nodes.getNode(id, Optional.empty(), Optional.empty(), Optional.of(true), true, true, language);
     }
 
     @Deprecated
@@ -193,7 +172,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
                     @RequestBody
                     @Schema(name = "ResourcePOST")
                     ResourcePostPut command) {
-        updateEntity(id, command);
+        nodes.updateEntity(id, command);
     }
 
     @Deprecated
@@ -206,7 +185,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     public ResponseEntity<Void> createResource(
             @Parameter(name = "resource", description = "the new resource") @RequestBody @Schema(name = "ResourcePUT")
                     ResourcePostPut command) {
-        return createEntity(new Node(NodeType.RESOURCE), command);
+        return nodes.createEntity(new Node(NodeType.RESOURCE), command);
     }
 
     @Deprecated
@@ -254,9 +233,7 @@ public class Resources extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "ISO-639-1 language code", example = "nb")
                     @RequestParam(value = "language", required = false, defaultValue = Constants.DefaultLanguage)
                     Optional<String> language) {
-        var node = nodeService.getNode(id);
-        return new NodeWithParents(
-                node, language.orElse(Constants.DefaultLanguage), Optional.of(false), newUrlSeparator);
+        return nodes.getNodeFull(id, language, Optional.of(true));
     }
 
     @Deprecated
@@ -268,6 +245,6 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
     public void deleteEntity(@PathVariable("id") URI id) {
-        nodeService.delete(id);
+        nodes.deleteEntity(id);
     }
 }

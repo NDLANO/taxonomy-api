@@ -213,6 +213,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                     Optional<String> language,
             @Parameter(name = "page", description = "The page to fetch") Optional<Integer> page,
             @Parameter(name = "pageSize", description = "Size of page to fetch") Optional<Integer> pageSize,
+            @Parameter(name = "nodeType", description = "Filter by nodeType") Optional<NodeType> nodeType,
             @Parameter(name = "includeContexts", description = "Include all contexts")
                     @RequestParam(value = "includeContexts", required = false, defaultValue = "true")
                     Optional<Boolean> includeContexts,
@@ -227,7 +228,9 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
         }
         if (page.get() < 1) throw new IllegalArgumentException("page parameter must be bigger than 0");
 
-        var ids = nodeRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get()));
+        var ids = nodeType.map(
+                        nt -> nodeRepository.findIdsByTypePaginated(PageRequest.of(page.get() - 1, pageSize.get()), nt))
+                .orElseGet(() -> nodeRepository.findIdsPaginated(PageRequest.of(page.get() - 1, pageSize.get())));
         var results = nodeRepository.findByIds(ids.getContent());
         var contents = results.stream()
                 .map(node -> new NodeDTO(

@@ -10,13 +10,8 @@ package no.ndla.taxonomy.rest.v1;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.persistence.EntityManager;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.exceptions.NotFoundException;
-import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.v1.dtos.TranslationPUT;
 import no.ndla.taxonomy.service.dtos.TranslationDTO;
 import org.springframework.http.HttpStatus;
@@ -28,13 +23,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(path = {"/v1/topics/{id}/translations", "/v1/topics/{id}/translations/"})
 public class TopicTranslations {
 
-    private final NodeRepository nodeRepository;
+    private final NodeTranslations nodeTranslations;
 
-    private final EntityManager entityManager;
-
-    public TopicTranslations(NodeRepository nodeRepository, EntityManager entityManager) {
-        this.nodeRepository = nodeRepository;
-        this.entityManager = entityManager;
+    public TopicTranslations(NodeTranslations nodeTranslations) {
+        this.nodeTranslations = nodeTranslations;
     }
 
     @Deprecated
@@ -42,16 +34,7 @@ public class TopicTranslations {
     @Operation(summary = "Gets all relevanceTranslations for a single topic")
     @Transactional(readOnly = true)
     public List<TranslationDTO> getAllTopicTranslations(@PathVariable("id") URI id) {
-        Node topic = nodeRepository.getByPublicId(id);
-        List<TranslationDTO> result = new ArrayList<>();
-        topic.getTranslations()
-                .forEach(t -> result.add(new TranslationDTO() {
-                    {
-                        name = t.getName();
-                        language = t.getLanguageCode();
-                    }
-                }));
-        return result;
+        return nodeTranslations.getAllNodeTranslations(id);
     }
 
     @Deprecated
@@ -63,16 +46,7 @@ public class TopicTranslations {
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true)
                     @PathVariable("language")
                     String language) {
-        Node topic = nodeRepository.getByPublicId(id);
-        var translation = topic.getTranslation(language)
-                .orElseThrow(
-                        () -> new NotFoundException("translation with language code " + language + " for topic", id));
-        return new TranslationDTO() {
-            {
-                name = translation.getName();
-                language = translation.getLanguageCode();
-            }
-        };
+        return nodeTranslations.getNodeTranslation(id, language);
     }
 
     @Deprecated
@@ -90,9 +64,7 @@ public class TopicTranslations {
                     String language,
             @Parameter(name = "topic", description = "The new or updated translation") @RequestBody
                     TranslationPUT command) {
-        var topic = nodeRepository.getByPublicId(id);
-        topic.addTranslation(command.name, language);
-        entityManager.persist(topic);
+        nodeTranslations.createUpdateNodeTranslation(id, language, command);
     }
 
     @Deprecated
@@ -108,10 +80,6 @@ public class TopicTranslations {
             @Parameter(description = "ISO-639-1 language code", example = "nb", required = true)
                     @PathVariable("language")
                     String language) {
-        Node topic = nodeRepository.getByPublicId(id);
-        topic.getTranslation(language).ifPresent(topicTranslation -> {
-            topic.removeTranslation(language);
-            entityManager.persist(topic);
-        });
+        nodeTranslations.deleteNodeTranslation(id, language);
     }
 }
