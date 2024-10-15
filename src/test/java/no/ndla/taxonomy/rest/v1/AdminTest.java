@@ -7,29 +7,18 @@
 
 package no.ndla.taxonomy.rest.v1;
 
-import static no.ndla.taxonomy.TestUtils.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import jakarta.persistence.EntityManager;
-import no.ndla.taxonomy.TestSeeder;
-import no.ndla.taxonomy.domain.*;
+import no.ndla.taxonomy.domain.Grade;
+import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.NodeType;
 import no.ndla.taxonomy.rest.v1.dtos.NodeConnectionPOST;
-import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.transaction.TestTransaction;
 
 public class AdminTest extends RestTest {
-    @Autowired
-    EntityManager entityManager;
-
-    @Autowired
-    private TestSeeder testSeeder;
-
-    @Value(value = "${new.url.separator:false}")
-    private boolean newUrlSeparator;
 
     @BeforeEach
     void clearAllRepos() {

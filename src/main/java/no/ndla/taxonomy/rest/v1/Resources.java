@@ -27,7 +27,6 @@ import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.NodeWithParents;
 import no.ndla.taxonomy.service.dtos.ResourceTypeWithConnectionDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,9 +39,6 @@ public class Resources extends CrudControllerWithMetadata<Node> {
     private final Nodes nodes;
     private final ResourceResourceTypeRepository resourceResourceTypeRepository;
     private final NodeService nodeService;
-
-    @Value(value = "${new.url.separator:false}")
-    private boolean newUrlSeparator;
 
     public Resources(
             Nodes nodes,

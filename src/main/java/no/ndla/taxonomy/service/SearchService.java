@@ -22,7 +22,6 @@ import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -73,9 +72,6 @@ public class SearchService {
                 rootId,
                 parentId);
     }
-
-    @Value(value = "${new.url.separator:false}")
-    private boolean newUrlSeparator;
 
     private Specification<Node> base() {
         return (root, query, criteriaBuilder) -> criteriaBuilder.isNotNull(root.get("id"));
@@ -151,8 +147,7 @@ public class SearchService {
                         Optional.empty(),
                         includeContexts,
                         filterProgrammes,
-                        false,
-                        newUrlSeparator))
+                        false))
                 .collect(Collectors.toList());
 
         return new SearchResultDTO<>(fetched.getTotalElements(), page, pageSize, dtos);

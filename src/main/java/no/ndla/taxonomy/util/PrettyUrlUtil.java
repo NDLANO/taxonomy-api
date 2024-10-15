@@ -19,18 +19,13 @@ public class PrettyUrlUtil {
             LanguageField<String> name,
             String language,
             String hash,
-            NodeType nodeType,
-            boolean newUrlSeparator) {
+            NodeType nodeType) {
         return createPrettyUrl(
-                rootName.map(lf -> lf.fromLanguage(language)),
-                name.fromLanguage(language),
-                hash,
-                nodeType,
-                newUrlSeparator);
+                rootName.map(lf -> lf.fromLanguage(language)), name.fromLanguage(language), hash, nodeType);
     }
 
     public static Optional<String> createPrettyUrl(
-            Optional<String> rootName, String name, String hash, NodeType nodeType, boolean newUrlSeparator) {
+            Optional<String> rootName, String name, String hash, NodeType nodeType) {
         if (name == null || hash == null) return Optional.empty();
         StringBuilder builder = new StringBuilder();
         rootName.ifPresent(rn -> {
@@ -41,11 +36,7 @@ public class PrettyUrlUtil {
         });
         builder.append("/");
         buildUrlFragment(builder, cleanString(name));
-        if (newUrlSeparator) {
-            builder.append(String.format("%s/%s", nodeTypeMapping(nodeType), hash));
-        } else {
-            builder.append(String.format("__%s", hash));
-        }
+        builder.append(String.format("%s/%s", nodeTypeMapping(nodeType), hash));
 
         return Optional.of(builder.toString());
     }

@@ -104,8 +104,7 @@ public class NodeDTO {
             Optional<String> contextId,
             Optional<Boolean> includeContexts,
             boolean filterProgrammes,
-            boolean isVisible,
-            boolean newUrlSeparator) {
+            boolean isVisible) {
 
         var contexts = entity.getContexts();
         var visibleContexts =
@@ -153,7 +152,7 @@ public class NodeDTO {
 
         Optional<TaxonomyContext> selected = entity.pickContext(contextId, parent, root, filteredContexts);
         selected.ifPresent(ctx -> {
-            var contextDto = getTaxonomyContextDTO(entity, newUrlSeparator, ctx, relevanceName);
+            var contextDto = getTaxonomyContextDTO(entity, ctx, relevanceName);
 
             // TODO: this changes the content in context breadcrumbs
             LanguageField<List<String>> breadcrumbList =
@@ -171,13 +170,13 @@ public class NodeDTO {
 
         includeContexts.filter(Boolean::booleanValue).ifPresent(includeCtx -> {
             this.contexts = filteredContexts.stream()
-                    .map(ctx -> getTaxonomyContextDTO(entity, newUrlSeparator, ctx, relevanceName))
+                    .map(ctx -> getTaxonomyContextDTO(entity, ctx, relevanceName))
                     .toList();
         });
     }
 
     private TaxonomyContextDTO getTaxonomyContextDTO(
-            Node entity, boolean newUrlSeparator, TaxonomyContext ctx, LanguageField<String> finalRelevanceName) {
+            Node entity, TaxonomyContext ctx, LanguageField<String> finalRelevanceName) {
         var parentContexts = entity.getAllParentContexts();
         var parents = ctx.parentContextIds().stream()
                 .map(parentCtxId -> {
@@ -191,8 +190,7 @@ public class NodeDTO {
                                 p.name(),
                                 this.language,
                                 parentCtxId,
-                                p.nodeType(),
-                                newUrlSeparator);
+                                p.nodeType());
                         return new TaxonomyCrumbDTO(
                                 URI.create(p.publicId()),
                                 parentCtxId,
@@ -235,8 +233,7 @@ public class NodeDTO {
                                 LanguageField.fromNode(entity),
                                 this.language,
                                 ctx.contextId(),
-                                entity.getNodeType(),
-                                newUrlSeparator)
+                                entity.getNodeType())
                         .orElse(ctx.path()),
                 parents);
     }
