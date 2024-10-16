@@ -44,11 +44,11 @@ public class TopicSubtopicsTest extends RestTest {
         }));
 
         final var connection = nodeConnectionRepository.findByPublicId(id);
+        assertNotNull(connection);
 
         Node calculus = nodeRepository.getByPublicId(calculusId);
         assertEquals(1, calculus.getChildNodes().size());
         assertAnyTrue(calculus.getChildNodes(), t -> "integration".equals(t.getName()));
-        assertNotNull(nodeConnectionRepository.getByPublicId(id));
     }
 
     @Test

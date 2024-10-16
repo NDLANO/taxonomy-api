@@ -168,11 +168,11 @@ public class NodeDTO {
             this.context = Optional.of(contextDto);
         });
 
-        includeContexts.filter(Boolean::booleanValue).ifPresent(includeCtx -> {
-            this.contexts = filteredContexts.stream()
-                    .map(ctx -> getTaxonomyContextDTO(entity, ctx, relevanceName))
-                    .toList();
-        });
+        includeContexts
+                .filter(Boolean::booleanValue)
+                .ifPresent(includeCtx -> this.contexts = filteredContexts.stream()
+                        .map(ctx -> getTaxonomyContextDTO(entity, ctx, relevanceName))
+                        .toList());
     }
 
     private TaxonomyContextDTO getTaxonomyContextDTO(

@@ -18,7 +18,7 @@ public class SubjectPostPut implements UpdatableDto<Node> {
     @JsonProperty
     @Schema(
             description =
-                    "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.",
+                    "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If omitted, an id will be assigned automatically.",
             example = "urn:subject:1")
     public Optional<URI> id = Optional.empty();
 

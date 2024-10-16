@@ -11,7 +11,6 @@ import java.net.URI;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.NoRepositoryBean;
 
 @NoRepositoryBean
@@ -23,9 +22,6 @@ public interface TaxonomyRepository<T> extends JpaRepository<T, Integer>, JpaSpe
         if (null == entity) throw new NotFoundException("entity", id);
         return entity;
     }
-
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
-    void deleteByPublicId(URI id);
 
     default void deleteAllAndFlush() {
         deleteAll();

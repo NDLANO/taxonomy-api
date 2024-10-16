@@ -14,7 +14,7 @@ public enum NodeType {
     RESOURCE("resource"),
     PROGRAMME("programme");
 
-    private String name;
+    private final String name;
 
     NodeType(String name) {
         this.name = name;

@@ -53,7 +53,7 @@ public class LiquibaseConfig implements InitializingBean, ResourceLoaderAware {
     private ResourceLoader resourceLoader;
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         try {
             List<String> schemas = new ArrayList<>();
             ResultSet resultSet = dataSource

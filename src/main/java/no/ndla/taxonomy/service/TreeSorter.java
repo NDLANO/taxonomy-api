@@ -41,8 +41,6 @@ public class TreeSorter {
      *
      * @param elements
      *            Elements to sort
-     * @param <T>
-     *
      * @return sorted flat list
      */
     public <T extends Sortable> List<T> sortList(Collection<T> elements) {

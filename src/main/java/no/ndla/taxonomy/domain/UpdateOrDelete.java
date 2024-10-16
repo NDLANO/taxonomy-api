@@ -7,7 +7,6 @@
 
 package no.ndla.taxonomy.domain;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
@@ -47,11 +46,7 @@ public class UpdateOrDelete<T> {
 
         @Override
         public boolean isEmpty(SerializerProvider provider, UpdateOrDelete<T> value) {
-            if (value == null || value.getValue().isEmpty()) {
-                return true;
-            }
-
-            return false;
+            return value == null || value.getValue().isEmpty();
         }
 
         @Override
@@ -79,7 +74,7 @@ public class UpdateOrDelete<T> {
 
         @Override
         public UpdateOrDelete<T> deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-                throws IOException, JacksonException {
+                throws IOException {
             JsonNode node = jsonParser.getCodec().readTree(jsonParser);
             if (node.isMissingNode()) {
                 return new UpdateOrDelete<>(null, false);

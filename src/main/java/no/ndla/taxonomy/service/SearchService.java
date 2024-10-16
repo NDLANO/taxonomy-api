@@ -26,10 +26,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-interface ExtraSpecification<T> {
-    Specification<T> applySpecification(Specification<T> spec);
-}
-
 @Service
 public class SearchService {
 
@@ -57,7 +53,7 @@ public class SearchService {
             Optional<Map<String, String>> customfieldsFilter,
             Optional<URI> rootId,
             Optional<URI> parentId) {
-        Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasOneOfNodeType(nt))));
+        Optional<ExtraSpecification> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasOneOfNodeType(nt))));
         return this.search(
                 query,
                 ids,
@@ -109,7 +105,7 @@ public class SearchService {
             boolean filterProgrammes,
             int pageSize,
             int page,
-            Optional<ExtraSpecification<Node>> applySpecLambda,
+            Optional<ExtraSpecification> applySpecLambda,
             Optional<Map<String, String>> customFieldFilters,
             Optional<URI> rootId,
             Optional<URI> parentId) {

@@ -26,8 +26,7 @@ public class RequestLoggerInterceptor implements AsyncHandlerInterceptor {
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-            throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         request.setAttribute(START_TIME, System.currentTimeMillis());
         MDC.put("Correlation-ID", getCorrelationId(request));
         var requestPath = request.getRequestURI();
@@ -44,15 +43,15 @@ public class RequestLoggerInterceptor implements AsyncHandlerInterceptor {
         long startTime = (Long) request.getAttribute(START_TIME);
         long latency = System.currentTimeMillis() - startTime;
         MDC.put("reqLatencyMs", Long.toString(latency));
-        logger.info(String.format(
-                "(%s) %s %s?%s (%s) executed in %sms with code %s",
+        logger.info(
+                "({}) {} {}?{} ({}) executed in {}ms with code {}",
                 Optional.ofNullable(request.getHeader("X-Correlation-ID")).orElse(""),
                 request.getMethod(),
                 request.getRequestURI(),
                 Optional.ofNullable(request.getQueryString()).orElse(""),
                 Optional.ofNullable(request.getHeader("VersionHash")).orElse(""),
                 "" + latency,
-                response.getStatus()));
+                response.getStatus());
         AsyncHandlerInterceptor.super.afterCompletion(request, response, handler, ex);
     }
 }

@@ -10,9 +10,9 @@ package no.ndla.taxonomy.service;
 import java.util.Optional;
 
 public class MetadataFilters {
-    private Optional<String> key;
-    private Optional<String> value;
-    private Optional<Boolean> visible;
+    private final Optional<String> key;
+    private final Optional<String> value;
+    private final Optional<Boolean> visible;
 
     public MetadataFilters(Optional<String> key, Optional<String> value, Optional<Boolean> visible) {
         this.key = key;

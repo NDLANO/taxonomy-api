@@ -125,8 +125,6 @@ public class UrlResolverServiceImpl implements UrlResolverService {
      * @param subjectId
      *            subjectID to be associated with this URL (optional)
      *
-     * @return true in order to be mockable "given" ugh!
-     *
      * @throws NodeIdNotFoundExeption
      *             if node ide not found in taxonomy
      */

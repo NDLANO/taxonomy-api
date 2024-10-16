@@ -11,7 +11,6 @@ import static no.ndla.taxonomy.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import jakarta.persistence.EntityManager;
 import java.net.URI;
 import java.util.Optional;
 import java.util.Set;
@@ -27,9 +26,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class TopicsTest extends RestTest {
-    @Autowired
-    EntityManager entityManager;
-
     @Autowired
     private TestSeeder testSeeder;
 

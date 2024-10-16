@@ -47,11 +47,11 @@ public class SubjectTopicsTest extends RestTest {
         }));
 
         final var connection = nodeConnectionRepository.findByPublicId(id);
+        assertNotNull(connection);
 
         Node physics = nodeRepository.getByPublicId(subjectId);
         assertEquals(1, physics.getChildNodes().size());
         assertAnyTrue(physics.getChildNodes(), t -> "trigonometry".equals(t.getName()));
-        assertNotNull(nodeConnectionRepository.getByPublicId(id));
     }
 
     @Test

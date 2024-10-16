@@ -19,7 +19,6 @@ import no.ndla.taxonomy.service.ContextUpdaterService;
 import no.ndla.taxonomy.service.NodeService;
 import no.ndla.taxonomy.service.QualityEvaluationService;
 import no.ndla.taxonomy.service.dtos.MetadataDTO;
-import no.ndla.taxonomy.service.exceptions.InvalidDataException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,8 +51,7 @@ public abstract class CrudControllerWithMetadata<T extends DomainEntity> extends
             summary = "Updates metadata for entity",
             security = {@SecurityRequirement(name = "oauth")})
     @Transactional
-    public MetadataDTO putMetadata(@PathVariable("id") URI id, @RequestBody MetadataDTO entityToUpdate)
-            throws InvalidDataException {
+    public MetadataDTO putMetadata(@PathVariable("id") URI id, @RequestBody MetadataDTO entityToUpdate) {
         var entity = repository.findByPublicId(id);
         if (entity instanceof EntityWithMetadata em) {
             var result = em.getMetadata().mergeWith(entityToUpdate);

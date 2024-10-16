@@ -39,7 +39,7 @@ public class DomainEntity implements Serializable {
     /**
      * Defaults to class name, but can be overrided
      *
-     * @return
+     * @return entity name
      */
     public String getEntityName() {
         return getClass().getSimpleName().toLowerCase();
