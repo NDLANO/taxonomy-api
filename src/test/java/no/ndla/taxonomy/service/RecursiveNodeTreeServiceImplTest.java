@@ -291,10 +291,8 @@ class RecursiveNodeTreeServiceImplTest extends AbstractIntegrationTest {
     @Test
     void getRecursiveTopics_with_infinite_loop() {
         // This condition should not be possible as validation when inserting should prevent it,
-        // this tests
-        // tests that the breaker works in case it happens, for example by manual editing. Otherwise
-        // it would
-        // result in a StackOverflowError at some point
+        // this test tests that the breaker works in case it happens, for example by manual editing.
+        // Otherwise it would result in a StackOverflowError at some point
 
         final var topic1 = new Node(NodeType.TOPIC);
         final var topic2 = new Node(NodeType.TOPIC);

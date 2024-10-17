@@ -167,8 +167,7 @@ public class VersionsTest extends RestTest {
             }
         };
 
-        MockHttpServletResponse response =
-                testUtils.updateResource("/v1/versions/" + version.getPublicId(), updateVersionCommand);
+        testUtils.updateResource("/v1/versions/" + version.getPublicId(), updateVersionCommand);
 
         Version updated = versionRepository.getByPublicId(newUri);
         assertEquals(updateVersionCommand.id.get(), updated.getPublicId());
@@ -181,8 +180,7 @@ public class VersionsTest extends RestTest {
     @Test
     public void can_publish_version() throws Exception {
         Version version = builder.version(); // BETA
-        MockHttpServletResponse response =
-                testUtils.updateResource("/v1/versions/" + version.getPublicId() + "/publish", null);
+        testUtils.updateResource("/v1/versions/" + version.getPublicId() + "/publish", null);
 
         Version updated = versionRepository.getByPublicId(version.getPublicId());
         assertEquals(VersionType.PUBLISHED, updated.getVersionType());
@@ -209,8 +207,7 @@ public class VersionsTest extends RestTest {
     public void publishing_version_unpublishes_current() throws Exception {
         Version published = builder.version(v -> v.type(VersionType.PUBLISHED));
         Version beta = builder.version();
-        MockHttpServletResponse response =
-                testUtils.updateResource("/v1/versions/" + beta.getPublicId() + "/publish", null);
+        testUtils.updateResource("/v1/versions/" + beta.getPublicId() + "/publish", null);
 
         Version updated = versionRepository.getByPublicId(beta.getPublicId());
         assertEquals(VersionType.PUBLISHED, updated.getVersionType());

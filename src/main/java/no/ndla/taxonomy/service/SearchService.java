@@ -22,14 +22,9 @@ import no.ndla.taxonomy.service.dtos.NodeDTO;
 import no.ndla.taxonomy.service.dtos.SearchResultDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-interface ExtraSpecification<T> {
-    Specification<T> applySpecification(Specification<T> spec);
-}
 
 @Service
 public class SearchService {
@@ -58,7 +53,7 @@ public class SearchService {
             Optional<Map<String, String>> customfieldsFilter,
             Optional<URI> rootId,
             Optional<URI> parentId) {
-        Optional<ExtraSpecification<Node>> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasOneOfNodeType(nt))));
+        Optional<ExtraSpecification> nodeSpecLambda = nodeType.map(nt -> (s -> s.and(nodeHasOneOfNodeType(nt))));
         return this.search(
                 query,
                 ids,
@@ -73,9 +68,6 @@ public class SearchService {
                 rootId,
                 parentId);
     }
-
-    @Value(value = "${new.url.separator:false}")
-    private boolean newUrlSeparator;
 
     private Specification<Node> base() {
         return (root, query, criteriaBuilder) -> criteriaBuilder.isNotNull(root.get("id"));
@@ -113,7 +105,7 @@ public class SearchService {
             boolean filterProgrammes,
             int pageSize,
             int page,
-            Optional<ExtraSpecification<Node>> applySpecLambda,
+            Optional<ExtraSpecification> applySpecLambda,
             Optional<Map<String, String>> customFieldFilters,
             Optional<URI> rootId,
             Optional<URI> parentId) {
@@ -151,8 +143,7 @@ public class SearchService {
                         Optional.empty(),
                         includeContexts,
                         filterProgrammes,
-                        false,
-                        newUrlSeparator))
+                        false))
                 .collect(Collectors.toList());
 
         return new SearchResultDTO<>(fetched.getTotalElements(), page, pageSize, dtos);

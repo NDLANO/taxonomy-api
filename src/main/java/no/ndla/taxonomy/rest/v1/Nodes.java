@@ -25,7 +25,6 @@ import no.ndla.taxonomy.rest.v1.commands.NodePostPut;
 import no.ndla.taxonomy.rest.v1.commands.NodeSearchBody;
 import no.ndla.taxonomy.service.*;
 import no.ndla.taxonomy.service.dtos.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,9 +41,6 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
     private final SearchService searchService;
-
-    @Value(value = "${new.url.separator:false}")
-    private boolean newUrlSeparator;
 
     public Nodes(
             NodeRepository nodeRepository,
@@ -241,8 +237,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                         Optional.empty(),
                         includeContexts,
                         filterProgrammes,
-                        isVisible,
-                        newUrlSeparator))
+                        isVisible))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }
@@ -380,8 +375,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                         language.orElse(Constants.DefaultLanguage),
                         includeContexts,
                         filterProgrammes,
-                        isVisible,
-                        newUrlSeparator))
+                        isVisible))
                 .forEach(returnList::add);
 
         var filtered = returnList.stream()
@@ -461,7 +455,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
             @Parameter(description = "Include all contexts") @RequestParam(value = "includeContexts", required = false)
                     Optional<Boolean> includeContexts) {
         var node = nodeService.getNode(id);
-        return new NodeWithParents(node, language.orElse(Constants.DefaultLanguage), includeContexts, newUrlSeparator);
+        return new NodeWithParents(node, language.orElse(Constants.DefaultLanguage), includeContexts);
     }
 
     @PutMapping("/{id}/makeResourcesPrimary")

@@ -234,7 +234,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
     @Test
     @Transactional
-    public void putOldUrlWithNoPaths() throws Exception {
+    public void putOldUrlWithNoPaths() {
         final String subjectId = "urn:subject:12";
         final String nodeId = "urn:topic:1:183926";
         builder.node(
@@ -273,14 +273,13 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     @Test
     @Transactional
     public void resolveEntitiesFromPath() {
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
-                .publicId("urn:subject:1")
-                .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1").resource("resource", resourceBuilder -> {
-                    resourceBuilder
-                            .publicId("urn:resource:1")
-                            .name("Resource Name")
-                            .contentUri(URI.create("urn:test:1"));
-                })));
+        builder.node(
+                NodeType.SUBJECT,
+                s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC, t -> t.publicId("urn:topic:1")
+                        .resource("resource", resourceBuilder -> resourceBuilder
+                                .publicId("urn:resource:1")
+                                .name("Resource Name")
+                                .contentUri(URI.create("urn:test:1")))));
 
         builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:2")
@@ -350,7 +349,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
             assertEquals("topic:2", resolvedUrl.getId().getSchemeSpecificPart());
             assertEquals("/subject:2/topic:2", resolvedUrl.getPath());
 
-            assertEquals("subject:2", parentIdList.get(0));
+            assertEquals("subject:2", parentIdList.getFirst());
         }
 
         {
@@ -395,7 +394,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
             assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
             assertEquals("/topic:3/resource:1", resolvedUrl.getPath());
 
-            assertEquals("topic:3", parentIdList.get(0));
+            assertEquals("topic:3", parentIdList.getFirst());
         }
 
         // Going via subject:3 is also valid

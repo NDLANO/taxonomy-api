@@ -21,9 +21,7 @@ public class LanguageField<V> extends HashMap<String, V> {
         var defaultName = Optional.ofNullable(node.getName()).orElse("");
         languageField.put(Constants.DefaultLanguage, defaultName);
 
-        node.getTranslations().forEach(nt -> {
-            languageField.put(nt.getLanguageCode(), nt.getName());
-        });
+        node.getTranslations().forEach(nt -> languageField.put(nt.getLanguageCode(), nt.getName()));
 
         return languageField;
     }
@@ -37,9 +35,7 @@ public class LanguageField<V> extends HashMap<String, V> {
                 .orElse("");
         languageField.put(Constants.DefaultLanguage, defaultName);
 
-        relevance.getTranslations().forEach(nt -> {
-            languageField.put(nt.getLanguageCode(), nt.getName());
-        });
+        relevance.getTranslations().forEach(nt -> languageField.put(nt.getLanguageCode(), nt.getName()));
 
         return languageField;
     }

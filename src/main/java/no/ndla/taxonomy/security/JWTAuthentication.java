@@ -9,6 +9,7 @@ package no.ndla.taxonomy.security;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import java.io.Serial;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,15 +19,16 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 public class JWTAuthentication implements Authentication {
 
+    @Serial
     private static final long serialVersionUID = 1L;
+
     private static final String TAXONOMY_API = "taxonomy";
     private static final String WRITE_PERMISSION = "write";
     private static final String ADMIN_PERMISSION = "admin";
-    private static final String PRODUCTION = "prod";
 
-    private Collection<GrantedAuthority> authorities;
+    private final Collection<GrantedAuthority> authorities;
     private boolean authenticated;
-    private Map<String, Claim> claims;
+    private final Map<String, Claim> claims;
     private static final Logger LOGGER = LoggerFactory.getLogger(JWTAuthentication.class);
 
     public JWTAuthentication(DecodedJWT token) {

@@ -28,7 +28,6 @@ import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
 import no.ndla.taxonomy.util.PrettyUrlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,9 +44,6 @@ public class NodeService {
     private final RecursiveNodeTreeService recursiveNodeTreeService;
     private final TreeSorter treeSorter;
     private final ContextUpdaterService contextUpdaterService;
-
-    @Value(value = "${new.url.separator:false}")
-    private boolean newUrlSeparator;
 
     public NodeService(
             DomainEntityHelperService domainEntityHelperService,
@@ -125,8 +121,7 @@ public class NodeService {
                                     contextId,
                                     includeContexts,
                                     filterProgrammes,
-                                    metadataFilters.getVisible().orElse(false),
-                                    newUrlSeparator))
+                                    metadataFilters.getVisible().orElse(false)))
                             .toList();
                     listToReturn.addAll(dtos);
                 });
@@ -154,13 +149,7 @@ public class NodeService {
 
         final var wrappedList = childConnections.stream()
                 .map(nodeConnection -> new NodeChildDTO(
-                        Optional.of(node),
-                        nodeConnection,
-                        languageCode,
-                        Optional.of(false),
-                        false,
-                        true,
-                        newUrlSeparator))
+                        Optional.of(node), nodeConnection, languageCode, Optional.of(false), false, true))
                 .toList();
 
         return topicTreeSorter.sortList(wrappedList);
@@ -185,8 +174,7 @@ public class NodeService {
                 Optional.empty(),
                 includeContexts,
                 filterProgrammes,
-                isVisible,
-                newUrlSeparator);
+                isVisible);
     }
 
     public Optional<Node> getMaybeNode(URI publicId) {
@@ -297,8 +285,7 @@ public class NodeService {
                             languageCode.orElse(Constants.DefaultLanguage),
                             includeContexts,
                             filterProgrammes,
-                            isVisible,
-                            newUrlSeparator);
+                            isVisible);
                 })
                 .toList();
     }
@@ -309,17 +296,14 @@ public class NodeService {
                 .findFirstByPublicId(nodePublicId)
                 .orElseThrow(() -> new NotFoundServiceException("Node was not found"));
         if (recursive) {
-            node.getChildConnections().forEach(nc -> {
-                nc.getChild()
-                        .filter(n -> n.getNodeType() != NodeType.RESOURCE)
-                        .map(n -> makeAllResourcesPrimary(n.getPublicId(), true));
-            });
+            node.getChildConnections().forEach(nc -> nc.getChild()
+                    .filter(n -> n.getNodeType() != NodeType.RESOURCE)
+                    .map(n -> makeAllResourcesPrimary(n.getPublicId(), true)));
         }
 
-        node.getResourceChildren().forEach(cc -> {
-            connectionService.updateParentChild(
-                    cc, cc.getRelevance().orElse(null), Optional.of(cc.getRank()), Optional.of(true));
-        });
+        node.getResourceChildren()
+                .forEach(cc -> connectionService.updateParentChild(
+                        cc, cc.getRelevance().orElse(null), Optional.of(cc.getRank()), Optional.of(true)));
 
         return node.getResourceChildren().stream()
                 .allMatch(resourceConnection -> resourceConnection.isPrimary().orElse(false));
@@ -373,8 +357,7 @@ public class NodeService {
                                                 p.name(),
                                                 language,
                                                 parentCtxId,
-                                                p.nodeType(),
-                                                newUrlSeparator);
+                                                p.nodeType());
                                         return new TaxonomyCrumbDTO(
                                                 URI.create(p.publicId()),
                                                 parentCtxId,
@@ -410,8 +393,7 @@ public class NodeService {
                                                 LanguageField.fromNode(node),
                                                 language,
                                                 context.contextId(),
-                                                node.getNodeType(),
-                                                newUrlSeparator)
+                                                node.getNodeType())
                                         .orElse(context.path()),
                                 parents);
                     });

@@ -8,9 +8,9 @@
 package no.ndla.taxonomy.security;
 
 public class JWTPermission {
-    private String api;
-    private String environment;
-    private String permission;
+    private final String api;
+    private final String environment;
+    private final String permission;
 
     public JWTPermission(String scope) {
         String parts[] = scope.split(":");

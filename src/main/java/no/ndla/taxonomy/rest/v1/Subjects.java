@@ -35,7 +35,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(path = {"/v1/subjects", "/v1/subjects/"})
 public class Subjects extends CrudControllerWithMetadata<Node> {
     private final Nodes nodes;
-    private final NodeService nodeService;
 
     public Subjects(
             Nodes nodes,
@@ -46,7 +45,6 @@ public class Subjects extends CrudControllerWithMetadata<Node> {
         super(nodeRepository, contextUpdaterService, nodeService, qualityEvaluationService);
 
         this.nodes = nodes;
-        this.nodeService = nodeService;
     }
 
     @Deprecated

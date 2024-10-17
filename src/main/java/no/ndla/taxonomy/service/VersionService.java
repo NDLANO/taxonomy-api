@@ -69,10 +69,6 @@ public class VersionService {
                 .collect(Collectors.toList());
     }
 
-    public Optional<Version> findVersionByPublicId(URI publicId) {
-        return versionRepository.findFirstByPublicId(publicId);
-    }
-
     @Transactional
     public void publishBetaAndArchiveCurrent(URI id) {
         Optional<Version> published = versionRepository.findFirstByVersionType(VersionType.PUBLISHED);

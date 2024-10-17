@@ -47,11 +47,11 @@ public class SubjectTopicsTest extends RestTest {
         }));
 
         final var connection = nodeConnectionRepository.findByPublicId(id);
+        assertNotNull(connection);
 
         Node physics = nodeRepository.getByPublicId(subjectId);
         assertEquals(1, physics.getChildNodes().size());
         assertAnyTrue(physics.getChildNodes(), t -> "trigonometry".equals(t.getName()));
-        assertNotNull(nodeConnectionRepository.getByPublicId(id));
     }
 
     @Test
@@ -111,7 +111,7 @@ public class SubjectTopicsTest extends RestTest {
         Map<String, Integer> mappedRanks = mapNodeConnectionRanks(subjectTopics);
 
         // make the last object the first
-        NodeConnection updatedConnection = subjectTopics.get(subjectTopics.size() - 1);
+        NodeConnection updatedConnection = subjectTopics.getLast();
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource(
                 "/v1/subject-topics/" + updatedConnection.getPublicId().toString(), new SubjectTopicPUT() {
@@ -142,7 +142,7 @@ public class SubjectTopicsTest extends RestTest {
         Map<String, Integer> mappedRanks = mapNodeConnectionRanks(subjectTopics);
 
         // make the last object the first
-        NodeConnection updatedConnection = subjectTopics.get(subjectTopics.size() - 1);
+        NodeConnection updatedConnection = subjectTopics.getLast();
         assertEquals(100, updatedConnection.getRank());
         testUtils.updateResource(
                 "/v1/subject-topics/" + updatedConnection.getPublicId().toString(), new SubjectTopicPUT() {
@@ -176,7 +176,7 @@ public class SubjectTopicsTest extends RestTest {
         Map<String, Integer> mappedRanks = mapNodeConnectionRanks(subjectTopics);
 
         // set rank for last object to higher than any existing
-        NodeConnection updatedConnection = subjectTopics.get(subjectTopics.size() - 1);
+        NodeConnection updatedConnection = subjectTopics.getLast();
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource(
                 "/v1/subject-topics/" + subjectTopics.get(9).getPublicId().toString(), new SubjectTopicPUT() {

@@ -241,7 +241,7 @@ public class NodeConnectionsTest extends RestTest {
         Map<String, Integer> mappedRanks = mapConnectionRanks(nodeConnections);
 
         // make the last object the first
-        NodeConnection updatedConnection = nodeConnections.get(nodeConnections.size() - 1);
+        NodeConnection updatedConnection = nodeConnections.getLast();
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource(
                 "/v1/node-connections/" + updatedConnection.getPublicId().toString(), new NodeConnectionPUT() {
@@ -273,7 +273,7 @@ public class NodeConnectionsTest extends RestTest {
         Map<String, Integer> mappedRanks = mapConnectionRanks(nodeConnections);
 
         // make the last object the first
-        NodeConnection updatedConnection = nodeConnections.get(nodeConnections.size() - 1);
+        NodeConnection updatedConnection = nodeConnections.getLast();
         assertEquals(100, updatedConnection.getRank());
         testUtils.updateResource(
                 "/v1/node-connections/" + updatedConnection.getPublicId().toString(), new NodeConnectionPUT() {
@@ -307,7 +307,7 @@ public class NodeConnectionsTest extends RestTest {
         Map<String, Integer> mappedRanks = mapConnectionRanks(nodeConnections);
 
         // set rank for last object to higher than any existing
-        NodeConnection updatedConnection = nodeConnections.get(nodeConnections.size() - 1);
+        NodeConnection updatedConnection = nodeConnections.getLast();
         assertEquals(10, updatedConnection.getRank());
         testUtils.updateResource(
                 "/v1/node-connections/" + nodeConnections.get(9).getPublicId().toString(), new NodeConnectionPUT() {

@@ -8,15 +8,11 @@
 package no.ndla.taxonomy.rest.v1;
 
 import jakarta.persistence.EntityManager;
-import java.net.URI;
-import java.util.Set;
 import no.ndla.taxonomy.TestUtils;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.*;
 import no.ndla.taxonomy.service.AbstractIntegrationTest;
 import no.ndla.taxonomy.service.ContextUpdaterService;
-import no.ndla.taxonomy.service.NodeService;
-import no.ndla.taxonomy.service.dtos.MetadataDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,9 +43,6 @@ public abstract class RestTest extends AbstractIntegrationTest {
     NodeRepository nodeRepository;
 
     @Autowired
-    NodeService nodeService;
-
-    @Autowired
     NodeConnectionRepository nodeConnectionRepository;
 
     @Autowired
@@ -60,20 +53,6 @@ public abstract class RestTest extends AbstractIntegrationTest {
 
     protected Builder builder;
 
-    private MetadataDTO createMetadataObject(URI publicId) {
-        final var metadata = new MetadataDTO();
-        metadata.setPublicId(publicId.toString());
-
-        // Can search for RESOURCE1 where publicId is urn:resource:1 in the test
-        metadata.setGrepCodes(
-                Set.of(publicId.getSchemeSpecificPart().replace(":", "").toUpperCase()));
-
-        metadata.setVisible(true);
-
-        return metadata;
-    }
-
-    @SuppressWarnings("unchecked")
     @BeforeEach
     public void restTestSetUp() {
         builder = new Builder(entityManager, contextUpdaterService);

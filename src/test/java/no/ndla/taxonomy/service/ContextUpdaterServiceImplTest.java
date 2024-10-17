@@ -79,7 +79,7 @@ class ContextUpdaterServiceImplTest extends AbstractIntegrationTest {
             assertEquals(1, topic1.getContexts().size());
             final var context = topic1.getContexts().iterator().next();
             assertEquals("/topic:1", context.path());
-            assertEquals("urn:topic:1", context.rootId().toString());
+            assertEquals("urn:topic:1", context.rootId());
             assertEquals(0, context.breadcrumbs().size());
             assertTrue(context.isPrimary());
 

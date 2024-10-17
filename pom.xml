@@ -24,7 +24,6 @@
         <java.version>21</java.version>
         <javamelody.version>2.2.0</javamelody.version>
         <spotless.version>2.43.0</spotless.version>
-        <postgresql.version>42.7.3</postgresql.version>
         <testcontainers.version>1.20.1</testcontainers.version>
     </properties>
 

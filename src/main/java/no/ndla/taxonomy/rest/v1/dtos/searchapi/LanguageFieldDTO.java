@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import no.ndla.taxonomy.domain.LanguageField;
-import no.ndla.taxonomy.domain.Node;
 import org.springframework.data.util.Pair;
 
 @Schema(name = "LanguageField")
@@ -21,9 +20,7 @@ public class LanguageFieldDTO<V> extends HashMap<String, V> {
     public LanguageFieldDTO() {}
 
     public LanguageFieldDTO(List<Pair<String, V>> translations) {
-        translations.forEach(t -> {
-            this.put(t.getFirst(), t.getSecond());
-        });
+        translations.forEach(t -> this.put(t.getFirst(), t.getSecond()));
     }
 
     public static LanguageFieldDTO<String> fromLanguageField(LanguageField<String> languageField) {
@@ -42,16 +39,5 @@ public class LanguageFieldDTO<V> extends HashMap<String, V> {
             dto.put(key, languageField.get(key));
         }
         return dto;
-    }
-
-    public static LanguageFieldDTO<String> nameFromNode(Node node) {
-        var languageField = new LanguageFieldDTO<String>();
-        languageField.put("nb", node.getName());
-
-        node.getTranslations().forEach(nt -> {
-            languageField.put(nt.getLanguageCode(), nt.getName());
-        });
-
-        return languageField;
     }
 }

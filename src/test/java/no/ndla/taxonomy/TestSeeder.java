@@ -79,14 +79,12 @@ public class TestSeeder {
         return resourceTypeRepository.save(resourceType);
     }
 
-    private ResourceResourceType createResourceResourceType(String publicId, Node resource, ResourceType resourceType) {
+    private void createResourceResourceType(String publicId, Node resource, ResourceType resourceType) {
         final var resourceResourceType = ResourceResourceType.create(resource, resourceType);
 
         if (publicId != null) {
             resourceResourceType.setPublicId(URI.create(publicId));
         }
-
-        return resourceResourceType;
     }
 
     private Node createNode(NodeType nodeType, String publicId, String name, String contentUri, Boolean context) {
@@ -112,8 +110,7 @@ public class TestSeeder {
         return node;
     }
 
-    private NodeConnection createNodeConnection(
-            String publicId, Node parent, Node child, Integer rank, Relevance relevance) {
+    private void createNodeConnection(String publicId, Node parent, Node child, Integer rank, Relevance relevance) {
         final var nodeConnection = NodeConnection.create(parent, child, relevance);
 
         if (publicId != null) {
@@ -127,11 +124,9 @@ public class TestSeeder {
         nodeConnectionRepository.saveAndFlush(nodeConnection);
 
         nodeConnection.getParent().ifPresent(cachedUrlUpdaterService::updateContexts);
-
-        return nodeConnection;
     }
 
-    private NodeConnection createNodeResource(
+    private void createNodeResource(
             String publicId, Node node, Node resource, Boolean isPrimary, Integer rank, Relevance relevance) {
         final var nodeResource = NodeConnection.create(node, resource, relevance);
 
@@ -150,8 +145,6 @@ public class TestSeeder {
         nodeConnectionRepository.saveAndFlush(nodeResource);
 
         nodeResource.getParent().ifPresent(cachedUrlUpdaterService::updateContexts);
-
-        return nodeResource;
     }
 
     private void clearAll() {

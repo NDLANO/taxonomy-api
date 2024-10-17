@@ -53,7 +53,7 @@ public class RecursiveNodeTreeService {
                     idsThisLevel.add(childId);
                 });
 
-        if (idsThisLevel.size() > 0) {
+        if (!idsThisLevel.isEmpty()) {
             addChildIdsRecursively(elements, idsThisLevel, ttl, nodeTypes);
         }
     }
