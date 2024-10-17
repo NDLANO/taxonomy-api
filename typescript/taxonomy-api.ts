@@ -436,7 +436,7 @@ export interface SubjectPostPut {
      */
     contentUri?: string;
     /**
-     * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
+     * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If omitted, an id will be assigned automatically.
      */
     id?: string;
     /**
@@ -810,7 +810,7 @@ export interface Version {
 
 export interface VersionPostPut {
     /**
-     * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If ommitted, an id will be assigned automatically.
+     * If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If omitted, an id will be assigned automatically.
      */
     id?: string;
     /**
