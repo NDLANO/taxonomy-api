@@ -18,7 +18,7 @@ public class PrettyUrlUtilTest {
     @Test
     void test_create_pretty_url() {
         assertEquals(
-                "/this-is-a-title/r/hash",
+                "/r/this-is-a-title/hash",
                 PrettyUrlUtil.createPrettyUrl(Optional.empty(), "This is a title", "hash", NodeType.RESOURCE)
                         .get());
     }
@@ -26,7 +26,7 @@ public class PrettyUrlUtilTest {
     @Test
     void test_create_pretty_url_with_root() {
         assertEquals(
-                "/the-root-title/this-is-a-title/e/hash",
+                "/e/the-root-title_this-is-a-title/hash",
                 PrettyUrlUtil.createPrettyUrl(Optional.of("The root title"), "This is a title", "hash", NodeType.TOPIC)
                         .get());
     }
@@ -34,11 +34,11 @@ public class PrettyUrlUtilTest {
     @Test
     void test_create_pretty_url_with_punctuation() {
         assertEquals(
-                "/this-is-a-title-seriously/r/hash",
+                "/r/this-is-a-title-seriously/hash",
                 PrettyUrlUtil.createPrettyUrl(Optional.empty(), "This is a title, seriously", "hash", NodeType.RESOURCE)
                         .get());
         assertEquals(
-                "/this-is-a-title-and-a-12/r/hash",
+                "/r/this-is-a-title-and-a-12/hash",
                 PrettyUrlUtil.createPrettyUrl(Optional.empty(), "This is a title and a 1/2", "hash", NodeType.RESOURCE)
                         .get());
     }
@@ -46,7 +46,7 @@ public class PrettyUrlUtilTest {
     @Test
     void test_create_pretty_url_from_html_formatted_text() {
         assertEquals(
-                "/this-is-a-italics-title/f/hash",
+                "/f/this-is-a-italics-title/hash",
                 PrettyUrlUtil.createPrettyUrl(
                                 Optional.empty(), "This is a <em>italics title</em>", "hash", NodeType.SUBJECT)
                         .get());
@@ -55,12 +55,12 @@ public class PrettyUrlUtilTest {
     @Test
     void test_create_pretty_url_with_norwegian_chars() {
         assertEquals(
-                "/nar-kommer-hosten-tror-du-arlig-talt/e/hash",
+                "/e/nar-kommer-hosten-tror-du-arlig-talt/hash",
                 PrettyUrlUtil.createPrettyUrl(
                                 Optional.empty(), "Når kommer høsten tror du ærlig talt?", "hash", NodeType.TOPIC)
                         .get());
         assertEquals(
-                "/utgatt-historie/a-hoppe-etter-wirkola/e/hash",
+                "/e/utgatt-historie_a-hoppe-etter-wirkola/hash",
                 PrettyUrlUtil.createPrettyUrl(
                                 Optional.of("Utgått historie"), "Å hoppe etter wirkola", "hash", NodeType.TOPIC)
                         .get());

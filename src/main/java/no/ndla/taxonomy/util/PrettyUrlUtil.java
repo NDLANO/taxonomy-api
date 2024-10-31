@@ -28,15 +28,16 @@ public class PrettyUrlUtil {
             Optional<String> rootName, String name, String hash, NodeType nodeType) {
         if (name == null || hash == null) return Optional.empty();
         StringBuilder builder = new StringBuilder();
+        builder.append(nodeTypeMapping(nodeType));
+        builder.append("/");
         rootName.ifPresent(rn -> {
             if (!rn.equals(name)) {
-                builder.append("/");
                 buildUrlFragment(builder, cleanString(rootName.get()));
+                builder.append("_");
             }
         });
-        builder.append("/");
         buildUrlFragment(builder, cleanString(name));
-        builder.append(String.format("%s/%s", nodeTypeMapping(nodeType), hash));
+        builder.append(String.format("/%s", hash));
 
         return Optional.of(builder.toString());
     }
