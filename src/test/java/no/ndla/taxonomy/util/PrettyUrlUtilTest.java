@@ -26,7 +26,7 @@ public class PrettyUrlUtilTest {
     @Test
     void test_create_pretty_url_with_root() {
         assertEquals(
-                "/e/the-root-title_this-is-a-title/hash",
+                "/e/the-root-title/this-is-a-title/hash",
                 PrettyUrlUtil.createPrettyUrl(Optional.of("The root title"), "This is a title", "hash", NodeType.TOPIC)
                         .get());
     }
@@ -60,7 +60,7 @@ public class PrettyUrlUtilTest {
                                 Optional.empty(), "Når kommer høsten tror du ærlig talt?", "hash", NodeType.TOPIC)
                         .get());
         assertEquals(
-                "/e/utgatt-historie_a-hoppe-etter-wirkola/hash",
+                "/e/utgatt-historie/a-hoppe-etter-wirkola/hash",
                 PrettyUrlUtil.createPrettyUrl(
                                 Optional.of("Utgått historie"), "Å hoppe etter wirkola", "hash", NodeType.TOPIC)
                         .get());

@@ -33,7 +33,7 @@ public class PrettyUrlUtil {
         rootName.ifPresent(rn -> {
             if (!rn.equals(name)) {
                 buildUrlFragment(builder, cleanString(rootName.get()));
-                builder.append("_");
+                builder.append("/");
             }
         });
         buildUrlFragment(builder, cleanString(name));
