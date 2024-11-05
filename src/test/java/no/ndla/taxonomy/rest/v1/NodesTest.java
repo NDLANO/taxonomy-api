@@ -204,7 +204,7 @@ public class NodesTest extends RestTest {
                 final var nodes = testUtils.getObject(NodeDTO[].class, response);
                 assertEquals(1, nodes.length);
                 assertEquals("Resource", nodes[0].getName());
-                assertTrue(nodes[0].getUrl().get().endsWith(String.format("/resource/r/%s", context.contextId())));
+                assertTrue(nodes[0].getUrl().get().endsWith(String.format("resource/%s", context.contextId())));
                 assertEquals(context.path(), nodes[0].getPath().get());
                 assertTrue(nodes[0].getBreadcrumbs()
                         .containsAll(context.breadcrumbs().get("nb")));
