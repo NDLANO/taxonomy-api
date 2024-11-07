@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.net.URI;
+import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.exceptions.NotFoundException;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.rest.v1.dtos.ResolvedOldUrl;
@@ -35,9 +36,12 @@ public class UrlResolver {
 
     @GetMapping("/resolve")
     @Transactional(readOnly = true)
-    public ResolvedUrl resolve(@RequestParam String path) {
+    public ResolvedUrl resolve(
+            @RequestParam String path,
+            @RequestParam(value = "language", defaultValue = Constants.DefaultLanguage, required = false)
+                    String language) {
         return urlResolverService
-                .resolveUrl(path)
+                .resolveUrl(path, language)
                 .orElseThrow(() -> new NotFoundHttpResponseException("Element with path was not found"));
     }
 

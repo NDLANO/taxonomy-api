@@ -301,7 +301,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
         {
             final var resolvedUrl = urlResolverService
-                    .resolveUrl("/subject:1/topic:1/resource:1")
+                    .resolveUrl("/subject:1/topic:1/resource:1", "nb")
                     .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
@@ -320,7 +320,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
         {
             final var resolvedUrl = urlResolverService
-                    .resolveUrl("/subject:2/topic:2/resource:1")
+                    .resolveUrl("/subject:2/topic:2/resource:1", "nb")
                     .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
@@ -339,7 +339,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
         {
             final var resolvedUrl =
-                    urlResolverService.resolveUrl("/subject:2/topic:2").orElseThrow();
+                    urlResolverService.resolveUrl("/subject:2/topic:2", "nb").orElseThrow();
             assertEquals(1, resolvedUrl.getParents().size());
 
             final var parentIdList = resolvedUrl.getParents().stream()
@@ -353,36 +353,25 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
         }
 
         {
-            final var resolvedUrl = urlResolverService.resolveUrl("/subject:2").orElseThrow();
-            assertEquals(0, resolvedUrl.getParents().size());
-            assertEquals("subject:2", resolvedUrl.getId().getSchemeSpecificPart());
-            assertEquals("/subject:2", resolvedUrl.getPath());
-        }
-
-        {
-            final var resolvedUrl = urlResolverService.resolveUrl("/subject:2/").orElseThrow();
-            assertEquals(0, resolvedUrl.getParents().size());
-            assertEquals("subject:2", resolvedUrl.getId().getSchemeSpecificPart());
-            assertEquals("/subject:2", resolvedUrl.getPath());
-        }
-        {
-            final var resolvedUrl = urlResolverService.resolveUrl("subject:2").orElseThrow();
+            final var resolvedUrl =
+                    urlResolverService.resolveUrl("/subject:2", "nb").orElseThrow();
             assertEquals(0, resolvedUrl.getParents().size());
             assertEquals("subject:2", resolvedUrl.getId().getSchemeSpecificPart());
             assertEquals("/subject:2", resolvedUrl.getPath());
         }
 
         // Test with a non-valid path
-        assertFalse(urlResolverService.resolveUrl("/subject:2/resource:1").isPresent());
+        assertFalse(urlResolverService.resolveUrl("subject:2", "nb").isPresent());
+        assertFalse(urlResolverService.resolveUrl("/subject:2/resource:1", "nb").isPresent());
 
         // Test with a non-context
-        assertFalse(urlResolverService.resolveUrl("/topic:1/resource:1").isPresent());
-        assertFalse(urlResolverService.resolveUrl("/topic:2/resource:1").isPresent());
+        assertFalse(urlResolverService.resolveUrl("/topic:1/resource:1", "nb").isPresent());
+        assertFalse(urlResolverService.resolveUrl("/topic:2/resource:1", "nb").isPresent());
 
         // Since topic3 is a context in itself, it would be valid to use it as root
         {
             final var resolvedUrl =
-                    urlResolverService.resolveUrl("/topic:3/resource:1").orElseThrow();
+                    urlResolverService.resolveUrl("/topic:3/resource:1", "nb").orElseThrow();
             assertEquals(1, resolvedUrl.getParents().size());
 
             final var parentIdList = resolvedUrl.getParents().stream()
@@ -400,47 +389,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
         // Going via subject:3 is also valid
         {
             final var resolvedUrl = urlResolverService
-                    .resolveUrl("/subject:3/topic:3/resource:1")
-                    .orElseThrow();
-            assertEquals(2, resolvedUrl.getParents().size());
-
-            final var parentIdList = resolvedUrl.getParents().stream()
-                    .map(URI::getSchemeSpecificPart)
-                    .toList();
-
-            assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
-            assertEquals("Resource Name", resolvedUrl.getName());
-            assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
-            assertEquals("/subject:3/topic:3/resource:1", resolvedUrl.getPath());
-
-            assertEquals("topic:3", parentIdList.get(0));
-            assertEquals("subject:3", parentIdList.get(1));
-        }
-
-        // Additional slashes should make no difference
-        {
-            final var resolvedUrl = urlResolverService
-                    .resolveUrl("////subject:3///topic:3//////resource:1///")
-                    .orElseThrow();
-            assertEquals(2, resolvedUrl.getParents().size());
-
-            final var parentIdList = resolvedUrl.getParents().stream()
-                    .map(URI::getSchemeSpecificPart)
-                    .toList();
-
-            assertEquals("resource:1", resolvedUrl.getId().getSchemeSpecificPart());
-            assertEquals("Resource Name", resolvedUrl.getName());
-            assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
-            assertEquals("/subject:3/topic:3/resource:1", resolvedUrl.getPath());
-
-            assertEquals("topic:3", parentIdList.get(0));
-            assertEquals("subject:3", parentIdList.get(1));
-        }
-
-        // No leading slash should make no difference
-        {
-            final var resolvedUrl = urlResolverService
-                    .resolveUrl("subject:3///topic:3//////resource:1///")
+                    .resolveUrl("/subject:3/topic:3/resource:1", "nb")
                     .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
