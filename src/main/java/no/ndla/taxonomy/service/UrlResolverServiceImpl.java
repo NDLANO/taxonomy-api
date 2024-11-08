@@ -154,10 +154,11 @@ public class UrlResolverServiceImpl implements UrlResolverService {
     public Optional<ResolvedUrl> resolveUrl(String path, String language) {
         try {
             final var resolvedPathComponents = resolveEntitiesFromPath(path);
-
+            final var normalizedPath =
+                    resolvedPathComponents.stream().map(Node::getPathPart).collect(Collectors.joining());
             final var leafNode = resolvedPathComponents.getLast();
             TaxonomyContext context = leafNode.getContexts().stream()
-                    .filter(ctx -> ctx.path().equals(path))
+                    .filter(ctx -> ctx.path().equals(normalizedPath))
                     .findFirst()
                     .orElseThrow(
                             () -> new NotFoundServiceException("Element with path " + path + " could not be found"));

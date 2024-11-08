@@ -72,6 +72,39 @@ public class UrlResolverTest extends RestTest {
     }
 
     @Test
+    public void ignores_multiple_or_leading_or_trailing_slashes() throws Exception {
+        builder.node(
+                NodeType.SUBJECT,
+                s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC, t -> t.publicId("urn:topic:1")
+                        .resource(r -> r.publicId("urn:resource:1").contentUri("urn:article:1"))));
+
+        {
+            ResolvedUrl url = resolveUrl("/subject:1/topic:1/resource:1");
+            assertEquals("urn:article:1", url.getContentUri().toString());
+            assertParents(url, "urn:topic:1", "urn:subject:1");
+            assertEquals("/subject:1/topic:1/resource:1", url.getPath());
+        }
+        {
+            ResolvedUrl url = resolveUrl("subject:1/topic:1/resource:1");
+            assertEquals("urn:article:1", url.getContentUri().toString());
+            assertParents(url, "urn:topic:1", "urn:subject:1");
+            assertEquals("/subject:1/topic:1/resource:1", url.getPath());
+        }
+        {
+            ResolvedUrl url = resolveUrl("/subject:1/topic:1/resource:1/");
+            assertEquals("urn:article:1", url.getContentUri().toString());
+            assertParents(url, "urn:topic:1", "urn:subject:1");
+            assertEquals("/subject:1/topic:1/resource:1", url.getPath());
+        }
+        {
+            ResolvedUrl url = resolveUrl("//subject:1////topic:1/resource:1//");
+            assertEquals("urn:article:1", url.getContentUri().toString());
+            assertParents(url, "urn:topic:1", "urn:subject:1");
+            assertEquals("/subject:1/topic:1/resource:1", url.getPath());
+        }
+    }
+
+    @Test
     public void gets_404_on_wrong_path_to_resource() throws Exception {
         builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")
