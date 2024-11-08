@@ -165,10 +165,10 @@ public class UrlResolverServiceImpl implements UrlResolverService {
 
             final var resolvedUrl = new ResolvedUrl();
             resolvedUrl.setContentUri(leafNode.getContentUri());
-            resolvedUrl.setId(leafNode.getPublicId());
+            resolvedUrl.setId(URI.create(context.publicId()));
             resolvedUrl.setParents(
                     context.parentIds().stream().map(URI::create).toList().reversed());
-            resolvedUrl.setName(leafNode.getName());
+            resolvedUrl.setName(context.name().fromLanguage(language));
             resolvedUrl.setPath(context.path());
             resolvedUrl.setUrl(PrettyUrlUtil.createPrettyUrl(
                             Optional.ofNullable(context.rootName()),
