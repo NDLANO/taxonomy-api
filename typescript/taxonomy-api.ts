@@ -328,6 +328,7 @@ export interface ResolvedUrl {
     name: string;
     parents: string[];
     path: string;
+    url: string;
 }
 
 export interface ResourcePostPut {
