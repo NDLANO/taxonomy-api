@@ -121,11 +121,6 @@ public class NodeDTO {
         this.paths = filteredContexts.stream().map(TaxonomyContext::path).collect(Collectors.toList());
         this.path = entity.getPrimaryPath().or(() -> paths.stream().findFirst());
 
-        Optional<Relevance> relevance =
-                entity.getParentConnections().stream().findFirst().flatMap(NodeConnection::getRelevance);
-        var relevanceName = relevance.map(LanguageField::fromRelevance).orElse(new LanguageField<>());
-        this.relevanceId = relevance.map(Relevance::getPublicId);
-
         this.translations = entity.getTranslations().stream()
                 .map(TranslationDTO::new)
                 .collect(Collectors.toCollection(TreeSet::new));
@@ -152,7 +147,7 @@ public class NodeDTO {
 
         Optional<TaxonomyContext> selected = entity.pickContext(contextId, parent, root, filteredContexts);
         selected.ifPresent(ctx -> {
-            var contextDto = getTaxonomyContextDTO(entity, ctx, relevanceName);
+            var contextDto = getTaxonomyContextDTO(entity, ctx);
 
             // TODO: this changes the content in context breadcrumbs
             LanguageField<List<String>> breadcrumbList =
@@ -171,12 +166,11 @@ public class NodeDTO {
         includeContexts
                 .filter(Boolean::booleanValue)
                 .ifPresent(includeCtx -> this.contexts = filteredContexts.stream()
-                        .map(ctx -> getTaxonomyContextDTO(entity, ctx, relevanceName))
+                        .map(ctx -> getTaxonomyContextDTO(entity, ctx))
                         .toList());
     }
 
-    private TaxonomyContextDTO getTaxonomyContextDTO(
-            Node entity, TaxonomyContext ctx, LanguageField<String> finalRelevanceName) {
+    private TaxonomyContextDTO getTaxonomyContextDTO(Node entity, TaxonomyContext ctx) {
         var parentContexts = entity.getAllParentContexts();
         var parents = ctx.parentContextIds().stream()
                 .map(parentCtxId -> {
@@ -202,6 +196,7 @@ public class NodeDTO {
                     }
                 })
                 .toList();
+        var relevance = Relevance.unsafeGetRelevance(URI.create(ctx.relevanceId()));
         return new TaxonomyContextDTO(
                 entity.getPublicId(),
                 entity.getPublicId(),
@@ -211,7 +206,7 @@ public class NodeDTO {
                 LanguageFieldDTO.fromLanguageFieldList(ctx.breadcrumbs()),
                 entity.getContextType(),
                 URI.create(ctx.relevanceId()),
-                LanguageFieldDTO.fromLanguageField(finalRelevanceName),
+                LanguageFieldDTO.fromLanguageField(LanguageField.fromRelevance(relevance)),
                 entity.getResourceTypes().stream()
                         .sorted((o1, o2) -> {
                             if (o1.getParent().isEmpty()) return -1;

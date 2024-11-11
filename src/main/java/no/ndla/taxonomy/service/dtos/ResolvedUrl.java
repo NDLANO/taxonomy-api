@@ -42,6 +42,10 @@ public class ResolvedUrl {
     @Schema(description = "URL path for resource", example = "'/subject:1/topic:12/resource:12'")
     private String path;
 
+    @JsonProperty
+    @Schema(description = "Pretty url resource", example = "'/r/subject-name/resource-name/hash'")
+    private String url;
+
     public URI getId() {
         return id;
     }
@@ -80,5 +84,13 @@ public class ResolvedUrl {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 }

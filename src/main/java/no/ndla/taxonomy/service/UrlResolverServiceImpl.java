@@ -9,15 +9,16 @@ package no.ndla.taxonomy.service;
 
 import java.net.URI;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.Node;
+import no.ndla.taxonomy.domain.TaxonomyContext;
 import no.ndla.taxonomy.domain.UrlMapping;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.UrlMappingRepository;
 import no.ndla.taxonomy.service.dtos.ResolvedUrl;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import no.ndla.taxonomy.util.PrettyUrlUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -149,61 +150,33 @@ public class UrlResolverServiceImpl implements UrlResolverService {
         }
     }
 
-    private void validateEntityPath(List<Node> entities) {
-        // Verify that the path is actually valid, not just that the objects referred to exists. We
-        // could use the CachedUrl
-        // to do this validation, but would rather not since the CachedUrl view generation could be
-        // removed later
-
-        // Searches the array, check that the child element has the previous entity as parent
-        final var lastEntity = new AtomicReference<Node>();
-        for (final var entity : entities) {
-            if (lastEntity.get() != null) {
-                if (entity.getParentConnections().stream().noneMatch(parentConnection -> parentConnection
-                        .getParent()
-                        .filter(parent -> parent.equals(lastEntity.get()))
-                        .isPresent())) {
-                    throw new NotFoundServiceException(
-                            lastEntity.get().getPublicId() + " has no child with ID " + entity.getPublicId());
-                }
-            } else {
-                // The first element must be marked as a context
-                if (!entity.isContext()) {
-                    throw new NotFoundServiceException(
-                            "Root element in path is not a context; cannot be the first element in a path");
-                }
-            }
-
-            lastEntity.set(entity);
-        }
-    }
-
     @Override
-    public Optional<ResolvedUrl> resolveUrl(String path) {
+    public Optional<ResolvedUrl> resolveUrl(String path, String language) {
         try {
             final var resolvedPathComponents = resolveEntitiesFromPath(path);
-
-            validateEntityPath(resolvedPathComponents);
-
-            final var leafElement = resolvedPathComponents.getLast();
+            final var normalizedPath =
+                    resolvedPathComponents.stream().map(Node::getPathPart).collect(Collectors.joining());
+            final var leafNode = resolvedPathComponents.getLast();
+            TaxonomyContext context = leafNode.getContexts().stream()
+                    .filter(ctx -> ctx.path().equals(normalizedPath))
+                    .findFirst()
+                    .orElseThrow(
+                            () -> new NotFoundServiceException("Element with path " + path + " could not be found"));
 
             final var resolvedUrl = new ResolvedUrl();
-            resolvedUrl.setContentUri(leafElement.getContentUri());
-            resolvedUrl.setId(leafElement.getPublicId());
-
-            // Create a list of parents with publicId in reversed order, not including the node
-            // itself
-            resolvedUrl.setParents(resolvedPathComponents.subList(0, resolvedPathComponents.size() - 1).stream()
-                    .map(Node::getPublicId)
-                    .sorted(Collections.reverseOrder())
-                    .collect(Collectors.toList()));
-
-            resolvedUrl.setName(leafElement.getName());
-
-            // Generate a string path from the sorted list of parent nodes, a cleaned version of the
-            // provided string path parameter
-            resolvedUrl.setPath(
-                    resolvedPathComponents.stream().map(Node::getPathPart).collect(Collectors.joining()));
+            resolvedUrl.setContentUri(leafNode.getContentUri());
+            resolvedUrl.setId(URI.create(context.publicId()));
+            resolvedUrl.setParents(
+                    context.parentIds().stream().map(URI::create).toList().reversed());
+            resolvedUrl.setName(context.name().fromLanguage(language));
+            resolvedUrl.setPath(context.path());
+            resolvedUrl.setUrl(PrettyUrlUtil.createPrettyUrl(
+                            Optional.ofNullable(context.rootName()),
+                            context.name(),
+                            language,
+                            context.contextId(),
+                            context.nodeType())
+                    .orElse(context.path()));
 
             return Optional.of(resolvedUrl);
         } catch (NotFoundServiceException e) {

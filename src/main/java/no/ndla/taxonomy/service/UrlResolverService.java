@@ -22,7 +22,7 @@ public interface UrlResolverService {
 
     void putUrlMapping(String oldUrl, URI nodeId, URI subjectId) throws NodeIdNotFoundExeption;
 
-    Optional<ResolvedUrl> resolveUrl(String path);
+    Optional<ResolvedUrl> resolveUrl(String path, String language);
 
     class NodeIdNotFoundExeption extends Exception {
         public NodeIdNotFoundExeption(String message) {

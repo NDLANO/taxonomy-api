@@ -275,21 +275,28 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
     public void resolveEntitiesFromPath() {
         builder.node(
                 NodeType.SUBJECT,
-                s -> s.isContext(true).publicId("urn:subject:1").child(NodeType.TOPIC, t -> t.publicId("urn:topic:1")
+                s -> s.isContext(true).publicId("urn:subject:1").name("Maths").child(NodeType.TOPIC, t -> t.publicId(
+                                "urn:topic:1")
+                        .name("Trignometry")
                         .resource("resource", resourceBuilder -> resourceBuilder
                                 .publicId("urn:resource:1")
                                 .name("Resource Name")
                                 .contentUri(URI.create("urn:test:1")))));
 
-        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
-                .publicId("urn:subject:2")
-                .child(NodeType.TOPIC, t -> t.publicId("urn:topic:2").resource("resource")));
-
         builder.node(
                 NodeType.SUBJECT,
-                s -> s.isContext(true).publicId("urn:subject:3").child(NodeType.TOPIC, t -> {
+                s -> s.isContext(true).publicId("urn:subject:2").name("Biology").child(NodeType.TOPIC, t -> t.publicId(
+                                "urn:topic:2")
+                        .name("Mammals")
+                        .resource("resource")));
+
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true)
+                .publicId("urn:subject:3")
+                .name("Chemistry")
+                .child(NodeType.TOPIC, t -> {
                     t.publicId("urn:topic:3");
                     t.isContext(true);
+                    t.name("Acids");
                     t.resource("resource");
                 }));
 
@@ -301,7 +308,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
         {
             final var resolvedUrl = urlResolverService
-                    .resolveUrl("/subject:1/topic:1/resource:1")
+                    .resolveUrl("/subject:1/topic:1/resource:1", "nb")
                     .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
@@ -313,6 +320,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
             assertEquals("Resource Name", resolvedUrl.getName());
             assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
             assertEquals("/subject:1/topic:1/resource:1", resolvedUrl.getPath());
+            assertTrue(resolvedUrl.getUrl().startsWith("/r/maths/resource-name/"));
 
             assertEquals("topic:1", parentIdList.get(0));
             assertEquals("subject:1", parentIdList.get(1));
@@ -320,7 +328,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
         {
             final var resolvedUrl = urlResolverService
-                    .resolveUrl("/subject:2/topic:2/resource:1")
+                    .resolveUrl("/subject:2/topic:2/resource:1", "nb")
                     .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
@@ -332,6 +340,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
             assertEquals("Resource Name", resolvedUrl.getName());
             assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
             assertEquals("/subject:2/topic:2/resource:1", resolvedUrl.getPath());
+            assertTrue(resolvedUrl.getUrl().startsWith("/r/biology/resource-name/"));
 
             assertEquals("topic:2", parentIdList.get(0));
             assertEquals("subject:2", parentIdList.get(1));
@@ -339,7 +348,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
         {
             final var resolvedUrl =
-                    urlResolverService.resolveUrl("/subject:2/topic:2").orElseThrow();
+                    urlResolverService.resolveUrl("/subject:2/topic:2", "nb").orElseThrow();
             assertEquals(1, resolvedUrl.getParents().size());
 
             final var parentIdList = resolvedUrl.getParents().stream()
@@ -348,41 +357,47 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
 
             assertEquals("topic:2", resolvedUrl.getId().getSchemeSpecificPart());
             assertEquals("/subject:2/topic:2", resolvedUrl.getPath());
+            assertTrue(resolvedUrl.getUrl().startsWith("/e/biology/mammals/"));
 
             assertEquals("subject:2", parentIdList.getFirst());
         }
-
         {
-            final var resolvedUrl = urlResolverService.resolveUrl("/subject:2").orElseThrow();
+            final var resolvedUrl =
+                    urlResolverService.resolveUrl("/subject:2", "nb").orElseThrow();
             assertEquals(0, resolvedUrl.getParents().size());
             assertEquals("subject:2", resolvedUrl.getId().getSchemeSpecificPart());
             assertEquals("/subject:2", resolvedUrl.getPath());
+            assertTrue(resolvedUrl.getUrl().startsWith("/f/biology/"));
         }
 
         {
-            final var resolvedUrl = urlResolverService.resolveUrl("/subject:2/").orElseThrow();
+            final var resolvedUrl =
+                    urlResolverService.resolveUrl("/subject:2/", "nb").orElseThrow();
             assertEquals(0, resolvedUrl.getParents().size());
             assertEquals("subject:2", resolvedUrl.getId().getSchemeSpecificPart());
             assertEquals("/subject:2", resolvedUrl.getPath());
+            assertTrue(resolvedUrl.getUrl().startsWith("/f/biology/"));
         }
         {
-            final var resolvedUrl = urlResolverService.resolveUrl("subject:2").orElseThrow();
+            final var resolvedUrl =
+                    urlResolverService.resolveUrl("subject:2", "nb").orElseThrow();
             assertEquals(0, resolvedUrl.getParents().size());
             assertEquals("subject:2", resolvedUrl.getId().getSchemeSpecificPart());
             assertEquals("/subject:2", resolvedUrl.getPath());
+            assertTrue(resolvedUrl.getUrl().startsWith("/f/biology/"));
         }
 
         // Test with a non-valid path
-        assertFalse(urlResolverService.resolveUrl("/subject:2/resource:1").isPresent());
+        assertFalse(urlResolverService.resolveUrl("/subject:2/resource:1", "nb").isPresent());
 
         // Test with a non-context
-        assertFalse(urlResolverService.resolveUrl("/topic:1/resource:1").isPresent());
-        assertFalse(urlResolverService.resolveUrl("/topic:2/resource:1").isPresent());
+        assertFalse(urlResolverService.resolveUrl("/topic:1/resource:1", "nb").isPresent());
+        assertFalse(urlResolverService.resolveUrl("/topic:2/resource:1", "nb").isPresent());
 
         // Since topic3 is a context in itself, it would be valid to use it as root
         {
             final var resolvedUrl =
-                    urlResolverService.resolveUrl("/topic:3/resource:1").orElseThrow();
+                    urlResolverService.resolveUrl("/topic:3/resource:1", "nb").orElseThrow();
             assertEquals(1, resolvedUrl.getParents().size());
 
             final var parentIdList = resolvedUrl.getParents().stream()
@@ -393,6 +408,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
             assertEquals("Resource Name", resolvedUrl.getName());
             assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
             assertEquals("/topic:3/resource:1", resolvedUrl.getPath());
+            assertTrue(resolvedUrl.getUrl().startsWith("/r/acids/resource-name/"));
 
             assertEquals("topic:3", parentIdList.getFirst());
         }
@@ -400,7 +416,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
         // Going via subject:3 is also valid
         {
             final var resolvedUrl = urlResolverService
-                    .resolveUrl("/subject:3/topic:3/resource:1")
+                    .resolveUrl("/subject:3/topic:3/resource:1", "nb")
                     .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
@@ -412,6 +428,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
             assertEquals("Resource Name", resolvedUrl.getName());
             assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
             assertEquals("/subject:3/topic:3/resource:1", resolvedUrl.getPath());
+            assertTrue(resolvedUrl.getUrl().startsWith("/r/chemistry/resource-name/"));
 
             assertEquals("topic:3", parentIdList.get(0));
             assertEquals("subject:3", parentIdList.get(1));
@@ -420,7 +437,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
         // Additional slashes should make no difference
         {
             final var resolvedUrl = urlResolverService
-                    .resolveUrl("////subject:3///topic:3//////resource:1///")
+                    .resolveUrl("////subject:3///topic:3//////resource:1///", "nb")
                     .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
@@ -432,6 +449,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
             assertEquals("Resource Name", resolvedUrl.getName());
             assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
             assertEquals("/subject:3/topic:3/resource:1", resolvedUrl.getPath());
+            assertTrue(resolvedUrl.getUrl().startsWith("/r/chemistry/resource-name/"));
 
             assertEquals("topic:3", parentIdList.get(0));
             assertEquals("subject:3", parentIdList.get(1));
@@ -440,7 +458,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
         // No leading slash should make no difference
         {
             final var resolvedUrl = urlResolverService
-                    .resolveUrl("subject:3///topic:3//////resource:1///")
+                    .resolveUrl("subject:3///topic:3//////resource:1///", "nb")
                     .orElseThrow();
             assertEquals(2, resolvedUrl.getParents().size());
 
@@ -452,6 +470,7 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
             assertEquals("Resource Name", resolvedUrl.getName());
             assertEquals(URI.create("urn:test:1"), resolvedUrl.getContentUri());
             assertEquals("/subject:3/topic:3/resource:1", resolvedUrl.getPath());
+            assertTrue(resolvedUrl.getUrl().startsWith("/r/chemistry/resource-name/"));
 
             assertEquals("topic:3", parentIdList.get(0));
             assertEquals("subject:3", parentIdList.get(1));
