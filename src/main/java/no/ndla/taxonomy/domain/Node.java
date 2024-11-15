@@ -310,7 +310,9 @@ public class Node extends DomainObject implements EntityWithMetadata {
                         .filter(c -> c.parentIds().contains(p.getPublicId().toString()))
                         .collect(Collectors.toSet()))
                 .orElse(containsParent);
-        return containsRoot.stream().min((context1, context2) -> {
+        // If no context is found based on params, return the one with the shortest path
+        var filtered = containsRoot.isEmpty() ? contextSet : containsRoot;
+        return filtered.stream().min((context1, context2) -> {
             final var inPath1 =
                     context1.path().contains(root.map(Node::getPathPart).orElse("other"));
             final var inPath2 =
