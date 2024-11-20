@@ -69,6 +69,7 @@ public class PrettyUrlUtil {
                 .replaceAll("æ", "a")
                 .replaceAll("ø", "o")
                 .replaceAll("å", "a")
+                .replaceAll("–", "-")
                 .trim();
     }
 
