@@ -40,7 +40,7 @@ public class PrettyUrlUtilTest {
                         .get());
         assertEquals(
                 "/r/this-is-a-title-and-a-12/hash",
-                PrettyUrlUtil.createPrettyUrl(Optional.empty(), "This is a title and a 1/2", "hash", NodeType.RESOURCE)
+                PrettyUrlUtil.createPrettyUrl(Optional.empty(), "This is a #title and a 1/2", "hash", NodeType.RESOURCE)
                         .get());
         assertEquals(
                 "/r/this-is-a-title---with-long-dash/hash",
