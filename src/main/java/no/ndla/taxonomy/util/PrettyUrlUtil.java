@@ -65,7 +65,7 @@ public class PrettyUrlUtil {
         return Jsoup.parse(name)
                 .text()
                 .toLowerCase()
-                .replaceAll("[.,!?()/«»'¡:`’#°π€%&|]", "")
+                .replaceAll("[.,!?()/«»\"”'¡:`’#°π€%&|]", "")
                 .replaceAll("[æåäáǎāà]", "a")
                 .replaceAll("[øöôóòõ]", "o")
                 .replaceAll("[ïíǐīìĩ]", "i")

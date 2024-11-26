@@ -45,11 +45,11 @@ public class PrettyUrlUtilTest {
         assertEquals(
                 "/r/this-is-a-title---with-long-dash/hash",
                 PrettyUrlUtil.createPrettyUrl(
-                                Optional.empty(), "This is a «title» – with long dash", "hash", NodeType.RESOURCE)
+                                Optional.empty(), "This is a «title» – with \"long\" dash", "hash", NodeType.RESOURCE)
                         .get());
         assertEquals(
                 "/r/pytagoras-setning/hash",
-                PrettyUrlUtil.createPrettyUrl(Optional.empty(), "Pytagoras’ setning", "hash", NodeType.RESOURCE)
+                PrettyUrlUtil.createPrettyUrl(Optional.empty(), "Pytagoras’ ”setning”", "hash", NodeType.RESOURCE)
                         .get());
         assertEquals(
                 "/r/empezamos-ya/hash",
