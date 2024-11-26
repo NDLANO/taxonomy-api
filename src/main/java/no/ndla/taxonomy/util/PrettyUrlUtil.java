@@ -74,7 +74,7 @@ public class PrettyUrlUtil {
                 .replaceAll("[čĉć]", "c")
                 .replaceAll("[üùũú]", "u")
                 .replaceAll("1D45-B7C5", "d")
-                .replaceAll("–", "-")
+                .replaceAll("[–：，]", "-")
                 .trim();
     }
 
