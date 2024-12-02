@@ -300,6 +300,8 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
                     t.resource("resource");
                 }));
 
+        builder.node(NodeType.RESOURCE, r -> r.publicId("urn:resource:2").name("Resource Name"));
+
         // Four paths exists to the same resource:
         // /subject:1/topic:1/resource:1
         // /subject:2/topic:2/resource:2
@@ -387,12 +389,18 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
             assertTrue(resolvedUrl.getUrl().startsWith("/f/biology/"));
         }
 
-        // Test with a non-valid path
-        assertFalse(urlResolverService.resolveUrl("/subject:2/resource:1", "nb").isPresent());
+        // Test with a non-valid path to valid resource
+        {
+            var resolvedUrl = urlResolverService.resolveUrl("/subject:2/resource:1", "nb");
+            assertTrue(resolvedUrl.isPresent());
+            assertFalse(resolvedUrl.get().isExactMatch());
+        }
 
-        // Test with a non-context
-        assertFalse(urlResolverService.resolveUrl("/topic:1/resource:1", "nb").isPresent());
-        assertFalse(urlResolverService.resolveUrl("/topic:2/resource:1", "nb").isPresent());
+        // Test with non-context node
+        {
+            assertFalse(urlResolverService.resolveUrl("/topic:1/resource:2", "nb").isPresent());
+            assertFalse(urlResolverService.resolveUrl("/topic:2/resource:2", "nb").isPresent());
+        }
 
         // Since topic3 is a context in itself, it would be valid to use it as root
         {
