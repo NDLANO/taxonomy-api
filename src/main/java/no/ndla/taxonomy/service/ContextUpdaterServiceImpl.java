@@ -8,6 +8,8 @@
 package no.ndla.taxonomy.service;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.LanguageField;
 import no.ndla.taxonomy.domain.Node;
@@ -106,7 +108,9 @@ public class ContextUpdaterServiceImpl implements ContextUpdaterService {
 
         clearContexts(entity);
 
-        entity.setContexts(createContexts(entity));
+        var contexts = createContexts(entity);
+        entity.setContexts(contexts);
+        entity.addContextIds(contexts.stream().map(TaxonomyContext::contextId).collect(Collectors.toSet()));
     }
 
     @Override

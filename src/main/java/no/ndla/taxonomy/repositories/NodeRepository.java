@@ -81,9 +81,9 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
 
     @Query(
             value =
-                    """
+            """
             SELECT n.id FROM Node n
-            WHERE (:contextId IS NULL OR n.contexts @> jsonb_build_array(jsonb_build_object('contextId',:contextId)))
+            WHERE (:contextId IS NULL OR n.contextids @> jsonb_build_array(:contextId))
             """,
             nativeQuery = true)
     List<Integer> findIdsByContextId(Optional<String> contextId);
