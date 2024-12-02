@@ -81,7 +81,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
 
     @Query(
             value =
-            """
+                    """
             SELECT n.id FROM Node n
             WHERE (:contextId IS NULL OR n.contextids @> jsonb_build_array(:contextId))
             """,

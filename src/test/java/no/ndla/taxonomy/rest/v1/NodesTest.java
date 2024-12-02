@@ -230,7 +230,8 @@ public class NodesTest extends RestTest {
         var contextId = node.getContextIds().stream().findFirst().get();
 
         // Disconnect from original placement
-        node.removeParentConnection(fromDB.get().getParentConnections().stream().findFirst().get());
+        node.removeParentConnection(
+                fromDB.get().getParentConnections().stream().findFirst().get());
         nodeRepository.save(node);
 
         // Add resource to new placement
@@ -251,7 +252,6 @@ public class NodesTest extends RestTest {
             // Not happening
         }
     }
-
 
     @Test
     public void can_get_nodes_by_key_and_value() throws Exception {

@@ -9,7 +9,6 @@ package no.ndla.taxonomy.service;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
 import no.ndla.taxonomy.config.Constants;
 import no.ndla.taxonomy.domain.LanguageField;
 import no.ndla.taxonomy.domain.Node;
