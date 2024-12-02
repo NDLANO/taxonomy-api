@@ -215,6 +215,45 @@ public class NodesTest extends RestTest {
     }
 
     @Test
+    public void can_get_moved_nodes_by_contextId() {
+        Node resource = builder.node(NodeType.RESOURCE, r -> r.name("Resource"));
+        builder.node(
+                NodeType.SUBJECT, s -> s.isContext(true).name("Basic science").child(NodeType.TOPIC, t -> {
+                    t.name("photo synthesis");
+                    t.contentUri(URI.create("urn:test:1")).resource(resource);
+                }));
+
+        Optional<Node> fromDB = nodeRepository.findFirstByPublicId(resource.getPublicId());
+        assertTrue(fromDB.isPresent());
+        var node = fromDB.get();
+        assertEquals(1, node.getContexts().size());
+        var contextId = node.getContextIds().stream().findFirst().get();
+
+        // Disconnect from original placement
+        node.removeParentConnection(fromDB.get().getParentConnections().stream().findFirst().get());
+        nodeRepository.save(node);
+
+        // Add resource to new placement
+        builder.node(NodeType.SUBJECT, s -> s.isContext(true).name("Maths").child(NodeType.TOPIC, t -> {
+            t.name("trigonometry");
+            t.contentUri(URI.create("urn:test:2")).resource(resource);
+        }));
+
+        // Try fetching by old contextid
+        try {
+            final var response = testUtils.getResource("/v1/nodes?nodeType=RESOURCE&contextId=" + contextId);
+            final var nodes = testUtils.getObject(NodeDTO[].class, response);
+            assertEquals(1, nodes.length);
+            assertEquals("Resource", nodes[0].getName());
+            // Should not be the old contextid
+            assertFalse(nodes[0].getUrl().get().endsWith(String.format("resource/%s", contextId)));
+        } catch (Exception e) {
+            // Not happening
+        }
+    }
+
+
+    @Test
     public void can_get_nodes_by_key_and_value() throws Exception {
         builder.node(
                 NodeType.SUBJECT, s -> s.isContext(true).name("Basic science").child(t -> {
