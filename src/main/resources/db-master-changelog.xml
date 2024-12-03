@@ -1587,7 +1587,7 @@
 
     <changeSet id="20241202 Add list of all contextIds a node has ever had" author="Gunnar Velle">
         <addColumn tableName="node">
-            <column name="contextids" type="jsonb"/>
+            <column name="contextids" type="jsonb" defaultValue="[]"/>
         </addColumn>
         <sql>
             UPDATE node n
@@ -1597,9 +1597,9 @@
             )
             WHERE contexts != '[]'
         </sql>
-        <createIndex tableName="node" indexName="node_context_ids_index">
-            <column name="contextids"/>
-        </createIndex>
+        <sql>
+            CREATE INDEX IF NOT EXISTS node_contextids_index ON node USING GIN (contextids);
+        </sql>
     </changeSet>
 
 </databaseChangeLog>
