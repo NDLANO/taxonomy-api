@@ -328,6 +328,7 @@ export interface ResolvedOldUrl {
 
 export interface ResolvedUrl {
     contentUri: string;
+    exactMatch: boolean;
     id: string;
     name: string;
     parents: string[];
