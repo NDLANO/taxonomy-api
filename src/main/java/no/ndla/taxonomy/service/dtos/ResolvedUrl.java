@@ -46,6 +46,10 @@ public class ResolvedUrl {
     @Schema(description = "Pretty url resource", example = "'/r/subject-name/resource-name/hash'")
     private String url;
 
+    @JsonProperty
+    @Schema(description = "Is this an exact match for the provided path? False if this is another path to the same resource.")
+    private boolean exactMatch;
+
     public URI getId() {
         return id;
     }
@@ -92,5 +96,13 @@ public class ResolvedUrl {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public boolean isExactMatch() {
+        return exactMatch;
+    }
+
+    public void setExactMatch(boolean exactMatch) {
+        this.exactMatch = exactMatch;
     }
 }

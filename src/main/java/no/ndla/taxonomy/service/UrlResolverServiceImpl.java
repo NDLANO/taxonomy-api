@@ -157,27 +157,33 @@ public class UrlResolverServiceImpl implements UrlResolverService {
             final var normalizedPath =
                     resolvedPathComponents.stream().map(Node::getPathPart).collect(Collectors.joining());
             final var leafNode = resolvedPathComponents.getLast();
-            TaxonomyContext context = leafNode.getContexts().stream()
+            Optional<TaxonomyContext> context = leafNode.getContexts().stream()
                     .filter(ctx -> ctx.path().equals(normalizedPath))
-                    .findFirst()
-                    .orElseThrow(
-                            () -> new NotFoundServiceException("Element with path " + path + " could not be found"));
+                    .findFirst();
 
             final var resolvedUrl = new ResolvedUrl();
-            resolvedUrl.setContentUri(leafNode.getContentUri());
-            resolvedUrl.setId(URI.create(context.publicId()));
-            resolvedUrl.setParents(
-                    context.parentIds().stream().map(URI::create).toList().reversed());
-            resolvedUrl.setName(context.name().fromLanguage(language));
-            resolvedUrl.setPath(context.path());
-            resolvedUrl.setUrl(PrettyUrlUtil.createPrettyUrl(
-                            Optional.ofNullable(context.rootName()),
-                            context.name(),
-                            language,
-                            context.contextId(),
-                            context.nodeType())
-                    .orElse(context.path()));
-
+            // Pick either the context matching path or the primary context
+            context.or(() -> leafNode.pickContext(Optional.empty(), Optional.empty(), Optional.empty(), Set.of()))
+                    .map(Optional::of)
+                    .orElseThrow(() -> new NotFoundServiceException("No context found for path"))
+                    .ifPresent(ctx -> {
+                        resolvedUrl.setExactMatch(context.isPresent());
+                        resolvedUrl.setContentUri(leafNode.getContentUri());
+                        resolvedUrl.setId(URI.create(ctx.publicId()));
+                        resolvedUrl.setParents(ctx.parentIds().stream()
+                                .map(URI::create)
+                                .toList()
+                                .reversed());
+                        resolvedUrl.setName(ctx.name().fromLanguage(language));
+                        resolvedUrl.setPath(ctx.path());
+                        resolvedUrl.setUrl(PrettyUrlUtil.createPrettyUrl(
+                                        Optional.ofNullable(ctx.rootName()),
+                                        ctx.name(),
+                                        language,
+                                        ctx.contextId(),
+                                        ctx.nodeType())
+                                .orElse(ctx.path()));
+                    });
             return Optional.of(resolvedUrl);
         } catch (NotFoundServiceException e) {
             return Optional.empty();
