@@ -37,6 +37,10 @@ export interface Node {
      * An id unique for this context.
      */
     contextId?: string;
+    /**
+     * A list of all contextids this node has ever had
+     */
+    contextids: string[];
     contexts: TaxonomyContext[];
     /**
      * A number representing the average grade of all children nodes recursively.

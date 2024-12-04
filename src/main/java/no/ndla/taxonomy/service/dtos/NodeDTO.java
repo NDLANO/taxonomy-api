@@ -80,6 +80,10 @@ public class NodeDTO {
     private List<TaxonomyContextDTO> contexts = new ArrayList<>();
 
     @JsonProperty
+    @Schema(description = "A list of all contextids this node has ever had")
+    private Set<String> contextids = new HashSet<>();
+
+    @JsonProperty
     @Schema(description = "The context object selected when fetching node")
     private Optional<TaxonomyContextDTO> context = Optional.empty();
 
@@ -144,6 +148,7 @@ public class NodeDTO {
                 .collect(Collectors.toCollection(TreeSet::new));
 
         this.nodeType = entity.getNodeType();
+        this.contextids = entity.getContextIds();
 
         Optional<TaxonomyContext> selected = entity.pickContext(contextId, parent, root, filteredContexts);
         selected.ifPresent(ctx -> {

@@ -1585,4 +1585,21 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20241202 Add list of all contextIds a node has ever had" author="Gunnar Velle">
+        <addColumn tableName="node">
+            <column name="contextids" type="jsonb" defaultValue="[]"/>
+        </addColumn>
+        <sql>
+            UPDATE node n
+            SET contextids=(
+            SELECT json_agg(obj->>'contextId')
+            FROM jsonb_array_elements(contexts) AS obj
+            )
+            WHERE contexts != '[]'
+        </sql>
+        <sql>
+            CREATE INDEX IF NOT EXISTS node_contextids_index ON node USING GIN (contextids);
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

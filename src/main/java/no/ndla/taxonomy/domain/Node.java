@@ -72,6 +72,10 @@ public class Node extends DomainObject implements EntityWithMetadata {
     @Column(name = "contexts", columnDefinition = "jsonb")
     private Set<TaxonomyContext> contexts = new HashSet<>();
 
+    @Type(JsonBinaryType.class)
+    @Column(name = "contextids", columnDefinition = "jsonb")
+    private Set<String> contextIds = new HashSet<>();
+
     @Column(name = "quality_evaluation")
     @Convert(converter = GradeConverter.class)
     private Grade qualityEvaluation;
@@ -551,6 +555,18 @@ public class Node extends DomainObject implements EntityWithMetadata {
 
     public boolean isContext() {
         return context;
+    }
+
+    public Set<String> getContextIds() {
+        return contextIds;
+    }
+
+    public void setContextIds(Set<String> contextIds) {
+        this.contextIds = contextIds;
+    }
+
+    public void addContextIds(Set<String> contextId) {
+        this.contextIds.addAll(contextId);
     }
 
     @Override
