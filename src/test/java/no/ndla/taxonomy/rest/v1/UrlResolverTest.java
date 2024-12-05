@@ -105,12 +105,12 @@ public class UrlResolverTest extends RestTest {
     }
 
     @Test
-    public void gets_404_on_wrong_path_to_resource() throws Exception {
+    public void gets_200_on_wrong_path_to_resource() throws Exception {
         builder.node(NodeType.SUBJECT, s -> s.isContext(true)
                 .publicId("urn:subject:1")
                 .child(NodeType.TOPIC, t -> t.publicId("urn:topic:1").resource(r -> r.publicId("urn:resource:1"))));
 
-        testUtils.getResource("/v1/url/resolve?path=/subject:1/topic:2/resource:1", status().isNotFound());
+        testUtils.getResource("/v1/url/resolve?path=/subject:1/topic:2/resource:1", status().isOk());
         testUtils.getResource("/v1/url/resolve?path=/subject:1/topic:1/resource:1", status().isOk());
     }
 

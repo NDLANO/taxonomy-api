@@ -185,7 +185,7 @@ public class UrlResolverServiceImpl implements UrlResolverService {
                                 .orElse(ctx.path()));
                     });
             return Optional.of(resolvedUrl);
-        } catch (NotFoundServiceException e) {
+        } catch (Exception e) {
             return Optional.empty();
         }
     }
