@@ -396,10 +396,19 @@ public class UrlResolverServiceImplTest extends AbstractIntegrationTest {
             assertFalse(resolvedUrl.get().isExactMatch());
         }
 
+        // Test with a non-valid path to valid resource
+        {
+            var resolvedUrl = urlResolverService.resolveUrl("/subject:2/topic:4/resource:1", "nb");
+            assertTrue(resolvedUrl.isPresent());
+            assertFalse(resolvedUrl.get().isExactMatch());
+        }
+
         // Test with non-context node
         {
-            assertFalse(urlResolverService.resolveUrl("/topic:1/resource:2", "nb").isPresent());
-            assertFalse(urlResolverService.resolveUrl("/topic:2/resource:2", "nb").isPresent());
+            assertFalse(
+                    urlResolverService.resolveUrl("/topic:1/resource:2", "nb").isPresent());
+            assertFalse(
+                    urlResolverService.resolveUrl("/topic:2/resource:2", "nb").isPresent());
         }
 
         // Since topic3 is a context in itself, it would be valid to use it as root

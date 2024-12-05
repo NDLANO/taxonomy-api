@@ -200,11 +200,14 @@ public class UrlResolverServiceImpl implements UrlResolverService {
                 continue;
             }
 
-            final var resolved = getEntityFromPublicId(URI.create("urn:" + pathPart))
-                    .orElseThrow(
-                            () -> new NotFoundServiceException("Element with Id " + pathPart + " could not be found"));
-
-            returnedList.add(resolved);
+            try {
+                final var resolved = getEntityFromPublicId(URI.create("urn:" + pathPart))
+                        .orElseThrow(() ->
+                                new NotFoundServiceException("Element with Id " + pathPart + " could not be found"));
+                returnedList.add(resolved);
+            } catch (Exception e) {
+                // Do nothing, just skip the part of the path that could not be resolved
+            }
         }
 
         return returnedList;

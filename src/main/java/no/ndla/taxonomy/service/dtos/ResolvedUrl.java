@@ -47,7 +47,9 @@ public class ResolvedUrl {
     private String url;
 
     @JsonProperty
-    @Schema(description = "Is this an exact match for the provided path? False if this is another path to the same resource.")
+    @Schema(
+            description =
+                    "Is this an exact match for the provided path? False if this is another path to the same resource.")
     private boolean exactMatch;
 
     public URI getId() {
