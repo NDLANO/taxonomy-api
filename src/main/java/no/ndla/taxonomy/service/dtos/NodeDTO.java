@@ -111,6 +111,7 @@ public class NodeDTO {
             boolean isVisible) {
 
         var contexts = entity.getContexts();
+        var parentContexts = entity.getAllParentContexts();
         var visibleContexts =
                 isVisible ? contexts.stream().filter(TaxonomyContext::isVisible).collect(Collectors.toSet()) : contexts;
         var filteredContexts = visibleContexts.stream()
@@ -152,7 +153,7 @@ public class NodeDTO {
 
         Optional<TaxonomyContext> selected = entity.pickContext(contextId, parent, root, filteredContexts);
         selected.ifPresent(ctx -> {
-            var contextDto = getTaxonomyContextDTO(entity, ctx);
+            var contextDto = getTaxonomyContextDTO(entity, ctx, parentContexts);
 
             // TODO: this changes the content in context breadcrumbs
             LanguageField<List<String>> breadcrumbList =
@@ -171,12 +172,12 @@ public class NodeDTO {
         includeContexts
                 .filter(Boolean::booleanValue)
                 .ifPresent(includeCtx -> this.contexts = filteredContexts.stream()
-                        .map(ctx -> getTaxonomyContextDTO(entity, ctx))
+                        .map(ctx -> getTaxonomyContextDTO(entity, ctx, parentContexts))
                         .toList());
     }
 
-    private TaxonomyContextDTO getTaxonomyContextDTO(Node entity, TaxonomyContext ctx) {
-        var parentContexts = entity.getAllParentContexts();
+    private TaxonomyContextDTO getTaxonomyContextDTO(
+            Node entity, TaxonomyContext ctx, Collection<TaxonomyContext> parentContexts) {
         var parents = ctx.parentContextIds().stream()
                 .map(parentCtxId -> {
                     var parent = parentContexts.stream()
