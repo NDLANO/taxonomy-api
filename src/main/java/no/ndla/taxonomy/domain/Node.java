@@ -508,7 +508,7 @@ public class Node extends DomainObject implements EntityWithMetadata {
         return all;
     }
 
-    public Collection<TaxonomyContext> getAllParentContexts() {
+    public Set<TaxonomyContext> getAllParentContexts() {
         return getAllParentsRecursive().stream()
                 .map(Node::getContexts)
                 .flatMap(Collection::stream)

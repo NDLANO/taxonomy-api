@@ -87,6 +87,7 @@ public class NodeService {
             MetadataFilters metadataFilters,
             Optional<Boolean> includeContexts,
             boolean filterProgrammes,
+            boolean includeParents,
             Optional<URI> rootId,
             Optional<URI> parentId) {
         final List<NodeDTO> listToReturn = new ArrayList<>();
@@ -121,7 +122,8 @@ public class NodeService {
                                     contextId,
                                     includeContexts,
                                     filterProgrammes,
-                                    metadataFilters.getVisible().orElse(false)))
+                                    metadataFilters.getVisible().orElse(false),
+                                    includeParents))
                             .toList();
                     listToReturn.addAll(dtos);
                 });
@@ -174,7 +176,8 @@ public class NodeService {
                 Optional.empty(),
                 includeContexts,
                 filterProgrammes,
-                isVisible);
+                isVisible,
+                true);
     }
 
     public Optional<Node> getMaybeNode(URI publicId) {

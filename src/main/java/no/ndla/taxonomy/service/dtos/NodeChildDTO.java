@@ -56,7 +56,8 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
                 Optional.empty(),
                 includeContexts,
                 filterProgrammes,
-                isVisible);
+                isVisible,
+                false);
 
         // This must be enabled when ed is updated to update metadata for connections.
         // this.metadata = new MetadataDto(nodeConnection.getMetadata());
@@ -84,7 +85,8 @@ public class NodeChildDTO extends NodeDTO implements TreeSorter.Sortable {
                 Optional.empty(),
                 Optional.of(false),
                 false,
-                true);
+                true,
+                false);
 
         this.rank = nodeConnection.getRank();
         this.connectionId = nodeConnection.getPublicId();

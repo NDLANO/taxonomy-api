@@ -130,6 +130,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                 metadataFilters,
                 includeContexts,
                 filterProgrammes,
+                true,
                 rootId,
                 parentId);
     }
@@ -237,7 +238,8 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                         Optional.empty(),
                         includeContexts,
                         filterProgrammes,
-                        isVisible))
+                        isVisible,
+                        false))
                 .collect(Collectors.toList());
         return new SearchResultDTO<>(ids.getTotalElements(), page.get(), pageSize.get(), contents);
     }

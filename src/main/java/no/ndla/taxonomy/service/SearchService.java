@@ -143,6 +143,7 @@ public class SearchService {
                         Optional.empty(),
                         includeContexts,
                         filterProgrammes,
+                        false,
                         false))
                 .collect(Collectors.toList());
 
