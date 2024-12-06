@@ -108,10 +108,10 @@ public class NodeDTO {
             Optional<String> contextId,
             Optional<Boolean> includeContexts,
             boolean filterProgrammes,
-            boolean isVisible) {
+            boolean isVisible,
+            boolean includeParents) {
 
         var contexts = entity.getContexts();
-        var parentContexts = entity.getAllParentContexts();
         var visibleContexts =
                 isVisible ? contexts.stream().filter(TaxonomyContext::isVisible).collect(Collectors.toSet()) : contexts;
         var filteredContexts = visibleContexts.stream()
@@ -151,6 +151,7 @@ public class NodeDTO {
         this.nodeType = entity.getNodeType();
         this.contextids = entity.getContextIds();
 
+        Set<TaxonomyContext> parentContexts = includeParents ? entity.getAllParentContexts() : Set.of();
         Optional<TaxonomyContext> selected = entity.pickContext(contextId, parent, root, filteredContexts);
         selected.ifPresent(ctx -> {
             var contextDto = getTaxonomyContextDTO(entity, ctx, parentContexts);
@@ -201,6 +202,7 @@ public class NodeDTO {
                         return null;
                     }
                 })
+                .filter(Objects::nonNull)
                 .toList();
         var relevance = Relevance.unsafeGetRelevance(URI.create(ctx.relevanceId()));
         return new TaxonomyContextDTO(

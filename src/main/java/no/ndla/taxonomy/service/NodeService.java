@@ -121,7 +121,8 @@ public class NodeService {
                                     contextId,
                                     includeContexts,
                                     filterProgrammes,
-                                    metadataFilters.getVisible().orElse(false)))
+                                    metadataFilters.getVisible().orElse(false),
+                                    false))
                             .toList();
                     listToReturn.addAll(dtos);
                 });
@@ -174,7 +175,8 @@ public class NodeService {
                 Optional.empty(),
                 includeContexts,
                 filterProgrammes,
-                isVisible);
+                isVisible,
+                true);
     }
 
     public Optional<Node> getMaybeNode(URI publicId) {
