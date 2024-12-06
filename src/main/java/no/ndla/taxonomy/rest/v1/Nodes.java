@@ -130,6 +130,7 @@ public class Nodes extends CrudControllerWithMetadata<Node> {
                 metadataFilters,
                 includeContexts,
                 filterProgrammes,
+                true,
                 rootId,
                 parentId);
     }
