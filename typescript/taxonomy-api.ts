@@ -558,7 +558,7 @@ export interface TaxonomyContext {
      */
     parentIds: string[];
     /**
-     * List of all parents to this context
+     * List of all parents to this context. Empty if node is fetched as child
      */
     parents: TaxonomyCrumb[];
     /**
