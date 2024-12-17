@@ -13,13 +13,20 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
+import no.ndla.taxonomy.repositories.NodeConnectionRepository;
+import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.rest.v1.commands.VersionPostPut;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
 import no.ndla.taxonomy.service.exceptions.NotFoundServiceException;
+import no.ndla.taxonomy.service.task.Deleter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,16 +37,28 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class VersionService {
     final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final VersionRepository versionRepository;
     private final EntityManager entityManager;
+    private final VersionRepository versionRepository;
+    private final NodeRepository nodeRepository;
+    private final NodeConnectionRepository nodeConnectionRepository;
+    private final NodeService nodeService;
     private final URNValidator validator = new URNValidator();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Value("${spring.datasource.hikari.schema:taxonomy_api}")
     private String defaultSchema;
 
-    public VersionService(VersionRepository versionRepository, EntityManager entityManager) {
-        this.versionRepository = versionRepository;
+    public VersionService(
+            EntityManager entityManager,
+            VersionRepository versionRepository,
+            NodeRepository nodeRepository,
+            NodeConnectionRepository nodeConnectionRepository,
+            NodeService nodeService) {
         this.entityManager = entityManager;
+        this.versionRepository = versionRepository;
+        this.nodeRepository = nodeRepository;
+        this.nodeConnectionRepository = nodeConnectionRepository;
+        this.nodeService = nodeService;
     }
 
     @Transactional
@@ -83,6 +102,22 @@ public class VersionService {
         beta.setLocked(true);
         beta.setPublished(Instant.now());
         versionRepository.save(beta);
+
+        disconnectAllInvisibleNodes(beta.getHash());
+    }
+
+    private void disconnectAllInvisibleNodes(String hash) {
+        // Use a task to run in a separate thread against a specified schema
+        try {
+            Deleter deleter = new Deleter();
+            deleter.setNodeService(nodeService);
+            deleter.setVersion(schemaFromHash(hash));
+            Future<DomainEntity> future = executor.submit(deleter);
+            future.get();
+        } catch (Exception e) {
+            logger.info(e.getMessage(), e);
+            // throw new NotFoundServiceException("Failed to disconnect invisible children in schema", e);
+        }
     }
 
     @Transactional
