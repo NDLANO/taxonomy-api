@@ -20,8 +20,6 @@ import java.util.stream.Collectors;
 import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
-import no.ndla.taxonomy.repositories.NodeConnectionRepository;
-import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.repositories.VersionRepository;
 import no.ndla.taxonomy.rest.v1.commands.VersionPostPut;
 import no.ndla.taxonomy.service.dtos.VersionDTO;
@@ -39,8 +37,6 @@ public class VersionService {
     final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final EntityManager entityManager;
     private final VersionRepository versionRepository;
-    private final NodeRepository nodeRepository;
-    private final NodeConnectionRepository nodeConnectionRepository;
     private final NodeService nodeService;
     private final URNValidator validator = new URNValidator();
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -48,16 +44,9 @@ public class VersionService {
     @Value("${spring.datasource.hikari.schema:taxonomy_api}")
     private String defaultSchema;
 
-    public VersionService(
-            EntityManager entityManager,
-            VersionRepository versionRepository,
-            NodeRepository nodeRepository,
-            NodeConnectionRepository nodeConnectionRepository,
-            NodeService nodeService) {
+    public VersionService(EntityManager entityManager, VersionRepository versionRepository, NodeService nodeService) {
         this.entityManager = entityManager;
         this.versionRepository = versionRepository;
-        this.nodeRepository = nodeRepository;
-        this.nodeConnectionRepository = nodeConnectionRepository;
         this.nodeService = nodeService;
     }
 
