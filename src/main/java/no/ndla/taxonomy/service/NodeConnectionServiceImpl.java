@@ -10,15 +10,14 @@ package no.ndla.taxonomy.service;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(propagation = Propagation.MANDATORY)
 @Service
 public class NodeConnectionServiceImpl implements NodeConnectionService {
+    Logger logger = LoggerFactory.getLogger(getClass().getName());
+
     private final NodeConnectionRepository nodeConnectionRepository;
     private final ContextUpdaterService contextUpdaterService;
     private final NodeRepository nodeRepository;
@@ -294,5 +295,26 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     @Override
     public void disconnectAllChildren(Node entity) {
         Set.copyOf(entity.getChildConnections()).forEach(this::disconnectParentChildConnection);
+    }
+
+    @Transactional
+    @Override
+    public Optional<DomainEntity> disconnectAllInvisibleNodes() {
+        nodeRepository.findRootSubjects().forEach(subject -> {
+            disconnectInvisibleConnections(subject);
+            nodeRepository.save(subject);
+        });
+        return Optional.empty();
+    }
+
+    private void disconnectInvisibleConnections(Node node) {
+        if (!node.isVisible()) {
+            logger.info("Disconnecting invisible node {}", node.getPublicId());
+            node.getParentConnections().forEach(this::disconnectParentChildConnection);
+        } else {
+            node.getChildConnections()
+                    .forEach(nodeConnection ->
+                            nodeConnection.getChild().ifPresent(this::disconnectInvisibleConnections));
+        }
     }
 }

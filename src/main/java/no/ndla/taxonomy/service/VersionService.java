@@ -28,6 +28,7 @@ import no.ndla.taxonomy.service.task.Deleter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,17 +38,20 @@ public class VersionService {
     final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final EntityManager entityManager;
     private final VersionRepository versionRepository;
-    private final NodeService nodeService;
+    private final NodeConnectionService nodeConnectionService;
     private final URNValidator validator = new URNValidator();
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Value("${spring.datasource.hikari.schema:taxonomy_api}")
     private String defaultSchema;
 
-    public VersionService(EntityManager entityManager, VersionRepository versionRepository, NodeService nodeService) {
+    public VersionService(
+            EntityManager entityManager,
+            VersionRepository versionRepository,
+            NodeConnectionService nodeConnectionService) {
         this.entityManager = entityManager;
         this.versionRepository = versionRepository;
-        this.nodeService = nodeService;
+        this.nodeConnectionService = nodeConnectionService;
     }
 
     @Transactional
@@ -78,19 +82,20 @@ public class VersionService {
     }
 
     @Transactional
+    @Async
     public void publishBetaAndArchiveCurrent(URI id) {
         Optional<Version> published = versionRepository.findFirstByVersionType(VersionType.PUBLISHED);
         if (published.isPresent()) {
             Version version = published.get();
             version.setVersionType(VersionType.ARCHIVED);
             version.setArchived(Instant.now());
-            versionRepository.save(version);
+            versionRepository.saveAndFlush(version);
         }
         Version beta = versionRepository.getByPublicId(id);
         beta.setVersionType(VersionType.PUBLISHED);
         beta.setLocked(true);
         beta.setPublished(Instant.now());
-        versionRepository.save(beta);
+        versionRepository.saveAndFlush(beta);
 
         disconnectAllInvisibleNodes(beta.getHash());
     }
@@ -99,10 +104,10 @@ public class VersionService {
         // Use a task to run in a separate thread against a specified schema
         try {
             Deleter deleter = new Deleter();
-            deleter.setNodeService(nodeService);
+            deleter.setNodeConnectionService(nodeConnectionService);
             deleter.setVersion(schemaFromHash(hash));
             Future<DomainEntity> future = executor.submit(deleter);
-            future.get();
+            // future.get();
         } catch (Exception e) {
             logger.info(e.getMessage(), e);
             // throw new NotFoundServiceException("Failed to disconnect invisible children in schema", e);

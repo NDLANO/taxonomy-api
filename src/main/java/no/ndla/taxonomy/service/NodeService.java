@@ -436,24 +436,4 @@ public class NodeService {
                 .filter(c -> c.contextId().equals(contextId.get()))
                 .toList();
     }
-
-    @Transactional
-    public Optional<DomainEntity> disconnectAllInvisibleNodes() {
-        nodeRepository.findRootSubjects().forEach(subject -> {
-            disconnectInvisibleConnections(subject);
-            nodeRepository.save(subject);
-        });
-        return Optional.empty();
-    }
-
-    private Node disconnectInvisibleConnections(Node node) {
-        if (!node.isVisible()) {
-            node.getParentConnections().forEach(nodeConnectionRepository::delete);
-        } else {
-            node.getChildConnections()
-                    .forEach(nodeConnection ->
-                            nodeConnection.getChild().ifPresent(this::disconnectInvisibleConnections));
-        }
-        return node;
-    }
 }
