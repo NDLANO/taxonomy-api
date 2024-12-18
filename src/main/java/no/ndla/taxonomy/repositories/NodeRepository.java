@@ -111,6 +111,18 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             LEFT JOIN FETCH n.resourceResourceTypes rrt
             LEFT JOIN FETCH rrt.resourceType
             LEFT JOIN FETCH n.parentConnections pc
+            LEFT JOIN FETCH n.childConnections cc
+            WHERE n.nodeType = "SUBJECT"
+            AND n.context = true
+            """)
+    List<Node> findRootSubjects();
+
+    @Query(
+            """
+            SELECT DISTINCT n FROM Node n
+            LEFT JOIN FETCH n.resourceResourceTypes rrt
+            LEFT JOIN FETCH rrt.resourceType
+            LEFT JOIN FETCH n.parentConnections pc
             WHERE n.contentUri = :contentUri
             """)
     List<Node> findByContentUri(Optional<URI> contentUri);

@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @ActiveProfiles("junit")
 @Transactional
-public abstract class RestTest extends AbstractIntegrationTest {
+public class RestTest extends AbstractIntegrationTest {
 
     @Autowired
     EntityManager entityManager;

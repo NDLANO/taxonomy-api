@@ -10,6 +10,7 @@ package no.ndla.taxonomy.service;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Optional;
+import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Node;
 import no.ndla.taxonomy.domain.NodeConnection;
 import no.ndla.taxonomy.domain.Relevance;
@@ -34,4 +35,6 @@ public interface NodeConnectionService {
     Collection<NodeConnection> getChildConnections(Node entity);
 
     void disconnectAllChildren(Node entity);
+
+    Optional<DomainEntity> disconnectAllInvisibleNodes();
 }

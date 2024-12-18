@@ -179,10 +179,17 @@ public class VersionsTest extends RestTest {
 
     @Test
     public void can_publish_version() throws Exception {
-        Version version = builder.version(); // BETA
-        testUtils.updateResource("/v1/versions/" + version.getPublicId() + "/publish", null);
+        var versionUri = URI.create("urn:version:beta");
+        final var createVersionCommand = new VersionPostPut() {
+            {
+                id = Optional.of(versionUri);
+                name = "Beta";
+            }
+        };
+        testUtils.createResource("/v1/versions", createVersionCommand);
+        testUtils.updateResource("/v1/versions/" + versionUri + "/publish", null);
 
-        Version updated = versionRepository.getByPublicId(version.getPublicId());
+        Version updated = versionRepository.getByPublicId(versionUri);
         assertEquals(VersionType.PUBLISHED, updated.getVersionType());
         assertTrue(updated.isLocked());
         assertNotNull(updated.getPublished());
