@@ -16,8 +16,6 @@ import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
 import no.ndla.taxonomy.service.exceptions.DuplicateConnectionException;
 import no.ndla.taxonomy.service.exceptions.InvalidArgumentServiceException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(propagation = Propagation.MANDATORY)
 @Service
 public class NodeConnectionServiceImpl implements NodeConnectionService {
-    Logger logger = LoggerFactory.getLogger(getClass().getName());
 
     private final NodeConnectionRepository nodeConnectionRepository;
     private final ContextUpdaterService contextUpdaterService;
@@ -309,7 +306,6 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
 
     private void disconnectInvisibleConnections(Node node) {
         if (!node.isVisible()) {
-            logger.info("Disconnecting invisible node {}", node.getPublicId());
             node.getParentConnections().forEach(this::disconnectParentChildConnection);
         } else {
             node.getChildConnections()

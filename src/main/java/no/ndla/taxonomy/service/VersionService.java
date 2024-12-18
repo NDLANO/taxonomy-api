@@ -15,9 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-import no.ndla.taxonomy.domain.DomainEntity;
 import no.ndla.taxonomy.domain.Version;
 import no.ndla.taxonomy.domain.VersionType;
 import no.ndla.taxonomy.repositories.VersionRepository;
@@ -102,15 +100,14 @@ public class VersionService {
 
     private void disconnectAllInvisibleNodes(String hash) {
         // Use a task to run in a separate thread against a specified schema
+        // Do not care about the result so no need to wait for it
         try {
             Deleter deleter = new Deleter();
             deleter.setNodeConnectionService(nodeConnectionService);
             deleter.setVersion(schemaFromHash(hash));
-            Future<DomainEntity> future = executor.submit(deleter);
-            // future.get();
+            executor.submit(deleter);
         } catch (Exception e) {
             logger.info(e.getMessage(), e);
-            // throw new NotFoundServiceException("Failed to disconnect invisible children in schema", e);
         }
     }
 
