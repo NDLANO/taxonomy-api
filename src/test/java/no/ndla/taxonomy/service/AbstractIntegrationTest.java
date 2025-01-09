@@ -22,7 +22,7 @@ public class AbstractIntegrationTest {
     static final PostgreSQLContainer<?> postgresDB;
 
     static {
-        postgresDB = new PostgreSQLContainer<>("postgres:13.12");
+        postgresDB = new PostgreSQLContainer<>("postgres:16.3");
         postgresDB.start();
     }
 
