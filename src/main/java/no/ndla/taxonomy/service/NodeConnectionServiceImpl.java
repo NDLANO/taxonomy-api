@@ -10,10 +10,7 @@ package no.ndla.taxonomy.service;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import no.ndla.taxonomy.domain.Node;
-import no.ndla.taxonomy.domain.NodeConnection;
-import no.ndla.taxonomy.domain.NodeType;
-import no.ndla.taxonomy.domain.Relevance;
+import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeConnectionRepository;
 import no.ndla.taxonomy.repositories.NodeRepository;
 import no.ndla.taxonomy.rest.NotFoundHttpResponseException;
@@ -26,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(propagation = Propagation.MANDATORY)
 @Service
 public class NodeConnectionServiceImpl implements NodeConnectionService {
+
     private final NodeConnectionRepository nodeConnectionRepository;
     private final ContextUpdaterService contextUpdaterService;
     private final NodeRepository nodeRepository;
@@ -294,5 +292,25 @@ public class NodeConnectionServiceImpl implements NodeConnectionService {
     @Override
     public void disconnectAllChildren(Node entity) {
         Set.copyOf(entity.getChildConnections()).forEach(this::disconnectParentChildConnection);
+    }
+
+    @Transactional
+    @Override
+    public Optional<DomainEntity> disconnectAllInvisibleNodes() {
+        nodeRepository.findRootSubjects().forEach(subject -> {
+            disconnectInvisibleConnections(subject);
+            nodeRepository.save(subject);
+        });
+        return Optional.empty();
+    }
+
+    private void disconnectInvisibleConnections(Node node) {
+        if (!node.isVisible()) {
+            node.getParentConnections().forEach(this::disconnectParentChildConnection);
+        } else {
+            node.getChildConnections()
+                    .forEach(nodeConnection ->
+                            nodeConnection.getChild().ifPresent(this::disconnectInvisibleConnections));
+        }
     }
 }

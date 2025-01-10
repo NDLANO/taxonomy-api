@@ -18,8 +18,8 @@ public class VersionPostPut implements UpdatableDto<Version> {
     @JsonProperty
     @Schema(
             description =
-                    "If specified, set the id to this value. Must start with urn:subject: and be a valid URI. If omitted, an id will be assigned automatically.",
-            example = "urn:subject:1")
+                    "If specified, set the id to this value. Must start with urn:version: and be a valid URI. If ommitted, an id will be assigned automatically.",
+            example = "urn:version:1")
     public Optional<URI> id = Optional.empty();
 
     @JsonProperty

@@ -13,18 +13,15 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 @DirtiesContext
 public class AbstractIntegrationTest {
 
-    static final PostgreSQLContainer<?> postgresDB;
-
-    static {
-        postgresDB = new PostgreSQLContainer<>("postgres:16.3");
-        postgresDB.start();
-    }
+    @Container
+    private static final PostgreSQLContainer<?> postgresDB = new PostgreSQLContainer<>("postgres:16.3");
 
     @Autowired
     EntityManager entityManager;
