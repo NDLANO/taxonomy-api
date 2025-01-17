@@ -1,7 +1,7 @@
-name: 'Release: taxonomy-api'
+name: "Release: taxonomy-api"
 on:
   workflow_dispatch:
-    inputs: { }
+    inputs: {}
   push:
     branches:
       - master
@@ -35,14 +35,17 @@ jobs:
           path: ndla/deploy
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: ${{ vars.PYTHON_VERSION }}
       - uses: abatilo/actions-poetry@v2
         with:
-          poetry-version: "1.6.1"
+          poetry-version: ${{ vars.POETRY_VERSION }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ vars.TERRAFORM_VERSION }}
       - name: Setup ~/bin directory
         run: |
          mkdir -p /home/runner/bin
