@@ -51,7 +51,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
     @Query(
             """
             UPDATE Node n
-            SET n.childQualityEvaluationAverage = NULL,
+            SET n.childQualityEvaluationSum = 0,
                 n.childQualityEvaluationCount = 0
             """)
     void wipeQualityEvaluationAverages();

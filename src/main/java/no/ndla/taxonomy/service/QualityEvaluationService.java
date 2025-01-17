@@ -7,6 +7,8 @@
 
 package no.ndla.taxonomy.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Optional;
@@ -26,6 +28,9 @@ public class QualityEvaluationService {
     Logger logger = LoggerFactory.getLogger(getClass().getName());
 
     private final NodeRepository nodeRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public QualityEvaluationService(NodeRepository nodeRepository) {
         this.nodeRepository = nodeRepository;
@@ -96,17 +101,11 @@ public class QualityEvaluationService {
             return;
         }
 
-        updateQualityEvaluationOf(node.getParentNodes(), oldGrade, newGrade);
+        updateQualityEvaluationOfRecursive(node.getParentNodes(), oldGrade, newGrade);
     }
 
     @Transactional
-    public void updateQualityEvaluationOf(
-            Collection<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
-        updateQualityEvaluationOfRecursive(parents, oldGrade, newGrade);
-    }
-
-    @Transactional
-    protected void updateQualityEvaluationOfRecursive(
+    public void updateQualityEvaluationOfRecursive(
             Collection<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
         var updatedParents = parents.stream()
                 .peek(p -> {
@@ -128,9 +127,15 @@ public class QualityEvaluationService {
         nodeRepository.save(node);
     }
 
+    public void wipeQualityEvaluationAverages() {
+        nodeRepository.wipeQualityEvaluationAverages();
+        nodeRepository.flush();
+        entityManager.clear();
+    }
+
     @Transactional
     public void updateQualityEvaluationOfAllNodes() {
-        nodeRepository.wipeQualityEvaluationAverages();
+        wipeQualityEvaluationAverages();
         var nodeStream = nodeRepository.findNodesWithQualityEvaluation();
         nodeStream.forEach(
                 node -> updateQualityEvaluationOfParents(node, Optional.empty(), node.getQualityEvaluationGrade()));

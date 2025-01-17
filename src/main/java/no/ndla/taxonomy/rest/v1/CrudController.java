@@ -76,7 +76,7 @@ public abstract class CrudController<T extends DomainEntity> {
 
         if (parents.isPresent()) {
             var p = parents.get();
-            qualityEvaluationService.updateQualityEvaluationOf(p, oldGrade, Optional.empty());
+            qualityEvaluationService.updateQualityEvaluationOfRecursive(p, oldGrade, Optional.empty());
         }
     }
 

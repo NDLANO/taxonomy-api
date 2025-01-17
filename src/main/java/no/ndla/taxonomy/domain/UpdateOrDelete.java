@@ -28,6 +28,10 @@ public class UpdateOrDelete<T> {
         return new UpdateOrDelete<>();
     }
 
+    public static <T> UpdateOrDelete<T> Update(T value) {
+        return new UpdateOrDelete<>(value, false);
+    }
+
     public boolean isDelete() {
         return delete;
     }
