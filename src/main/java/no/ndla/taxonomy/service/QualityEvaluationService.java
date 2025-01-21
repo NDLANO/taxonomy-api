@@ -96,17 +96,11 @@ public class QualityEvaluationService {
             return;
         }
 
-        updateQualityEvaluationOf(node.getParentNodes(), oldGrade, newGrade);
+        updateQualityEvaluationOfRecursive(node.getParentNodes(), oldGrade, newGrade);
     }
 
     @Transactional
-    public void updateQualityEvaluationOf(
-            Collection<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
-        updateQualityEvaluationOfRecursive(parents, oldGrade, newGrade);
-    }
-
-    @Transactional
-    protected void updateQualityEvaluationOfRecursive(
+    public void updateQualityEvaluationOfRecursive(
             Collection<Node> parents, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
         var updatedParents = parents.stream()
                 .peek(p -> {

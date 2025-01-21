@@ -83,8 +83,8 @@ public class Node extends DomainObject implements EntityWithMetadata {
     @Column(name = "quality_evaluation_comment")
     private String qualityEvaluationComment;
 
-    @Column(name = "child_quality_evaluation_average")
-    private Double childQualityEvaluationAverage;
+    @Column(name = "child_quality_evaluation_sum")
+    private int childQualityEvaluationSum;
 
     @Column(name = "child_quality_evaluation_count")
     private int childQualityEvaluationCount;
@@ -147,25 +147,33 @@ public class Node extends DomainObject implements EntityWithMetadata {
     }
 
     public Optional<GradeAverage> getChildQualityEvaluationAverage() {
-        return Optional.ofNullable(this.childQualityEvaluationAverage)
-                .map(avg -> new GradeAverage(avg, this.childQualityEvaluationCount));
+        if (this.childQualityEvaluationSum == 0) {
+            return Optional.empty();
+        }
+        var gradeAverage = new GradeAverage(this.childQualityEvaluationSum, this.childQualityEvaluationCount);
+        return Optional.of(gradeAverage);
     }
 
     public void addGradeAverageTreeToAverageCalculation(GradeAverage newGradeAverage) {
         var childAvg = getChildQualityEvaluationAverage();
         if (childAvg.isEmpty()) {
-            this.childQualityEvaluationAverage = newGradeAverage.getAverageValue();
+            this.childQualityEvaluationSum = newGradeAverage.getAverageSum();
             this.childQualityEvaluationCount = newGradeAverage.getCount();
             return;
         }
 
-        var oldSum = childAvg.get().getAverageValue() * childAvg.get().getCount();
-        var sumToAdd = newGradeAverage.getAverageValue() * newGradeAverage.getCount();
+        var oldSum = childAvg.get().getAverageSum();
+        var sumToAdd = newGradeAverage.getAverageSum();
         var newSum = oldSum + sumToAdd;
         var newCount = childAvg.get().getCount() + newGradeAverage.getCount();
 
-        this.childQualityEvaluationAverage = newSum / newCount;
-        this.childQualityEvaluationCount = newCount;
+        if (newCount > 0) {
+            this.childQualityEvaluationSum = newSum;
+            this.childQualityEvaluationCount = newCount;
+        } else {
+            this.childQualityEvaluationSum = 0;
+            this.childQualityEvaluationCount = 0;
+        }
     }
 
     public void removeGradeAverageTreeFromAverageCalculation(GradeAverage previousGradeAverage) {
@@ -178,17 +186,17 @@ public class Node extends DomainObject implements EntityWithMetadata {
             return;
         }
 
-        var totalSum = childAvg.get().getAverageValue() * childAvg.get().getCount();
-        var sumToRemove = previousGradeAverage.getAverageValue() * previousGradeAverage.getCount();
+        var totalSum = childAvg.get().getAverageSum();
+        var sumToRemove = previousGradeAverage.getAverageSum();
 
         var newSum = totalSum - sumToRemove;
         var newCount = childAvg.get().getCount() - previousGradeAverage.getCount();
 
         if (newCount == 0) {
-            this.childQualityEvaluationAverage = null;
+            this.childQualityEvaluationSum = 0;
             this.childQualityEvaluationCount = 0;
         } else {
-            this.childQualityEvaluationAverage = newSum / newCount;
+            this.childQualityEvaluationSum = newSum;
             this.childQualityEvaluationCount = newCount;
         }
     }
@@ -197,42 +205,30 @@ public class Node extends DomainObject implements EntityWithMetadata {
         var childAvg = getChildQualityEvaluationAverage();
         if (childAvg.isEmpty()) {
             newGrade.ifPresent(ng -> {
-                this.childQualityEvaluationAverage = (double) ng.toInt();
+                this.childQualityEvaluationSum = ng.toInt();
                 this.childQualityEvaluationCount = 1;
             });
             return;
         }
 
         var avg = childAvg.get();
-
-        if (Double.isNaN(avg.averageValue)) {
-            logger.warn(
-                    "Child quality evaluation average of node '{}' is NaN. Recalculating entire tree.",
-                    this.getPublicId());
-            updateEntireAverageTree();
-            return;
-        }
-
         if (previousGrade.isEmpty() && newGrade.isEmpty()) return;
         else if (previousGrade.isEmpty()) { // New grade is present
             var newCount = avg.getCount() + 1;
-            var newSum = ((avg.averageValue * avg.getCount()) + newGrade.get().toInt());
-            var newAverage = newSum / newCount;
+            var newSum = avg.averageSum + newGrade.get().toInt();
             this.childQualityEvaluationCount = newCount;
-            this.childQualityEvaluationAverage = newAverage;
+            this.childQualityEvaluationSum = newSum;
         } else if (newGrade.isEmpty()) { // Previous grade is present
             var newCount = avg.getCount() - 1;
-            var oldSum = (avg.averageValue * avg.getCount());
+            var oldSum = avg.getAverageSum();
             var newSum = oldSum - previousGrade.get().toInt();
-            var newAverage = newCount > 0 ? newSum / newCount : null;
             this.childQualityEvaluationCount = newCount;
-            this.childQualityEvaluationAverage = newAverage;
+            this.childQualityEvaluationSum = newSum;
         } else { // Both grades are present
-            var oldSum = avg.averageValue * avg.getCount();
+            var oldSum = avg.getAverageSum();
             var newSum = oldSum - previousGrade.get().toInt() + newGrade.get().toInt();
-            var newAverage = newSum / avg.getCount();
             this.childQualityEvaluationCount = avg.getCount();
-            this.childQualityEvaluationAverage = newAverage;
+            this.childQualityEvaluationSum = newSum;
         }
     }
 
@@ -246,10 +242,10 @@ public class Node extends DomainObject implements EntityWithMetadata {
                 gradeAverage);
 
         if (gradeAverage.count == 0) {
-            this.childQualityEvaluationAverage = null;
+            this.childQualityEvaluationSum = 0;
             this.childQualityEvaluationCount = 0;
         } else if (gradeAverage.count > 0) {
-            this.childQualityEvaluationAverage = gradeAverage.averageValue;
+            this.childQualityEvaluationSum = gradeAverage.getAverageSum();
             this.childQualityEvaluationCount = gradeAverage.count;
         }
     }

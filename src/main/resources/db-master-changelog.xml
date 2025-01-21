@@ -1602,4 +1602,11 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20250120 Quality evaluation sum instead of calculated" author="Jonas Natten">
+        <dropColumn tableName="node" columnName="child_quality_evaluation_average"/>
+        <addColumn tableName="node">
+            <column name="child_quality_evaluation_sum" type="int" defaultValueNumeric="0" />
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

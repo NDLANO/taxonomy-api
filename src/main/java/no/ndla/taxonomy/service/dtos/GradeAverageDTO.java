@@ -29,7 +29,8 @@ public class GradeAverageDTO {
 
     public static Optional<GradeAverageDTO> fromNode(Node node) {
         return node.getChildQualityEvaluationAverage().map(ga -> {
-            var roundedAvg = roundToSingleDecimal(ga.getAverageValue());
+            var avg = (double) ga.getAverageSum() / ga.getCount();
+            var roundedAvg = roundToSingleDecimal(avg);
             var count1 = ga.getCount();
             return new GradeAverageDTO(roundedAvg, count1);
         });

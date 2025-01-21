@@ -13,10 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import jakarta.persistence.EntityManager;
 import java.net.URI;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import no.ndla.taxonomy.TestSeeder;
@@ -28,6 +25,7 @@ import no.ndla.taxonomy.service.dtos.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.transaction.TestTransaction;
 
 public class NodesTest extends RestTest {
     @Autowired
@@ -1128,7 +1126,7 @@ public class NodesTest extends RestTest {
             var dbTopic = nodeRepository.getByPublicId(URI.create(topicId));
             var dbSuject = nodeRepository.getByPublicId(URI.create(subjectId));
             assertEquals(dbResource.getQualityEvaluationGrade(), Optional.of(Grade.Five));
-            var expectedFive = Optional.of(new GradeAverage(5.0, 1));
+            var expectedFive = Optional.of(new GradeAverage(5, 1));
             assertEquals(dbSuject.getChildQualityEvaluationAverage(), expectedFive);
             assertEquals(dbTopic.getChildQualityEvaluationAverage(), expectedFive);
         }
@@ -1292,6 +1290,14 @@ public class NodesTest extends RestTest {
         testUtils.createResource("/v1/node-connections/", connectBody);
     }
 
+    public void connectId(URI parentId, URI childId) throws Exception {
+        var connectBody = new NodeConnectionPOST();
+        connectBody.parentId = parentId;
+        connectBody.childId = childId;
+
+        testUtils.createResource("/v1/node-connections/", connectBody);
+    }
+
     public void disconnect(Node parent, Node child) throws Exception {
         var connection = nodeConnectionRepository.findByParentIdAndChildId(parent.getId(), child.getId());
         var connectionId = connection.getPublicId();
@@ -1436,6 +1442,168 @@ public class NodesTest extends RestTest {
 
         testQualityEvaluationAverage(s1, 1, 3.0);
         testQualityEvaluationAverage(t1, 1, 3.0);
+    }
+
+    public URI createNode(String name, NodeType nodeType, Optional<Integer> qualityEvaluation) {
+        var n = new NodePostPut();
+        n.name = Optional.of(name);
+        n.nodeType = nodeType;
+        qualityEvaluation.ifPresent(x -> {
+            var comment = Optional.of("La til karakter " + x + " her da...");
+            var qe = new QualityEvaluationDTO(Grade.fromInt(x), comment);
+            n.qualityEvaluation = UpdateOrDelete.Update(qe);
+        });
+
+        try {
+            return getId(testUtils.createResource("/v1/nodes", n));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<Integer> getQualityEvaluationGradesOf(List<URI> ids) {
+        return ids.stream()
+                .map(id -> nodeRepository
+                        .getByPublicId(id)
+                        .getQualityEvaluationGrade()
+                        .orElseThrow()
+                        .toInt())
+                .toList();
+    }
+
+    public List<GradeAverage> getQEAverageGradesOf(List<URI> ids) {
+        return ids.stream()
+                .map(id -> nodeRepository
+                        .getByPublicId(id)
+                        .getChildQualityEvaluationAverage()
+                        .orElse(null))
+                .toList();
+    }
+
+    @Test
+    public void update_super_nested_quality_evaluation() throws Exception {
+        // Create subjects
+        var s1id = createNode("S1", NodeType.SUBJECT, Optional.of(5));
+        var s2id = createNode("S2", NodeType.SUBJECT, Optional.of(4));
+        var s3id = createNode("S3", NodeType.SUBJECT, Optional.of(3));
+
+        // Create topics
+        var t1id = createNode("S1T1", NodeType.TOPIC, Optional.of(5));
+        var t2id = createNode("S1T2", NodeType.TOPIC, Optional.of(5));
+        var t3id = createNode("S2T3", NodeType.TOPIC, Optional.of(5));
+        var t4id = createNode("S1T1T4", NodeType.TOPIC, Optional.of(2));
+        var t5id = createNode("S1T1T5", NodeType.TOPIC, Optional.of(3));
+        var t6id = createNode("S1T2T6", NodeType.TOPIC, Optional.of(4));
+        var t7id = createNode("S1T4T7", NodeType.TOPIC, Optional.of(3));
+        var t8id = createNode("S1T4T8", NodeType.TOPIC, Optional.of(2));
+        var t9id = createNode("S1T6T9", NodeType.TOPIC, Optional.of(3));
+        var t10id = createNode("S1T5T10", NodeType.TOPIC, Optional.of(2));
+        var t11id = createNode("S1T4T7T11", NodeType.TOPIC, Optional.of(5));
+        var t12id = createNode("S1T4T7T12", NodeType.TOPIC, Optional.of(4));
+
+        // Hook topics to subjects
+        connectId(s1id, t1id);
+        connectId(s1id, t2id);
+        connectId(s2id, t3id);
+        connectId(t1id, t4id);
+        connectId(t1id, t5id);
+        connectId(t2id, t6id);
+        connectId(t4id, t7id);
+        connectId(t4id, t8id);
+        connectId(t6id, t9id);
+        connectId(t5id, t10id);
+        connectId(t7id, t11id);
+        connectId(t7id, t12id);
+
+        // Create resources
+        var r1id = createNode("S1T1R1", NodeType.RESOURCE, Optional.of(5));
+        var r2id = createNode("S1T1R2", NodeType.RESOURCE, Optional.of(4));
+        var r3id = createNode("S1T2R3", NodeType.RESOURCE, Optional.of(3));
+        var r4id = createNode("S1T2T6R4", NodeType.RESOURCE, Optional.of(5));
+        var r5id = createNode("S2T3R5", NodeType.RESOURCE, Optional.of(4));
+        var r6id = createNode("S1T1T4R6", NodeType.RESOURCE, Optional.of(2));
+        var r7id = createNode("S1T6R7", NodeType.RESOURCE, Optional.of(2));
+        var r8id = createNode("S1T4T7R8", NodeType.RESOURCE, Optional.of(3));
+        var r9id = createNode("S1T4T7R9", NodeType.RESOURCE, Optional.of(1));
+        var r10id = createNode("S1T4T8R10", NodeType.RESOURCE, Optional.of(1));
+        var r11id = createNode("S1T5T10R11", NodeType.RESOURCE, Optional.of(4));
+        var r12id = createNode("S1T5T10R12", NodeType.RESOURCE, Optional.of(2));
+        var r13id = createNode("S1T5T10R13", NodeType.RESOURCE, Optional.of(3));
+        var r14id = createNode("S1T5T10R14", NodeType.RESOURCE, Optional.of(5));
+        var r15id = createNode("S1T4T7T11R15", NodeType.RESOURCE, Optional.of(1));
+        var r16id = createNode("S1T4T7T11R16", NodeType.RESOURCE, Optional.of(2));
+        var r17id = createNode("S1T4T7T11R17", NodeType.RESOURCE, Optional.of(3));
+        var r18id = createNode("S1T4T7T11R18", NodeType.RESOURCE, Optional.of(2));
+        var r19id = createNode("S1T4T7T12R19", NodeType.RESOURCE, Optional.of(4));
+        var r20id = createNode("S1T4T7T12R20", NodeType.RESOURCE, Optional.of(1));
+
+        // Hook resources to topics
+        connectId(t1id, r1id);
+        connectId(t1id, r2id);
+        connectId(t2id, r3id);
+        connectId(t6id, r4id);
+        connectId(t3id, r5id);
+        connectId(t4id, r6id);
+        connectId(t6id, r7id);
+        connectId(t7id, r8id);
+        connectId(t7id, r9id);
+        connectId(t8id, r10id);
+        connectId(t10id, r11id);
+        connectId(t10id, r12id);
+        connectId(t10id, r13id);
+        connectId(t10id, r14id);
+        connectId(t11id, r15id);
+        connectId(t11id, r16id);
+        connectId(t11id, r17id);
+        connectId(t11id, r18id);
+        connectId(t12id, r19id);
+        connectId(t12id, r20id);
+
+        var allIds = List.of(
+                s1id, s2id, s3id, t1id, t2id, t3id, t4id, t5id, t6id, t7id, t8id, t9id, t10id, t11id, t12id, r1id, r2id,
+                r3id, r4id, r5id, r6id, r7id, r8id, r9id, r10id, r11id, r12id, r13id, r14id, r15id, r16id, r17id, r18id,
+                r19id, r20id);
+
+        var originalGrades = getQualityEvaluationGradesOf(allIds);
+        var originalAvgs = getQEAverageGradesOf(allIds);
+
+        testUtils.createResource("/v1/admin/buildAverageTree");
+        nodeRepository.flush();
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+        TestTransaction.start();
+
+        var originalAfterRebuild = getQualityEvaluationGradesOf(allIds);
+        var originalAvgsAfterRebuild = getQEAverageGradesOf(allIds);
+        assertEquals(originalAfterRebuild, originalGrades);
+        assertEquals(originalAvgsAfterRebuild, originalAvgs);
+
+        // Update all quality evaluations
+        var updateBody = new NodePostPut();
+        updateBody.qualityEvaluation = UpdateOrDelete.Update(getRandomGrade());
+        for (var id : allIds) {
+            testUtils.updateResource("/v1/nodes/" + id, updateBody);
+        }
+
+        var updatedGrades = getQualityEvaluationGradesOf(allIds);
+        var updatedAvgs = getQEAverageGradesOf(allIds);
+
+        testUtils.createResource("/v1/admin/buildAverageTree");
+        nodeRepository.flush();
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+        TestTransaction.start();
+
+        var updatedAfterRebuild = getQualityEvaluationGradesOf(allIds);
+        var updatedAvgsAfterRebuild = getQEAverageGradesOf(allIds);
+        assertEquals(updatedGrades, updatedAfterRebuild);
+        assertEquals(updatedAvgs, updatedAvgsAfterRebuild);
+    }
+
+    public QualityEvaluationDTO getRandomGrade() {
+        var x = new Random().nextInt(5) + 1;
+        var dto = new QualityEvaluationDTO(Grade.fromInt(x), Optional.of("Random grade " + x));
+        return dto;
     }
 
     public void testQualityEvaluationAverage(Node inputNode, int expectedCount, double expectedAverage) {

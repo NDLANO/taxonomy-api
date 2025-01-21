@@ -47,11 +47,11 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             """)
     Stream<Node> findNodesWithQualityEvaluation();
 
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(
             """
             UPDATE Node n
-            SET n.childQualityEvaluationAverage = NULL,
+            SET n.childQualityEvaluationSum = 0,
                 n.childQualityEvaluationCount = 0
             """)
     void wipeQualityEvaluationAverages();
