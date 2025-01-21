@@ -7,8 +7,6 @@
 
 package no.ndla.taxonomy.service;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Optional;
@@ -28,9 +26,6 @@ public class QualityEvaluationService {
     Logger logger = LoggerFactory.getLogger(getClass().getName());
 
     private final NodeRepository nodeRepository;
-
-    @PersistenceContext
-    private EntityManager entityManager;
 
     public QualityEvaluationService(NodeRepository nodeRepository) {
         this.nodeRepository = nodeRepository;
@@ -127,15 +122,9 @@ public class QualityEvaluationService {
         nodeRepository.save(node);
     }
 
-    public void wipeQualityEvaluationAverages() {
-        nodeRepository.wipeQualityEvaluationAverages();
-        nodeRepository.flush();
-        entityManager.clear();
-    }
-
     @Transactional
     public void updateQualityEvaluationOfAllNodes() {
-        wipeQualityEvaluationAverages();
+        nodeRepository.wipeQualityEvaluationAverages();
         var nodeStream = nodeRepository.findNodesWithQualityEvaluation();
         nodeStream.forEach(
                 node -> updateQualityEvaluationOfParents(node, Optional.empty(), node.getQualityEvaluationGrade()));

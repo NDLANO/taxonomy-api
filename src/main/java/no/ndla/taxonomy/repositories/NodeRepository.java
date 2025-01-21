@@ -47,7 +47,7 @@ public interface NodeRepository extends TaxonomyRepository<Node> {
             """)
     Stream<Node> findNodesWithQualityEvaluation();
 
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(
             """
             UPDATE Node n
