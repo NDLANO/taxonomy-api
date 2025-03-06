@@ -1600,6 +1600,96 @@ public class NodesTest extends RestTest {
         assertEquals(updatedAvgs, updatedAvgsAfterRebuild);
     }
 
+    @Test
+    public void that_moving_quality_evaluated_trees_works_recursively() throws Exception {
+        var s1 = builder.node(NodeType.SUBJECT, s -> s.name("S1").publicId("urn:subject:1"));
+
+        var t1 = builder.node(
+                NodeType.TOPIC, n -> n.name("T1").publicId("urn:topic:1").qualityEvaluation(Grade.Four));
+        var t2 = builder.node(NodeType.TOPIC, n -> n.name("T2").qualityEvaluation(Grade.One));
+        var t3 = builder.node(NodeType.TOPIC, n -> n.name("T3").qualityEvaluation(Grade.Two));
+        var t4 = builder.node(
+                NodeType.TOPIC, n -> n.name("T4").publicId("urn:topic:4").qualityEvaluation(Grade.One));
+
+        var s2 = builder.node(NodeType.SUBJECT, s -> s.name("S2").publicId("urn:subject:2"));
+        var t5 = builder.node(NodeType.TOPIC, n -> n.name("T5").qualityEvaluation(Grade.Two));
+
+        var r1 = builder.node(NodeType.RESOURCE, n -> n.name("R1").qualityEvaluation(Grade.Five));
+        var r2 = builder.node(NodeType.RESOURCE, n -> n.name("R2").qualityEvaluation(Grade.Five));
+        var r3 = builder.node(NodeType.RESOURCE, n -> n.name("R3").qualityEvaluation(Grade.Three));
+        var r4 = builder.node(NodeType.RESOURCE, n -> n.name("R4").qualityEvaluation(Grade.Four));
+        var r5 = builder.node(NodeType.RESOURCE, n -> n.name("R5").qualityEvaluation(Grade.One));
+        var r6 = builder.node(NodeType.RESOURCE, n -> n.name("R6").qualityEvaluation(Grade.Five));
+        var r7 = builder.node(NodeType.RESOURCE, n -> n.name("R7").qualityEvaluation(Grade.Five));
+        var r8 = builder.node(NodeType.RESOURCE, n -> n.name("R8").qualityEvaluation(Grade.Four));
+        var r9 = builder.node(NodeType.RESOURCE, n -> n.name("R9").qualityEvaluation(Grade.Four));
+        var r10 = builder.node(NodeType.RESOURCE, n -> n.name("R10").qualityEvaluation(Grade.Five));
+        var r11 = builder.node(NodeType.RESOURCE, n -> n.name("R11").qualityEvaluation(Grade.Three));
+        var r12 = builder.node(NodeType.RESOURCE, n -> n.name("R12").qualityEvaluation(Grade.Two));
+        var r13 = builder.node(NodeType.RESOURCE, n -> n.name("R13").qualityEvaluation(Grade.Five));
+        var r14 = builder.node(NodeType.RESOURCE, n -> n.name("R14").qualityEvaluation(Grade.One));
+        var r15 = builder.node(NodeType.RESOURCE, n -> n.name("R15").qualityEvaluation(Grade.Four));
+        var r16 = builder.node(NodeType.RESOURCE, n -> n.name("R16").qualityEvaluation(Grade.Four));
+        var r17 = builder.node(NodeType.RESOURCE, n -> n.name("R17").qualityEvaluation(Grade.Three));
+        var r18 = builder.node(NodeType.RESOURCE, n -> n.name("R18").qualityEvaluation(Grade.Two));
+
+        connect(s1, t1);
+        connect(t1, t2);
+        connect(t2, t3);
+
+        connect(t1, r1);
+        connect(t1, r2);
+        connect(t1, r3);
+        connect(t1, r4);
+
+        connect(t2, r5);
+        connect(t2, r6);
+        connect(t2, r7);
+        connect(t2, r8);
+
+        connect(t3, r9);
+        connect(t3, r10);
+        connect(t3, r11);
+        connect(t3, r12);
+
+        connect(t4, r13);
+        connect(t4, r14);
+        connect(t4, r15);
+        connect(t4, r16);
+
+        connect(t1, t4);
+
+        connect(t5, r17);
+        connect(t5, r18);
+        connect(s2, t5);
+
+        testQualityEvaluationAverage(s1, 16, 3.75);
+        testQualityEvaluationAverage(t1, 16, 3.75);
+        testQualityEvaluationAverage(t2, 8, 3.625);
+        testQualityEvaluationAverage(t3, 4, 3.5);
+        testQualityEvaluationAverage(t4, 4, 3.5);
+
+        disconnect(t1, t4);
+
+
+        testQualityEvaluationAverage(t5, 2, 2.5);
+        testQualityEvaluationAverage(s2, 2, 2.5);
+        connect(t5, t4);
+
+        testQualityEvaluationAverage(s2, 6, 3.1666666666666665);
+
+        disconnect(t5, t4);
+        testQualityEvaluationAverage(s2, 2, 2.5);
+
+        connect(t1, t4);
+        testQualityEvaluationAverage(s1, 16, 3.75);
+        testQualityEvaluationAverage(t1, 16, 3.75);
+        testQualityEvaluationAverage(t2, 8, 3.625);
+        testQualityEvaluationAverage(t3, 4, 3.5);
+        testQualityEvaluationAverage(t4, 4, 3.5);
+
+    }
+
     public QualityEvaluationDTO getRandomGrade() {
         var x = new Random().nextInt(5) + 1;
         var dto = new QualityEvaluationDTO(Grade.fromInt(x), Optional.of("Random grade " + x));
