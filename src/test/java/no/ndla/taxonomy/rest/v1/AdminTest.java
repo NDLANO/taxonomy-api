@@ -58,6 +58,7 @@ public class AdminTest extends RestTest {
     @Test
     public void rebuilding_quality_evaluation_works_as_expected() throws Exception {
         var s1 = builder.node(NodeType.SUBJECT, s -> s.name("S1").publicId("urn:subject:1"));
+        var s2 = builder.node(NodeType.SUBJECT, s -> s.name("S2").publicId("urn:subject:2"));
 
         var t1 = builder.node(
                 NodeType.TOPIC, n -> n.name("T1").publicId("urn:topic:1").qualityEvaluation(Grade.Four));
@@ -65,6 +66,9 @@ public class AdminTest extends RestTest {
         var t3 = builder.node(NodeType.TOPIC, n -> n.name("T3").qualityEvaluation(Grade.Two));
         var t4 = builder.node(
                 NodeType.TOPIC, n -> n.name("T4").publicId("urn:topic:4").qualityEvaluation(Grade.One));
+
+        var t5 = builder.node(
+                NodeType.TOPIC, n -> n.name("T5").publicId("urn:topic:5").qualityEvaluation(Grade.One));
 
         var r1 = builder.node(NodeType.RESOURCE, n -> n.name("R1").qualityEvaluation(Grade.Five));
         var r2 = builder.node(NodeType.RESOURCE, n -> n.name("R2").qualityEvaluation(Grade.Five));
@@ -87,6 +91,13 @@ public class AdminTest extends RestTest {
         connect(t1, t2);
         connect(t2, t3);
 
+        connect(t5, r9);
+        connect(t5, r10);
+        connect(t5, r11);
+        connect(t5, r12);
+
+        connect(s2, t5);
+
         connect(t1, r1);
         connect(t1, r2);
         connect(t1, r3);
@@ -108,6 +119,17 @@ public class AdminTest extends RestTest {
         connect(t4, r16);
 
         connect(t1, t4);
+
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+        TestTransaction.start();
+
+        testQualityEvaluationAverage(s1, 16, 3.75);
+        testQualityEvaluationAverage(t1, 16, 3.75);
+        testQualityEvaluationAverage(t2, 8, 3.625);
+        testQualityEvaluationAverage(t3, 4, 3.5);
+        testQualityEvaluationAverage(t4, 4, 3.5);
+        testQualityEvaluationAverage(s2, 4, 3.5);
 
         nodeRepository.wipeQualityEvaluationAverages();
         nodeRepository.flush();
@@ -132,6 +154,7 @@ public class AdminTest extends RestTest {
         testQualityEvaluationAverage(t2, 8, 3.625);
         testQualityEvaluationAverage(t3, 4, 3.5);
         testQualityEvaluationAverage(t4, 4, 3.5);
+        testQualityEvaluationAverage(s2, 4, 3.5);
 
         disconnect(t1, t4);
 
