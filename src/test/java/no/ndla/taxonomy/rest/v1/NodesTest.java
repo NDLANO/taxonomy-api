@@ -1671,7 +1671,6 @@ public class NodesTest extends RestTest {
 
         disconnect(t1, t4);
 
-
         testQualityEvaluationAverage(t5, 2, 2.5);
         testQualityEvaluationAverage(s2, 2, 2.5);
         connect(t5, t4);
@@ -1687,7 +1686,6 @@ public class NodesTest extends RestTest {
         testQualityEvaluationAverage(t2, 8, 3.625);
         testQualityEvaluationAverage(t3, 4, 3.5);
         testQualityEvaluationAverage(t4, 4, 3.5);
-
     }
 
     public QualityEvaluationDTO getRandomGrade() {

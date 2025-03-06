@@ -130,6 +130,7 @@ public class AdminTest extends RestTest {
         testQualityEvaluationAverage(t3, 4, 3.5);
         testQualityEvaluationAverage(t4, 4, 3.5);
         testQualityEvaluationAverage(s2, 4, 3.5);
+        testQualityEvaluationAverage(t5, 4, 3.5);
 
         nodeRepository.wipeQualityEvaluationAverages();
         nodeRepository.flush();
@@ -155,6 +156,7 @@ public class AdminTest extends RestTest {
         testQualityEvaluationAverage(t3, 4, 3.5);
         testQualityEvaluationAverage(t4, 4, 3.5);
         testQualityEvaluationAverage(s2, 4, 3.5);
+        testQualityEvaluationAverage(t5, 4, 3.5);
 
         disconnect(t1, t4);
 
