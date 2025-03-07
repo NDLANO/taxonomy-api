@@ -9,6 +9,7 @@ package no.ndla.taxonomy.service;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import no.ndla.taxonomy.domain.*;
 import no.ndla.taxonomy.repositories.NodeRepository;
@@ -47,15 +48,17 @@ public class QualityEvaluationService {
 
         var newGrade = nodeCommand.qualityEvaluation.getValue().map(QualityEvaluationDTO::getGrade);
 
-        updateQualityEvaluationOfParents(node, oldGrade, newGrade);
+        updateQualityEvaluationOfParents(node.getNodeType(), node.getParentNodes(), oldGrade, newGrade);
     }
 
     public void updateQualityEvaluationOfNewConnection(Node parent, Node child) {
         // Update parents quality evaluation average with the newly linked one.
-        updateQualityEvaluationOfParents(child, Optional.empty(), child.getQualityEvaluationGrade());
+        updateQualityEvaluationOfParents(
+                child.getNodeType(), List.of(parent), Optional.empty(), child.getQualityEvaluationGrade());
 
-        child.getChildQualityEvaluationAverage()
-                .ifPresent(childAverage -> addGradeAverageTreeToParents(parent, childAverage));
+        child.getChildQualityEvaluationAverage().ifPresent(childAverage -> {
+            addGradeAverageTreeToParents(parent, childAverage);
+        });
     }
 
     private void addGradeAverageTreeToParents(Node node, GradeAverage averageToAdd) {
@@ -74,29 +77,31 @@ public class QualityEvaluationService {
         if (noChild || noParent) return;
 
         var child = connectionToDelete.getChild().get();
+        var parent = connectionToDelete.getParent().get();
 
         if (shouldBeIncludedInQualityEvaluationAverage(child.getNodeType())) {
-            updateQualityEvaluationOfParents(child, child.getQualityEvaluationGrade(), Optional.empty());
+            updateQualityEvaluationOfParents(
+                    child.getNodeType(), List.of(parent), child.getQualityEvaluationGrade(), Optional.empty());
             return;
         }
 
         if (child.getChildQualityEvaluationAverage().isEmpty()) return;
         var childAverage = child.getChildQualityEvaluationAverage().get();
 
-        var parent = connectionToDelete.getParent().get();
         removeGradeAverageTreeFromParents(parent, childAverage);
     }
 
     @Transactional
-    protected void updateQualityEvaluationOfParents(Node node, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
-        if (!shouldBeIncludedInQualityEvaluationAverage(node.getNodeType())) {
+    protected void updateQualityEvaluationOfParents(
+            NodeType nodeType, Collection<Node> parentNodes, Optional<Grade> oldGrade, Optional<Grade> newGrade) {
+        if (!shouldBeIncludedInQualityEvaluationAverage(nodeType)) {
             return;
         }
         if (oldGrade.isEmpty() && newGrade.isEmpty() || oldGrade.equals(newGrade)) {
             return;
         }
 
-        updateQualityEvaluationOfRecursive(node.getParentNodes(), oldGrade, newGrade);
+        updateQualityEvaluationOfRecursive(parentNodes, oldGrade, newGrade);
     }
 
     @Transactional
@@ -126,7 +131,7 @@ public class QualityEvaluationService {
     public void updateQualityEvaluationOfAllNodes() {
         nodeRepository.wipeQualityEvaluationAverages();
         var nodeStream = nodeRepository.findNodesWithQualityEvaluation();
-        nodeStream.forEach(
-                node -> updateQualityEvaluationOfParents(node, Optional.empty(), node.getQualityEvaluationGrade()));
+        nodeStream.forEach(node -> updateQualityEvaluationOfParents(
+                node.getNodeType(), node.getParentNodes(), Optional.empty(), node.getQualityEvaluationGrade()));
     }
 }
